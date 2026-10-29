@@ -61,8 +61,6 @@ pnpm run dev:web | dev:desktop  # 先 build:artifacts 再启动；start:web | st
 - 真实 API 的测试和演示读 `DEEPSEEK_API_KEY`、可选的 `DEEPSEEK_BASE_URL` 和根目录的 `.env`；没有 key 时 e2e 自动跳过（[key 规则](docs/testing.md)）。凭据绝不提交。
 - `cordis.yml` 只在插件的 `config` 和条目的 `disabled` 下允许 `!!js`（不是 `!js`）；其余元数据保持字面量，条件组合用 overlay（[说明](docs/cordis-primer.md#loader-configuration)）。
 
-<a id="conventions"></a>
-
 ## 技术约定
 
 继承自 DSH，改造之前仍然成立。
@@ -90,4 +88,4 @@ pnpm run dev:web | dev:desktop  # 先 build:artifacts 再启动；start:web | st
 
 ## 改这些规则
 
-根目录、`packages/`、`vendor/` 的 `CLAUDE.md` 都是指向同目录 `AGENTS.md` 的软链接，改真文件。`<a id="conventions">` 是给 `docs/rescope.md` 和它的中文版留的链接目标，处理文档时把这两处链接改到"技术约定"，再删掉这个锚点。
+根目录、`packages/`、`vendor/` 的 `CLAUDE.md` 都是指向同目录 `AGENTS.md` 的软链接，改真文件。仓库里有文档链接到本文件的"命令""检查""技术约定"三节，改这三个标题时要一起改那些链接（`pnpm run verify-md-links` 会查出来）。
