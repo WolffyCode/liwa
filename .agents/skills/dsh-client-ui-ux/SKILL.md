@@ -1,6 +1,7 @@
 ---
 name: dsh-client-ui-ux
 description: Design and review DeepSeek Harness client UI changes — visual token discipline, reuse-before-adding, feedback surfaces (toast vs in-place notice vs empty state), overlay and menu safety, platform window adaptation, loading states, and error copy placement. Use when adding or changing product-user-visible GUI behavior in packages/client, or when reviewing such a PR.
+disable-model-invocation: true
 ---
 
 # DeepSeek Harness Client UI/UX

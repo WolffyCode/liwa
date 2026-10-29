@@ -1,6 +1,7 @@
 ---
 name: dsh-session-projection
 description: Use when creating, extending, or reviewing a DeepSeek Harness session projection, or migrating session-derived recovery state to one.
+disable-model-invocation: true
 ---
 
 # Session Projection Rules

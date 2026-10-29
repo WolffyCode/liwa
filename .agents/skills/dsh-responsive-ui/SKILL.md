@@ -1,6 +1,7 @@
 ---
 name: dsh-responsive-ui
 description: Use when designing, implementing, or reviewing responsive client layouts, mobile and touch detection, text truncation, title wrapping, icon-only controls, mobile hover, tooltips and keyboard behavior, and focus during width changes in DeepSeek Harness.
+disable-model-invocation: true
 ---
 
 # Responsive client UI

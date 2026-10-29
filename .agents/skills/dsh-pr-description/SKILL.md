@@ -1,7 +1,7 @@
 ---
 name: dsh-pr-description
 description: Use when creating a deepseek-harness pull request, or when updating its description after later changes or a handled review round. Defines each description section, Issue references, test design, change-specific disclosures, and the AI Usage section with its levels, stages, grading rules, AI-DECLARATION badge, and update timing.
-user-invocable: false
+disable-model-invocation: true
 ---
 
 # Writing PR descriptions
