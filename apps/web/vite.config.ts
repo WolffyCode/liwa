@@ -258,6 +258,9 @@ export default defineConfig({
     // internal slot the shell boot fills with the client module loader).
     'process.versions.node': '"0.0.0"',
     'process.execArgv': '[]',
+    // vendored loader config/tree.ts: import() converts Windows drive-letter
+    // paths when process.platform is "win32"; "browser" never takes that branch.
+    'process.platform': '"browser"',
     // vendored loader index.ts: envData falls to its default branch.
     'process.env.CORDIS_SHARED': 'undefined',
   },
