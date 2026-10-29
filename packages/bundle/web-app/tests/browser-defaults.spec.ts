@@ -2,7 +2,7 @@
 import { fileURLToPath } from 'node:url'
 import { Context } from '@deepseek-ai/cordis'
 import Loader from '@deepseek-ai/cordis-plugin-loader'
-import { applyEntryPatches } from '@deepseek-ai/cordis-plugin-include'
+import { applyPatches } from '@deepseek-ai/cordis-plugin-include'
 import { loadOverlayPatches } from '@deepseek-ai/dsh-app-boot'
 import * as Browser from '@deepseek-ai/dsh-client-ui-sidebar-browser'
 import { expect, it, onTestFinished } from 'vitest'
@@ -19,8 +19,8 @@ it.each([
     .flatMap(patch => patch.insert ?? []).filter(row => row.id === 'ui-sidebar-browser')
   expect(rows).toHaveLength(1)
   expect(rows[0]!.name).toBe('@deepseek-ai/dsh-client-ui-sidebar-browser')
-  const configured = applyEntryPatches(rows, override === undefined ? [] : [{ id: 'ui-sidebar-browser', disabled: override }],
-    (message) => { throw new Error(message) })
+  const configured = applyPatches(rows, override === undefined ? [] : [{ id: 'ui-sidebar-browser', disabled: override }],
+    (message) => { throw new Error(message) }).data
   const ctx = new Context()
   onTestFinished(() => ctx.fiber.dispose())
   if (profile !== undefined) {

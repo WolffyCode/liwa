@@ -114,14 +114,49 @@ export namespace Property {
 
 /** Concrete service implementation record stored in the root reflect service. */
 export interface Impl {
+  /** Registration id, unique within the root reflect service; part of each dependent's load epoch. */
+  uid: number
   /** The service name. */
   name: string
-  /** The fiber that provided the service (owns its lifetime). */
-  fiber: Fiber
+  /** The context that provided the service; `ctx.fiber` owns its lifetime. */
+  ctx: Context
+  /** Fibers whose current load committed this implementation; the provider's teardown waits for them. */
+  dependents: Set<Fiber>
+  /** Resolves the provider's pending removal once the last dependent has unloaded. */
+  release?: () => void
   /** The current service value. */
   value?: any
   /** Optional availability predicate consulted before dependents may load. */
   check?: () => boolean
+  // Actual isolation symbol; may differ from the provider context after a blocked move.
+  isolate: symbol
+}
+
+// Resolve an access to service `name` from the def site `ctx` by walking up its fibers.
+// `fiber` is the fiber whose `inject` admits the access, and `impl` is the impl the access reaches.
+// - `{ impl }`: a fiber provides the impl itself in the same isolation.
+// - `{ fiber, impl }`: the impl comes from the committed view of `fiber`.
+// - `{ fiber }`: `fiber` declares the service but is inactive.
+// - `undefined`: no fiber declares the service, or the walk reaches a context that isolates `name` again.
+export function locate(ctx: Context, name: string): { fiber?: Fiber; impl?: Impl } | undefined {
+  const key = ctx[symbols.isolate][name]
+  let table = ctx[symbols.isolate]
+  let fiber = ctx.fiber
+  while (true) {
+    let impl: Impl | undefined
+    for (const provision of fiber.provisions) {
+      if (provision.name === name && provision.ctx[symbols.isolate][name] === key) impl = provision
+    }
+    if (impl) return { impl }
+    while (table !== fiber.ctx[symbols.isolate]) {
+      if (!table || Object.hasOwn(table, name)) return
+      table = Object.getPrototypeOf(table)
+    }
+    impl = fiber.committed?.[name]
+    if (impl || name in fiber.inject) return { fiber, impl }
+    if (!fiber.runtime) return
+    fiber = fiber.parent.fiber
+  }
 }
 
 /**
@@ -149,21 +184,15 @@ export class ReflectService {
           return def.get.call(ctx, ctx[symbols.receiver], error)
         }
 
-        if (!ctx.fiber.runtime) return ctx.reflect.get(prop, false)
+        // a fiber-less def site cannot declare `inject` at all, so it keeps the unchecked root access.
+        const defSite = (ctx[symbols.shadow] as Context | undefined) ?? ctx
+        if (!defSite.fiber.runtime) return ctx.reflect.get(prop, false)
         return ctx.events.waterfall('internal/get', ctx, prop, error, () => {
-          const key = target[symbols.isolate][prop]
-          let fiber = (ctx[symbols.shadow] as Context ?? ctx).fiber
-          while (true) {
-            const impl = fiber.store?.[prop]
-            if (impl) return getTraceable(ctx, impl.value)
-            if (prop in fiber.inject) {
-              error.message = `cannot get required service "${prop}" in inactive context`
-              throw error
-            }
-            if (!fiber.runtime) throw error
-            if (fiber.parent[symbols.isolate][prop] !== key) throw error
-            fiber = fiber.parent.fiber
-          }
+          const result = locate(defSite, prop)
+          if (!result) throw error
+          if (result.impl) return getTraceable(ctx, result.impl.value)
+          error.message = `cannot get required service "${prop}" in inactive context`
+          throw error
         })
       } catch (e: any) {
         throw e === error ? enhanceError(e) : e
@@ -209,6 +238,7 @@ export class ReflectService {
   public store: Dict<Impl, symbol> = Object.create(null)
   /** Declared context properties (services and accessors), by name. */
   public props: Dict<Property> = Object.create(null)
+  private _implCounter = 0
 
   constructor(public ctx: Context) {
     defineProperty(this, symbols.tracker, {
@@ -238,7 +268,7 @@ export class ReflectService {
     const key = this.ctx[symbols.isolate][name]
     const impl = key && this.store[key]
     if (!impl) return
-    if (strict && impl.fiber.state !== FiberState.ACTIVE) return
+    if (strict && impl.ctx.fiber.state !== FiberState.ACTIVE) return
     return impl
   }
 
@@ -257,7 +287,7 @@ export class ReflectService {
     if (!impl) {
       throw new Error(`cannot set property "${name}" without provide`)
     }
-    if (impl.fiber !== this.ctx.fiber) {
+    if (impl.ctx.fiber !== this.ctx.fiber) {
       throw new Error(`cannot set property "${name}" in multiple fibers`)
     }
     impl.value = value
@@ -283,23 +313,31 @@ export class ReflectService {
       }
       this.props[name] = { type: 'service' }
 
-      this.ctx.root[symbols.isolate][name] ??= Symbol(name)
+      this.ctx[symbols.root][symbols.isolate][name] ??= Symbol(name)
       const key = this.ctx[symbols.isolate][name]
-      const impl: Impl = { name, value, fiber: this.ctx.fiber, check }
+      const impl: Impl = { uid: ++this._implCounter, name, value, ctx: this.ctx, check, isolate: key, dependents: new Set() }
       if (this.store[key]) {
-        throw new Error(`service "${name}" has been registered at <${this.store[key].fiber.name}>`)
+        throw new Error(`service "${name}" has been registered at <${this.store[key].ctx.fiber.name}>`)
       }
       this.store[key] = impl
-      this.ctx.fiber.store![name] = impl
+      this.ctx.fiber.provisions.add(impl)
       if (this.ctx.fiber.state === FiberState.ACTIVE) {
         this.notify([name])
       }
       return async () => {
-        delete this.store[key]
-        const fibers = this.notify([name])
-        await Promise.allSettled(fibers.map(fiber => fiber.await()))
+        if (this.store[impl.isolate] === impl) delete this.store[impl.isolate]
+        this.ctx.isolate(name, impl.isolate).reflect.notify([name])
+        // Retired bindings cannot gain new dependents. Wait only for their
+        // cleanup, even if a fiber has left the registry or starts a new load.
+        // Yield even without direct dependents so child cleanup can still
+        // access the inherited service before its provision is removed.
+        await new Promise<void>((resolve) => {
+          impl.release = resolve
+          if (!impl.dependents.size) resolve()
+        })
+        impl.release = undefined
         // ensure self access before dependencies cleanup
-        delete this.ctx.fiber.store![name]
+        this.ctx.fiber.provisions.delete(impl)
       }
     }, `ctx.provide(${JSON.stringify(name)})`)
   }
@@ -312,7 +350,6 @@ export class ReflectService {
    * @returns the fibers whose dependency state was refreshed.
    */
   notify(names: string[], filter = (ctx: Context, name: string) => ctx[symbols.isolate][name] === this.ctx[symbols.isolate][name]) {
-    const fibers: Fiber[] = []
     for (const runtime of this.ctx.registry.values()) {
       for (const fiber of runtime.fibers) {
         let hasUpdate = false
@@ -324,7 +361,6 @@ export class ReflectService {
         }
         if (!hasUpdate) continue
         fiber._refresh()
-        fibers.push(fiber)
       }
     }
     for (const name of names) {
@@ -332,7 +368,6 @@ export class ReflectService {
       self[symbols.filter] = (target: Context) => filter(target, name)
       this.ctx.events.emit(self, 'internal/service', name, this._getImpl(name, false)?.value)
     }
-    return fibers
   }
 
   /**

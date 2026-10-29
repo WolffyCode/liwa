@@ -7,9 +7,11 @@ module caches, and reloads only the plugin entries that depend on changed
 application files. Changes to framework-level dependencies fall back to
 `loader.exit()`, letting the host process restart.
 
-Module watches canonicalize their existing base directory before opening
-Chokidar, so the native backend receives one filesystem spelling even when
-Windows supplied an 8.3 alias.
+`ctx.hmr.watch(path, callback)` watches one file, even outside `root`, and
+runs every registered callback on each change before module reloading; an
+Include registers its config file this way. DSH profiles use
+`@deepseek-ai/dsh-hmr`, which provides the same `watch()` contract through its
+reload queue.
 
 ## Requirements
 

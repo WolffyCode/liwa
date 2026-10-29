@@ -4,7 +4,7 @@
  * a real Loader tree with live file watching.
  */
 
-import { mkdtempSync, rmSync, unlinkSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, realpathSync, rmSync, unlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, describe, expect, it, onTestFinished, vi } from 'vitest'
@@ -22,16 +22,14 @@ import {
 const NAME = 'dsh-test-bin'
 
 const configWatch = vi.hoisted(() => ({
-  create: undefined as ((options?: ChokidarOptions) => FSWatcher) | undefined,
+  create: undefined as ((paths: string | string[], options?: ChokidarOptions) => FSWatcher | undefined) | undefined,
 }))
 
 vi.mock('chokidar', async (importOriginal) => {
   const native = await importOriginal<typeof import('chokidar')>()
   return {
     ...native,
-    watch: (paths: string | string[], options?: ChokidarOptions) => configWatch.create === undefined
-      ? native.watch(paths, options)
-      : configWatch.create(options),
+    watch: (paths: string | string[], options?: ChokidarOptions) => configWatch.create?.(paths, options) ?? native.watch(paths, options),
   }
 })
 
@@ -89,7 +87,10 @@ describe('profile reconciliation', () => {
     const watchers: FSWatcher[] = []
     const previousFactory = configWatch.create
     onTestFinished(() => { configWatch.create = previousFactory })
-    configWatch.create = (options) => {
+    // Only the user patch directory is delivered explicitly; the root Include's own file watch stays native.
+    const userRoot = realpathSync(userDir)
+    configWatch.create = (paths, options) => {
+      if (![paths].flat().some(path => path.startsWith(userRoot))) return undefined
       const watcher = new FSWatcher(options)
       watchers.push(watcher)
       queueMicrotask(() => { watcher.emit('ready') })

@@ -418,15 +418,17 @@ describe('collectConfigSchemas', () => {
     expect(validates(result, [{ name: 'good', config: 3 }])).toBe(true)
   })
 
-  it('keeps healthy group and include siblings after malformed child rows', async () => {
+  it('keeps healthy group siblings after malformed child rows and reports an include with a non-object row as unavailable', async () => {
     modules.set('good', { Config: Schema.string() })
     const result = await collectConfigSchemas(profile, [
       row('cordis:group', [{ name: false }, row('good')]),
+      // The Include composes its rows even without patches and mounts none of them when one is not an object.
       row('cordis:include', { path: './missing.yml', initial: [null, row('good')] }),
     ], resolution)
-    expect(result['x-cordis'].diagnostics.map(item => item.path)).toEqual(['/0/config/0', '/1/include/0'])
+    expect(result['x-cordis'].diagnostics.map(item => item.path)).toEqual(['/0/config/0', '/1'])
+    expect(result['x-cordis'].diagnostics[1]?.message).toContain('child declarations are unavailable')
     expect(result['x-cordis'].entries.filter(entry => entry.status === 'schema').map(entry => entry.path))
-      .toEqual(['/0/config/1', '/1/include/1'])
+      .toEqual(['/0/config/1'])
   })
 
   it.each([

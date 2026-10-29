@@ -66,14 +66,14 @@ it('activates the actual default Client registry without experimental packages',
             Object.defineProperty(globalThis, '__ModuleLoader__', { configurable: true, writable: true, value: target })
             const create = target.create.bind(target)
             target.create = function (options) {
-              const cordis = options.staticModules['@deepseek-ai/cordis'] as { RegistryService: typeof RegistryService }
+              const cordis = options.staticModules['@deepseek-ai/cordis'] as { Context: typeof Context; RegistryService: typeof RegistryService }
               const prototype = cordis.RegistryService.prototype
               // eslint-disable-next-line @typescript-eslint/unbound-method -- apply() preserves the runtime registry receiver.
               const plugin = prototype.plugin
               // Capture the first real root and immediately restore the registry method.
               prototype.plugin = function (...args: Parameters<RegistryService['plugin']>) {
                 prototype.plugin = plugin
-                observation.ctx = this.ctx.root
+                observation.ctx = this.ctx[cordis.Context.root]
                 return plugin.apply(this, args)
               }
               const modules = create(options)

@@ -12,8 +12,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterAll, describe, expect, it, vi } from 'vitest'
-import * as yaml from 'js-yaml'
-import { entryListSchema } from '@deepseek-ai/cordis-plugin-include'
+import { parseEntryYaml } from '@deepseek-ai/cordis-plugin-include'
 import { loadOverlayPatches, renderConfigDump } from '../src/index.ts'
 
 const NAME = 'dsh-test-bin'
@@ -73,7 +72,7 @@ describe('renderConfigDump', () => {
     ], () => {})
     // Comments do not break loadability: the dump parses as one document
     // equal to what boot() would mount.
-    const parsed = yaml.load(dump, { schema: entryListSchema }) as {
+    const parsed = parseEntryYaml(dump) as {
       id: string
       config?: Record<string, unknown>
     }[]
@@ -116,12 +115,10 @@ describe('renderConfigDump', () => {
   })
 
   it('composes all layers as one flattened patch list, exactly like boot()', () => {
-    // boot() flattens every layer into ONE applyEntryPatches call, whose id
-    // index sees inserted rows but NOT children introduced by a plain group
-    // `config` replacement. A per-layer composition would rebuild the index
-    // between layers and let the second layer patch that child — a tree the
-    // real boot never mounts. Pin the single-call semantics: the child patch
-    // is skipped (with the layer-labeled warning), matching boot.
+    // boot() flattens every layer into ONE applyPatches call, which indexes
+    // the children a group `config` replacement supplies, so a later layer can
+    // patch them. Pin that the dump composes exactly as boot mounts: the
+    // second layer patches the child the first layer introduced.
     const dir = tmp()
     const base = join(dir, 'base.yml')
     writeFileSync(base, [
@@ -139,14 +136,12 @@ describe('renderConfigDump', () => {
       },
       { label: 'b.yml', patches: [{ id: 'child', config: { v: 2 } }] },
     ], line => void warnings.push(line))
-    expect(warnings).toEqual([`${NAME}: [b.yml] patch: entry "child" not found`])
-    const parsed = yaml.load(dump, { schema: entryListSchema }) as {
+    expect(warnings).toEqual([])
+    const parsed = parseEntryYaml(dump) as {
       config?: { config?: { v?: number } }[]
     }[]
-    expect(parsed[0]?.config?.[0]?.config?.v).toBe(1)
-    // The skipped layer did not change the row, so the comment does not list it.
-    expect(dump).toContain('# == base.yml, patched by a.yml\n- id: g')
-    expect(dump).not.toContain('b.yml\n- id: g')
+    expect(parsed[0]?.config?.[0]?.config?.v).toBe(2)
+    expect(dump).toContain('# == base.yml, patched by a.yml, b.yml\n- id: g')
   })
 
   it('reports a patch whose target row is absent through warn with its layer label and keeps composing', () => {
@@ -169,7 +164,7 @@ describe('renderConfigDump', () => {
       line => void warnings.push(line),
     )
     expect(warnings).toEqual([`${NAME}: [overlay.yml] patch: entry "only-on-another-surface" not found`])
-    const parsed = yaml.load(dump, { schema: entryListSchema }) as { config?: { value?: string } }[]
+    const parsed = parseEntryYaml(dump) as { config?: { value?: string } }[]
     expect(parsed[0]?.config?.value).toBe('patched')
   })
 

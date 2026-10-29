@@ -25,7 +25,7 @@ import { createRequire } from 'node:module'
 import { existsSync, mkdirSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import type { EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
-import { applyEntryPatches, type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
+import { applyPatches, type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import type { DshBundleManifest, DshPackageManifest } from '@deepseek-ai/dsh-package-manifest'
 import { INSTALLATION_OWNED_PROFILE_TUPLES, PROFILE_TEMPLATES, RETIRED_BUNDLES } from '@deepseek-ai/dsh-official-bundles'
@@ -746,7 +746,7 @@ export function loadProfile(
 
 /**
  * Compose patch layers into the effective entry list over an empty root —
- * the same single `applyEntryPatches` call the boot include makes, so flag
+ * the same single `applyPatches` call the boot include makes, so flag
  * derivation and config dumps see exactly what mounts.
  * @param layers - patch lists in application order.
  * @param warn - sink for skipped-patch diagnostics; defaults to silent (boot repeats them).
@@ -755,8 +755,8 @@ export function loadProfile(
 export function composeEntries(
   layers: readonly PatchOptions[][], warn: (message: string) => void = () => {},
 ): EntryOptions[] {
-  return applyEntryPatches([], structuredClone(layers.flat()), (message: string, ...args: unknown[]) => {
+  return applyPatches([], structuredClone(layers.flat()), (message: string, ...args: unknown[]) => {
     let index = 0
     warn(message.replace(/%C/g, () => JSON.stringify(args[index++])))
-  })
+  }).data
 }

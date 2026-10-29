@@ -66,7 +66,7 @@ it.each(['portable-bundle', 'foreign-nested-row'] as const)('validates and insta
       await writeBundle(spec.request.cwd!, instructions.packageName)
       if (scenario === 'foreign-nested-row') {
         await writeFile(join(spec.request.cwd!, 'cordis.patch.yml'), JSON.stringify([{ insert: [{
-          id: instructions.packageName + ':group', name: instructions.packageName, group: true,
+          id: instructions.packageName + '-group', name: instructions.packageName, group: true,
           config: [{ id: 'access', name: instructions.packageName }],
         }] }]))
       } else {
@@ -125,7 +125,7 @@ it.each(['portable-bundle', 'foreign-nested-row'] as const)('validates and insta
   if (typeof name !== 'string') throw new Error('the installed card records no bundle name')
   await ctx.pluginManager.setBundleEnabled(name, false)
   expect((await ctx.pluginManager.setBundleEnabled(name, true)).application).toBe('applied')
-  const live = () => [...ctx.loader.entries()].find(entry => entry.options.id === name + ':counter')?.fiber
+  const live = () => [...ctx.loader.entries()].find(entry => entry.options.id === name + '-counter')?.fiber
   expect(live()).toBeDefined()
   expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toContain(name)
   await ctx.actionCards.act(agent, callId, 'keep')

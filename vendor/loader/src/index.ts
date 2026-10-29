@@ -1,10 +1,10 @@
-import { Context, FiberState, Inject, Service, type Fiber } from '@deepseek-ai/cordis'
-import { defineProperty, isNullable, type Dict } from '@deepseek-ai/cosmokit'
+import { Context, FiberState, Inject, Service, ValidationError, type Fiber } from '@deepseek-ai/cordis'
+import { defineProperty, isNullable, type Awaitable, type Dict } from '@deepseek-ai/cosmokit'
 import { ModuleLoader } from './internal.ts'
 import { Entry, type EntryOptions } from './config/entry.ts'
 import { EntryGroup } from './config/group.ts'
 import isolate from './config/isolate.ts'
-import { EntryTree } from './config/tree.ts'
+import { EntryTree, type EntryChange } from './config/tree.ts'
 import { interpolate } from './config/utils.ts'
 
 /** Re-export entry node APIs. */
@@ -33,12 +33,12 @@ declare module '@deepseek-ai/cordis' {
      */
     'loader/volatile-update'(paths: readonly (readonly string[])[]): void
     /**
-     * Refresh entry context before applying config.
+     * Refresh entry context before applying config; the Loader awaits the result.
      * @param entry - entry containing the new raw config and optional current fiber.
      * @param next - continue context refresh and Loader's config update.
      * @mode waterfall
      */
-    'loader/patch-context'(entry: Entry, next: () => void): void
+    'loader/patch-context'(entry: Entry, next: () => Awaitable<void>): Awaitable<void>
   }
 
   interface Context {
@@ -72,10 +72,10 @@ export namespace Loader {
 /**
  * Service that owns a loader entry tree and imports configured plugins.
  *
- * Subclasses provide persistence by implementing `write()` on `EntryTree`.
+ * Subclasses provide persistence by implementing `commit()` on `EntryTree`.
  */
 export class Loader extends EntryTree {
-  declare [Service.config]: Loader.Intercept
+  declare [Service.metadata]: Loader.Intercept
 
   public envData = process.env.CORDIS_SHARED
     ? JSON.parse(process.env.CORDIS_SHARED)
@@ -101,26 +101,49 @@ export class Loader extends EntryTree {
 
     ctx.reflect.provide('loader', this, this[Service.check])
 
-    ctx.on('internal/config', function (this: Fiber, _config, next) {
+    // the source config each entry fiber last resolved
+    const sources = new WeakMap<Fiber, any>()
+
+    // Registered before the built-in validation listener, so validation
+    // failures can be traced to the config source. A config passed in at
+    // runtime is not written anywhere yet, so its failures are left as is.
+    ctx.on('internal/config', (fiber, next) => {
+      if (!fiber.entry || fiber.parent.fiber?.entry === fiber.entry) return next()
+      try {
+        return next()
+      } catch (error) {
+        if (ValidationError.is(error) && sources.get(fiber) === fiber.entry.options.config) {
+          fiber.entry.traceValidation(error)
+        }
+        throw error
+      }
+    }, { prepend: true })
+
+    // Registered after the built-in validation listener, so interpolation runs
+    // on the source config and validation sees the interpolated result.
+    ctx.on('internal/config', (fiber, next) => {
       const config = next()
-      if (!this.entry || this.parent.fiber?.entry === this.entry) return config
-      // Tree carriers (Group, Include) keep their configs literal: their
-      // entry and patch lists hold other rows' configs, whose `!!js`
-      // expressions belong to those rows' own fibers.
-      const plugin = this.runtime?.callback as Record<PropertyKey, unknown> | undefined
-      if (plugin?.[EntryGroup.key]) return config
-      return interpolate(this.ctx, config)
-    }, { global: true })
+      // nested plugins inherit `entry` through the context prototype chain;
+      // only the entry's own fiber carries the entry config
+      if (!fiber.entry || fiber.parent.fiber?.entry === fiber.entry) return config
+      sources.set(fiber, config)
+      // a group's config is the entry list itself, which the loader mutates in
+      // place and identifies by reference
+      if (fiber.runtime!.callback[EntryGroup.key]) return config
+      return interpolate(fiber.ctx, config)
+    })
 
-    ctx.on('internal/update', function (config, noSave, next) {
-      if (!this.entry || noSave || this.parent.fiber?.entry === this.entry) return next()
-      const unparse = this.runtime?.Config?.['simplify']
-      this.entry.options.config = unparse ? unparse.call(this.runtime!.Config, config) : config
-      this.entry.parent.tree.write()
-      return next()
-    }, { global: true, prepend: true })
+    ctx.on('internal/commit', (fiber, config) => {
+      if (!fiber.entry || fiber.parent.fiber?.entry === fiber.entry) return
+      const unparse = fiber.runtime?.Config?.['simplify']
+      const { entry } = fiber
+      const legacy = { ...entry.options }
+      // Schemastery's `simplify` reads its schema through `this`.
+      entry.options.config = unparse ? unparse.call(fiber.runtime!.Config, config) : config
+      entry.parent.tree.commit({ id: entry.options.id, group: entry.parent, options: entry.options, legacy })
+    })
 
-    ctx.on('internal/update', function (config, _, next) {
+    ctx.on('internal/update', function (config, next) {
       if (!this.entry || this.parent.fiber?.entry === this.entry) return next()
       self.showLog(this.entry, 'reload')
       return next()
@@ -151,36 +174,59 @@ export class Loader extends EntryTree {
       // plugin hmr: delete(plugin) -> runtime dispose -> fiber dispose
       if (!ctx.registry.has(fiber.runtime!.callback)) return
 
-      // case 5: the entry's tree is being disposed
+      // case 5: the entry's tree is being disposed or unloaded
       const treeOwner = fiber.entry.parent.tree.ctx.fiber
       if (!treeOwner.uid || treeOwner.state === FiberState.UNLOADING) return
 
-      this.showLog(fiber.entry, 'unload')
+      const { entry } = fiber
+      this.showLog(entry, 'unload')
 
-      // case 6: fiber is disposed by loader behavior
+      // case 6: the entry's parent is being unloaded, which takes the entry with it
+      // (the parent may still be registered, e.g. when it has lost a dependency)
+      if (fiber.parent.fiber.state === FiberState.UNLOADING) return
+
+      // case 7: the entry is being removed by the loader (`EntryGroup.remove`
+      // unregisters it before disposing the fiber)
+      if (entry.parent.tree.store[entry.options.id] !== entry) return
+
+      // case 8: fiber is disposed by loader behavior
       // such as inject checker, config file update, ancestor group disable
-      if (fiber.entry.disabled) return
+      if (entry.disabled) return
 
-      fiber.entry.options.disabled = true
-      fiber.entry.parent.tree.write()
+      const legacy = { ...entry.options }
+      entry.options.disabled = true
+      entry.parent.tree.commit({ id: entry.options.id, group: entry.parent, options: entry.options, legacy })
     })
 
     ctx.plugin(isolate)
   }
 
-  write() {
-    // Loader's root tree is in-memory; writes are no-ops.
+  /**
+   * Accept a tree-side change; the root tree lives in memory only, so there is nothing to persist.
+   * @param _change - the applied change.
+   */
+  commit(_change: EntryChange): void {
+    // the root tree lives in memory only; there is nothing to persist to
   }
 
+  /**
+   * Report whether dependents that requested `await` may load yet.
+   * @returns `false` while entries are still loading under an `await` intercept.
+   */
   [Service.check]() {
-    const config: Loader.Intercept = Service.prototype[Service.resolveConfig].call(this)
+    const config: Loader.Intercept = Service.prototype[Service.resolveIntercept].call(this)
     if (config.await && this.getTasks().length) return false
     return true
   }
 
+  /**
+   * Log an entry lifecycle transition through the root logger.
+   * @param entry - the entry whose plugin changed.
+   * @param type - the transition verb, e.g. `apply`, `reload` or `unload`.
+   */
   showLog(entry: Entry, type: string) {
     if (entry.options.group || !entry.parent.tree.enableLogs) return
-    this.ctx.root.logger?.('loader').info('%s plugin %C', type, entry.options.name)
+    this.ctx[Context.root].logger?.('loader').info('%s plugin %C', type, entry.options.name)
   }
 
   /** Return the loader entry id that owns `fiber`, if any. */

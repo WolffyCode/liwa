@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { Context } from '@deepseek-ai/cordis'
 import Loader from '@deepseek-ai/cordis-plugin-loader'
-import Include, { applyEntryPatches } from '@deepseek-ai/cordis-plugin-include'
+import Include, { applyPatches } from '@deepseek-ai/cordis-plugin-include'
 import { loadOverlayPatches } from '@deepseek-ai/dsh-app-boot'
 import { OfficeSourceKey, type OfficeToPdfRequest } from '@deepseek-ai/dsh-office-to-pdf'
 import * as LibreOfficeProvider from '@deepseek-ai/dsh-office-to-pdf'
@@ -22,8 +22,8 @@ it('loads one shared conversion row and retains caller-owned PDFs after disposal
     .flatMap(patch => patch.insert ?? [])
     .filter(row => row.name === '@deepseek-ai/dsh-office-to-pdf')
   expect(rows.map(row => row.id)).toEqual(['office-to-pdf'])
-  const configured = applyEntryPatches(rows, [{ id: 'office-to-pdf', config: { maxConcurrentConversions: 1 } }],
-    (message) => { throw new Error(message) })
+  const configured = applyPatches(rows, [{ id: 'office-to-pdf', config: { maxConcurrentConversions: 1 } }],
+    (message) => { throw new Error(message) }).data
   const configPath = join(directory, 'cordis.yml')
   await writeFile(configPath, JSON.stringify(configured))
   ctx.baseUrl = pathToFileURL(directory).href + '/'

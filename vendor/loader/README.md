@@ -46,7 +46,7 @@ root.loader.update(id, { config: { enabled: false } })
 | `loader.await()` | Wait for pending entry imports and fiber reloads. |
 | `loader.locate(fiber?)` | Return the loader entry id that owns a fiber. |
 
-For file-backed trees, use `@cordisjs/plugin-include`.
+Tree mutations report each applied change synchronously to `EntryTree.commit(change)`; the root Loader and other in-memory trees ignore it, and file-backed trees persist it. Entry options are validated before they reach a group, and config validation and import failures name their source location when the tree has one (`EntryTree.getLocation`). For file-backed trees, use `@cordisjs/plugin-include`.
 
 ## Module resolution
 
@@ -54,7 +54,7 @@ Without Node module internals, Loader resolves bare specifiers, package imports 
 
 If no scope exists or writing the helper files fails, Loader uses its native import fallback. This fallback emits no diagnostic of its own; project-only dependencies can remain unavailable, and the resulting import error can name the Loader module rather than the configuration project. Failure to import a written helper propagates to the caller without this fallback.
 
-Initialization results are cached for the lifetime of the resolver module, including failed writes and rejected helper imports. Fixing the filesystem does not retry initialization for an already cached scope. Concurrent initialization through filesystem aliases of the same package can contend for the temporary helper files and cause a write failure.
+Successful initialization is cached for the lifetime of the resolver module; a scope whose helper could not be written is retried on the next import. An identical helper is not rewritten, and a rename blocked by another process (`EACCES`, `EPERM`, `EBUSY`) is retried with a bounded backoff. Concurrent initialization through filesystem aliases of the same package can still contend for the temporary helper files and cause a write failure.
 
 Node module internals are classified by their available APIs, including the v1 API used by Node 24.0–24.11.
 

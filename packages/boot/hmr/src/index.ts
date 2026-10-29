@@ -4,7 +4,6 @@ import { AsyncLocalStorage } from 'node:async_hooks'
 import { watchConfig as watchExactConfig } from './watch-config.ts'
 import { Context, FiberState, Inject, Service, type Fiber, type Plugin } from '@deepseek-ai/cordis'
 import type { Entry, ModuleLoader, ModuleJob, ResolveResult } from '@deepseek-ai/cordis-plugin-loader'
-import type { Include } from '@deepseek-ai/cordis-plugin-include'
 import { FSWatcher, watch, type ChokidarOptions } from 'chokidar'
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync } from 'node:fs'
@@ -304,6 +303,20 @@ class Hmr extends Service {
     }
   }
 
+  /**
+   * Watch one file through the reload queue: the `ctx.hmr.watch()` contract of `@deepseek-ai/cordis-plugin-hmr`,
+   * which Include uses to refresh its config file. The callback runs for additions, changes and removals once the
+   * application is ready, serialized with module replacement and profile reloads; the path is watched even outside
+   * {@link HmrConfig.root}.
+   * @param path Absolute path, `file:` URL, or path relative to {@link baseDir}.
+   * @param callback Change handler, awaited inside the queue.
+   * @returns Disposer of the caller-owned effect, ending the watch after its pending callback settles.
+   */
+  watch(path: string | URL, callback: () => void | Promise<void>): () => Promise<void> {
+    const filename = path instanceof URL || path.startsWith('file:') ? fileURLToPath(path) : resolve(this.baseDir, path)
+    return this.ctx.effect(() => this.watchConfig(filename, async () => { await callback() }), 'ctx.hmr.watch()')
+  }
+
   constructor(ctx: Context, public config: HmrConfig) {
     super(ctx, 'hmr')
     this.ownerContext = ctx
@@ -439,7 +452,6 @@ class Hmr extends Service {
         if (!await this.applicationReady) return
         const batch = [...changed]
         changed.clear()
-        const includes = new Set<Include>()
         let fullReload = false
         for (const path of batch) {
           const filename = canonicalPath(resolve(watchBaseDir, path))
@@ -459,17 +471,13 @@ class Hmr extends Service {
             continue
           }
           if (isManifest) continue
-          const include = [...loader.entries()].map(entry => entry.subtree as Include | undefined)
-            .find(tree => tree?.filename === filename || tree?.filename === configuredFilename)
-          if (include !== undefined) includes.add(include)
-          else this.ctx.emit('hmr/change', url)
+          this.ctx.emit('hmr/change', url)
         }
-        if (!fullReload && includes.size === 0 && this.stashed.size === 0) return
+        if (!fullReload && this.stashed.size === 0) return
         if (fullReload) {
           loader.exit()
           return
         }
-        for (const include of includes) await include.refresh()
         if (this.stashed.size > 0) {
           try { await this.partialReload() } finally { this.stashed.clear() }
         }
@@ -646,7 +654,7 @@ class Hmr extends Service {
       ...info, previous,
       fibers: [...info.runtime?.fibers ?? []].map((fiber) => {
         const entry = fiber.entry?.fiber?.uid === fiber.uid ? fiber.entry : undefined
-        const config: unknown = entry === undefined ? fiber.rawConfig : entry.options.config
+        const config: unknown = entry === undefined ? fiber.config : entry.options.config
         return { fiber, entry, config, moduleNamespace: entry?.moduleNamespace }
       }),
     }))
@@ -966,7 +974,7 @@ class Hmr extends Service {
           return job !== undefined && namespaceOf(job) === undefined
         }))
       }, undefined)
-      const result = await recomposeProfile(this.ownerContext.root, patches, 'dsh', { requiredIds, running })
+      const result = await recomposeProfile(this.ownerContext[Context.root], patches, 'dsh', { requiredIds, running })
       const restartReason = compared === undefined || unavailable ? 'module-comparison' : result.restartReason
       return { warnings: result.warnings, pending, ...restartReason === undefined ? {} : { restartReason } }
     } finally {

@@ -33,7 +33,7 @@ kind: "package-reference"
     root: ["."]
 ```
 
-已有配置将模块名 `@deepseek-ai/cordis-plugin-hmr` 替换为 `@deepseek-ai/dsh-hmr`。继续提供 `hmr` 服务键、`baseDir`、`config`、`getLinked()`、`getOuterStack()`、`hmr/change` 和 `hmr/reload`。工作区保留 vendored 包；DSH profile 使用本包。
+已有配置将模块名 `@deepseek-ai/cordis-plugin-hmr` 替换为 `@deepseek-ai/dsh-hmr`。继续提供 `hmr` 服务键、`baseDir`、`config`、`getLinked()`、`getOuterStack()`、`watch()`、`hmr/change` 和 `hmr/reload`。工作区保留 vendored 包；DSH profile 使用本包。
 
 ### 配置
 
@@ -56,7 +56,7 @@ HMR 的 profile 监听和 Plugin Manager 执行的 profile 重新组合，还会
 <details>
 <summary>实现细节——点击展开</summary>
 
-`watchConfig()` 注册会被等待的配置处理器，仅监听目标路径及必要的父目录；同级文件（包括临时写锁）在创建原生 watcher 前即被排除。`runExclusive()` 将配置变更、Loader 更新与自动重载串行化，并拒绝嵌套事务。包安装和删除在该队列之外执行。HMR 不获取包操作写锁；manifest 通知仅在有序的 `dsh.profile.bundles` 列表变化时触发重载。profile 与 home patch 变化也会触发重新组合。配置事务期间收到的文件事件在事务结束后处理。 Include 刷新和 profile 重载都通过普通的 Loader 条目更新到达插件；仅 volatile 变化由 Loader 就地提交。
+`watchConfig()` 注册会被等待的配置处理器，仅监听目标路径及必要的父目录；同级文件（包括临时写锁）在创建原生 watcher 前即被排除。`runExclusive()` 将配置变更、Loader 更新与自动重载串行化，并拒绝嵌套事务。包安装和删除在该队列之外执行。HMR 不获取包操作写锁；manifest 通知仅在有序的 `dsh.profile.bundles` 列表变化时触发重载。profile 与 home patch 变化也会触发重新组合。配置事务期间收到的文件事件在事务结束后处理。`watch()` 经由 `watchConfig()` 提供 Cordis HMR 的单文件回调约定；Include 通过它登记自己的文件，因此 Include 刷新在该队列中运行。与 Cordis HMR 不同，回调在文件新增和删除时也会运行，并在 watcher 初次扫描时运行一次，以覆盖 Include 首次读取到开始监听之间发生的编辑。Include 刷新和 profile 重载都通过普通的 Loader 条目更新到达插件；仅 volatile 变化由 Loader 就地提交。
 
 App-boot 负责 profile 解析和 patch 优先级规则。HMR 读取启动器提供的纯数据 `profileContext`，在初始化时注册 profile manifest 和两份用户 patch 的监听，并等待应用就绪后处理更改。销毁 HMR 时会关闭监听器并取消等待启动的重载。配置监听器在当前事务上下文之外启动，使后续通知可以进入队列。
 

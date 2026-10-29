@@ -15,7 +15,8 @@ A fiber is one loaded plugin instance: its lifecycle state, validated config, an
  * run (in reverse order) either when the returned disposer is called or
  * when the fiber unloads, whichever comes first. Calling the disposer twice
  * is a no-op. Throws `CordisError('INACTIVE_EFFECT')` if the fiber is
- * already disposed, and `TypeError` if `execute` returns an invalid shape.
+ * already disposed or unloading, and `TypeError` if `execute` returns an
+ * invalid shape.
  *
  * @param execute — the effect body; see {@link Effect} for accepted shapes.
  * @param label — effect label shown in `getEffects()` diagnostics.
@@ -27,14 +28,14 @@ effect(execute: () => Effect, label?: string): AsyncDisposable<Promise<void>>
 
 Register a cleanup-aware effect on this fiber.
 
-`execute` runs immediately; the disposers it produces are collected and run (in reverse order) either when the returned disposer is called or when the fiber unloads, whichever comes first. Calling the disposer twice is a no-op. Throws `CordisError('INACTIVE_EFFECT')` if the fiber is already disposed, and `TypeError` if `execute` returns an invalid shape.
+`execute` runs immediately; the disposers it produces are collected and run (in reverse order) either when the returned disposer is called or when the fiber unloads, whichever comes first. Calling the disposer twice is a no-op. Throws `CordisError('INACTIVE_EFFECT')` if the fiber is already disposed or unloading, and `TypeError` if `execute` returns an invalid shape.
 
 - `execute` — the effect body; see `Effect` for accepted shapes.
 - `label` — effect label shown in `getEffects()` diagnostics.
 
 **Returns** a disposer that tears the effect down and settles once done.
 
-[Source](../../vendor/cordis/src/fiber.ts#L415)
+[Source](../../vendor/cordis/src/fiber.ts#L452)
 
 ### ctx.fiber
 
@@ -53,7 +54,7 @@ Runtime instance of one plugin application.
 
 A fiber tracks dependency state, validated config, lifecycle effects, and cleanup for the plugin context returned by `ctx.plugin()`.
 
-[Source](../../vendor/cordis/src/fiber.ts#L184)
+[Source](../../vendor/cordis/src/fiber.ts#L215)
 
 ### fiber.uid
 
@@ -64,7 +65,7 @@ public uid: number | null
 
 Unique id within the registry; 0 for the root fiber, `null` once disposed.
 
-[Source](../../vendor/cordis/src/fiber.ts#L186)
+[Source](../../vendor/cordis/src/fiber.ts#L217)
 
 ### fiber.ctx
 
@@ -75,18 +76,21 @@ public readonly ctx: Context
 
 The context this fiber's plugin runs in (extends the parent context).
 
-[Source](../../vendor/cordis/src/fiber.ts#L188)
+[Source](../../vendor/cordis/src/fiber.ts#L219)
 
 ### fiber.config
 
 ```ts cordis-catalog
-/** The validated plugin config (updated by `update()`); read through {@link effectiveConfig}. */
+/**
+ * The raw plugin config, retained without evaluating expressions or validating it.
+ * Every activation resolves it through `internal/config`; `update()` replaces it. Read the value passed to the running instance through {@link effectiveConfig}.
+ */
 public config: any
 ```
 
-The validated plugin config (updated by `update()`); read through effectiveConfig.
+The raw plugin config, retained without evaluating expressions or validating it. Every activation resolves it through `internal/config`; `update()` replaces it. Read the value passed to the running instance through effectiveConfig.
 
-[Source](../../vendor/cordis/src/fiber.ts#L190)
+[Source](../../vendor/cordis/src/fiber.ts#L224)
 
 ### fiber.state
 
@@ -97,7 +101,7 @@ public state
 
 Current lifecycle state; transitions emit `internal/status`.
 
-[Source](../../vendor/cordis/src/fiber.ts#L194)
+[Source](../../vendor/cordis/src/fiber.ts#L226)
 
 ### fiber.dispose
 
@@ -108,18 +112,29 @@ public readonly dispose: () => Promise<void>
 
 Dispose this fiber: unload the plugin, then settle once cleanup finished.
 
-[Source](../../vendor/cordis/src/fiber.ts#L196)
+[Source](../../vendor/cordis/src/fiber.ts#L228)
 
-### fiber.store
+### fiber.committed
 
 ```ts cordis-catalog
-/** Snapshot of required service implementations while loaded; `undefined` otherwise. */
-public store: Dict<Impl> | undefined
+/** Snapshot of the required service implementations taken for the current load; `undefined` while unloaded. */
+public committed: Readonly<Dict<Impl>> | undefined
 ```
 
-Snapshot of required service implementations while loaded; `undefined` otherwise.
+Snapshot of the required service implementations taken for the current load; `undefined` while unloaded.
 
-[Source](../../vendor/cordis/src/fiber.ts#L198)
+[Source](../../vendor/cordis/src/fiber.ts#L230)
+
+### fiber.provisions
+
+```ts cordis-catalog
+/** Service implementations this fiber provides; its effects outlive them until every dependent has unloaded. */
+public readonly provisions
+```
+
+Service implementations this fiber provides; its effects outlive them until every dependent has unloaded.
+
+[Source](../../vendor/cordis/src/fiber.ts#L232)
 
 ### fiber.inertia
 
@@ -130,7 +145,7 @@ public inertia: Promise<void> | undefined
 
 The in-flight load/unload transition, if one is currently running.
 
-[Source](../../vendor/cordis/src/fiber.ts#L200)
+[Source](../../vendor/cordis/src/fiber.ts#L234)
 
 ### fiber.name
 
@@ -141,7 +156,7 @@ get name()
 
 The plugin's display name, inherited from the nearest named ancestor, else `'root'`.
 
-[Source](../../vendor/cordis/src/fiber.ts#L336)
+[Source](../../vendor/cordis/src/fiber.ts#L372)
 
 ### fiber.assertActive()
 
@@ -159,7 +174,7 @@ Throw if the fiber has already been disposed.
 
 **Returns** nothing when the fiber is still active.
 
-[Source](../../vendor/cordis/src/fiber.ts#L351)
+[Source](../../vendor/cordis/src/fiber.ts#L387)
 
 ### fiber.effect(execute, label?)
 
@@ -171,7 +186,8 @@ Throw if the fiber has already been disposed.
  * run (in reverse order) either when the returned disposer is called or
  * when the fiber unloads, whichever comes first. Calling the disposer twice
  * is a no-op. Throws `CordisError('INACTIVE_EFFECT')` if the fiber is
- * already disposed, and `TypeError` if `execute` returns an invalid shape.
+ * already disposed or unloading, and `TypeError` if `execute` returns an
+ * invalid shape.
  *
  * @param execute — the effect body; see {@link Effect} for accepted shapes.
  * @param label — effect label shown in `getEffects()` diagnostics.
@@ -183,14 +199,14 @@ effect(execute: () => Effect, label?: string): AsyncDisposable<Promise<void>>
 
 Register a cleanup-aware effect on this fiber.
 
-`execute` runs immediately; the disposers it produces are collected and run (in reverse order) either when the returned disposer is called or when the fiber unloads, whichever comes first. Calling the disposer twice is a no-op. Throws `CordisError('INACTIVE_EFFECT')` if the fiber is already disposed, and `TypeError` if `execute` returns an invalid shape.
+`execute` runs immediately; the disposers it produces are collected and run (in reverse order) either when the returned disposer is called or when the fiber unloads, whichever comes first. Calling the disposer twice is a no-op. Throws `CordisError('INACTIVE_EFFECT')` if the fiber is already disposed or unloading, and `TypeError` if `execute` returns an invalid shape.
 
 - `execute` — the effect body; see `Effect` for accepted shapes.
 - `label` — effect label shown in `getEffects()` diagnostics.
 
 **Returns** a disposer that tears the effect down and settles once done.
 
-[Source](../../vendor/cordis/src/fiber.ts#L415)
+[Source](../../vendor/cordis/src/fiber.ts#L452)
 
 ### fiber.getEffects()
 
@@ -207,54 +223,43 @@ Return metadata for currently registered effects.
 
 **Returns** one `EffectMeta` tree per labeled live effect.
 
-[Source](../../vendor/cordis/src/fiber.ts#L568)
-
-### fiber.rawConfig
-
-```ts cordis-catalog
-/** Raw input retained for the next activation, without evaluating expressions or validating it. */
-get rawConfig(): unknown
-```
-
-Raw input retained for the next activation, without evaluating expressions or validating it.
-
-[Source](../../vendor/cordis/src/fiber.ts#L642)
+[Source](../../vendor/cordis/src/fiber.ts#L605)
 
 ### fiber.effectiveConfig
 
 ```ts cordis-catalog
 /**
- * The config object published by the existing activation/update lifecycle, without cloning or re-parsing.
- * It is undefined before the first resolution and remains readable after unload; callers requiring a live instance check `state`.
+ * The resolved config object passed to the plugin by its latest activation, without cloning or re-parsing.
+ * It is undefined before the first activation and remains readable after unload; callers requiring a live instance check `state`.
  */
 get effectiveConfig(): unknown
 ```
 
-The config object published by the existing activation/update lifecycle, without cloning or re-parsing. It is undefined before the first resolution and remains readable after unload; callers requiring a live instance check `state`.
+The resolved config object passed to the plugin by its latest activation, without cloning or re-parsing. It is undefined before the first activation and remains readable after unload; callers requiring a live instance check `state`.
 
-[Source](../../vendor/cordis/src/fiber.ts#L655)
+[Source](../../vendor/cordis/src/fiber.ts#L683)
 
 ### fiber.resolveConfig(config)
 
 ```ts cordis-catalog
 /**
- * Evaluate and validate a candidate using this fiber's `internal/config` hooks and runtime schema.
- * Does not publish the result, replace raw input, or commit running volatile references.
+ * Resolve raw config through this fiber's `internal/config` waterfall, which ends in the runtime schema's validation.
+ * Activation and `update()` resolve through it; a candidate resolved by other callers is not published and does not replace {@link config}.
  * Required injections must be available when a hook uses them.
- * @param config Raw candidate input.
- * @returns The candidate's resolved config, retaining the schema's result identity.
- * @throws {ValidationError} when the runtime schema rejects the candidate; hook errors propagate.
+ * @param config Raw config.
+ * @returns The resolved config, retaining the schema's result identity.
+ * @throws {ValidationError} when the runtime schema rejects the config; hook errors propagate.
  */
 resolveConfig(config: unknown): unknown
 ```
 
-Evaluate and validate a candidate using this fiber's `internal/config` hooks and runtime schema. Does not publish the result, replace raw input, or commit running volatile references. Required injections must be available when a hook uses them.
+Resolve raw config through this fiber's `internal/config` waterfall, which ends in the runtime schema's validation. Activation and `update()` resolve through it; a candidate resolved by other callers is not published and does not replace config. Required injections must be available when a hook uses them.
 
-- `config` — Raw candidate input.
+- `config` — Raw config.
 
-**Returns** The candidate's resolved config, retaining the schema's result identity.
+**Returns** The resolved config, retaining the schema's result identity.
 
-[Source](../../vendor/cordis/src/fiber.ts#L667)
+[Source](../../vendor/cordis/src/fiber.ts#L695)
 
 ### fiber.await()
 
@@ -272,53 +277,56 @@ Wait for current lifecycle work and rethrow startup errors.
 
 **Returns** this fiber, once it has settled into a stable state.
 
-[Source](../../vendor/cordis/src/fiber.ts#L731)
+[Source](../../vendor/cordis/src/fiber.ts#L773)
 
 ### fiber.restart()
 
 ```ts cordis-catalog
 /**
- * Dispose and immediately reload this plugin with its current config.
+ * Unload and reload this plugin with its current raw config, which is resolved again.
  *
  * @returns a promise resolving once the reload settled.
  * @throws {CordisError} `INACTIVE_EFFECT` when the fiber is already disposed.
  */
-async restart()
+async restart(): Promise<void>
 ```
 
-Dispose and immediately reload this plugin with its current config.
+Unload and reload this plugin with its current raw config, which is resolved again.
 
 **Returns** a promise resolving once the reload settled.
 
-[Source](../../vendor/cordis/src/fiber.ts#L745)
+[Source](../../vendor/cordis/src/fiber.ts#L787)
 
 ### fiber.update(config, noSave?)
 
 ```ts cordis-catalog
 /**
- * Validate and apply new config, then restart the plugin.
+ * Replace the raw config, then restart the plugin with it.
  *
- * Runs the `internal/update` waterfall first, so update hooks (and HMR)
- * can veto or replace the restart.
+ * A loaded fiber resolves the candidate first, so an invalid config throws
+ * before anything changes, and runs the `internal/update` waterfall, whose
+ * listeners (e.g. Group, Include) can apply it in place instead of
+ * restarting. Unless `noSave`, `internal/commit` reports the accepted raw
+ * config to persistence hooks.
  *
- * @param config — the new raw config; validated before anything restarts.
- * @param noSave — hint for persistence hooks not to write the change back.
- * @returns nothing; the restart runs behind the `internal/update` waterfall.
- * @throws {ValidationError} when the new config fails validation.
+ * @param config — the new raw config.
+ * @param noSave — skip `internal/commit`, e.g. when the config came from the persisted source itself.
+ * @returns the restart or the listener's replacement work, or nothing when a listener vetoed synchronously.
+ * @throws {ValidationError} when a loaded fiber's candidate fails validation.
  */
-update(config: any, noSave = false)
+update(config: any, noSave = false): Awaitable<void>
 ```
 
-Validate and apply new config, then restart the plugin.
+Replace the raw config, then restart the plugin with it.
 
-Runs the `internal/update` waterfall first, so update hooks (and HMR) can veto or replace the restart.
+A loaded fiber resolves the candidate first, so an invalid config throws before anything changes, and runs the `internal/update` waterfall, whose listeners (e.g. Group, Include) can apply it in place instead of restarting. Unless `noSave`, `internal/commit` reports the accepted raw config to persistence hooks.
 
-- `config` — the new raw config; validated before anything restarts.
-- `noSave` — hint for persistence hooks not to write the change back.
+- `config` — the new raw config.
+- `noSave` — skip `internal/commit`, e.g. when the config came from the persisted source itself.
 
-**Returns** nothing; the restart runs behind the `internal/update` waterfall.
+**Returns** the restart or the listener's replacement work, or nothing when a listener vetoed synchronously.
 
-[Source](../../vendor/cordis/src/fiber.ts#L764)
+[Source](../../vendor/cordis/src/fiber.ts#L809)
 
 ## Effect
 
@@ -339,7 +347,7 @@ type Effect<T = any> =
   | AsyncEffect<T>
 ```
 
-[Source](../../vendor/cordis/src/fiber.ts#L83)
+[Source](../../vendor/cordis/src/fiber.ts#L113)
 
 ## Disposable
 
@@ -357,7 +365,7 @@ Disposers run in reverse registration order when the owning fiber unloads; they 
 type Disposable<T = any> = () => T
 ```
 
-[Source](../../vendor/cordis/src/fiber.ts#L74)
+[Source](../../vendor/cordis/src/fiber.ts#L104)
 
 ## EffectMeta
 
@@ -373,7 +381,7 @@ interface EffectMeta {
 }
 ```
 
-[Source](../../vendor/cordis/src/fiber.ts#L96)
+[Source](../../vendor/cordis/src/fiber.ts#L126)
 
 ## CordisError
 
@@ -399,7 +407,7 @@ namespace CordisError {
 }
 ```
 
-[Source](../../vendor/cordis/src/fiber.ts#L157)
+[Source](../../vendor/cordis/src/fiber.ts#L188)
 
 ## ValidationError
 
@@ -413,9 +421,33 @@ class ValidationError extends TypeError {
   /**
    * Build the aggregated message from schema issues.
    *
-   * @param issues — the standard-schema issues, one message line each.
+   * @param issues — the standard-schema issues, one message line each; kept on the error.
    */
-  constructor(issues: readonly StandardSchemaV1.Issue[])
+  constructor(public issues: readonly StandardSchemaV1.Issue[])
+
+  /**
+   * Recognize a validation error across realms and copies of cordis.
+   *
+   * @param error — the value to test.
+   * @returns `true` if `error` carries the global validation-error brand.
+   */
+  static is(error: unknown): error is ValidationError
+
+  /**
+   * Reduce an issue path to its property keys.
+   *
+   * @param path — the standard-schema issue path, whose segments may be `{ key }` objects.
+   * @returns the plain property keys, outermost first.
+   */
+  static normalizePath(path: StandardSchemaV1.Issue['path'] = []): PropertyKey[]
+
+  /**
+   * Format an issue path for messages.
+   *
+   * @param path — the standard-schema issue path.
+   * @returns the keys joined with `.`, e.g. `nested.0.name`.
+   */
+  static formatPath(path: StandardSchemaV1.Issue['path']): string
 }
 ```
 

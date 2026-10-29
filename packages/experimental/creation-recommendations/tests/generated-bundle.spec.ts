@@ -14,14 +14,16 @@ it('admits new package rows and its exports, rejecting edits, duplicates, foreig
   await writeBundle(directory, name)
   await expect(validateGeneratedBundle(directory, name)).resolves.toBeUndefined()
   const patch = join(directory, 'cordis.patch.yml')
-  await writeFile(patch, JSON.stringify([{ insert: [{ id: name + ':client', name: name + '/client' }] }]))
+  await writeFile(patch, JSON.stringify([{ insert: [{ id: name + '-client', name: name + '/client' }] }]))
   await expect(validateGeneratedBundle(directory, name)).resolves.toBeUndefined()
   for (const rows of [
     [{ insert: [{ id: 'existing', name }] }],
-    [{ insert: [{ id: name + ':one', name: 'other-package' }] }],
-    [{ insert: [{ id: name + ':one', name }, { id: name + ':one', name }] }],
+    // Loader rejects the nested-path separator in ids, so the row would never start.
+    [{ insert: [{ id: name + ':one', name }] }],
+    [{ insert: [{ id: name + '-one', name: 'other-package' }] }],
+    [{ insert: [{ id: name + '-one', name }, { id: name + '-one', name }] }],
     [{ remove: 'existing' }], [], [{ insert: [] }],
-    [{ insert: [{ id: name + ':group', name, group: true, config: [{ id: 'existing-plugin', name }] }] }],
+    [{ insert: [{ id: name + '-group', name, group: true, config: [{ id: 'existing-plugin', name }] }] }],
   ]) {
     await writeFile(patch, JSON.stringify(rows))
     await expect(validateGeneratedBundle(directory, name)).rejects.toThrow()
@@ -41,13 +43,13 @@ it('accepts ordinary YAML but rejects custom tags, aliases, missing exports and 
   const name = '@dsh-local/view-yaml'
   await writeBundle(directory, name)
   const path = join(directory, 'cordis.patch.yml')
-  await writeFile(path, `- insert:\n    - id: '${name}:counter'\n      name: '${name}'\n`)
+  await writeFile(path, `- insert:\n    - id: '${name}-counter'\n      name: '${name}'\n`)
   await expect(validateGeneratedBundle(directory, name)).resolves.toBeUndefined()
   for (const text of [
     '- insert: !!js \'process.exit()\'',
     '- insert: !include other.yml',
     `- insert: &rows [{id: '${name}:one', name: '${name}'}]\n- insert: *rows`,
-    JSON.stringify([{ insert: [{ id: name + ':one', name: name + '/missing' }] }]),
+    JSON.stringify([{ insert: [{ id: name + '-one', name: name + '/missing' }] }]),
   ]) {
     await writeFile(path, text)
     await expect(validateGeneratedBundle(directory, name)).rejects.toThrow()
@@ -89,7 +91,7 @@ it('checks explicit, default and legacy subpath entries and refuses source files
     await writeFile(join(directory, 'package.json'), JSON.stringify({ ...base, main }))
     await expect(validateGeneratedBundle(directory, name)).resolves.toBeUndefined()
   }
-  await writeFile(join(directory, 'cordis.patch.yml'), JSON.stringify([{ insert: [{ id: name + ':client', name: name + '/index.js' }] }]))
+  await writeFile(join(directory, 'cordis.patch.yml'), JSON.stringify([{ insert: [{ id: name + '-client', name: name + '/index.js' }] }]))
   await expect(validateGeneratedBundle(directory, name)).resolves.toBeUndefined()
   await writeBundle(directory, name)
   for (const exports of [null, { '.': './source.ts' }, { '.': './folder.js' }]) {

@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, it, onTestFinished, vi } from 'vitest'
 import type { Context } from '@deepseek-ai/cordis'
+import type { Include } from '@deepseek-ai/cordis-plugin-include'
 import Timer from '@deepseek-ai/cordis-plugin-timer'
 import { boot, initProfile, loadProfileDirectory, readProfilePatches, readProfileManifest, type ProfileContext } from '@deepseek-ai/dsh-app-boot'
 import Hmr from '@deepseek-ai/dsh-hmr'
@@ -71,8 +72,14 @@ it.each(['normal', 'consumer-unload'] as const)('enables through the real Loader
       actionCards: ActionCards, recommendations: Recommendations,
     })
   })
+  // The profile's Include watches its file through the HMR queue; the watcher's initial event refreshes it once.
+  const include = [...ctx.loader.entries()].find(entry => entry.options.name === 'cordis:include')?.subtree as Include | undefined
+  if (include === undefined) throw new Error('the profile Include is not mounted')
+  const includeRefresh = vi.spyOn(include, 'refresh')
   await ctx.plugin(Timer)
   await ctx.plugin(Hmr, { root: [], ignored: [], debounce: 0 })
+  // The queue below then holds only the operations this test starts.
+  await vi.waitFor(() => { expect(includeRefresh).toHaveBeenCalled() }, { timeout: 10_000 })
   await ctx.hmr.runExclusive(async () => {})
   expect([...ctx.loader.entries()].filter(entry => entry.options.id === 'action-cards')).toHaveLength(1)
   const model = new Model()

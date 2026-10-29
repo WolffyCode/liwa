@@ -40,11 +40,11 @@ type RemoteEventListener = (this: Context, ...args: unknown[]) => unknown
 
 /** Untyped access used only for instance-private Cordis event keys. */
 interface PrivateEventContext {
-  on(name: string, listener: RemoteEventListener): () => boolean
-  parallel(name: string, ...args: unknown[]): Promise<void>
+  on(name: string | symbol, listener: RemoteEventListener): () => boolean
+  parallel(name: string | symbol, ...args: unknown[]): Promise<void>
   waterfall(
     thisArg: Context,
-    name: string,
+    name: string | symbol,
     request: Readonly<Record<string, unknown>>,
     next: () => Promise<symbol>,
   ): unknown

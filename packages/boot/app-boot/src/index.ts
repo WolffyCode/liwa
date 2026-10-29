@@ -12,10 +12,9 @@ import { inspect, parseEnv } from 'node:util'
 import { captureStartupComposition, type StartupCompositionDiagnostic } from './startup-diagnostics.ts'
 export type { StartupCompositionDiagnostic, StartupPluginState, StartupServiceState } from './startup-diagnostics.ts'
 import { basename, dirname, isAbsolute, resolve } from 'node:path'
-import * as yaml from 'js-yaml'
 import { Context, type Fiber, type FiberState } from '@deepseek-ai/cordis'
 import Loader, { type Entry, type EntryGroup, type EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
-import Include, { applyEntryPatches, entryListSchema, type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
+import Include, { applyPatches, parseEntryYaml, stringifyEntryYaml, type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
 import Group from '@deepseek-ai/cordis-plugin-group'
 import { dshHomePath, resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import { createLaunchEnvironmentSnapshot, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
@@ -258,13 +257,6 @@ export function loadLayeredEnv(
 
 const bootstrapIncludes = new WeakMap<Context, Entry>()
 
-// The include's YAML dialect (`!!js` scalars become expression nodes the
-// Loader interpolates against each entry's injection-ready context), imported
-// from the include itself so patch parsing and config dumping can never drift
-// from what the include mounts. User patch layers share it so they may
-// reference `process.env`.
-const userPatchesSchema = entryListSchema
-
 /** What a caller of {@link recomposeProfile} already did and requires. */
 export interface ProfileRecompositionOptions {
   /** Explicit enablement targets whose existing failures also reject the recomposition. */
@@ -386,10 +378,13 @@ async function recompose(
     const prepared = prepareProfilePatches(ctx, patches, parentURL, binName)
     applying = true
     const retried = [...new Set([...running, ...withResolution ? [...ctx.loader.entries()].filter(importFailed) : []])]
+    // A row the generation re-creates receives a new options object and has already been started, or failed to
+    // import, by the generation itself; resuming only the rows it left untouched imports no row twice.
+    const previousOptions = new Map(retried.map(row => [row, row.options]))
     try {
       await entry.update({ config: { ...includeConfig, patches: prepared } })
     } finally {
-      await resume(ctx, retried)
+      await resume(ctx, retried.filter(row => row.options === previousOptions.get(row)))
     }
     const results = await Promise.allSettled(previousFibers.map(({ fiber }) => fiber.await()))
     await ctx.loader.await()
@@ -468,7 +463,7 @@ function rowIds(patches: readonly PatchOptions[]): Set<string> {
     }
   }
   // Patch warnings are logged when the generation itself is prepared.
-  visit(applyEntryPatches([], patches as PatchOptions[], () => {}))
+  visit(applyPatches([], [...patches], () => {}).data)
   return ids
 }
 
@@ -575,7 +570,9 @@ function parsePatchList(
 ): PatchOptions[] {
   let parsed: unknown
   try {
-    parsed = yaml.load(content, { schema: userPatchesSchema })
+    // The Include's own YAML dialect (`!!js` scalars become expression nodes the Loader interpolates against
+    // each entry's injection-ready context), so user patch layers may reference `process.env`.
+    parsed = parseEntryYaml(content)
   } catch (error) {
     throw new Error(`${binName}: failed to parse ${label} ${file}: ${String(error)}`)
   }
@@ -601,10 +598,10 @@ export interface ConfigDumpLayer {
 /**
  * Compose the configured entry list: parse the base config file with the
  * include's entry-list dialect, apply every layer's patches as ONE flattened
- * list through the include's own patch algorithm (`applyEntryPatches`) — the
+ * list through the include's own patch algorithm (`applyPatches`) — the
  * same call `boot()` makes, so even patch-visibility corner cases (a later
- * layer targeting a group child a plain config replacement introduced, which
- * the single-pass id index never sees) compose identically — then render the
+ * layer targeting a row an earlier layer inserted or a group config replaced)
+ * compose identically — then render the
  * result as YAML in the same dialect (`!!js` expressions print verbatim,
  * unevaluated). Row admission is a later stage: a plugin row the compatibility
  * policy denies still appears here, while a denied bundle contributes no layer.
@@ -644,7 +641,7 @@ export function renderConfigDump(
   }
   let parsed: unknown
   try {
-    parsed = yaml.load(content, { schema: entryListSchema })
+    parsed = parseEntryYaml(content)
   } catch (error) {
     throw new Error(`${binName}: failed to parse config ${absoluteConfigPath}: ${String(error)}`)
   }
@@ -655,21 +652,28 @@ export function renderConfigDump(
   // YAML parsing yields untyped rows; the include validates each entry
   // at mount, and the dump prints whatever the file holds, so `EntryOptions`
   // here is structural trust in the same file `boot()` would include.
-  const base = parsed as Parameters<typeof applyEntryPatches>[0]
+  const base = parsed as EntryOptions[]
   // snapshot_k = ONE application of layers 1..k flattened, using the exact
   // arguments boot passes for that prefix. snapshot_N is the mounted composition.
-  // The patches are cloned per call: applyEntryPatches detaches the entry
-  // list but pushes `insert` rows by reference from the patch list, so
-  // sharing patch objects across snapshot calls would leak a later
-  // snapshot's mutations into an earlier one's result.
-  const snapshot = (count: number, warnings: string[]): ReturnType<typeof applyEntryPatches> => {
-    const flattened = structuredClone(layers.slice(0, count).flatMap(layer => layer.patches))
-    return applyEntryPatches(base, flattened, (message: string, ...args: unknown[]) => {
+  // applyPatches clones the rows it mounts but gives ids to the rows of a group
+  // config a patch supplies on that patch itself, so every snapshot shares one
+  // clone of the patches: the ids stay stable across snapshots, and the
+  // caller's layers stay untouched.
+  const flattened = structuredClone(layers.flatMap(layer => layer.patches))
+  const prefixLengths: number[] = []
+  let patchCount = 0
+  for (const layer of layers) {
+    patchCount += layer.patches.length
+    prefixLengths.push(patchCount)
+  }
+  const snapshot = (count: number, warnings: string[]): EntryOptions[] => {
+    const prefix = flattened.slice(0, prefixLengths[count - 1])
+    return applyPatches(base, prefix, (message: string, ...args: unknown[]) => {
       // The include logs through cordis's printf-style logger (`%C` = code); a
       // dump has no logger, so substitute inline for a plain line.
       let index = 0
       warnings.push(message.replace(/%C/g, () => JSON.stringify(args[index++])))
-    })
+    }).data
   }
   let previous = base
   let previousWarnings: string[] = []
@@ -706,7 +710,7 @@ function groupedDump(
   const flush = (): void => {
     if (currentLabel === undefined || group.length === 0) return
     lines.push(`# == ${currentLabel}`)
-    lines.push(yaml.dump(group, { schema: entryListSchema, noRefs: true }).trimEnd())
+    lines.push(stringifyEntryYaml(group).trimEnd())
     group = []
   }
   for (let index = 0; index < composed.length; index += 1) {
@@ -1224,11 +1228,6 @@ export async function boot(
   try {
     ctx.baseUrl = pathToFileURL(dirname(absoluteConfigPath)).href + '/'
     ctx.provide('dshHomePath', dshHomePath)
-    // Fiber.update() discards the restart promise. Observe it before the
-    // waterfall returns; activation audits still report the failed fiber.
-    ctx.on('internal/update', (_config, _noSave, next: () => unknown) => {
-      void Promise.resolve(next()).catch((error: unknown) => { ctx.logger.error(error) })
-    }, { global: true, prepend: true })
     await ctx.plugin(Loader)
     await prepare?.(ctx)
     stage = 'plugin tree failed to load'

@@ -17,7 +17,8 @@ fiber 是一个已加载的插件实例，包含其生命周期状态、经过�
  * run (in reverse order) either when the returned disposer is called or
  * when the fiber unloads, whichever comes first. Calling the disposer twice
  * is a no-op. Throws `CordisError('INACTIVE_EFFECT')` if the fiber is
- * already disposed, and `TypeError` if `execute` returns an invalid shape.
+ * already disposed or unloading, and `TypeError` if `execute` returns an
+ * invalid shape.
  *
  * @param execute — the effect body; see {@link Effect} for accepted shapes.
  * @param label — effect label shown in `getEffects()` diagnostics.
@@ -29,14 +30,14 @@ effect(execute: () => Effect, label?: string): AsyncDisposable<Promise<void>>
 
 在此 fiber 上注册一个支持清理的作用。
 
-`execute` 会立即运行；它产生的清理函数将被收集，并在调用返回的清理函数或卸载 fiber 时按相反顺序运行，以先发生者为准。重复调用清理函数不会产生任何效果。如果 fiber 已经 dispose（资源释放），则抛出 `CordisError('INACTIVE_EFFECT')`；如果结构无效，则抛出 `TypeError`，表示 `execute` 返回了不受支持的结果。
+`execute` 会立即运行；它产生的清理函数将被收集，并在调用返回的清理函数或卸载 fiber 时按相反顺序运行，以先发生者为准。重复调用清理函数不会产生任何效果。如果 fiber 已经 dispose（资源释放）或正在卸载，则抛出 `CordisError('INACTIVE_EFFECT')`；如果 `execute` 返回了不受支持的结构，则抛出 `TypeError`。
 
 - `execute`：作用主体；可接受的结构见 `Effect`。
 - `label`：在 `getEffects()` 诊断信息中显示的作用标签。
 
-**返回**一个用于撤销该作用的清理函数，并在清理完成后结算。
+**返回**一个清理函数，它拆除该作用，并在完成后结算。
 
-[源码](../../vendor/cordis/src/fiber.ts#L415)
+[源码](../../vendor/cordis/src/fiber.ts#L452)
 
 ### ctx.fiber
 
@@ -55,7 +56,7 @@ fiber: Fiber
 
 fiber 会跟踪 `ctx.plugin()` 返回的插件上下文所对应的依赖状态、经过校验的配置、生命周期作用和清理操作。
 
-[源码](../../vendor/cordis/src/fiber.ts#L184)
+[源码](../../vendor/cordis/src/fiber.ts#L215)
 
 ### fiber.uid
 
@@ -66,7 +67,7 @@ public uid: number | null
 
 在注册表中的唯一 id；根 fiber 的 id 为 0，dispose 后为 `null`。
 
-[源码](../../vendor/cordis/src/fiber.ts#L186)
+[源码](../../vendor/cordis/src/fiber.ts#L217)
 
 ### fiber.ctx
 
@@ -77,18 +78,21 @@ public readonly ctx: Context
 
 此 fiber 的插件运行所在的上下文（扩展自父上下文）。
 
-[源码](../../vendor/cordis/src/fiber.ts#L188)
+[源码](../../vendor/cordis/src/fiber.ts#L219)
 
 ### fiber.config
 
 ```ts cordis-catalog
-/** The validated plugin config (updated by `update()`); read through {@link effectiveConfig}. */
+/**
+ * The raw plugin config, retained without evaluating expressions or validating it.
+ * Every activation resolves it through `internal/config`; `update()` replaces it. Read the value passed to the running instance through {@link effectiveConfig}.
+ */
 public config: any
 ```
 
-经过校验的插件配置（由 `update()` 更新）；通过 `effectiveConfig` 读取。
+原始插件配置，保留时不做表达式求值，也不做校验。每次激活都会经 `internal/config` 解析它；`update()` 会替换它。传给运行实例的值通过 effectiveConfig 读取。
 
-[源码](../../vendor/cordis/src/fiber.ts#L190)
+[源码](../../vendor/cordis/src/fiber.ts#L224)
 
 ### fiber.state
 
@@ -99,7 +103,7 @@ public state
 
 当前生命周期状态；状态转换会发出 `internal/status`。
 
-[源码](../../vendor/cordis/src/fiber.ts#L194)
+[源码](../../vendor/cordis/src/fiber.ts#L226)
 
 ### fiber.dispose
 
@@ -110,18 +114,29 @@ public readonly dispose: () => Promise<void>
 
 dispose 此 fiber：卸载插件，并在清理完成后结算。
 
-[源码](../../vendor/cordis/src/fiber.ts#L196)
+[源码](../../vendor/cordis/src/fiber.ts#L228)
 
-### fiber.store
+### fiber.committed
 
 ```ts cordis-catalog
-/** Snapshot of required service implementations while loaded; `undefined` otherwise. */
-public store: Dict<Impl> | undefined
+/** Snapshot of the required service implementations taken for the current load; `undefined` while unloaded. */
+public committed: Readonly<Dict<Impl>> | undefined
 ```
 
-加载期间所需服务实现的快照；其他情况下为 `undefined`。
+为本次加载取得的所需服务实现快照；未加载时为 `undefined`。
 
-[源码](../../vendor/cordis/src/fiber.ts#L198)
+[源码](../../vendor/cordis/src/fiber.ts#L230)
+
+### fiber.provisions
+
+```ts cordis-catalog
+/** Service implementations this fiber provides; its effects outlive them until every dependent has unloaded. */
+public readonly provisions
+```
+
+此 fiber 提供的服务实现；在所有依赖方卸载之前，它的作用会一直保留。
+
+[源码](../../vendor/cordis/src/fiber.ts#L232)
 
 ### fiber.inertia
 
@@ -132,7 +147,7 @@ public inertia: Promise<void> | undefined
 
 当前正在进行的加载或卸载转换；如果没有此类转换，则为 undefined。
 
-[源码](../../vendor/cordis/src/fiber.ts#L200)
+[源码](../../vendor/cordis/src/fiber.ts#L234)
 
 ### fiber.name
 
@@ -143,7 +158,7 @@ get name()
 
 插件的显示名称，继承自最近的具名祖先；如果不存在，则为 `'root'`。
 
-[源码](../../vendor/cordis/src/fiber.ts#L336)
+[源码](../../vendor/cordis/src/fiber.ts#L372)
 
 ### fiber.assertActive()
 
@@ -161,7 +176,7 @@ assertActive()
 
 **返回**：fiber 仍处于活动状态时不返回任何内容。
 
-[源码](../../vendor/cordis/src/fiber.ts#L351)
+[源码](../../vendor/cordis/src/fiber.ts#L387)
 
 ### fiber.effect(execute, label?)
 
@@ -173,7 +188,8 @@ assertActive()
  * run (in reverse order) either when the returned disposer is called or
  * when the fiber unloads, whichever comes first. Calling the disposer twice
  * is a no-op. Throws `CordisError('INACTIVE_EFFECT')` if the fiber is
- * already disposed, and `TypeError` if `execute` returns an invalid shape.
+ * already disposed or unloading, and `TypeError` if `execute` returns an
+ * invalid shape.
  *
  * @param execute — the effect body; see {@link Effect} for accepted shapes.
  * @param label — effect label shown in `getEffects()` diagnostics.
@@ -185,14 +201,14 @@ effect(execute: () => Effect, label?: string): AsyncDisposable<Promise<void>>
 
 在此 fiber 上注册一个支持清理的作用。
 
-`execute` 会立即运行；它产生的清理函数将被收集，并在调用返回的清理函数或卸载 fiber 时按相反顺序运行，以先发生者为准。重复调用清理函数不会产生任何效果。如果 fiber 已经 dispose，则抛出 `CordisError('INACTIVE_EFFECT')`；如果结构无效，则抛出 `TypeError`，表示 `execute` 返回了不受支持的结果。
+`execute` 会立即运行；它产生的清理函数将被收集，并在调用返回的清理函数或卸载 fiber 时按相反顺序运行，以先发生者为准。重复调用清理函数不会产生任何效果。如果 fiber 已经 dispose（资源释放）或正在卸载，则抛出 `CordisError('INACTIVE_EFFECT')`；如果 `execute` 返回了不受支持的结构，则抛出 `TypeError`。
 
 - `execute`：作用主体；可接受的结构见 `Effect`。
 - `label`：在 `getEffects()` 诊断信息中显示的作用标签。
 
-**返回**一个用于撤销该作用的清理函数，并在清理完成后结算。
+**返回**一个清理函数，它拆除该作用，并在完成后结算。
 
-[源码](../../vendor/cordis/src/fiber.ts#L415)
+[源码](../../vendor/cordis/src/fiber.ts#L452)
 
 ### fiber.getEffects()
 
@@ -209,54 +225,43 @@ getEffects()
 
 **返回**：每个带标签的活动作用对应一棵 `EffectMeta` 树。
 
-[源码](../../vendor/cordis/src/fiber.ts#L568)
-
-### fiber.rawConfig
-
-```ts cordis-catalog
-/** Raw input retained for the next activation, without evaluating expressions or validating it. */
-get rawConfig(): unknown
-```
-
-保留供下次激活使用的原始输入，不执行表达式求值或验证。
-
-[源码](../../vendor/cordis/src/fiber.ts#L642)
+[源码](../../vendor/cordis/src/fiber.ts#L605)
 
 ### fiber.effectiveConfig
 
 ```ts cordis-catalog
 /**
- * The config object published by the existing activation/update lifecycle, without cloning or re-parsing.
- * It is undefined before the first resolution and remains readable after unload; callers requiring a live instance check `state`.
+ * The resolved config object passed to the plugin by its latest activation, without cloning or re-parsing.
+ * It is undefined before the first activation and remains readable after unload; callers requiring a live instance check `state`.
  */
 get effectiveConfig(): unknown
 ```
 
-既有激活／更新生命周期发布的配置对象，不克隆或重新解析。首次解析前为 undefined，卸载后仍可读取；需要运行实例的调用方应检查 `state`。
+最近一次激活传给插件的已解析配置对象，不克隆也不重新解析。首次激活前为 undefined，卸载后仍可读取；需要运行实例的调用方应检查 `state`。
 
-[源码](../../vendor/cordis/src/fiber.ts#L655)
+[源码](../../vendor/cordis/src/fiber.ts#L683)
 
 ### fiber.resolveConfig(config)
 
 ```ts cordis-catalog
 /**
- * Evaluate and validate a candidate using this fiber's `internal/config` hooks and runtime schema.
- * Does not publish the result, replace raw input, or commit running volatile references.
+ * Resolve raw config through this fiber's `internal/config` waterfall, which ends in the runtime schema's validation.
+ * Activation and `update()` resolve through it; a candidate resolved by other callers is not published and does not replace {@link config}.
  * Required injections must be available when a hook uses them.
- * @param config Raw candidate input.
- * @returns The candidate's resolved config, retaining the schema's result identity.
- * @throws {ValidationError} when the runtime schema rejects the candidate; hook errors propagate.
+ * @param config Raw config.
+ * @returns The resolved config, retaining the schema's result identity.
+ * @throws {ValidationError} when the runtime schema rejects the config; hook errors propagate.
  */
 resolveConfig(config: unknown): unknown
 ```
 
-通过此 fiber 的 `internal/config` 钩子和运行时 schema 对候选值求值并验证。此操作不发布结果、不替换原始输入，也不提交运行中的 volatile 引用。钩子访问的注入服务必须已经可用。
+通过此 fiber 的 `internal/config` waterfall（瀑布式事件）解析原始配置，waterfall 最终由运行时 schema 校验。激活和 `update()` 都经它解析；其他调用方解析的候选值不会被发布，也不会替换 config。钩子使用的注入服务必须已经可用。
 
-- `config`：原始候选输入。
+- `config`：原始配置。
 
-**返回**候选配置的解析结果，保留 schema 返回对象的身份。
+**返回**解析后的配置，保留 schema 返回对象的身份。
 
-[源码](../../vendor/cordis/src/fiber.ts#L667)
+[源码](../../vendor/cordis/src/fiber.ts#L695)
 
 ### fiber.await()
 
@@ -274,53 +279,56 @@ async await()
 
 **返回**：进入稳定状态后的此 fiber。
 
-[源码](../../vendor/cordis/src/fiber.ts#L731)
+[源码](../../vendor/cordis/src/fiber.ts#L773)
 
 ### fiber.restart()
 
 ```ts cordis-catalog
 /**
- * Dispose and immediately reload this plugin with its current config.
+ * Unload and reload this plugin with its current raw config, which is resolved again.
  *
  * @returns a promise resolving once the reload settled.
  * @throws {CordisError} `INACTIVE_EFFECT` when the fiber is already disposed.
  */
-async restart()
+async restart(): Promise<void>
 ```
 
-dispose 此插件，并立即使用其当前配置重新加载。
+卸载并重新加载此插件，使用其当前的原始配置，并重新解析。
 
 **返回**一个在重新加载完成后兑现的 promise。
 
-[源码](../../vendor/cordis/src/fiber.ts#L745)
+[源码](../../vendor/cordis/src/fiber.ts#L787)
 
 ### fiber.update(config, noSave?)
 
 ```ts cordis-catalog
 /**
- * Validate and apply new config, then restart the plugin.
+ * Replace the raw config, then restart the plugin with it.
  *
- * Runs the `internal/update` waterfall first, so update hooks (and HMR)
- * can veto or replace the restart.
+ * A loaded fiber resolves the candidate first, so an invalid config throws
+ * before anything changes, and runs the `internal/update` waterfall, whose
+ * listeners (e.g. Group, Include) can apply it in place instead of
+ * restarting. Unless `noSave`, `internal/commit` reports the accepted raw
+ * config to persistence hooks.
  *
- * @param config — the new raw config; validated before anything restarts.
- * @param noSave — hint for persistence hooks not to write the change back.
- * @returns nothing; the restart runs behind the `internal/update` waterfall.
- * @throws {ValidationError} when the new config fails validation.
+ * @param config — the new raw config.
+ * @param noSave — skip `internal/commit`, e.g. when the config came from the persisted source itself.
+ * @returns the restart or the listener's replacement work, or nothing when a listener vetoed synchronously.
+ * @throws {ValidationError} when a loaded fiber's candidate fails validation.
  */
-update(config: any, noSave = false)
+update(config: any, noSave = false): Awaitable<void>
 ```
 
-校验并应用新配置，然后重新启动插件。
+替换原始配置，然后用它重新启动插件。
 
-首先运行 `internal/update` waterfall（瀑布式事件），因此更新钩子（以及 HMR（热模块替换））可以否决或取代重新启动操作。
+已加载的 fiber 会先解析候选配置，因此无效配置会在任何改动发生前抛出；随后运行 `internal/update` waterfall，其监听器（例如 Group、Include）可以就地应用新配置而不重新启动。除非指定 `noSave`，`internal/commit` 会把被接受的原始配置报告给持久化钩子。
 
-- `config`：新的原始配置；在任何内容重新启动前进行校验。
-- `noSave`：提示持久化钩子不要写回此变更。
+- `config`：新的原始配置。
+- `noSave`：跳过 `internal/commit`，例如配置本身就来自持久化来源时。
 
-**返回**无返回值；重启由 `internal/update` waterfall 执行。
+**返回**重新启动的任务或监听器替代执行的工作；监听器同步否决时无返回值。
 
-[源码](../../vendor/cordis/src/fiber.ts#L764)
+[源码](../../vendor/cordis/src/fiber.ts#L809)
 
 ## Effect
 
@@ -341,7 +349,7 @@ type Effect<T = any> =
   | AsyncEffect<T>
 ```
 
-[源码](../../vendor/cordis/src/fiber.ts#L83)
+[源码](../../vendor/cordis/src/fiber.ts#L113)
 
 ## Disposable
 
@@ -359,7 +367,7 @@ type Effect<T = any> =
 type Disposable<T = any> = () => T
 ```
 
-[源码](../../vendor/cordis/src/fiber.ts#L74)
+[源码](../../vendor/cordis/src/fiber.ts#L104)
 
 ## EffectMeta
 
@@ -375,7 +383,7 @@ interface EffectMeta {
 }
 ```
 
-[源码](../../vendor/cordis/src/fiber.ts#L96)
+[源码](../../vendor/cordis/src/fiber.ts#L126)
 
 ## CordisError
 
@@ -401,7 +409,7 @@ namespace CordisError {
 }
 ```
 
-[源码](../../vendor/cordis/src/fiber.ts#L157)
+[源码](../../vendor/cordis/src/fiber.ts#L188)
 
 ## ValidationError
 
@@ -415,9 +423,33 @@ class ValidationError extends TypeError {
   /**
    * Build the aggregated message from schema issues.
    *
-   * @param issues — the standard-schema issues, one message line each.
+   * @param issues — the standard-schema issues, one message line each; kept on the error.
    */
-  constructor(issues: readonly StandardSchemaV1.Issue[])
+  constructor(public issues: readonly StandardSchemaV1.Issue[])
+
+  /**
+   * Recognize a validation error across realms and copies of cordis.
+   *
+   * @param error — the value to test.
+   * @returns `true` if `error` carries the global validation-error brand.
+   */
+  static is(error: unknown): error is ValidationError
+
+  /**
+   * Reduce an issue path to its property keys.
+   *
+   * @param path — the standard-schema issue path, whose segments may be `{ key }` objects.
+   * @returns the plain property keys, outermost first.
+   */
+  static normalizePath(path: StandardSchemaV1.Issue['path'] = []): PropertyKey[]
+
+  /**
+   * Format an issue path for messages.
+   *
+   * @param path — the standard-schema issue path.
+   * @returns the keys joined with `.`, e.g. `nested.0.name`.
+   */
+  static formatPath(path: StandardSchemaV1.Issue['path']): string
 }
 ```
 

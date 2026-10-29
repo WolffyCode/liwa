@@ -9,12 +9,12 @@ import { basename, dirname, extname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { JSDOM } from 'jsdom'
 import ts from 'typescript'
-import { applyEntryPatches, type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
+import { applyPatches, parseEntryYaml, type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
 import type { EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
 import { loadOverlayPatches } from '../packages/boot/app-boot/src/index.ts'
 import { bundlePatchPaths, composeEntries } from '../packages/boot/app-boot/src/profile.ts'
 import type { DshBundleManifest } from '../packages/util/package-manifest/src/types.ts'
-import { isAgentPresetEntry, isCordisGroupEntry, loadCordisYaml } from './cordis-yaml.ts'
+import { isAgentPresetEntry, isCordisGroupEntry } from './cordis-yaml.ts'
 import {
   collectRuntimeLocalSourceSpecifiers,
   collectRuntimeSourceSpecifiers,
@@ -214,12 +214,12 @@ export function verifyDefaultProductIsolation(root: string): ProductIsolationRes
           if (existsSync(filename) || initial === undefined) scanConfig(filename)
           return
         }
-        const content = existsSync(filename) ? loadCordisYaml(readFileSync(filename, 'utf8')) : initial
+        const content = existsSync(filename) ? parseEntryYaml(readFileSync(filename, 'utf8')) : initial
         if (!Array.isArray(content)) {
           failures.push(`${display(filename)}: included composition must contain an entry array`)
           return
         }
-        const entries = applyEntryPatches(content as EntryOptions[], entry.config.patches as PatchOptions[] | undefined, () => {})
+        const entries = applyPatches(content as EntryOptions[], entry.config.patches as PatchOptions[] | undefined).data
         scanEntries(entries, filename, true, nestedStack)
       }
     }
@@ -228,7 +228,7 @@ export function verifyDefaultProductIsolation(root: string): ProductIsolationRes
   const scanConfig = (path: string): void => {
     if (configs.has(path)) return
     configs.add(path)
-    const document = loadCordisYaml(readFileSync(path, 'utf8'))
+    const document = parseEntryYaml(readFileSync(path, 'utf8'))
     if (!Array.isArray(document)) {
       failures.push(`${display(path)}: shipped composition must contain an entry array`)
       return

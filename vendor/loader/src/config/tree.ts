@@ -1,8 +1,62 @@
 import { composeError, Context } from '@deepseek-ai/cordis'
 import { isNonNullable, type Dict } from '@deepseek-ai/cosmokit'
+import url from 'node:url'
 import { Entry, type EntryOptions } from './entry.ts'
 import { EntryGroup } from './group.ts'
+import { EntryValidationError, validateOptions, type SourceLocation } from './utils.ts'
 import { createResolve } from '../resolve.ts'
+
+// A Windows drive-letter path, e.g. `C:\app\plugin.js` or `C:/app/plugin.js`.
+const driveLetter = /^[A-Za-z]:[\\/]/
+
+// Node names the modules only in the message:
+// `Cannot find (module|package) '<target>' imported from <parent>`
+function parseNotFound(error: any) {
+  if (error?.code !== 'ERR_MODULE_NOT_FOUND' || typeof error.message !== 'string') return
+  // later lines are hints, e.g. `Did you mean to import ...?`
+  const [first, ...hints] = error.message.split('\n') as string[]
+  const match = first.match(/^(Cannot find (?:module|package) '.*') imported from (.*)$/)
+  if (match) return { description: match[1], parent: match[2], hints }
+}
+
+function toPath(href: string) {
+  try {
+    return href.startsWith('file:') ? url.fileURLToPath(href) : href
+  } catch {
+    return href
+  }
+}
+
+/** A plugin module named by an entry could not be found; the message names the entry specifier rather than Node's resolver frames. */
+export class ModuleNotFoundError extends Error {
+  name = 'ModuleNotFoundError'
+  code = 'ERR_MODULE_NOT_FOUND'
+
+  /**
+   * @param specifier - the entry's module specifier.
+   * @param message - Node's description and hints, without the importing file.
+   */
+  constructor(public specifier: string, message: string) {
+    super(message)
+  }
+}
+
+/**
+ * One tree-side mutation, reported to `EntryTree.commit()` synchronously after
+ * it has been applied to `entry.options` / `group.data`.
+ *
+ * - `options` absent: the entry was removed from `group`.
+ * - `legacy` absent: the entry was created in `group`.
+ * - both present: the entry was updated and now lives in `group`; `from` is
+ *   the group it left if the update moved it.
+ */
+export interface EntryChange {
+  id: string
+  group: EntryGroup
+  from?: EntryGroup
+  options?: EntryOptions
+  legacy?: EntryOptions
+}
 
 /** Mutable tree of loader entries. Persistence is supplied by subclasses. */
 export abstract class EntryTree {
@@ -82,31 +136,45 @@ export abstract class EntryTree {
   /** Create an entry in the root group or a nested group. */
   async create(options: Omit<EntryOptions, 'id'>, parent: string | null = null, position = Infinity) {
     const group = this.resolveGroup(parent)
+    const issues = validateOptions(options, EntryTree.sep, true)
+    if (issues.length) throw new EntryValidationError(issues)
+    const id = group.tree.ensureId(options)
     group.data.splice(position, 0, options as EntryOptions)
-    group.tree.write()
+    group.tree.commit({ id, group, options: options as EntryOptions })
     return group.create(options)
   }
 
   /** Stop and remove an entry from its parent group. */
   remove(id: string) {
     const entry = this.resolve(id)
-    entry.parent.remove(id)
-    entry.parent.tree.write()
+    const group = entry.parent
+    const legacy = entry.options
+    group.remove(legacy.id)
+    group.tree.commit({ id: legacy.id, group, legacy })
   }
 
   /** Update an entry and optionally move it to another group. */
   async update(id: string, options: Omit<EntryOptions, 'id' | 'name'>, parent?: string | null, position?: number) {
     const entry = this.resolve(id)
     const source = entry.parent
+    const legacy = { ...entry.options }
+    const issues = validateOptions(Entry.merge({ ...legacy }, options), EntryTree.sep, true)
+    if (issues.length) throw new EntryValidationError(issues)
     if (parent !== undefined) {
       const target = this.resolveGroup(parent)
       source.unlink(entry.options)
       target.data.splice(position ?? Infinity, 0, entry.options)
-      target.tree.write()
       entry.parent = target
     }
-    source.tree.write()
-    return entry.update(options, false, true)
+    // `Entry.update` assigns the new options before its first `await`, so the
+    // change is fully visible to `commit()` once the call returns.
+    const task = entry.update(options, false, true)
+    if (entry.parent.tree !== source.tree) {
+      source.tree.commit({ id: legacy.id, group: source, legacy })
+    }
+    const from = entry.parent === source ? undefined : source
+    entry.parent.tree.commit({ id: legacy.id, group: entry.parent, from, options: entry.options, legacy })
+    return task
   }
 
   /** Import a plugin module from a specifier or `cordis:` builtin. */
@@ -114,23 +182,70 @@ export abstract class EntryTree {
     if (name.startsWith('cordis:')) {
       return this.ctx.loader.builtins[name.slice(7)]
     }
+    // On Windows, a drive-letter path is converted with `pathToFileURL`.
+    if (process.platform === 'win32' && driveLetter.test(name)) {
+      name = url.pathToFileURL(name).href
+    }
+    // to tell `name` apart from a module it imports
+    let parent: string | undefined
+    // the helper resolves `name` only
+    let unresolved: unknown
     return composeError(async (info) => {
       // ModuleJob.run
       // onImport.tracePromise.__proto__
       // internal.import
       info.offset += 3
       if (this.ctx.loader.internal) {
-        return await this.ctx.loader.internal.import(name, this.ctx.baseUrl!, {})
+        parent = this.ctx.baseUrl!
+        return await this.ctx.loader.internal.import(name, parent, {})
       } else if (name.startsWith('.')) {
-        return await import(/* @vite-ignore */new URL(name, this.ctx.baseUrl).href)
+        parent = import.meta.url
+        return await import(/* @vite-ignore */ new URL(name, this.ctx.baseUrl).href)
       } else {
+        // An `import()` written here anchors on this file, reaching the loader's
+        // own dependencies. A helper inside the config file's project supplies
+        // that project as the anchor; the plain import applies when no project
+        // can be located.
         const resolve = await createResolve(this.ctx.baseUrl)
-        const url = resolve ? resolve(name) : name
-        return await import(/* @vite-ignore */ url)
+        let specifier = name
+        if (resolve) {
+          try {
+            specifier = resolve(name)
+          } catch (error) {
+            unresolved = error
+            throw error
+          }
+        }
+        parent = import.meta.url
+        return await import(/* @vite-ignore */ specifier)
       }
-    }, getOuterStack)
+    }, getOuterStack).catch((error: unknown) => {
+      const notFound = parseNotFound(error)
+      if (!notFound) throw error
+      if (error !== unresolved && (!parent || notFound.parent !== toPath(parent))) throw error
+      const result = new ModuleNotFoundError(name, [notFound.description, ...notFound.hints].join('\n'))
+      const frames = getOuterStack?.() ?? []
+      // Node's frames are those of its resolver
+      if (frames.length) result.stack = [`${result.name}: ${result.message}`, ...frames].join('\n')
+      throw result
+    })
   }
 
-  /** Persist current tree state. In-memory trees may implement this as a no-op. */
-  abstract write(): void
+  /**
+   * Accept one tree-side change, called synchronously once it is applied to `entry.options` / `group.data`.
+   * Persistent trees record it for writing; in-memory trees may implement this as a no-op.
+   * @param change - the applied change.
+   */
+  abstract commit(change: EntryChange): void
+
+  /**
+   * Where a value of the entry options is written. A path that leaves the
+   * source falls back to its deepest written ancestor.
+   * @param _id - the entry id within this tree.
+   * @param _path - property path below the entry options.
+   * @returns the source location, or `undefined` for a tree without a source.
+   */
+  getLocation(_id: string, _path: PropertyKey[]): SourceLocation | undefined {
+    return undefined
+  }
 }

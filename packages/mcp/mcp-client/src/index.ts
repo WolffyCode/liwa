@@ -13,7 +13,7 @@
  * @module @deepseek-ai/dsh-mcp-client
  */
 
-import type { Context } from '@deepseek-ai/cordis'
+import { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { scopeOf } from '@deepseek-ai/dsh-scope'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
@@ -160,7 +160,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   // Reserve the namespace next: a duplicate `serverName` fails THIS instance
   // at load with an actionable error and leaves the earlier instance intact.
   ctx.effect(() => {
-    const owner = scopeOf(ctx) ?? ctx.root
+    const owner = scopeOf(ctx) ?? ctx[Context.root]
     let names = activeServerNames.get(owner)
     if (!names) {
       names = new Set()

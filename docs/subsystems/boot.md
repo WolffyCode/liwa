@@ -171,6 +171,17 @@ runExclusive<T>(operation: () => Promise<T>): Promise<T>
  */
 async watchConfig(filename: string, refresh: () => Promise<void>): Promise<() => Promise<void>>
 
+/**
+ * Watch one file through the reload queue: the `ctx.hmr.watch()` contract of `@deepseek-ai/cordis-plugin-hmr`,
+ * which Include uses to refresh its config file. The callback runs for additions, changes and removals once the
+ * application is ready, serialized with module replacement and profile reloads; the path is watched even outside
+ * {@link HmrConfig.root}.
+ * @param path Absolute path, `file:` URL, or path relative to {@link baseDir}.
+ * @param callback Change handler, awaited inside the queue.
+ * @returns Disposer of the caller-owned effect, ending the watch after its pending callback settles.
+ */
+watch(path: string | URL, callback: () => void | Promise<void>): () => Promise<void>
+
 /** Read direct module dependency URLs from the active Node loader.
  * @param url Module URL.
  * @returns Linked module URLs, or an empty list for an uncached module.

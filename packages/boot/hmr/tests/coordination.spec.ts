@@ -107,7 +107,7 @@ it('can dispose HMR from its own transaction without waiting on itself', async (
 })
 
 
-it('refreshes an Include through the queue and skips registered exact paths', async () => {
+it('refreshes an Include through its own exact watch and keeps module-root changes of that path out', async () => {
   const { ctx, dir, hmr } = await fixture()
   const moduleWatcher = watchers.at(-1)!
   const file = join(dir, 'nested.yml')
@@ -118,19 +118,18 @@ it('refreshes an Include through the queue and skips registered exact paths', as
   await ctx.loader.await()
   const include = ctx.loader.resolve(id).subtree as Include
   const refresh = vi.spyOn(include, 'refresh')
-  moduleWatcher.emit('change', file)
-  await vi.waitFor(() => { expect(refresh).toHaveBeenCalledOnce() })
-  await hmr.runExclusive(async () => {})
-  const refreshed = Promise.withResolvers<undefined>()
-  const registered = await hmr.watchConfig(file, async () => { refreshed.resolve(undefined) })
+  // The Include registers its file through `ctx.hmr.watch()`, which opens one exact watcher.
+  await vi.waitFor(() => { expect(watchers.at(-1)).not.toBe(moduleWatcher) })
+  const exact = watchers.at(-1)!
   const observed = Promise.withResolvers<string>()
   ctx.on('hmr/change', (url) => { observed.resolve(url) })
   moduleWatcher.emit('change', file)
   moduleWatcher.emit('change', 'ack.txt')
-  await observed.promise
-  watchers.at(-1)!.emit('change', file)
-  await refreshed.promise
-  await registered()
+  expect(await observed.promise).toBe(pathToFileURL(join(realpathSync(dir), 'ack.txt')).href)
+  await hmr.runExclusive(async () => {})
+  expect(refresh).not.toHaveBeenCalled()
+  exact.emit('change', file)
+  await vi.waitFor(() => { expect(refresh).toHaveBeenCalledOnce() })
   await hmr.runExclusive(async () => {})
   expect(refresh).toHaveBeenCalledOnce()
 })
@@ -218,8 +217,7 @@ it('rebinds configuration handlers when its provider is reconfigured within a re
   })
   await binding.await()
   await hmr.runExclusive(async () => {
-    provider.update({ root: [], ignored: [], debounce: 1 })
-    await provider.await()
+    await provider.update({ root: [], ignored: [], debounce: 1 })
     await binding.await()
   })
   expect(ctx.hmr).not.toBe(hmr)

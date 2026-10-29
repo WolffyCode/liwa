@@ -14,10 +14,12 @@ import { globSync, readFileSync } from 'node:fs'
 import { dirname, relative, resolve } from 'node:path'
 import { Script } from 'node:vm'
 import ts from 'typescript'
+import { parseEntryYaml } from '@deepseek-ai/cordis-plugin-include'
+import { isJsExpr } from '@deepseek-ai/cordis-plugin-loader'
 import type { DshBundleManifest } from '../packages/util/package-manifest/src/types.ts'
 import { bundlePatchFiles, bundlePatchPaths } from '../packages/boot/app-boot/src/profile.ts'
 import { cordisConfigFiles } from './cordis-config-files.ts'
-import { isAgentPresetEntry, presetDefinitions, isCordisGroupEntry, isJsExpr, loadCordisYaml } from './cordis-yaml.ts'
+import { isAgentPresetEntry, presetDefinitions, isCordisGroupEntry } from './cordis-yaml.ts'
 
 export interface PackageManifest {
   name?: string
@@ -63,7 +65,7 @@ if (import.meta.main) {
   const files = cordisConfigFiles(root)
 
   for (const file of files) {
-    const document = loadCordisYaml(readFileSync(resolve(root, file), 'utf8'))
+    const document = parseEntryYaml(readFileSync(resolve(root, file), 'utf8'))
     if (!isUnknownArray(document)) {
       errors.push(`${file}: root must be a Loader entry array`)
       continue
@@ -168,7 +170,7 @@ function validatePresetPlaneSeparation(): string[] {
 
 /** Every entry of one config file, or an empty list when it is not an entry array. */
 function loadEntries(file: string): unknown[] {
-  const document = loadCordisYaml(readFileSync(resolve(root, file), 'utf8'))
+  const document = parseEntryYaml(readFileSync(resolve(root, file), 'utf8'))
   return isUnknownArray(document) ? document : []
 }
 

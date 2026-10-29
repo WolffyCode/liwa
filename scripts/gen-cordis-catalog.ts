@@ -955,6 +955,7 @@ export const FOUNDATION_TYPE_NAMES: ReadonlySet<string> = new Set([
   'ReadonlySet',
   'Request',
   'Response',
+  'URL',
   'IncomingMessage',
   'ServerResponse',
   'ReturnType',

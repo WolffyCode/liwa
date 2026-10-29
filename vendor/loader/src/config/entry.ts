@@ -1,9 +1,9 @@
-import { Context, Fiber, FiberState, Inject } from '@deepseek-ai/cordis'
+import { Context, Fiber, FiberState, Inject, ValidationError } from '@deepseek-ai/cordis'
 import { deepEqual, isNullable, updateVolatile, volatileEntries, type Volatile } from '@deepseek-ai/cosmokit'
 import { Loader } from '../index.ts'
 import { EntryGroup } from './group.ts'
-import { EntryTree } from './tree.ts'
-import { evaluate, isJsExpr } from './utils.ts'
+import { EntryTree, ModuleNotFoundError } from './tree.ts'
+import { evaluate, formatIssues, formatLocation, isJsExpr, relocate } from './utils.ts'
 import { equalExceptVolatile } from './diff.ts'
 
 /** Serialized plugin entry options stored in loader config files. */
@@ -53,11 +53,28 @@ export class Entry {
   public subgroup?: EntryGroup
   public subtree?: EntryTree
 
-  _initTask?: Promise<void>
+  _initTask?: Promise<void> | undefined
 
   constructor(public loader: Loader) {
     this.ctx = loader.ctx.extend({ [Entry.key]: this })
     this.context.emit('loader/entry-init', this)
+  }
+
+  /**
+   * Merge options into `target` in place; a nullish value deletes its key.
+   * @param target - the options to update.
+   * @param options - the changed fields.
+   * @returns `target`.
+   */
+  static merge(target: Partial<EntryOptions>, options: Partial<EntryOptions>) {
+    for (const [key, value] of Object.entries(options)) {
+      if (isNullable(value)) {
+        delete target[key]
+      } else {
+        target[key] = value
+      }
+    }
+    return target
   }
 
   get context(): Context {
@@ -72,38 +89,34 @@ export class Entry {
     return id
   }
 
-  /** True when this entry or any owning parent entry is disabled. */
+  private _resolveDisabled(options: EntryOptions): boolean {
+    return isJsExpr(options.disabled)
+      ? Boolean(this.evaluate(options.disabled.__jsExpr))
+      : Boolean(options.disabled)
+  }
+
+  /** True when this entry or any owning parent entry is disabled; a `!!js` value evaluates against the entry context. */
   get disabled() {
     // group is always enabled
     if (this.options.group) return false
     let entry: Entry | undefined = this
     do {
-      if (this.disabledOf(entry.options)) return true
+      if (this._resolveDisabled(entry.options)) return true
       entry = entry.parent.ctx.fiber.entry
     } while (entry)
     return false
-  }
-
-  /**
-   * Effective disabled state: a `!!js` expression evaluates against the loader
-   * context. The raw node stays in the options, so write-back keeps the form.
-   */
-  private disabledOf(options: EntryOptions): boolean {
-    return isJsExpr(options.disabled)
-      ? Boolean(this.evaluate(options.disabled.__jsExpr))
-      : Boolean(options.disabled)
   }
 
   evaluate(expr: string) {
     return evaluate(this.ctx, expr)
   }
 
-  private _patchContext(diff: string[]) {
-    this.context.waterfall('loader/patch-context', this, () => {
+  private async _patchContext(diff: string[]) {
+    await this.context.waterfall('loader/patch-context', this, async () => {
       Object.setPrototypeOf(this.ctx, this.parent.ctx)
 
       if (this.fiber?.uid && (diff.includes('config') || this.options.group)) {
-        this.fiber.update(this.options.config, true)
+        await this.fiber.update(this.options.config, true)
       }
     })
   }
@@ -122,13 +135,7 @@ export class Entry {
     if (create) {
       this.options = options as EntryOptions
     } else {
-      for (const [key, value] of Object.entries(options)) {
-        if (isNullable(value)) {
-          delete this.options[key]
-        } else {
-          this.options[key] = value
-        }
-      }
+      Entry.merge(this.options, options)
     }
     sortKeys(this.options)
 
@@ -146,11 +153,11 @@ export class Entry {
       const volatileOnly = changes.length === 1 && changes[0] === 'config'
         && this.fiber.state === FiberState.ACTIVE && Object.getPrototypeOf(this.ctx) === this.parent.ctx
         && equalExceptVolatile(legacy.config, this.options.config, this.fiber.runtime?.Config)
-      if (volatileOnly) this.fiber.rawConfig = this.options.config
+      if (volatileOnly) this.fiber.config = this.options.config
       const pending = volatileOnly && this._commitVolatile() ? [] : changes
       if (!pending.length && !force) return
       this.context.emit('loader/partial-dispose', this, legacy, true)
-      this._patchContext(pending)
+      await this._patchContext(pending)
     } else {
       await this.init()
     }
@@ -196,14 +203,40 @@ export class Entry {
     return true
   }
 
-  getOuterStack = () => {
-    let entry: Entry | undefined = this
-    const result: string[] = []
-    do {
-      result.push(`    at ${entry.parent.tree.ctx.baseUrl}#${entry.options.id}`)
-      entry = entry.parent.ctx.fiber.entry
-    } while (entry)
-    return result
+  /**
+   * Locate a value of this entry's options in its config source.
+   * @param path - property path below the entry options, e.g. `['config', 'port']`.
+   * @returns the source location, or `undefined` when the tree has no source for it.
+   */
+  getLocation(path: PropertyKey[] = []) {
+    return this.parent.tree.getLocation(this.options.id, path)
+  }
+
+  getOuterStack = () => this.parent.getOuterStack(this.options.id)
+
+  /**
+   * Rewrite a config validation error to point at the entry's config source.
+   * @param error - the validation error; its message and stack are replaced in place.
+   */
+  traceValidation(error: ValidationError) {
+    const frames = this.getOuterStack()
+    // an entry outside any source has nothing to point to
+    if (!frames.length) return
+    const issues = error.issues.map(({ message, path }) => ({ message, path: ValidationError.normalizePath(path) }))
+    const locate = (path: PropertyKey[]) => this.getLocation(['config', ...path])
+    relocate(error, formatIssues('invalid config', issues, locate), frames)
+  }
+
+  private _reportImport(error: unknown) {
+    if (error instanceof ModuleNotFoundError) {
+      const location = this.getLocation(['name'])
+      if (location) {
+        // before Node's hints
+        const [first, ...hints] = error.message.split('\n')
+        relocate(error, [`${first} (at name, ${formatLocation(location)})`, ...hints].join('\n'), this.getOuterStack())
+      }
+    }
+    this.ctx.logger.error(error)
   }
 
   /** Import and start the configured plugin if it is not already running. */
@@ -213,11 +246,11 @@ export class Entry {
     } finally {
       this._initTask = undefined
     }
-    const notify = () => {
+    // failures are already reported by the fiber; we only need it to settle
+    this.fiber?.await().catch(() => {}).finally(() => {
       if (this.loader.getTasks().length) return
       this.ctx.reflect.notify(['loader'])
-    }
-    this.fiber?.await().then(notify, notify)
+    })
   }
 
   private async _init() {
@@ -225,14 +258,17 @@ export class Entry {
     try {
       moduleNamespace = await this.parent.tree.import(this.options.name, this.getOuterStack)
     } catch (error) {
-      this.ctx.logger.error(error)
+      this._reportImport(error)
       return
-    } finally {
-      this._initTask = undefined
     }
     const plugin = this.loader.unwrapExports(moduleNamespace)
-    this._patchContext([])
+    // A previous fiber of this entry keeps its services registered until its
+    // dependents have unloaded; a new instance providing them must wait for it.
+    await this.fiber?.await().catch(() => {})
+    await this._patchContext([])
     this.loader.showLog(this, 'apply')
+    // Keep the canonical fiber rather than the registry's PromiseLike wrapper:
+    // writes such as a volatile commit's `config` must reach the lifecycle state.
     this.fiber = this.ctx.registry.plugin(plugin, this.options.config, this.getOuterStack).ctx.fiber
     this.moduleNamespace = moduleNamespace
   }

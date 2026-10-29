@@ -5,12 +5,12 @@ import { dirname, extname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { JSDOM } from 'jsdom'
 import ts from 'typescript'
-import { applyEntryPatches, type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
+import { applyPatches, parseEntryYaml, type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
 import type { EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
 import { bundlePatchPaths, composeEntries, loadOverlayPatches } from '../packages/boot/app-boot/src/index.ts'
 import type { DshBundleManifest } from '../packages/util/package-manifest/src/types.ts'
 import { assertNever } from '../packages/util/values/src/index.ts'
-import { isAgentPresetEntry, isCordisGroupEntry, loadCordisYaml } from './cordis-yaml.ts'
+import { isAgentPresetEntry, isCordisGroupEntry } from './cordis-yaml.ts'
 import { PRODUCT_PACKAGE_POLICY, type ProductPackagePolicy } from './product-package-policy.ts'
 import { collectRuntimeLocalSourceSpecifiers, collectRuntimeSourceSpecifiers } from './verify-client-packages.ts'
 
@@ -176,10 +176,10 @@ export function verifyProductUse(
       if (typeof path !== 'string') { failures.push(`${display(from)}: Include path must be a literal string`); continue }
       const filename = path.startsWith('file:') ? fileURLToPath(path) : resolve(dirname(from), path)
       if (stack.has(filename)) { failures.push(`${display(from)}: cyclic Include ${display(filename)}`); continue }
-      const content: unknown = existsSync(filename) ? loadCordisYaml(readFileSync(filename, 'utf8')) : row.config.initial
+      const content: unknown = existsSync(filename) ? parseEntryYaml(readFileSync(filename, 'utf8')) : row.config.initial
       configs.add(filename)
       if (!Array.isArray(content)) { failures.push(`${display(filename)}: Include requires an entry array or initial entries`); continue }
-      const entries = applyEntryPatches(content as EntryOptions[], row.config.patches as PatchOptions[] | undefined, () => {})
+      const entries = applyPatches(content as EntryOptions[], row.config.patches as PatchOptions[] | undefined).data
       scanEntries(entries, filename, reach, new Set([...stack, filename]))
     }
   }

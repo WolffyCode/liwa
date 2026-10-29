@@ -15,9 +15,6 @@
       "path": "../../../vendor/loader"
     },
     {
-      "path": "../../../vendor/include"
-    },
-    {
       "path": "../../../vendor/timer"
     },
     {

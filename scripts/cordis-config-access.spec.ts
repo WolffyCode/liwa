@@ -22,33 +22,34 @@ describe('Fiber configuration access', () => {
     const fiber = ctx.loader.resolve(id).fiber!
     await fiber.await()
     const running = applied.mock.calls[0]![1] as ReturnType<typeof Config>
-    expect(fiber.rawConfig).toBe(raw)
+    expect(fiber.config).toBe(raw)
     expect(fiber.effectiveConfig).toBe(running)
     const candidate = fiber.resolveConfig({ value: { __jsExpr: '2 + 2' } }) as ReturnType<typeof Config>
     expect(candidate.value.get()).toBe(4)
     expect(candidate.value).not.toBe(running.value)
     expect(() => fiber.resolveConfig({ value: -1 })).toThrow()
-    expect(fiber.rawConfig).toBe(raw)
+    expect(fiber.config).toBe(raw)
     expect(fiber.effectiveConfig).toBe(running)
     expect(running.value.get()).toBe(2)
     expect(applied).toHaveBeenCalledOnce()
   })
 
-  it('uses the canonical fiber through registry wrappers and retains raw input without updating', async () => {
+  it('resolves through the canonical fiber from registry wrappers and retains raw input without updating', async () => {
     const ctx = root()
     const initial = { value: 1 }
     const apply = vi.fn()
     const wrapper = ctx.plugin(apply, initial)
     await wrapper
     const fiber = wrapper.ctx.fiber
-    const hook = vi.fn(function (this: Fiber, _config: unknown, next: () => unknown) {
-      expect(this).toBe(fiber)
+    const hook = vi.fn((target: Fiber, next: () => unknown) => {
+      expect(target).toBe(fiber)
       return next()
     })
     fiber.ctx.on('internal/config', hook)
     const raw = { value: 2 }
-    wrapper.rawConfig = raw
-    expect(fiber.rawConfig).toBe(raw)
+    // Raw config is a plain field: the registry wrapper reads it through its prototype, writes target the canonical fiber.
+    fiber.config = raw
+    expect(wrapper.config).toBe(raw)
     expect(wrapper.effectiveConfig).toBe(initial)
     expect(wrapper.resolveConfig(raw)).toBe(raw)
     expect(hook).toHaveBeenCalledOnce()
@@ -66,12 +67,12 @@ describe('Fiber configuration access', () => {
     const wrapper = ctx.plugin(apply, initial)
     await wrapper
     const raw = { value: 2 }
-    wrapper.update(raw)
-    await wrapper.await()
+    await wrapper.update(raw)
     expect(apply).toHaveBeenLastCalledWith(wrapper.ctx, raw)
-    expect(wrapper.rawConfig).toBe(raw)
+    expect(wrapper.config).toBe(raw)
     expect(wrapper.effectiveConfig).toBe(raw)
-    expect(wrapper.ctx.fiber.rawConfig).toBe(raw)
+    expect(Object.hasOwn(wrapper, 'config')).toBe(false)
+    expect(wrapper.ctx.fiber.config).toBe(raw)
     expect(wrapper.ctx.fiber.effectiveConfig).toBe(raw)
     expect(apply).toHaveBeenCalledTimes(2)
   })
@@ -82,8 +83,9 @@ describe('Fiber configuration access', () => {
     const apply = vi.fn()
     const wrapper = ctx.plugin({ inject: ['configAccessTest'], apply }, { value: 1 })
     const raw = { value: 2 }
-    wrapper.update(raw)
-    expect(wrapper.rawConfig).toBe(raw)
+    // The restart waits for the injection set below; its outcome is read from the fiber afterwards.
+    void wrapper.update(raw)
+    expect(wrapper.config).toBe(raw)
     expect(wrapper.effectiveConfig).toBeUndefined()
     ctx.set('configAccessTest', {})
     await wrapper

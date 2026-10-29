@@ -291,7 +291,8 @@ describe('GoalService creation and replay', () => {
     await fiber.dispose()
     expect(ctx.get('goals')).toBeUndefined()
     expect(ctx.sessionProjections.checkpoint(stub.session).goal?.val).toBeUndefined()
-    expect(first.get(stub.agent)).toMatchObject({ id: goal.id })
+    // A disposed service resolves its own injections from its fiber, so the stale instance no longer reaches `agents`.
+    expect(() => first.get(stub.agent)).toThrow('in inactive context')
 
     await ctx.plugin(GoalService)
     expect(ctx.goals).not.toBe(first)

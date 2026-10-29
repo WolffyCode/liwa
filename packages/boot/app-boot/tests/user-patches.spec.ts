@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterAll, afterEach, describe, expect, it, onTestFinished } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
+import { Context, FiberState } from '@deepseek-ai/cordis'
 import Include, { type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
 import Loader from '@deepseek-ai/cordis-plugin-loader'
 import {
@@ -254,6 +254,11 @@ describe('Loader config interpolation', () => {
       await provider?.update({ config: { value: 'recovered' } })
       await provider?.update({ disabled: false })
       await ctx.loader.await()
+      // A failed fiber does not re-enter its lifecycle on a dependency refresh; an update recovers it and resolves
+      // its raw `!!js` config again against the replaced provider.
+      expect(reader?.fiber?.state).toBe(FiberState.FAILED)
+      await reader?.fiber?.update(reader.options.config, true)
+      await ctx.loader.await()
       expect(ctx.get('readerResult')).toEqual({ value: 'recovered' })
     } finally {
       await ctx.fiber.dispose()
@@ -337,9 +342,10 @@ describe('profile reconciliation settlement', () => {
     const patches = [{ insert: [{ id: 'missing-plugin', name: './missing.mjs' }] }]
     const ctx = await boot(NAME, join(dir, 'cordis.yml'), patches)
     onTestFinished(() => ctx.fiber.dispose())
-    // Reload diagnostics carry the import error's message without stack frames.
-    const prefix = 'missing-plugin \\(\\./missing\\.mjs\\): failed to import: Error \\[ERR_MODULE_NOT_FOUND\\]'
-    const diagnostic = new RegExp(`^${prefix}: Cannot find module '[^']*missing\\.mjs' imported from [^\\n]*$`, 'u')
+    // Reload diagnostics carry the import error's message without stack frames; the Loader names the entry's module
+    // rather than the resolver's importing file.
+    const prefix = 'missing-plugin \\(\\./missing\\.mjs\\): failed to import: ModuleNotFoundError'
+    const diagnostic = new RegExp(`^${prefix}: Cannot find module '[^']*missing\\.mjs'$`, 'u')
     expect(await reconcileProfilePatches(ctx, patches, NAME)).toEqual([expect.stringMatching(diagnostic)])
   })
 
@@ -360,7 +366,8 @@ describe('profile reconciliation settlement', () => {
     onTestFinished(() => ctx.fiber.dispose())
     const entry = [...ctx.loader.entries()].find(row => row.options.id === 'candidate')
     if (entry === undefined) throw new Error('candidate entry missing')
-    await entry.update({ config: { fail: true } })
+    // An entry update awaits the restart it causes, so it reports the activation failure.
+    await expect(entry.update({ config: { fail: true } })).rejects.toThrow('candidate activation failed')
     await ctx.loader.await()
     await reconcileProfilePatches(ctx, [], NAME)
     expect([...ctx.loader.entries()].some(row => row.options.id === 'candidate')).toBe(false)
@@ -379,7 +386,7 @@ describe('profile reconciliation settlement', () => {
       .rejects.toThrow('candidate activation failed')
   })
 
-  it('reports an activation failure that settles while its entry is being removed', async () => {
+  it('logs an activation failure that settles while its entry is being removed without failing the reconciliation', async () => {
     const dir = tmp()
     const entered = Promise.withResolvers<undefined>()
     const release = Promise.withResolvers<undefined>()
@@ -390,11 +397,18 @@ describe('profile reconciliation settlement', () => {
     })
     onTestFinished(async () => { release.resolve(undefined); await ctx.fiber.dispose() })
     const entry = [...ctx.loader.entries()].find(row => row.options.id === 'candidate')!
-    await entry.update({ config: { fail: true } })
+    const logged: unknown[] = []
+    ctx.logger.exporter({ levels: { default: 3 }, export: ({ type, args }) => { if (type === 'error') logged.push(...args as unknown[]) } })
+    // The update settles with the activation it starts, which this test holds open.
+    const updating = entry.update({ config: { fail: true } })
     await entered.promise
-    const result = expect(reconcileProfilePatches(ctx, [], NAME)).rejects.toThrow('in-flight failure')
+    const result = reconcileProfilePatches(ctx, [], NAME)
     release.resolve(undefined)
-    await result
+    // The removal supersedes the in-flight load: its failure is logged, but fails neither the removed fiber nor the reconciliation.
+    expect(await result).toEqual([])
+    await updating
+    expect([...ctx.loader.entries()].some(row => row.options.id === 'candidate')).toBe(false)
+    expect(logged.some(arg => arg instanceof Error && arg.message === 'in-flight failure')).toBe(true)
   })
 
   it('waits for a removed plugin to release its resources', async () => {

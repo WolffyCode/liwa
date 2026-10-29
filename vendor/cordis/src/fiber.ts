@@ -22,16 +22,46 @@ export class ValidationError extends TypeError {
   /**
    * Build the aggregated message from schema issues.
    *
-   * @param issues — the standard-schema issues, one message line each.
+   * @param issues — the standard-schema issues, one message line each; kept on the error.
    */
-  constructor(issues: readonly StandardSchemaV1.Issue[]) {
+  constructor(public issues: readonly StandardSchemaV1.Issue[]) {
     super(`invalid config:\n` + issues.map(issue => {
-      if (issue.path) {
-        return `  - ${issue.message} (at ${issue.path.join('.')})`
+      if (issue.path?.length) {
+        return `  - ${issue.message} (at ${ValidationError.formatPath(issue.path)})`
       } else {
         return `  - ${issue.message}`
       }
     }).join('\n'))
+  }
+
+  /**
+   * Recognize a validation error across realms and copies of cordis.
+   *
+   * @param error — the value to test.
+   * @returns `true` if `error` carries the global validation-error brand.
+   */
+  static is(error: unknown): error is ValidationError {
+    return !!error?.[kValidationError]
+  }
+
+  /**
+   * Reduce an issue path to its property keys.
+   *
+   * @param path — the standard-schema issue path, whose segments may be `{ key }` objects.
+   * @returns the plain property keys, outermost first.
+   */
+  static normalizePath(path: StandardSchemaV1.Issue['path'] = []): PropertyKey[] {
+    return path.map(segment => typeof segment === 'object' ? segment.key : segment)
+  }
+
+  /**
+   * Format an issue path for messages.
+   *
+   * @param path — the standard-schema issue path.
+   * @returns the keys joined with `.`, e.g. `nested.0.name`.
+   */
+  static formatPath(path: StandardSchemaV1.Issue['path']): string {
+    return ValidationError.normalizePath(path).map(String).join('.')
   }
 }
 
@@ -121,6 +151,7 @@ function emitPluginDisposed(context: Context, fiber: Fiber) {
   const args: any[] = ['internal/plugin', fiber]
   let callbacks: Function[]
   try {
+    // `emit()` stops at the first throwing observer; containment needs the individual callbacks.
     callbacks = context.events.dispatch('emit', args)
   } catch (error) {
     context.logger.error(error)
@@ -186,16 +217,19 @@ export class Fiber {
   public uid: number | null
   /** The context this fiber's plugin runs in (extends the parent context). */
   public readonly ctx: Context
-  /** The validated plugin config (updated by `update()`); read through {@link effectiveConfig}. */
+  /**
+   * The raw plugin config, retained without evaluating expressions or validating it.
+   * Every activation resolves it through `internal/config`; `update()` replaces it. Read the value passed to the running instance through {@link effectiveConfig}.
+   */
   public config: any
-  /** The raw plugin config, re-resolved before activation; use {@link rawConfig} to read or retain it. */
-  public _config: any
   /** Current lifecycle state; transitions emit `internal/status`. */
   public state = FiberState.PENDING
   /** Dispose this fiber: unload the plugin, then settle once cleanup finished. */
   public readonly dispose: () => Promise<void>
-  /** Snapshot of required service implementations while loaded; `undefined` otherwise. */
-  public store: Dict<Impl> | undefined
+  /** Snapshot of the required service implementations taken for the current load; `undefined` while unloaded. */
+  public committed: Readonly<Dict<Impl>> | undefined
+  /** Service implementations this fiber provides; its effects outlive them until every dependent has unloaded. */
+  public readonly provisions = new Set<Impl>()
   /** The in-flight load/unload transition, if one is currently running. */
   public inertia: Promise<void> | undefined
 
@@ -206,15 +240,18 @@ export class Fiber {
   protected context: Context
 
   private _error: any
+  private _revision = 0
   private _runner: EffectRunner<string>
   private _store: Dict<Impl> = Object.create(null)
+  private _release: (() => void) | undefined
+  private _effectiveConfig: unknown
 
   /**
    * Create a fiber. Plugin authors normally obtain fibers from `ctx.plugin()`
    * rather than constructing them directly.
    *
    * @param parent — the context the plugin was loaded from.
-   * @param config — raw config, validated against the runtime's schema.
+   * @param config — raw config, resolved through `internal/config` on each activation.
    * @param inject — resolved dependency map (service name → intercept config).
    * @param runtime — the shared plugin runtime, or `null` for the root fiber.
    * @param getOuterStack — captures the caller stack for effect diagnostics.
@@ -226,7 +263,7 @@ export class Fiber {
     public runtime: Plugin.Runtime | null,
     getOuterStack: () => string[],
   ) {
-    this._config = config
+    this.config = config
     const collect = (dispose: Disposable) => {
       this._disposables.push(dispose)
     }
@@ -235,28 +272,21 @@ export class Fiber {
       this.uid = parent.registry.counter
       this.ctx = this.context = parent.extend({ fiber: this })
 
-      const injectEntries = Object.entries(this.inject)
-      if (injectEntries.length) {
-        this.ctx[Context.intercept] = Object.create(parent[Context.intercept])
-        for (const [name, config] of injectEntries) {
-          if (isNullable(config)) continue
-          this.ctx[Context.intercept][name] = config
-        }
-      }
-
       this._runner = {
         epoch: INACTIVE,
         getOuterStack,
-        execute: function () {
+        execute: function (this: Fiber) {
+          const config = this.resolveConfig(this.config)
+          this._effectiveConfig = config
           if (isConstructor(runtime.callback)) {
             // eslint-disable-next-line new-cap
-            const instance = new runtime.callback(this.ctx, this.config)
+            const instance = new runtime.callback(this.ctx, config)
             for (const hook of instance?.[symbols.initHooks] ?? []) {
               hook()
             }
             return instance?.[symbols.init]?.()
           } else {
-            return runtime.callback(this.ctx, this.config)
+            return runtime.callback(this.ctx, config)
           }
         },
         collect,
@@ -274,25 +304,26 @@ export class Fiber {
             }
           }
           this._setEpoch(INACTIVE)
-          // A PENDING fiber can already own effects registered by an
-          // internal/plugin observer. Its epoch is still INACTIVE, so
-          // _setEpoch() has no transition to drive; explicitly unload that
-          // pre-activation work before reporting disposal complete.
+          // A PENDING or FAILED fiber can already own effects registered by
+          // an internal/plugin observer. `_setEpoch()` has no transition to
+          // drive for it, so explicitly unload that work before reporting
+          // disposal complete.
           if (!this.inertia) {
             this._updateState(() => {
               this.inertia = this._unload()
               return FiberState.UNLOADING
             })
           }
-          // `this.inertia` itself should never reject — both `_reload` and
-          // `_unload` swallow their own work errors via `ctx.logger.error`.
-          // If it *does* reject, the only remaining cause is the logger
-          // itself failing, which we can't recover from in this exact spot
-          // (calling the logger again is what just failed). Let the
-          // rejection propagate; process-level crash is the honest outcome.
+          // `inertia` never rejects: `_reload` and `_unload` both log their
+          // own work errors. A rejection here would mean the logger itself
+          // failed, so let it propagate.
           while (this.inertia) {
             await this.inertia
           }
+          // `_setEpoch()` above returns early for a fiber that was not ACTIVE,
+          // so the cached state is not refreshed. Re-derive it now that
+          // `uid` is null; the empty callback falls through to `_getState()`.
+          this._updateState(() => {})
         }
       }, 'ctx.plugin()')
 
@@ -315,15 +346,20 @@ export class Fiber {
         for (const name of Object.keys(this.inject)) {
           this._checkImpl(name)
         }
-        this._refresh()
+        try {
+          this._refresh()
+        } catch (error) {
+          this.ctx.logger.error(error)
+          this._error = error
+        }
       }
     } else {
       this.uid = 0
       this.ctx = this.context = parent
       this.state = FiberState.ACTIVE
-      this.store = Object.create(null)
+      this.committed = Object.create(null)
       this._runner = {
-        epoch: '',
+        epoch: '0',
         getOuterStack,
         execute: () => {},
         collect,
@@ -406,7 +442,8 @@ export class Fiber {
    * run (in reverse order) either when the returned disposer is called or
    * when the fiber unloads, whichever comes first. Calling the disposer twice
    * is a no-op. Throws `CordisError('INACTIVE_EFFECT')` if the fiber is
-   * already disposed, and `TypeError` if `execute` returns an invalid shape.
+   * already disposed or unloading, and `TypeError` if `execute` returns an
+   * invalid shape.
    *
    * @param execute — the effect body; see {@link Effect} for accepted shapes.
    * @param label — effect label shown in `getEffects()` diagnostics.
@@ -589,8 +626,8 @@ export class Fiber {
     if (oldState !== FiberState.ACTIVE && this.state !== FiberState.ACTIVE) return
     for (const key of Reflect.ownKeys(this.ctx.reflect.store)) {
       const impl = this.ctx.reflect.store[key as symbol]
-      if (impl.fiber !== this) continue
-      this.ctx.reflect.notify([impl.name])
+      if (impl.ctx.fiber !== this) continue
+      this.ctx.isolate(impl.name, impl.isolate).reflect.notify([impl.name])
     }
   }
 
@@ -602,22 +639,21 @@ export class Fiber {
         return delete this._store[name]
       }
     } catch (error) {
-      impl.fiber.ctx.logger.error(error)
+      impl.ctx.logger.error(error)
       return delete this._store[name]
     }
     this._store[name] = impl
   }
 
   _refresh() {
-    let epoch: string | boolean = false
-    epoch = ''
+    let epoch = `${this._revision}`
     for (const name of Object.keys(this.inject)) {
       const impl = this._store[name]
       if (!impl) {
         epoch = INACTIVE
         break
       }
-      epoch += ':' + impl.fiber.uid
+      epoch += ':' + impl.uid
     }
     this._setEpoch(epoch)
   }
@@ -625,6 +661,8 @@ export class Fiber {
   private _setEpoch(epoch: string) {
     const oldEpoch = this._runner.epoch
     if (epoch === oldEpoch) return
+    // a failed fiber only recovers through update(), which clears _error
+    if (this._error) return
     this._runner.epoch = epoch
     if (this.inertia) return
     this._updateState(() => {
@@ -638,56 +676,47 @@ export class Fiber {
     })
   }
 
-  /** Raw input retained for the next activation, without evaluating expressions or validating it. */
-  get rawConfig(): unknown {
-    return this.ctx.fiber._config
-  }
-
-  /** Retain raw input without changing the running config or triggering an update. */
-  set rawConfig(config: unknown) {
-    this.ctx.fiber._config = config
-  }
-
   /**
-   * The config object published by the existing activation/update lifecycle, without cloning or re-parsing.
-   * It is undefined before the first resolution and remains readable after unload; callers requiring a live instance check `state`.
+   * The resolved config object passed to the plugin by its latest activation, without cloning or re-parsing.
+   * It is undefined before the first activation and remains readable after unload; callers requiring a live instance check `state`.
    */
   get effectiveConfig(): unknown {
-    return this.ctx.fiber.config
+    return this.ctx.fiber._effectiveConfig
   }
 
   /**
-   * Evaluate and validate a candidate using this fiber's `internal/config` hooks and runtime schema.
-   * Does not publish the result, replace raw input, or commit running volatile references.
+   * Resolve raw config through this fiber's `internal/config` waterfall, which ends in the runtime schema's validation.
+   * Activation and `update()` resolve through it; a candidate resolved by other callers is not published and does not replace {@link config}.
    * Required injections must be available when a hook uses them.
-   * @param config Raw candidate input.
-   * @returns The candidate's resolved config, retaining the schema's result identity.
-   * @throws {ValidationError} when the runtime schema rejects the candidate; hook errors propagate.
+   * @param config Raw config.
+   * @returns The resolved config, retaining the schema's result identity.
+   * @throws {ValidationError} when the runtime schema rejects the config; hook errors propagate.
    */
   resolveConfig(config: unknown): unknown {
     const fiber = this.ctx.fiber
-    config = fiber.context.waterfall(fiber, 'internal/config', config, () => config)
-    return fiber.runtime ? resolveConfig(fiber.runtime, config) : config
+    return fiber.context.waterfall('internal/config', fiber, () => config)
   }
 
   private async _reload() {
-    this.store = { ...this._store }
+    this.committed = { ...this._store }
+    for (const impl of Object.values(this.committed)) {
+      if (impl.ctx.fiber === this) continue
+      impl.dependents.add(this)
+    }
     const oldEpoch = this._runner.epoch
     try {
       await Promise.resolve()
-      // A disposer queued before this checkpoint may already have invalidated
-      // the load. Do not run plugin code for a stale epoch; the state update
-      // below will drain any effects collected while the fiber was PENDING.
       if (this._runner.epoch === oldEpoch) {
-        this.config = this.resolveConfig(this._config)
         await this._execute(this._runner)
-        this._error = undefined
       }
     } catch (reason) {
       // impl guarantees that the error is non-null (?)
       this.ctx.logger.error(reason)
-      this._error = reason
-      this._runner.epoch = INACTIVE
+      // A superseded load still needs cleanup, but cannot fail the new target.
+      if (this._runner.epoch === oldEpoch) {
+        this._error = reason
+        this._runner.epoch = INACTIVE
+      }
     }
     this._updateState(() => {
       if (this._runner.epoch === oldEpoch) {
@@ -700,6 +729,13 @@ export class Fiber {
   }
 
   private async _unload() {
+    // Dependents are notified when this fiber leaves ACTIVE, but may still
+    // access its services during their own teardown, so the effects of this
+    // fiber are only disposed after every dependent has unloaded.
+    while ([...this.provisions].some(impl => impl.dependents.size)) {
+      await new Promise<void>((resolve) => this._release = resolve)
+    }
+    this._release = undefined
     await Promise.all(this._disposables.clear().map(async (dispose) => {
       try {
         await composeError(async (info) => {
@@ -711,7 +747,13 @@ export class Fiber {
         this.ctx.logger.error(reason)
       }
     }))
-    this.store = undefined
+    // release the providers waiting for this fiber to unload
+    for (const impl of Object.values(this.committed ?? {})) {
+      if (!impl.dependents.delete(this) || impl.dependents.size) continue
+      impl.release?.()
+      impl.ctx.fiber._release?.()
+    }
+    this.committed = undefined
     this._updateState(() => {
       if (this._runner.epoch === INACTIVE) {
         this.inertia = undefined
@@ -737,47 +779,52 @@ export class Fiber {
   }
 
   /**
-   * Dispose and immediately reload this plugin with its current config.
+   * Unload and reload this plugin with its current raw config, which is resolved again.
    *
    * @returns a promise resolving once the reload settled.
    * @throws {CordisError} `INACTIVE_EFFECT` when the fiber is already disposed.
    */
-  async restart() {
+  async restart(): Promise<void> {
     const fiber = this.ctx.fiber
     fiber.assertActive()
-    fiber._setEpoch(INACTIVE)
+    fiber._revision++
     fiber._refresh()
     await fiber.await()
   }
 
   /**
-   * Validate and apply new config, then restart the plugin.
+   * Replace the raw config, then restart the plugin with it.
    *
-   * Runs the `internal/update` waterfall first, so update hooks (and HMR)
-   * can veto or replace the restart.
+   * A loaded fiber resolves the candidate first, so an invalid config throws
+   * before anything changes, and runs the `internal/update` waterfall, whose
+   * listeners (e.g. Group, Include) can apply it in place instead of
+   * restarting. Unless `noSave`, `internal/commit` reports the accepted raw
+   * config to persistence hooks.
    *
-   * @param config — the new raw config; validated before anything restarts.
-   * @param noSave — hint for persistence hooks not to write the change back.
-   * @returns nothing; the restart runs behind the `internal/update` waterfall.
-   * @throws {ValidationError} when the new config fails validation.
+   * @param config — the new raw config.
+   * @param noSave — skip `internal/commit`, e.g. when the config came from the persisted source itself.
+   * @returns the restart or the listener's replacement work, or nothing when a listener vetoed synchronously.
+   * @throws {ValidationError} when a loaded fiber's candidate fails validation.
    */
-  update(config: any, noSave = false) {
+  update(config: any, noSave = false): Awaitable<void> {
     const fiber = this.ctx.fiber
     fiber.assertActive()
-    fiber._config = config
-    if (fiber.state !== FiberState.ACTIVE) {
-      // Config resolution may access injected services, so defer it until the
-      // fiber can activate.
-      fiber._error = undefined
-      fiber._setEpoch(INACTIVE)
-      fiber._refresh()
-      return
-    }
-    config = fiber.resolveConfig(config)
-    fiber.context.waterfall(fiber, 'internal/update', config, noSave, () => {
-      fiber.config = config
-      fiber._error = undefined
-      return fiber.restart()
-    })
+    const loaded = fiber._runner.epoch !== INACTIVE
+    const resolved = loaded ? fiber.resolveConfig(config) : undefined
+    if (!noSave) fiber.context.emit('internal/commit', fiber, config)
+    fiber.config = config
+    fiber._error = undefined
+    const restart = () => fiber.restart()
+    const result = loaded
+      ? fiber.context.waterfall(fiber, 'internal/update', resolved, restart)
+      : restart()
+    // a listener may veto the restart, in which case there is nothing to await
+    if (result === undefined) return
+    const task = Promise.resolve(result)
+    // the failure is already reported by the fiber, so mark it handled here:
+    // a caller that drops the result cannot turn it into an unhandled
+    // rejection, while `await update()` still observes it
+    task.catch(() => {})
+    return task
   }
 }

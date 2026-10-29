@@ -8,7 +8,8 @@ import { globSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { parseArgs } from 'node:util'
-import { isCordisGroupEntry, loadCordisYaml, presetDefinitions } from './cordis-yaml.ts'
+import { parseEntryYaml } from '@deepseek-ai/cordis-plugin-include'
+import { isCordisGroupEntry, presetDefinitions } from './cordis-yaml.ts'
 
 interface PackageManifest {
   name?: string
@@ -95,7 +96,7 @@ export async function verifyRuntimeClosure(
 
   return {
     failures,
-    presetCount: (await Promise.all(presetPaths.map(async path => presetDefinitions(loadCordisYaml(await readFile(resolve(root, path), 'utf8'))).length))).reduce((a, b) => a + b, 0),
+    presetCount: (await Promise.all(presetPaths.map(async path => presetDefinitions(parseEntryYaml(await readFile(resolve(root, path), 'utf8'))).length))).reduce((a, b) => a + b, 0),
     workspacePackageCount: queue.length,
   }
 }
@@ -127,7 +128,7 @@ async function missingPresetPlugins(
   const missing = new Map<string, Set<string>>()
   const failures: string[] = []
   for (const presetPath of presetPaths) {
-    const document = loadCordisYaml(await readFile(resolve(root, presetPath), 'utf8'))
+    const document = parseEntryYaml(await readFile(resolve(root, presetPath), 'utf8'))
     if (!Array.isArray(document)) {
       failures.push(`${presetPath}: preset root must be a Loader entry array`)
       continue

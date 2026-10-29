@@ -10,7 +10,7 @@
  * @module @deepseek-ai/dsh-experimental-claude-code-mods
  */
 
-import type { Context } from '@deepseek-ai/cordis'
+import { FiberState, type Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-working-directory'
 import z from '@deepseek-ai/schemastery'
 import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
@@ -274,8 +274,13 @@ export class ClaudeCodeMods extends TypertRemoteService {
     })
     this.engine = engine
     const registrations = this.registrations
+    // A provider's effects run only after its dependents unload, and a mod plugin's unload awaits its running timer
+    // callbacks; cancel them as this service starts unloading so a callback waiting inside a `$` call ends first.
+    ctx.on('internal/status', (fiber) => {
+      if (fiber === ctx.fiber && fiber.state === FiberState.UNLOADING) detached.cancel()
+    })
     ctx.effect(() => async () => {
-      // Cancel first: a timer callback waiting inside a `$` call ends on this signal, and engine.dispose awaits it.
+      // A timer callback waiting inside a `$` call ends on this signal, and engine.dispose awaits it.
       detached.cancel()
       surfaces.dispose()
       for (const owned of registrations.values()) for (const dispose of owned) dispose()

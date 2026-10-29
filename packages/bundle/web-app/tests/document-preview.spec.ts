@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { Context } from '@deepseek-ai/cordis'
 import Loader from '@deepseek-ai/cordis-plugin-loader'
-import Include, { applyEntryPatches } from '@deepseek-ai/cordis-plugin-include'
+import Include, { applyPatches } from '@deepseek-ai/cordis-plugin-include'
 import { loadOverlayPatches } from '@deepseek-ai/dsh-app-boot'
 import WorkspaceFiles, { type WorkspaceFileScope } from '@deepseek-ai/dsh-api-workspace-files'
 import OfficeToPdf from '@deepseek-ai/dsh-office-to-pdf'
@@ -43,10 +43,10 @@ it('loads the shipped Office rows with separately patched settings and authorize
   expect(rows.map(row => [row.id, row.name])).toEqual(Object.entries(expectedRows))
   const providerConfig = { maxInputBytes: 4096, maxConcurrentConversions: 1, fontFallbacks: [['Missing Serif', 'Available Serif']] }
   const clientConfig = DocumentPreview.Config({ office: { maxCachedEntries: 3, maxCachedBytes: 8192 } })
-  const configured = applyEntryPatches(rows, [
+  const configured = applyPatches(rows, [
     { id: 'office-to-pdf', config: providerConfig },
     { id: 'ui-sidebar-documentpreview', config: clientConfig },
-  ], (message) => { throw new Error(message) })
+  ], (message) => { throw new Error(message) }).data
   expect(configured.find(row => row.id === 'ui-sidebar-documentpreview')!.config).toEqual(clientConfig)
   await writeFile(configPath, JSON.stringify([
     { name: '@deepseek-ai/dsh-session' },

@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import { expect, it, onTestFinished } from 'vitest'
 import * as yaml from 'js-yaml'
 import type { Context } from '@deepseek-ai/cordis'
-import { entryListSchema } from '@deepseek-ai/cordis-plugin-include'
+import { parseEntryYaml } from '@deepseek-ai/cordis-plugin-include'
 import Timer from '@deepseek-ai/cordis-plugin-timer'
 import { boot, initProfile, loadProfileDirectory, readProfilePatches, type ProfileContext } from '@deepseek-ai/dsh-app-boot'
 import Hmr from '@deepseek-ai/dsh-hmr'
@@ -32,9 +32,7 @@ const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.
   dependencies: Record<string, string>
   dsh: { bundle: { patch: string } }
 }
-const patch = yaml.load(readFileSync(new URL(`../${manifest.dsh.bundle.patch}`, import.meta.url), 'utf8'), {
-  schema: entryListSchema,
-}) as { insert: Row[] }[]
+const patch = parseEntryYaml(readFileSync(new URL(`../${manifest.dsh.bundle.patch}`, import.meta.url), 'utf8')) as { insert: Row[] }[]
 const rows = patch[0]?.insert ?? []
 
 /** A browser row's Host entry is an empty `apply`; its contribution loads in the Client. */

@@ -1698,6 +1698,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'Disposer closing this registration and waiting for its pending refresh.',
       },
       {
+        signature: 'watch(path: string | URL, callback: () => void | Promise<void>): () => Promise<void>',
+        description: 'Watch one file through the reload queue: the `ctx.hmr.watch()` contract of `@deepseek-ai/cordis-plugin-hmr`, which Include uses to refresh its config file. The callback runs for additions, changes and removals once the application is ready, serialized with module replacement and profile reloads; the path is watched even outside HmrConfig.root.',
+        parameters: [{ name: 'path', description: 'Absolute path, `file:` URL, or path relative to {@link baseDir}.' }, { name: 'callback', description: 'Change handler, awaited inside the queue.' }],
+        returns: 'Disposer of the caller-owned effect, ending the watch after its pending callback settles.',
+      },
+      {
         signature: 'getOuterStack: () => string[] = () => []',
         description: 'Omit internal HMR frames from module import diagnostics.',
         parameters: [],

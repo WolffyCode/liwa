@@ -3,10 +3,10 @@
 import { readFile, realpath } from 'node:fs/promises'
 import { extname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import * as yaml from 'js-yaml'
+import { YAMLError } from 'yaml'
 import Loader, { EntryGroup, ModuleLoader, isJsExpr, type EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
 import Group from '@deepseek-ai/cordis-plugin-group'
-import Include, { applyEntryPatches, entryListSchema, type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
+import Include, { applyPatches, parseEntryYaml, type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
 import type { Profile, RuntimeResolution } from '../profile.ts'
 import { installRuntimeInterception } from '../profile-resolution/resolver.ts'
 import { buildConfigSchemaDocument } from './document.ts'
@@ -148,10 +148,11 @@ export async function collectConfigSchemas(
       }
       if (content !== undefined) {
         try {
-          source = extension === '.json' ? JSON.parse(content) : yaml.load(content, { schema: entryListSchema })
+          source = extension === '.json' ? JSON.parse(content) : parseEntryYaml(content)
         } catch (error) {
           // Parser messages can quote configuration values; retain only the file and location.
-          const at = error instanceof yaml.YAMLException ? ` at line ${error.mark.line + 1}, column ${error.mark.column + 1}` : ''
+          const position = error instanceof YAMLError ? error.linePos?.[0] : undefined
+          const at = position === undefined ? '' : ` at line ${position.line}, column ${position.col}`
           throw new Error(`invalid ${extension === '.json' ? 'JSON' : 'YAML'} include ${filename}${at}`)
         }
       }
@@ -159,7 +160,7 @@ export async function collectConfigSchemas(
       const rows = entryList(source)
       let children: EntryOptions[]
       try {
-        children = applyEntryPatches(rows as EntryOptions[], patches, warn(path))
+        children = applyPatches(rows as EntryOptions[], structuredClone(patches), warn(path)).data
       } catch (error) {
         throw new Error(`include patches could not be composed for ${filename}; child declarations are unavailable`, { cause: error })
       }

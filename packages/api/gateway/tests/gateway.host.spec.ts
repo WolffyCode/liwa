@@ -34,6 +34,11 @@ interface MarkedContext extends Context {
   readonly fixtureScope?: string
 }
 
+/** A service's caller Context carries the service's def site, whose inject rules govern absent properties: probe before reading. */
+function fixtureScope(ctx: Context): string {
+  return 'fixtureScope' in ctx ? (ctx as MarkedContext).fixtureScope ?? 'root' : 'root'
+}
+
 declare module '@deepseek-ai/dsh-typert-protocol' {
   interface TypertLookupMap {
     gatewayFixture: TypertLookup<FixtureAgent, string>
@@ -75,14 +80,14 @@ class GoalService extends Service {
     return {
       agentId: agent.id,
       title: request.title,
-      scope: (this.ctx as MarkedContext).fixtureScope ?? 'root',
+      scope: fixtureScope(this.ctx),
     }
   }
 
   @RemoteScope('gatewayFixture')
   rename(request: { readonly title: string }): unknown {
     this.calls.push('rename')
-    return { title: request.title, scope: (this.ctx as MarkedContext).fixtureScope ?? 'root' }
+    return { title: request.title, scope: fixtureScope(this.ctx) }
   }
 
   @Remote

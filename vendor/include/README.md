@@ -40,4 +40,20 @@ Example `cordis.yml`:
 | `patches` | Runtime patches applied after reading the file. |
 | `enableLogs` | Enables loader apply, reload, and unload logs. |
 
-Patches can insert entries or override fields on entries with a matching `id`.
+Patches can insert entries or override fields on entries with a matching `id`;
+a later patch can target an entry an earlier patch inserted or a group config
+it supplied.
+
+Tree-side changes (a plugin updating its config, a self-disposed entry marked
+`disabled`) are recorded in a journal and written back asynchronously: a change
+owned by a patch updates `patches` in the Include's own config, any other change
+updates the file. Edits made to the file in the meantime are merged, and a
+conflicting key keeps the file's value. `flush()` waits for pending reads and
+writes; `stop()` makes a last write attempt for changes a failed write left
+pending. With an `hmr` service available, the Include registers its file
+through `ctx.hmr.watch()` and refreshes on each change.
+
+The package exports the pure patch algorithm (`applyPatches`) and the YAML
+dialect it reads and writes (`parseEntryYaml`, `stringifyEntryYaml`: `!!js`
+scalars become `{ __jsExpr }` nodes, and an empty expression is an error), so
+config tooling composes and prints exactly what an Include mounts.

@@ -23,9 +23,6 @@
       "path": "../loader"
     },
     {
-      "path": "../include"
-    },
-    {
       "path": "../timer"
     },
     {

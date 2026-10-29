@@ -6,6 +6,11 @@ import { parseDocument } from 'yaml'
 import { resolve as resolvePackageEntry } from 'resolve.exports'
 
 const RUNTIME_EXTENSIONS = ['.js', '.mjs', '.cjs']
+/**
+ * Joins the reserved package name and a row's own suffix in an inserted row id. Loader reserves `:` for nested entry
+ * paths and rejects it in ids.
+ */
+const ROW_ID_SEPARATOR = '-'
 
 /** Validate model-written files before profile installation.
  * @param directory - Host-reserved output directory.
@@ -28,7 +33,7 @@ export async function validateGeneratedBundle(directory: string, name: string): 
   }).strict()).min(1).parse(document.toJS({ maxAliasCount: 0 }))
   const ids = new Set<string>()
   for (const operation of patch) for (const row of operation.insert) {
-    if (!row.id.startsWith(name + ':') || ids.has(row.id)
+    if (!row.id.startsWith(name + ROW_ID_SEPARATOR) || ids.has(row.id)
       || row.name !== name && !row.name.startsWith(name + '/')) {
       throw new Error('Generated bundles must add uniquely named rows from their own package.')
     }

@@ -308,9 +308,9 @@ describe('real Loader composition', () => {
     expect(renameControl.attempts).toBeGreaterThanOrEqual(2)
   })
 
-  it('reports a terminal debounced-write failure again to the teardown owner', { timeout: 60_000 }, async () => {
+  it('keeps a change whose write failed terminally pending and persists it at teardown', { timeout: 60_000 }, async () => {
     stubAttendedHost()
-    const { ctx } = await loadComposition('127.0.0.1')
+    const { ctx, configPath } = await loadComposition('127.0.0.1')
     const autoEntry = [...ctx.loader.entries()].find(entry => entry.options.name === AUTO)!
     const include = includeTree(ctx)
     renameControl.failureCode = 'EIO'
@@ -318,7 +318,9 @@ describe('real Loader composition', () => {
 
     await autoEntry.fiber!.dispose()
     await expect.poll(() => renameControl.injectedFailures).toBe(1)
-    await expect(include.stop()).rejects.toMatchObject({ code: 'EIO' })
+    // The Include logs the failed write and keeps the change in its journal; teardown makes the last write attempt.
+    await expect(include.stop()).resolves.toBeUndefined()
+    expect(await readFile(configPath, 'utf8')).toContain('disabled: true')
     await expect(ctx.fiber.dispose()).resolves.not.toThrow()
     context = undefined
   })

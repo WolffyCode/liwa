@@ -110,7 +110,7 @@ describe('volatile Loader updates', () => {
   it('bypasses custom update hooks for volatile changes and retains them for mixed changes', async () => {
     const ctx = await runtimeContext()
     const hooks: string[] = []
-    const globalHook = vi.fn((_config: unknown, _noSave: boolean, next: () => void) => { next() })
+    const globalHook = vi.fn((_config: unknown, next: () => void | Promise<void>) => next())
     ctx.on('internal/update', globalHook, { global: true })
     const fiber = await mountEntry(ctx, { Config, apply(owner: Context) {
       owner.on('internal/update', (config: ReturnType<typeof Config>) => {
@@ -144,8 +144,7 @@ describe('volatile Loader updates', () => {
     await fiber.await()
     expect(apply).toHaveBeenCalledTimes(3)
     const ordinary = await mountEntry(ctx, { Config: z.object({ value: z.string() }), apply() { apply() } }, { value: 'same' })
-    ordinary.update({ value: 'same' })
-    await ordinary.await()
+    await ordinary.update({ value: 'same' })
     expect(apply).toHaveBeenCalledTimes(5)
   })
 
@@ -229,23 +228,23 @@ it('reloads real YAML and persists plain values independently of custom update h
   const entry = [...ctx.loader.entries()].find(entry => entry.options.id === 'consumer')!
   expect(configs[0]!.title.get()).toBe('initial')
   await ctx.plugin(Timer)
-  // An exact-file config watch mirrors the HMR root-watch Include path, which packages/boot/hmr covers with a mocked watcher.
+  // The Include registers its file with `ctx.hmr.watch()` once HMR is available; its exact-file watch refreshes the tree.
   await ctx.plugin(Hmr, { root: [], ignored: [], debounce: 0 })
-  const stopWatching = await ctx.hmr.watchConfig(filename, async () => {
-    await include.refresh()
-    await ctx.loader.await()
-  })
-  await writeFile(filename, '- id: group\n  name: cordis:group\n  group: true\n  config:\n    - id: consumer\n      name: cordis:volatile-test\n      config:\n        title: file-update\n')
-  // The config watcher stabilizes writes for two seconds before publishing a change.
-  await vi.waitFor(() => { expect(configs[0]!.title.get()).toBe('file-update') }, { timeout: 10_000 })
-  await stopWatching()
+  const fileUpdate = '- id: group\n  name: cordis:group\n  group: true\n  config:\n    - id: consumer\n      name: cordis:volatile-test\n      config:\n        title: file-update\n'
+  // The watch becomes ready asynchronously, and it stabilizes writes for two seconds before publishing a change:
+  // rewrite until a change lands after readiness.
+  await vi.waitFor(async () => {
+    await writeFile(filename, fileUpdate)
+    expect(configs[0]!.title.get()).toBe('file-update')
+  }, { timeout: 15_000, interval: 3_000 })
+  await include.flush()
   expect(configs).toHaveLength(1)
   expect(include.store.group!.fiber).toBe(group)
   expect(group.uid).toBe(groupUid)
   expect(configs[0]!.title.get()).toBe('file-update')
-  entry.fiber!.update({ title: 'program-update', group: { list: ['item'] } })
+  await entry.fiber!.update({ title: 'program-update', group: { list: ['item'] } })
   expect(entry.options.config).toEqual({ title: 'program-update', group: { list: ['item'] } })
-  entry.fiber!.update({ title: 'ephemeral' }, true)
+  await entry.fiber!.update({ title: 'ephemeral' }, true)
   expect(entry.options.config).toEqual({ title: 'program-update', group: { list: ['item'] } })
   await ctx.fiber.dispose()
   const saved = await readFile(filename, 'utf8')
@@ -298,11 +297,13 @@ it('updates volatile children through Group and Include custom updates and saves
   const originalConsumer = consumer.fiber
   const initial = configs[0]!
 
-  group.fiber!.update([child('group-update')])
+  await group.fiber!.update([child('group-update')])
   await ctx.loader.await()
   expect(initial.title.get()).toBe('group-update')
   expect(group.options.config).toEqual([child('group-update')])
-  includeEntry.fiber!.update({ path: includePath, patches: [{ id: 'consumer', config: { title: 'include-update' } }] })
+  await includeEntry.fiber!.update({ path: includePath, patches: [{ id: 'consumer', config: { title: 'include-update' } }] })
+  // The Include writes the Group's change to its file asynchronously; the patched tree applies once the journal is written.
+  await include.flush()
   await ctx.loader.await()
   expect(initial.title.get()).toBe('include-update')
   expect(includeEntry.fiber).toBe(originalInclude)
@@ -315,14 +316,14 @@ it('updates volatile children through Group and Include custom updates and saves
 
   const ordinary = await ctx.loader.create({ name: 'cordis:volatile-test', config: {} })
   const entry = ctx.loader.resolve(ordinary)
-  entry.fiber!.update({ title: 'custom-update', fixed: 'ordinary' })
+  await entry.fiber!.update({ title: 'custom-update', fixed: 'ordinary' })
   expect(childUpdates).toHaveBeenCalledOnce()
   expect(entry.options.config).toEqual({ title: 'custom-update', fixed: 'ordinary' })
   expect((entry.fiber!.effectiveConfig as ReturnType<typeof Config>).title.get()).toBe('hello')
-  entry.fiber!.update({ title: 'ephemeral', fixed: 'ordinary' }, true)
+  await entry.fiber!.update({ title: 'ephemeral', fixed: 'ordinary' }, true)
   expect(childUpdates).toHaveBeenCalledTimes(2)
   expect(entry.options.config).toEqual({ title: 'custom-update', fixed: 'ordinary' })
-  expect(() => { entry.fiber!.update({ nested: { count: -1 } }) }).toThrow()
+  expect(() => { void entry.fiber!.update({ nested: { count: -1 } }) }).toThrow()
   expect(childUpdates).toHaveBeenCalledTimes(2)
   expect(entry.options.config).toEqual({ title: 'custom-update', fixed: 'ordinary' })
 })
@@ -347,10 +348,9 @@ it('commits volatile edits in place and retains direct Fiber updates', async () 
   const current = fiber.effectiveConfig as ReturnType<typeof Config>
   expect(current.title.get()).toBe('mixed')
 
-  const hook = vi.fn((_config: unknown, _noSave: boolean, next: () => void) => { next() })
+  const hook = vi.fn((_config: unknown, next: () => void | Promise<void>) => next())
   fiber.ctx.on('internal/update', hook)
-  fiber.update({ title: 'direct' })
-  await fiber.await()
+  await fiber.update({ title: 'direct' })
   expect(hook).toHaveBeenCalledOnce()
   expect(apply).toHaveBeenCalledTimes(3)
   expect(current.title.get()).toBe('mixed')
@@ -366,7 +366,7 @@ it('parses a volatile-only update through the config hook without patching the e
     owner.on('loader/volatile-update', () => { trace.push('notify') })
   } }, { block: { title: 'initial' } })
   const current = fiber.effectiveConfig as ReturnType<typeof Config>
-  const resolveHook = vi.fn((_raw: unknown, next: () => unknown) => next())
+  const resolveHook = vi.fn((_fiber: unknown, next: () => unknown) => next())
   fiber.ctx.on('internal/config', resolveHook)
   const contextPatch = vi.fn((_entry: unknown, next: () => void) => { next() })
   ctx.on('loader/patch-context', contextPatch)
@@ -379,7 +379,7 @@ it('parses a volatile-only update through the config hook without patching the e
   expect(resolveHook).toHaveBeenCalledOnce()
   expect(trace).toEqual(['validate', 'notify'])
   expect(current.block.get()).toEqual({ title: 'changed' })
-  expect(fiber.rawConfig).toBe(raw)
+  expect(fiber.config).toBe(raw)
 })
 
 it.each([true, false])('keeps old references untouched when isolation replaces a dependency (available: %s)', async (available) => {
@@ -406,15 +406,18 @@ it.each([true, false])('keeps old references untouched when isolation replaces a
   const original = configs[0]!
   await ctx.loader.resolve(id).update({ isolate: { 'volatile-isolated-service': 'b' }, config: { title: 'new' } })
   await ctx.loader.await()
-  expect(configs).toHaveLength(available ? 2 : 1)
+  // The Loader awaits the config restart before the isolate hook re-resolves
+  // the entry's services, so the new config first activates against the
+  // committed realm-a implementation, then reloads for realm b (or waits for it).
+  expect(configs).toHaveLength(available ? 3 : 2)
   expect(original.title.get()).toBe('old')
   expect(notifications).not.toHaveBeenCalled()
   if (!available) {
     await provider('b')
     await ctx.loader.await()
   }
-  expect(configs).toHaveLength(2)
-  expect(configs[1]!.title.get()).toBe('new')
+  expect(configs).toHaveLength(3)
+  expect(configs.at(-1)!.title.get()).toBe('new')
 })
 
 it.each(['group', 'include'] as const)('applies profile patches to a %s subtree without HMR and keeps mixed updates on the normal lifecycle', async (kind) => {
@@ -482,7 +485,7 @@ it('logs an invalid candidate and keeps its references while other entries commi
   await healthy.entry!.update({ config: { title: 'healthy' } })
   expect(warning).toHaveBeenCalledTimes(2)
   expect((invalid.effectiveConfig as ReturnType<typeof Config>).title.get()).toBe('hello')
-  expect(invalid.rawConfig).toEqual({ title: 'invalid', nested: { count: -1 } })
+  expect(invalid.config).toEqual({ title: 'invalid', nested: { count: -1 } })
   expect((healthy.effectiveConfig as ReturnType<typeof Config>).title.get()).toBe('healthy')
   expect(events).toHaveBeenCalledExactlyOnceWith([['title']])
 })
@@ -500,7 +503,7 @@ it.each([false, true])('retains raw expression edits for dependency restoration 
   await fiber.entry!.update({ config: raw })
   await fiber.await()
   expect(values).toEqual(volatile ? ['same'] : ['same', 'same'])
-  expect(fiber.rawConfig).toBe(raw)
+  expect(fiber.config).toBe(raw)
   await provider.dispose()
   await provide('old-route', 'new-route')
   await fiber.await()
@@ -594,12 +597,11 @@ it('keeps an ordinary plugin mounted when an absent object becomes its explicit 
 it('keeps a noSave volatile value as the pending raw config across a no-op entry update', async () => {
   const ctx = await runtimeContext()
   const fiber = await mountEntry(ctx, { Config, apply() {} }, { title: 'saved' })
-  fiber.update({ title: 'ephemeral' }, true)
-  await fiber.await()
+  await fiber.update({ title: 'ephemeral' }, true)
   expect((fiber.effectiveConfig as ReturnType<typeof Config>).title.get()).toBe('ephemeral')
   expect(fiber.entry!.options.config).toEqual({ title: 'saved' })
   await fiber.entry!.update({ config: { title: 'saved' } })
-  expect(fiber.rawConfig).toEqual({ title: 'ephemeral' })
+  expect(fiber.config).toEqual({ title: 'ephemeral' })
   expect((fiber.effectiveConfig as ReturnType<typeof Config>).title.get()).toBe('ephemeral')
 })
 
