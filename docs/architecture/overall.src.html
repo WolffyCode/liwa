@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>灵鲸 · 整体架构图</title>
+<style>
+:root {
+  --bg: #f7f6f2; --panel: #ffffff; --text: #1f2328; --muted: #5f6670; --line: #e3e1da; --accent: #2563eb;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #15171a; --panel: #1d2024; --text: #e6e7e9; --muted: #9aa1aa; --line: #2e3238; --accent: #60a5fa; }
+}
+:root[data-theme="dark"] { --bg: #15171a; --panel: #1d2024; --text: #e6e7e9; --muted: #9aa1aa; --line: #2e3238; --accent: #60a5fa; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 80px; display: grid; grid-template-columns: 220px 1fr; gap: 28px; }
+nav { position: sticky; top: 16px; align-self: start; max-height: calc(100vh - 32px); overflow: auto; font-size: 13px; }
+nav a { display: block; color: var(--muted); text-decoration: none; padding: 2px 0; }
+nav a:hover { color: var(--accent); }
+nav .grp { margin-top: 12px; font-weight: 600; color: var(--text); }
+main { min-width: 0; }
+h1 { font-size: 26px; margin: 0 0 4px; }
+h2 { font-size: 20px; margin: 40px 0 12px; padding-top: 8px; border-top: 1px solid var(--line); }
+h3 { font-size: 16px; margin: 0; }
+.sub { color: var(--muted); margin: 0 0 18px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; margin: 14px 0; }
+.card .head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.id { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--muted); }
+.one { margin: 2px 0 10px; color: var(--muted); }
+.pts { margin: 10px 0 0; padding-left: 18px; color: var(--muted); font-size: 14px; }
+.diagram { overflow-x: auto; }
+.diagram pre.mermaid { background: #ffffff; border-radius: 8px; padding: 8px; }
+pre.mermaid { margin: 0; background: transparent; font-size: 12px; white-space: pre; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { border: 1px solid var(--line); padding: 6px 8px; vertical-align: top; text-align: left; }
+th { background: color-mix(in srgb, var(--panel) 85%, var(--line)); }
+@media (max-width: 860px) { .wrap { grid-template-columns: 1fr; } nav { position: static; max-height: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <div class="grp">总图</div>
+  <a href="#A1">A1 总图</a>
+  <a href="#A2">A2 进程</a>
+  <a href="#A3">A3 分层与依赖</a>
+  <a href="#A4">A4 四种用脑</a>
+  <div class="grp">循环</div>
+  <a href="#B1">B1 身的每分钟一跳</a>
+  <a href="#B2">B2 到了念以后去哪</a>
+  <a href="#B3">B3 经历流与投影</a>
+  <div class="grp">链路</div>
+  <a href="#C1">C1 主人问"在干嘛"</a>
+  <a href="#C2">C2 她自己的事</a>
+  <a href="#C3">C3 想找主人</a>
+  <a href="#C4">C4 夜里整理</a>
+  <div class="grp">其他</div>
+  <a href="#open">已定与待补</a>
+</nav>
+<main>
+<h1>灵鲸 · 整体架构图</h1>
+<p class="sub">配合 <code>docs/architecture/overall.md</code> 看。图已预先渲染，不联网也能看。2026-10-28。</p>
+
+<h2 id="overview">总图</h2>
+
+<div class="card" id="A1">
+  <div class="head"><span class="id">A1</span><h3>总图：九个部分落在本体的哪里</h3></div>
+  <p class="one">本体是她的身体和神经系统；思考交给四种用脑。代码只管身体、事实、边界；模型管评价和判断。</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart TB
+  W["世界与时钟：主控台 / 网页 · 形态适配器子进程【V2 起】· 世界源（天气 · 节日 · 日历）· 时钟"]
+  W --> S["感 senses：归一 · 认人 · 算受众 · 先写经历流"]
+  S --> A["念 attention：显著性 · 容量 · 心事 · 关注 · 联想 → 决定去向"]
+  B["身 body：每分钟一跳，不调模型&lt;br/&gt;精力 · 需求 · 情绪 · 心情 · 耐受 · 调节器"] --> A
+  B --> WL["意 will：承诺 · 打算 · 心愿 · 牵挂 · 方针 · 冲动 · 家规 · 摆桌子"]
+  A --> M["思 minds：四种用脑&lt;br/&gt;在场 · 慢想 · 手 · 睡眠"]
+  WL --> M
+  M <--> CLI["CLI 子进程：Claude / Codex / ACP"]
+  M <--> L["账本：self · memory · people · skills · roster"]
+  M --> ACT["行 actions + outbox + tasks&lt;br/&gt;准入 → 记将要做 → 执行 → 记结果"]
+  ACT --> W
+  S --> J["经历流 journal：事件 + 载荷 + 投影"]
+  ACT --> J
+  G["守护 guard：暂停 · 总闸 · 收回 · 容量"] -.准入.-> M
+  G -.准入.-> ACT
+  </pre></div>
+  <ul class="pts">
+    <li>所有事件进同一条经历流；所有动作走同一条管线。</li>
+    <li>身每分钟一跳几毫秒，是本体里唯一一直在跑的"她"。</li>
+  </ul>
+</div>
+
+<div class="card" id="A2">
+  <div class="head"><span class="id">A2</span><h3>进程：一个本体加一群子进程</h3></div>
+  <p class="one">崩溃隔离在子进程里；写只在主线程。</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart LR
+  LD["launchd"] --> CORE["本体：一个 Node 进程&lt;br/&gt;主线程：事件循环 · SQLite 唯一写入者 · 身的定时器 · 作业定时器&lt;br/&gt;worker_threads：重查询"]
+  CORE --> C1["CLI 子进程 ×N&lt;br/&gt;每个活着的用脑一个"]
+  CORE --> C2["形态适配器子进程 ×N【V2】"]
+  CORE --> C3["本地能力服务（按需）"]
+  CORE --> DB["liwa.db · derived.db · blobs/ · workspaces/ · backups/"]
+  UI["浏览器 / Electron 薄壳 / 桌宠【V5】/ 手机【V5】"] -->|HTTPS · WebSocket| CORE
+  </pre></div>
+</div>
+
+<div class="card" id="A3">
+  <div class="head"><span class="id">A3</span><h3>分层与依赖方向</h3></div>
+  <p class="one">调用只能向下；账本不依赖插件宿主；守护横切。</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart TB
+  L1["接入层：gateway · toolport"] --> L2["编排层：senses · attention · will · scheduler · tasks · outbox"]
+  L2 --> L3["运行层：minds · context · actions"]
+  L3 --> L4["账本层：body · self · memory · people · skills · roster"]
+  L3 --> L5["插件宿主 plugins：记忆引擎 · 成长引擎 · 关系模型（第一版内置）"]
+  L5 --> L4
+  L4 --> L6["资源层：brains · procs · formhost · abilities · workspace · notify"]
+  L3 --> L6
+  L6 --> L8["基础层：journal"]
+  L4 --> L8
+  G["守护 guard：每次用脑、每个动作之前"] -.-> L2
+  G -.-> L3
+  </pre></div>
+</div>
+
+<div class="card" id="A4">
+  <div class="head"><span class="id">A4</span><h3>四种用脑</h3></div>
+  <table>
+    <tr><th></th><th>在场</th><th>慢想</th><th>手</th><th>睡眠</th></tr>
+    <tr><td>什么时候</td><td>这个地方有人说话；有东西要在这里说</td><td>不对人的冲动过线、几个念头差不多、冲突、请示、异常、心事到期</td><td>被派活；她自己决定做一件事</td><td>空闲满条件；夜里</td></tr>
+    <tr><td>会话</td><td>每个在场一个，常驻，闲置回收</td><td>每次新开，处理完保留 5 分钟</td><td>每件事一个</td><td>每次作业一个</td></tr>
+    <tr><td>大脑</td><td>快而便宜，配备用</td><td>强</td><td>Claude / Codex</td><td>便宜，夜里可换强</td></tr>
+    <tr><td>能读的记忆</td><td>本在场受众能知道的</td><td>全部，外人原文标不可信</td><td>按发起在场的受众</td><td>作业范围内</td></tr>
+    <tr><td>能做的事</td><td>8 个工具：回复、主动开口、一次内心记录（感受 · 念头 · 事实 · 心事 · 牵挂）、承诺、请示、派活、召回、查看</td><td>拍板、定方针、定打算、推进心愿、派活、托在场说话、开始或停下一件自己的事、主动开口的判断（第一版）</td><td>CLI 原生工具（替主人的活限 worktree；她自己的事只有只读工具）、汇报、回问、子会话</td><td>只有一个 submit，交结构化提案</td></tr>
+  </table>
+</div>
+
+<h2 id="loops">循环</h2>
+
+<div class="card" id="B1">
+  <div class="head"><span class="id">B1</span><h3>身的每分钟一跳</h3></div>
+  <p class="one">确定性：只依赖注入的时钟和带种子的随机，所以能回放。</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart TD
+  T["每分钟 tick：注入的时钟 + 带种子的随机"] --> U1["精力：两过程 + 昼夜 + 用脑负荷"]
+  U1 --> U2["需求：联结（每个在乎的人）· 认可 · 新知 · 胜任 · 自主"]
+  U2 --> U3["情绪事件按类型半衰期衰减；被提起就再点燃"]
+  U3 --> U4["心情两维：向基线回弹 + 扰动 + 情绪推动；睡着冻结"]
+  U4 --> U5["无聊：闲着涨、做着没意义也涨；耐受按天回落；冲动衰减、线索再点燃"]
+  U5 --> MOD["调节器（算出来不存）：唤醒 · 细致度 · 专注 · 查看频率 · 心情词"]
+  MOD --> TH{"需求过线？&lt;br/&gt;概率随超出程度上升"}
+  TH -->|命中| IMP["生成或加强冲动（带来源）→ 交给念"]
+  TH -->|没命中| END["结束，几毫秒"]
+  IMP --> SAMP["过线 / 档位变化 / 整点：记一条 body.sampled"]
+  END -.整点.-> SAMP
+  </pre></div>
+</div>
+
+<div class="card" id="B2">
+  <div class="head"><span class="id">B2</span><h3>到了念以后去哪</h3></div>
+  <p class="one">对话类的事在那个地方的在场里想；她自己的事和冲突由慢想想；确定性的事代码直接办。</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart TD
+  IN["到了念的东西：事件或冲动"] --> SC["显著性打分：类型基础分 + 关注命中 + 心事匹配 + 关切命中 + 紧急度"]
+  SC --> CAP{"容量？"}
+  CAP -->|满| QUEUE["排队；超过几秒本体用她的口吻说等我一下"]
+  CAP -->|有空| KIND{"是什么"}
+  KIND -->|主人说话| P1["起主人的在场回合，抢占非主人发起的回合"]
+  KIND -->|别人私聊 / 过了两道门的群消息【V2】| P2["起那个地方的在场回合"]
+  KIND -->|心事条件满足 · 承诺到期| P3["注入对应在场的下一轮，或起一轮"]
+  KIND -->|对着某个人的冲动| HR{"不应期？家规？"}
+  HR -->|允许| P4["主动开口的判断：第一版默认慢想三选一，说 / 留成心事 / 不说 → 那个人的在场按人设措辞"]
+  HR -->|不允许| HOLD["留着，到点再看"]
+  KIND -->|不对人的冲动 · 一件事做完 · 几个念头差不多 · 冲突 · 请示| SLOW["意 摆桌子 → 叫醒慢想"]
+  KIND -->|再来一个的小选择| COIN["代码掷有偏的硬币"]
+  KIND -->|确定性的事：主人亲口且无冲突 · 发起人没权限| CODE["代码直接执行，或拒绝、转主人"]
+  KIND -->|其余| LOG["只记下"]
+  </pre></div>
+</div>
+
+<div class="card" id="B3">
+  <div class="head"><span class="id">B3</span><h3>经历流与投影</h3></div>
+  <p class="one">事件信封不改，正文是可删的载荷；一切状态都是投影，能删掉重算。</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart LR
+  subgraph W["写入方，只经 append"]
+    S1["senses"]
+    A1["actions / outbox"]
+    B1["body 采样"]
+    M1["minds 回合"]
+    T1["tasks"]
+    L1["账本变更"]
+  end
+  J["经历流 journal&lt;br/&gt;事件信封（不改）+ 载荷（可删）+ 大对象"]
+  subgraph IN["内联投影，同事务"]
+    P1["她现在"]
+    P2["手上的事"]
+    P3["她在意的"]
+    P4["花费 · 用量"]
+  end
+  subgraph AS["异步投影，derived.db，可重建"]
+    Q1["记忆 · 印象摘要"]
+    Q2["全文与向量索引"]
+    Q3["日记 · 成长 · 自我"]
+    Q4["验收指标"]
+  end
+  S1 --> J
+  A1 --> J
+  B1 --> J
+  M1 --> J
+  T1 --> J
+  L1 --> J
+  J --> IN
+  J --> AS
+  IN --> V["窗：主控台 / 桌宠 / 手机"]
+  AS --> V
+  AS --> R["回放与验收脚本"]
+  </pre></div>
+</div>
+
+<h2 id="chains">链路</h2>
+
+<div class="card" id="C1">
+  <div class="head"><span class="id">C1</span><h3>链路一：主人在 QQ 问"在干嘛"</h3></div>
+  <p class="one">没有慢想出场；心事由代码注入；妈妈的在场没动；手没停。</p>
+  <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant O as 爸爸（QQ）
+  participant AD as QQ 适配层
+  participant S as senses / people
+  participant J as 经历流
+  participant AT as attention
+  participant CX as context
+  participant P as 在场用脑（CLI）
+  participant TP as toolport / outbox
+  O->>AD: 在干嘛
+  AD->>S: 标准消息：地方、账号、在场者、说给她的、内容
+  S->>J: message.received，来源人 主人，受众 主人
+  S->>AT: 事件 + 心事匹配（等爸爸上线）
+  AT->>CX: 起在场回合（主人优先，容量有空）
+  CX->>P: 稳定前缀（缓存）+ [状态][正在做][心事][记得][刚才想起][别处] + 爸爸说
+  P->>TP: 同一批：reply(含感受) · inner(心事已了结)
+  TP->>J: effect.intended → effect.completed
+  TP->>AD: 投递到那条消息所在的地方
+  AD->>O: 回复
+  Note over J,AT: 写回：评价进身 · 心事了结 · 用量记账 · 投影更新
+  </pre></div>
+</div>
+
+<div class="card" id="C2">
+  <div class="head"><span class="id">C2</span><h3>链路二：她自己冒出念头（第四版的活动，机制第一版就有）</h3></div>
+  <p class="one">代码摆桌子，慢想拍板；连续的小选择由硬币；腻和冲突把她拉回决策点。</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart TD
+  T["身：无聊过线，概率命中 → 冲动：换点事"] --> A1["念：不对着人 → 叫醒慢想？查容量、退避"]
+  A1 --> TB["意 摆桌子：候选 = 冲动 ∪ 能做∩会做，按爱做加权、按耐受打折&lt;br/&gt;每个候选附身体权重：层级 · 成功预期 · 机会 · 习惯 · 在位加成 − 代价"]
+  TB --> SL["慢想（强大脑，新会话）：读心事、承诺、打算、心愿、桌子、摘要&lt;br/&gt;do(看手工视频, 理由)"]
+  SL --> H["开一只她自己的事的手：受众公开 · 花费单独算 · 不进看板"]
+  H --> LOOP["手每看一条：inner(感受: 有意思 · 学到；念头: 分享给爸爸)"]
+  LOOP --> COIN{"再看一个？&lt;br/&gt;在她写的终止条件之内，代码掷有偏的硬币"}
+  COIN -->|继续| LOOP
+  COIN -->|腻了 / 累了 / 和打算冲突 / 成瘾样信号| SL2["叫醒慢想：stop + plan(再看一个就去改首页)，或继续；理由写进经历流"]
+  SL2 --> N["做完时由这只手在最后一个回合选下一件；夜里：日记 · 习惯增长 · 偏好更新 · 成长提案"]
+  </pre></div>
+</div>
+
+<div class="card" id="C3">
+  <div class="head"><span class="id">C3</span><h3>链路三：想找主人（判断归她，边界归你）</h3></div>
+  <p class="one">代码不发消息、不按阈值放行；它只让想念涨落（含等回音的不应期）、拼事实包、查家规。</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart TD
+  B["身：对主人的联结涨到 0.7，过线概率命中 → 冲动：想爸爸"] --> HR{"不应期：上次说的话他还没回？&lt;br/&gt;家规：勿扰时段 · 别烦 · 今日条数？"}
+  HR -->|命中| HOLD["不起回合；冲动留着，到点再看"]
+  HR -->|没设或没命中| FP["意 拼事实包：上次找他 10:00 没回 · 昨晚聊得热 · 现在 14:30 工作日 · 15:00 有会 · 手里有榫卯视频和妈妈的事"]
+  FP --> P["判断：第一版默认慢想，评测后可移回在场&lt;br/&gt;前缀 + [想找他] + 事实包 + 教养底线 → 三选一"]
+  P -->|说| W["主人的在场按人设措辞 → say"]
+  W --> OB["outbox：家规再查一次 → 目标 = 主人最近活动的地方 → 投递 → 记 proactive.sent（理由）"]
+  P -->|留成心事| KM["inner(心事)：等他开完会说"]
+  P -->|不说| Q["安静结束，冲动按半衰期淡掉"]
+  OB --> R["身：想念部分释放，进入等回音的不应期；没回就退避"]
+  R --> FB["反馈：回了 / 没回 / 点开没回 / 别烦 → 经历流"]
+  FB --> E["当天进心情；夜里进印象（爸爸上班时不爱聊天）和习惯"]
+  </pre></div>
+</div>
+
+<div class="card" id="C4">
+  <div class="head"><span class="id">C4</span><h3>链路四：夜里整理</h3></div>
+  <p class="one">一次批量用脑，十件事按顺序交提案，账本校验后写入。</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart LR
+  C["到睡觉时间且没人在聊&lt;br/&gt;主人还在聊就推迟"] --> SL["睡眠用脑（便宜大脑）&lt;br/&gt;分批读检查点之后的经历流"]
+  SL --> S1["① 巩固记忆"] --> S2["② 关系与印象摘要"] --> S3["③ 重算牵挂"] --> S4["④ 遗忘"] --> S5["⑤ 反思与成长提案"]
+  S5 --> S6["⑥ 日记 + 明天的打算"] --> S7["⑦ 事后检查"] --> S8["⑧ 近况与余波"] --> S9["⑨ 自我模型"] --> S10["⑩ 抽查感受"]
+  S10 --> OUT["账本校验后写入 · 在场换新 · 候选账号提醒 · 早安材料"]
+  </pre></div>
+</div>
+
+<h2 id="open">已定与待补</h2>
+<div class="card">
+  <p class="one"><code>overall.md</code> §18 的全部选择已随整体架构确认（2026-10-28）。仍需主人提供：备份加密的密钥放哪；她用的账号是否和主人共用、预留多少额度。后续版本前再定：第二版前是否告诉家人主人能看私聊；第四版前公开发言的规则。</p>
+</div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+(function () {
+  function uniqueMarkers() {
+    document.querySelectorAll('pre.mermaid svg').forEach(function (svg, n) {
+      var prefix = 'd' + n + '-';
+      var map = {};
+      svg.querySelectorAll('marker[id]').forEach(function (m) { map[m.id] = prefix + m.id; m.id = prefix + m.id; });
+      if (!Object.keys(map).length) return;
+      svg.querySelectorAll('*').forEach(function (el) {
+        ['marker-start', 'marker-end', 'marker-mid'].forEach(function (a) {
+          var v = el.getAttribute(a);
+          if (!v) return;
+          var m = v.match(/url\(#([^)]+)\)/);
+          if (m && map[m[1]]) el.setAttribute(a, 'url(#' + map[m[1]] + ')');
+        });
+      });
+    });
+  }
+  if (window.mermaid) {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'default',
+      themeVariables: { fontFamily: '-apple-system, "PingFang SC", "Microsoft YaHei", sans-serif' },
+      sequence: { mirrorActors: false, wrap: false, messageFontSize: 13, noteFontSize: 12, actorFontSize: 13 },
+      flowchart: { htmlLabels: true, curve: 'basis' }
+    });
+    mermaid.run({ querySelector: 'pre.mermaid', suppressErrors: true }).then(uniqueMarkers, uniqueMarkers);
+  }
+})();
+</script>
+</body>
+</html>
