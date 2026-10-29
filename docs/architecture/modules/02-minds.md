@@ -135,7 +135,7 @@ type ToolResult = { ok: true; result: JsonValue } | { ok: false; error: { catego
 
 **稳定前缀**（`SessionConfig.persona.stable`，作为完整的自定义 systemPrompt，决策 33）= 人设文件的锚段 + 在场说明 + 人设文件的说话段，按 `06-growth.md` §4.3 的十段顺序拼接，段头用固定标题、段间空行；里面没有时间、消息号、会话号、令牌（`overall.md` §5.1 硬规则；OpenClaw #20894〔二手〕）。
 
-**静态人设文件**：`$LIWA_HOME/members/<member>/persona.md`，主人用任何编辑器手写，仓库带一份带占位符的样板 `profiles/persona.example.md`（`liwa doctor` 报缺失与超限）。格式：YAML 前言 + 固定二级标题；未知标题、缺必填段、段超硬上限都算错误，context 拒绝开会话并指出段名（`06-growth.md` §4.3"锚段之和超硬上限属出生设定校验错误"）。
+**静态人设文件**：`$LIWA_HOME/members/<member>/persona.md`，主人用任何编辑器手写，仓库带一份带占位符的样板 `packages/plugins/persona-template-default/persona.md`（`persona.template` 数据包；`liwa doctor` 报缺失与超限）。格式：YAML 前言 + 固定二级标题；未知标题、缺必填段、段超硬上限都算错误，context 拒绝开会话并指出段名（`06-growth.md` §4.3"锚段之和超硬上限属出生设定校验错误"）。
 
 ```markdown
 ---
