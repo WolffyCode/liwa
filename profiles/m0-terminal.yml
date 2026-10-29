@@ -1,0 +1,5 @@
+# m0 终端链路的装配清单（docs/architecture/modules/00-plugin-kernel.md §4.1）
+# 骨架阶段只有标识与阶段集合；插件条目随各插件实现逐个加入
+id: m0-terminal
+stage: m0
+plugins: []

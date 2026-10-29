@@ -1,0 +1,28 @@
+{
+  "name": "@liwa/plugin-memory-engine-default",
+  "version": "0.1.0",
+  "private": true,
+  "description": "memory.engine 的内置实现：内置记忆引擎",
+  "type": "module",
+  "exports": {
+    ".": {
+      "liwa-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "liwa": {
+    "manifestVersion": 1,
+    "id": "memory-engine-default",
+    "kind": "builtin"
+  },
+  "dependencies": {
+    "@liwa/contracts": "workspace:*",
+    "@liwa/kernel": "workspace:*"
+  },
+  "devDependencies": {
+    "@liwa/testkit": "workspace:*",
+    "vitest": "catalog:"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  // 灵鲸所有 TypeScript 项目共用的编译选项（docs/engineering.md §4.1、§8）
+  // 包之间只用包名引用，不设路径别名
+  "compilerOptions": {
+    // Node 24 原生支持 ES2024
+    "target": "ES2024",
+    "lib": ["ES2024"],
+    "types": ["node"],
+
+    // ESM only：按 Node 的规则解析，相对引用写 .js 后缀
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "moduleDetection": "force",
+    "resolveJsonModule": true,
+    // 开发期解析条件：各包 exports 里的 liwa-source 指向 src/*.ts，免构建即可跨包检查；
+    // 生产构建上线时另设 tsconfig.build.json，去掉此项、按 dist 解析
+    "customConditions": ["liwa-source"],
+
+    // 严格模式与额外的严格项
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // 每个文件可单独转译（tsx、vitest 都按单文件转译）；纯类型引用必须写 import type
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+
+    // 现阶段只做类型检查，不产出文件
+    "noEmit": true,
+    "skipLibCheck": true
+  }
+}

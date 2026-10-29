@@ -77,7 +77,7 @@
 ```ts
 import { definePlugin, z } from '@liwa/kernel';          // z 由 contracts 统一 re-export，避免多份 zod
 
-export const Config = z.strictObject({ maxTurns: z.number().int().min(1).default(200) });   // 同步校验；不许 async refine / 会抛异常的 transform〔源：cordis 只接受同步 validate〕
+export const Config = z.strictObject({ maxTurns: z.number().int().min(1).default(200) });   // 同步校验；不许 async refine。kernel 挂载前用 safeParse 校验、填默认值，错误写进禁用原因或启动失败原因；不再交给 cordis 的 Config〔源：cordis 的 resolveConfig 只接受同步 validate，错误只进它的日志〕
 
 export const plugin = definePlugin({
   id: 'brain-claude',
@@ -93,7 +93,7 @@ export const plugin = definePlugin({
 });
 ```
 
-`definePlugin` 把 `name: id` 交给 cordis（否则重复注册的报错里只写 `root`）；把 `apply` 包成 kernel 的门面调用；返回的对象带 kernel 的标记，loader 核对 id 与 manifest 一致。required 插件用 `defineService(key, { inject, Config, async create(ctx, config) })`：工厂先 `await` 再 `provide`，实例冻结后发布；非 required 包里出现 `defineService` 的产物即拒绝。
+`definePlugin` 把 `name: id` 交给 cordis（否则重复注册的报错里只写 `root`）；把 `apply` 包成 kernel 的门面调用；Config 由 kernel 校验（上面的注释），cordis 拿到的是校验后的值；返回的对象带 kernel 的标记，loader 核对 id 与 manifest 一致。required 插件用 `defineService(key, { inject, Config, async create(ctx, config) })`：工厂先 `await` 再 `provide`，实例冻结后发布；非 required 包里出现 `defineService` 的产物即拒绝。
 
 ## 4 profile 与 patch
 
@@ -135,8 +135,8 @@ memberDefaults:                             # 对所有成员生效的部署默�
 
 | 阶段 | 做什么 | 失败时 |
 | --- | --- | --- |
-| 1 计划校验 | 读 profile 与四层 patch；对每条解析包（以组合根的 URL 为解析根）、读 `package.json`、按 `realpath` 推导种类并与 manifest 核对、zod 校验 manifest、比对契约与视图版本；用 `plugins[].service` 与 `consumes` 建**静态服务图**：缺提供方、重复提供、成环当场点名；required 的装载顺序取拓扑序；槽位计划按基数检查；阶段集合检查：本阶段必须在装的 required 都在、必需槽位都有提供方 | 任一项失败即退出，指出文件、层、条目 |
-| 2 注册 | 按拓扑序 `import()` 入口、核对 `mod.plugin.id`、`inject ⊆ consumes`、解析密钥引用、`ctx.plugin(plugin, config)`；`apply` 只许登记，并收到一个 `AbortSignal`。required 的 fiber 必须在 `startupTimeout`（默认 20 秒）内 ACTIVE，否则列出每个未就绪插件缺的键后退出；就绪用 `fiber.state` 判断，不用 `await ctx.plugin()`〔源：`fiber.await()` 在 PENDING 时立即返回且不报错〕。builtin 的 `apply` 抛错：FAILED、禁用、警告；builtin 超时：触发 signal、该代的后续登记一律拒绝（代际失效），不能确认它已停下来（同步死循环）就按整体失败退出，不宣称能"杀掉"一个进程内插件 | required 失败即退出 |
+| 1 计划校验 | 读 profile 与四层 patch；对每条解析包（以组合根 `apps/liwa` 为 Node 的包解析根；仓库根另算，缺省从组合根向上找含 `pnpm-workspace.yaml` 的目录，用来推导种类、读 `profiles/`）、读 `package.json`、按 `realpath` 推导种类并与 manifest 核对、zod 校验 manifest、比对契约与视图版本；用 `plugins[].service` 与 `consumes` 建**静态服务图**：缺提供方、重复提供、成环当场点名；required 的装载顺序取拓扑序；槽位计划按基数检查；阶段集合检查：本阶段必须在装的 required 都在、必需槽位都有提供方 | 任一项失败即退出，指出文件、层、条目 |
+| 2 注册 | 先挂 required：按拓扑序校验 Config、解析密钥引用、`ctx.plugin(plugin, config)`，全部 ACTIVE 才往下走；`startupTimeout`（默认 20 秒）内没齐，列出每个未就绪插件在等的服务后退出；就绪用 `fiber.state` 判断，不用 `await ctx.plugin()`〔源：`fiber.await()` 在 PENDING 时立即返回且不报错〕。再按 profile 顺序逐个挂 builtin：`import()` 入口、核对 `mod.plugin.id`、`inject ⊆ consumes`、校验 Config、解析密钥、挂载并等它落定（`apply` 只做登记，不该耗时）。builtin 的默认导出、Config 不合规范、密钥解析不到、`apply` 抛错、剩余时限内没落定，一律只禁用它自己，原因写进计划（`liwa status` 可见）；禁用时最多等它释放 5 秒：cordis 不能打断在途的 `apply`，不宣称能"杀掉"一个进程内插件 | required 失败即退出 |
 | 3 恢复 | journal 的日志恢复（被打断的回合、结果不明的副作用）、procs 清孤儿、迁移、异步投影追上（`overall.md` §12.1 的 1–4 步），由对应 required 插件的 `recover` 钩子按拓扑序执行 | 失败即退出 |
 | 4 槽位就绪 | 核对**实际登记**与 manifest 声明一致；`requiredBy` 的槽位（`memory.engine` ← memory、`growth.engine` ← self、`brain.provider` ← brains）在其服务在装时必须有可用实现；可降级槽位（`ability.*`）缺了只记日志 | 必需槽位缺失即退出 |
 | 5 开放业务 | 按拓扑序调用 `ready`：gateway 开始接客户端、scheduler 装作业、订阅开始；写 `kernel.started.v1{profile, stage, assemblyHash}`；打印 `dump-config` 摘要 | `ready` 抛错：required 退出，builtin 禁用 |
@@ -145,7 +145,7 @@ memberDefaults:                             # 对所有成员生效的部署默�
 
 ### 5.2 关闭
 
-SIGTERM 或主人"排空后重启"→ 全局截止 45 秒（launchd `ExitTimeOut` 不小于它，到点直接 `process.exit`）→ 按逆拓扑序调用 `drain(ctx, deadline)`：停接新回合，minds 等在跑的回合到安全点 → kernel 逐个 `await fiber.dispose()`（逆序；不能依赖 cordis 的并发释放〔源：同一 fiber 的释放用 `Promise.all`〕）→ procs 在自己的 dispose 里杀进程组 → 退出码 0。非 0 退出计入启动失败预算。
+SIGTERM 或主人"排空后重启"→ 全局截止 45 秒（launchd `ExitTimeOut` 不小于它，到点直接 `process.exit`）→ 按逆拓扑序调用 `drain(ctx, deadline)`：停接新回合，minds 等在跑的回合到安全点 → kernel 逐个 `await fiber.dispose()`（挂载的逆序：builtin 先于 required、required 逆拓扑，因为 cordis 释放提供方时要等依赖它的 fiber 先释放〔源：`_unload` 等 `dependents` 清空〕；不能依赖 cordis 的并发释放〔源：同一 fiber 的释放用 `Promise.all`〕）→ procs 在自己的 dispose 里杀进程组 → 退出码 0。每个插件的 `drain` 与每个 fiber 的 `dispose` 都只等到全局截止：到点只记日志、继续下一个（cordis 不能打断在途的 `apply`，卡住的插件不能拖住关闭）。非 0 退出计入启动失败预算。
 
 ### 5.3 运行时崩溃与安全模式
 
@@ -244,9 +244,13 @@ export function definePlugin<S extends ZodType, I extends ViewKey | ServiceKey>(
   ready?(ctx: KernelContext<I>): Promise<void>; drain?(ctx: KernelContext<I>, deadline: number): Promise<void>; health?(): Promise<{ ok: boolean; reason?: string }>;
 }): PluginDef;
 export function defineService<K extends ServiceKey>(key: K, def: { inject?: readonly ServiceKey[]; Config?: ZodType; create(ctx, config): Promise<Services[K]>; recover?(ctx): Promise<void>; ready?; drain?; health? }): PluginDef;
-export function startKernel(opts: { root: URL; home: string; profile: string; patches?: string[]; required: PluginDef[]; stageSets: StageSets; logger: Logger; secrets: SecretResolver; clock?: Clock; rng?: Rng; startupTimeoutMs?: number }): Promise<KernelHandle>;   // KernelHandle: { plan: AssemblyPlan; shutdown(reason): Promise<void> }
-export function dumpConfig(opts: { root: URL; home: string; profile: string; patches?: string[]; required: PluginDef[]; stageSets: StageSets }): Promise<AssemblyPlan>;
-export function createTestKernel(opts: { root: URL; profile: ProfileDoc; required?: PluginDef[]; fakeServices?: Partial<Services>; clock?: Clock; rng?: Rng; resolve?: (pkg: string) => Promise<{ manifest, module }> }): Promise<KernelHandle>;   // 走同一段第 1–5 阶段代码；只有它能替换 required
+export function startKernel(opts: StartOptions): Promise<KernelHandle>;
+// StartOptions: { root: URL; repoRoot?: string; home: string; profile: string; patches?: string[]; required: PluginDef[]; stageSets?: StageSets; logger?: Logger; secrets?: SecretResolver; clock?: Clock; rng?: Rng; ids?: Ids; startupTimeoutMs?: number; shutdownDeadlineMs?: number }
+//   root 是组合根（Node 的包解析根）；repoRoot 缺省从 root 向上找含 pnpm-workspace.yaml 的目录
+// KernelHandle: { plan: AssemblyPlan; health(): Promise<Record<string, Health>>; shutdown(reason: string): Promise<void>; service<K>(key: K): Services[K] }
+export function dumpConfig(opts: StartOptions): AssemblyPlan;   // 同步，只跑第 1 阶段，不导入业务代码
+export function createTestKernel(opts: { root?: string; profile: Profile; patches?; required?: PluginDef[]; fakeServices?: Partial<Services>; packages?: Record<string, { dir: string; pkg: PackageManifest; module }>; clock?: FakeClock; logger?: MemoryLogger; secrets?; startupTimeoutMs?; shutdownDeadlineMs? }): Promise<KernelHandle & { clock: FakeClock; logger: MemoryLogger }>;
+//   走同一段第 1–5 阶段代码，只多"内存里的包"与"假服务"两个注入点；只有它能替换 required。另有 dumpTestConfig、prepareTestAssembly 与 fakeClock（advance / flush）
 ```
 
 kernel 事件（进程内，斜杠风格，只有 kernel 能 emit）：`kernel/started`、`plugin/loaded`、`plugin/disabled`、`plugin/failed`、`plugin/circuit-open`、`slot/bound`；写进经历流的对应 `kernel.started.v1`、`plugin.disabled.v1`、`plugin.failed.v1`、`plugin.circuit_open.v1`、`slot.bound.v1`（系统流，受众 `AUDIENCE_OWNER`），journal 就绪前先缓冲。
@@ -267,7 +271,7 @@ kernel 事件（进程内，斜杠风格，只有 kernel 能 emit）：`kernel/s
 
 ## 14 待实测
 
-cordis `4.0.0-rc.12`：`FiberState` 是 `const enum`，`tsx` / `isolatedModules` 下跨包引用是否拿得到运行时值；zod 4 的 Standard Schema 与 `resolveConfig` 的配合（同步校验、错误信息）；`AsyncLocalStorage` 标 id 的开销；pnpm 下以组合根为解析根的动态 `import()`；关闭 45 秒截止与 launchd `ExitTimeOut` 的配合。
+cordis `4.0.0-rc.12`：`AsyncLocalStorage` 标 id 的开销；pnpm 下以组合根为解析根的动态 `import()`（m0 接第一个真实插件包时验）；关闭 45 秒截止与 launchd `ExitTimeOut` 的配合。已验：`FiberState` 是 `const enum`、跨包拿不到运行时值，kernel 按源码写死数值并用测试守住；Config 不经 cordis 的 `resolveConfig`，由 kernel 用 zod `safeParse` 同步校验（§3.2）。
 
 ## 15 依据
 

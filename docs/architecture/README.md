@@ -16,7 +16,7 @@
 | `modules/03-foundation.md` 基础与守护 | 待写 |
 | `modules/04-life-core.md` 生命内核 | 待写 |
 | `modules/05-memory.md` 记忆系统 | 已确认（2026-10-28） |
-| `modules/06-growth.md` 成长系统 | 调研完成（`research/2026-10-28-growth-mechanisms.md`，8 个拍板点见其 ⑩），待写 |
+| `modules/06-growth.md` 成长系统 | 草稿已写（2026-10-29），待主人确认；8 个拍板点已按决策 33 定 |
 | `modules/07-protocol-gateway.md` 前后端协议与网关 | 待写 |
 | `modules/08-console.md` 客户端界面 | 待写 |
 | `modules/09-abilities.md` 能力插件 | 待写 |
@@ -111,7 +111,7 @@
 主人 2026-10-28 定：**最先做最复杂的两份，05 记忆系统和 06 成长系统**，各自先跑调研（读开源项目和论文），再写方案。其余按"先验证最大风险、再搭地基、再长血肉"排：
 
 1. **05 记忆系统**：调研 `docs/research/2026-10-28-memory-mechanisms.md`（联想式 / 激活式记忆、巩固与遗忘、自我与人物的先例、Node + SQLite 选型）→ `modules/05-memory.md` 已确认（2026-10-28）。
-2. **06 成长系统**：调研 `docs/research/2026-10-28-growth-mechanisms.md`（人设写法与渲染、性格参数、成长提案与防漂移、本事与习惯、日记、回归）已完成 → 05 确认后写 `modules/06-growth.md`。
+2. **06 成长系统**：调研 `docs/research/2026-10-28-growth-mechanisms.md`（人设写法与渲染、性格参数、成长提案与防漂移、本事与习惯、日记、回归）已完成 → `modules/06-growth.md` 草稿已写（2026-10-29），待主人确认。
 3. **01 agent CLI 接入**：第 0 步大脑探针在这份里，它的结果决定工具契约和在场的默认大脑。
 4. **02 用脑调度**：紧接着 01。
 5. **03 基础与守护**：骨架的第 1、2 步。

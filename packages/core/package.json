@@ -1,0 +1,23 @@
+{
+  "name": "@liwa/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "required 插件与编排层：一个包多个插件，入口由 liwa.plugins[].entry 指定",
+  "type": "module",
+  "exports": {
+    ".": {
+      "liwa-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@liwa/contracts": "workspace:*",
+    "@liwa/kernel": "workspace:*"
+  },
+  "devDependencies": {
+    "@liwa/testkit": "workspace:*",
+    "vitest": "catalog:"
+  }
+}

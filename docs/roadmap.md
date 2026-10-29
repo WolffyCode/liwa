@@ -24,7 +24,7 @@
 | 1.5 | 工程约定与代码实现设计 | 一 | A | 1 天 | 已确认（`docs/engineering.md`） |
 | 1.7 | m0 终端能跑：契约与底座之后的最小链路 + `liwa` 命令行（start、status、doctor、dump-config、chat、tail），探针跑在它上面 | 一 | A | 3–4 天 | 待做 |
 | 1.6 | 第一版实现计划 | 一 | A | 1 天 | 待做 |
-| 2.1 | 工程底座 + kernel-0（契约机制层、底座、testkit、组合根） | 二 M1 | A | 4 天 | 待做 |
+| 2.1 | 工程底座 + kernel-0（契约机制层、底座、testkit、组合根） | 二 M1 | A | 4 天 | 进行中（2026-10-29：脚手架与本机 CI、`contracts` 机制层、`kernel` 五阶段 loader 已写并通过测试；testkit、组合根的进程入口与安全模式页待做） |
 | 2.1b | kernel-1：IPC 宿主运行时 | 第一个真正的进程外插件出现时 | A | 3 天 | 推迟 |
 | 2.2 | journal | 二 M1 | A | 3 天 | 待做 |
 | 2.3 | guard 骨架 | 二 M1 | A | 1 天 | 待做 |

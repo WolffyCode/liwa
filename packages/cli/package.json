@@ -1,0 +1,21 @@
+{
+  "name": "@liwa/cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "标准终端命令 liwa：gateway 的命令行客户端，走同一套前后端协议",
+  "type": "module",
+  "exports": {
+    ".": {
+      "liwa-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@liwa/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
+  }
+}

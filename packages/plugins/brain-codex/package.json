@@ -1,0 +1,29 @@
+{
+  "name": "@liwa/plugin-brain-codex",
+  "version": "0.1.0",
+  "private": true,
+  "description": "brain.provider 的 Codex 实现：Codex app-server 适配器（从 Paseo 摘）",
+  "type": "module",
+  "exports": {
+    ".": {
+      "liwa-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "liwa": {
+    "manifestVersion": 1,
+    "id": "brain-codex",
+    "kind": "builtin"
+  },
+  "dependencies": {
+    "@liwa/brain-shared": "workspace:*",
+    "@liwa/contracts": "workspace:*",
+    "@liwa/kernel": "workspace:*"
+  },
+  "devDependencies": {
+    "@liwa/testkit": "workspace:*",
+    "vitest": "catalog:"
+  }
+}

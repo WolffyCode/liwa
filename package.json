@@ -1,0 +1,33 @@
+{
+  "name": "liwa",
+  "version": "0.1.0",
+  "private": true,
+  "description": "灵鲸（Liwa）工作区根：统一脚本与开发依赖；各包版本号随仓库统一升（docs/engineering.md §4）",
+  "type": "module",
+  "packageManager": "pnpm@11.17.0",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "ci": "bash tools/ci.sh",
+    "lint": "eslint . && depcruise apps packages tools --config .dependency-cruiser.cjs",
+    "typecheck": "tsc -p tsconfig.json && pnpm -r exec tsc --noEmit",
+    "test": "vitest run --project '!contract'",
+    "test:contract": "vitest run --project contract --passWithNoTests",
+    "dump-config": "tsx --conditions=liwa-source tools/dump-config.ts",
+    "dev": "tsx tools/placeholder.ts dev",
+    "probe": "tsx tools/placeholder.ts probe",
+    "replay": "tsx tools/placeholder.ts replay",
+    "backup": "tsx tools/placeholder.ts backup",
+    "contracts:export": "tsx tools/placeholder.ts contracts:export"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@typescript-eslint/parser": "catalog:",
+    "dependency-cruiser": "catalog:",
+    "eslint": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

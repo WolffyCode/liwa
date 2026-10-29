@@ -1,0 +1,22 @@
+{
+  "name": "@liwa/brain-shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "三个大脑适配器共用的 Paseo 基础代码；是库不是插件，不带 liwa 字段",
+  "type": "module",
+  "exports": {
+    ".": {
+      "liwa-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@liwa/contracts": "workspace:*",
+    "@liwa/kernel": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
+  }
+}

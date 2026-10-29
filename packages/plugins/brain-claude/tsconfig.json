@@ -1,0 +1,5 @@
+{
+  // 继承仓库公共编译选项；检查本包的 src（含 __tests__）与 test（跨模块集成测试，有则检查）
+  "extends": "../../../tsconfig.base.json",
+  "include": ["src", "test"]
+}

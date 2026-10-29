@@ -1,0 +1,14 @@
+{
+  "name": "@liwa/tools",
+  "version": "0.1.0",
+  "private": true,
+  "description": "仓库工具脚本：本机 CI、dump-config 等（docs/engineering.md §4.4）；用根目录的开发依赖运行",
+  "type": "module",
+  "exports": {
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@liwa/app": "workspace:*",
+    "@liwa/contracts": "workspace:*"
+  }
+}

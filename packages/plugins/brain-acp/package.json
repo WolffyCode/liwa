@@ -1,0 +1,29 @@
+{
+  "name": "@liwa/plugin-brain-acp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "brain.provider 的 ACP 通用实现：ACP 适配器（从 Paseo 摘，不验收）",
+  "type": "module",
+  "exports": {
+    ".": {
+      "liwa-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "liwa": {
+    "manifestVersion": 1,
+    "id": "brain-acp",
+    "kind": "builtin"
+  },
+  "dependencies": {
+    "@liwa/brain-shared": "workspace:*",
+    "@liwa/contracts": "workspace:*",
+    "@liwa/kernel": "workspace:*"
+  },
+  "devDependencies": {
+    "@liwa/testkit": "workspace:*",
+    "vitest": "catalog:"
+  }
+}

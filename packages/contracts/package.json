@@ -1,0 +1,21 @@
+{
+  "name": "@liwa/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "协议规范：manifest 与 profile 的 schema、槽位契约、事件、错误；零运行时依赖（zod 4 除外）",
+  "type": "module",
+  "exports": {
+    ".": {
+      "liwa-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
+  }
+}

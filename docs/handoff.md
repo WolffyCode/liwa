@@ -1,6 +1,6 @@
 # 交接文档
 
-更新：2026-10-28。给接手的 agent 或新会话用：读完这份就能接着做，不必翻原对话。
+更新：2026-10-29。给接手的主对话（新会话）用：读完这份就能接着安排活，不必翻原对话。接手顺序：先读"怎么协作"与"现状"，再读"下一步的活"，其余按需。
 
 ## 整体结论速览
 
@@ -8,8 +8,8 @@
 - **她的抽象**：一个生命的九个部分：身、感、念、思、意、忆、行、长、能；两个运行时概念：在场（她在某个地方的出现）、手上的事。原则：判断归她，边界归你，身体归代码；规则打底，模型定调；行为来自意愿，每件事带理由。
 - **方案**：新仓库自研；TypeScript + Node 24 本体，React 前端，Electron 薄壳，SQLite；所有用脑都走各家 CLI（Claude Code、Codex、ACP），统一用灵鲸自己的 agent 契约；Paseo 和 OpenClaw 只作参考和模块来源。
 - **整体架构**：`docs/architecture/overall.md`（18 节）加图页 `docs/architecture/overall.html`。本体是她的身体和神经系统，不是脑子：账本（self、body、memory、people、skills、roster）+ 感 senses、念 attention、意 will、时钟 scheduler、手上的事 tasks、嘴 outbox + 四种用脑 minds（在场、慢想、手、睡眠）+ 行动管线 actions + 守护 guard + 经历流 journal。慢想按需醒、每次新开、靠心事交接；身每分钟一跳、不调模型、确定性可回放。
-- **进度**：产品定义、人物画像、整体架构都已确认（整体架构经 Fable 5.1、Opus 5.5 两位独立评审，意见并入后用户 2026-10-28 说"我认为现在这个没问题"）。
-- **接着做什么**：模块详细设计，清单在 `docs/architecture/README.md`（十份）。用户 2026-10-28 定：先做最复杂的 05 记忆系统和 06 成长系统（"我看网上好多人给他做神经元记忆机制，你还是去读开源项目和论文给我一个方案"），各自先调研再写方案；之后 01 agent CLI 接入（含第 0 步大脑探针）→ 02 用脑调度 → 03 基础与守护 → 04 生命内核 → 07 前后端协议与网关 → 08 客户端界面 → 10 回放与验收 → 09 能力插件。05 记忆系统已确认（决策 26），`overall.md` §16.1 已同步；06 成长系统调研已完成（`docs/research/2026-10-28-growth-mechanisms.md`，8 个拍板点见其 ⑩），下一步写 `docs/architecture/modules/06-growth.md`；从现在到各版本做完的总路线图和提速办法在 `docs/roadmap.md`，已按用户定的最终目标四条（决策 27：接入微信、Mac 客户端、像 Codex 那样对话编程、手机远程）重排。用户 2026-10-28 问"为啥 agent cli 这一项不在范围内"，原来它并在"用脑与大脑"里，按用户的意思拆成独立的一份。每份开写前先按 README 里"要补的调研"跑一次调研 agent（一次一个），写完给用户看一页结论和关键取舍，确认后再写下一份。之后用 writing-plans 写第一版实现计划。
+- **进度**：产品定义、人物画像、整体架构、05 记忆系统、00 插件机制底座、00 协议规范、工程约定、路线图都已确认；06 成长系统草稿已写、待主人确认；代码上 `contracts` 与 `kernel`（插件机制底座）已写完并通过测试，内核服务与插件还都是空壳。
+- **接着做什么**：路线图 1.7 的 m0 终端能跑（见"下一步的活"），按"设计 agent 出方案 → 主人确认 → 实现 agent 写代码"推进；其余模块文档按 `docs/architecture/README.md` 的顺序出轻量版（01 → 02 → 03 → 04 → 07 → 08 → 10 → 09）。
 - **对话记录**：`docs/conversations/` 是文字版；原始 jsonl（含子任务日志）在 mac mini 的 `/Volumes/Aether/Users/wolffycode/Desktop/liwa-conversation-logs/`，不进仓库（仓库公开）。
 - **开发工作区**：mac mini 的 `/Volumes/Aether/Users/wolffycode/Developer/person/liwa`。所有确定的需求、架构都必须写进仓库文档。
 
@@ -30,11 +30,77 @@
    - `2026-10-28-subagent-notes/`：8 个子调研的原文存档（记忆论文、记忆开源项目源码、记忆评测与投毒、Claude SDK 与 Codex app-server、ACP/A2A/MCP、多 agent 实践、Paseo 上游与 OpenClaw 编排、OpenClaw 早期版）。模块阶段当起点用。
 7. 对话记录只在需要核对原话时翻。
 
-## 当前进度
+## 怎么协作（2026-10-29 起，决策 34）
 
-- 阶段：**模块架构**。产品定义、人物画像、整体架构已确认；模块设计计划在 `architecture/README.md`，用户 2026-10-28 看过整体设计的通俗讲解后说"这个设计非常的好"，要求先列模块清单，再逐个研究核心实现。第一份 05 记忆系统：调研完成，`architecture/modules/05-memory.md` 草稿已写（结论：不做"神经元图谱"，做激活数值 + 线索一跳联想；trigram 全文 + 线索倒排；遗忘读时算、被用到才加强；受众只由 people 算），用户追问"算法查库很难保证查询准确，神经元图谱是否更靠谱"后又跑了 GitHub 全景调研 `research/2026-10-28-memory-landscape.md`（结论：混合检索占有真实用户实现的绝对主流，神经元图谱类无一在生产中长期使用，查得准靠检索工程不靠存储形态），据此草稿把向量检索提前到 V1.0、嵌入默认本地 Qwen3-Embedding-0.6B、加原文补位与别名扩展、`recall` 改三步，不加重排与 PPR，拍板点第 4 条相应改了。用户 2026-10-28 说"那确定方案然后写入文档吧"，05 标为已确认（决策 26），`overall.md` §2.3、§5.2、§16.1 已同步。第二份 06 成长系统：调研完成（结论：系统级人设锚每次调用都在是第一位，续接丢锚会让身份退回底层模型；在场、慢想、睡眠建议改用自定义 systemPrompt，这改决策 4 的实现细节，要用户拍板；成长提案只交"操作 + 证据"，代码按 14 条规则分提交 / 暂缓 / 忽略三路；性格六维各九档派生约 20 个身体参数，初值全标〔推理〕由 L0 回放标定；回归用"访谈 + 评委"、同题三遍独立会话），05 草稿已按它的 4 处对齐点改过（selfBlock 简版不含价值观；自我候选的证据只能是经历事件；兴趣、习惯类自我条目要挂成长条目；成长采纳自动生成自我候选），用户同时说"效率太慢"，要求列出从现在到实现完毕的全部步骤，路线图写在 `docs/roadmap.md`（其余八份模块文档改轻量版、探针立刻开工）；用户随后说"你先列一个，然后我们继续做代码实现设计"：路线图顶部加了一张总清单（一行一步、带状态），工程约定与代码实现设计在 `docs/engineering.md`（已确认，决策 29、30：cordis 底座、contracts 绑定、模块落位表）。执行顺序改为：contracts 与 kernel → m0 终端能跑 → 探针跑在 m0 上 → 06 成长方案、轻量文档与 M1 其余步骤并行 → demo 网页 = M1 最小主控台。 用户随后说"到不了做的阶段，应该是设计：插件机制和协议，还有仓库结构"，于是写了 `architecture/modules/00-plugin-kernel.md`（cordis 封装、manifest、profile 与 patch、loader 八步、槽位基数、required 名单、IPC 宿主、kernel API）、`architecture/modules/00-contracts.md`（两层契约、manifest schema、槽位清单、`brain.provider` 等第一批契约、事件信封、IPC、错误、版本规则）和 `engineering.md` §4（顶层、包表、包内布局、依赖规则、模块落位、Paseo 剥离落位），用户 2026-10-29 定 cordis 用 4.0 线，并要求"设计完整机制与协议核心后，让 Codex 最强模型、Opus 5.5、Fable 5.1 都审核一下"。四份评审（Codex gpt-6-astra、Codex gpt-6.1-terra、Fable 5.1、Opus 5.5，报告在 `research/2026-10-29-review-kernel-*.md`）已逐条处理（见"评审意见的处理"），三份设计按评审改成定稿（决策 31、32），用户 2026-10-29 全部确认（决策 33）。下一步：并行写代码（kernel-0：contracts 机制层、kernel 五阶段 loader、testkit、`apps/liwa`、m0 profile）和 `architecture/modules/06-growth.md`（8 个拍板点已按推荐值定）。
+主人定的分工：**主对话只跟主人对话、安排活、汇报**，不自己写方案和代码；**设计 agent** 出方案（Fable 5.1 或 Opus 5.5）；**实现 agent** 写代码（Opus 5.5）；重要稿子另请独立评审。
+
+| 角色 | 谁 | 做什么 | 不做什么 |
+| --- | --- | --- | --- |
+| 主对话 | 新会话（Opus 5.5） | 读本文接手；把活拆成任务书派给 agent；收活后自己复核一遍，再用通俗的话（配例子）给主人讲；把主人定下的事写进本文与对应文档；征得同意后提交推送 | 不自己长篇写方案或代码（状态行、错字这类小改除外）；不替主人做决定；主人没同意不提交 |
+| 设计 agent | Agent 工具，`model: "fable"` 或 `"opus"` | 读指定文档与调研，写模块文档（轻量版 150–300 行，写法按 `architecture/README.md`）或改设计；末尾给"一页结论 + 关键取舍 + 要主人定的点" | 不写代码；不改已确认文档的结论（只能写"建议改哪、为什么"）；不开子 agent |
+| 实现 agent | Agent 工具，`model: "opus"` | 按已确认的文档写代码与测试，跑 `pnpm run ci`，交回"改了哪些文件、测试原文、没做的事、风险" | 不改设计（发现设计有问题就停下写明，让主对话去问）；不提交 git；不开子 agent；不装 catalog 之外的依赖 |
+| 评审 | Codex CLI、Fable、Opus 各一 | 对重要稿子独立评审，报告进 `docs/research/`，处理结果记在本文"评审意见的处理" | — |
+
+**派活的规矩**
+
+- 用 Agent 工具，`subagent_type: general-purpose`，按上表给 `model`；互不依赖的任务并行派（主人 2026-10-29 同意并行），有依赖的串行；`run_in_background` 之后等通知，不要轮询。
+- 任务书是 agent 唯一的上下文，必须写全：目标与验收；要读的文件（路径 + 节号）；硬规则；产出格式；改动范围（只许动哪些目录）。
+- 每个 agent 的硬规则：全程中文；文档只存最新方案、不留历史措辞；每个设计点带依据并标〔一手〕〔二手〕〔推理〕；遵守 `docs/engineering.md` §9 与 `~/.claude/CLAUDE.md`（改在根上、不叠兼容层、每样东西唯一归属、模块间只走 API）；代码要过 `pnpm run ci`（命令见"环境与工具注意事项"）；不碰 `node_modules`、不提交 git、不开子 agent；原始对话日志与凭据不进仓库（公开仓库）。
+- 收活时主对话要做的：核对产出是否在范围内、测试原文是否真的跑了、设计点有没有裸奔的〔推理〕；把"要主人定的点"整理成一页给主人；主人定了的写进"已定的决策"。
+- 顺序：设计 agent 出文档 → 主对话给主人一页结论 → 主人确认、文档标"已确认" → 实现 agent 写代码 → 主对话复核 CI 与范围 → 征得同意后提交。
+
+**任务书模板**（复制后填空）
+
+```
+你是灵鲸（Liwa）项目的 <设计|实现> agent。仓库 /Volumes/Aether/Users/wolffycode/Developer/person/liwa，公开仓库，分支 main。
+目标：<一句话>。验收：<可检查的条件>。
+先读：docs/handoff.md 的"怎么协作""现状""环境与工具注意事项"；<具体文件与节号>。
+只许改：<目录或文件清单>。不许：改已确认文档的结论、提交 git、开子 agent、装 catalog 之外的依赖、碰 node_modules。
+硬规则：全程中文；只存最新方案；每个设计点标〔一手〕〔二手〕〔推理〕；遵守 docs/engineering.md §9 与 ~/.claude/CLAUDE.md；代码跑 pnpm run ci（先 export PATH="$HOME/.local/share/fnm/aliases/default/bin:$PATH"）。
+交回：<设计：文档路径 + 一页结论 + 关键取舍表 + 要主人定的点 ｜ 实现：改动文件清单 + 测试与 CI 原文 + 没做的事 + 风险>。
+```
+
+## 现状（2026-10-29）
+
+- **已确认的文档**：`product.md`、`portrait.md`、`architecture/overall.md`、`architecture/modules/05-memory.md`、`00-plugin-kernel.md`、`00-contracts.md`、`engineering.md`、`roadmap.md`；状态表在 `architecture/README.md`。怎么走到这里的（调研、评审、决策）都在"已定的决策"与"评审意见的处理"，不必翻对话。
+- **待主人确认**：`architecture/modules/06-growth.md` 草稿（787 行，依据齐全，与 05 的接口名全部对得上）。要点头的四点：① `growth.engine` 在 `00-contracts.md` §5.3 之外多三对方法（日记、做法提取、"今天注意"）；② `renderPersona` 标 `pure`；③ self 账本把自我第一层条目以结构化形式交给引擎；④ `persona.rendered.v1` 草稿写进 `mind:<id>` 流，按单写者原则建议改写进 `member:<id>` 流并带会话号。确认后要同步 `00-contracts.md` §5.3、`overall.md` §4.9 与 §13（§9.2、§18.2 U5 已按决策 33 改）。
+- **代码（全部未提交）**：脚手架（pnpm workspace 与 catalog 钉版、tsconfig、eslint 与 dependency-cruiser 规则、vitest projects、`tools/ci.sh`）；`packages/contracts` 机制层 887 行、17 项测试；`packages/kernel` 五阶段 loader 1876 行、29 项测试（覆盖 `00-plugin-kernel.md` §12 的反例）；`apps/liwa` 只有装配入口（required 清单、启动参数、`dumpAssembly`），`pnpm dump-config --profile m0-terminal` 走真实 loader，目前准确报出 m0 阶段集合缺的 12 个服务；`packages/core`、8 个插件包、`cli`、`console`、`replay`、`testkit`、`lib/brain-shared` 都是 2 行空壳。本机 CI 全绿：lint、依赖规则、逐包类型检查、22 个测试文件 61 项。
+- **kernel-0 里留到 1.7 一起做的**：回环编解码测试（等第一个真槽位实现）、安全模式页与启动失败计数 `boot.json`（组合根进程入口）、连续崩溃自动禁用与 `AsyncLocalStorage` 标插件 id、`@liwa/testkit` 独立包（测试内核现在在 kernel 的 `testing.ts`）。
+- **实现中在已确认设计之内定下的细节**（已写进 `00-plugin-kernel.md` §3.2、§5、§11、§14，主人过目即可）：组合根只做 Node 的包解析根、仓库根另算；插件 Config 由 kernel 用 zod `safeParse` 同步校验、错误成为禁用原因；注册阶段先挂 required 等全部就绪，再逐个挂 builtin 并等落定，失败只禁用自己并写明原因；关闭每一步受全局截止约束，因为 cordis 不能打断在途的 `apply`；同一层 patch 对同一插件只能有一条；`data` 插件可放 builtin 或 external 的位置。
 - 用户要求的架构文档结构：一、整体架构（整体逻辑怎么设计）；二、模块架构（按 overall.md §0.4 的七份：生命内核；记忆系统；成长系统；用脑与大脑，即她怎么调用 agent CLI；能力插件；客户端界面，以及第一版要不要客户端；前后端）。之后再讲兜底与出错、测试、第一版里程碑。
-- 推进方式：先把整体架构定明白，再挨个模块做细节架构。设计必须有调研依据，每个设计点带依据。经用户逐段确认后，`docs/architecture/` 里的文件就是设计 spec；之后用 writing-plans 写实现计划。
+- 推进方式：先把整体架构定明白，再挨个模块做细节架构。设计必须有调研依据，每个设计点带依据。经用户逐段确认后，`docs/architecture/` 里的文件就是设计 spec；实现按"怎么协作"派给实现 agent。
+
+## 下一步的活（路线图 1.7：m0 终端能跑）
+
+目标：`liwa start` 起本体，`liwa chat` 在终端里和她说上话（Claude Code 外壳 + DeepSeek V4.1 Flash），`liwa status / doctor / dump-config / tail` 可用；探针（路线图 1.3）跑在它上面。m0 阶段集合要在装的 12 个服务：journal、guard、procs、brains、minds、context、actions、senses、attention、outbox、toolport、gateway（`contracts` 的 `STAGE_SETS.m0`）。模块落在哪个包见 `engineering.md` §4.7。
+
+**第一波：设计**（四个设计 agent 可并行；每份轻量版 150–300 行，写法按 `architecture/README.md`；只写 m0 需要的最小版，V1 其余放"以后"一节）
+
+| # | 文档 | 要定的 | 先读 |
+| --- | --- | --- | --- |
+| D1 | `modules/01-agent-cli.md` agent CLI 接入 | brains 服务（提供方登记、开会话、用量上报）；`brain.provider` 的 Claude 实现从 Paseo 最新上游剥离（固定提交号、`src/paseo/` 原样 + NOTICE、`adapter.ts` 映射层、进程经 `procs.spawn`、`settingSources` 为空、每成员独立数据目录）；人设注入两种方式（自定义 systemPrompt 与预设 + append）；Codex、ACP 的落位只列不做 | `overall.md` §3.4、§9.2、§12.3、§16.1、§17；`00-contracts.md` §5.1；`engineering.md` §4.8；`research/2026-10-28-paseo-architecture.md`、`research/2026-10-28-subagent-notes/cli-claude-sdk-codex-app-server.md`；决策 1、2、4、6、28、33 |
+| D2 | `modules/02-minds.md` 用脑调度 | minds（在场会话登记、回合生命周期、steer、换新与闲置回收的最小版）；context（稳定前缀 = 静态人设文件 + 在场说明，每轮前缀 = 状态行最小版）；toolport（会话令牌、m0 只开 `reply` 与 `inner`、批结束钩子）；主人消息抢占 | `overall.md` §2.4、§3.3、§5.1–§5.4、§8、§11.6；`00-contracts.md` §2、§4、§6；`06-growth.md` §4.3（草稿，人设块十段）；决策 5、12、13 |
+| D3 | `modules/03-foundation.md` 基础与守护 | journal（`node:sqlite`、追加协议 `AppendRequest` / `CommittedEvent`、投影注册、载荷与删除、WAL 检查点）与 `core/db`；procs（进程组、看门狗、清孤儿、`spawn` / `kill`）；actions（先记后做、副作用协议、幂等键）；guard 最小版（`admit` 放行 / 拒绝、`pause`、日预算骨架） | `overall.md` §6、§11.7–§11.9、§12.1、§13；`00-contracts.md` §6、§7；`engineering.md` §6、§7；`research/2026-10-28-event-log-supplement.md` |
+| D4 | `modules/07-protocol-gateway.md` 前后端协议与网关 | gateway（HTTP + WebSocket、`hello`、主人令牌 `OwnerToken` 签发、`liwa` 六个命令的端点）；senses / attention / outbox 的 m0 最小路由（终端是一个"地方"：消息进 → 主人的在场 → 回复投递回终端）；`packages/cli` 的 `liwa` 命令（`--json`、退出码 0 / 1 / 2 / 3） | `overall.md` §3.1、§7、§10、§11.6；`00-contracts.md` §8（客户端协议）；`engineering.md` §12；决策 19、33；`research/2026-10-28-client-backend.md` |
+
+每份交回后：主对话复核依据与范围，给主人一页结论和要定的点；主人确认后在 `architecture/README.md` 标"已确认"，再进第二波。
+
+**第二波：实现**（Opus 5.5；"依赖"列是前置条件，同一组可并行）
+
+| # | 包 | 内容 | 验收 | 依赖 |
+| --- | --- | --- | --- | --- |
+| I1 | `packages/core/src/db`、`journal`、`ledgers` 骨架 | `defineService('journal')`；`append` / `read` / `subscribe` / `putPayload`；投影注册；`kernel.started.v1` 落库 | 单元测试 + 经真实 loader 的装配测试；重启后读得回 | D3 |
+| I2 | `packages/core/src/procs` | 进程组 spawn / kill、看门狗、启动时清孤儿（允许真定时器的两处之一） | 杀进程树与孤儿清理的测试 | D3 |
+| I3 | `packages/lib/brain-shared`、`packages/plugins/brain-claude` | 从 Paseo 剥 Claude 适配器 + 映射层；`provide('brain.provider', 'claude')`；经 `procs.spawn` | 契约测试 + 回环编解码；用假 procs 可测 | D1 |
+| I4 | `core/src/brains`、`minds`、`context`、`toolport` | 大脑登记与开会话；在场会话与回合；静态人设 + 稳定前缀；`reply` / `inner` 与令牌 | 用假大脑跑完一回合，事件齐全 | D1、D2、I1 |
+| I5 | `core/src/guard`、`actions`、`senses`、`attention`、`outbox` | 最小版：放行 / 暂停；先记后做；终端消息进出 | 一条消息从进到出的集成测试 | D3、D4、I1 |
+| I6 | `core/src/gateway`、`packages/cli` | HTTP + WS、`hello`、OwnerToken；`liwa start / status / doctor / dump-config / chat / tail` | `liwa status --json` 与退出码正确；`chat` 收到回复 | D4、I4、I5 |
+| I7 | `apps/liwa`、`profiles/m0-terminal.yml` | 进程入口（自检、`startKernel`、信号、`boot.json`、安全模式页）；profile 填入 `brain-claude`；端到端 | `liwa start` 后 `liwa chat` 与真 Claude Code 外壳说上话；CI 全绿 | I1–I6 |
+| I8 | 探针（路线图 1.3） | 20 个场景、指标、对比臂，跑在 m0 上 | 报告进 `docs/research/` | I7 |
+
+I1、I2、I3 可同时派；I4 与 I5 可同时派；之后 I6、I7 串行。每个实现 agent 的交回必须附 `pnpm run ci` 原文；主对话抽查范围与测试是否真跑。
+
+**同时要主人定的**：提交 2026-10-29 这批代码与文档（见"仓库状态"）；06 草稿的四点（见"现状"）；备份密钥位置；账号共用与额度（见"待定事项"）。
 
 ## 文档约定
 
@@ -79,6 +145,7 @@
 | 31 | 插件机制底座与协议规范定稿（2026-10-29） | 用户定 cordis 用 4.0 线。四份评审处理后定下：cordis 精确钉 `4.0.0-rc.12`、类型与实例不出 kernel；required 由组合根以代码传入、种类按 realpath 推导、本机层 patch 不能装包、V1 拒绝外部插件；非 required 插件只拿 `PLUGIN_VIEWS`（V1 只 `procs.spawn`），槽位门面分宿主 / 提供方 / 消费方三份；五阶段启动与阶段集合（m0 / m1 / v1）、`requiredBy` 必需槽位、静态服务图、ready / drain / health；方法形状规则（异步、CallContext、只传 JSON、句柄、流、pure）与回环编解码测试；zod 4 钉版、strictObject、partialRecord；五种版本号分开；journal 追加协议；大脑有效绑定归 roster；profile 只放部署项、主人文件层 `owner.yml`、`$secret` 引用；时钟随机编号注入；具名导出入口；测试内核走真实 loader、`testkit` 包；组合根 `apps/liwa` 与安全模式页；IPC 宿主运行时推迟到第一个进程外插件（契约形状现在定）；context 归运行层、`overall.md` §3.2 规则 4 改写；05 §3.5 接缝改为 prepare / interpret + 纯函数；本地嵌入先进程内记为 §3.5 的例外。仍要用户确认的 9 项见"待定事项" |
 | 32 | 信任模型：插件全部可信，隐私只管出口（2026-10-29） | 用户原话："所有插件都信任，因为这个插件后期都是上传 github 的……软件在本地，所有插件都是给自己用的……隐私是针对适配层对外说话的，不是对内逻辑的……一旦内部代码这么控制，会导致逻辑信息不全，造成误差。"落实：信任边界是模型与外界（`overall.md` §11.1 本来如此），插件在边界之内；插件可以 inject 任何服务、读任何账本、订阅经历流，逻辑信息不残缺；保留的只有工程纪律——写经各账本的写 API（单点写、校验集中、可回放）、主人专属操作要带 gateway 签发的主人令牌（防模型与会话）、受众只由 people 造且只在 context 装上下文和 outbox 投递两处裁、cordis 不出 kernel（防 API 漂移）。取消"插件视图白名单""伪造 required 测试""未审阅插件不装"这类按防插件写的设计；进程外只为故障隔离。`00-plugin-kernel.md` §0、§2、§3、§7、§10、§12，`00-contracts.md` §4.2，`engineering.md` §1–§4，`overall.md` §2.3、§3.2、§11.1 已同步 |
 | 33 | 插件底座、协议规范、工程约定、成长拍板点全部确认；一个 CLI 一个插件；标准终端命令（2026-10-29） | 用户对"要定的 22 项"说"你这些我认为没问题"：决策 31 / 32 的 8 项、成长调研的 8 项全按推荐值定下；agent 可以并行跑；本次全部文档改动可提交推送。另两点：**一个 agent CLI 算一个插件**（`brain.provider` 的 claude、codex、acp 各一个包，ACP 用 `as:` 多实例接更多 CLI）；**对外要有一套标准终端命令，跟 Paseo 一样**，`packages/cli` 升格为 `liwa` 命令行，是 gateway 的客户端（`engineering.md` §12），m0 先有 start / status / doctor / dump-config / chat / tail。用户还问 DSH 插件化到什么程度、我们够不够丰富，对照表写在 `00-plugin-kernel.md` §16：槽位种类不少于 DSH，多出生命相关的，缺界面插件与热重载，故意不开 agent loop、工具执行、提示词整段替换；以后可加投影单元、沙箱提供方两个槽位 |
+| 34 | 分工：主对话只对话与派活，设计与实现走 agent（2026-10-29） | 用户原话："我要新开一个 opus5.5 的，然后方案设计采用 agent 让 fable5.1 或者 opus5.5 设计器，代码实现让 opus5.5 实现，主对话只负责跟我对话，安排活。"落实见"怎么协作"：主对话（Opus 5.5）读本文接手、拆任务书、派 agent、复核、给主人讲、写回文档、征得同意后提交；设计 agent 用 Fable 5.1 或 Opus 5.5 出轻量版模块文档与一页结论；实现 agent 用 Opus 5.5 按已确认文档写代码并跑 CI；评审照旧请 Codex、Fable、Opus。1.7 先不急着继续，等新会话接手 |
 
 ## 评审意见的处理
 
@@ -186,11 +253,11 @@
 
 - **需要用户提供的信息**：备份加密的密钥放哪；她用的 Claude、Codex 账号是否和用户自己写代码共用、预留多少额度（overall.md §18.5）。
 - **后续版本前再定**：第二版接家人前，要不要让家人知道主人能看她们的私聊；第四版前，公开发言（B 站、抖音评论）的规则（`product.md` §12 第 14 条）。
-- **需要用户同意的操作**：转写小凌的讲解视频（要装 ffmpeg 和中文语音识别，不做也不影响架构）。提交推送仍逐次征得同意（2026-10-29 的文档批次已获同意并推送）。
+- **需要用户同意的操作**：提交推送 2026-10-29 的代码批次（见"仓库状态"）；06 成长系统草稿的四点（见"现状"）；转写小凌的讲解视频（要装 ffmpeg 和中文语音识别，不做也不影响架构）。提交推送逐次征得同意。
 
 ## 模块阶段的调研起点
 
-记忆系统、用脑与大脑两个模块已有子调研原文（`docs/research/2026-10-28-subagent-notes/`），下表里已经读过的部分不必重做。调研约定：一次只跑一个调研 agent，且它不再开子 agent（除非用户明说可以并行）；单个 agent 内部不设阅读量上限；产出写进 `docs/research/2026-10-28-<主题>.md`，格式：来源清单（注明实际读了什么）、机制对比表、对灵鲸的设计建议（理由、取舍、依据）、坑与反例、待实测；区分一手和二手。
+记忆系统、用脑与大脑两个模块已有子调研原文（`docs/research/2026-10-28-subagent-notes/`），下表里已经读过的部分不必重做。调研约定：调研 agent 可以并行跑（2026-10-29 同意），但每个 agent 自己不再开子 agent；单个 agent 内部不设阅读量上限；产出写进 `docs/research/2026-10-28-<主题>.md`，格式：来源清单（注明实际读了什么）、机制对比表、对灵鲸的设计建议（理由、取舍、依据）、坑与反例、待实测；区分一手和二手。
 
 | 模块 | 要回答的问题 | 调研起点 |
 | --- | --- | --- |
@@ -209,6 +276,7 @@
 - **GitHub**：WebFetch 访问 github.com 会被代理拒绝。Bash 里已配 `HTTPS_PROXY`，curl 可用：优先用 raw 地址 `curl -sS -m 30 -o <file> https://raw.githubusercontent.com/OWNER/REPO/HEAD/<path>`；API 的 README 用 `-H 'Accept: application/vnd.github.raw' https://api.github.com/repos/OWNER/REPO/readme`，目录用 `.../contents/<path>`；未认证每小时约 60 次、搜索每分钟 10 次；完整目录树对大仓库会超时。
 - 论文：`curl -sS 'https://export.arxiv.org/api/query?search_query=all:<terms>&max_results=5'`。
 - macOS 没有 `timeout` 命令。zsh 里不要用小写 `path` 当变量名。
+- 本机 CI 是 `pnpm run ci`（`pnpm ci` 是 pnpm 内置的干净安装）；非交互 shell 先 `export PATH="$HOME/.local/share/fnm/aliases/default/bin:$PATH"`，或 `fnm exec --using=.node-version -- pnpm run ci`。单跑一个包的测试：`pnpm vitest run --project @liwa/kernel`；类型检查：`pnpm exec tsc --noEmit -p packages/kernel/tsconfig.json`。**不要在包目录里 `npx tsc`**：找不到工作区的 TypeScript 时它会去装 npm 上同名的 `tsc` 包并等交互确认，表现为卡住不动。
 - 图页：`docs/scenarios/build.py` 用 Google Chrome 无头模式把 Mermaid 预渲染成 SVG（需要能访问 cdn.jsdelivr.net）；改图只改 `.src.html`。
 - 仓库提交身份：仓库级 `user.name=WolffyCode`，邮箱沿用全局 noreply。
 
@@ -223,11 +291,12 @@
 - 用户自己提的方案要先评审合不合理再采纳（用户原话："这个只是我说的，不代表就要这么设计，你应该评审我的是否合理"）。
 - 讲得太技术时用户会说"没看懂"：用直白的话、配具体例子；用户偏好图和页面胜过大段文字。
 - 外部灵感来源（如抖音小凌）只作参照，设计依据以开源代码和论文为主；游戏机制只借身体层，不当标准。
-- 在意 token 开销；2026-10-29 起同意调研与实现 agent 并行跑（总 token 不变，只省等待）；重要稿子请独立评审（整体架构请了 Fable 5.1 和 Opus 5.5；插件底座请了 Codex astra、Codex terra、Fable 5.1、Opus 5.5）。
+- 在意 token 开销；2026-10-29 起同意调研与实现 agent 并行跑（总 token 不变，只省等待）；重要稿子请独立评审（整体架构请了 Fable 5.1 和 Opus 5.5；插件底座请了 Codex astra、Codex terra、Fable 5.1、Opus 5.5）。 2026-10-29 起分工改为：主对话只对话与派活，设计走 Fable 5.1 或 Opus 5.5 的 agent，实现走 Opus 5.5 的 agent（决策 34，见"怎么协作"）。
 - 名字、人设内容是用户自己的事：软件名已定（灵鲸 / LingWhale / Liwa）；人设名由用户在出生设定里起。
 
 ## 仓库状态
 
-- 远端：`git@github.com:WolffyCode/liwa.git`，**公开仓库**，分支 `main`，最后一次提交 `2ad7c76`。不要把原始对话日志、本机配置、凭据提交进来。
+- 远端：`git@github.com:WolffyCode/liwa.git`，**公开仓库**，分支 `main`，最后一次提交 `a07c2d0`。不要把原始对话日志、本机配置、凭据提交进来。
 - 本地副本：mac mini `/Volumes/Aether/Users/wolffycode/Developer/person/liwa` 是开发工作区；MacBook 上的 `/Users/zhuanzmima0000/Desktop/coding/person/liwa` 可能落后，用之前先拉取。
 - 2026-10-29 已把下列改动提交并推送到 `main`（用户同意）：产品定义、人物画像、整体架构与图页、场景页、三份"像生命"调研、结构验证与插件化调研、事件日志补充、子调研存档、两份评审报告、模块设计计划（`architecture/README.md`）、记忆调研报告、记忆全景调研报告、成长调研报告、05 记忆模块文档、00 插件机制底座与协议规范两份设计、四份插件底座评审报告、路线图（`docs/roadmap.md`）、工程约定（`docs/engineering.md`）、本文。
+- 2026-10-29 工作区里**未提交**的改动：仓库脚手架（根配置、各包占位、`profiles/m0-terminal.yml`、`tools/`、`THIRD_PARTY_NOTICES.md`）、`packages/contracts`、`packages/kernel`、`architecture/modules/06-growth.md` 草稿、以及本文、路线图、README、`00-plugin-kernel.md`、`overall.md` 的同步更新。提交前要主人同意。

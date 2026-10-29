@@ -1,0 +1,23 @@
+{
+  "name": "@liwa/kernel",
+  "version": "0.1.0",
+  "private": true,
+  "description": "插件机制底座：封装上游 cordis，manifest 校验、profile 装配、槽位注册表、注入时钟与随机",
+  "type": "module",
+  "exports": {
+    ".": {
+      "liwa-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@liwa/contracts": "workspace:*",
+    "cordis": "catalog:",
+    "yaml": "catalog:"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
+  }
+}

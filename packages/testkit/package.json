@@ -1,0 +1,22 @@
+{
+  "name": "@liwa/testkit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "测试工具：假时钟、计数器随机、编号源、服务假实现、录放大脑、测试内核的便利封装",
+  "type": "module",
+  "exports": {
+    ".": {
+      "liwa-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@liwa/contracts": "workspace:*",
+    "@liwa/kernel": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "@liwa/plugin-ability-embed-local",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ability.embed 的本地实现：Qwen3-Embedding-0.6B，第一版进程内",
+  "type": "module",
+  "exports": {
+    ".": {
+      "liwa-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "liwa": {
+    "manifestVersion": 1,
+    "id": "ability-embed-local",
+    "kind": "builtin"
+  },
+  "dependencies": {
+    "@liwa/contracts": "workspace:*",
+    "@liwa/kernel": "workspace:*"
+  },
+  "devDependencies": {
+    "@liwa/testkit": "workspace:*",
+    "vitest": "catalog:"
+  }
+}

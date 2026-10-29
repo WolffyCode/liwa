@@ -1,0 +1,5 @@
+{
+  // 继承仓库公共编译选项；检查 tools 下的全部 TypeScript 脚本
+  "extends": "../tsconfig.base.json",
+  "include": ["**/*.ts"]
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@liwa/console",
+  "version": "0.1.0",
+  "private": true,
+  "description": "网页主控台（React + Vite）；骨架阶段只有占位，尚未装 React",
+  "type": "module",
+  "exports": {
+    ".": {
+      "liwa-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@liwa/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
+  }
+}

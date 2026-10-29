@@ -1,0 +1,28 @@
+{
+  "name": "@liwa/plugin-growth-engine-default",
+  "version": "0.1.0",
+  "private": true,
+  "description": "growth.engine 的内置实现：内置成长引擎",
+  "type": "module",
+  "exports": {
+    ".": {
+      "liwa-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "liwa": {
+    "manifestVersion": 1,
+    "id": "growth-engine-default",
+    "kind": "builtin"
+  },
+  "dependencies": {
+    "@liwa/contracts": "workspace:*",
+    "@liwa/kernel": "workspace:*"
+  },
+  "devDependencies": {
+    "@liwa/testkit": "workspace:*",
+    "vitest": "catalog:"
+  }
+}

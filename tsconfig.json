@@ -1,0 +1,5 @@
+{
+  // 仓库根目录自身的 TypeScript 文件；各包与 tools 各有自己的 tsconfig.json
+  "extends": "./tsconfig.base.json",
+  "include": ["vitest.config.ts"]
+}

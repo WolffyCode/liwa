@@ -87,7 +87,7 @@ liwa/
 | `@liwa/desktop`（V1.1） | `packages/desktop` | Electron 薄壳 | contracts |
 | `@liwa/replay` | `packages/replay` | L0 模拟器、L1 / L2 回放、A–G 指标、回放题库、探针场景 | contracts、kernel、core 与 app 的公开入口、testkit |
 
-插件包命名：`@liwa/plugin-<槽位简名>-<实现名>`。所有包同一版本号，随仓库统一升；core 与 console 同版本发布；`exports` 必须含 `./package.json`。
+插件包命名：`@liwa/plugin-<槽位简名>-<实现名>`。所有包同一版本号，随仓库统一升；core 与 console 同版本发布；`exports` 必须含 `./package.json`。各包的 `exports["."]` 带条件：`liwa-source` 指向 `src/index.ts`（开发、测试、类型检查用，tsconfig 的 `customConditions` 与 vitest 的 `resolve.conditions` 都设了它，免构建即可跨包引用），默认指向 `dist/index.js`（生产）。
 
 ### 4.3 包内布局
 
@@ -242,7 +242,7 @@ packages/plugins/<名字>/
 - 分支：`main` 可运行；每个实现任务一个分支，合并前过本机 CI；提交与推送前征得主人同意。
 - 实现顺序（决策 30）：**先定插件机制和协议规范，再长模块**。① `contracts` 的机制层与第一批槽位契约 + `kernel`（kernel-0）+ `testkit` + `profiles/m0-terminal.yml`；② m0 终端能跑：journal 最小版、procs、`brain-claude`（从 Paseo 剥）、minds 与 context 最小版、toolport 的 `reply` 与 `inner`、gateway 最小版、`cli` 终端客户端，静态人设文件；③ 第 0 步探针直接跑在 m0 上；④ demo 网页 = M1 的最小主控台；⑤ 之后每个模块按"契约进 contracts → 轻量文档 → 实现与测试 → 装进 profile"独立推进；IPC 宿主（kernel-1）等第一个真正的进程外插件。
 - 实现任务来自 `docs/plans/v1.0.md`，每个任务不超过一天、带测试与完成标准；做完更新对应模块文档的"实现备注"段。
-- 命令：`pnpm dev --profile dev`、`pnpm dump-config --profile m0-terminal`、`pnpm probe`、`pnpm replay`、`pnpm backup`、`pnpm ci`。
+- 命令：`pnpm dev --profile dev`、`pnpm dump-config --profile m0-terminal`、`pnpm probe`、`pnpm replay`、`pnpm backup`、`pnpm run ci`（pnpm 11 的 `pnpm ci` 是它内置的干净安装命令，跑不到我们的脚本）。非交互 shell 里 `node` 会解析到 Homebrew 的 26，用 `fnm exec --using=.node-version -- pnpm run ci`。
 
 ## 11 已定的选择与待实测
 

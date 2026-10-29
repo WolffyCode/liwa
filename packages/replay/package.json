@@ -1,0 +1,25 @@
+{
+  "name": "@liwa/replay",
+  "version": "0.1.0",
+  "private": true,
+  "description": "L0 模拟器、L1 / L2 回放、A–G 指标、回放题库、探针场景",
+  "type": "module",
+  "exports": {
+    ".": {
+      "liwa-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@liwa/app": "workspace:*",
+    "@liwa/contracts": "workspace:*",
+    "@liwa/core": "workspace:*",
+    "@liwa/kernel": "workspace:*",
+    "@liwa/testkit": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
+  }
+}

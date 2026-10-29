@@ -1,0 +1,32 @@
+{
+  "name": "@liwa/app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "组合根：进程入口、自检、信号处理、launchd 入口、安全模式页；依赖全部插件包",
+  "type": "module",
+  "exports": {
+    ".": {
+      "liwa-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@liwa/contracts": "workspace:*",
+    "@liwa/core": "workspace:*",
+    "@liwa/kernel": "workspace:*",
+    "@liwa/plugin-ability-embed-local": "workspace:*",
+    "@liwa/plugin-brain-acp": "workspace:*",
+    "@liwa/plugin-brain-claude": "workspace:*",
+    "@liwa/plugin-brain-codex": "workspace:*",
+    "@liwa/plugin-growth-engine-default": "workspace:*",
+    "@liwa/plugin-job-triggers": "workspace:*",
+    "@liwa/plugin-memory-engine-default": "workspace:*",
+    "@liwa/plugin-social-model-default": "workspace:*",
+    "pino": "catalog:"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
+  }
+}

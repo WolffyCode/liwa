@@ -1,0 +1,32 @@
+# 灵鲸 pnpm 工作区（docs/engineering.md §4.1、§8）
+
+# 包的位置：组合根、核心包、插件包、共用库、仓库工具
+packages:
+  - apps/*
+  - packages/*
+  - packages/plugins/*
+  - packages/lib/*
+  - tools
+
+# 统一钉版：各包一律写 `catalog:` 引用，升级只改这里，且都写精确版本
+catalog:
+  # 插件运行时：上游 cordis 精确钉候选版，升级要过 kernel 的 T1–T12（engineering §11 #1）
+  cordis: 4.0.0-rc.12
+  # 校验：zod 4，由 contracts 统一导出（engineering §11 #6）
+  zod: 4.6.7
+  yaml: 2.9.1
+  pino: 10.4.0
+  # 工具链
+  typescript: 5.9.3
+  tsx: 4.23.15
+  vitest: 5.0.5
+  eslint: 10.13.0
+  # ESLint 解析 TypeScript 用；规则本身只用内置的 no-restricted-*
+  '@typescript-eslint/parser': 8.72.1
+  dependency-cruiser: 18.7.0
+  '@types/node': 24.19.2
+
+# pnpm 11 默认不许依赖跑安装脚本（strictDepBuilds），需要的逐个放行
+allowBuilds:
+  # tsx 与 vite 用的转译器；安装脚本只校验并链接本平台的二进制
+  esbuild: true
