@@ -1,9 +1,9 @@
-; Electron user data and updater downloads leave with the application; the Harness home is never touched.
+; Electron user data and updater downloads leave with the application; the Liwa home is never touched.
 !include FileFunc.nsh
 Var UnTarget
 Var UnHome
 
-; The helper refuses unsafe roots, the installation and the Harness home, and never descends into reparse points;
+; The helper refuses unsafe roots, the installation and the Liwa home, and never descends into reparse points;
 ; a locked file leaves residue and never fails the uninstall. customCheckAppRunning extracts window-frame.dll first.
 Function un.RemoveData
   System::Call '$PLUGINSDIR\window-frame.dll::UninstallRemoveData(w "$UnTarget", w "$INSTDIR", w "$UnHome") ?c'
@@ -20,8 +20,8 @@ Function un.CleanData
   ${IfNot} ${Errors}
     Return
   ${EndIf}
-  ; Only a DSH_HOME published as a Windows environment variable is visible here.
-  ReadEnvStr $UnHome DSH_HOME
+  ; Only a LIWA_HOME published as a Windows environment variable is visible here.
+  ReadEnvStr $UnHome LIWA_HOME
   ClearErrors
   StrCpy $UnTarget "$APPDATA\${PRODUCT_FILENAME}"
   Call un.RemoveData
@@ -31,6 +31,6 @@ Function un.CleanData
     Call un.RemoveData
     System::Call '$PLUGINSDIR\window-frame.dll::UninstallRemoveEmptyParents(w "$UnTarget", w "$APPDATA") ?c'
   !endif
-  StrCpy $UnTarget "$LOCALAPPDATA\${DSH_UPDATER_CACHE_NAME}"
+  StrCpy $UnTarget "$LOCALAPPDATA\${LIWA_UPDATER_CACHE_NAME}"
   Call un.RemoveData
 FunctionEnd

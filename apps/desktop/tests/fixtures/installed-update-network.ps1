@@ -2,27 +2,27 @@ param([string]$Script, [string]$Plan, [string]$Case)
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [Text.UTF8Encoding]::new()
 $spec = Get-Content -LiteralPath $Plan -Raw -Encoding UTF8 | ConvertFrom-Json
-$global:dshNetworkRules = @()
-$global:dshNetworkCreated = 0
-$global:dshNetworkRemoved = 0
-function Get-NetFirewallRule { param($PolicyStore) return $global:dshNetworkRules }
+$global:liwaNetworkRules = @()
+$global:liwaNetworkCreated = 0
+$global:liwaNetworkRemoved = 0
+function Get-NetFirewallRule { param($PolicyStore) return $global:liwaNetworkRules }
 function Get-NetFirewallApplicationFilter {
     param([Parameter(ValueFromPipeline = $true)]$InputObject)
     process { return [pscustomobject]@{ Program = $InputObject.Program } }
 }
 function New-NetFirewallRule {
     param($Name, $DisplayName, $Description, $Direction, $Program, $Action, $Profile, $Enabled, $PolicyStore)
-    $global:dshNetworkCreated++
+    $global:liwaNetworkCreated++
     if ($Case -eq 'creation-failure') { throw 'inert creation failure' }
-    $global:dshNetworkRules = @([pscustomobject]@{ Name = $Name; Description = $Description; Direction = $Direction;
+    $global:liwaNetworkRules = @([pscustomobject]@{ Name = $Name; Description = $Description; Direction = $Direction;
         Program = $Program; Action = $Action; Enabled = $Enabled; Profile = $Profile; PolicyStore = $PolicyStore })
-    return $global:dshNetworkRules
+    return $global:liwaNetworkRules
 }
 function Remove-NetFirewallRule {
     param([Parameter(ValueFromPipeline = $true)]$InputObject)
     process {
-        $global:dshNetworkRemoved++
-        if ($Case -ne 'restore-failure') { $global:dshNetworkRules = @() }
+        $global:liwaNetworkRemoved++
+        if ($Case -ne 'restore-failure') { $global:liwaNetworkRules = @() }
     }
 }
 function Read-Host {
@@ -33,12 +33,12 @@ function Read-Host {
     return "BLOCK $($spec.runId)"
 }
 if ($Case -in @('existing', 'foreign', 'restore', 'restore-failure', 'restore-declined', 'status')) {
-    $global:dshNetworkRules = @([pscustomobject]@{ Name = $spec.ruleName; Direction = 'Outbound'; Action = 'Block';
-        Program = $spec.executable; Enabled = 'True'; Description = "dsh-update-qualification:$($spec.runId):$($spec.sha512Hex)" })
-    if ($Case -eq 'foreign') { $global:dshNetworkRules[0].Program = 'C:\not-the-test-application.exe' }
+    $global:liwaNetworkRules = @([pscustomobject]@{ Name = $spec.ruleName; Direction = 'Outbound'; Action = 'Block';
+        Program = $spec.executable; Enabled = 'True'; Description = "liwa-update-qualification:$($spec.runId):$($spec.sha512Hex)" })
+    if ($Case -eq 'foreign') { $global:liwaNetworkRules[0].Program = 'C:\not-the-test-application.exe' }
 }
 $action = if ($Case -like 'restore*') { 'Restore' } elseif ($Case -eq 'status') { 'Status' } else { 'Block' }
 $failure = $null
 try { & $Script -Plan $Plan -Action $action } catch { $failure = $_.Exception.Message }
-@{ failure = $failure; created = $global:dshNetworkCreated; removed = $global:dshNetworkRemoved;
-    remaining = $global:dshNetworkRules.Count } | ConvertTo-Json -Compress
+@{ failure = $failure; created = $global:liwaNetworkCreated; removed = $global:liwaNetworkRemoved;
+    remaining = $global:liwaNetworkRules.Count } | ConvertTo-Json -Compress

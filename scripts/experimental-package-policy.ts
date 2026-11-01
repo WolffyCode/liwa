@@ -6,29 +6,29 @@
  * experimental status keeps their names.
  */
 export const EXPERIMENTAL_PACKAGE_NAME_EXCEPTIONS: Readonly<Record<string, string>> = {
-  'packages/experimental/cua': '@deepseek-ai/dsh-cua',
-  'packages/experimental/cua-bundle': '@deepseek-ai/dsh-cua-bundle',
-  'packages/experimental/tool-session-query': '@deepseek-ai/dsh-tool-session-query',
-  'packages/experimental/session-title-all-prompts-llm': '@deepseek-ai/dsh-session-title-all-prompts-llm',
-  'packages/experimental/tool-terminal': '@deepseek-ai/dsh-tool-terminal',
-  'packages/experimental/tool-ralph': '@deepseek-ai/dsh-tool-ralph',
-  'packages/experimental/skill-badge': '@deepseek-ai/dsh-skill-badge',
-  'packages/experimental/hook-protocol': '@deepseek-ai/dsh-hook-protocol',
-  'packages/experimental/hooks-claude-code': '@deepseek-ai/dsh-hooks-claude-code',
-  'packages/experimental/hooks-codex': '@deepseek-ai/dsh-hooks-codex',
-  'packages/experimental/webhook': '@deepseek-ai/dsh-webhook',
-  'packages/experimental/webhook-github': '@deepseek-ai/dsh-webhook-github',
-  'packages/experimental/action-cards': '@deepseek-ai/dsh-action-cards',
-  'packages/experimental/client-ui-action-cards': '@deepseek-ai/dsh-client-ui-action-cards',
-  'packages/experimental/creation-recommendations': '@deepseek-ai/dsh-creation-recommendations',
-  'packages/experimental/client-ui-creation-recommendations': '@deepseek-ai/dsh-client-ui-creation-recommendations',
-  'packages/experimental/plugin-recommendations': '@deepseek-ai/dsh-plugin-recommendations',
-  'packages/experimental/client-ui-plugin-recommendations': '@deepseek-ai/dsh-client-ui-plugin-recommendations',
-  'packages/experimental/personalized-recommendations': '@deepseek-ai/dsh-personalized-recommendations',
-} satisfies Record<`packages/experimental/${string}`, `@deepseek-ai/dsh-${string}`>
+  'packages/experimental/cua': '@liwa/cua',
+  'packages/experimental/cua-bundle': '@liwa/cua-bundle',
+  'packages/experimental/tool-session-query': '@liwa/tool-session-query',
+  'packages/experimental/session-title-all-prompts-llm': '@liwa/session-title-all-prompts-llm',
+  'packages/experimental/tool-terminal': '@liwa/tool-terminal',
+  'packages/experimental/tool-ralph': '@liwa/tool-ralph',
+  'packages/experimental/skill-badge': '@liwa/skill-badge',
+  'packages/experimental/hook-protocol': '@liwa/hook-protocol',
+  'packages/experimental/hooks-claude-code': '@liwa/hooks-claude-code',
+  'packages/experimental/hooks-codex': '@liwa/hooks-codex',
+  'packages/experimental/webhook': '@liwa/webhook',
+  'packages/experimental/webhook-github': '@liwa/webhook-github',
+  'packages/experimental/action-cards': '@liwa/action-cards',
+  'packages/experimental/client-ui-action-cards': '@liwa/client-ui-action-cards',
+  'packages/experimental/creation-recommendations': '@liwa/creation-recommendations',
+  'packages/experimental/client-ui-creation-recommendations': '@liwa/client-ui-creation-recommendations',
+  'packages/experimental/plugin-recommendations': '@liwa/plugin-recommendations',
+  'packages/experimental/client-ui-plugin-recommendations': '@liwa/client-ui-plugin-recommendations',
+  'packages/experimental/personalized-recommendations': '@liwa/personalized-recommendations',
+} satisfies Record<`packages/experimental/${string}`, `@liwa/${string}`>
 
 /** npm namespace for experimental packages without retained-name exceptions. */
-export const EXPERIMENTAL_PACKAGE_NAME_PREFIX = '@deepseek-ai/dsh-experimental-'
+export const EXPERIMENTAL_PACKAGE_NAME_PREFIX = '@liwa/experimental-'
 const retainedNames = new Set(Object.values(EXPERIMENTAL_PACKAGE_NAME_EXCEPTIONS))
 
 /**
@@ -47,7 +47,7 @@ export function isExperimentalPackageName(name: string): boolean {
  */
 export function hasExperimentalPackageReference(reference: string): boolean {
   const normalized = reference.replaceAll('\\', '/')
-  return [...normalized.matchAll(/(?:^|[/:\u0000])(@deepseek-ai\/[^/@?#:\s]+)(?=$|[/@?#:])/g)]
+  return [...normalized.matchAll(/(?:^|[/:\u0000])(@liwa\/[^/@?#:\s]+)(?=$|[/@?#:])/g)]
     .some(([, name]) => name !== undefined && isExperimentalPackageName(name))
 }
 
@@ -58,7 +58,7 @@ export function hasExperimentalPackageReference(reference: string): boolean {
  */
 export function experimentalPackageRecordNamespace(name: string): string | undefined {
   if (!isExperimentalPackageName(name)) return undefined
-  return name.slice(name.startsWith(EXPERIMENTAL_PACKAGE_NAME_PREFIX) ? EXPERIMENTAL_PACKAGE_NAME_PREFIX.length : '@deepseek-ai/dsh-'.length)
+  return name.slice(name.startsWith(EXPERIMENTAL_PACKAGE_NAME_PREFIX) ? EXPERIMENTAL_PACKAGE_NAME_PREFIX.length : '@liwa/'.length)
 }
 
 /** Experimental packages excluded from public releases and npm baselines. */
@@ -68,7 +68,7 @@ export const PRIVATE_EXPERIMENTAL_PACKAGE_DIRECTORIES: readonly string[] = []
  * Whether an experimental package publishes under the default-public policy.
  * @param directory - repository-relative package directory.
  * @param privateDirectories - experimental directories excluded from publication.
- * @returns Whether the package publishes with the dsh family.
+ * @returns Whether the package publishes with the liwa family.
  */
 export function isPublicExperimentalPackageDirectory(
   directory: string,

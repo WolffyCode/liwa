@@ -1,4 +1,4 @@
-import { SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
+import { SESSION_FORMAT_VERSION } from '@liwa/session'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createHash } from 'node:crypto'
 import {
@@ -31,18 +31,18 @@ import {
 import { createJsonlGenerationTestRuntime } from '../src/testing/generation.ts'
 import { compressZstdFrame, decompressZstdFrame, scanZstdFrames } from '../src/zstd.ts'
 import type { JsonlCompression } from '../src/format.ts'
-import { createSessionFormatCatalogWithChildren, sessionFormatCatalog } from '@deepseek-ai/dsh-session-format-catalog'
+import { createSessionFormatCatalogWithChildren, sessionFormatCatalog } from '@liwa/session-format-catalog'
 import type {
   SessionFormatArtifact,
   SessionFormatEvent,
   SessionFormatJsonValue,
   SessionFormatRestore,
-} from '@deepseek-ai/dsh-session-format'
+} from '@liwa/session-format'
 
 const roots: string[] = []
 
 async function tempRoot(): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-jsonl-generation-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-jsonl-generation-'))
   roots.push(root)
   return root
 }

@@ -1,10 +1,10 @@
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import SessionProjectionRegistry from '@liwa/session-projection'
 import { describe, expect, expectTypeOf, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { Session, SessionId } from '@deepseek-ai/dsh-session'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import TerminalSessionService, { TerminalBackendCleanupError, TerminalError, TerminalSessionId } from '@deepseek-ai/dsh-terminal'
+import { Context } from '@liwa/cordis'
+import { Session, SessionId } from '@liwa/session'
+import AgentRegistry from '@liwa/agent'
+import type { Agent } from '@liwa/agent'
+import TerminalSessionService, { TerminalBackendCleanupError, TerminalError, TerminalSessionId } from '@liwa/terminal'
 import type {
   TerminalBackend,
   TerminalBackendSession,
@@ -14,8 +14,8 @@ import type {
   TerminalSessionId as TerminalSessionIdType,
   TerminalSessionStatus,
   TerminalSignal,
-} from '@deepseek-ai/dsh-terminal'
-import { unsupportedModel, unsupportedInbox } from '@deepseek-ai/dsh-agent-loop-testkit'
+} from '@liwa/terminal'
+import { unsupportedModel, unsupportedInbox } from '@liwa/agent-loop-testkit'
 
 const agentScopeDisposers = new WeakMap<Agent, () => Promise<void>>()
 const ptyServiceDisposers = new WeakMap<Context, () => Promise<void>>()

@@ -4,7 +4,7 @@ import { defineConfig } from 'tsdown'
 
 export default defineConfig({
   entry: { 'image-read.perf': 'image-read.perf.ts' },
-  outDir: '../.dsh-build/image-read',
+  outDir: '../.liwa-build/image-read',
   format: 'esm',
   platform: 'node',
   target: 'es2024',
@@ -12,5 +12,5 @@ export default defineConfig({
   dts: false,
   clean: true,
   tsconfig: '../../../../tsconfig.base.json',
-  deps: { neverBundle: [/^@deepseek-ai\//], onlyBundle: false },
+  deps: { neverBundle: [/^@liwa\//], onlyBundle: false },
 })

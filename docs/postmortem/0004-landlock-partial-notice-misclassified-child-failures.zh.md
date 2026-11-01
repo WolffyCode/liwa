@@ -6,13 +6,13 @@ Status: resolved
 
 ## 摘要
 
-在 Landlock ABI 较旧的内核上，launcher 会在执行每个子进程前打印一条无害的部分强制执行通知。harness 把共享的 `landlock-run:` 前缀与任意非零子进程退出组合起来，判定为 launcher 失败，因此 ripgrep 在没有匹配项时以 1 退出等普通结果会呈现为 `SANDBOX_UNAVAILABLE`；当时仍由 bash 支撑的文件系统搜索还会用 `SEARCH_FAILED` 遮蔽这个结构化错误。过于宽泛的签名规则，以及缺少较旧 ABI 下部分强制执行的组合测试覆盖，让该缺陷得以流入。runner 分类现在会先精确排除信息性行，再要求由退出状态门控的致命证据，并由一个组装后的无密钥场景固定仍然存在的 bash 路径。文件系统搜索通过 subprocess seam 运行打包的 ripgrep，不经过沙箱化 bash。
+在 Landlock ABI 较旧的内核上，launcher 会在执行每个子进程前打印一条无害的部分强制执行通知。灵鲸把共享的 `landlock-run:` 前缀与任意非零子进程退出组合起来，判定为 launcher 失败，因此 ripgrep 在没有匹配项时以 1 退出等普通结果会呈现为 `SANDBOX_UNAVAILABLE`；当时仍由 bash 支撑的文件系统搜索还会用 `SEARCH_FAILED` 遮蔽这个结构化错误。过于宽泛的签名规则，以及缺少较旧 ABI 下部分强制执行的组合测试覆盖，让该缺陷得以流入。runner 分类现在会先精确排除信息性行，再要求由退出状态门控的致命证据，并由一个组装后的无密钥场景固定仍然存在的 bash 路径。文件系统搜索通过 subprocess seam 运行打包的 ripgrep，不经过沙箱化 bash。
 
 ## 概述
 
 原生 launcher 约定区分两类 stderr 行。内核只能部分强制执行时，会精确打印 `landlock-run: partial enforcement (older Landlock ABI)`，然后继续执行子进程。launcher 失败则打印另一行 `landlock-run:` 诊断，在不执行子进程的情况下以 125 退出。
 
-harness 用一个不区分大小写的 `landlock-run: ` 子串表示这两种情况。消费方只要发现非零退出同时携带该子串，就会归类为 runner 失败。因此，子进程的退出状态被错误地关联到 launcher 的信息性行：`false`、ripgrep 无匹配时的退出码 1、无效 pattern 的退出码 2，乃至由子进程自行选择的退出码 125，都可能在约束与执行均成功的情况下被错误归因为沙箱故障。
+灵鲸用一个不区分大小写的 `landlock-run: ` 子串表示这两种情况。消费方只要发现非零退出同时携带该子串，就会归类为 runner 失败。因此，子进程的退出状态被错误地关联到 launcher 的信息性行：`false`、ripgrep 无匹配时的退出码 1、无效 pattern 的退出码 2，乃至由子进程自行选择的退出码 125，都可能在约束与执行均成功的情况下被错误归因为沙箱故障。
 
 事故发生时，文件系统搜索又造成第二处归因错误。当时由 bash 支撑的 `runRipgrep()` 会捕获 bash 执行器除中止外抛出的所有错误，并将其替换为关于 cwd 或 shell 启动的通用 `SEARCH_FAILED`，其中也包括沙箱执行器产生的结构化 `SandboxUnavailableError`。
 
@@ -41,9 +41,9 @@ stderr 仍是带内归因通道。受限子进程可以故意复现 runner 的�
 ## 已添加的防护措施
 
 - [`RunnerFailureRule`](../subsystems/sandbox.zh.md#wrapped-argv-and-classification-dialects) 携带可选的允许退出码、不区分大小写的逐行致命签名，以及按不区分大小写的整行精确匹配排除的信息性行。
-- [`dsh-sandbox-local`](../../packages/sandbox/sandbox-local/) 把 Landlock 映射为退出码 125 加一行非通知的 `landlock-run:` 诊断，而 bwrap、Seatbelt 和自定义 runner 仍仅依据签名。
-- [`dsh-bash-sandbox`](../../packages/shell/bash-sandbox/) 直接 spawn 提供方 argv，因此启动前遭拒时使用 spawn 错误通道，而非本地化的 shell 诊断。已结算的前台与后台执行共用一个返回证据的分类器；致命证据优先于拒绝，前台错误会报告匹配到的致命行，同时保持捕获的 stderr 不变。
-- [`dsh-tool-fs-search`](../../packages/fs/tool-fs-search/) 通过 `ctx.subprocess` 运行打包的 ripgrep，并继续位于沙箱化 bash seam 之外。
+- [`liwa-sandbox-local`](../../packages/sandbox/sandbox-local/) 把 Landlock 映射为退出码 125 加一行非通知的 `landlock-run:` 诊断，而 bwrap、Seatbelt 和自定义 runner 仍仅依据签名。
+- [`liwa-bash-sandbox`](../../packages/shell/bash-sandbox/) 直接 spawn 提供方 argv，因此启动前遭拒时使用 spawn 错误通道，而非本地化的 shell 诊断。已结算的前台与后台执行共用一个返回证据的分类器；致命证据优先于拒绝，前台错误会报告匹配到的致命行，同时保持捕获的 stderr 不变。
+- [`liwa-tool-fs-search`](../../packages/fs/tool-fs-search/) 通过 `ctx.subprocess` 运行打包的 ripgrep，并继续位于沙箱化 bash seam 之外。
 - 原生边界回归用例位于 [`partial-landlock.spec.ts`](../../packages/shell/bash-sandbox/tests/partial-landlock.spec.ts)，包括信息性通知、致命证据和前台／后台分类。
 - 组装后的产品路径由 [`partial-landlock` 快照组合](../../snapshots/session/partial-landlock-child-failure/cordis.snapshot.yml)固定，独立于文件系统搜索的实现选择。
 

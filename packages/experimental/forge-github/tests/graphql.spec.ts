@@ -1,5 +1,5 @@
-import { changeRequestKey } from '@deepseek-ai/dsh-experimental-forge'
-import type { ChangeRequestSnapshot } from '@deepseek-ai/dsh-experimental-forge'
+import { changeRequestKey } from '@liwa/experimental-forge'
+import type { ChangeRequestSnapshot } from '@liwa/experimental-forge'
 import { describe, expect, it } from 'vitest'
 import { mapHeadResponse, mapSnapshotResponse, snapshotQuery } from '../src/graphql.ts'
 import { checkRun, demo, pull, pullRequestNode, repositorySettings, statusContext } from './fixtures.ts'

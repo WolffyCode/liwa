@@ -1,8 +1,8 @@
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@liwa/cordis'
 import type {
   ConversationMatch, ConversationNodeDefinition, RequestView,
-} from '@deepseek-ai/dsh-client-ui-conversation/client'
-import type {} from '@deepseek-ai/dsh-compaction/types'
+} from '@liwa/client-ui-conversation/client'
+import type {} from '@liwa/compaction/types'
 import { trajectoryNode } from './trajectory-definition-common.ts'
 
 interface CompactionState {

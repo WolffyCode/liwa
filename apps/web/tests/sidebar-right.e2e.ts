@@ -23,7 +23,7 @@ import { fileURLToPath } from 'node:url'
 import type { Browser, ConsoleMessage, Locator, Page } from 'playwright'
 import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed } from 'vitest'
-import { createMessage, createUserMessage } from '@deepseek-ai/dsh-llm'
+import { createMessage, createUserMessage } from '@liwa/llm'
 import { acknowledgeReloadConnectionLoss, launchWebScaffold, watchConsole, type WebScaffold } from './scaffold.ts'
 import {
   connectFreshWorkspace, newEnglishPage, saveFailureShot, ZH_BROWSER_LOCALE,
@@ -137,7 +137,7 @@ async function ensureExpanded(page: Page, column: Locator): Promise<void> {
 async function resetSidebar(page: Page): Promise<Locator> {
   await page.evaluate(() => {
     for (const key of Object.keys(localStorage)) {
-      if (key.startsWith('dsh.sidebar-right.v1.')) localStorage.removeItem(key)
+      if (key.startsWith('liwa.sidebar-right.v1.')) localStorage.removeItem(key)
     }
   })
   await page.reload({ waitUntil: 'load' })
@@ -1084,7 +1084,7 @@ describe('web e2e: shipped right Sidebar', () => {
       // draws inside it.
       const clamped = await panel.evaluate((node) => {
         const element = node as HTMLElement
-        for (const name of ['x', 'y', 'width', 'height']) element.style.setProperty(`--dsh-dockkit-float-${name}`, '5000px')
+        for (const name of ['x', 'y', 'width', 'height']) element.style.setProperty(`--liwa-dockkit-float-${name}`, '5000px')
         const box = element.getBoundingClientRect()
         return { left: box.left, top: box.top, right: box.right, bottom: box.bottom }
       })

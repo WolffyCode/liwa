@@ -1,11 +1,11 @@
 /** Live title input remains owned while projection registration is pending. */
-import { Context, FiberState } from '@deepseek-ai/cordis'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import LlmRuntime, { createUserMessage, markAgentLoopRequest } from '@deepseek-ai/dsh-llm'
-import SessionStore, { type Session } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import SessionTitleService, { SessionTitleProviderId, type SessionTitleProviderRequest } from '@deepseek-ai/dsh-session-title'
-import { deepFreeze } from '@deepseek-ai/dsh-util-values'
+import { Context, FiberState } from '@liwa/cordis'
+import AgentRegistry from '@liwa/agent'
+import LlmRuntime, { createUserMessage, markAgentLoopRequest } from '@liwa/llm'
+import SessionStore, { type Session } from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import SessionTitleService, { SessionTitleProviderId, type SessionTitleProviderRequest } from '@liwa/session-title'
+import { deepFreeze } from '@liwa/util-values'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
 
 const CONFIG = { fallbackMaxWords: 8, fallbackMaxBytes: 64, maxTitleBytes: 256 }

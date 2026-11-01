@@ -3,13 +3,13 @@ description: "面向部署方与消费方的持久终端会话说明，用于选
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-terminal
+# @liwa/terminal
 
 [English](README.md) | 中文
 
 ## 概述
 
-`dsh-terminal` 为 harness 提供持久且限定所有者范围的终端会话：会话让 shell 或 REPL 状态跨工具调用存活，且每个操作都被限制在创建它的那个确切 agent（智能体）内。本包提供 `ctx.terminals` 服务，负责生成不透明的会话 id、通过已注册的后端路由会话创建，并在所有者或服务 dispose（资源释放）时等待完全停稳的清理。它本身不定义任何终端机制：`dsh-terminal-bash` 之类的后端负责启动与就绪检测，`dsh-tool-terminal` 中的面向模型工具负责呈现。会话只存在于进程本地：harness 重启后不会恢复。
+`liwa-terminal` 为灵鲸提供持久且限定所有者范围的终端会话：会话让 shell 或 REPL 状态跨工具调用存活，且每个操作都被限制在创建它的那个确切 agent（智能体）内。本包提供 `ctx.terminals` 服务，负责生成不透明的会话 id、通过已注册的后端路由会话创建，并在所有者或服务 dispose（资源释放）时等待完全停稳的清理。它本身不定义任何终端机制：`liwa-terminal-bash` 之类的后端负责启动与就绪检测，`liwa-tool-terminal` 中的面向模型工具负责呈现。会话只存在于进程本地：灵鲸重启后不会恢复。
 
 ## 目录
 
@@ -25,20 +25,20 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-当组合需要状态跨工具调用存活的终端会话时，挂载 `@deepseek-ai/dsh-terminal`。单独的服务本身没有用处：请与 `@deepseek-ai/dsh-terminal-bash` 之类的后端、`@deepseek-ai/dsh-tool-terminal` 之类的工具包配对，并在同一个组合中一起加载。
+当组合需要状态跨工具调用存活的终端会话时，挂载 `@liwa/terminal`。单独的服务本身没有用处：请与 `@liwa/terminal-bash` 之类的后端、`@liwa/tool-terminal` 之类的工具包配对，并在同一个组合中一起加载。
 
 ### 何时选择
 
-当工作状态存在于终端而非文件时，选择持久终端：在调试器中单步执行、在 Python 或 Node REPL 中探索，或中断前台命令后回到 shell。对于有界操作，请选择单次 bash、read、write 与 edit 工具——它们保留更强的校验、审批、输出上限与回放约定。会话只存在于进程本地：harness 进程退出时它们会消失，因此需要持久的工作应写入文件或其他持久系统。
+当工作状态存在于终端而非文件时，选择持久终端：在调试器中单步执行、在 Python 或 Node REPL 中探索，或中断前台命令后回到 shell。对于有界操作，请选择单次 bash、read、write 与 edit 工具——它们保留更强的校验、审批、输出上限与回放约定。会话只存在于进程本地：灵鲸进程退出时它们会消失，因此需要持久的工作应写入文件或其他持久系统。
 
 ### 组合方式
 
 将会话服务与后端、工具包一起加载：
 
 ```yaml
-- name: '@deepseek-ai/dsh-terminal'
-- name: '@deepseek-ai/dsh-terminal-bash'
-- name: '@deepseek-ai/dsh-tool-terminal'
+- name: '@liwa/terminal'
+- name: '@liwa/terminal-bash'
+- name: '@liwa/tool-terminal'
 ```
 
 后端提供一个稳定类型——随附的 shell 后端提供 `shell`——工具按该类型打开会话。shell 后端还额外要求沙箱、沙箱策略与子进程提供方；完整组合见其 [README](../terminal-bash/README.zh.md)。
@@ -114,7 +114,7 @@ kind: "package-reference"
 
 #### 模型看到什么
 
-没有直接可见内容。此包不注册提示词或工具；可见 schema 与结果文本由 `@deepseek-ai/dsh-tool-terminal` 负责。
+没有直接可见内容。此包不注册提示词或工具；可见 schema 与结果文本由 `@liwa/tool-terminal` 负责。
 
 #### Token 影响
 
@@ -122,7 +122,7 @@ kind: "package-reference"
 
 #### KV Cache 影响
 
-不会直接失效；请求前缀变更由 `@deepseek-ai/dsh-tool-terminal` 负责。
+不会直接失效；请求前缀变更由 `@liwa/tool-terminal` 负责。
 
 ## 已知限制与延期工作
 
@@ -131,7 +131,7 @@ kind: "package-reference"
 
 这些限制说明服务何时不合适。它们是当前包约束，不是任务积压。
 
-- **进程本地会话**——会话与原始 scrollback 只存在于本进程中，harness 重启后不会恢复；需要持久的工作必须写入文件或其他持久系统。
+- **进程本地会话**——会话与原始 scrollback 只存在于本进程中，灵鲸重启后不会恢复；需要持久的工作必须写入文件或其他持久系统。
 - **不支持跨 agent 共享**——会话有意保持单一所有者，没有共享或转移会话的途径。
 - **没有声明式自动启动**——会话只在 agent 工具调用期间创建。
 

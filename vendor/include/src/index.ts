@@ -1,6 +1,6 @@
-import { EntryGroup, EntryTree, isJsExpr, type EntryChange, type EntryOptions, type SourceLocation } from '@deepseek-ai/cordis-plugin-loader'
-import { Context, Service } from '@deepseek-ai/cordis'
-import { deepEqual, type Awaitable } from '@deepseek-ai/cosmokit'
+import { EntryGroup, EntryTree, isJsExpr, type EntryChange, type EntryOptions, type SourceLocation } from '@liwa/cordis-plugin-loader'
+import { Context, Service } from '@liwa/cordis'
+import { deepEqual, type Awaitable } from '@liwa/cosmokit'
 import { basename, dirname, extname, join } from 'node:path'
 import { access, constants, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { setTimeout as sleep } from 'node:timers/promises'
@@ -62,8 +62,8 @@ export function stringifyEntryYaml(data: unknown): string {
 }
 
 /**
- * The file-watch capability Include registers its file with. Both HMR providers (`@deepseek-ai/cordis-plugin-hmr`
- * and `@deepseek-ai/dsh-hmr`) declare their own `ctx.hmr` type, so Include depends on this shape instead of either.
+ * The file-watch capability Include registers its file with. Both HMR providers (`@liwa/cordis-plugin-hmr`
+ * and `@liwa/hmr`) declare their own `ctx.hmr` type, so Include depends on this shape instead of either.
  */
 export interface HmrWatch {
   /**

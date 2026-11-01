@@ -22,7 +22,7 @@ describe('PR preview workflow', () => {
     // hosted label stays as the fallback when the Blacksmith pool is not chosen.
     expect(preview['runs-on']).toContain('blacksmith-4vcpu-ubuntu-2404')
     expect(preview['runs-on']).toContain("'ubuntu-24.04'")
-    expect(preview['runs-on']).toContain('DSH_CI_FAILOVER_LINUX')
+    expect(preview['runs-on']).toContain('LIWA_CI_FAILOVER_LINUX')
     expect(workflow.on).toEqual({ pull_request: { types: ['opened', 'synchronize', 'reopened'] } })
     expect(workflow.permissions).toEqual({ contents: 'read', 'pull-requests': 'write' })
     expect(preview.steps.find(step => step.uses === 'actions/checkout@v7.0.1')?.with).toEqual({ 'persist-credentials': false })
@@ -43,12 +43,12 @@ describe('PR preview workflow', () => {
 
   it('keeps the immutable complete artifact build and restore-only dependency cache', () => {
     expect(workflow.env.PRIMARY_NODE_VERSION).toBe('24')
-    expect(workflow.env.DSH_TELEMETRY_DISABLED).toBe('1')
+    expect(workflow.env.LIWA_TELEMETRY_DISABLED).toBe('1')
     const commands = preview.steps.map(step => step.run)
     expect(commands).toContain('pnpm install --frozen-lockfile')
     expect(commands).toContain('pnpm run build')
-    expect(commands).toContain('pnpm --filter @deepseek-ai/dsh-web-frontend run build:preview')
-    expect(commands.indexOf('pnpm run build')).toBeLessThan(commands.indexOf('pnpm --filter @deepseek-ai/dsh-web-frontend run build:preview'))
+    expect(commands).toContain('pnpm --filter @liwa/web-frontend run build:preview')
+    expect(commands.indexOf('pnpm run build')).toBeLessThan(commands.indexOf('pnpm --filter @liwa/web-frontend run build:preview'))
     // The complete build also runs the aggregate type checks the required
     // consumers dropped.
     expect(commands).not.toContain('pnpm run build:check')
@@ -63,7 +63,7 @@ describe('PR preview workflow', () => {
       group: 'build-preview-cloudflare-${{ github.event.pull_request.number }}',
       'cancel-in-progress': true,
     })
-    expect(workflow.env.CF_PROJECT).toBe('dsh-build-preview')
+    expect(workflow.env.CF_PROJECT).toBe('liwa-build-preview')
     const shape = preview.steps.find(step => step.name === 'Shape the upload')!
     expect(shape.run).toContain("find apps/web/dist -name '*.map' -delete")
     expect(shape.run).toContain('cp apps/web/dist/preview.html apps/web/dist/index.html')
@@ -77,7 +77,7 @@ describe('PR preview workflow', () => {
     expect(verify.run).toContain('"$magic" != "1f8b"')
     expect(verify.env?.CF_ACCESS_CLIENT_SECRET).toBe('${{ secrets.CF_ACCESS_CLIENT_SECRET }}')
     const comment = preview.steps.find(step => step.name === 'Comment the preview URL')!
-    expect(comment.run).toContain('<!-- dsh-preview-url -->')
+    expect(comment.run).toContain('<!-- liwa-preview-url -->')
     expect(comment.run).toContain('gh pr comment "$PR" --body-file -')
   })
 })

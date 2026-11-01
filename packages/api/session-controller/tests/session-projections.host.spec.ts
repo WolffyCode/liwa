@@ -11,26 +11,26 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { z } from 'zod'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import { AttachmentStore } from '@deepseek-ai/dsh-attachment'
-import { agentPresetProjectionDefinition } from '@deepseek-ai/dsh-agent-preset-registry'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import SessionStore, { SESSION_FORMAT_VERSION, SessionId, SessionLogOffset, SessionSeq } from '@deepseek-ai/dsh-session'
-import type { Session, SessionEvent, SessionHeader, UserMessage } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import type { ProjectionDefinition } from '@deepseek-ai/dsh-session-projection'
-import SessionProjectionCache, { projectionCacheDomainSpec } from '@deepseek-ai/dsh-session-projection-cache'
-import { titleProjectionDefinition } from '@deepseek-ai/dsh-session-title'
-import Storage from '@deepseek-ai/dsh-storage'
-import * as StorageDomain from '@deepseek-ai/dsh-storage-domain'
-import * as StorageJson from '@deepseek-ai/dsh-storage-json'
-import type { SessionControlFrame, SessionFollowFrame } from '@deepseek-ai/dsh-api-session-controller/types'
+import AgentRegistry from '@liwa/agent'
+import { AttachmentStore } from '@liwa/attachment'
+import { agentPresetProjectionDefinition } from '@liwa/agent-preset-registry'
+import { createUserMessage } from '@liwa/llm'
+import SessionStore, { SESSION_FORMAT_VERSION, SessionId, SessionLogOffset, SessionSeq } from '@liwa/session'
+import type { Session, SessionEvent, SessionHeader, UserMessage } from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import type { ProjectionDefinition } from '@liwa/session-projection'
+import SessionProjectionCache, { projectionCacheDomainSpec } from '@liwa/session-projection-cache'
+import { titleProjectionDefinition } from '@liwa/session-title'
+import Storage from '@liwa/storage'
+import * as StorageDomain from '@liwa/storage-domain'
+import * as StorageJson from '@liwa/storage-json'
+import type { SessionControlFrame, SessionFollowFrame } from '@liwa/api-session-controller/types'
 import {
   mountAgentLoopTestDependencies,
   mountAgentLoopTestHarness,
-} from '@deepseek-ai/dsh-agent-loop-testkit'
+} from '@liwa/agent-loop-testkit'
 import { createSessionTestRemote, testSessionPersistence, type TestSessionRemote } from './test-remote.ts'
 
 const ownedContexts = new Set<Context>()
@@ -40,7 +40,7 @@ afterEach(async () => {
 })
 let nextHarnessSession = 1
 
-declare module '@deepseek-ai/dsh-session-projection/types' {
+declare module '@liwa/session-projection/types' {
   interface SessionProjectionMap {
     'test/last-user': { text: string } | null
   }
@@ -571,7 +571,7 @@ describe('session.list projections column', () => {
   })
 
   it('keeps persisted host-only state out of a cold session.list response', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'dsh-api-projcache-'))
+    const root = await mkdtemp(join(tmpdir(), 'liwa-api-projcache-'))
     const ctx = new Context()
     try {
       await ctx.plugin(Storage)
@@ -624,7 +624,7 @@ describe('session.list projections column', () => {
   })
 
   it('lists a forked Session\'s cached title after a Host restart without opening its body', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'dsh-api-projcache-'))
+    const root = await mkdtemp(join(tmpdir(), 'liwa-api-projcache-'))
     const id = SessionId('session-cold-fork')
     /** One Host process over `root`: storage stack, registry with the title unit, and the cache. */
     const boot = async (): Promise<Context> => {

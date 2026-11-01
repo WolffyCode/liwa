@@ -1,9 +1,9 @@
 ---
-description: "dsh Web 客户端的侧边栏外壳插件：品牌行、New Session 操作、折叠控件、可感知滚动的区域席位与底部固定的 Settings 席位。"
+description: "liwa Web 客户端的侧边栏外壳插件：品牌行、New Session 操作、折叠控件、可感知滚动的区域席位与底部固定的 Settings 席位。"
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-client-ui-sidebar
+# @liwa/client-ui-sidebar
 
 [English](README.md) | 中文
 
@@ -11,7 +11,7 @@ kind: "package-reference"
 
 ## 概述
 
-dsh Web 客户端的侧边栏让用户识别当前构建、启动新会话、将导航折叠为 56px 轨道、浏览 Workspace 与 Session，以及打开 Settings。它会将 Settings 入口固定在底部，并在隐藏空闲滚动条时避免浏览器行发生位移。New Session 优先使用显式选择的 Workspace，其次使用当前 Session 所属的 Workspace，再其次使用最近活跃的 Workspace；如果都不存在，则打开空白的 New Session 页面。部署可以替换品牌标记或名称，同时保留导航控件和轨道几何。
+liwa Web 客户端的侧边栏让用户识别当前构建、启动新会话、将导航折叠为 56px 轨道、浏览 Workspace 与 Session，以及打开 Settings。它会将 Settings 入口固定在底部，并在隐藏空闲滚动条时避免浏览器行发生位移。New Session 优先使用显式选择的 Workspace，其次使用当前 Session 所属的 Workspace，再其次使用最近活跃的 Workspace；如果都不存在，则打开空白的 New Session 页面。部署可以替换品牌标记或名称，同时保留导航控件和轨道几何。
 
 ## 目录
 
@@ -31,7 +31,7 @@ dsh Web 客户端的侧边栏让用户识别当前构建、启动新会话、将
 
 ### 品牌与 New Session
 
-展开的品牌行把 `sidebar.brand.mark` 与 `sidebar.brand.name` 渲染为两个独立的 single slot；收起轨道则渲染同一个 mark slot。在 Web 和 Windows 桌面端，点击展开态的品牌会新建会话，悬停或聚焦时不显示 tooltip。没有占位者时，外壳使用鱼形标记和本地化的本地构建标签。完整构建会在标签下方显示代码徽标；该徽标使用 `DSH_CLIENT_VERSION`、可选的 7 位 `DSH_CLIENT_COMMIT_HASH` 与 `DSH_CLIENT_GIT_DIRTY=true` 组装成 `version[-commit][-dirty]`；缺少版本元数据时不显示徽标。此类构建中点击回退的标记或标签会复制该徽标文本而非新建会话，macOS 桌面端同样适用；写入成功后弹出“版本号复制成功”toast。New Session 优先使用作用域操作明确指定的 Workspace，否则使用当前 Session 所属 Workspace，再否则使用最近活跃 Workspace；一个 Workspace 都没有时则清空选择，进入空白 New Session 页面。 展开态的新建会话按钮在键盘聚焦时于右侧以灰色文字显示当前有效绑定，不受设备悬停能力限制；支持悬停的设备也会在悬停时显示。快捷键可见且空间较窄时，居中的图标与文字在快捷键之前渐隐；CSS 为快捷键保留宽度，无需测量按钮。纯图标控件保留使用平台键位样式的 tooltip，侧栏隐藏时常驻的 macOS 头部控件也保持一致。所有控件均提供 `aria-keyshortcuts`。全局访问快照不含 `session/create` 时，品牌行不可点击，New Session 按钮和窗口标题栏中的 New Session 控件都不渲染；每个新建请求仍由 Host 判定。
+展开的品牌行把 `sidebar.brand.mark` 与 `sidebar.brand.name` 渲染为两个独立的 single slot；收起轨道则渲染同一个 mark slot。在 Web 和 Windows 桌面端，点击展开态的品牌会新建会话，悬停或聚焦时不显示 tooltip。没有占位者时，外壳使用鱼形标记和本地化的本地构建标签。完整构建会在标签下方显示代码徽标；该徽标使用 `LIWA_CLIENT_VERSION`、可选的 7 位 `LIWA_CLIENT_COMMIT_HASH` 与 `LIWA_CLIENT_GIT_DIRTY=true` 组装成 `version[-commit][-dirty]`；缺少版本元数据时不显示徽标。此类构建中点击回退的标记或标签会复制该徽标文本而非新建会话，macOS 桌面端同样适用；写入成功后弹出“版本号复制成功”toast。New Session 优先使用作用域操作明确指定的 Workspace，否则使用当前 Session 所属 Workspace，再否则使用最近活跃 Workspace；一个 Workspace 都没有时则清空选择，进入空白 New Session 页面。 展开态的新建会话按钮在键盘聚焦时于右侧以灰色文字显示当前有效绑定，不受设备悬停能力限制；支持悬停的设备也会在悬停时显示。快捷键可见且空间较窄时，居中的图标与文字在快捷键之前渐隐；CSS 为快捷键保留宽度，无需测量按钮。纯图标控件保留使用平台键位样式的 tooltip，侧栏隐藏时常驻的 macOS 头部控件也保持一致。所有控件均提供 `aria-keyshortcuts`。全局访问快照不含 `session/create` 时，品牌行不可点击，New Session 按钮和窗口标题栏中的 New Session 控件都不渲染；每个新建请求仍由 Host 判定。
 
 ### 全局面板入口
 
@@ -47,7 +47,7 @@ root 作用域的 `sidebar.panellist.actions` list 有注册项时，导航区�
 
 实时收起时，展开内容在当前宽度淡出，上方控件共用同一段透明度渐变，并向左平移进入 56px 轨道，由布局的栏滑动结束整段动画。页面初始即为收起状态时会静态渲染轨道；减少动态效果模式会禁用两段过渡。固定在底部的 `sidebar.settings` 控件共用相同的透明度渐变时序，但不发生横向位移。
 
-在 Windows Electron 中，`html[data-windows-titlebar]` 将两种状态下的侧栏开关固定在顶栏左上角，仅在展开态与新建会话按钮左边缘对齐。展开态品牌位于顶栏下方、新建会话按钮上方，按钮上方额外留出 8px。收起后，品牌和侧栏内容隐藏，新建会话按钮排在侧栏开关与 Desktop 菜单之间。侧栏在收起态将根元素的 `--dsh-windows-menu-start` 设为 84px；Desktop preload 使用它将菜单放在新建会话之后，展开态默认为 48px。顶栏图标按钮采用紧凑控件圆角的 28px 控件，图标为居中 16px，并从窗口拖拽区域中排除。侧栏开关与新建会话的悬停提示在顶栏下方展开，Desktop 菜单文字不会盖住它们；占用 `sidebar.toggle.badge` 的控件自行决定气泡展开方向。
+在 Windows Electron 中，`html[data-windows-titlebar]` 将两种状态下的侧栏开关固定在顶栏左上角，仅在展开态与新建会话按钮左边缘对齐。展开态品牌位于顶栏下方、新建会话按钮上方，按钮上方额外留出 8px。收起后，品牌和侧栏内容隐藏，新建会话按钮排在侧栏开关与 Desktop 菜单之间。侧栏在收起态将根元素的 `--liwa-windows-menu-start` 设为 84px；Desktop preload 使用它将菜单放在新建会话之后，展开态默认为 48px。顶栏图标按钮采用紧凑控件圆角的 28px 控件，图标为居中 16px，并从窗口拖拽区域中排除。侧栏开关与新建会话的悬停提示在顶栏下方展开，Desktop 菜单文字不会盖住它们；占用 `sidebar.toggle.badge` 的控件自行决定气泡展开方向。
 
 ### macOS 桌面
 
@@ -78,7 +78,7 @@ root 作用域的 `sidebar.panellist.actions` list 有注册项时，导航区�
 
 展开态导航的左右外距为 8px，悬停与选中底色在两侧各内缩 3px，前置单元宽 16px，与标签间隔 6px。新会话内容居中，左右外边距为 4px，底部外边距为 10px。logo 行无底部外边距；内容从侧栏左边缘向内 16px 开始，标记与名称间隔 5px。仅 macOS 非全屏、侧栏展开时，顶部开关向右偏移 4px，并在整个淡出期间保持该偏移。折叠态尺寸独立保留。
 
-侧边栏根节点向 `sidebar.workspaces` 与 `sidebar.settings` 提供可继承的 CSS 属性：`--dsh-sidebar-inline-padding: 8px`、`--dsh-sidebar-row-padding: 12px`、`--dsh-sidebar-label-gap: 6px` 和 `--dsh-sidebar-paint-inset: 3px`。占用者使用这些值对齐展开态行；独立组合必须在祖先节点提供这些值。底色内缩不移动内容：行从左右内边距中减去该内缩值，并以等宽透明边框承载内缩。
+侧边栏根节点向 `sidebar.workspaces` 与 `sidebar.settings` 提供可继承的 CSS 属性：`--liwa-sidebar-inline-padding: 8px`、`--liwa-sidebar-row-padding: 12px`、`--liwa-sidebar-label-gap: 6px` 和 `--liwa-sidebar-paint-inset: 3px`。占用者使用这些值对齐展开态行；独立组合必须在祖先节点提供这些值。底色内缩不移动内容：行从左右内边距中减去该内缩值，并以等宽透明边框承载内缩。
 
 ### slot 纪律
 

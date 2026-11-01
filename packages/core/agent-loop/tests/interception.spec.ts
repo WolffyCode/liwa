@@ -1,28 +1,28 @@
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 import { describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import LlmRuntime, { createUserMessage, ToolCallId  } from '@deepseek-ai/dsh-llm'
-import type { ContextFormed } from '@deepseek-ai/dsh-llm'
+import { Context } from '@liwa/cordis'
+import LlmRuntime, { createUserMessage, ToolCallId  } from '@liwa/llm'
+import type { ContextFormed } from '@liwa/llm'
 import SessionStore, {
   SessionId,
   type SessionEvent,
   type TurnEndReason,
   type UserMessage,
-} from '@deepseek-ai/dsh-session'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime, { type PostToolDecision, type PreToolDecision } from '@deepseek-ai/dsh-tools'
-import { defineContentToolFixture } from '@deepseek-ai/dsh-tool-testkit'
+} from '@liwa/session'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime, { type PostToolDecision, type PreToolDecision } from '@liwa/tools'
+import { defineContentToolFixture } from '@liwa/tool-testkit'
 import AgentRegistry, {
   type Agent,
   type PreStepDecision,
   type SessionStartSource,
-} from '@deepseek-ai/dsh-agent'
+} from '@liwa/agent'
 
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import AgentLoop from '@liwa/agent-loop'
+import SessionProjectionRegistry from '@liwa/session-projection'
 import { MockAdapter, textResponse, toolCallResponse } from './mock-adapter.ts'
 
-declare module '@deepseek-ai/dsh-llm' {
+declare module '@liwa/llm' {
   interface MessageSourceMap {
     'a': { kind: 'a' } & ContextFormed
     'accepted source': { kind: 'accepted source' } & ContextFormed
@@ -733,7 +733,7 @@ describe('tools/pre-execute gate (native-plugin permission pattern, end-to-end t
 })
 
 describe('worked example: a native hook plugin is just a cordis plugin on the seams', () => {
-  // The whole point of the interception taxonomy: a "native hook" needs no dsh-hook-protocol,
+  // The whole point of the interception taxonomy: a "native hook" needs no liwa-hook-protocol,
   // no external command, no hook/* log — it is an ordinary cordis plugin subscribing to the
   // canonical events and returning typed decisions.
   const NativeGuard = {

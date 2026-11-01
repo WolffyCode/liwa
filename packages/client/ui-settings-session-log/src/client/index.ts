@@ -1,14 +1,14 @@
 /** General settings companion for the Host Session-log upload configuration. */
-import type { Context } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-client-locale/client'
-import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
-import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
-import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
+import type { Context } from '@liwa/cordis'
+import type {} from '@liwa/client-locale/client'
+import type {} from '@liwa/client-ui-settings/client'
+import type {} from '@liwa/client-ui-layout/client'
+import type {} from '@liwa/client-ui-renderer/client'
 import { UploadPreference, type UploadSettings } from './upload-preference.ts'
 import { UploadRow, UploadToast, type UploadInjected } from './UploadRow.tsx'
 import { en, ja, es, fr, de, ru, pt, zh } from './locales.ts'
 
-declare module '@deepseek-ai/dsh-client-ui-slots' {
+declare module '@liwa/client-ui-slots' {
   interface LocaleNamespaceMap {
     /** API Session-log preference copy. */
     'settings.sessionLog': keyof typeof en

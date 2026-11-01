@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-client-locale",
+  "name": "@liwa/client-locale",
   "description": "Locale plugin: Host-backed preference, extensible language catalog, browser fallback, and typed built-in dictionaries",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/client/locale"
   },
   "type": "module",
@@ -26,13 +26,13 @@
     "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json"
   },
-  "dsh": {
+  "liwa": {
     "client": {
       "inject": [
-        "@deepseek-ai/dsh-client-connection",
-        "@deepseek-ai/dsh-client-ui-renderer",
-        "@deepseek-ai/dsh-client-ui-settings",
-        "@deepseek-ai/dsh-api-remotes"
+        "@liwa/client-connection",
+        "@liwa/client-ui-renderer",
+        "@liwa/client-ui-settings",
+        "@liwa/api-remotes"
       ],
       "platform": "web",
       "immediately": true
@@ -40,24 +40,24 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-api-remotes": "workspace:*",
-    "@deepseek-ai/dsh-client-store": "workspace:*",
-    "@deepseek-ai/dsh-client-test-runtime": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-primitives": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-renderer": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-settings": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-slots": "workspace:*",
-    "@deepseek-ai/dsh-package-manifest": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/api-remotes": "workspace:*",
+    "@liwa/client-store": "workspace:*",
+    "@liwa/client-test-runtime": "workspace:*",
+    "@liwa/client-ui-primitives": "workspace:*",
+    "@liwa/client-ui-renderer": "workspace:*",
+    "@liwa/client-ui-settings": "workspace:*",
+    "@liwa/client-ui-slots": "workspace:*",
+    "@liwa/package-manifest": "workspace:*",
     "react": "^18.2.0",
-    "@deepseek-ai/dsh-client-connection": "workspace:*",
-    "@deepseek-ai/dsh-settings": "workspace:*"
+    "@liwa/client-connection": "workspace:*",
+    "@liwa/settings": "workspace:*"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/schemastery": "workspace:~"
   },
   "files": [
     "locale/*.json",

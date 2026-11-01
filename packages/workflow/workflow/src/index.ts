@@ -1,11 +1,11 @@
 /**
  * Service Definition for the workflow capability seam. Service Providers execute orchestration scripts;
  * observe-only lifecycle events never expose run control.
- * @module @deepseek-ai/dsh-workflow
+ * @module @liwa/workflow
  */
 
-import { Context, Service } from '@deepseek-ai/cordis'
-import { HarnessError } from '@deepseek-ai/dsh-llm'
+import { Context, Service } from '@liwa/cordis'
+import { LiwaError } from '@liwa/llm'
 import type {
   WorkflowAgentEndInfo,
   WorkflowAgentInfo,
@@ -28,7 +28,7 @@ export type {
 } from './types.ts'
 export type { WorkflowRun, WorkflowStartRequest } from './runtime-types.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     workflowEngine: WorkflowEngine
   }
@@ -119,7 +119,7 @@ export type WorkflowErrorCode =
   | 'CANCELLED'
 
 /**
- * Typed error for workflow-seam failures. Extends {@link HarnessError}, so the
+ * Typed error for workflow-seam failures. Extends {@link LiwaError}, so the
  * `code` is machine-routable taxonomy. `fatal` drives the combinator
  * discipline: `parallel()`/`pipeline()` re-throw a fatal error (a typo'd
  * option or a tripped cap must kill the script loudly), and reserve the
@@ -127,7 +127,7 @@ export type WorkflowErrorCode =
  * Every {@link WorkflowErrorCode} is fatal; the flag exists so the
  * distinction is explicit at every catch site rather than implied.
  */
-export class WorkflowError extends HarnessError {
+export class WorkflowError extends LiwaError {
   /** Whether combinators must propagate this error instead of nulling the item. */
   readonly fatal: boolean
 

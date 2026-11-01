@@ -11,7 +11,7 @@ const roots: string[] = []
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })
 
 function fixture(ja: unknown = { meta: { title: '名前 {name}', description: '説明' } }): string {
-  const root = mkdtempSync(join(tmpdir(), 'dsh-locale-meta-'))
+  const root = mkdtempSync(join(tmpdir(), 'liwa-locale-meta-'))
   roots.push(root)
   const directory = join(root, 'packages/demo/plugin/locale')
   mkdirSync(directory, { recursive: true })
@@ -65,7 +65,7 @@ it('does not mistake package.json in the locale service package for a translatio
 })
 
 it('rejects an empty discovery', () => {
-  const root = mkdtempSync(join(tmpdir(), 'dsh-locale-empty-'))
+  const root = mkdtempSync(join(tmpdir(), 'liwa-locale-empty-'))
   roots.push(root)
   expect(localeMetadataProblems(root)).toEqual(['no package locale metadata found'])
 })
@@ -74,7 +74,7 @@ it('rejects loadable plugins without any locale directory', () => {
   const root = fixture()
   const directory = join(root, 'packages/demo/new-plugin')
   mkdirSync(join(directory, 'src'), { recursive: true })
-  writeFileSync(join(directory, 'package.json'), JSON.stringify({ name: '@deepseek-ai/dsh-new-plugin' }))
+  writeFileSync(join(directory, 'package.json'), JSON.stringify({ name: '@liwa/new-plugin' }))
   writeFileSync(join(directory, 'src/index.ts'), 'export function apply() {}')
   expect(localeMetadataProblems(root).join('\n')).toContain('new-plugin/locale')
 })
@@ -112,7 +112,7 @@ it('permits missing Chinese resources for loadable plugins', () => {
   const directory = join(root, 'packages/demo/plugin')
   mkdirSync(join(directory, 'src'))
   writeFileSync(join(directory, 'src/index.ts'), 'export function apply() {}')
-  writeFileSync(join(directory, 'package.json'), JSON.stringify({ name: '@deepseek-ai/dsh-demo' }))
+  writeFileSync(join(directory, 'package.json'), JSON.stringify({ name: '@liwa/demo' }))
   rmSync(join(directory, 'locale/zh.json'))
   for (const language of ['es', 'fr', 'de', 'ru', 'pt']) writeFileSync(join(directory, `locale/${language}.json`), JSON.stringify({ meta: { title: 'Name {name}' } }))
   expect(localeMetadataProblems(root)).toEqual([])
@@ -123,7 +123,7 @@ it('excludes packages formally classified as test helpers', () => {
   const directory = join(root, 'packages/test-support/llm-replay')
   mkdirSync(join(directory, 'src'), { recursive: true })
   writeFileSync(join(directory, 'src/index.ts'), 'export function apply() {}')
-  writeFileSync(join(directory, 'package.json'), JSON.stringify({ name: '@deepseek-ai/dsh-llm-replay' }))
+  writeFileSync(join(directory, 'package.json'), JSON.stringify({ name: '@liwa/llm-replay' }))
   expect(localeMetadataProblems(root)).toEqual([])
 })
 

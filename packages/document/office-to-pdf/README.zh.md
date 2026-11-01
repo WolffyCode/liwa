@@ -3,7 +3,7 @@ description: "通过独立发布的 LibreOffice kit 在 Host 转换 Office 文�
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-office-to-pdf
+# @liwa/office-to-pdf
 
 [English](README.md) | 中文
 
@@ -25,11 +25,11 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用此包
 
-[Web bundle](../../bundle/web-app/README.zh.md)以 `office-to-pdf` 条目挂载此提供方。独立组合通过 `cordis.yml` 条目挂载 `@deepseek-ai/dsh-office-to-pdf`。
+[Web bundle](../../bundle/web-app/README.zh.md)以 `office-to-pdf` 条目挂载此提供方。独立组合通过 `cordis.yml` 条目挂载 `@liwa/office-to-pdf`。
 
 调用方通过 `ctx.officeToPdf.convert()` 提交已授权源的标识、版本、可选字节数、延迟的有界读取、Office 扩展名和调度优先级。源版本变化会拒绝转换。结果包含调用方拥有的 PDF 字节、缺失字体、缓存键和转换 generation；配置替换后 generation 随之改变。取消以原因为拒绝值，转换失败使用 `OfficeToPdfError`。
 
-此 provider 依赖独立发布的 [`@deepseek-ai/libreoffice-kit`](https://github.com/deepseek-ai/dsh-libreoffice-kit) npm API，kit 版本为 `^0.1.5`。应用打包选择 kit 的 `optionalDependencies` 中声明的匹配原生包；目标没有声明原生包时选择 WASM。已声明的原生引擎缺失时拒绝打包，不会选择 WASM。[发布归属决策](../../../.agents/notes/implemented/architecture/2026-09-14-independent-libreoffice-kit.zh.md)定义独立 kit 与 Harness 各自的职责。
+此 provider 依赖独立发布的 [`@deepseek-ai/libreoffice-kit`](https://github.com/deepseek-ai/dsh-libreoffice-kit) npm API，kit 版本为 `^0.1.5`。应用打包选择 kit 的 `optionalDependencies` 中声明的匹配原生包；目标没有声明原生包时选择 WASM。已声明的原生引擎缺失时拒绝打包，不会选择 WASM。[发布归属决策](../../../.agents/notes/implemented/architecture/2026-09-14-independent-libreoffice-kit.zh.md)定义独立 kit 与灵鲸各自的职责。
 
 浏览器通过 `officeToPdf.render` Remote 方法请求 PDF，参数为 Session 标识、Office 路径和优先级。此入口使用 `workspaceFiles` 完成授权和源版本检查，再通过 `fs.readBytes` 在转换预留容量内读取原始字节。进程内 `convert()` 不要求这些服务。响应保留源文件路径与版本，通过二进制 Remote 的 multipart 传输携带原生 PDF 字节，并携带缺失字体和转换 generation。`officeToPdf.generation` Remote 方法返回当前提供方 generation；`api/remotes` 负责挂载生成的 Client 描述符。
 
@@ -42,7 +42,7 @@ kind: "package-reference"
 | `maxImageResolution` | `192` | 最大光栅图像 DPI；覆盖 kit 的默认值 `144`。 |
 | `fontFallbacks` | kit 默认值 | 有序字体族优先组；每组至少包含两个含非空白字符的名称。 |
 
-[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-office-to-pdf)定义全部字体、归档和图像设置。`fontDirectories` 接受绝对目录；省略时使用 kit 的平台默认值。显式 `fontFallbacks` 替换 kit 的默认分组。已安装的请求字体仍优先使用，缺失字形仍可由其他系统字体提供。原生引擎可能在应用这些优先规则前选中已安装的度量兼容字体。
+[配置目录](../../../docs/config-catalog.zh.md#liwaoffice-to-pdf)定义全部字体、归档和图像设置。`fontDirectories` 接受绝对目录；省略时使用 kit 的平台默认值。显式 `fontFallbacks` 替换 kit 的默认分组。已安装的请求字体仍优先使用，缺失字形仍可由其他系统字体提供。原生引擎可能在应用这些优先规则前选中已安装的度量兼容字体。
 
 [有界转换决策](../../../.agents/notes/implemented/architecture/2026-09-15-bounded-office-conversion.zh.md)说明队列准入、缓存限额与共享取消的设计依据。
 

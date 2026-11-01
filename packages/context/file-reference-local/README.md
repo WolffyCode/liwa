@@ -3,13 +3,13 @@ description: "Local-workspace @file completion provider for users and maintainer
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-file-reference-local
+# @liwa/file-reference-local
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-Agents and host UIs can complete `@file` mentions with ranked paths from each agent's local workspace, with bounded discovery that stays responsive in large repositories. Results refresh after tool activity without blocking completion, and directory symlinks are never followed. When `read` is available, the model also receives stable guidance for interpreting referenced paths. Choose this package when `read` uses the Harness host filesystem; remote or virtual namespaces need matching discovery.
+Agents and host UIs can complete `@file` mentions with ranked paths from each agent's local workspace, with bounded discovery that stays responsive in large repositories. Results refresh after tool activity without blocking completion, and directory symlinks are never followed. When `read` is available, the model also receives stable guidance for interpreting referenced paths. Choose this package when `read` uses the Liwa host filesystem; remote or virtual namespaces need matching discovery.
 
 ## Table of Contents
 
@@ -27,14 +27,14 @@ Agents and host UIs can complete `@file` mentions with ranked paths from each ag
 
 Changing the Session's working directory discards the previous directory's search index; the next completion searches the new directory.
 
-Mount this provider when `@file` completion should discover the Harness host's own filesystem — the namespace the shipped `read` tool operates on. Each agent's workspace is indexed from its Session's current working directory.
+Mount this provider when `@file` completion should discover the Liwa host's own filesystem — the namespace the shipped `read` tool operates on. Each agent's workspace is indexed from its Session's current working directory.
 
 ### Enabling the provider
 
 The defaults suit a typical workspace, so the minimal mount needs no configuration:
 
 ```yaml
-- name: '@deepseek-ai/dsh-file-reference-local'
+- name: '@liwa/file-reference-local'
   config:
     maxResults: 20
 ```
@@ -89,7 +89,7 @@ Read these pages when the package-level contract is not enough. They move from t
 
 - [File-reference seam](../file-reference/README.md) — the service contract and `@file` grammar this provider implements.
 - [Session-reference subsystem](../../../docs/subsystems/session-reference.md) — the shared file-reference contract behind host UIs.
-- [Filesystem tool catalog](../../../docs/tool-catalog.md#deepseek-aidsh-tool-fs) — the `read` tool whose namespace discovery must match.
+- [Filesystem tool catalog](../../../docs/tool-catalog.md#liwatool-fs) — the `read` tool whose namespace discovery must match.
 - [Context group map](../README.md) — sibling request-context packages.
 
 -----
@@ -124,7 +124,7 @@ The stable sentence joins the system-prompt prefix. Mounting or removing this pr
 
 These limits define when the provider is a poor fit. They are current package constraints.
 
-- **Host-local namespace** — the provider scans the Harness host filesystem, so remote or virtual `read` implementations require a provider whose namespace matches the tool.
+- **Host-local namespace** — the provider scans the Liwa host filesystem, so remote or virtual `read` implementations require a provider whose namespace matches the tool.
 - **Bounded advisory index** — very large workspaces may omit paths after `maxEntries`, and excluded or unreadable directories do not appear. The default exclusions name only build outputs no ecosystem also uses for sources; `lib` is deliberately absent, so a workspace that builds into it adds that name through `excludedDirectories`.
 - **One invalidation of staleness** — a bare query answered right after a tool result reflects the tree as of the previous traversal; the following query sees the rebuild.
 - **No ignore-file semantics** — `.gitignore` and other project ignore files do not influence discovery; only configured directory basenames are excluded.

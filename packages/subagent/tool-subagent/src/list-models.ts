@@ -1,12 +1,12 @@
 /** Model-facing discovery of LLM routes available to child Agents. */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type LlmRuntime from '@deepseek-ai/dsh-llm'
-import type { LlmProviderInfo } from '@deepseek-ai/dsh-llm'
-import { defineTool } from '@deepseek-ai/dsh-tools'
-import { parentAgentOptionsForDelegation } from '@deepseek-ai/dsh-subagent'
-import type { ToolRunContext } from '@deepseek-ai/dsh-tools'
-import type { ProjectionHandle } from '@deepseek-ai/dsh-session-projection'
+import type { Context } from '@liwa/cordis'
+import type LlmRuntime from '@liwa/llm'
+import type { LlmProviderInfo } from '@liwa/llm'
+import { defineTool } from '@liwa/tools'
+import { parentAgentOptionsForDelegation } from '@liwa/subagent'
+import type { ToolRunContext } from '@liwa/tools'
+import type { ProjectionHandle } from '@liwa/session-projection'
 import type { AllowedModelRoute, ModelSelectionPolicy } from './model-selection.ts'
 import { subagentModelSelectionPolicy } from './model-selection-state.ts'
 

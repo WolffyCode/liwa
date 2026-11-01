@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-host-directory-picker-auto",
-  "description": "Adaptive chooser of the directory-picker seam: resolves the host situation at boot and mounts the native or browse backend for the DeepSeek Harness web GUI host",
+  "name": "@liwa/host-directory-picker-auto",
+  "description": "Adaptive chooser of the directory-picker seam: resolves the host situation at boot and mounts the native or browse backend for the Liwa web GUI host",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/host/directory-picker-auto"
   },
   "type": "module",
@@ -29,28 +29,28 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-client-connection": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-directory-picker-browse": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-directory-picker-native": "workspace:*",
-    "@deepseek-ai/dsh-host-directory-picker-browse": "workspace:*",
-    "@deepseek-ai/dsh-host-directory-picker-native": "workspace:*",
-    "@deepseek-ai/dsh-host-webserver": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/client-connection": "workspace:*",
+    "@liwa/client-ui-directory-picker-browse": "workspace:*",
+    "@liwa/client-ui-directory-picker-native": "workspace:*",
+    "@liwa/host-directory-picker-browse": "workspace:*",
+    "@liwa/host-directory-picker-native": "workspace:*",
+    "@liwa/host-webserver": "workspace:*"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-client-connection": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-directory-picker-browse": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-directory-picker-native": "workspace:*",
-    "@deepseek-ai/dsh-host-directory-picker": "workspace:*",
-    "@deepseek-ai/dsh-host-directory-picker-browse": "workspace:*",
-    "@deepseek-ai/dsh-host-directory-picker-native": "workspace:*",
-    "@deepseek-ai/dsh-host-webserver": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/client-connection": "workspace:*",
+    "@liwa/client-ui-directory-picker-browse": "workspace:*",
+    "@liwa/client-ui-directory-picker-native": "workspace:*",
+    "@liwa/host-directory-picker": "workspace:*",
+    "@liwa/host-directory-picker-browse": "workspace:*",
+    "@liwa/host-directory-picker-native": "workspace:*",
+    "@liwa/host-webserver": "workspace:*"
   },
   "dependencies": {
-    "@deepseek-ai/dsh-launch-environment": "workspace:*"
+    "@liwa/launch-environment": "workspace:*"
   }
 }

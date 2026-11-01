@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process'
 import { createConnection, type Socket } from 'node:net'
 import { once } from 'node:events'
 import assert from 'node:assert/strict'
-import { Context, Service } from '@deepseek-ai/cordis'
+import { Context, Service } from '@liwa/cordis'
 import { z } from 'zod'
 import { SshRpcPeer, SSH_PROTOCOL_VERSION } from '../../../ssh/src/protocol.ts'
 import { helloSchema, type SshStreamEndpoint } from '../../../ssh/src/schemas.ts'
@@ -26,7 +26,7 @@ export default class DirectHelper extends Service {
     super(ctx, 'ssh')
     const child = spawn(config.executable, [], {
       cwd: config.workspace, stdio: ['pipe', 'pipe', 'pipe'],
-      env: { HOME: config.home, PATH: config.path, TMPDIR: config.home, NODE_OPTIONS: '--disable-sigusr1', DSH_ARTIFACT_SECRET: 'must-not-reach-program' },
+      env: { HOME: config.home, PATH: config.path, TMPDIR: config.home, NODE_OPTIONS: '--disable-sigusr1', LIWA_ARTIFACT_SECRET: 'must-not-reach-program' },
     })
     this.child = child
     this.exited = new Promise<void>((resolve, reject) => {

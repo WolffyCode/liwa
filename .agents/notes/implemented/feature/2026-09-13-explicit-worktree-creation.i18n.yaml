@@ -3,17 +3,17 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-09-13-explicit-worktree-creation.md
 /agent-note-explicit-worktree-creation:
-  en: 68d9e5eab7671458
-  zh: fc889567986f2bbe
+  en: 1a7f0937db2191ea
+  zh: 5a342e9fa64a257a
 /agent-note-explicit-worktree-creation/problem:
   en: 12ab239ab0c58e31
   zh: c32874442ce66041
 /agent-note-explicit-worktree-creation/decision:
-  en: e3be190201a36710
-  zh: 9ef0036b9b95377e
+  en: bb8f32c949a7b641
+  zh: 4b23d02a28c70030
 /agent-note-explicit-worktree-creation/alternatives-considered:
-  en: 72d42e892a37b94c
-  zh: 92a14a51c6a89c53
+  en: 706d79a1887b65d5
+  zh: f8819574b42d9d5d
 /agent-note-explicit-worktree-creation/consequences:
   en: 083851db27cc4846
   zh: b3db48d41356c9cf

@@ -1,17 +1,17 @@
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
+import { Context } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
 import { defaultRuntimes } from '@botiverse/oar'
 import type { Event, Runtime, Session, SessionOptions } from '@botiverse/oar'
 import { scriptedRuntime } from '@botiverse/oar/testing'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import SubagentRuntime from '@deepseek-ai/dsh-subagent'
-import type { ResolvedSubagentStartRequest } from '@deepseek-ai/dsh-subagent'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import SubagentRuntime from '@liwa/subagent'
+import type { ResolvedSubagentStartRequest } from '@liwa/subagent'
+import SessionProjectionRegistry from '@liwa/session-projection'
 import { externalTestParent } from '../../../subagent/subagent/tests/external-activation-helpers.ts'
 import { mountWorkingDirectoryFixture } from '../../../subagent/subagent/tests/working-directory-fixture.ts'
 import * as oar from '../src/index.ts'
 import { startOarRun, textTask } from '../src/run.ts'
-import * as subprocess from '@deepseek-ai/dsh-subprocess'
+import * as subprocess from '@liwa/subprocess'
 import { oarEnvironment } from '../src/environment.ts'
 import type { OarRunSpec } from '../src/run.ts'
 
@@ -149,12 +149,12 @@ describe('OAR task input', () => {
 
   it('removes inherited credentials and retains explicit environment deletion', () => {
     vi.stubEnv('OAR_FIXTURE_API_TOKEN', 'private')
-    vi.stubEnv('DSH_OAR_DELETE_ME', 'inherited')
-    const environment = oarEnvironment({ DSH_OAR_DELETE_ME: null, DSH_OAR_KEEP_ME: 'supplied' })
+    vi.stubEnv('LIWA_OAR_DELETE_ME', 'inherited')
+    const environment = oarEnvironment({ LIWA_OAR_DELETE_ME: null, LIWA_OAR_KEEP_ME: 'supplied' })
     expect(environment.OAR_FIXTURE_API_TOKEN).toBeNull()
-    expect(environment.DSH_OAR_DELETE_ME).toBeNull()
-    expect(environment.DSH_OAR_KEEP_ME).toBe('supplied')
-    expect(process.env.DSH_OAR_DELETE_ME).toBe('inherited')
+    expect(environment.LIWA_OAR_DELETE_ME).toBeNull()
+    expect(environment.LIWA_OAR_KEEP_ME).toBe('supplied')
+    expect(process.env.LIWA_OAR_DELETE_ME).toBe('inherited')
   })
   it('forwards shared environment corrections without copying unchanged ambient values', () => {
     const inherited = process.env.OAR_FIXTURE_PROXY_VALUE

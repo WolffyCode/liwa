@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-session-title-llm",
-  "description": "Shared LLM generation policy for DeepSeek Harness session-title providers",
+  "name": "@liwa/session-title-llm",
+  "description": "Shared LLM generation policy for Liwa session-title providers",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/session/session-title-llm"
   },
   "type": "module",
@@ -27,21 +27,21 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-title": "workspace:*",
-    "@deepseek-ai/dsh-timeout": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-title": "workspace:*",
+    "@liwa/timeout": "workspace:*"
   },
   "dependencies": {
-    "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/util-values": "workspace:*",
+    "@liwa/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-title": "workspace:*",
-    "@deepseek-ai/dsh-timeout": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-title": "workspace:*",
+    "@liwa/timeout": "workspace:*"
   }
 }

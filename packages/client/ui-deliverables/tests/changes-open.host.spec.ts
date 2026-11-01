@@ -2,15 +2,15 @@
 import { mkdtemp, rm, writeFile, mkdir, realpath, unlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { LocalFileSystem } from '@deepseek-ai/dsh-fs-local'
-import { WorkspaceFiles } from '@deepseek-ai/dsh-api-workspace-files'
-import { Context } from '@deepseek-ai/cordis'
-import { HostConnectionService } from '@deepseek-ai/dsh-client-connection'
-import type { BrowserAuth } from '@deepseek-ai/dsh-client-connection/src/browser-auth.ts'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import { SessionQueryError } from '@deepseek-ai/dsh-session-query'
-import type { SessionEventReadRequest } from '@deepseek-ai/dsh-session-query'
-import type { WorkspaceChangedFile, WorkspaceChangesSummary, WorkspaceFileDiff } from '@deepseek-ai/dsh-workspace-changes/types'
+import { LocalFileSystem } from '@liwa/fs-local'
+import { WorkspaceFiles } from '@liwa/api-workspace-files'
+import { Context } from '@liwa/cordis'
+import { HostConnectionService } from '@liwa/client-connection'
+import type { BrowserAuth } from '@liwa/client-connection/src/browser-auth.ts'
+import { SessionId } from '@liwa/session'
+import { SessionQueryError } from '@liwa/session-query'
+import type { SessionEventReadRequest } from '@liwa/session-query'
+import type { WorkspaceChangedFile, WorkspaceChangesSummary, WorkspaceFileDiff } from '@liwa/workspace-changes/types'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as deliverables from '../src/index.ts'
 import {
@@ -28,7 +28,7 @@ afterEach(async () => {
 const changed = (path: string, display = path): WorkspaceChangedFile => ({ path, display, added: 1, deleted: 0 })
 
 async function fixture() {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-changes-open-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-changes-open-'))
   cleanups.push(() => rm(root, { recursive: true, force: true }))
   const cwd = join(root, 'workspace')
   await mkdir(join(cwd, 'src', 'lib'), { recursive: true })

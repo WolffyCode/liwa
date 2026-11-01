@@ -3,17 +3,17 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-09-17-persistence-schema-review.md
 /agent-note-persistence-schema-policy-and-review:
-  en: 354306d8acf2141b
-  zh: 01b9235a77121284
+  en: ef4929375c3a4e53
+  zh: e0da2f5d83d04d9a
 /agent-note-persistence-schema-policy-and-review/problem:
   en: 4dfc8768cd580993
   zh: ad78f2ff4c22b390
 /agent-note-persistence-schema-policy-and-review/decision:
-  en: ab2a881b58bb6e05
-  zh: c6e7b7b9854a0f94
+  en: 8bbfe961dac3381a
+  zh: 4cb9e1866de4abf5
 /agent-note-persistence-schema-policy-and-review/alternatives-considered:
   en: 4a73283af97bcd4b
   zh: 952cf965d7615737
 /agent-note-persistence-schema-policy-and-review/consequences:
-  en: eeadd60710998de9
-  zh: 5c48f512f1d53d2c
+  en: c78bccfb43178938
+  zh: 2ffd9e5961030a7e

@@ -1,7 +1,7 @@
 /** Configuration of a route that follows a `/models` listing: cache timing and its validation. */
-import type { Volatile } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
+import type { Volatile } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import { MAX_TIMER_DELAY_MS } from '@liwa/timeout'
 
 /** Default deadline of one model-listing request and of a first-use wait. */
 export const DEFAULT_MODELS_TIMEOUT_MS = 5_000

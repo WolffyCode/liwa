@@ -13,8 +13,8 @@
   min-height: 0;
   max-height: 100%;
   overflow-y: auto;
-  --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
-  --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
+  --liwa-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --liwa-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
 }
 
 .panel {
@@ -71,8 +71,8 @@
   gap: 12px;
   padding: 0 16px 4px;
   overflow-y: auto;
-  --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
-  --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
+  --liwa-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --liwa-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
 }
 
 .panelFooter {

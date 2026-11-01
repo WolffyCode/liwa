@@ -3,7 +3,7 @@ description: "通过按应用和窗口限定的对象，观察和操作原生 ma
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-experimental-cua-macos
+# @liwa/experimental-cua-macos
 
 [English](README.md) | 中文
 
@@ -36,8 +36,8 @@ helper 为授权提示和已授权应用列表提供 64 像素 PNG 图标。读�
 ```sh
 swift build --package-path packages/experimental/cua-macos/native --configuration release
 cua_native_root="$PWD/packages/experimental/cua-macos/native"
-export DSH_CUA_HELPER="$cua_native_root/.build/release/dsh-cua-native"
-pnpm dsh headless --patch packages/experimental/cua-macos/examples/macos.cordis.yml --dump-config
+export LIWA_CUA_HELPER="$cua_native_root/.build/release/liwa-cua-native"
+pnpm liwa headless --patch packages/experimental/cua-macos/examples/macos.cordis.yml --dump-config
 ```
 
 配置输出命令不发起模型请求。执行真实任务时，将 `--dump-config` 替换为任务提示，并配置该 profile 的模型凭据。配置挂载 computer-use 注册表和本 provider；使用前需移除已有的竞争 provider。负责执行的宿主或辅助进程需要辅助功能权限来读取 AX 和输入，需要屏幕录制权限来截图。`getCapabilities` 查询权限和锁屏状态，不弹出系统授权窗口。桌面会话锁定或不可用时，界面观察与输入会在分派前拒绝，需由用户解锁 macOS 后继续。`listApps` 和 `cua.getState` 列出运行中的应用。`findApps(query)` 按名称、bundle ID 或绝对路径搜索 macOS 标准应用目录。`getApp` 按唯一名称、bundle ID、路径或运行中的 PID 选择应用，取得应用许可后，在需要时后台启动尚未运行的应用。授权前从磁盘读取应用的 Bundle ID 和可执行路径，在启动前后重新读取并核对；没有 Bundle ID 的应用使用规范化的可执行路径复用授权。选择尚未运行的安装副本时，会请求为该副本创建新实例。helper 等待应用完成启动后才返回其 PID。启动后验证失败会使待启动句柄失效，但进程可能仍在运行；应先查看运行中的应用，再取得新句柄。返回的对象读取初始 AX，不自动激活应用。启动被取消时，应用可能已经运行。模型指引要求先在后台观察和输入，不在初始化或每次动作前激活应用。窗口隐藏或最小化时，先尝试 `app.show()` 或 `window.show()`，再重新观察。它请求取消隐藏和恢复最小化，不主动激活、抬起窗口或切换桌面空间；应用级恢复选择焦点窗口、主窗口或唯一 AX 窗口。结果通过 `windowId` 指明选中的窗口，未选中时为 null；`foregroundChanged` 比较操作前后的前台应用和最上层窗口，无法取得完整观察时为 null，返回后仍可能发生焦点变化。恢复失败或窗口仍不可用时，说明需要前台的步骤，再调用 `app.activate()` 或窗口的 `raise` 动作并重新观察。必须使用前台时，以完成任务为先。应用收到输入后仍可能改变焦点，后台投递不保证用户操作始终不受干扰。
@@ -61,13 +61,13 @@ pnpm dsh headless --patch packages/experimental/cua-macos/examples/macos.cordis.
 | `dragDurationMs` / `dragSteps` | `400` / `20` | 拖动时长和移动分段数。 |
 | `textEventIntervalMs` | `0.25` | 每个 Unicode 按下或抬起事件后的间隔，范围为 0 至 1000 毫秒。组合键的节奏独立。 |
 
-[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-experimental-cua-macos)列出全部字段。原生工具调用使用 `{method, params}`，模型可以看到每个方法的完整参数定义。例如，`getApp` 返回 `listWindows`、`getState` 和输入操作所需的 `appHandle`。
+[配置目录](../../../docs/config-catalog.zh.md#liwaexperimental-cua-macos)列出全部字段。原生工具调用使用 `{method, params}`，模型可以看到每个方法的完整参数定义。例如，`getApp` 返回 `listWindows`、`getState` 和输入操作所需的 `appHandle`。
 
 数字键盘名称（`KP_0` 到 `KP_9`、`KP_Enter` 和数字键盘运算键）保留独立的物理键码。组合键用 `+` 分隔修饰键与按键。加号键写作 `+`，Command 加号写作 `cmd++`，也可以使用键名 `plus`；`cmd+` 这类缺少按键的输入会被拒绝。
 
 Agent 销毁和插件卸载会取消并等待完整工具调用，包括图像接入检查和附件存储。已经开始的图像写入必须结束后，销毁才会返回；已取消的调用不会返回成功截图。
 
-CUA 工具在读取 AX、窗口标题、截图、激活和输入前检查应用授权。首次选择应用时询问用户，可选择本会话允许、拒绝；profile 提供持久存储时还可保存长期授权。会话许可按对话和应用身份持久化，重启 DSH 或关闭 Computer Use 后仍可复用，其他对话需要单独授权。应用身份使用区分大小写的 Bundle ID，因此不同路径下的版本和副本共用许可与撤销决定，不受签名状态影响。运行中应用具有有效 Bundle ID 时，即使操作系统无法提供可执行路径，也可以授权。路径可取得时仍核对所选目标，进程实例和窗口归属检查始终保留。缺少 Bundle ID 时，授权必须取得规范化可执行路径。在同一路径下重启或更新会沿用许可，移动或复制到另一个路径则需要重新决定。这项规则不验证发布者身份，其他程序声明相同标识，或替换路径授权所对应的可执行文件时，也会继承许可。拒绝后，同一会话不会反复询问。撤销与长期许可的保存共用队列，在队列内读取并移除许可，然后使相关 Agent 连接失效并等待原生清理完成，不自动重放输入。同一 Agent 连接中的其他应用也需要重新选择，其他应用的会话许可和长期许可仍可复用。设计理由见[应用授权决策](../../../.agents/notes/implemented/architecture/2026-09-26-cua-application-consent.zh.md)。这些检查的范围是 CUA 调用。persistent PTC 与已授权的 shell 仍按各自执行权限运行。
+CUA 工具在读取 AX、窗口标题、截图、激活和输入前检查应用授权。首次选择应用时询问用户，可选择本会话允许、拒绝；profile 提供持久存储时还可保存长期授权。会话许可按对话和应用身份持久化，重启灵鲸或关闭 Computer Use 后仍可复用，其他对话需要单独授权。应用身份使用区分大小写的 Bundle ID，因此不同路径下的版本和副本共用许可与撤销决定，不受签名状态影响。运行中应用具有有效 Bundle ID 时，即使操作系统无法提供可执行路径，也可以授权。路径可取得时仍核对所选目标，进程实例和窗口归属检查始终保留。缺少 Bundle ID 时，授权必须取得规范化可执行路径。在同一路径下重启或更新会沿用许可，移动或复制到另一个路径则需要重新决定。这项规则不验证发布者身份，其他程序声明相同标识，或替换路径授权所对应的可执行文件时，也会继承许可。拒绝后，同一会话不会反复询问。撤销与长期许可的保存共用队列，在队列内读取并移除许可，然后使相关 Agent 连接失效并等待原生清理完成，不自动重放输入。同一 Agent 连接中的其他应用也需要重新选择，其他应用的会话许可和长期许可仍可复用。设计理由见[应用授权决策](../../../.agents/notes/implemented/architecture/2026-09-26-cua-application-consent.zh.md)。这些检查的范围是 CUA 调用。persistent PTC 与已授权的 shell 仍按各自执行权限运行。
 
 原始 `getState` 操作返回经过校验的状态字段，以及按本次披露选项生成的完整文本。原生 helper 还返回供原生检查使用的结构化元素诊断数组；工具投影会从模型文本和结构化工具值中移除这份重复数组。
 
@@ -86,7 +86,7 @@ AX 观察默认只展示菜单栏入口。使用 `app.getAXState({ includeMenus:
 使用 persistent PTC 时，在 macOS 配置后追加 `--patch packages/experimental/cua-macos/examples/persistent-ptc.cordis.yml`。该 provider 为存活的 Agent 保留变量，并遵守当前选择的文件沙箱策略。调用方导入适配模块，并提供当前执行中已授权的 `tools.cua` 绑定。persistent PTC 会在 CUA 指引中收到安装目录内 bridge 的文件 URL，项目无须安装本包。下面的例子用于能从自身安装目录解析本包、且已提供 `tools` 的外部宿主；本包不安装全局对象，也不负责保留变量：
 
 ```javascript
-import { connectCua } from '@deepseek-ai/dsh-cua/bridge'
+import { connectCua } from '@liwa/cua/bridge'
 const cua = connectCua(() => tools.cua, text => console.log(text))
 const app = await cua.getApp("com.apple.TextEdit")
 void await app.getScreenshot()

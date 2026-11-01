@@ -10,19 +10,19 @@ import { tmpdir } from 'node:os'
 import { isAbsolute, join, relative, resolve as resolvePath } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ReasoningEffortId } from '@deepseek-ai/dsh-llm'
+import { ReasoningEffortId } from '@liwa/llm'
 import {
-  DeepSeekHarness,
-  HarnessClient,
-  HarnessSession,
+  Liwa,
+  LiwaClient,
+  LiwaSession,
   JsonRpcResponseError,
   RequestTimeoutError,
   SdkProtocolError,
   TransportClosedError,
-  type HarnessNotification,
+  type LiwaNotification,
 } from '../src/index.ts'
-import { createProcessDeepSeekHarness, finalResponse, normalizeInput } from '../src/api.ts'
-import { createProcessHarnessClient } from '../src/client.ts'
+import { createProcessLiwa, finalResponse, normalizeInput } from '../src/api.ts'
+import { createProcessLiwaClient } from '../src/client.ts'
 import type { RuntimeProcessOptions } from '../src/launch.ts'
 
 const fakeRuntime = fileURLToPath(new URL('./fake-runtime.ts', import.meta.url))
@@ -46,12 +46,12 @@ function fakeLaunch(env: Record<string, string> = {}, extra: LaunchOverrides = {
   }
 }
 
-function processClient(options: RuntimeProcessOptions): HarnessClient {
-  return createProcessHarnessClient(options)
+function processClient(options: RuntimeProcessOptions): LiwaClient {
+  return createProcessLiwaClient(options)
 }
 
-function harnessWith(env: Record<string, string> = {}, extra: LaunchOverrides = {}): DeepSeekHarness {
-  const harness = createProcessDeepSeekHarness(fakeLaunch(env, extra))
+function harnessWith(env: Record<string, string> = {}, extra: LaunchOverrides = {}): Liwa {
+  const harness = createProcessLiwa(fakeLaunch(env, extra))
   cleanups.push(() => harness.close())
   return harness
 }
@@ -62,7 +62,7 @@ async function tempDir(prefix: string): Promise<string> {
   return dir
 }
 
-describe('DeepSeekHarness', () => {
+describe('Liwa', () => {
   it('returns a restored handle that can run followups on the same identity', async () => {
     const harness = harnessWith()
     const session = await harness.resumeSession('saved-session')
@@ -121,7 +121,7 @@ describe('DeepSeekHarness', () => {
         },
       },
       { method: 'session.status', params: { sessionId: 'owned', status: 'idle' } },
-    ] as HarnessNotification[]
+    ] as LiwaNotification[]
     let closed = false
     const harness = {
       start: () => Promise.resolve(),
@@ -138,9 +138,9 @@ describe('DeepSeekHarness', () => {
           async * [Symbol.asyncIterator]() {},
         }),
       },
-    } as unknown as DeepSeekHarness
+    } as unknown as Liwa
 
-    const result = await new HarnessSession(harness, 'owned').run('go')
+    const result = await new LiwaSession(harness, 'owned').run('go')
 
     expect(result.notifications.map(notification => notification.method))
       .toEqual(['session.event', 'session.status'])
@@ -214,7 +214,7 @@ describe('DeepSeekHarness', () => {
       { method: 'session.event', params: { sessionId: 'owned', event: ptcStart } },
       { method: 'session.event', params: { sessionId: 'owned', event: ptcResult } },
       { method: 'session.status', params: { sessionId: 'owned', status: 'idle' } },
-    ] as HarnessNotification[]
+    ] as LiwaNotification[]
     const harness = {
       start: () => Promise.resolve(),
       client: {
@@ -230,9 +230,9 @@ describe('DeepSeekHarness', () => {
           async * [Symbol.asyncIterator]() {},
         }),
       },
-    } as unknown as DeepSeekHarness
+    } as unknown as Liwa
 
-    const result = await new HarnessSession(harness, 'owned').run('go')
+    const result = await new LiwaSession(harness, 'owned').run('go')
 
     expect(result.events).toEqual([receipt, nativeResult, ptcStart, ptcResult])
     expect(result.events.find(event => event.type === 'tool/ptc-dispatch')?.data.meta)
@@ -271,7 +271,7 @@ describe('DeepSeekHarness', () => {
 
   it('keeps events root-scoped while streaming notifications for the session tree', async () => {
     const harness = harnessWith({ FAKE_SUBAGENT: '1' })
-    const seen: HarnessNotification[] = []
+    const seen: LiwaNotification[] = []
     const result = await harness.run('delegate', {
       sessionId: 'parent-1',
       onNotification: (n) => { seen.push(n) },
@@ -293,7 +293,7 @@ describe('DeepSeekHarness', () => {
   it('sends the configured cwd/provider/model/reasoningEffort/maxTokens in the handshake exactly once', async () => {
     const dir = await tempDir('sdk-client-init-')
     const recordFile = join(dir, 'init.jsonl')
-    const harness = createProcessDeepSeekHarness(fakeLaunch({ FAKE_RECORD_INIT: recordFile }), {
+    const harness = createProcessLiwa(fakeLaunch({ FAKE_RECORD_INIT: recordFile }), {
       cwd: dir,
       provider: 'custom-provider',
       model: 'custom-model',
@@ -319,14 +319,14 @@ describe('DeepSeekHarness', () => {
   it('resolves a relative launch cwd to an absolute workspace before the handshake', async () => {
     // vitest workers forbid chdir, so derive a RELATIVE path from the real
     // process cwd to a temp worker dir; resolution is lexical either way.
-    const dir = await mkdtemp(join(process.cwd(), '.dsh-sdk-client-relcwd-'))
+    const dir = await mkdtemp(join(process.cwd(), '.liwa-sdk-client-relcwd-'))
     cleanups.push(() => rm(dir, { recursive: true, force: true }))
     const recordFile = join(dir, 'init.jsonl')
     const inner = join(dir, 'worker')
     await mkdir(inner)
     const relativeCwd = relative(process.cwd(), inner)
     expect(isAbsolute(relativeCwd)).toBe(false)
-    const harness = createProcessDeepSeekHarness(
+    const harness = createProcessLiwa(
       fakeLaunch({ FAKE_RECORD_INIT: recordFile, FAKE_ECHO_CWD_IN_INIT: '1' }, { cwd: relativeCwd }),
     )
     cleanups.push(() => harness.close())
@@ -357,16 +357,16 @@ describe('DeepSeekHarness', () => {
   it('preserves both initialize and SDK-owned cleanup failures', async () => {
     const initializeError = new SdkProtocolError('malformed initialize')
     const cleanupError = new Error('cleanup failed')
-    const start = vi.spyOn(HarnessClient.prototype, 'start').mockImplementation(() => {})
-    const initialize = vi.spyOn(HarnessClient.prototype, 'initialize').mockRejectedValue(initializeError)
-    const close = vi.spyOn(HarnessClient.prototype, 'close').mockRejectedValue(cleanupError)
+    const start = vi.spyOn(LiwaClient.prototype, 'start').mockImplementation(() => {})
+    const initialize = vi.spyOn(LiwaClient.prototype, 'initialize').mockRejectedValue(initializeError)
+    const close = vi.spyOn(LiwaClient.prototype, 'close').mockRejectedValue(cleanupError)
     try {
-      const harness = createProcessDeepSeekHarness(fakeLaunch())
+      const harness = createProcessLiwa(fakeLaunch())
       const failedClient = harness.client
       const failure = await harness.start().catch((error: unknown) => error)
       expect(failure).toBeInstanceOf(AggregateError)
       expect((failure as AggregateError).errors).toEqual([initializeError, cleanupError])
-      expect((failure as Error).message).toBe('DeepSeek Harness initialization and cleanup failed')
+      expect((failure as Error).message).toBe('Liwa initialization and cleanup failed')
       expect(harness.client).toBe(failedClient)
     } finally {
       start.mockRestore()
@@ -378,11 +378,11 @@ describe('DeepSeekHarness', () => {
   it('does not replace the client after terminal close wins a failed handshake', async () => {
     let rejectInitialize!: (error: Error) => void
     const initializeResult = new Promise<never>((_resolve, reject) => { rejectInitialize = reject })
-    const start = vi.spyOn(HarnessClient.prototype, 'start').mockImplementation(() => {})
-    const initialize = vi.spyOn(HarnessClient.prototype, 'initialize').mockReturnValue(initializeResult)
-    const close = vi.spyOn(HarnessClient.prototype, 'close').mockResolvedValue()
+    const start = vi.spyOn(LiwaClient.prototype, 'start').mockImplementation(() => {})
+    const initialize = vi.spyOn(LiwaClient.prototype, 'initialize').mockReturnValue(initializeResult)
+    const close = vi.spyOn(LiwaClient.prototype, 'close').mockResolvedValue()
     try {
-      const harness = createProcessDeepSeekHarness(fakeLaunch())
+      const harness = createProcessLiwa(fakeLaunch())
       const original = harness.client
       const pending = harness.start()
       await harness.close()
@@ -418,9 +418,9 @@ describe('DeepSeekHarness', () => {
   })
 
   it('supports await using disposal', async () => {
-    let captured: DeepSeekHarness
+    let captured: Liwa
     {
-      await using harness = createProcessDeepSeekHarness(fakeLaunch())
+      await using harness = createProcessLiwa(fakeLaunch())
       captured = harness
       const result = await harness.run('scoped')
       expect(result.finalResponse).toBe('hello from fake runtime')
@@ -429,19 +429,19 @@ describe('DeepSeekHarness', () => {
     await expect(captured.run('after')).rejects.toThrow(TransportClosedError)
   })
 
-  it('constructs the public dsh-backed client lazily', async () => {
-    const harness = new DeepSeekHarness()
-    expect(harness.client).toBeInstanceOf(HarnessClient)
+  it('constructs the public liwa-backed client lazily', async () => {
+    const harness = new Liwa()
+    expect(harness.client).toBeInstanceOf(LiwaClient)
     await harness.close()
   })
 })
 
-describe('HarnessClient', () => {
+describe('LiwaClient', () => {
   it('bounds profile initialization and names the selected profile in its diagnostic', async () => {
     const client = processClient(fakeLaunch(
       { FAKE_HANG_INIT: '1' },
       {
-        description: 'dsh profile "profile-without-sdk-server"',
+        description: 'liwa profile "profile-without-sdk-server"',
         initializeTimeoutMs: 50,
         disposeEofGraceMs: 100,
         // Wide SIGKILL confirmation: the hang-init child may still be
@@ -452,7 +452,7 @@ describe('HarnessClient', () => {
     ))
     cleanups.push(() => client.close())
     await expect(client.initialize({ cwd: process.cwd(), provider: 'p', model: 'm' }))
-      .rejects.toThrow(/initialize timed out after 50ms waiting for dsh profile "profile-without-sdk-server"/)
+      .rejects.toThrow(/initialize timed out after 50ms waiting for liwa profile "profile-without-sdk-server"/)
     await client.close()
   })
 
@@ -523,15 +523,15 @@ describe('HarnessClient', () => {
     expect(String(failure)).toContain('no trailing newline')
   })
 
-  it('fails when the configured dsh CLI module does not exist', async () => {
-    const client = new HarnessClient({ dshBin: join(tmpdir(), 'dsh-no-such-runtime-bin') })
+  it('fails when the configured liwa CLI module does not exist', async () => {
+    const client = new LiwaClient({ liwaBin: join(tmpdir(), 'liwa-no-such-runtime-bin') })
     cleanups.push(() => client.close())
     await expect(client.request('initialize', {}, 1_000)).rejects.toThrow(TransportClosedError)
   })
 
   it('reports a generic process spawn failure to internal transports', async () => {
     const client = processClient(fakeLaunch({}, {
-      command: join(tmpdir(), 'dsh-no-such-process-command'),
+      command: join(tmpdir(), 'liwa-no-such-process-command'),
       args: [],
     }))
     cleanups.push(() => client.close())
@@ -594,7 +594,7 @@ describe('HarnessClient', () => {
 
     // A bare unbounded request with omitted params sends `{}` on the wire.
     const identity = await client.request('initialize') as { serverInfo: { name: string } }
-    expect(identity.serverInfo.name).toBe('deepseek-harness-sdk-runtime')
+    expect(identity.serverInfo.name).toBe('liwa-sdk-runtime')
 
     // Async iteration consumes queued items and then parks.
     const collected: string[] = []
@@ -677,7 +677,7 @@ describe('HarnessClient', () => {
     const tree = client.subscribeSessionTree('root')
     // Lineage edges arrive as subagent.started notifications.
     const inject = (method: string, params: Record<string, unknown>): void => {
-      (client as unknown as { dispatchNotification(n: HarnessNotification): void }).dispatchNotification({ method, params })
+      (client as unknown as { dispatchNotification(n: LiwaNotification): void }).dispatchNotification({ method, params })
     }
     const unknownChild = { type: 'subagent/catalog', seq: 0, time: 1,
       data: { version: 1, childId: 'unreadable-child', childCreatedAt: 1, mode: 'unknown' } }

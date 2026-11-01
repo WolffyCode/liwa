@@ -3,7 +3,7 @@ description: "配置显式产品使用事件、OTLP/HTTP 路由、批量发送�
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-host-product-telemetry-otel
+# @liwa/host-product-telemetry-otel
 
 [English](README.md) | 中文
 
@@ -25,15 +25,15 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-在 Cordis 组合中挂载插件并提供应用标识；需要时可覆盖接收地址。桌面组合在开启[产品埋点](../../client/product-analytics/README.zh.md)时挂载本插件；普通 Web 不挂载。下方独立示例读取 `DSH_APP_VERSION`；桌面端由原生启动器提供 `DSH_CLIENT_VERSION`。两者均须为运行中的发布版本；缺少版本时 schema 会拒绝配置。
+在 Cordis 组合中挂载插件并提供应用标识；需要时可覆盖接收地址。桌面组合在开启[产品埋点](../../client/product-analytics/README.zh.md)时挂载本插件；普通 Web 不挂载。下方独立示例读取 `LIWA_APP_VERSION`；桌面端由原生启动器提供 `LIWA_CLIENT_VERSION`。两者均须为运行中的发布版本；缺少版本时 schema 会拒绝配置。
 
 ```yaml
-- name: '@deepseek-ai/dsh-otel'
-- name: '@deepseek-ai/dsh-host-product-telemetry-otel'
+- name: '@liwa/otel'
+- name: '@liwa/host-product-telemetry-otel'
   config:
     endpoint: https://dsh-otel-collector.deepseeksvc.com/v1/logs
-    serviceName: deepseek-harness
-    serviceVersion: !!js process.env.DSH_APP_VERSION
+    serviceName: liwa
+    serviceVersion: !!js process.env.LIWA_APP_VERSION
     compression: gzip
     scheduledDelayMillis: 30000
 ```

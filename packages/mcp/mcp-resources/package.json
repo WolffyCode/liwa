@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-mcp-resources",
+  "name": "@liwa/mcp-resources",
   "description": "Scoped MCP resource discovery and reading through shared model tools",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/mcp/mcp-resources"
   },
   "type": "module",
@@ -29,29 +29,29 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-scope": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/llm": "workspace:*",
+    "@liwa/scope": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/tools": "workspace:*"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-ptc-runtime": "workspace:*",
-    "@deepseek-ai/dsh-scope": "workspace:*",
-    "@deepseek-ai/dsh-tool-executor-native": "workspace:*",
-    "@deepseek-ai/dsh-tool-executor-ptc": "workspace:*",
-    "@deepseek-ai/dsh-tool-testkit": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-agent": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/llm": "workspace:*",
+    "@liwa/ptc-runtime": "workspace:*",
+    "@liwa/scope": "workspace:*",
+    "@liwa/tool-executor-native": "workspace:*",
+    "@liwa/tool-executor-ptc": "workspace:*",
+    "@liwa/tool-testkit": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/agent": "workspace:*"
   },
   "dependencies": {
-    "@deepseek-ai/dsh-util-values": "workspace:*"
+    "@liwa/util-values": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-system-prompt": {
+    "@liwa/system-prompt": {
       "optional": true
     }
   }

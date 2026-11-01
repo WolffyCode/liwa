@@ -1,13 +1,13 @@
 /** Public plugin management records shared with clients. */
-import type { Branded } from '@deepseek-ai/dsh-brand'
-import type { PluginLocalizedMeta } from '@deepseek-ai/dsh-package-manifest'
-import type { PluginInventoryEntry } from '@deepseek-ai/dsh-host-plugin-inventory/types'
-export type { PluginEntryId } from '@deepseek-ai/dsh-host-plugin-inventory/types'
-import type { PluginEntryId } from '@deepseek-ai/dsh-host-plugin-inventory/types'
-import type {} from '@deepseek-ai/dsh-typert-protocol'
-import type { DetailFailureReason } from '@deepseek-ai/dsh-plugin-detail/types'
+import type { Branded } from '@liwa/brand'
+import type { PluginLocalizedMeta } from '@liwa/package-manifest'
+import type { PluginInventoryEntry } from '@liwa/host-plugin-inventory/types'
+export type { PluginEntryId } from '@liwa/host-plugin-inventory/types'
+import type { PluginEntryId } from '@liwa/host-plugin-inventory/types'
+import type {} from '@liwa/typert-protocol'
+import type { DetailFailureReason } from '@liwa/plugin-detail/types'
 
-declare module '@deepseek-ai/dsh-typert-protocol' {
+declare module '@liwa/typert-protocol' {
   interface RemoteErrorDetailsMap {
     /** The profile lists no such bundle, or its directory cannot be resolved. */
     'plugin-manager/unknown-bundle': { readonly name: string }
@@ -25,12 +25,12 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
 /** Reasons a profile control cannot modify its target. */
 export type ReadOnlyReason = 'management-required' | 'unaddressable'
 
-/** A package whose declared DSH requirements reject the running DSH version, without an exemption for the exact pair. */
+/** A package whose declared Liwa requirements reject the running Liwa version, without an exemption for the exact pair. */
 export interface IncompatiblePlugin {
   name: string
   version: string
   runtimeVersion: string
-  /** Only the requirements the running version does not satisfy, keyed `engines.dsh` or by DSH peer package name. */
+  /** Only the requirements the running version does not satisfy, keyed `engines.liwa` or by Liwa peer package name. */
   requirements: Record<string, string>
 }
 
@@ -38,13 +38,13 @@ export interface IncompatiblePlugin {
 export interface ManagementError {
   code: ReadOnlyReason | 'unknown-plugin' | 'invalid-spec' | 'already-installed' | 'ambiguous-install' | 'not-bundle' | 'not-removable' | 'stop-profile' | 'bundle-in-use' | 'stale-approval' | 'incompatible-version' | 'unsupported-platform' | 'operation-error'
   diagnostic?: string
-  /** Present with `incompatible-version`: the packages the running DSH version rejects. */
+  /** Present with `incompatible-version`: the packages the running Liwa version rejects. */
   incompatible?: IncompatiblePlugin[]
 }
 
 /**
  * Why a change waits for the next start: `no-hmr` profiles apply changes only at startup; `package-moved` changes map an
- * installed package to another directory without removing it first, or change or locally override a package the DSH
+ * installed package to another directory without removing it first, or change or locally override a package the Liwa
  * installation provides; `host-module` changes reach
  * modules the running process itself imports; `unmanaged-plugin` changes reach a plugin running outside a Loader entry;
  * `module-comparison` means loaded modules could not be compared with disk.
@@ -147,7 +147,7 @@ export interface PackageResult {
   kind?: PluginInstallFailureKind
   /** The manager terminated the run after it printed nothing for its silence bound; `exitCode` still reports how it ended. */
   timedOut?: boolean
-  /** Present when a compatibility check refused the run: the packages the running DSH version rejects. */
+  /** Present when a compatibility check refused the run: the packages the running Liwa version rejects. */
   incompatible?: IncompatiblePlugin[]
 }
 
@@ -266,9 +266,9 @@ export interface PluginVersion {
   readonly prerelease: boolean
   /** The registry's deprecation message, when the version is deprecated. */
   readonly deprecated?: string
-  /** Whether the version declares a `dsh.bundle`; a version that does not cannot replace a bundle. */
+  /** Whether the version declares a `liwa.bundle`; a version that does not cannot replace a bundle. */
   readonly bundle: boolean
-  /** Present when the version's `engines.dsh` or DSH peers reject the running DSH version without an exemption for the exact pair. */
+  /** Present when the version's `engines.liwa` or Liwa peers reject the running Liwa version without an exemption for the exact pair. */
   readonly incompatible?: IncompatiblePlugin
 }
 
@@ -409,7 +409,7 @@ export type PluginOperation = {
   | { readonly phase: 'unknown' }
 )
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Events {
     /**
      * One manager invocation started or ended; subscribers run independently without delaying management.

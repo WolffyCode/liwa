@@ -2,28 +2,28 @@
  * Bridge for unmodified Claude Code command hooks on harness interception
  * extension points. It supports SessionStart, prompt/tool pre/post, Stop, and subagent
  * start/stop. It owns Claude payloads, environment, substitution, and decision
- * mapping; shared execution and parsing live in `dsh-hook-protocol`.
+ * mapping; shared execution and parsing live in `liwa-hook-protocol`.
  * `updatedInput` is logged and warned but not honored. Bespoke behavior should
  * use typed native plugins on the same extension points.
- * @module @deepseek-ai/dsh-hooks-claude-code
+ * @module @liwa/hooks-claude-code
  */
 
-import type {} from '@deepseek-ai/dsh-working-directory'
+import type {} from '@liwa/working-directory'
 import { readFileSync } from 'node:fs'
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import type { ContextFormed } from '@deepseek-ai/dsh-llm'
-declare module '@deepseek-ai/dsh-llm' {
+import type { Context } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import type { Agent, PreStepDecision } from '@liwa/agent'
+import { createUserMessage } from '@liwa/llm'
+import type { ContextFormed } from '@liwa/llm'
+declare module '@liwa/llm' {
   interface MessageSourceMap {
     'hooks-claude-code': { kind: 'hooks-claude-code' } & ContextFormed
   }
 }
 
-import type { ContentBlock, MessageSource } from '@deepseek-ai/dsh-llm'
-import type { UserMessage } from '@deepseek-ai/dsh-session'
-import type { PostToolDecision, PreToolDecision, ToolExecution, ToolExecutionResult } from '@deepseek-ai/dsh-tools'
+import type { ContentBlock, MessageSource } from '@liwa/llm'
+import type { UserMessage } from '@liwa/session'
+import type { PostToolDecision, PreToolDecision, ToolExecution, ToolExecutionResult } from '@liwa/tools'
 import {
   appendHookInvoked,
   appendHookResult,
@@ -35,10 +35,10 @@ import {
   selectHookGroups,
   type HookOutput,
   type MergedHookOutcome,
-} from '@deepseek-ai/dsh-hook-protocol'
+} from '@liwa/hook-protocol'
 // Pulls in the declaration-merged subagent events and the identity pairing their
 // start/end edges.
-import type { SubagentRunId } from '@deepseek-ai/dsh-subagent'
+import type { SubagentRunId } from '@liwa/subagent'
 import { parseClaudeCodeConfig, type ClaudeCodeHookConfig } from './config.ts'
 
 export const name = 'hooks-claude-code'
@@ -303,7 +303,7 @@ export function apply(ctx: Context, config: Config): void {
 }
 
 /**
- * The `agent_type` value the bridge reports for SubagentStart/Stop. The harness
+ * The `agent_type` value the bridge reports for SubagentStart/Stop. Liwa
  * subagent seam carries no per-kind label, so the bridge uses Claude Code's own
  * Task-tool default — a hooks.json with a default/`*`/empty `agent_type` matcher
  * fires; a config matching a specific kind (e.g. `code-reviewer`) does not.

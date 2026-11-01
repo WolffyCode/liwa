@@ -1,7 +1,7 @@
 // Web e2e scenario: switching a plugin on the Plugins page updates the `/`
 // menu of a Session that is already open. One chromium page holds a blank
 // Session while a second page switches the official badge skill bundle; a
-// global skill seeded in the harness home stays listed throughout. No model
+// global skill seeded in the Liwa home stays listed throughout. No model
 // call is issued, so a stray stream fails loud on the open LLM seam.
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -12,8 +12,8 @@ import { launchWebScaffold, watchConsole, type WebScaffold } from './scaffold.ts
 import { connectFreshWorkspace, newEnglishPage, PLUGIN_TOGGLE_SETTLE_MS, saveFailureShot, writeComposerDraft } from './support.ts'
 
 const BUNDLE_DIR = fileURLToPath(new URL('../../../packages/experimental/badge-skill-bundle', import.meta.url))
-const BUNDLE = '@deepseek-ai/dsh-experimental-badge-skill-bundle'
-const GLOBAL_SKILL = 'dsh-global-skill'
+const BUNDLE = '@liwa/experimental-badge-skill-bundle'
+const GLOBAL_SKILL = 'liwa-global-skill'
 
 describe('web e2e: the slash menu follows plugin switches', () => {
   let scaffold: WebScaffold
@@ -25,8 +25,8 @@ describe('web e2e: the slash menu follows plugin switches', () => {
 
   beforeAll(async () => {
     scaffold = await launchWebScaffold({ profile: { packages: [{ dir: BUNDLE_DIR }] } })
-    // The scaffold pins the skill-filesystem harness home inside its temporary world.
-    const directory = join(scaffold.workspaceCwd, '.dsh-home', 'skills', GLOBAL_SKILL)
+    // The scaffold pins the skill-filesystem Liwa home inside its temporary world.
+    const directory = join(scaffold.workspaceCwd, '.liwa-home', 'skills', GLOBAL_SKILL)
     await mkdir(directory, { recursive: true })
     await writeFile(join(directory, 'SKILL.md'), [
       '---',
@@ -59,14 +59,14 @@ describe('web e2e: the slash menu follows plugin switches', () => {
 
   /**
    * Retype the query in the open Session and read whether the badge skill is listed.
-   * @returns whether the menu lists `dsh-badge` beside the global skill.
+   * @returns whether the menu lists `liwa-badge` beside the global skill.
    */
   async function badgeListed(): Promise<boolean> {
-    await writeComposerDraft(page, page.locator('[data-composer-input]').first(), '/dsh-')
+    await writeComposerDraft(page, page.locator('[data-composer-input]').first(), '/liwa-')
     const menu = page.getByRole('listbox', { name: 'Trigger suggestions' })
     // The skill source answers with one list, so the global entry marks a settled skill group.
     await menu.getByRole('option', { name: new RegExp(`^${GLOBAL_SKILL} `) }).waitFor({ timeout: 10_000 })
-    return await menu.getByRole('option', { name: /^dsh-badge / }).count() === 1
+    return await menu.getByRole('option', { name: /^liwa-badge / }).count() === 1
   }
 
   /**

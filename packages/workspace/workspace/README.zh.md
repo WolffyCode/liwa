@@ -3,7 +3,7 @@ description: "面向选择、挂载或排查持久 workspace 记录与会话头�
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-workspace
+# @liwa/workspace
 
 [English](README.md) | 中文
 
@@ -29,21 +29,21 @@ kind: "package-reference"
 
 ### 何时使用
 
-当产品展示持久 workspace 界面——侧边栏、会话分组或需要命名并排序目录的自动化——时使用它。它对模型不可见，因此不增加任何 token 或请求成本。没有分组界面时跳过它；harness 中没有其他包需要它。
+当产品展示持久 workspace 界面——侧边栏、会话分组或需要命名并排序目录的自动化——时使用它。它对模型不可见，因此不增加任何 token 或请求成本。没有分组界面时跳过它；灵鲸中没有其他包需要它。
 
 ### 设置
 
 此包需要会话存储、会话持久化后端，以及保存其记录的存储行。最小组合如下：
 
 ```yaml
-- name: '@deepseek-ai/dsh-session'
-- name: '@deepseek-ai/dsh-session-persistence-jsonl'
-- name: '@deepseek-ai/dsh-storage'
-- name: '@deepseek-ai/dsh-storage-json'
-- name: '@deepseek-ai/dsh-storage-domain'
+- name: '@liwa/session'
+- name: '@liwa/session-persistence-jsonl'
+- name: '@liwa/storage'
+- name: '@liwa/storage-json'
+- name: '@liwa/storage-domain'
   config:
     backend: json
-- name: '@deepseek-ai/dsh-workspace'
+- name: '@liwa/workspace'
 ```
 
 挂载这些行之后，创建项目会立即出现在列表中并在重启后保留；首次启动还会按会话运行的目录对既有会话分组。如果缺少某个必需依赖，workspace 功能会一直不可用，直到它被挂载。

@@ -5,7 +5,7 @@ import { expect, it, onTestFinished } from 'vitest'
 import { DragFiles } from '../src/file-drag-files.ts'
 
 async function files() {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-drag-test-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-drag-test-'))
   const store = new DragFiles(root)
   onTestFinished(async () => { await store.dispose(); await rm(root, { recursive: true, force: true }) })
   return { root, store }

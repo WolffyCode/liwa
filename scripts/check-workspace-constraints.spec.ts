@@ -10,14 +10,14 @@ import {
   EXPERIMENTAL_PACKAGE_NAME_EXCEPTIONS,
 } from './experimental-package-policy.ts'
 import {
-  checkDshFamilyVersion,
+  checkLiwaFamilyVersion,
   checkWorkspaceManifest,
   checkWorkspaceProtocol,
   checkExperimentalDependencyIsolation,
   checkExperimentalManifest,
   checkExperimentalNameExceptions,
   detailDocumentFiles,
-  expectedDshPackageFiles,
+  expectedLiwaPackageFiles,
   readWorkspaceManifests,
   type WorkspaceManifest,
 } from './check-workspace-constraints.ts'
@@ -25,17 +25,17 @@ import {
 const experimental = {
   dir: 'packages/experimental/prototype',
   manifest: {
-    name: '@deepseek-ai/dsh-experimental-prototype',
+    name: '@liwa/experimental-prototype',
     publishConfig: { access: 'public' },
   },
 } satisfies WorkspaceManifest
 
 describe('workspace dependency ranges', () => {
-  const dependency = { dir: 'packages/core/runtime', manifest: { name: '@deepseek-ai/dsh-runtime' } }
-  const cli = { dir: 'apps/cli', manifest: { name: '@deepseek-ai/dsh' } }
-  const vendor = { dir: 'vendor/cordis', manifest: { name: '@deepseek-ai/cordis' } }
-  const native = { dir: 'native/system', manifest: { name: '@deepseek-ai/node-addon-system' } }
-  const platform = { dir: 'native/system/packages/darwin-arm64', manifest: { name: '@deepseek-ai/node-addon-system-darwin-arm64' } }
+  const dependency = { dir: 'packages/core/runtime', manifest: { name: '@liwa/runtime' } }
+  const cli = { dir: 'apps/cli', manifest: { name: '@liwa/cli' } }
+  const vendor = { dir: 'vendor/cordis', manifest: { name: '@liwa/cordis' } }
+  const native = { dir: 'native/system', manifest: { name: '@liwa/node-addon-system' } }
+  const platform = { dir: 'native/system/packages/darwin-arm64', manifest: { name: '@liwa/node-addon-system-darwin-arm64' } }
   const unrelated = { dir: 'tools/helper', manifest: { name: '@other/helper' } }
 
   describe.each([
@@ -44,14 +44,14 @@ describe('workspace dependency ranges', () => {
     'vendor/loader', 'native/system', 'native/system/packages/entry',
   ])('consumer %s', (dir) => {
     it.each(['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'] as const)(
-      'requires exact DSH and tilde vendor/native %s independently of the consumer name',
+      'requires exact Liwa and tilde vendor/native %s independently of the consumer name',
       (section) => {
         const consumer = (name: string, range: string): WorkspaceManifest => ({
           dir, manifest: { name: 'consumer', [section]: { [name]: range } },
         })
         const check = (name: string, range: string): string[] =>
           checkWorkspaceProtocol([dependency, cli, vendor, native, platform, unrelated, consumer(name, range)])
-        for (const name of ['@deepseek-ai/dsh', '@deepseek-ai/dsh-runtime']) {
+        for (const name of ['@liwa/cli', '@liwa/runtime']) {
           expect(check(name, 'workspace:*')).toEqual([])
           for (const range of ['workspace:^', 'workspace:~', 'workspace:^0.1.7', '^0.1.7', '*']) {
             expect(check(name, range)).toEqual([
@@ -59,7 +59,7 @@ describe('workspace dependency ranges', () => {
             ])
           }
         }
-        for (const name of ['@deepseek-ai/cordis', '@deepseek-ai/node-addon-system', '@deepseek-ai/node-addon-system-darwin-arm64']) {
+        for (const name of ['@liwa/cordis', '@liwa/node-addon-system', '@liwa/node-addon-system-darwin-arm64']) {
           expect(check(name, 'workspace:~')).toEqual([])
           for (const range of ['workspace:*', 'workspace:^', '^4.0.3', '~4.0.3']) {
             expect(check(name, range)).toEqual([
@@ -81,7 +81,7 @@ describe('workspace dependency ranges', () => {
 
 describe('workspace manifest discovery', () => {
   it('checks root, app, runtime, tooling, and newly declared members while honoring exclusions', () => {
-    const root = mkdtempSync(join(tmpdir(), 'dsh-workspace-ranges-'))
+    const root = mkdtempSync(join(tmpdir(), 'liwa-workspace-ranges-'))
     onTestFinished(() => { rmSync(root, { recursive: true, force: true }) })
     const consumers = ['.', 'apps/cli', 'apps/web', 'apps/desktop', 'apps/desktop-host', 'benchmarks', 'website', 'python/sdk-runtime', 'tools/probe']
     writeFileSync(join(root, 'pnpm-workspace.yaml'), [
@@ -91,18 +91,18 @@ describe('workspace manifest discovery', () => {
     for (const dir of [...consumers, 'tools/excluded', 'unlisted/probe', 'packages/core/runtime']) {
       mkdirSync(join(root, dir), { recursive: true })
       writeFileSync(join(root, dir, 'package.json'), JSON.stringify(dir === 'packages/core/runtime'
-        ? { name: '@deepseek-ai/dsh-runtime' }
-        : { dependencies: { '@deepseek-ai/dsh-runtime': 'workspace:^' } }))
+        ? { name: '@liwa/runtime' }
+        : { dependencies: { '@liwa/runtime': 'workspace:^' } }))
     }
     const manifests = readWorkspaceManifests(root)
     expect(manifests.map(entry => entry.dir).sort()).toEqual([...consumers, 'packages/core/runtime'].sort())
     expect(checkWorkspaceProtocol(manifests).sort()).toEqual(consumers.map(dir =>
-      `${dir}: dependencies.@deepseek-ai/dsh-runtime must use workspace:*, got workspace:^`).sort())
+      `${dir}: dependencies.@liwa/runtime must use workspace:*, got workspace:^`).sort())
   })
 
   it.each(['', 'null', '{}', 'packages: []', 'packages: [false]', 'packages: [""]', 'packages: wrong'])(
     'rejects an invalid workspace declaration: %s', (contents) => {
-      const root = mkdtempSync(join(tmpdir(), 'dsh-workspace-ranges-'))
+      const root = mkdtempSync(join(tmpdir(), 'liwa-workspace-ranges-'))
       onTestFinished(() => { rmSync(root, { recursive: true, force: true }) })
       writeFileSync(join(root, 'pnpm-workspace.yaml'), contents)
       expect(() => readWorkspaceManifests(root)).toThrow('packages must be a non-empty list of workspace patterns')
@@ -110,7 +110,7 @@ describe('workspace manifest discovery', () => {
   )
 
   it('rejects a declaration that matches no workspace members', () => {
-    const root = mkdtempSync(join(tmpdir(), 'dsh-workspace-ranges-'))
+    const root = mkdtempSync(join(tmpdir(), 'liwa-workspace-ranges-'))
     onTestFinished(() => { rmSync(root, { recursive: true, force: true }) })
     writeFileSync(join(root, 'pnpm-workspace.yaml'), 'packages: [missing/*]')
     expect(() => readWorkspaceManifests(root)).toThrow('packages matched no workspace manifests')
@@ -121,9 +121,9 @@ describe('experimental workspace constraints', () => {
   it('requires the experimental package-name prefix', () => {
     expect(checkExperimentalManifest({
       ...experimental,
-      manifest: { ...experimental.manifest, name: '@deepseek-ai/dsh-prototype' },
+      manifest: { ...experimental.manifest, name: '@liwa/prototype' },
     })).toEqual([
-      '@deepseek-ai/dsh-prototype: experimental package name must start with "@deepseek-ai/dsh-experimental-" or match its declared directory exception',
+      '@liwa/prototype: experimental package name must start with "@liwa/experimental-" or match its declared directory exception',
     ])
   })
 
@@ -144,7 +144,7 @@ describe('experimental workspace constraints', () => {
     const [first, ...rest] = manifests
     for (const invalid of [
       rest,
-      [{ ...first!, manifest: { name: '@deepseek-ai/dsh-experimental-replacement' } }, ...rest],
+      [{ ...first!, manifest: { name: '@liwa/experimental-replacement' } }, ...rest],
       [{ ...first!, dir: 'packages/core/replacement' }, ...rest],
       [...manifests, { ...first!, dir: 'packages/experimental/duplicate' }],
     ]) expect(checkExperimentalNameExceptions(invalid)).toEqual([expect.stringContaining(first!.manifest.name)])
@@ -153,7 +153,7 @@ describe('experimental workspace constraints', () => {
   it.each(Object.values(EXPERIMENTAL_PACKAGE_NAME_EXCEPTIONS))('rejects retained runtime names and aliases: %s', (name) => {
     for (const dependencies of [{ [name]: 'workspace:*' }, { alias: `npm:${name}@1.0.0` }, { alias: `workspace:${name}@*` }]) {
       expect(checkExperimentalDependencyIsolation([{
-        dir: 'apps/cli', manifest: { name: '@deepseek-ai/dsh', dependencies },
+        dir: 'apps/cli', manifest: { name: '@liwa/cli', dependencies },
       }], [])).toEqual([expect.stringContaining('must not reference an experimental package')])
     }
   })
@@ -164,8 +164,8 @@ describe('experimental workspace constraints', () => {
       ...experimental,
       manifest: { name: experimental.manifest.name, private: true },
     })).toEqual([
-      '@deepseek-ai/dsh-experimental-prototype: public experimental package must not set "private": true',
-      '@deepseek-ai/dsh-experimental-prototype: public experimental package must set publishConfig.access to "public"',
+      '@liwa/experimental-prototype: public experimental package must not set "private": true',
+      '@liwa/experimental-prototype: public experimental package must set publishConfig.access to "public"',
     ])
   })
 
@@ -204,28 +204,28 @@ describe('experimental workspace constraints', () => {
       expect(checkExperimentalDependencyIsolation([experimental, {
         dir: 'packages/core/consumer',
         manifest: {
-          name: '@deepseek-ai/dsh-consumer',
-          [section]: { '@deepseek-ai/dsh-experimental-prototype': 'workspace:^' },
+          name: '@liwa/consumer',
+          [section]: { '@liwa/experimental-prototype': 'workspace:^' },
         },
       }])).toEqual([
-        `@deepseek-ai/dsh-consumer: ${section}.@deepseek-ai/dsh-experimental-prototype must not reference an experimental package`,
+        `@liwa/consumer: ${section}.@liwa/experimental-prototype must not reference an experimental package`,
       ])
     },
   )
 
-  it('allows the dsh installation to ship the optional bundles the launcher names, and nothing else experimental', () => {
-    const listed = { '@deepseek-ai/dsh-experimental-prototype': 'workspace:^' }
-    const installation = { dir: 'apps/cli', manifest: { name: '@deepseek-ai/dsh', dependencies: listed } } satisfies WorkspaceManifest
-    expect(checkExperimentalDependencyIsolation([experimental, installation], ['@deepseek-ai/dsh-experimental-prototype'])).toEqual([])
+  it('allows the liwa installation to ship the optional bundles the launcher names, and nothing else experimental', () => {
+    const listed = { '@liwa/experimental-prototype': 'workspace:^' }
+    const installation = { dir: 'apps/cli', manifest: { name: '@liwa/cli', dependencies: listed } } satisfies WorkspaceManifest
+    expect(checkExperimentalDependencyIsolation([experimental, installation], ['@liwa/experimental-prototype'])).toEqual([])
     expect(checkExperimentalDependencyIsolation([experimental, installation], [])).toEqual([
-      '@deepseek-ai/dsh: dependencies.@deepseek-ai/dsh-experimental-prototype must not reference an experimental package',
+      '@liwa/cli: dependencies.@liwa/experimental-prototype must not reference an experimental package',
     ])
     // Only a plain dependency edge is offered; a peer would make the bundle a requirement of every consumer.
     expect(checkExperimentalDependencyIsolation([experimental, {
       dir: 'apps/cli',
-      manifest: { name: '@deepseek-ai/dsh', peerDependencies: listed },
-    }], ['@deepseek-ai/dsh-experimental-prototype'])).toEqual([
-      '@deepseek-ai/dsh: peerDependencies.@deepseek-ai/dsh-experimental-prototype must not reference an experimental package',
+      manifest: { name: '@liwa/cli', peerDependencies: listed },
+    }], ['@liwa/experimental-prototype'])).toEqual([
+      '@liwa/cli: peerDependencies.@liwa/experimental-prototype must not reference an experimental package',
     ])
   })
 
@@ -233,58 +233,58 @@ describe('experimental workspace constraints', () => {
     const manifests: WorkspaceManifest[] = [experimental, {
       dir: 'packages/core/test-only',
       manifest: {
-        name: '@deepseek-ai/dsh-test-only',
-        devDependencies: { '@deepseek-ai/dsh-experimental-prototype': 'workspace:^' },
+        name: '@liwa/test-only',
+        devDependencies: { '@liwa/experimental-prototype': 'workspace:^' },
       },
     }, {
       dir: 'packages/experimental/consumer',
       manifest: {
-        name: '@deepseek-ai/dsh-experimental-consumer',
-        dependencies: { '@deepseek-ai/dsh-experimental-prototype': 'workspace:^' },
+        name: '@liwa/experimental-consumer',
+        dependencies: { '@liwa/experimental-prototype': 'workspace:^' },
       },
     }, {
       dir: 'python/sdk-runtime',
       manifest: {
-        name: '@deepseek-ai/dsh-python-runtime',
-        dependencies: { '@deepseek-ai/dsh-experimental-prototype': 'workspace:^' },
+        name: '@liwa/python-runtime',
+        dependencies: { '@liwa/experimental-prototype': 'workspace:^' },
       },
     }]
 
     expect(checkExperimentalDependencyIsolation(manifests)).toEqual([
-      '@deepseek-ai/dsh-python-runtime: dependencies.@deepseek-ai/dsh-experimental-prototype must not reference an experimental package',
+      '@liwa/python-runtime: dependencies.@liwa/experimental-prototype must not reference an experimental package',
     ])
   })
 })
 
-describe('dsh family version coherence', () => {
+describe('liwa family version coherence', () => {
   it('rejects a package carrying a stale shared version', () => {
-    expect(checkDshFamilyVersion(
-      { name: '@deepseek-ai/dsh-http-proxy', version: '0.1.2-alpha.5' },
+    expect(checkLiwaFamilyVersion(
+      { name: '@liwa/http-proxy', version: '0.1.2-alpha.5' },
       '0.1.2-rc.1',
-    )).toBe('@deepseek-ai/dsh-http-proxy: package.json version must match root version 0.1.2-rc.1')
+    )).toBe('@liwa/http-proxy: package.json version must match root version 0.1.2-rc.1')
   })
 
   it('rejects the root-named CLI app on a stale shared version', () => {
-    expect(checkDshFamilyVersion(
-      { name: '@deepseek-ai/dsh', version: '0.1.2-alpha.5' },
+    expect(checkLiwaFamilyVersion(
+      { name: '@liwa/cli', version: '0.1.2-alpha.5' },
       '0.1.2-rc.1',
-    )).toBe('@deepseek-ai/dsh: package.json version must match root version 0.1.2-rc.1')
+    )).toBe('@liwa/cli: package.json version must match root version 0.1.2-rc.1')
   })
 
   it('accepts a manifest carrying the shared version', () => {
-    expect(checkDshFamilyVersion(
-      { name: '@deepseek-ai/dsh-http-proxy', version: '0.1.2-rc.1' },
+    expect(checkLiwaFamilyVersion(
+      { name: '@liwa/http-proxy', version: '0.1.2-rc.1' },
       '0.1.2-rc.1',
     )).toBeUndefined()
   })
 
   it('leaves other sequences to their own version lines', () => {
-    expect(checkDshFamilyVersion({ name: '@deepseek-ai/cordis', version: '4.0.1' }, '0.1.2-rc.1')).toBeUndefined()
-    expect(checkDshFamilyVersion(
-      { name: '@deepseek-ai/node-addon-system', version: '0.1.1' },
+    expect(checkLiwaFamilyVersion({ name: '@liwa/cordis', version: '4.0.1' }, '0.1.2-rc.1')).toBeUndefined()
+    expect(checkLiwaFamilyVersion(
+      { name: '@liwa/node-addon-system', version: '0.1.1' },
       '0.1.2-rc.1',
     )).toBeUndefined()
-    expect(checkDshFamilyVersion({ version: '0.1.2-alpha.5' }, '0.1.2-rc.1')).toBeUndefined()
+    expect(checkLiwaFamilyVersion({ version: '0.1.2-alpha.5' }, '0.1.2-rc.1')).toBeUndefined()
   })
 })
 
@@ -294,15 +294,15 @@ describe('package payload constraints', () => {
     [{ import: './art/icon.svg', default: './art/fallback.svg' }, ['art/icon.svg', 'art/fallback.svg']],
     [['./art/icon.svg', './art/icon.svg'], ['art/icon.svg']],
   ] as const)('includes exported icon targets in the canonical payload: %j', (icon, expected) => {
-    expect(expectedDshPackageFiles({ exports: { './icon': icon } })).toEqual([...expected, 'lib/index.js', 'lib/types/**/*.d.ts'])
+    expect(expectedLiwaPackageFiles({ exports: { './icon': icon } })).toEqual([...expected, 'lib/index.js', 'lib/types/**/*.d.ts'])
   })
 
   it.each(['icon.svg', './icon.svg'])('includes and deduplicates manifest icon %s', (icon) => {
-    expect(expectedDshPackageFiles({ icon, exports: { './icon': './icon.svg' } })).toEqual(['icon.svg', 'lib/index.js', 'lib/types/**/*.d.ts'])
+    expect(expectedLiwaPackageFiles({ icon, exports: { './icon': './icon.svg' } })).toEqual(['icon.svg', 'lib/index.js', 'lib/types/**/*.d.ts'])
   })
 
   it('includes manifest, root, and subpath icon targets', () => {
-    expect(expectedDshPackageFiles({ icon: './legacy.svg', exports: { './icon': './fallback.svg', './search/icon': './search.svg' } })).toEqual([
+    expect(expectedLiwaPackageFiles({ icon: './legacy.svg', exports: { './icon': './fallback.svg', './search/icon': './search.svg' } })).toEqual([
       'legacy.svg', 'fallback.svg', 'search.svg', 'lib/index.js', 'lib/types/**/*.d.ts',
     ])
   })
@@ -323,7 +323,7 @@ describe('package payload constraints', () => {
     { exports: { './locale/*.json': './locale/*.json', './search/locale/*.json': './locale/*.json' }, resources: ['locale/*.json'] },
     { exports: { './search/locale/*.json': './z/*.json', './locale/*.json': './a/*.json' }, resources: ['a/*.json', 'z/*.json'] },
   ])('includes declared locale resources in the canonical payload: $exports', ({ exports, resources }) => {
-    expect(expectedDshPackageFiles({ name: '@deepseek-ai/dsh-localized', exports })).toEqual([
+    expect(expectedLiwaPackageFiles({ name: '@liwa/localized', exports })).toEqual([
       ...resources, 'lib/index.js', 'lib/types/**/*.d.ts',
     ])
   })
@@ -347,7 +347,7 @@ describe('package payload constraints', () => {
   })
 
   it('publishes the directory of each locale detail document after the locale resources', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dsh-detail-files-'))
+    const dir = mkdtempSync(join(tmpdir(), 'liwa-detail-files-'))
     onTestFinished(() => { rmSync(dir, { recursive: true, force: true }) })
     mkdirSync(join(dir, 'docs/guide'), { recursive: true })
     mkdirSync(join(dir, 'locale'))
@@ -361,13 +361,13 @@ describe('package payload constraints', () => {
     writeFileSync(join(dir, 'locale/ja.json'), '{')
     const detailFiles = detailDocumentFiles(dir)
     expect(detailFiles).toEqual(['docs'])
-    expect(expectedDshPackageFiles({ exports: { './locale/*.json': './locale/*.json' } }, detailFiles)).toEqual([
+    expect(expectedLiwaPackageFiles({ exports: { './locale/*.json': './locale/*.json' } }, detailFiles)).toEqual([
       'locale/*.json', 'docs', 'lib/index.js', 'lib/types/**/*.d.ts',
     ])
   })
 
   it('rejects a detail document that is missing, outside the package, or at the package root', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dsh-detail-invalid-'))
+    const dir = mkdtempSync(join(tmpdir(), 'liwa-detail-invalid-'))
     onTestFinished(() => { rmSync(dir, { recursive: true, force: true }) })
     mkdirSync(join(dir, 'locale'))
     const declare = (detail: unknown): void => {
@@ -395,7 +395,7 @@ describe('package payload constraints', () => {
   })
 
   it('does not infer locale payloads from unrelated or non-JSON exports', () => {
-    expect(expectedDshPackageFiles({
+    expect(expectedLiwaPackageFiles({
       exports: {
         './config.json': './config.json',
         './locale/README.md': './locale/README.md',
@@ -434,17 +434,17 @@ describe('package payload constraints', () => {
   })
 
   it('includes a declared profile patch without a package-name allowlist', () => {
-    expect(expectedDshPackageFiles({
-      name: '@deepseek-ai/dsh-private-profile',
-      dsh: { bundle: { patch: './cordis.patch.yml' } },
+    expect(expectedLiwaPackageFiles({
+      name: '@liwa/private-profile',
+      liwa: { bundle: { patch: './cordis.patch.yml' } },
     })).toEqual([
       'lib/index.js',
       'cordis.patch.yml',
       'lib/types/**/*.d.ts',
     ])
-    expect(expectedDshPackageFiles({
-      name: '@deepseek-ai/dsh-private-profile',
-      dsh: { bundle: { patch: ['./cordis.patch.yml', './layers/web.patch.yml'] } },
+    expect(expectedLiwaPackageFiles({
+      name: '@liwa/private-profile',
+      liwa: { bundle: { patch: ['./cordis.patch.yml', './layers/web.patch.yml'] } },
     })).toEqual([
       'lib/index.js',
       'cordis.patch.yml',
@@ -465,7 +465,7 @@ describe('package payload constraints', () => {
     { './assets/*': './lib/assets/*' },
     { './assets/*': { default: './lib/assets/*' } },
   ])('publishes built package assets after the browser Client entries: %j', (assets) => {
-    expect(expectedDshPackageFiles({
+    expect(expectedLiwaPackageFiles({
       exports: {
         './client': { types: './lib/types/client/index.d.ts', node: './lib/client.node.js', default: './lib/client.js' },
         './loader': './lib/loader.js',
@@ -482,14 +482,14 @@ describe('package payload constraints', () => {
     { './assets/*': { types: './lib/assets/*' } },
     { './assets/extra': './lib/assets/*' },
   ])('does not publish package assets without the exact asset export target: %j', (assets) => {
-    expect(expectedDshPackageFiles({ exports: { './client': './lib/client.js', ...assets } }))
+    expect(expectedLiwaPackageFiles({ exports: { './client': './lib/client.js', ...assets } }))
       .toEqual(['lib/index.js', 'lib/client.js', 'lib/types/**/*.d.ts'])
   })
 
   it('rejects a package-asset export whose payload omits the built assets', () => {
     const dir = 'packages/client/probe'
     const manifest = {
-      name: '@deepseek-ai/dsh-client-probe',
+      name: '@liwa/client-probe',
       type: 'module',
       main: 'lib/index.js',
       types: 'lib/types/index.d.ts',
@@ -499,14 +499,14 @@ describe('package payload constraints', () => {
         './assets/*': './lib/assets/*',
       },
       files: ['lib/index.js', 'lib/client.js', 'lib/assets', 'lib/types/**/*.d.ts'],
-      peerDependencies: { '@deepseek-ai/cordis': 'workspace:~' },
-      devDependencies: { '@deepseek-ai/cordis': 'workspace:~' },
+      peerDependencies: { '@liwa/cordis': 'workspace:~' },
+      devDependencies: { '@liwa/cordis': 'workspace:~' },
     } satisfies WorkspaceManifest['manifest']
     const payloadErrors = (candidate: WorkspaceManifest['manifest']): string[] =>
       checkWorkspaceManifest({ dir, manifest: candidate }).filter(error => error.includes('package.json files must be'))
     expect(payloadErrors(manifest)).toEqual([])
     expect(payloadErrors({ ...manifest, files: manifest.files.filter(file => file !== 'lib/assets') })).toEqual([
-      expect.stringContaining('@deepseek-ai/dsh-client-probe: package.json files must be '
+      expect.stringContaining('@liwa/client-probe: package.json files must be '
         + '["lib/index.js","lib/client.js","lib/assets","lib/types/**/*.d.ts"]'),
     ])
   })
@@ -527,7 +527,7 @@ it('publishes CLI runtime declarations and rejects a payload that omits them', (
   const manifest = JSON.parse(readFileSync(new URL('../apps/cli/package.json', import.meta.url), 'utf8')) as WorkspaceManifest['manifest']
   expect(checkWorkspaceManifest({ dir: 'apps/cli', manifest })).toEqual([])
   expect(checkWorkspaceManifest({ dir: 'apps/cli', manifest: { ...manifest, files: ['lib/*.js'] } }))
-    .toEqual([expect.stringContaining('@deepseek-ai/dsh: package.json files must be ["lib/*.js","lib/types/*.d.ts"]')])
+    .toEqual([expect.stringContaining('@liwa/cli: package.json files must be ["lib/*.js","lib/types/*.d.ts"]')])
 })
 
 it('requires the shared Web injection entry in the published payload', () => {
@@ -561,7 +561,7 @@ it('requires Node profile configuration and both execution bootstraps in the pub
   const manifest = JSON.parse(readFileSync(new URL(`../${dir}/package.json`, import.meta.url), 'utf8')) as WorkspaceManifest['manifest']
   expect(checkWorkspaceManifest({ dir, manifest })).toEqual([])
   for (const omitted of ['lib/configuration.js', 'lib/process.js', 'lib/persistent-process.js']) {
-    const files = expectedDshPackageFiles(manifest).filter(file => file !== omitted)
+    const files = expectedLiwaPackageFiles(manifest).filter(file => file !== omitted)
     expect(checkWorkspaceManifest({ dir, manifest: { ...manifest, files } }))
       .toEqual([expect.stringContaining('package.json files must be')])
   }
@@ -609,7 +609,7 @@ it('requires the OAR license while rejecting unrelated payload files', () => {
     'icon.svg', 'locale/*.json', 'lib/index.js',
     'LICENSE-OAR', 'lib/types/**/*.d.ts',
   ]
-  expect(expectedDshPackageFiles(manifest)).toEqual(files)
+  expect(expectedLiwaPackageFiles(manifest)).toEqual(files)
   expect(checkWorkspaceManifest({ dir, manifest })).toEqual([])
   for (const invalidFiles of [
     files.filter(file => file !== 'LICENSE-OAR'),

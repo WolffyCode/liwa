@@ -108,7 +108,7 @@ const homeAndGuide = pairedPages([
   {
     source: 'docs/user/index.md',
     route: 'index.md',
-    label: { root: 'DeepSeek Harness', en: 'DeepSeek Harness' },
+    label: { root: 'Liwa', en: 'Liwa' },
     sidebar: { root: null, en: null },
     section: { root: '首页', en: 'Home' },
     order: 0,
@@ -192,7 +192,7 @@ const develop = pairedPages([
   {
     source: 'docs/user/develop/basic/index.md',
     route: 'develop/basic/index.md',
-    label: { root: '第一个 Harness 插件', en: 'Your first Harness plugin' },
+    label: { root: '第一个灵鲸插件', en: 'Your first Liwa plugin' },
     sidebar: { root: 'zh-develop', en: 'en-develop' },
     section: { root: '基础', en: 'Basics' },
     order: 1,
@@ -267,7 +267,7 @@ const develop = pairedPages([
   {
     source: 'docs/user/develop/practice/dynamic-cordis.md',
     route: 'develop/practice/dynamic-cordis.md',
-    label: { root: '持久化 Harness 插件', en: 'Persistent Harness plugins' },
+    label: { root: '持久化灵鲸插件', en: 'Persistent Liwa plugins' },
     sidebar: { root: 'zh-develop', en: 'en-develop' },
     section: { root: '实战', en: 'Practice' },
     order: 3,
@@ -282,7 +282,7 @@ const cordisTutorial = pairedPages(([
   ['04-events.md', '4. 事件', '4. Events'],
   ['05-config.md', '5. 配置', '5. Configuration'],
   ['06-composition-and-hmr.md', '6. 组合与热重载', '6. Composition and HMR'],
-  ['07-into-the-harness.md', '7. 进入 Harness', '7. Into the harness'],
+  ['07-into-liwa.md', '7. 进入灵鲸', '7. Into the harness'],
 ] as const).map(([file, rootLabel, enLabel], order): PairedPage => ({
   source: `docs/cordis-tutorial/${file}`,
   route: `develop/cordis-tutorial/${file}`,

@@ -1,24 +1,24 @@
 /**
- * The three adapters between pi-ai's auth model and the harness credential
- * plane. Every pi-ai-specific concept stays on this side of them: the harness
+ * The three adapters between pi-ai's auth model and the Liwa credential
+ * plane. Every pi-ai-specific concept stays on this side of them: Liwa
  * seams they consume — `ctx.credentials` records and `ctx.authorization` flows —
  * name nothing from this library, so another adapter family can arrive with a
  * different auth model and share the same two seams.
  *
- * @module dsh-llm-pi-ai/auth
+ * @module liwa-llm-pi-ai/auth
  */
 
 import { homedir } from 'node:os'
 import { access } from 'node:fs/promises'
 import { resolve as resolvePath } from 'node:path'
 import type { AuthContext, Credential, CredentialInfo, CredentialStore } from '@earendil-works/pi-ai'
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@liwa/cordis'
 import {
   credentialKey, credentialKeyId, credentialKeyScope, credentialRef, isCredentialKeySegment, isCredentialRefName,
-} from '@deepseek-ai/dsh-credentials'
-import type { CredentialKey, CredentialProvider, CredentialRecord } from '@deepseek-ai/dsh-credentials'
-import { launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment'
-import { LlmError } from '@deepseek-ai/dsh-llm'
+} from '@liwa/credentials'
+import type { CredentialKey, CredentialProvider, CredentialRecord } from '@liwa/credentials'
+import { launchEnvironmentOf } from '@liwa/launch-environment'
+import { LlmError } from '@liwa/llm'
 
 /**
  * The record scope every credential this adapter family stores is written
@@ -30,7 +30,7 @@ export const RECORD_SCOPE = 'llm-pi-ai'
 
 /**
  * The record address for one pi-ai provider id.
- * @param providerId - pi-ai's own provider id, which is also the harness route key.
+ * @param providerId - pi-ai's own provider id, which is also Liwa route key.
  * @returns the scoped credential key this adapter family reads and writes.
  */
 export function recordKeyFor(providerId: string): CredentialKey {
@@ -114,7 +114,7 @@ function writableStore(ctx: Context): CredentialProvider {
   if (credentials === undefined) {
     throw new LlmError(
       'llm-pi-ai: this composition mounts no credentials service, so there is nowhere to store the'
-      + ' credential a sign-in produces; mount one (dsh-credentials-local) to sign in',
+      + ' credential a sign-in produces; mount one (liwa-credentials-local) to sign in',
       'NO_CREDENTIAL_STORE',
     )
   }
@@ -122,7 +122,7 @@ function writableStore(ctx: Context): CredentialProvider {
 }
 
 /**
- * A pi-ai `CredentialStore` over the harness credential records.
+ * A pi-ai `CredentialStore` over the Liwa credential records.
  *
  * pi-ai runs OAuth refresh *inside* `modify()`, so this store's exclusion has
  * to cover a network round trip rather than a file rename — which is why the
@@ -186,11 +186,11 @@ export function credentialStoreFrom(ctx: Context): CredentialStore {
 }
 
 /**
- * A pi-ai `AuthContext` over the harness credential plane and the host
+ * A pi-ai `AuthContext` over the Liwa credential plane and the host
  * filesystem.
  *
  * `env()` answers from the credential seam first, so a value a deployment
- * stored through the harness is found by a provider's own ambient discovery —
+ * stored through Liwa is found by a provider's own ambient discovery —
  * without this, that discovery reads only the process environment and a stored
  * `AWS_ACCESS_KEY_ID` is invisible to it. `fileExists()` answers about the host
  * process's own filesystem rather than the workspace `ctx.fs` seam, because the

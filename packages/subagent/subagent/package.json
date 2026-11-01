@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-subagent",
+  "name": "@liwa/subagent",
   "description": "Abstract subagent seam (ctx.subagents): named-provider registry for delegating to child agents",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/subagent/subagent"
   },
   "type": "module",
@@ -50,88 +50,88 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-brand": "workspace:*",
-    "@deepseek-ai/dsh-chunked-list": "workspace:*",
-    "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/brand": "workspace:*",
+    "@liwa/chunked-list": "workspace:*",
+    "@liwa/util-values": "workspace:*",
+    "@liwa/schemastery": "workspace:~",
     "zod": "4.4.3"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-agent-preset-registry": "workspace:*",
-    "@deepseek-ai/dsh-attachment": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/dsh-scope": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-persistence": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-session-query": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:*",
-    "@deepseek-ai/dsh-user-approval": "workspace:*",
-    "@deepseek-ai/dsh-util-time": "workspace:*",
-    "@deepseek-ai/dsh-permission-presets": "workspace:*",
-    "@deepseek-ai/dsh-workspace": "workspace:*",
-    "@deepseek-ai/dsh-working-directory": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-preset-registry": "workspace:*",
+    "@liwa/attachment": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/sandbox": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/scope": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-persistence": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/session-query": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/typert-protocol": "workspace:*",
+    "@liwa/user-approval": "workspace:*",
+    "@liwa/util-time": "workspace:*",
+    "@liwa/permission-presets": "workspace:*",
+    "@liwa/workspace": "workspace:*",
+    "@liwa/working-directory": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-agent-preset-registry": {
+    "@liwa/agent-preset-registry": {
       "optional": true
     },
-    "@deepseek-ai/dsh-permission-presets": {
+    "@liwa/permission-presets": {
       "optional": true
     },
-    "@deepseek-ai/dsh-sandbox": {
+    "@liwa/sandbox": {
       "optional": true
     },
-    "@deepseek-ai/dsh-sandbox-policy": {
+    "@liwa/sandbox-policy": {
       "optional": true
     },
-    "@deepseek-ai/dsh-session-persistence": {
+    "@liwa/session-persistence": {
       "optional": true
     },
-    "@deepseek-ai/dsh-session-query": {
+    "@liwa/session-query": {
       "optional": true
     },
-    "@deepseek-ai/dsh-workspace": {
+    "@liwa/workspace": {
       "optional": true
     },
-    "@deepseek-ai/dsh-user-approval": {
+    "@liwa/user-approval": {
       "optional": true
     }
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-agent-preset-registry": "workspace:*",
-    "@deepseek-ai/dsh-attachment": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/dsh-scope": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-persistence": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-session-query": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-tool-testkit": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:*",
-    "@deepseek-ai/dsh-user-approval": "workspace:*",
-    "@deepseek-ai/dsh-util-time": "workspace:*",
-    "@deepseek-ai/dsh-permission-presets": "workspace:*",
-    "@deepseek-ai/dsh-workspace": "workspace:*",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-agent-loop": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:*",
-    "@deepseek-ai/dsh-fs-sandbox": "workspace:*",
-    "@deepseek-ai/dsh-tool-fs": "workspace:*",
-    "@deepseek-ai/dsh-session-persistence-jsonl": "workspace:*",
-    "@deepseek-ai/dsh-working-directory": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-preset-registry": "workspace:*",
+    "@liwa/attachment": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/sandbox": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/scope": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-persistence": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/session-query": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/tool-testkit": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/typert-protocol": "workspace:*",
+    "@liwa/user-approval": "workspace:*",
+    "@liwa/util-time": "workspace:*",
+    "@liwa/permission-presets": "workspace:*",
+    "@liwa/workspace": "workspace:*",
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/agent-loop": "workspace:*",
+    "@liwa/agent-loop-testkit": "workspace:*",
+    "@liwa/fs-sandbox": "workspace:*",
+    "@liwa/tool-fs": "workspace:*",
+    "@liwa/session-persistence-jsonl": "workspace:*",
+    "@liwa/working-directory": "workspace:*"
   }
 }

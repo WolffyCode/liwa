@@ -5,7 +5,7 @@
  */
 import { types } from '../util.ts'
 
-/** The `node:util/types` predicates the harness reads, shared with the util shim. */
+/** The `node:util/types` predicates Liwa reads, shared with the util shim. */
 export const { isPromise, isDate, isRegExp, isTypedArray } = types
 
 /** CommonJS interop marker: the worker loader hands `default` to default imports (see ./builtins.ts). */

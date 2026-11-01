@@ -4,16 +4,16 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import type { SandboxPolicy } from '@deepseek-ai/dsh-sandbox'
-import { LocalSandboxProvider } from '@deepseek-ai/dsh-sandbox-local'
+import { Context } from '@liwa/cordis'
+import type { SandboxPolicy } from '@liwa/sandbox'
+import { LocalSandboxProvider } from '@liwa/sandbox-local'
 import { seatbeltProfileArgs } from '../src/profiles.ts'
 import { checkExtraWrites, checkRedirectedRoot } from './extra-roots.ts'
 
 /**
  * Keyless backend integration through `confine()` and a real macOS Seatbelt process, with Linux
  * rungs forced off. Tests assert world effects and that the kernel denial matches the advertised
- * dialect; consumer coverage lives in dsh-bash-sandbox. Skips off macOS or when the profile probe
+ * dialect; consumer coverage lives in liwa-bash-sandbox. Skips off macOS or when the profile probe
  * fails. HOME-based workspaces avoid Seatbelt's wholesale temp-directory grants, so
  * workspace-write proves the workspace-root grant itself.
  */
@@ -37,7 +37,7 @@ afterEach(async () => {
 })
 
 async function tempDir(base: string): Promise<string> {
-  const dir = await mkdtemp(join(base, 'dsh-seatbelt-e2e-'))
+  const dir = await mkdtemp(join(base, 'liwa-seatbelt-e2e-'))
   tempDirs.push(dir)
   return dir
 }
@@ -134,10 +134,10 @@ describe.skipIf(!seatbeltUsable)('sandbox-local: real Seatbelt confinement throu
       : join(await tempDir(homedir()), 'linked')
     const gitEnv = {
       ...process.env,
-      GIT_AUTHOR_NAME: 'DSH Test',
-      GIT_AUTHOR_EMAIL: 'dsh-test@example.invalid',
-      GIT_COMMITTER_NAME: 'DSH Test',
-      GIT_COMMITTER_EMAIL: 'dsh-test@example.invalid',
+      GIT_AUTHOR_NAME: 'Liwa Test',
+      GIT_AUTHOR_EMAIL: 'liwa-test@example.invalid',
+      GIT_COMMITTER_NAME: 'Liwa Test',
+      GIT_COMMITTER_EMAIL: 'liwa-test@example.invalid',
       GIT_CONFIG_GLOBAL: '/dev/null',
       GIT_CONFIG_SYSTEM: '/dev/null',
     }

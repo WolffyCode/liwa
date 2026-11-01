@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-acp",
-  "description": "Automation-only Agent Client Protocol server for driving DeepSeek Harness agents over JSON-RPC stdio",
+  "name": "@liwa/acp",
+  "description": "Automation-only Agent Client Protocol server for driving Liwa agents over JSON-RPC stdio",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/acp/acp"
   },
   "type": "module",
@@ -30,41 +30,41 @@
   "license": "MIT",
   "dependencies": {
     "@agentclientprotocol/sdk": "1.4.0",
-    "@deepseek-ai/dsh-brand": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/brand": "workspace:*",
+    "@liwa/schemastery": "workspace:~"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-attachment": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-mcp-client": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-persistence": "workspace:*",
-    "@deepseek-ai/dsh-token-meter": "workspace:*",
-    "@deepseek-ai/dsh-user-approval": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/attachment": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/mcp-client": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-persistence": "workspace:*",
+    "@liwa/token-meter": "workspace:*",
+    "@liwa/user-approval": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-token-meter": {
+    "@liwa/token-meter": {
       "optional": true
     }
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:*",
-    "@deepseek-ai/dsh-attachment": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-mcp-client": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-persistence": "workspace:*",
-    "@deepseek-ai/dsh-session-persistence-jsonl": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-subagent": "workspace:*",
-    "@deepseek-ai/dsh-token-meter": "workspace:*",
-    "@deepseek-ai/dsh-tool-testkit": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-user-approval": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-loop": "workspace:*",
+    "@liwa/agent-loop-testkit": "workspace:*",
+    "@liwa/attachment": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/mcp-client": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-persistence": "workspace:*",
+    "@liwa/session-persistence-jsonl": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/subagent": "workspace:*",
+    "@liwa/token-meter": "workspace:*",
+    "@liwa/tool-testkit": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/user-approval": "workspace:*"
   }
 }

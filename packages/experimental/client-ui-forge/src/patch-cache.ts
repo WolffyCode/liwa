@@ -4,7 +4,7 @@
  */
 
 import { Buffer } from 'node:buffer'
-import type { ChangeRequestKey } from '@deepseek-ai/dsh-experimental-forge'
+import type { ChangeRequestKey } from '@liwa/experimental-forge'
 
 interface Entry {
   /** Head commit and base branch the patch was read at. */

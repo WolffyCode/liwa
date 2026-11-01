@@ -1,12 +1,12 @@
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { describe, expect, it } from 'vitest'
-import type { IndexInjection, WebServer } from '@deepseek-ai/dsh-host-webserver'
+import type { IndexInjection, WebServer } from '@liwa/host-webserver'
 import * as HostPlugin from '../src/index.ts'
 import { liveConfig, omitsGeneratedPage } from '../../../settings/settings/tests/live-config.ts'
 import { plainConfig } from '../../../settings/settings/src/schema.ts'
 import {
   DEFAULT_PREFERENCE, Config, apply,
-} from '@deepseek-ai/dsh-client-ui-theme'
+} from '@liwa/client-ui-theme'
 
 /** The Peer an index render speaks for; this listener reads no field of it. */
 const PAGE_PEER = { principal: { kind: 'owner' } } as Parameters<WebServer['renderIndex']>[1]
@@ -58,10 +58,10 @@ describe('ui-theme host', () => {
     expect(rowText(rows[0])).toContain('@media(prefers-color-scheme:dark)')
     expect(rowText(rows[1])).toContain('const preference = "system"')
     expect(rowText(rows[1])).toContain('"14px"')
-    expect(rowText(rows[1])).not.toContain('--dsh-font-family')
+    expect(rowText(rows[1])).not.toContain('--liwa-font-family')
     await configuration.update({ preference: 'dark', fontSize: 22, terminalFontSize: 18, terminalFontFamily: 'MesloLGS NF' })
-    expect(rowText(collect(ctx)[1])).toContain('"--dsh-terminal-font-size", "18px"')
-    expect(rowText(collect(ctx)[1])).toContain('"--dsh-font-family-terminal", "\\"MesloLGS NF\\""')
+    expect(rowText(collect(ctx)[1])).toContain('"--liwa-terminal-font-size", "18px"')
+    expect(rowText(collect(ctx)[1])).toContain('"--liwa-font-family-terminal", "\\"MesloLGS NF\\""')
     expect(rowText(collect(ctx)[0])).toContain('color-scheme:dark')
     expect(rowText(collect(ctx)[1])).toContain('const preference = "dark"')
     expect(rowText(collect(ctx)[1])).toContain('"22px"')

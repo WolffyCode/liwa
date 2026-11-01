@@ -1,6 +1,6 @@
 /** The `shell.overlay` entry that renders the account feature's shared native Platform page. */
-import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
-import type { HostObservable, InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
+import type {} from '@liwa/client-ui-layout/client'
+import type { HostObservable, InjectFace, PropsLocale, PropsRuntime } from '@liwa/client-ui-slots'
 import type { PlatformPageClaim } from './platform-pages.ts'
 import { PlatformOverlay, type PlatformBridge } from './PlatformOverlay.tsx'
 
@@ -27,7 +27,7 @@ export type AccountPlatformHostProps =
 export function AccountPlatformHost({ platform, usePage, closePage, t }: AccountPlatformHostProps) {
   const claim = usePage(current => current)
   if (claim === null) return null
-  return <PlatformOverlay bridge={platform} page={claim.page} backLabel={t('backToHarness')}
+  return <PlatformOverlay bridge={platform} page={claim.page} backLabel={t('backToLiwa')}
     loadingLabel={t('loading')} failureLabel={t('platformFailed')} retryLabel={t('platformRetry')}
     onClose={closePage} />
 }

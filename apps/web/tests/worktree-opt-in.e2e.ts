@@ -5,14 +5,14 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
-import { FiberState } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-experimental-worktree'
+import { FiberState } from '@liwa/cordis'
+import type {} from '@liwa/experimental-worktree'
 import { chromium } from 'playwright'
 import { expect, it, onTestFailed, onTestFinished } from 'vitest'
 import { launchWebScaffold, watchConsole } from './scaffold.ts'
 import { connectFreshWorkspace, newEnglishPage, PLUGIN_TOGGLE_SETTLE_MS, saveFailureShot } from './support.ts'
 
-const BUNDLE = '@deepseek-ai/dsh-experimental-tool-worktree'
+const BUNDLE = '@liwa/experimental-tool-worktree'
 const exec = promisify(execFile)
 
 it('persists the Git Worktrees switch and removes its capability while retaining checkouts', async () => {
@@ -56,10 +56,10 @@ it('persists the Git Worktrees switch and removes its capability while retaining
   const rows = () => [...scaffold.ctx.loader.entries()]
     .filter(entry => ['worktree', 'tool-worktree'].includes(entry.options.id) && entry.fiber?.state === FiberState.ACTIVE)
   const selectedBundles = async (): Promise<string[]> => {
-    const manifest = JSON.parse(await readFile(join(scaffold.harnessHome, 'profiles/scaffold/package.json'), 'utf8')) as {
-      dsh: { profile: { bundles: string[] } }
+    const manifest = JSON.parse(await readFile(join(scaffold.liwaHome, 'profiles/scaffold/package.json'), 'utf8')) as {
+      liwa: { profile: { bundles: string[] } }
     }
-    return manifest.dsh.profile.bundles
+    return manifest.liwa.profile.bundles
   }
   const openPlugins = async () => {
     await page.getByRole('navigation', { name: 'Global panels' }).getByRole('button', { name: 'Plugins', exact: true }).click()

@@ -12,10 +12,10 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterAll, describe, expect, it, vi } from 'vitest'
-import { parseEntryYaml } from '@deepseek-ai/cordis-plugin-include'
+import { parseEntryYaml } from '@liwa/cordis-plugin-include'
 import { loadOverlayPatches, renderConfigDump } from '../src/index.ts'
 
-const NAME = 'dsh-test-bin'
+const NAME = 'liwa-test-bin'
 
 const tempRoots: string[] = []
 afterAll(() => {
@@ -23,7 +23,7 @@ afterAll(() => {
 })
 
 const tmp = (): string => {
-  const dir = mkdtempSync(join(tmpdir(), 'dsh-config-dump-'))
+  const dir = mkdtempSync(join(tmpdir(), 'liwa-config-dump-'))
   tempRoots.push(dir)
   return dir
 }
@@ -35,7 +35,7 @@ function writeBase(dir: string): string {
     '  name: ./noop.mjs',
     '  config:',
     '    value: base',
-    '    key: !!js process.env.DSH_DUMP_SPEC',
+    '    key: !!js process.env.LIWA_DUMP_SPEC',
     '- id: untouched',
     '  name: ./noop.mjs',
     '',
@@ -52,7 +52,7 @@ describe('renderConfigDump', () => {
       '- id: shared',
       '  config:',
       '    value: surface',
-      '    key: !!js process.env.DSH_DUMP_SPEC',
+      '    key: !!js process.env.LIWA_DUMP_SPEC',
       '- insert:',
       '    - id: surface-extra',
       '      name: ./noop.mjs',
@@ -80,7 +80,7 @@ describe('renderConfigDump', () => {
       {
         id: 'shared',
         name: './noop.mjs',
-        config: { value: 'surface', key: { __jsExpr: 'process.env.DSH_DUMP_SPEC' } },
+        config: { value: 'surface', key: { __jsExpr: 'process.env.LIWA_DUMP_SPEC' } },
       },
       { id: 'untouched', name: './noop.mjs' },
       {
@@ -90,7 +90,7 @@ describe('renderConfigDump', () => {
       },
     ])
     // Unevaluated: the expression text round-trips as a !!js scalar.
-    expect(dump).toContain('!!js process.env.DSH_DUMP_SPEC')
+    expect(dump).toContain('!!js process.env.LIWA_DUMP_SPEC')
     // Source separators: origin file, plus every layer that changed the
     // row; an inserted row carries the inserting layer as its origin.
     expect(dump).toContain('# == base.yml, patched by surface.yml')

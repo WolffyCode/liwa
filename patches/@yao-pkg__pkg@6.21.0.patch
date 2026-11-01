@@ -7,7 +7,7 @@ index a0cb0de8491d4eff37aba7eaaeeec5934f5a9985..f6bb9a35ce2c1978fb08a3400a36a86c
              return zlib.gzipSync;
          case compress_type_1.CompressType.Brotli:
 -            return zlib.brotliCompressSync;
-+            // DSH patch: pkg calls brotliCompressSync without options, so every
++            // Liwa patch: pkg calls brotliCompressSync without options, so every
 +            // archive is compressed at Brotli's default quality 11 -- the
 +            // slowest setting. Quality 6 keeps the archive within 12% of that
 +            // size at a fortieth of the build time.

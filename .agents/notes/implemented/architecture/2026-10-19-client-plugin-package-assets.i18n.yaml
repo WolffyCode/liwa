@@ -3,11 +3,11 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-10-19-client-plugin-package-assets.md
 /agent-note-client-plugin-package-assets-served-by-url:
-  en: 5505b948511a2d52
-  zh: dae985d67e5c5935
+  en: 7d3a3ab9dc906fce
+  zh: 47051696da9198cb
 /agent-note-client-plugin-package-assets-served-by-url/problem:
-  en: 159de908b09780eb
-  zh: 8d15ca2f15b8846a
+  en: cefadbc9f90c31f3
+  zh: ab8287c00c52312b
 /agent-note-client-plugin-package-assets-served-by-url/decision:
   en: 8ffcd355ec5e8271
   zh: 2932530bf783e3f7

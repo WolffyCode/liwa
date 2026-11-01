@@ -1,32 +1,32 @@
 /**
- * TypeScript client SDK for the DeepSeek Harness runtime: spawn the
- * same-version `dsh --profile sdk` runtime as a subprocess and drive agent
- * turns over stdio JSON-RPC. `DeepSeekHarness` is the high-level run API;
- * `HarnessClient` is the lower-level protocol client. A pure library — it
+ * TypeScript client SDK for the Liwa runtime: spawn the
+ * same-version `liwa --profile sdk` runtime as a subprocess and drive agent
+ * turns over stdio JSON-RPC. `Liwa` is the high-level run API;
+ * `LiwaClient` is the lower-level protocol client. A pure library — it
  * registers nothing on a Cordis context; named profiles and ordered patch
  * files customize the runtime process it spawns.
  *
- * @module @deepseek-ai/dsh-sdk-client
+ * @module @liwa/sdk-client
  */
 
-export { DeepSeekHarness, HarnessSession, validatedSessionEvent } from './api.ts'
+export { Liwa, LiwaSession, validatedSessionEvent } from './api.ts'
 export type { RunOptions } from './api.ts'
 export {
-  HarnessClient,
+  LiwaClient,
   RequestTimeoutError,
   SdkProtocolError,
   TransportClosedError,
 } from './client.ts'
 export type { NotificationSubscription } from './client.ts'
-export { JsonRpcResponseError } from '@deepseek-ai/dsh-sdk-protocol'
+export { JsonRpcResponseError } from '@liwa/sdk-protocol'
 export type {
   ContentBlock,
   SdkPromptContentBlock,
   SdkUserQuestionAnswer,
   SdkUserQuestionRequest,
-  DeepSeekHarnessOptions,
-  HarnessClientOptions,
-  HarnessNotification,
+  LiwaOptions,
+  LiwaClientOptions,
+  LiwaNotification,
   NotificationFilter,
   RunResult,
 } from './types.ts'

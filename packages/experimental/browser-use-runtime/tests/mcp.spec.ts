@@ -1,31 +1,31 @@
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
-import * as PtcToolExecutor from '@deepseek-ai/dsh-tool-executor-ptc'
+import { executeToolFixture } from '@liwa/tool-testkit'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
+import * as PtcToolExecutor from '@liwa/tool-executor-ptc'
 import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import Include from '@deepseek-ai/cordis-plugin-include'
-import BrowserUse from '@deepseek-ai/dsh-browser-use'
-import SystemPrompt, { renderPrompt } from '@deepseek-ai/dsh-system-prompt'
-import Tools from '@deepseek-ai/dsh-tools'
-import McpResources from '@deepseek-ai/dsh-mcp-resources'
-import { PtcRuntime } from '@deepseek-ai/dsh-ptc-runtime'
-import Llm, { LlmAdapter, ToolCallId, createUserMessage } from '@deepseek-ai/dsh-llm'
-import type { GenerateOptions, LlmResolvedModelInfo, StreamChunk } from '@deepseek-ai/dsh-llm'
-import Sessions, { SessionId } from '@deepseek-ai/dsh-session'
-import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import Agents from '@deepseek-ai/dsh-agent'
-import type { Agent, AgentHandle } from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { provideWorkingDirectoryFixture } from '@deepseek-ai/dsh-agent-loop-testkit'
-import LocalFileSystem from '@deepseek-ai/dsh-fs-local'
-import Projections from '@deepseek-ai/dsh-session-projection'
-import WorkingDirectory from '@deepseek-ai/dsh-working-directory'
-import { bindScopeParent } from '@deepseek-ai/dsh-scope'
+import { Context } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
+import Include from '@liwa/cordis-plugin-include'
+import BrowserUse from '@liwa/browser-use'
+import SystemPrompt, { renderPrompt } from '@liwa/system-prompt'
+import Tools from '@liwa/tools'
+import McpResources from '@liwa/mcp-resources'
+import { PtcRuntime } from '@liwa/ptc-runtime'
+import Llm, { LlmAdapter, ToolCallId, createUserMessage } from '@liwa/llm'
+import type { GenerateOptions, LlmResolvedModelInfo, StreamChunk } from '@liwa/llm'
+import Sessions, { SessionId } from '@liwa/session'
+import * as JsonlSessionPersistence from '@liwa/session-persistence-jsonl'
+import Agents from '@liwa/agent'
+import type { Agent, AgentHandle } from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import { provideWorkingDirectoryFixture } from '@liwa/agent-loop-testkit'
+import LocalFileSystem from '@liwa/fs-local'
+import Projections from '@liwa/session-projection'
+import WorkingDirectory from '@liwa/working-directory'
+import { bindScopeParent } from '@liwa/scope'
 import { BrowserMcpConfig, mountSessionMcp, validateBrowserMcpConfig } from '../src/mcp.ts'
 
 const fixture = fileURLToPath(new URL('./mcp-fixture.mjs', import.meta.url))
@@ -81,7 +81,7 @@ class PresentationRuntime extends PtcRuntime {
 }
 
 async function load(exclusive = false, mode?: string, toolCallTimeoutMs?: number, toolOrder?: string[]) {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-browser-mcp-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-browser-mcp-'))
   roots.push(root)
   const model = new FixtureModel()
   const modules = new Map<string, unknown>([

@@ -52,7 +52,7 @@ def _host_platform_tag() -> str:
     try:
         return _PLATFORMS[key][0]
     except KeyError as exc:
-        raise RuntimeError(f"unsupported deepseek-harness-runtime-bin build platform: {key}") from exc
+        raise RuntimeError(f"unsupported liwa-runtime-bin build platform: {key}") from exc
 
 
 class RuntimeBuildHook(BuildHookInterface):
@@ -63,19 +63,19 @@ class RuntimeBuildHook(BuildHookInterface):
             return
         if self.target_name == "sdist":
             raise RuntimeError(
-                "deepseek-harness-runtime-bin is wheel-only; build and publish platform wheels only."
+                "liwa-runtime-bin is wheel-only; build and publish platform wheels only."
             )
 
-        platform_tag = os.environ.get("DSH_RUNTIME_PLATFORM_TAG") or _host_platform_tag()
+        platform_tag = os.environ.get("LIWA_RUNTIME_PLATFORM_TAG") or _host_platform_tag()
         matches = [value for value in _PLATFORMS.values() if value[0] == platform_tag]
         if len(matches) != 1:
             supported = ", ".join(value[0] for value in _PLATFORMS.values())
             raise RuntimeError(
-                f"unsupported DSH_RUNTIME_PLATFORM_TAG {platform_tag!r}; expected one of {supported}"
+                f"unsupported LIWA_RUNTIME_PLATFORM_TAG {platform_tag!r}; expected one of {supported}"
             )
         expected_executable = matches[0][1]
         target = next(name for name, value in _PLATFORMS.items() if value[0] == platform_tag)
-        runtime_dir = Path(self.root) / "src" / "deepseek_harness_runtime" / "runtime"
+        runtime_dir = Path(self.root) / "src" / "liwa_runtime" / "runtime"
         runtime_files = sorted(
             (path for path in runtime_dir.iterdir() if path.name != "node") if runtime_dir.is_dir() else []
         )

@@ -3,29 +3,29 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-07-16-persistent-pty-sessions.md
 /agent-note-persistent-pty-sessions:
-  en: c7796dc579fe7fb3
-  zh: 2126be0b08124ca5
+  en: ea89005a228f234e
+  zh: 7df1c3172505b12f
 /agent-note-persistent-pty-sessions/problem:
-  en: cd408e9b6e9705e8
-  zh: 7811f9216b6961fa
+  en: 71c2845a88ceeec1
+  zh: 7ebffbe895575a38
 /agent-note-persistent-pty-sessions/decision:
-  en: 5656c117648160c8
-  zh: 7f7c3de8e2ea6d9a
+  en: 6f5e7078777e09e9
+  zh: 859f13952f302416
 /agent-note-persistent-pty-sessions/decision/package-topology:
   en: 0187ac573d06a360
   zh: 13e08f4f22bacfff
 /agent-note-persistent-pty-sessions/decision/agent-ownership-and-identity:
-  en: c2a38b8c0403e1e4
-  zh: 6063cf5e41a6582e
+  en: 6fa6584d2c429024
+  zh: ea97fcce2354609d
 /agent-note-persistent-pty-sessions/decision/security-and-process-boundary:
-  en: 882bbfd3f0dc6e09
-  zh: a547d6ff5e6ef7a1
+  en: a0219a73734224ac
+  zh: 104d1ff65c9c80c4
 /agent-note-persistent-pty-sessions/decision/six-model-facing-tools:
   en: b92715f36550c728
   zh: e18d7e0e2363347a
 /agent-note-persistent-pty-sessions/decision/local-readiness-detection:
-  en: 8f36f06869bd5367
-  zh: f3560477a8965cbe
+  en: 457e80648fcf4059
+  zh: 6fe52498cbfc8b08
 /agent-note-persistent-pty-sessions/decision/model-visible-output-and-durability:
   en: 1b504ab41b47216d
   zh: 8fb3d360b3a4e6a1

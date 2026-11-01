@@ -3,13 +3,13 @@ description: "面向部署方与维护者的 MCP 客户端桥接说明，用于�
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-mcp-client
+# @liwa/mcp-client
 
 [English](README.md) | 中文
 
 ## 概述
 
-`dsh-mcp-client` 让模型使用外部 MCP（Model Context Protocol）服务器的工具与资源。每台服务器配置一条记录；其工具使用 `mcp__github__create_issue` 这样的名称。默认不启用任何服务器。随附 profile 已提供[共享资源发现与读取](../mcp-resources/README.zh.md)。调用方作用域为空时，不添加 MCP 工具或提示词文本。服务器指令作为字面文本加入已记录的系统提示词；MCP 提示词模板不受支持。缓慢或崩溃的服务器可能延迟启动，或让调用失败直至恢复。
+`liwa-mcp-client` 让模型使用外部 MCP（Model Context Protocol）服务器的工具与资源。每台服务器配置一条记录；其工具使用 `mcp__github__create_issue` 这样的名称。默认不启用任何服务器。随附 profile 已提供[共享资源发现与读取](../mcp-resources/README.zh.md)。调用方作用域为空时，不添加 MCP 工具或提示词文本。服务器指令作为字面文本加入已记录的系统提示词；MCP 提示词模板不受支持。缓慢或崩溃的服务器可能延迟启动，或让调用失败直至恢复。
 
 ## 目录
 
@@ -25,15 +25,15 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-当模型需要像调用原生工具一样调用外部 MCP 服务器时，添加 `dsh-mcp-client`。为每台服务器指定唯一名称和传输方式。官方 SDK 优先选择可用的 2026-07-28 协议，并回退到支持的旧版协议。本地程序使用 stdio，远端服务使用 Streamable HTTP；stdio 协商会先启动临时探测进程，再启动实际服务进程。
+当模型需要像调用原生工具一样调用外部 MCP 服务器时，添加 `liwa-mcp-client`。为每台服务器指定唯一名称和传输方式。官方 SDK 优先选择可用的 2026-07-28 协议，并回退到支持的旧版协议。本地程序使用 stdio，远端服务使用 Streamable HTTP；stdio 协商会先启动临时探测进程，再启动实际服务进程。
 
 ### 最小配置
 
-每台服务器添加一条配置项即可，无需其他内容。harness 启动后，服务器的工具会出现在模型的工具列表中。
+每台服务器添加一条配置项即可，无需其他内容。灵鲸启动后，服务器的工具会出现在模型的工具列表中。
 
 ```yaml
 - id: mcp-github
-  name: '@deepseek-ai/dsh-mcp-client'
+  name: '@liwa/mcp-client'
   config:
     serverName: github
     transport: stdio
@@ -43,7 +43,7 @@ kind: "package-reference"
       GITHUB_TOKEN: !!js process.env.GITHUB_TOKEN
 
 - id: mcp-web
-  name: '@deepseek-ai/dsh-mcp-client'
+  name: '@liwa/mcp-client'
   config:
     serverName: web
     transport: streamable-http
@@ -66,9 +66,9 @@ kind: "package-reference"
 | `reconnect.maxDelayMs` | `30,000` | 退避上限；同时是重置尝试预算所需的正常运行时长 |
 | `reconnect.maxAttempts` | `10` | 每次中断内连续失败尝试次数上限，超出后放弃 |
 
-生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-mcp-client)是每个受支持字段的穷尽式真源。
+生成的[配置目录](../../../docs/config-catalog.zh.md#liwamcp-client)是每个受支持字段的穷尽式真源。
 
-启动后，服务器的工具会以 `mcp__<serverName>__<tool>` 形式出现——试着用一条提示词调用其中一个。如果初始连接失败，harness 仍会启动，但该服务器的工具不会出现，并会记录一条错误。设置 `failOnStartupError: true` 会拒绝插件激活；[app-boot 的启动策略](../../boot/app-boot/README.zh.md)仍允许可选 MCP 配置项失败，而不中止 harness。
+启动后，服务器的工具会以 `mcp__<serverName>__<tool>` 形式出现——试着用一条提示词调用其中一个。如果初始连接失败，灵鲸仍会启动，但该服务器的工具不会出现，并会记录一条错误。设置 `failOnStartupError: true` 会拒绝插件激活；[app-boot 的启动策略](../../boot/app-boot/README.zh.md)仍允许可选 MCP 配置项失败，而不中止灵鲸。
 
 ### 工具命名与共存
 
@@ -84,13 +84,13 @@ kind: "package-reference"
 
 模型调用 MCP 工具时，调用会以每次调用超时（默认 60 秒）发往远程服务器，并像其他工具调用一样可以取消。结果按块顺序以普通文本返回；资源链接以文本形式显示名称与 URI。如果服务器报告错误，调用会明确失败——模型不会看到虚假的成功。
 
-当前模型接受图片输入且 harness 启用了附件功能时支持图片；图片会像其他图片一样出现在对话中。不支持图片时——以及服务器返回音频或嵌入资源时——模型会看到清晰的诊断消息，而不是什么都没有。
+当前模型接受图片输入且灵鲸启用了附件功能时支持图片；图片会像其他图片一样出现在对话中。不支持图片时——以及服务器返回音频或嵌入资源时——模型会看到清晰的诊断消息，而不是什么都没有。
 
 ### 启动、工具更新与重连
 
-服务器的工具会在 harness 开始首个轮次之前出现。服务器更改工具列表时，模型的工具集会自动更新；更新失败时，上一组工具继续可用。
+服务器的工具会在灵鲸开始首个轮次之前出现。服务器更改工具列表时，模型的工具集会自动更新；更新失败时，上一组工具继续可用。
 
-服务器连接断开时——例如本地服务器进程崩溃——插件会以从 500 ms 起逐次翻倍、上限 30 s 的延迟自动重连，并刷新工具集；重连进度在日志中可见。中断期间最后已知的工具仍会列出，但对它们的调用会失败，直到服务器恢复。连续失败十次后，该服务器的工具会被移除，重连停止，直到你重载配置或重启 harness；服务器持续连接一段时间后，该计数会重置。设置 `reconnect.enabled: false` 可禁用自动重连——此时工具在断开后仍会列出，但调用失败，直到你重载。编辑配置项会在原地重载服务器连接，未变的名称保持不变。
+服务器连接断开时——例如本地服务器进程崩溃——插件会以从 500 ms 起逐次翻倍、上限 30 s 的延迟自动重连，并刷新工具集；重连进度在日志中可见。中断期间最后已知的工具仍会列出，但对它们的调用会失败，直到服务器恢复。连续失败十次后，该服务器的工具会被移除，重连停止，直到你重载配置或重启灵鲸；服务器持续连接一段时间后，该计数会重置。设置 `reconnect.enabled: false` 可禁用自动重连——此时工具在断开后仍会列出，但调用失败，直到你重载。编辑配置项会在原地重载服务器连接，未变的名称保持不变。
 
 -----
 
@@ -134,7 +134,7 @@ SDK 通过旧版通知或现代协议订阅接收工具列表变化。监督器�
 
 ### 环境清洗（stdio）
 
-子进程环境以子进程 seam 的 `scrubbedParentEnv()` 为基座——删除匹配 `/KEY|PASSWORD|SECRET|TOKEN/i` 的环境名称与所有 `DSH_*` 名称——再在其上合并配置的 `env`，因此显式覆盖得以保留。实际 spawn 由 MCP SDK 负责；本包共享清洗定义，而非 spawn 路径。
+子进程环境以子进程 seam 的 `scrubbedParentEnv()` 为基座——删除匹配 `/KEY|PASSWORD|SECRET|TOKEN/i` 的环境名称与所有 `LIWA_*` 名称——再在其上合并配置的 `env`，因此显式覆盖得以保留。实际 spawn 由 MCP SDK 负责；本包共享清洗定义，而非 spawn 路径。
 
 </details>
 
@@ -149,7 +149,7 @@ SDK 通过旧版通知或现代协议订阅接收工具列表变化。监督器�
 - [历史MCP 客户端插件 Agent Note](../../../.agents/notes/archived/feature/2026-07-07-mcp-client-plugin.md)——命名不变式、发现与执行设计、备选方案与后果。
 - [规范工具输出约定 reference](../../core/tools/README.zh.md)——MCP 结果如何映射进规范工具输出约定。
 - [第三方记忆 MCP 指南](../../../docs/user/guide/mcp-memory.zh.md)——使用本包的三份记忆服务器 overlay。
-- [生成配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-mcp-client)——每个受支持配置字段及其源声明。
+- [生成配置目录](../../../docs/config-catalog.zh.md#liwamcp-client)——每个受支持配置字段及其源声明。
 
 -----
 
@@ -221,7 +221,7 @@ SDK 通过旧版通知或现代协议订阅接收工具列表变化。监督器�
 本开发备注是维护者的工作上下文：开放设计问题与尚未决定的探索方向。它明确不具权威性——已交付行为、限制与既定理由以上文、包代码与所链接的 Agent Note 为准。
 
 - 公开名称算法是由测试固定的 v1 约定；发布后更改会破坏会话历史与权限规则。
-- 由 DSH 显式拥有的连接与发现超时是开放的探索方向；SDK 的 60 秒默认值约束着启动请求。
+- 由灵鲸显式拥有的连接与发现超时是开放的探索方向；SDK 的 60 秒默认值约束着启动请求。
 - Streamable HTTP 的重连归属仍未决定：按请求重试是 SDK 行为，supervisor 也可以拥有 HTTP 世代。
 - MCP 提示词模板需要独立的用户选择和模板调用机制。
 - 固定的 MCP SDK 仍在演化；上游破坏性变更需要更新桥接。

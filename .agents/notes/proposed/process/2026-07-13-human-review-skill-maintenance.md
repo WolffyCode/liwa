@@ -10,7 +10,7 @@ The `dsh-code-review` skill records failure modes that require reviewer judgment
 
 ## Proposal
 
-Periodic out-of-repo maintenance. A private tool, kept on the skill maintainer's machine rather than committed to this repository, runs against a clean full-history checkout at refreshed `origin/master`. The intended scheduler runs daily with a two-UTC-day overlap; manual runs accept another `--since` duration or repeated `--pr` arguments for an explicit set. The scan is idempotent against the current skill and stores no repository cursor. The only repository file changed by promotion is [.agents/skills/dsh-code-review/SKILL.md](../../../skills/dsh-code-review/SKILL.md); the draft PR lists the source feedback URLs or IDs and adoption evidence without exposing the private adapter logs.
+Periodic out-of-repo maintenance. A private tool, kept on the skill maintainer's machine rather than committed to this repository, runs against a clean full-history checkout at refreshed `origin/master`. The intended scheduler runs daily with a two-UTC-day overlap; manual runs accept another `--since` duration or repeated `--pr` arguments for an explicit set. The scan is idempotent against the current skill and stores no repository cursor. The only repository file changed by promotion is [.agents/skills/dsh-code-review/SKILL.md](../../../skills/liwa-code-review/SKILL.md); the draft PR lists the source feedback URLs or IDs and adoption evidence without exposing the private adapter logs.
 
 ```mermaid
 flowchart TD
@@ -52,7 +52,7 @@ The promote helper starts from a clean checkout at refreshed `origin/master` and
 
 ### Where the mechanism lives
 
-The tool source, adapter binaries, provider credentials, and intended daily scheduler are kept private to the maintainer's machine rather than committed to this repository. This document specifies the protocol; the reference implementation is private infrastructure. The mechanism serves a single skill maintained by a single operator, so the ongoing cost of vetting mechanism edits through repository review outweighs the benefit of committing the tool and its history. If the mechanism is ever handed off to a second maintainer, that handoff is a follow-up Agent Note that revises this decision — the operator doc at [docs/cookbook/maintaining-dsh-code-review.md](../../../../docs/cookbook/maintaining-dsh-code-review.md) is the entry point for anyone taking over.
+The tool source, adapter binaries, provider credentials, and intended daily scheduler are kept private to the maintainer's machine rather than committed to this repository. This document specifies the protocol; the reference implementation is private infrastructure. The mechanism serves a single skill maintained by a single operator, so the ongoing cost of vetting mechanism edits through repository review outweighs the benefit of committing the tool and its history. If the mechanism is ever handed off to a second maintainer, that handoff is a follow-up Agent Note that revises this decision — the operator doc at [docs/cookbook/maintaining-dsh-code-review.md](../../../../docs/cookbook/maintaining-liwa-code-review.md) is the entry point for anyone taking over.
 
 ## Alternatives considered
 

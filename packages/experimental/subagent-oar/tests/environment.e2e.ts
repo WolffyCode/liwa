@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execa } from 'execa'
 import { expect, it } from 'vitest'
-import { resolveExampleLaunch } from '@deepseek-ai/dsh-loader-smoke'
+import { resolveExampleLaunch } from '@liwa/loader-smoke'
 
 interface Observation {
   kind: 'probe' | 'session'
@@ -14,7 +14,7 @@ interface Observation {
 }
 
 it('scrubs real native probes and leaves inherited Claude session markers removed', { timeout: 60_000, retry: 0 }, async (test) => {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-oar-environment-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-oar-environment-'))
   test.onTestFinished(() => rm(root, { recursive: true, force: true }))
   const nativeScript = fileURLToPath(new URL('./fixtures/environment-probe.mjs', import.meta.url))
   const executable = join(root, process.platform === 'win32' ? 'native-fixture.cmd' : 'native-fixture')
@@ -34,7 +34,7 @@ it('scrubs real native probes and leaves inherited Claude session markers remove
       OAR_CLAUDE_BIN: executable,
       OAR_CAPTURE_PATH: capture,
       OAR_FIXTURE_API_TOKEN: 'implicit-private-value',
-      DSH_OAR_FIXTURE_ID: 'implicit-harness-value',
+      LIWA_OAR_FIXTURE_ID: 'implicit-harness-value',
       OAR_FIXTURE_KEEP: 'ordinary-value',
       OAR_FIXTURE_EXPLICIT_TOKEN: 'implicit-token-value',
       OAR_FIXTURE_DELETE: 'remove-me',
@@ -60,7 +60,7 @@ it('scrubs real native probes and leaves inherited Claude session markers remove
   expect(observations.filter(entry => entry.args.includes('--version'))).toHaveLength(2)
   for (const entry of observations) {
     expect(entry.environment.OAR_FIXTURE_API_TOKEN).toBeNull()
-    expect(entry.environment.DSH_OAR_FIXTURE_ID).toBeNull()
+    expect(entry.environment.LIWA_OAR_FIXTURE_ID).toBeNull()
     expect(entry.environment.OAR_FIXTURE_EXPLICIT_TOKEN).toBe('explicit-fixture-value')
     expect(entry.environment.OAR_FIXTURE_KEEP).toBe('ordinary-value')
     expect(entry.environment.OAR_FIXTURE_DELETE).toBeNull()

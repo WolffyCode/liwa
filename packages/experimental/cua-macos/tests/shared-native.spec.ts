@@ -4,9 +4,9 @@ import { chmod, mkdir, mkdtemp, realpath, rm, symlink, writeFile } from 'node:fs
 import { createServer, Socket } from 'node:net'
 import { userInfo } from 'node:os'
 import { join } from 'node:path'
-import type { SubprocessHandle, SubprocessOutcome, SubprocessRuntime } from '@deepseek-ai/dsh-subprocess'
+import type { SubprocessHandle, SubprocessOutcome, SubprocessRuntime } from '@liwa/subprocess'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
-import type { NativeClientConfig } from '@deepseek-ai/dsh-cua/native-client'
+import type { NativeClientConfig } from '@liwa/cua/native-client'
 import { createSharedNativeChannel, type NativeChannel } from '../src/shared-native.ts'
 
 const runtime = vi.hoisted(() => ({ source: '', directory: '', foreignOwner: false }))
@@ -50,7 +50,7 @@ async function fixture(options: {
   const peerClosures: Promise<void>[] = []
   const channels: NativeChannel[] = []
   const server = createServer({ allowHalfOpen: true })
-  runtime.source = `/tmp/dsh-cua-${userInfo().uid}`
+  runtime.source = `/tmp/liwa-cua-${userInfo().uid}`
   runtime.directory = join(root, 'r')
   runtime.foreignOwner = options.root === 'foreign'
   onTestFinished(async () => {

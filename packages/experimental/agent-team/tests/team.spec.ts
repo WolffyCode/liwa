@@ -1,19 +1,19 @@
-import { Service } from '@deepseek-ai/cordis'
+import { Service } from '@liwa/cordis'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import { SessionLogOffset, SessionId, type Session, type SessionEvent } from '@deepseek-ai/dsh-session'
-import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import SubagentService from '@deepseek-ai/dsh-subagent'
-import { deliverSubagentPrompt, type HostPromptDeliverer } from '@deepseek-ai/dsh-subagent/internal'
-import * as SubagentFork from '@deepseek-ai/dsh-subagent-fork-in-process'
-import * as SubagentSpawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
+import { Context } from '@liwa/cordis'
+import type { Agent } from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import { mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
+import { createUserMessage } from '@liwa/llm'
+import { SessionLogOffset, SessionId, type Session, type SessionEvent } from '@liwa/session'
+import * as JsonlSessionPersistence from '@liwa/session-persistence-jsonl'
+import SubagentService from '@liwa/subagent'
+import { deliverSubagentPrompt, type HostPromptDeliverer } from '@liwa/subagent/internal'
+import * as SubagentFork from '@liwa/subagent-fork-in-process'
+import * as SubagentSpawn from '@liwa/subagent-spawn-in-process'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import { mountWorkingDirectoryFixture } from '../../../subagent/subagent/tests/working-directory-fixture.ts'
 import TeamService, { TeamError, TeamId, TeamMessageId, TeamTaskId } from '../src/index.ts'
@@ -68,7 +68,7 @@ async function setup(
   contexts.push(ctx)
   await mountAgentLoopTestDependencies(ctx)
   await mountWorkingDirectoryFixture(ctx)
-  const storageRoot = mkdtempSync(join(tmpdir(), 'dsh-team-'))
+  const storageRoot = mkdtempSync(join(tmpdir(), 'liwa-team-'))
   roots.push(storageRoot)
   await ctx.plugin(JsonlSessionPersistence, { root: storageRoot })
   await ctx.plugin(TestSessionQuery)
@@ -177,7 +177,7 @@ describe('Team identity and provisioning', () => {
     contexts.push(ctx)
     await mountAgentLoopTestDependencies(ctx)
     await mountWorkingDirectoryFixture(ctx)
-    const storageRoot = mkdtempSync(join(tmpdir(), 'dsh-team-direct-'))
+    const storageRoot = mkdtempSync(join(tmpdir(), 'liwa-team-direct-'))
     roots.push(storageRoot)
     await ctx.plugin(JsonlSessionPersistence, { root: storageRoot })
     await ctx.plugin(AgentLoop, { agents: [] })
@@ -1069,7 +1069,7 @@ describe('Team direct messages and waiting', () => {
     contexts.push(ctx)
     await mountAgentLoopTestDependencies(ctx)
     await mountWorkingDirectoryFixture(ctx)
-    const storageRoot = mkdtempSync(join(tmpdir(), 'dsh-team-wait-'))
+    const storageRoot = mkdtempSync(join(tmpdir(), 'liwa-team-wait-'))
     roots.push(storageRoot)
     await ctx.plugin(JsonlSessionPersistence, { root: storageRoot })
     await ctx.plugin(AgentLoop, { agents: [] })

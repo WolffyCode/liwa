@@ -2,7 +2,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { PLATFORM_IPC, type PlatformLocale } from './platform-ipc.ts'
 
-const originArgument = '--dsh-platform-origin='
+const originArgument = '--liwa-platform-origin='
 const allowedOrigin = process.argv.find(argument => argument.startsWith(originArgument))?.slice(originArgument.length)
 if (process.isMainFrame && location.origin === allowedOrigin) {
   let token: string | undefined
@@ -26,6 +26,7 @@ if (process.isMainFrame && location.origin === allowedOrigin) {
   } catch {
     // Initialization failure retains embedded mode so Platform cannot use browser credentials.
   }
+  // The DeepSeek Platform pages read this bridge as `window.dsh`; the global name belongs to their contract.
   contextBridge.exposeInMainWorld('dsh', {
     protocolVersion: 1,
     displayMode: 'embedded',

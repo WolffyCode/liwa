@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import WorkflowEngineDefault, {
   isFatalWorkflowError,
   WorkflowError,
@@ -22,12 +22,12 @@ class StubEngine extends WorkflowEngine {
 
 const INFO: WorkflowRunInfo = { id: WorkflowRunId('run-1'), meta: { name: 'w', description: 'd' } }
 
-describe('dsh-workflow (interface)', () => {
+describe('liwa-workflow (interface)', () => {
   it('WorkflowRunId brands a string (identity at runtime)', () => {
     expect(WorkflowRunId('abc')).toBe('abc')
   })
 
-  it('WorkflowError carries code + fatal (default true) and reads as a HarnessError', () => {
+  it('WorkflowError carries code + fatal (default true) and reads as a LiwaError', () => {
     const error = new WorkflowError('cap hit', 'AGENT_CAP')
     expect(error.code).toBe('AGENT_CAP')
     expect(error.fatal).toBe(true)

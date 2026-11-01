@@ -67,7 +67,7 @@ vi.mock('../scripts/packaging-run.mjs', () => ({
       } else if (stage.startsWith('remove-signature-')) {
         state.removals.push({ executable, args, environment: options.env })
       } else {
-        state.signed.add(options.env.DSH_DESKTOP_WINDOWS_SIGN_TARGET!)
+        state.signed.add(options.env.LIWA_DESKTOP_WINDOWS_SIGN_TARGET!)
       }
     }),
   })),
@@ -79,7 +79,7 @@ vi.mock('../scripts/packaging-run.mjs', () => ({
 vi.mock('../scripts/windows-signing-state.mjs', () => ({
   beginWindowsSigningAttempt: vi.fn((options: { runDirectory: string; target: string; stateDirectory?: string }) => {
     expect(options.stateDirectory).toBeUndefined()
-    const lock = join(state.root, '.dsh-desktop-signing', 'attempt.json')
+    const lock = join(state.root, '.liwa-desktop-signing', 'attempt.json')
     mkdirSync(dirname(lock), { recursive: true })
     writeFileSync(lock, 'batch attempt', { flag: 'wx' })
     return {
@@ -119,11 +119,11 @@ beforeEach(async () => {
   state.identity = 'matched'; state.failure = ''; state.successes = 0; state.failures = 0
   state.signed.clear(); state.completed.clear(); state.stages = []; state.events = []; state.removals = []
   state.environment = {
-    DSH_DESKTOP_WINDOWS_CER_FILE: join(state.root, 'certificate.cer'),
-    DSH_DESKTOP_WINDOWS_SIGNTOOL: 'forbidden-signer', DSH_DESKTOP_WINDOWS_TOKEN_PIN: 'fixture-pin',
-    DSH_DESKTOP_WINDOWS_KEY_CONTAINER: '  fixture-container  ', API_KEY: 'fixture-secret', NODE_OPTIONS: 'forbidden-option',
+    LIWA_DESKTOP_WINDOWS_CER_FILE: join(state.root, 'certificate.cer'),
+    LIWA_DESKTOP_WINDOWS_SIGNTOOL: 'forbidden-signer', LIWA_DESKTOP_WINDOWS_TOKEN_PIN: 'fixture-pin',
+    LIWA_DESKTOP_WINDOWS_KEY_CONTAINER: '  fixture-container  ', API_KEY: 'fixture-secret', NODE_OPTIONS: 'forbidden-option',
   }
-  await writeFile(state.environment.DSH_DESKTOP_WINDOWS_CER_FILE!, 'inert certificate')
+  await writeFile(state.environment.LIWA_DESKTOP_WINDOWS_CER_FILE!, 'inert certificate')
   Object.defineProperty(process, 'platform', { value: 'win32', configurable: true })
   const { createWindowsTokenSigner } = await import('../scripts/windows-sign.mjs')
   vi.mocked(createWindowsTokenSigner).mockReturnValue(vi.fn(async () => { throw new Error('Production signer is forbidden') }))
@@ -137,7 +137,7 @@ afterEach(async () => {
 })
 
 const execute = () => runWindowsSigningConcurrencyExperiment(['--execute', '--config-root', state.root, '--rounds', '1'])
-const lock = () => join(state.root, '.dsh-desktop-signing', 'attempt.json')
+const lock = () => join(state.root, '.liwa-desktop-signing', 'attempt.json')
 
 it('requires opt-in before reading configuration or querying a device', async () => {
   await runWindowsSigningConcurrencyExperiment([])

@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-host-directory-picker-native",
-  "description": "Native-OS-chooser backend of the directory-picker seam for the DeepSeek Harness web GUI host",
+  "name": "@liwa/host-directory-picker-native",
+  "description": "Native-OS-chooser backend of the directory-picker seam for the Liwa web GUI host",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/host/directory-picker-native"
   },
   "type": "module",
@@ -34,15 +34,15 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-host-directory-picker": "workspace:*",
-    "@deepseek-ai/dsh-native-command": "workspace:*",
+    "@liwa/host-directory-picker": "workspace:*",
+    "@liwa/native-command": "workspace:*",
     "koffi": "3.1.1"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
+    "@liwa/cordis": "workspace:~",
     "tsx": "^4.23.13"
   }
 }

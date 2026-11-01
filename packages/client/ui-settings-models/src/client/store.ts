@@ -7,13 +7,13 @@
  * re-renders from the next describe, pushed or refetched.
  */
 
-import type { Context as ClientContext } from '@deepseek-ai/cordis'
+import type { Context as ClientContext } from '@liwa/cordis'
 import type {
   CredentialInfo, LlmConfigurableProvider, LlmNativeAuth, LlmProviderInfo, SettingsNamespaceView,
-} from '@deepseek-ai/dsh-api-remotes/client'
-import type { SnapshotStore } from '@deepseek-ai/dsh-client-store'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import type { SettingsDescribeFace } from '@deepseek-ai/dsh-client-ui-settings/client'
+} from '@liwa/api-remotes/client'
+import type { SnapshotStore } from '@liwa/client-store'
+import { createSnapshotStore } from '@liwa/client-store'
+import type { SettingsDescribeFace } from '@liwa/client-ui-settings/client'
 import type { SettingsSchemaOperations } from './schema-operations.ts'
 
 /**

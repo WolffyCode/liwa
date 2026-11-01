@@ -25,7 +25,7 @@ const SPEC = `git+https://git.example/team/sub/plugin.git#${'a'.repeat(40)}&path
 const SSH_SPEC = `git+ssh://git@git.example/team/sub/plugin.git#${'a'.repeat(40)}&path:/packages/a`
 
 async function fixture() {
-  const dir = await mkdtemp(join(tmpdir(), 'dsh-git-transport-'))
+  const dir = await mkdtemp(join(tmpdir(), 'liwa-git-transport-'))
   onTestFinished(() => rm(dir, { recursive: true, force: true }))
   const config = join(dir, 'git.config')
   await writeFile(config, '')

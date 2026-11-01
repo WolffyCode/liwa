@@ -1,30 +1,30 @@
 /** Real Loader composition: the bridge mounted from a cordis.yml row beside the shipped core plugins. */
 
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterEach, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import Include from '@deepseek-ai/cordis-plugin-include'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import CommandRuntime from '@deepseek-ai/dsh-commands'
-import LocalFileSystem from '@deepseek-ai/dsh-fs-local'
-import WorkingDirectory from '@deepseek-ai/dsh-working-directory'
-import LlmRuntime, { createUserMessage } from '@deepseek-ai/dsh-llm'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
-import { defineContentToolFixture } from '@deepseek-ai/dsh-tool-testkit'
+import { Context } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
+import Include from '@liwa/cordis-plugin-include'
+import AgentRegistry from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import CommandRuntime from '@liwa/commands'
+import LocalFileSystem from '@liwa/fs-local'
+import WorkingDirectory from '@liwa/working-directory'
+import LlmRuntime, { createUserMessage } from '@liwa/llm'
+import SessionStore, { SessionId } from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime from '@liwa/tools'
+import { defineContentToolFixture } from '@liwa/tool-testkit'
 import * as ClaudeCodeMods from '../src/index.ts'
 import { MockAdapter, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 
 // Keep workspace imports in Vitest's source graph even when the config has a package scope.
-vi.mock('@deepseek-ai/cordis-plugin-loader/src/resolve.ts', () => ({ createResolve: () => undefined }))
+vi.mock('@liwa/cordis-plugin-loader/src/resolve.ts', () => ({ createResolve: () => undefined }))
 
 const FIXTURES = resolve(import.meta.dirname, 'fixtures')
 
@@ -39,23 +39,23 @@ afterEach(async () => {
 })
 
 it('loads from cordis.yml, counts the model\'s tool calls, and answers /tally through the composed command registry', async () => {
-  root = await mkdtemp(join(tmpdir(), 'dsh-cc-mods-composition-'))
+  root = await mkdtemp(join(tmpdir(), 'liwa-cc-mods-composition-'))
   await writeFile(join(root, 'package.json'), JSON.stringify({ type: 'module' }))
   const configPath = join(root, 'cordis.yml')
   const modules = new Map<string, unknown>([
-    ['@deepseek-ai/dsh-llm', LlmRuntime],
-    ['@deepseek-ai/dsh-session', SessionStore],
-    ['@deepseek-ai/dsh-session-projection', SessionProjectionRegistry],
+    ['@liwa/llm', LlmRuntime],
+    ['@liwa/session', SessionStore],
+    ['@liwa/session-projection', SessionProjectionRegistry],
 
-    ['@deepseek-ai/dsh-system-prompt', SystemPrompt],
-    ['@deepseek-ai/dsh-fs-local', LocalFileSystem],
-    ['@deepseek-ai/dsh-working-directory', WorkingDirectory],
-    ['@deepseek-ai/dsh-tools', ToolRuntime],
-    ['@deepseek-ai/dsh-tool-executor-native', NativeToolExecutor],
-    ['@deepseek-ai/dsh-agent', AgentRegistry],
-    ['@deepseek-ai/dsh-agent-loop', AgentLoop],
-    ['@deepseek-ai/dsh-commands', CommandRuntime],
-    ['@deepseek-ai/dsh-experimental-claude-code-mods', ClaudeCodeMods],
+    ['@liwa/system-prompt', SystemPrompt],
+    ['@liwa/fs-local', LocalFileSystem],
+    ['@liwa/working-directory', WorkingDirectory],
+    ['@liwa/tools', ToolRuntime],
+    ['@liwa/tool-executor-native', NativeToolExecutor],
+    ['@liwa/agent', AgentRegistry],
+    ['@liwa/agent-loop', AgentLoop],
+    ['@liwa/commands', CommandRuntime],
+    ['@liwa/experimental-claude-code-mods', ClaudeCodeMods],
   ])
   // A mod is a plugin like any other: here the tutorial mod's `defineMod` wrapper, mounted by file URL after the bridge.
   const firstMod = pathToFileURL(resolve(FIXTURES, 'first-mod.ts')).href

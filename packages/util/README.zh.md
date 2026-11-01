@@ -1,5 +1,5 @@
 ---
-description: "共享工具家族的包映射：原子文件写入、品牌化 id、双端队列、JSON 值、harness 主目录路径、启动环境、原生命令、输出保留、时间与时区词汇、超时，以及官方包列表。"
+description: "共享工具家族的包映射：原子文件写入、品牌化 id、双端队列、JSON 值、灵鲸主目录路径、启动环境、原生命令、输出保留、时间与时区词汇、超时，以及官方包列表。"
 kind: "package-group"
 ---
 
@@ -9,7 +9,7 @@ kind: "package-group"
 
 ## 概述
 
-`util/` 组为能力包提供共享的机制原语，避免重复实现。它涵盖原子写入、品牌化 id、双端队列、无损 JSON 值、UUID、Harness home 路径、启动环境、出站代理策略、原生命令、输出保留、时区、时刻与时间段词汇，以及超时处理。这里的每个根入口都是库：它不注册产品服务或事件，业务语义仍由消费它的能力负责。例外是 `official-bundles`：它不是机制原语，而是以纯数据形式保存安装方和插件管理器的官方包列表，由各自的消费方应用。
+`util/` 组为能力包提供共享的机制原语，避免重复实现。它涵盖原子写入、品牌化 id、双端队列、无损 JSON 值、UUID、灵鲸 home 路径、启动环境、出站代理策略、原生命令、输出保留、时区、时刻与时间段词汇，以及超时处理。这里的每个根入口都是库：它不注册产品服务或事件，业务语义仍由消费它的能力负责。例外是 `official-bundles`：它不是机制原语，而是以纯数据形式保存安装方和插件管理器的官方包列表，由各自的消费方应用。
 
 ## 目录
 
@@ -35,7 +35,7 @@ kind: "package-group"
 | [`deque/`](deque/README.zh.md) | 提供摊销常数时间的队列操作和有界空闲存储 |
 | [`chunked-list/`](chunked-list/README.zh.md) | 通过有界追加复制和检查点校验保留不可变列表版本 |
 | [`values/`](values/README.zh.md) | 校验、创建快照、比较和冻结无损 JSON 兼容值 |
-| [`home-paths/`](home-paths/README.zh.md) | 解析统一的 Harness 主目录并拼接共享的用户数据路径 |
+| [`home-paths/`](home-paths/README.zh.md) | 解析统一的灵鲸主目录并拼接共享的用户数据路径 |
 | [`http-proxy/`](http-proxy/README.zh.md) | 解析出唯一的出站代理策略，并为 `fetch`、SDK agent（智能体）与 spawn 的子进程安装它 |
 | [`launch-environment/`](launch-environment/README.zh.md) | 冻结的启动环境，记住每个值来自哪一层 |
 | [`atomic-write/`](atomic-write/README.zh.md) | 原子文件替换与跨进程写锁 |

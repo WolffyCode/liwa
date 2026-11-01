@@ -53,7 +53,7 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     page = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: ZH_BROWSER_LOCALE })
     await page.addInitScript(() => {
       const events = { received: 0, handled: 0 }
-      Reflect.set(window, '__DSH_MODELS_ADAPTER_EVENTS__', events)
+      Reflect.set(window, '__LIWA_MODELS_ADAPTER_EVENTS__', events)
       const NativeWebSocket = window.WebSocket
       window.WebSocket = class extends NativeWebSocket {
         constructor(url: string | URL, protocols?: string | string[]) {
@@ -170,7 +170,7 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     await dialog.getByText('已保存 minimax-cn。', { exact: true }).waitFor({ timeout: 10_000 })
     expect(await dialog.getByRole('img', { name: 'API 密钥已配置' }).count()).toBe(0)
     expect(await dialog.getByRole('img', { name: 'API 密钥缺失' }).count()).toBe(0)
-    const document = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
+    const document = await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(document).toContain('minimax-cn: {}')
     expect(document).not.toContain('MINIMAX_CN_API_KEY')
   }, 60_000)
@@ -197,7 +197,7 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     await dialog.getByRole('textbox', { name: 'API 密钥', exact: true }).fill('sk-e2e-minimax')
     await dialog.getByRole('button', { name: '保存', exact: true }).click()
     // The profile lands in cordis.patch.yml with only the derived reference, the
-    // key value lands in the harness home's .credentials.yaml, the dormant route
+    // key value lands in the Liwa home's .credentials.yaml, the dormant route
     // registers, and the topology frame invalidates the page into the row.
     await expect.poll(
       async () => dialog.getByRole('textbox', { name: 'API 密钥', exact: true }).count(),
@@ -205,11 +205,11 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     ).toBe(0)
     await dialog.getByRole('img', { name: 'API 密钥已配置' }).waitFor({ timeout: 10_000 })
     await dialog.getByText('已保存 minimax-cn。', { exact: true }).waitFor({ timeout: 10_000 })
-    const document = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
+    const document = await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(document).toContain('minimax-cn:')
     expect(document).toContain('apiKeyEnv: MINIMAX_CN_API_KEY')
     expect(document).not.toContain('sk-e2e-minimax')
-    const credentialFile = join(scaffold.harnessHome, '.credentials.yaml')
+    const credentialFile = join(scaffold.liwaHome, '.credentials.yaml')
     await expect.poll(
       async () => readFile(credentialFile, 'utf8').catch(() => ''),
       { timeout: 10_000 },
@@ -233,7 +233,7 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     // stored profile beside the reference.
     await expect.poll(async () => dialog.getByLabel('API 地址').count(), { timeout: 10_000 }).toBe(0)
     await dialog.getByText('已保存 minimax-cn。', { exact: true }).waitFor({ timeout: 10_000 })
-    const document = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
+    const document = await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(document).toContain('baseURL: https://gateway.minimax.example/v1')
     expect(document).toContain('apiKeyEnv: MINIMAX_CN_API_KEY')
     const snapshot = await captureStableAria(page, '[role="dialog"]', scaffold.workspaceCwd)
@@ -321,7 +321,7 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
 
     const row = dialog.getByText('Acme Gateway', { exact: true }).first()
     await row.waitFor({ timeout: 10_000 })
-    const document = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
+    const document = await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(document).toContain('acme-gateway:')
     expect(document).toContain('reasoningEfforts:')
     await expect(scaffold.ctx.llm.resolveModelInfo('acme-gateway', 'acme-large')).resolves.toMatchObject({
@@ -380,7 +380,7 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     // The status line names the route as the refreshed directory reports it;
     // the target captured when the card opened still carries the old name.
     await dialog.getByText('已保存 Acme 网关 (acme-gateway)。', { exact: true }).waitFor({ timeout: 10_000 })
-    const document = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
+    const document = await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(document).toContain('api: anthropic-messages')
     expect(document).toContain('displayName: Acme 网关')
     expect(document).toContain('high: deep')
@@ -434,13 +434,13 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
       await firstStarted.promise
       const obsolete = [...reads]
       const receivedBefore = await page.evaluate(() => {
-        const events: unknown = Reflect.get(window, '__DSH_MODELS_ADAPTER_EVENTS__')
+        const events: unknown = Reflect.get(window, '__LIWA_MODELS_ADAPTER_EVENTS__')
         if (typeof events !== 'object' || events === null || !('received' in events) || typeof events.received !== 'number') throw new Error('Missing adapter event observer')
         return events.received
       })
       nextStarted = Promise.withResolvers<undefined>()
       const successorHandled = page.waitForFunction((received) => {
-        const events: unknown = Reflect.get(window, '__DSH_MODELS_ADAPTER_EVENTS__')
+        const events: unknown = Reflect.get(window, '__LIWA_MODELS_ADAPTER_EVENTS__')
         return typeof events === 'object' && events !== null && 'handled' in events && typeof events.handled === 'number' && events.handled > received
       }, receivedBefore)
       scaffold.ctx.emit('llm/adapters-updated')
@@ -491,12 +491,12 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
       const image = types.getByRole('checkbox', { name: '图片', exact: true })
       await expect.poll(() => image.isChecked()).toBe(true)
       expect(await types.getByRole('checkbox', { name: '文本', exact: true }).isChecked()).toBe(true)
-      const before = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
+      const before = await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
       await compareOrRefreshGolden(join(SNAPSHOT_DIR, 'catalog-inputs.expected.md'),
         await captureStableAria(page, '[role="dialog"]', scaffold.workspaceCwd), MODE)
       await dialog.getByRole('button', { name: '保存', exact: true }).click()
       await types.waitFor({ state: 'detached' })
-      expect(await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')).toBe(before)
+      expect(await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')).toBe(before)
 
       await edit.click()
       await dialog.getByText('自定义设置').click()
@@ -551,7 +551,7 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     await dialog.getByRole('button', { name: '保存', exact: true }).click()
     await dialog.getByText('已保存 Acme 网关 (acme-gateway)。', { exact: true }).waitFor()
     const before = structuredClone(settings())
-    const path = join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml')
+    const path = join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml')
     const document = await readFile(path, 'utf8')
 
     for (const save of [false, true]) {
@@ -668,7 +668,7 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
 
   it('confirms an identified provider deletion before removing its profile and key', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-models-delete'))
-    expect(await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')).not.toContain('openai:')
+    expect(await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')).not.toContain('openai:')
     const settingsDialog = page.getByRole('dialog', { name: '设置' })
     await settingsDialog.getByRole('button', { name: '删除 minimax-cn', exact: true }).click()
     const deleteDialog = page.getByRole('dialog', { name: '删除 minimax-cn？' })
@@ -681,15 +681,15 @@ describe('web e2e: Models settings page configures a dormant provider', () => {
     await compareOrRefreshGolden(DELETE_EXPECTED, snapshot, MODE)
 
     await deleteDialog.getByRole('button', { name: '取消', exact: true }).click()
-    expect(await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')).toContain('minimax-cn:')
+    expect(await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')).toContain('minimax-cn:')
     await settingsDialog.getByRole('button', { name: '删除 minimax-cn', exact: true }).click()
     await page.getByRole('dialog', { name: '删除 minimax-cn？' })
       .getByRole('button', { name: '删除 minimax-cn', exact: true }).click()
     await expect.poll(
-      async () => readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'),
+      async () => readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'),
       { timeout: 10_000 },
     ).not.toContain('minimax-cn:')
-    expect(await readFile(join(scaffold.harnessHome, '.credentials.yaml'), 'utf8'))
+    expect(await readFile(join(scaffold.liwaHome, '.credentials.yaml'), 'utf8'))
       .not.toContain('MINIMAX_CN_API_KEY')
     await expect.poll(
       async () => page.getByRole('dialog', { name: '删除 minimax-cn？' }).count(),

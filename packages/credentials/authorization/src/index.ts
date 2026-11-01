@@ -23,12 +23,12 @@
  * })
  * ```
  *
- * @module @deepseek-ai/dsh-authorization
+ * @module @liwa/authorization
  */
 
-import { Context, Service } from '@deepseek-ai/cordis'
-import type { CredentialKey, CredentialRecord } from '@deepseek-ai/dsh-credentials'
-import { HarnessError } from '@deepseek-ai/dsh-llm'
+import { Context, Service } from '@liwa/cordis'
+import type { CredentialKey, CredentialRecord } from '@liwa/credentials'
+import { LiwaError } from '@liwa/llm'
 
 import type {
   AuthorizationEntry, AuthorizationMethod, AuthorizationNotice, AuthorizationOutcome, AuthorizationPrompt,
@@ -40,7 +40,7 @@ export type {
   AuthorizationPromptOption, AuthorizationSettlement, AuthorizationStatus,
 } from './types.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     authorization: AuthorizationService
   }
@@ -59,7 +59,7 @@ declare module '@deepseek-ai/cordis' {
 }
 
 /** Stable error taxonomy for authorization failures. */
-export class AuthorizationError extends HarnessError {
+export class AuthorizationError extends LiwaError {
   constructor(message: string, code: string, options?: ErrorOptions) {
     super(message, code, options)
     this.name = 'AuthorizationError'

@@ -76,7 +76,7 @@ describe.skipIf(MODE === 'record')('web e2e: trusted remote host preferences', (
       () => page.locator('#root').evaluate(root => (root as HTMLElement).inert),
       { timeout: 15_000 },
     ).toBe(false)
-    const settingsPath = join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml')
+    const settingsPath = join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml')
     await expect.poll(() => readFile(settingsPath, 'utf8'), { timeout: 10_000 })
       .toContain('welcomeNoticeVersion:')
 

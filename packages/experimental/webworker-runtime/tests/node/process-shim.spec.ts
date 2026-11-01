@@ -20,7 +20,7 @@ describe('process shim', () => {
     const original = Object.getOwnPropertyDescriptor(globalThis, 'global')
     try {
       Reflect.deleteProperty(globalThis, 'global')
-      const shim = installProcessGlobal({ cwd: '/dsh', env: {} })
+      const shim = installProcessGlobal({ cwd: '/liwa', env: {} })
       expect(globalThis.global).toBe(globalThis)
       expect(globalThis.global.process).toBe(shim)
     } finally {
@@ -30,18 +30,18 @@ describe('process shim', () => {
   })
 
   it('publishes cwd, env, and the Node release its internal modules follow', () => {
-    const shim = installProcessGlobal({ cwd: '/dsh', env: { DSH_HOME: '/dsh/home' } })
-    expect(shim.cwd()).toBe('/dsh')
-    expect(shim.env.DSH_HOME).toBe('/dsh/home')
-    expect(shim.title).toBe('dsh-webworker')
+    const shim = installProcessGlobal({ cwd: '/liwa', env: { LIWA_HOME: '/liwa/home' } })
+    expect(shim.cwd()).toBe('/liwa')
+    expect(shim.env.LIWA_HOME).toBe('/liwa/home')
+    expect(shim.title).toBe('liwa-webworker')
     // The vendored Loader reaches Node internals from Node 22 on; execArgv carries no --expose-internals.
     expect(shim.versions.node).toBe('24.18.0')
     expect(shim.execArgv).toEqual([])
   })
 
   it('exposes an executable identity without enabling Node programs', () => {
-    const shim = installProcessGlobal({ cwd: '/dsh', env: {} })
-    expect(shim.execPath).toBe('/dsh/bin/node')
+    const shim = installProcessGlobal({ cwd: '/liwa', env: {} })
+    expect(shim.execPath).toBe('/liwa/bin/node')
     // No entry script: consumers that read argv[1] as the main module find none.
     expect(shim.argv).toEqual([shim.execPath])
     expect(spawnSync(shim.execPath, ['--eval', 'throw new Error("must not execute")']).error?.code).toBe('ENOENT')
@@ -54,14 +54,14 @@ describe('process shim', () => {
     // same object every time.
     const factory = (): unknown => fs
     const vfs = new MemoryVfs()
-    vfs.seedDirectory('/dsh')
+    vfs.seedDirectory('/liwa')
     const loader = new WorkerModuleLoader({
       vfs,
-      root: '/dsh',
+      root: '/liwa',
       staticModules: { 'node:fs': factory, 'fs': factory },
     })
     setActiveModuleLoader(loader)
-    const shim = installProcessGlobal({ cwd: '/dsh', env: {} })
+    const shim = installProcessGlobal({ cwd: '/liwa', env: {} })
     // The shim calls the factory: a caller receives the module, never the thunk.
     expect(shim.getBuiltinModule('fs')).toBe(fs)
     expect(shim.getBuiltinModule('node:fs')).toBe(fs)

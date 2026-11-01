@@ -2,7 +2,7 @@
 
 [English](liveshare.md) | 中文
 
-可选的 LiveShare bundle（`@deepseek-ai/dsh-experimental-liveshare`）让一位所有者通过独立的 Liveshare 服务端 把一个会话分享给外部 viewer。viewer 永远拿不到所有者的工具：所有者宿主机自己读取 viewer 的每个请求，以该 viewer 自己的 Peer 分派它，Gateway 依据本包注册的 [remote access](../../packages/api/remote-access/README.zh.md) 策略判定该 Peer 的 `share-viewer` principal，并把共享会话代表 viewer 运行的一切限制在分享所授予的工作区内。[包 README](../../packages/experimental/liveshare/README.zh.md)负责配置、客户端界面与限制；[Owner 说明](../../.agents/notes/implemented/feature/2026-09-13-liveshare-protocol-and-owner-surfaces.zh.md)负责其背后的安全姿态。
+可选的 LiveShare bundle（`@liwa/experimental-liveshare`）让一位所有者通过独立的 Liveshare 服务端 把一个会话分享给外部 viewer。viewer 永远拿不到所有者的工具：所有者宿主机自己读取 viewer 的每个请求，以该 viewer 自己的 Peer 分派它，Gateway 依据本包注册的 [remote access](../../packages/api/remote-access/README.zh.md) 策略判定该 Peer 的 `share-viewer` principal，并把共享会话代表 viewer 运行的一切限制在分享所授予的工作区内。[包 README](../../packages/experimental/liveshare/README.zh.md)负责配置、客户端界面与限制；[Owner 说明](../../.agents/notes/implemented/feature/2026-09-13-liveshare-protocol-and-owner-surfaces.zh.md)负责其背后的安全姿态。
 
 源码：[`packages/experimental/liveshare/src/host/fork-enforcement.ts`](../../packages/experimental/liveshare/src/host/fork-enforcement.ts)
 
@@ -10,7 +10,7 @@
 
 ## 启用与可见性
 
-本包随 dsh 一同交付，但在 profile 启用它之前不会出现在插件管理器的任何列表中。profile 可以把自己的 `cordis.patch.yml` 插入组合包声明的两条行，这样组合包本身保持未选中而插件照常运行；也可以改在 `dsh.profile.bundles` 中选中该组合包。[包 README](../../packages/experimental/liveshare/README.zh.md#default-visibility-and-enabling)负责具体条目和部署需要替换的占位符。
+本包随 liwa 一同交付，但在 profile 启用它之前不会出现在插件管理器的任何列表中。profile 可以把自己的 `cordis.patch.yml` 插入组合包声明的两条行，这样组合包本身保持未选中而插件照常运行；也可以改在 `liwa.profile.bundles` 中选中该组合包。[包 README](../../packages/experimental/liveshare/README.zh.md#default-visibility-and-enabling)负责具体条目和部署需要替换的占位符。
 
 插件管理器只有在组合包声明的行至少有一条在运行时才把卡片列在**实验性插件**下；删除这些行、把它们置为 disabled，或取消选中组合包，卡片会再次从该列表和**更多**页消失。两条路线都在 profile 下一次重新组合时生效，而不是在当前任务中途：启用 HMR 时会重新读取 profile，未启用时则等下一次启动。
 
@@ -48,7 +48,7 @@ fork 创建查看者拥有的新会话，源会话保持不变。Fork 授权检�
 
 ## viewer 状态
 
-一次以拒绝结束的 viewer 读取会指明它自己的状态，而不是让所有原因共用一种失败：链接不存在、owner 已停止分享、分享已过期、owner 的机器没有路由、登录已过期、读者尚未申请、申请仍在等待、申请被 owner 拒绝、owner 从未收到通知，每种都有各自的 HTTP 状态与错误码；页面联系不上 Liveshare 服务端时由页面自己陈述。`@deepseek-ai/dsh-experimental-liveshare-protocol` 中的 `VIEWER_STATE_ANSWERS` 就是这份词汇表，每种状态对应的答案由 [共享协议](../../packages/experimental/liveshare-protocol/README.zh.md) 维护。没有任何一种答案会扩大 viewer 能读到的内容：owner 离线、分享已停止、申请被拒，三者都是拒绝。
+一次以拒绝结束的 viewer 读取会指明它自己的状态，而不是让所有原因共用一种失败：链接不存在、owner 已停止分享、分享已过期、owner 的机器没有路由、登录已过期、读者尚未申请、申请仍在等待、申请被 owner 拒绝、owner 从未收到通知，每种都有各自的 HTTP 状态与错误码；页面联系不上 Liveshare 服务端时由页面自己陈述。`@liwa/experimental-liveshare-protocol` 中的 `VIEWER_STATE_ANSWERS` 就是这份词汇表，每种状态对应的答案由 [共享协议](../../packages/experimental/liveshare-protocol/README.zh.md) 维护。没有任何一种答案会扩大 viewer 能读到的内容：owner 离线、分享已停止、申请被拒，三者都是拒绝。
 
 viewer 页面渲染所用的工作区流与会话列表经同一策略过滤：只要工作区还持有共享会话或该 viewer 自己创建的分支就会下发，其成员与手工顺序只保留这些。失去它们的工作区要到该工作区或工作区顺序下次变化时才离开工作区流，届时流替换读者的基线；仅访问变化不会发送帧。因此读者看到的是围绕它被授予的那一个会话的 owner 工作区名称与分组，而不是 owner 其余的工作区。
 

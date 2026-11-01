@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
-import { Context } from '@deepseek-ai/cordis'
-import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
-import { SlotRegistry } from '@deepseek-ai/dsh-client-ui-renderer/client'
-import { resolveSlotLabel } from '@deepseek-ai/dsh-client-ui-slots'
-import { TestRemote } from '@deepseek-ai/dsh-client-test-runtime'
+import { Context } from '@liwa/cordis'
+import { LocaleRuntime } from '@liwa/client-locale/client'
+import { SlotRegistry } from '@liwa/client-ui-renderer/client'
+import { resolveSlotLabel } from '@liwa/client-ui-slots'
+import { TestRemote } from '@liwa/client-test-runtime'
 import { expect, it, onTestFinished, vi } from 'vitest'
 import { apply, inject } from '../src/client/index.ts'
-import type { PluginDetailDocumentId } from '@deepseek-ai/dsh-api-remotes/client'
-import { brandString } from '@deepseek-ai/dsh-brand'
+import type { PluginDetailDocumentId } from '@liwa/api-remotes/client'
+import { brandString } from '@liwa/brand'
 import type { DiscoverFace } from '../src/client/market-store.ts'
 
 it('contributes Discover to the Plugins page, follows Host changes, and withdraws with its fiber', async () => {

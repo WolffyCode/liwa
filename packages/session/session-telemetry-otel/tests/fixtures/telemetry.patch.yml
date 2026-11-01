@@ -24,7 +24,7 @@
 
 - insert:
     - id: logger-console
-      name: '@deepseek-ai/cordis-plugin-logger-console'
+      name: '@liwa/cordis-plugin-logger-console'
       config:
         colors: false
         levels:
@@ -42,5 +42,5 @@
 - id: sandbox-policy
   inject: []
   config:
-    mode: !!js process.env.DSH_PERMISSION_MODE ?? 'workspace-write'
+    mode: !!js process.env.LIWA_PERMISSION_MODE ?? 'workspace-write'
     workspaceRoot: !!js process.cwd()

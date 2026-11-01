@@ -8,14 +8,14 @@ Every way a mod behaves differently through this bridge than under Claude Code, 
 
 | Claude Code | This bridge | Reason or follow-up |
 |---|---|---|
-| A plugin directory with `.claude-plugin/plugin.json` and `hooks/hooks.json` naming one hooks module; `claude --plugin-dir`, marketplaces, `/plugin install` | A mod is a plugin: `defineMod({ name, version, root, userConfig, register })` wraps the hooks module and mounts through cordis.yml after the bridge; `plugin.json` and `hooks.json` are not read | Mods join the one composition mechanism every DSH plugin uses; the example directories keep their manifests so they also run under `claude --plugin-dir` |
+| A plugin directory with `.claude-plugin/plugin.json` and `hooks/hooks.json` naming one hooks module; `claude --plugin-dir`, marketplaces, `/plugin install` | A mod is a plugin: `defineMod({ name, version, root, userConfig, register })` wraps the hooks module and mounts through cordis.yml after the bridge; `plugin.json` and `hooks.json` are not read | Mods join the one composition mechanism every Liwa plugin uses; the example directories keep their manifests so they also run under `claude --plugin-dir` |
 | `userConfig` schema in `plugin.json` with typed defaults; options validated at load | `userConfig` is the defaults object of the `defineMod` spec; the plugin's cordis.yml `config` overlays it and is validated as a record of strings, numbers, booleans, and string lists | No manifest is read |
-| Tiers (`user`, `project`, `managed`) and `next.to(e, tier)` | Every mod loads as `user`; `tier()` in a test is accepted and ignored; `next.to` rejects | Managed settings are not a DSH concept |
+| Tiers (`user`, `project`, `managed`) and `next.to(e, tier)` | Every mod loads as `user`; `tier()` in a test is accepted and ignored; `next.to` rejects | Managed settings are not a Liwa concept |
 | Hot reload of the hooks module on edit; `claude plugin validate`, `claude plugin test`, types generation from `types/index.d.ts` | None of these commands; a remount re-runs `register` on the same evaluated module, so module-level variables keep their values | Follow-up only on demand; the test kit's `createModTestKit` replaces `claude plugin test` inside Vitest |
-| A hooks module may be TypeScript | A `.ts` hooks module loads only where the launcher transpiles (the source launch does; a built install does not) | DSH ships plain Node |
-| Mods run in-process with `$` as their only access to the host | The hooks module runs in-process with Node's globals, no access rule, and the process's full authority: `$.env` reads and writes the harness environment, `$.http.fetch` reaches any URL, `$.fs` and `$.tool.call` act as the session | No sandbox is applied to mods; mount only mods you would run as a plugin |
-| `import type { … } from 'claude-code'`, `declare module 'claude-code' { interface PluginState }` | The `claude-code` module name resolves only inside this repository's test setup, to the bridge's types; a mod outside it imports `@deepseek-ai/dsh-experimental-claude-code-mods` | The type names are the bridge's own |
-| `settings hooks` in `hooks.json` run beside mod hooks | Not run; mount `@deepseek-ai/dsh-hooks-claude-code` for them | Different bridge |
+| A hooks module may be TypeScript | A `.ts` hooks module loads only where the launcher transpiles (the source launch does; a built install does not) | Liwa ships plain Node |
+| Mods run in-process with `$` as their only access to the host | The hooks module runs in-process with Node's globals, no access rule, and the process's full authority: `$.env` reads and writes the Liwa environment, `$.http.fetch` reaches any URL, `$.fs` and `$.tool.call` act as the session | No sandbox is applied to mods; mount only mods you would run as a plugin |
+| `import type { … } from 'claude-code'`, `declare module 'claude-code' { interface PluginState }` | The `claude-code` module name resolves only inside this repository's test setup, to the bridge's types; a mod outside it imports `@liwa/experimental-claude-code-mods` | The type names are the bridge's own |
+| `settings hooks` in `hooks.json` run beside mod hooks | Not run; mount `@liwa/hooks-claude-code` for them | Different bridge |
 
 ## Events
 
@@ -25,7 +25,7 @@ Every way a mod behaves differently through this bridge than under Claude Code, 
 | `session.end` | Raised once per session | Raised for a root agent from `agent/disposed`; `$.state` is readable until the hooks settle |
 | `prompt.submit` | `e.text` is the typed prompt; `context` entries become one block each after the prompt as typed; a prompt a plugin submitted carries `origin: { kind: 'plugin', name }` | Same; `e.text` joins the text blocks of the human's own (`user`-sourced) messages in the claimed batch, a batch of injected context alone raises nothing, and a prompt `$.prompt.submit` queued carries the submitting mod as its origin |
 | `turn.start`, `turn.complete` | Per turn; subagent turns carry `agentId` | Same; `turn.complete`'s `{ text }` reaches the host log, not a line under the answer; `durationMs` counts from `turn/start` |
-| `tool.call` | Runs before Claude Code's permission check; `next({ ...e, command })` rewrites the arguments the tool runs with, and `next({ ...e, tool })` reroutes the call | Runs around `tools/execute`, after the harness permission decision; a hook (or `.catch` handler) that rewrites arguments or names another tool is skipped with a report — the argument case names the [pre-tool input rewrite proposal](../../.agents/notes/proposed/feature/2026-06-30-pre-tool-input-rewrite.md) — because the logged call runs as logged. `{ deny }`, `{ result }`, observing, and rewriting the result or `isError` after `next` work as described |
+| `tool.call` | Runs before Claude Code's permission check; `next({ ...e, command })` rewrites the arguments the tool runs with, and `next({ ...e, tool })` reroutes the call | Runs around `tools/execute`, after the Liwa permission decision; a hook (or `.catch` handler) that rewrites arguments or names another tool is skipped with a report — the argument case names the [pre-tool input rewrite proposal](../../.agents/notes/proposed/feature/2026-06-30-pre-tool-input-rewrite.md) — because the logged call runs as logged. `{ deny }`, `{ result }`, observing, and rewriting the result or `isError` after `next` work as described |
 | `command.run` | Runs for a command the mod registered | Same |
 | `ui.render` | Raised for every render site (`AbovePrompt`, `Pane`, `ToolUse`, `AssistantMessage`, `Spinner`, …) | Raised for `AbovePrompt` only, once per redraw of a session's band; `Pane` hooks run only through the test kit's `$.ui.mount({ component: 'Pane' })` |
 | `tool.check`, `tool.describe`, `tool.list`, `tool.register` | Shape the tool list and permissions | Not raised; `$.tool.register` and `$.tool.list` are served as `$` calls |
@@ -51,7 +51,7 @@ Every way a mod behaves differently through this bridge than under Claude Code, 
 | `$.plugin` | `name`, `root`, `tier` | `name`, `root` from the `defineMod` spec |
 | `$.ui` | `resolve`, `invalidate`, `open`, `close`, `panes`, `focus`, `log`, `toast`, `status`, `notice`, `ask`, `blit`, `copy`, `press`, `input`, `select` | `resolve`, `invalidate`, `open`, `close`, `panes`, `log`, `toast`, `status`, `ask`; `open` answers `{ isPlaced: false }` with a reason and redraws the band; `log`, `toast`, `status` reach the host log; the rest reject |
 | `$.command` | `register`, `run`, `list` | Same; `run` of a command nobody answers rejects with the registering mod named |
-| `$.tool` | `register`, `call`, `list` | Same; a registered tool is `mcp__<plugin>__<tool>`; `call` runs the harness pipeline and injects a tool's deferred contexts into the session |
+| `$.tool` | `register`, `call`, `list` | Same; a registered tool is `mcp__<plugin>__<tool>`; `call` runs the Liwa pipeline and injects a tool's deferred contexts into the session |
 | `$.prompt` | `submit`, `compose` | `submit`; the message is `user`-sourced, framed `Message from the "<plugin>" mod:` unless `asUser`, and the `prompt.submit` it raises names the mod as origin |
 | `$.session` | `id`, `cwd`, `root`, `repo`, `model`, `turns`, `messages`, `usage`, `version`, `send`, `append`, `authorize`, `compact`, `surfaces` | `id`, `cwd`, `root`, `model`, `turns`, `messages`, `usage`, `version`; `cwd` reports the committed current directory; `root` retains the original project; `usage.context.window` is `0` and `percent` absent until the token meter knows the route's window; `rateLimits` is empty; `version` names this bridge |
 | `$.state` | Per session, survives hot reload | Per session, in memory; a read during `ui.render` subscribes the band to the slot |
@@ -80,7 +80,7 @@ Every way a mod behaves differently through this bridge than under Claude Code, 
 
 | `claude-code/testing` | This bridge |
 |---|---|
-| `describe`, `test(name, ($, on) => …)`, `expect`, `mock`, `tier` | Inside this repository the same module name provides them over Vitest; `test` infers the mod from the test file's location (`<mod>/tests/*.test.ts` → `<mod>/index.ts`) and `defineModTests` overrides it. Outside, `createModTestKit` and `mock` come from `@deepseek-ai/dsh-experimental-claude-code-mods/testing` |
+| `describe`, `test(name, ($, on) => …)`, `expect`, `mock`, `tier` | Inside this repository the same module name provides them over Vitest; `test` infers the mod from the test file's location (`<mod>/tests/*.test.ts` → `<mod>/index.ts`) and `defineModTests` overrides it. Outside, `createModTestKit` and `mock` come from `@liwa/experimental-claude-code-mods/testing` |
 | `on` stubs the engine's answers; the kit answers `ui.*` itself | Same; `ui.open` answers `{ isPlaced: false }`, `ui.invalidate` and `ui.close` succeed; `session.cwd`, `process.run`, `fs.*`, `store.*`, `env.*` need a stub (`mock.store`, `mock.env`, `mock.clock` answer whole namespaces) |
 | `$.ui.mount({ plugin, surface, component, props })` → `find`, `findAll`, `press`, `unmount` | Same, plus `tree()` and `text()`; every read renders afresh through every loaded mod's hooks; `plugin` and `surface` are accepted for source compatibility |
 | 5 s hook budget in tests | Same (`budgetMs`) |
@@ -109,7 +109,7 @@ Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnp
 
 ### `ctx.claudeCodeMods` — `ClaudeCodeMods`
 
-The bridge service: loaded mods, their hooks, and the harness listeners that raise their events. Mods join through ClaudeCodeMods.add, which defineMod calls when a mod plugin mounts. The Remote methods let a Client draw each session's band above the prompt and press its buttons.
+The bridge service: loaded mods, their hooks, and Liwa listeners that raise their events. Mods join through ClaudeCodeMods.add, which defineMod calls when a mod plugin mounts. The Remote methods let a Client draw each session's band above the prompt and press its buttons.
 
 ```ts cordis-catalog
 /**

@@ -7,12 +7,13 @@
 
 import { globSync, readFileSync } from 'node:fs'
 import { dirname, resolve, sep } from 'node:path'
+import { isLiwaRuntimePackage } from '../packages/boot/app-boot/src/plugin-compatibility.ts'
 
-const SCOPE = '@deepseek-ai/dsh-'
+const SCOPE = '@liwa/'
 
-/** One harness package and its in-repo peer-dependency edges. */
+/** One Liwa package and its in-repo peer-dependency edges. */
 export interface PackageGraphNode {
-  /** Package name with the `@deepseek-ai/dsh-` prefix removed. */
+  /** Package name with the `@liwa/` prefix removed. */
   short: string
   /** Full npm package name. */
   name: string
@@ -25,7 +26,7 @@ export interface PackageGraphNode {
 }
 
 /**
- * Read every harness package manifest and return dependency-first graph nodes.
+ * Read every Liwa package manifest and return dependency-first graph nodes.
  * @param root - absolute repository root.
  * @param groupOrder - caller-specific tiebreak order for packages in the same dependency layer.
  * @param gate - command name used in structural error messages.
@@ -39,11 +40,11 @@ export function collectPackageGraph(root: string, groupOrder: readonly string[],
       name: string
       peerDependencies?: Record<string, string>
     }
-    if (!json.name.startsWith(SCOPE)) continue
+    if (!isLiwaRuntimePackage(json.name)) continue
     const [, group, leaf] = rel.split('/')
     if (group === undefined || leaf === undefined) throw new Error(`${gate}: unexpected package path ${rel}`)
     const deps = Object.keys(json.peerDependencies ?? {})
-      .filter(dep => dep.startsWith(SCOPE))
+      .filter(dep => isLiwaRuntimePackage(dep))
       .map(dep => dep.slice(SCOPE.length))
       .sort()
     packages.push({

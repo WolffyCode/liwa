@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/upgrade-guide/v0.2.1-alpha.1/plugin-option-placement/guide.md
 /:
-  en: 3f9b48b2230ec6e4
-  zh: c1aad0e9121d46a4
-/dsh-plugin-option-placement:
-  en: 3d717a2b7e9087d3
-  zh: e6004d015e6a4829
-/dsh-plugin-option-placement/change:
-  en: 15fe8cf74db0ba53
-  zh: c6ea1056aa7a6f77
-/dsh-plugin-option-placement/migration:
-  en: b7239597ebc4d970
-  zh: fa45f851cf1f3af1
+  en: c9706c9c4475c3ab
+  zh: bacc58569ef10c83
+/liwa-plugin-option-placement:
+  en: eea3a52b284fd467
+  zh: 69990725d856d403
+/liwa-plugin-option-placement/change:
+  en: cc475b89a299e39d
+  zh: 1187bff0327d5689
+/liwa-plugin-option-placement/migration:
+  en: 5f123d6c52764676
+  zh: b9b15331b0da8850

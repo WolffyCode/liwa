@@ -1,6 +1,6 @@
 ; Native welcome and finish pages for the electron-builder installer.
-!ifndef HARNESS_INSTALLER_UI
-!define HARNESS_INSTALLER_UI
+!ifndef LIWA_INSTALLER_UI
+!define LIWA_INSTALLER_UI
 !define WM_NOTIFY_OUTER_NEXT 0x408
 
 Var InstallerDialog
@@ -168,7 +168,7 @@ Function InstallerCreate
     ${NSD_OnClick} $InstallerButton InstallerStart
     ${NSD_OnNotify} $InstallerButton InstallerPaintButton
     Call InstallerRender
-    System::Call 'user32::SetPropW(p $HWNDPARENT, w "HarnessInstaller.Ready", p 1)'
+    System::Call 'user32::SetPropW(p $HWNDPARENT, w "LiwaInstaller.Ready", p 1)'
     ShowWindow $InstallerDialog 5
     ShowWindow $HWNDPARENT 5
     ${If} $InstallerPhase == "welcome"

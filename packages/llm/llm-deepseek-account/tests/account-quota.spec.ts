@@ -1,16 +1,28 @@
 /** Account-route quota classification stays separate from API-key and third-party quota. */
-import { Context } from '@deepseek-ai/cordis'
-import { BlockAssembler, LlmRuntime } from '@deepseek-ai/dsh-llm'
-import type { DeepSeekAccount } from '@deepseek-ai/dsh-deepseek-account'
-import * as ApiKey from '@deepseek-ai/dsh-llm-deepseek-api-key'
-import { afterEach, expect, it, vi } from 'vitest'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { Context } from '@liwa/cordis'
+import { BlockAssembler, LlmRuntime } from '@liwa/llm'
+import type { DeepSeekAccount } from '@liwa/deepseek-account'
+import * as ApiKey from '@liwa/llm-deepseek-api-key'
+import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import * as Account from '../src/index.ts'
 
 const contexts: Context[] = []
+let testHome: string
+
+// Each request resolves the anonymous user id inside $LIWA_HOME; a temp home keeps the suite off the person's ~/.liwa.
+beforeEach(() => {
+  testHome = mkdtempSync(join(tmpdir(), 'liwa-account-quota-'))
+  vi.stubEnv('LIWA_HOME', testHome)
+})
+
 afterEach(async () => {
   for (const ctx of contexts.splice(0)) await ctx.fiber.dispose()
   vi.restoreAllMocks()
   vi.unstubAllEnvs()
+  rmSync(testHome, { recursive: true, force: true })
 })
 
 /** Fail the model listing request fast, so either route serves its bundled catalog and each call gets a fresh Messages response. */

@@ -10,7 +10,7 @@ Status: proposed
 
 ## 提案
 
-在仓库外定期维护。一项保存在 skill 维护者机器上、而不提交到本仓库的私有工具，会针对刷新至 `origin/master` 的干净完整历史 checkout 运行。预期的调度器每天运行，并使用两天的 UTC 重叠窗口；手动运行可以通过另一个 `--since` 时长或重复的 `--pr` 参数指定显式集合。扫描相对于当前 skill 是幂等的，不存储仓库游标。推广时唯一会变更的仓库文件是 [.agents/skills/dsh-code-review/SKILL.md](../../../skills/dsh-code-review/SKILL.md)；draft PR（Pull Request）列出源反馈 URL 或 ID 和采纳证据，不会公开私有适配器日志。
+在仓库外定期维护。一项保存在 skill 维护者机器上、而不提交到本仓库的私有工具，会针对刷新至 `origin/master` 的干净完整历史 checkout 运行。预期的调度器每天运行，并使用两天的 UTC 重叠窗口；手动运行可以通过另一个 `--since` 时长或重复的 `--pr` 参数指定显式集合。扫描相对于当前 skill 是幂等的，不存储仓库游标。推广时唯一会变更的仓库文件是 [.agents/skills/dsh-code-review/SKILL.md](../../../skills/liwa-code-review/SKILL.md)；draft PR（Pull Request）列出源反馈 URL 或 ID 和采纳证据，不会公开私有适配器日志。
 
 ```mermaid
 flowchart TD
@@ -52,7 +52,7 @@ flowchart TD
 
 ### 机制所在位置
 
-工具源码、适配器二进制文件、提供方凭据和预期的每日调度器保存在维护者机器上，不会提交到本仓库。本文规定协议，参考实现属于私有基础设施。该机制只服务于由单个运维方维护的一项 skill，因此，持续通过仓库评审审查机制改动的成本高于提交工具及其历史的收益。如果该机制将来移交给第二位维护者，移交工作需要一篇后续 Agent Note 来修订本决策；任何接手者都应从运维文档 [docs/cookbook/maintaining-dsh-code-review.md](../../../../docs/cookbook/maintaining-dsh-code-review.zh.md) 入手。
+工具源码、适配器二进制文件、提供方凭据和预期的每日调度器保存在维护者机器上，不会提交到本仓库。本文规定协议，参考实现属于私有基础设施。该机制只服务于由单个运维方维护的一项 skill，因此，持续通过仓库评审审查机制改动的成本高于提交工具及其历史的收益。如果该机制将来移交给第二位维护者，移交工作需要一篇后续 Agent Note 来修订本决策；任何接手者都应从运维文档 [docs/cookbook/maintaining-dsh-code-review.md](../../../../docs/cookbook/maintaining-liwa-code-review.zh.md) 入手。
 
 ## 考虑过的替代方案
 

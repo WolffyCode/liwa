@@ -11,7 +11,7 @@ const { DragFiles } = await import('../src/file-drag-files.ts')
 afterEach(() => { vi.mocked(rm).mockReset(); vi.mocked(writeFile).mockReset(); vi.useRealTimers() })
 
 async function fixture() {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-image-release-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-image-release-'))
   const store = new DragFiles(root)
   vi.mocked(rm).mockImplementation(fs.rm)
   vi.mocked(writeFile).mockImplementation(fs.writeFile)

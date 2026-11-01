@@ -6,8 +6,8 @@
  * child's prompt can be refused for a reason the Host can name. It also holds the ceiling the child
  * runs under, and refuses every prompt until that ceiling is installed and verified.
  *
- * One DSH home can be served by several Host processes, so every change is committed as a
- * read-modify-write under the cross-process writer lock of `@deepseek-ai/dsh-atomic-write`: the file
+ * One Liwa home can be served by several Host processes, so every change is committed as a
+ * read-modify-write under the cross-process writer lock of `@liwa/atomic-write`: the file
  * is re-read inside the lock, this process's own changes are applied to what it holds, and the result
  * replaces the file in one atomic step. A change therefore cannot be dropped by a concurrent write
  * from another process, and an entry another process changed is never restored from this process's
@@ -16,7 +16,7 @@
 
 import { mkdirSync, readFileSync } from 'node:fs'
 import { dirname } from 'node:path'
-import { withFileLock, writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
+import { withFileLock, writeFileAtomic } from '@liwa/atomic-write'
 import type { ForkCeiling } from './fork-policy.ts'
 
 /** Trusted creator identity of one child session. */

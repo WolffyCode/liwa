@@ -3,11 +3,11 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/proposed/simplification/2026-09-19-python-sdk-directional-client.md
 /agent-note-remove-the-python-sdk-s-unused-reverse-rpc-direction:
-  en: 29c6b53f7f81bfd8
-  zh: 94139164373cda91
+  en: 990580964fce61a9
+  zh: 12cfb6c99250aacd
 /agent-note-remove-the-python-sdk-s-unused-reverse-rpc-direction/problem:
-  en: 839a904fc25dc18e
-  zh: 5f7b3cac4fac2755
+  en: 741d5f17659a0146
+  zh: 83e80c6683588135
 /agent-note-remove-the-python-sdk-s-unused-reverse-rpc-direction/proposal:
   en: 508671a9a29a8f2a
   zh: 750587c118eb7450

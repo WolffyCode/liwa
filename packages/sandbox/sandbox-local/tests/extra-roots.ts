@@ -4,8 +4,8 @@ import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync } from 'no
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { expect } from 'vitest'
-import type { SandboxPolicy } from '@deepseek-ai/dsh-sandbox'
-import type { LocalSandboxProvider } from '@deepseek-ai/dsh-sandbox-local'
+import type { SandboxPolicy } from '@liwa/sandbox'
+import type { LocalSandboxProvider } from '@liwa/sandbox-local'
 
 function quote(path: string): string {
   return `'${path.replaceAll("'", "'\\''")}'`

@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for maintaining-liwa-code-review.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/cookbook/maintaining-liwa-code-review.md
+/maintaining-the-liwa-code-review-skill:
+  en: ad5416543017c77b
+  zh: 645349c81f22c394
+/maintaining-the-liwa-code-review-skill/what-the-maintainer-receives:
+  en: 108c689fbaeecbda
+  zh: 4b5a19bd69eb8213
+/maintaining-the-liwa-code-review-skill/what-the-operator-does-with-a-candidate-diff:
+  en: 34610cd3fa325937
+  zh: e5fb6b565dab9c0f
+/maintaining-the-liwa-code-review-skill/when-a-run-produces-no-candidate:
+  en: feb6d261939d6c19
+  zh: 044d8238cd6537d3
+/maintaining-the-liwa-code-review-skill/interruptions-and-handoff:
+  en: c615d73f1680f512
+  zh: 341bf3fe391172e0
+/maintaining-the-liwa-code-review-skill/where-the-operator-s-private-setup-lives:
+  en: ae06145764738c16
+  zh: d527b944db8c52be

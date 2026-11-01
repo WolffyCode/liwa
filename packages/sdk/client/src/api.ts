@@ -1,40 +1,40 @@
 /**
- * High-level run API over {@link HarnessClient}: `DeepSeekHarness` owns one
- * runtime subprocess across many sessions; `HarnessSession.run` sends a
+ * High-level run API over {@link LiwaClient}: `Liwa` owns one
+ * runtime subprocess across many sessions; `LiwaSession.run` sends a
  * prompt and settles when the whole agent next becomes idle.
  *
- * @module @deepseek-ai/dsh-sdk-client/api
+ * @module @liwa/sdk-client/api
  */
 
 import { randomUUID } from 'node:crypto'
 import { resolve } from 'node:path'
-import type { SessionEvent, TurnEndReason } from '@deepseek-ai/dsh-session'
-import { createProcessHarnessClient, HarnessClient, isRecord, SdkProtocolError } from './client.ts'
+import type { SessionEvent, TurnEndReason } from '@liwa/session'
+import { createProcessLiwaClient, LiwaClient, isRecord, SdkProtocolError } from './client.ts'
 import type { RuntimeProcessOptions } from './launch.ts'
-import type { ContentBlock, DeepSeekHarnessOptions, HarnessNotification, RunResult, SdkPromptContentBlock } from './types.ts'
+import type { ContentBlock, LiwaOptions, LiwaNotification, RunResult, SdkPromptContentBlock } from './types.ts'
 
 /**
- * Reusable SDK for running DeepSeek Harness agent turns in a runtime
+ * Reusable SDK for running Liwa agent turns in a runtime
  * subprocess. The subprocess starts lazily on first use and stays owned by
  * this instance until {@link close}; always close (or `await using`) so the
  * child is reaped.
  */
-export class DeepSeekHarness implements AsyncDisposable {
-  private clientInstance: HarnessClient
-  private readonly createClient: () => HarnessClient
+export class Liwa implements AsyncDisposable {
+  private clientInstance: LiwaClient
+  private readonly createClient: () => LiwaClient
   private readonly cwd: string
   private readonly provider: string
   private readonly model: string
-  private readonly reasoningEffort: DeepSeekHarnessOptions['reasoningEffort']
+  private readonly reasoningEffort: LiwaOptions['reasoningEffort']
   private readonly maxTokens: number | undefined
   private readonly approvalRequests: boolean | undefined
   private initialized: Promise<void> | undefined
   private closed = false
 
-  /** @param options - dsh launch configuration plus the session route, effort, and output cap. */
-  constructor(options?: DeepSeekHarnessOptions)
-  constructor(options: DeepSeekHarnessOptions = {}, clientFactory?: () => HarnessClient) {
-    this.createClient = clientFactory ?? (() => new HarnessClient(options))
+  /** @param options - liwa launch configuration plus the session route, effort, and output cap. */
+  constructor(options?: LiwaOptions)
+  constructor(options: LiwaOptions = {}, clientFactory?: () => LiwaClient) {
+    this.createClient = clientFactory ?? (() => new LiwaClient(options))
     this.clientInstance = this.createClient()
     // Absolute before the handshake: the child spawns relative to THIS
     // process's cwd, but the wire cwd is resolved again inside the child — a
@@ -54,14 +54,14 @@ export class DeepSeekHarness implements AsyncDisposable {
    * failed {@link start}.
    * @returns the client currently owning the runtime subprocess.
    */
-  get client(): HarnessClient {
+  get client(): LiwaClient {
     return this.clientInstance
   }
 
   /**
    * Start the subprocess and perform the `initialize` handshake once. On
    * failure, successful SDK-owned cleanup reaps the runtime and installs a
-   * fresh client (`HarnessClient.close` is permanent), so a later call retries
+   * fresh client (`LiwaClient.close` is permanent), so a later call retries
    * with a new subprocess unless {@link close} already ended this harness. If
    * cleanup also fails, rejects with an `AggregateError` whose ordered errors
    * preserve both causes and retains the failed client rather than spawning
@@ -87,7 +87,7 @@ export class DeepSeekHarness implements AsyncDisposable {
         } catch (cleanupError: unknown) {
           throw new AggregateError(
             [error, cleanupError],
-            'DeepSeek Harness initialization and cleanup failed',
+            'Liwa initialization and cleanup failed',
           )
         }
         if (!this.closed) this.clientInstance = this.createClient()
@@ -103,20 +103,20 @@ export class DeepSeekHarness implements AsyncDisposable {
    * @param sessionId - explicit id to reuse; omitted mints a fresh one.
    * @returns the session handle.
    */
-  session(sessionId?: string): HarnessSession {
-    return new HarnessSession(this, sessionId ?? `session-${randomUUID().replaceAll('-', '')}`)
+  session(sessionId?: string): LiwaSession {
+    return new LiwaSession(this, sessionId ?? `session-${randomUUID().replaceAll('-', '')}`)
   }
 
   /**
    * Start the runtime and restore a persisted session without sending input.
-   * The configured Harness home must contain its history; missing or occupied sessions reject.
+   * The configured Liwa home must contain its history; missing or occupied sessions reject.
    * @param sessionId - exact persisted identity to continue.
    * @returns a handle ready to run new prompts on the restored history.
    */
-  async resumeSession(sessionId: string): Promise<HarnessSession> {
+  async resumeSession(sessionId: string): Promise<LiwaSession> {
     await this.start()
     await this.client.resumeSession(sessionId)
-    return new HarnessSession(this, sessionId)
+    return new LiwaSession(this, sessionId)
   }
 
   /**
@@ -149,18 +149,18 @@ export class DeepSeekHarness implements AsyncDisposable {
 }
 
 /** Construct the high-level API against a generic process for package-local fake-runtime tests. */
-export function createProcessDeepSeekHarness(
+export function createProcessLiwa(
   runtime: RuntimeProcessOptions,
-  options: DeepSeekHarnessOptions = {},
-): DeepSeekHarness {
-  const Constructor = DeepSeekHarness as new (
-    publicOptions: DeepSeekHarnessOptions,
-    clientFactory: () => HarnessClient,
-  ) => DeepSeekHarness
+  options: LiwaOptions = {},
+): Liwa {
+  const Constructor = Liwa as new (
+    publicOptions: LiwaOptions,
+    clientFactory: () => LiwaClient,
+  ) => Liwa
   return new Constructor({
     ...runtime.cwd === undefined ? {} : { processCwd: runtime.cwd },
     ...options,
-  }, () => createProcessHarnessClient(runtime))
+  }, () => createProcessLiwaClient(runtime))
 }
 
 /** Per-run options: target session and streaming observer. */
@@ -168,18 +168,18 @@ export interface RunOptions {
   /** Session id to run on; omitted mints a fresh session per call. */
   sessionId?: string
   /** Observer invoked with every notification for this session tree, in wire order. */
-  onNotification?: (notification: HarnessNotification) => void
+  onNotification?: (notification: LiwaNotification) => void
 }
 
 /**
  * One SDK session: a stable id plus owned activity intervals.
  */
-export class HarnessSession {
+export class LiwaSession {
   /**
    * @param harness - the owning harness (supplies the client and handshake).
    * @param id - the wire session id this handle runs on.
    */
-  constructor(readonly harness: DeepSeekHarness, readonly id: string) {}
+  constructor(readonly harness: Liwa, readonly id: string) {}
 
   /**
    * Read the effective directory and recover a missing directory to the Session origin.
@@ -212,10 +212,10 @@ export class HarnessSession {
     const client = this.harness.client
     const contentBlocks = normalizeInput(input)
     const events: SessionEvent[] = []
-    const notifications: HarnessNotification[] = []
+    const notifications: LiwaNotification[] = []
 
     const subscription = client.subscribeSessionTree(this.id)
-    const collect = (notification: HarnessNotification): void => {
+    const collect = (notification: LiwaNotification): void => {
       if (notification.method === 'session.event' && notification.params.sessionId === this.id) {
         // Wire boundary: the envelope feeds the typed RunResult, so a
         // malformed runtime surfaces as a protocol error, not as type-invalid

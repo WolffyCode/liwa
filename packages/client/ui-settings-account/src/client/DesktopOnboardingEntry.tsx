@@ -1,7 +1,7 @@
 /** Framework-hook projection into the desktop introduction's pure view. */
 import { useEffect, useLayoutEffect, useState } from 'react'
-import type { HostObservable, InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
-import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
+import type { HostObservable, InjectFace, PropsLocale, PropsRuntime } from '@liwa/client-ui-slots'
+import type {} from '@liwa/client-ui-layout/client'
 import type { AccountSnapshot } from './AccountSection.tsx'
 import type { DesktopOnboardingProps, DesktopOnboardingState } from './onboarding-contract.ts'
 import { OnboardingSurface } from './OnboardingSurface.tsx'
@@ -30,8 +30,8 @@ export function DesktopOnboardingEntry({ useOnboarding, useAccount, setVisible, 
   useLayoutEffect(() => {
     if (!state.visible) return
     const bridge = (globalThis as typeof globalThis & {
-      dshOnboarding?: { setActive(active: boolean): void }
-    }).dshOnboarding
+      liwaOnboarding?: { setActive(active: boolean): void }
+    }).liwaOnboarding
     bridge?.setActive(true)
     return () => { bridge?.setActive(false) }
   }, [state.visible])

@@ -1,4 +1,4 @@
-import { defineProperty, isNullable } from '@deepseek-ai/cosmokit'
+import { defineProperty, isNullable } from '@liwa/cosmokit'
 import { Context } from './context.ts'
 import { locate } from './reflect.ts'
 import { createCallable, joinPrototype, symbols, type Tracker } from './utils.ts'

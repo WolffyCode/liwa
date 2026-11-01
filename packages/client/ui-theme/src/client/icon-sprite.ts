@@ -3,8 +3,8 @@
  * every product icon, so ui-primitives icons render through `<use>` and
  * inherit `currentColor` and CSS variables at each use site.
  */
-import type { Context } from '@deepseek-ai/cordis'
-import { ICON_SYMBOLS, type IconSymbolId } from '@deepseek-ai/dsh-client-ui-primitives'
+import type { Context } from '@liwa/cordis'
+import { ICON_SYMBOLS, type IconSymbolId } from '@liwa/client-ui-primitives'
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
 
@@ -32,7 +32,7 @@ export function installIconSprite(ctx: Context, icons: IconReplacements | undefi
   if (typeof document === 'undefined') return
   const sprite = document.createElementNS(SVG_NS, 'svg')
   sprite.setAttribute('aria-hidden', 'true')
-  sprite.setAttribute('data-dsh-icon-sprite', '')
+  sprite.setAttribute('data-liwa-icon-sprite', '')
   sprite.style.cssText = 'position: absolute; width: 0; height: 0; overflow: hidden'
   const rendered = new Map<string, SVGSymbolElement>()
   const markups = new Map<string, string>()

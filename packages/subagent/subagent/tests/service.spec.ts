@@ -1,12 +1,12 @@
 import { mountWorkingDirectoryFixture } from './working-directory-fixture.ts'
 import { describe, expect, expectTypeOf, it, onTestFinished, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { type Agent } from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
+import { Context } from '@liwa/cordis'
+import { type Agent } from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import { mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
 
-import { HarnessError, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
-import { carrierKeyOf } from '@deepseek-ai/dsh-scope'
+import { LiwaError, ReasoningEffortId } from '@liwa/llm'
+import { carrierKeyOf } from '@liwa/scope'
 import SubagentRuntime, {
   foldSubagentDescriptor,
   snapshotSubagentDescriptor,
@@ -21,9 +21,9 @@ import SubagentRuntime, {
   type SubagentRun,
   type SubagentRunEndInfo,
   type SubagentStartRequest,
-} from '@deepseek-ai/dsh-subagent'
-import { Session, SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+} from '@liwa/subagent'
+import { Session, SessionId, type SessionEvent } from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
 
 function fakeParent(id = 'parent-1'): Agent {
   return { id: SessionId(id) } as unknown as Agent
@@ -444,7 +444,7 @@ describe('SubagentRuntime', () => {
 
   it('SubagentError participates in the harness error taxonomy', () => {
     const error = new SubagentError('boom', 'NO_PROVIDER')
-    expect(error).toBeInstanceOf(HarnessError)
+    expect(error).toBeInstanceOf(LiwaError)
     expect(error.name).toBe('SubagentError')
     expect(error.code).toBe('NO_PROVIDER')
   })

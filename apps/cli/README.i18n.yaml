@@ -2,21 +2,21 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write apps/cli/README.md
-/deepseek-ai-dsh:
-  en: ebdc75fa0da18801
-  zh: 5c6cd2554b8f8a98
-/deepseek-ai-dsh/entry-modes:
-  en: a1e035a813554366
-  zh: b87053214afe71b6
-/deepseek-ai-dsh/app-arguments:
-  en: cc03e6b75206661b
-  zh: 99e41f4143198352
-/deepseek-ai-dsh/profiles:
-  en: 523477a093beb0c2
-  zh: f88ea21e5fbea969
-/deepseek-ai-dsh/optional-overlays:
-  en: 3a40ddc44e55f79c
-  zh: 8d3949132e1ef93c
-/deepseek-ai-dsh/development:
-  en: 0a289c1235869927
-  zh: a1f473f70036ad37
+/liwa-cli:
+  en: 8615cdda78d0cc23
+  zh: c0eca146f08280f4
+/liwa-cli/entry-modes:
+  en: 5a3996d7479e176d
+  zh: 1bb0612d8d890a41
+/liwa-cli/app-arguments:
+  en: 73fd47cee4a8ca60
+  zh: 9b3418165b985325
+/liwa-cli/profiles:
+  en: f99795af8fcb7e84
+  zh: 6327031f0950f6dc
+/liwa-cli/optional-overlays:
+  en: 178892e5db90ad0c
+  zh: 967bd8cc7e6ec07b
+/liwa-cli/development:
+  en: 71e91e908d89b25a
+  zh: d7b0bb58a180e4f4

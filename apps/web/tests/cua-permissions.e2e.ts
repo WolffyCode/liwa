@@ -3,9 +3,9 @@ import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { ToolCallId } from '@deepseek-ai/dsh-llm'
-import type {} from '@deepseek-ai/dsh-user-approval'
-import type {} from '@deepseek-ai/dsh-agent-preset-registry'
+import { ToolCallId } from '@liwa/llm'
+import type {} from '@liwa/user-approval'
+import type {} from '@liwa/agent-preset-registry'
 import { chromium, type Browser } from 'playwright'
 import { expect, it, onTestFailed, onTestFinished, vi } from 'vitest'
 import { captureStableAria, compareOrRefreshGolden, launchWebScaffold, webSnapshotMode, watchConsole, type WebScaffold } from './scaffold.ts'
@@ -17,7 +17,7 @@ const expected = fileURLToPath(new URL('./expected/cua-permissions/missing.expec
 
 // System-permission onboarding belongs to the macOS-only bundle; rendering and policy units remain portable.
 it.skipIf(process.platform !== 'darwin')('keeps system requests pending until fresh observation and persists application revocation', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-cua-permissions-web-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-cua-permissions-web-'))
   const resources: { scaffold?: WebScaffold; browser?: Browser; closeFixture?: () => Promise<void> } = {}
   onTestFinished(async () => {
     try { await resources.browser?.close() } finally {
@@ -41,7 +41,7 @@ it.skipIf(process.platform !== 'darwin')('keeps system requests pending until fr
     extraOverlayPath: fixturePatch,
   })
   resources.scaffold = scaffold
-  expect((await scaffold.ctx.pluginManager.listBundles()).find(bundle => bundle.name === '@deepseek-ai/dsh-cua-bundle'))
+  expect((await scaffold.ctx.pluginManager.listBundles()).find(bundle => bundle.name === '@liwa/cua-bundle'))
     .toMatchObject({ listedByDefault: false, enabled: true, installed: true })
   const browser = await chromium.launch()
   resources.browser = browser
@@ -74,7 +74,7 @@ it.skipIf(process.platform !== 'darwin')('keeps system requests pending until fr
   expect((await grant).results).toMatchObject([{ result: { isError: false } }])
   await approval.waitFor({ state: 'hidden' })
   await page.getByRole('button', { name: 'Plugins', exact: true }).click()
-  const card = page.locator('[data-plugin-package="@deepseek-ai/dsh-cua-bundle"]')
+  const card = page.locator('[data-plugin-package="@liwa/cua-bundle"]')
   expect(await card.getByRole('button', { name: /Accessibility permission|Screen Recording permission/ }).count()).toBe(0)
   await page.setViewportSize({ width: 1680, height: 600 })
   const plugins = page.locator('[data-plugin-panel]')
@@ -142,9 +142,9 @@ it.skipIf(process.platform !== 'darwin')('keeps system requests pending until fr
   await panel.getByRole('heading', { name: 'Applications not allowed', exact: true }).waitFor()
   await panel.getByRole('button', { name: 'Allow asking again', exact: true }).click()
   await panel.getByText('Fixture', { exact: true }).waitFor({ state: 'hidden' })
-  const saved = await readFile(join(scaffold.harnessHome, 'profiles/scaffold/cordis.patch.yml'), 'utf8')
+  const saved = await readFile(join(scaffold.liwaHome, 'profiles/scaffold/cordis.patch.yml'), 'utf8')
   expect(saved).not.toContain('allowedApps:')
-  const files = await readdir(join(scaffold.workspaceCwd, '.dsh-storages'))
+  const files = await readdir(join(scaffold.workspaceCwd, '.liwa-storages'))
   expect(files.some(file => file.startsWith('cua_permissions_') && file.endsWith('.json'))).toBe(true)
   expect((await scaffold.ctx.cuaAccess.applications()).allowedApps).toEqual([])
   const events = (await readFile(audit, 'utf8')).trim().split('\n').map(line => JSON.parse(line) as { event: string; method: string; params: object })
@@ -196,7 +196,7 @@ it.skipIf(process.platform !== 'darwin')('keeps system requests pending until fr
       for (let cycle = 0; cycle < 3; cycle++) {
         await toggle.click()
         await expect.poll(async () => (await scaffold.ctx.pluginManager.listBundles())
-          .find(bundle => bundle.name === '@deepseek-ai/dsh-cua-bundle'))
+          .find(bundle => bundle.name === '@liwa/cua-bundle'))
           .toMatchObject({ enabled: false, installed: true })
         await expect.poll(() => toggle.getAttribute('aria-checked'), { timeout: PLUGIN_TOGGLE_SETTLE_MS }).toBe('false')
         await expect.poll(() => toggle.isEnabled(), { timeout: PLUGIN_TOGGLE_SETTLE_MS }).toBe(true)

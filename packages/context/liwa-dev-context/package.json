@@ -1,0 +1,51 @@
+{
+  "name": "@liwa/liwa-dev-context",
+  "description": "Model context naming the Liwa checkout and Web GUI URL without letting either change the system prompt",
+  "version": "0.2.2-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
+    "directory": "packages/context/liwa-dev-context"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./locale/*.json": "./locale/*.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "locale/*.json",
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "zod": "4.4.3"
+  },
+  "peerDependencies": {
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/system-prompt": "workspace:*"
+  },
+  "devDependencies": {
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-loop-testkit": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/web-app": "workspace:*"
+  }
+}

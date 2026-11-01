@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-repeat-tool-reminder",
+  "name": "@liwa/repeat-tool-reminder",
   "description": "Repeat-tool-call guard plugin: advisory reminders when an agent loops on identical tool calls",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/guard/repeat-tool-reminder"
   },
   "type": "module",
@@ -29,22 +29,22 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/schemastery": "workspace:~"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/agent": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-tool-testkit": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-session-projection": "workspace:*"
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-loop": "workspace:*",
+    "@liwa/agent-loop-testkit": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/tool-testkit": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/session-projection": "workspace:*"
   }
 }

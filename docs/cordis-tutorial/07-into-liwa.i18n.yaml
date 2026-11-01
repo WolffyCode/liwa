@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 07-into-liwa.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/cordis-tutorial/07-into-liwa.md
+/7-into-liwa:
+  en: 1830568d16efd7b6
+  zh: 2ff60bd0d8dc9d0b
+/7-into-liwa/a-tool-plugin:
+  en: 4e19100fed20a966
+  zh: 76e5c63815d5fc25
+/7-into-liwa/an-observer-plugin:
+  en: d891a4ddb9a063f5
+  zh: 032f54bdf553cd5c
+/7-into-liwa/compose-and-run:
+  en: 85a44caf4df0349f
+  zh: 99e69f750a5facd2
+/7-into-liwa/from-here-to-a-full-agent:
+  en: 6637f22b05549e39
+  zh: 6795328682bd193e

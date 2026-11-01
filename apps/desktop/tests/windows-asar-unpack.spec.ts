@@ -48,9 +48,9 @@ afterEach(async () => {
 
 function unsignedWindowsConfig(appId: string, source: string) {
   return createElectronBuilderConfig({
-    DSH_DESKTOP_APP_ID: appId, DSH_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN: 'https://policy.example.com',
-    DSH_DESKTOP_MANDATORY_UPDATE_CONFIG: JSON.stringify({ allowedAuthOrigins: ['https://login.example.com'] }),
-    DSH_DESKTOP_UNSIGNED: '1',
+    LIWA_DESKTOP_APP_ID: appId, LIWA_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN: 'https://policy.example.com',
+    LIWA_DESKTOP_MANDATORY_UPDATE_CONFIG: JSON.stringify({ allowedAuthOrigins: ['https://login.example.com'] }),
+    LIWA_DESKTOP_UNSIGNED: '1',
   }, 'win32', 'x64', source)
 }
 
@@ -58,7 +58,7 @@ async function fixture(external: boolean) {
   const root = await mkdtemp(join(tmpdir(), 'windows-asar-'))
   roots.push(root)
   const appDir = join(root, 'app')
-  const source = external ? join(root, 'private', 'dsh') : join(appDir, '.desktop-build', 'dsh')
+  const source = external ? join(root, 'private', 'liwa') : join(appDir, '.desktop-build', 'liwa')
   const resources = join(root, 'output', 'resources')
   await mkdir(resources, { recursive: true })
   await mkdir(appDir, { recursive: true })
@@ -85,8 +85,8 @@ async function fixture(external: boolean) {
     await writeFile(join(directory, 'cli.js'), 'export {}')
   }
   const config = {
-    files: [{ from: source, to: 'dsh', filter: ['**/*'] },
-      { from: join(source, 'node_modules'), to: 'dsh/node_modules', filter: ['**/*'] }],
+    files: [{ from: source, to: 'liwa', filter: ['**/*'] },
+      { from: join(source, 'node_modules'), to: 'liwa/node_modules', filter: ['**/*'] }],
     asarUnpack: ['**/*.node'],
   } satisfies Configuration
   const info = new Packager({ projectDir: appDir })
@@ -122,7 +122,7 @@ async function packageFixture(input: Awaited<ReturnType<typeof fixture>>) {
   await visit(mapping.from)
   await new AsarPackager({ info: { getWorkspaceRoot: async () => input.root } }, {
     defaultDestination: destination, resourcePath: input.resources, options: {}, unpackPattern: matchers[0]!.createFilter(),
-  }).pack([{ src: mapping.from, destination: join(destination, 'dsh'), files, metadata }])
+  }).pack([{ src: mapping.from, destination: join(destination, 'liwa'), files, metadata }])
 }
 
 it('includes the diagnostic worker in the archive selected by the shipping file rules', async () => {
@@ -137,7 +137,7 @@ it('includes the diagnostic worker in the archive selected by the shipping file 
   const excluded = join(appDir, 'lib', 'not-shipped.js')
   await writeFile(worker, 'export {}')
   await writeFile(excluded, 'export {}')
-  const config = unsignedWindowsConfig('com.example.diagnostics', join(root, 'dsh'))
+  const config = unsignedWindowsConfig('com.example.diagnostics', join(root, 'liwa'))
   const filesConfig = config.files.map(entry => typeof entry === 'string' ? entry : { ...entry, filter: [...entry.filter] })
   const matchers = getFileMatchers({ files: filesConfig }, 'files', destination, {
     defaultSrc: appDir, globalOutDir: root, customBuildOptions: {}, macroExpander: value => value,
@@ -167,8 +167,8 @@ it.each([false, true])('unpacks PE files through builder source patterns (extern
   await packageFixture(input)
   await verifyWindowsAsarUnpack(input.source, input.resources, files)
   const archive = await readAsar(join(input.resources, 'app.asar'))
-  expect(archive.getFile(join('dsh', 'node_modules', 'foo', 'companion.json')).unpacked).not.toBe(true)
-  expect(archive.getFile(join('dsh', 'node_modules', 'foo', '$xarchy.binary')).unpacked).toBe(true)
+  expect(archive.getFile(join('liwa', 'node_modules', 'foo', 'companion.json')).unpacked).not.toBe(true)
+  expect(archive.getFile(join('liwa', 'node_modules', 'foo', '$xarchy.binary')).unpacked).toBe(true)
   expect(files).toEqual(input.names.map(name => join('node_modules', 'foo', name)).sort())
   const first = input.config.files[0]!
   const nested = input.config.files[1]!
@@ -188,7 +188,7 @@ it('rejects an inline PE even when a neighboring unpacked copy exists', async ()
   const files = await prepareWindowsAsarUnpack(input.context, input.source)
   input.config.asarUnpack = ['**/*.node']
   await packageFixture(input)
-  const path = join(input.resources, 'app.asar.unpacked', 'dsh', files[0]!)
+  const path = join(input.resources, 'app.asar.unpacked', 'liwa', files[0]!)
   await mkdir(dirname(path), { recursive: true })
   await writeFile(path, await readFile(join(input.source, files[0]!)))
   await expect(verifyWindowsAsarUnpack(input.source, input.resources, files)).rejects.toThrow('PE must be unpacked')
@@ -198,7 +198,7 @@ it.each(['changed', 'missing'] as const)('rejects %s unpacked PE bytes', async (
   const input = await fixture(false)
   const files = await prepareWindowsAsarUnpack(input.context, input.source)
   await packageFixture(input)
-  const path = join(input.resources, 'app.asar.unpacked', 'dsh', files[0]!)
+  const path = join(input.resources, 'app.asar.unpacked', 'liwa', files[0]!)
   if (state === 'changed') await writeFile(path, 'changed')
   else await rm(path)
   await expect(verifyWindowsAsarUnpack(input.source, input.resources, files)).rejects.toThrow(state === 'changed' ? 'PE bytes changed' : 'ENOENT')
@@ -222,10 +222,10 @@ it.each([true, false])('validates the real builder hook for unsigned=%s', async 
   const certificate = join(input.root, 'certificate.cer')
   await writeFile(certificate, 'fixture public certificate')
   const config = createElectronBuilderConfig({
-    DSH_DESKTOP_APP_ID: 'com.example.unpack', DSH_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN: 'https://policy.example.com',
-    DSH_DESKTOP_MANDATORY_UPDATE_CONFIG: JSON.stringify({ allowedAuthOrigins: ['https://login.example.com'] }),
-    DSH_DESKTOP_TARGET_PLATFORM: 'win32', DSH_DESKTOP_TARGET_ARCH: 'x64', DSH_DESKTOP_UNSIGNED: unsigned ? '1' : '0',
-    DSH_DESKTOP_WINDOWS_CER_FILE: certificate, DOWNLOAD_TEST_ORIGIN: 'https://updates.example.com', DOWNLOAD_TEST_RELEASE_ID: '0123456789abcdef0123456789abcdef',
+    LIWA_DESKTOP_APP_ID: 'com.example.unpack', LIWA_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN: 'https://policy.example.com',
+    LIWA_DESKTOP_MANDATORY_UPDATE_CONFIG: JSON.stringify({ allowedAuthOrigins: ['https://login.example.com'] }),
+    LIWA_DESKTOP_TARGET_PLATFORM: 'win32', LIWA_DESKTOP_TARGET_ARCH: 'x64', LIWA_DESKTOP_UNSIGNED: unsigned ? '1' : '0',
+    LIWA_DESKTOP_WINDOWS_CER_FILE: certificate, DOWNLOAD_TEST_ORIGIN: 'https://updates.example.com', DOWNLOAD_TEST_RELEASE_ID: '0123456789abcdef0123456789abcdef',
   }, 'win32', 'x64', input.source)
   // Qualification replaces files after creating the base configuration; builder owns a separate config object.
   input.config.asarUnpack = [...config.asarUnpack]
@@ -233,7 +233,7 @@ it.each([true, false])('validates the real builder hook for unsigned=%s', async 
   await packageFixture(input)
   await config.afterPack(input.context)
   if (!unsigned) await config.afterSign(input.context)
-  const file = join(input.resources, 'app.asar.unpacked', 'dsh', 'node_modules', 'foo', 'custom.binary')
+  const file = join(input.resources, 'app.asar.unpacked', 'liwa', 'node_modules', 'foo', 'custom.binary')
   await writeFile(file, 'changed after packaging')
   if (unsigned) await expect(config.afterPack(input.context)).rejects.toThrow('PE bytes changed')
   else {
@@ -255,9 +255,9 @@ it.each([false, true])('unpacks platform ripgrep executables with external sourc
   input.config.asarUnpack = [...config.asarUnpack]
   await packageFixture(input)
   const archive = await readAsar(join(input.resources, 'app.asar'))
-  expect(archive.getFile(join('dsh', 'node_modules', '@vscode', 'ripgrep/lib/index.js')).unpacked).not.toBe(true)
+  expect(archive.getFile(join('liwa', 'node_modules', '@vscode', 'ripgrep/lib/index.js')).unpacked).not.toBe(true)
   for (const file of files) {
-    const path = join('dsh', 'node_modules', '@vscode', file)
+    const path = join('liwa', 'node_modules', '@vscode', file)
     expect(archive.getFile(path, false).unpacked).toBe(true)
     expect(await readFile(join(input.resources, 'app.asar.unpacked', path), 'utf8')).toBe('ripgrep fixture')
   }
@@ -280,13 +280,13 @@ it.each([false, true])('keeps the complete Office engine outside ASAR with exter
   await config.beforePack(input.context)
   await packageFixture(input)
   const archive = await readAsar(join(input.resources, 'app.asar'))
-  expect(archive.getFile(join('dsh', 'node_modules', '@deepseek-ai', 'libreoffice-kit-wasm', 'package.json')).unpacked).not.toBe(true)
+  expect(archive.getFile(join('liwa', 'node_modules', '@deepseek-ai', 'libreoffice-kit-wasm', 'package.json')).unpacked).not.toBe(true)
   for (const name of ['@deepseek-ai/libreoffice-kit', 'office-codec']) {
-    expect(archive.getFile(join('dsh', 'node_modules', name, 'cli.js')).unpacked).toBe(true)
+    expect(archive.getFile(join('liwa', 'node_modules', name, 'cli.js')).unpacked).toBe(true)
   }
   for (const file of files) {
-    expect(archive.getFile(join('dsh', engine, file), false).unpacked).toBe(true)
-    expect(await readFile(join(input.resources, 'app.asar.unpacked', 'dsh', engine, file), 'utf8')).toBe('{}')
+    expect(archive.getFile(join('liwa', engine, file), false).unpacked).toBe(true)
+    expect(await readFile(join(input.resources, 'app.asar.unpacked', 'liwa', engine, file), 'utf8')).toBe('{}')
   }
 })
 
@@ -309,7 +309,7 @@ it('verifies archived bytes against the preparation descriptor', async () => {
   await packageFixture(input)
   const archive = join(input.resources, 'app.asar')
   await expect(verifyRuntimeArchive(archive, expected)).resolves.toBeUndefined()
-  await writeFile(join(input.resources, 'app.asar.unpacked/dsh/node_modules/foo/native.node'), 'tampered')
+  await writeFile(join(input.resources, 'app.asar.unpacked/liwa/node_modules/foo/native.node'), 'tampered')
   await expect(verifyRuntimeArchive(archive, expected)).rejects.toThrow('ASAR integrity')
 })
 
@@ -335,7 +335,7 @@ it.each(['directory', 'extra'] as const)('rejects an unpacked %s without a match
   const input = await fixture(false)
   const expected = await seal(input)
   await packageFixture(input)
-  const root = join(input.resources, 'app.asar.unpacked/dsh')
+  const root = join(input.resources, 'app.asar.unpacked/liwa')
   if (state === 'directory') {
     const file = join(root, 'node_modules/foo/native.node')
     await rm(file)
@@ -360,7 +360,7 @@ it.skipIf(process.platform === 'win32')('checks packed executable records and ph
   await packageFixture(input)
   const archive = join(input.resources, 'app.asar')
   await expect(verifyRuntimeArchive(archive, expected)).resolves.toBeUndefined()
-  await chmod(join(input.resources, 'app.asar.unpacked/dsh/node_modules/foo/native.node'), 0o644)
+  await chmod(join(input.resources, 'app.asar.unpacked/liwa/node_modules/foo/native.node'), 0o644)
   await expect(verifyRuntimeArchive(archive, expected)).rejects.toThrow('ASAR integrity')
 })
 

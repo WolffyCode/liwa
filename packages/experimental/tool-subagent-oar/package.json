@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-experimental-tool-subagent-oar",
+  "name": "@liwa/experimental-tool-subagent-oar",
   "description": "Delegate standalone tasks to configured external subagent providers",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/experimental/tool-subagent-oar"
   },
   "type": "module",
@@ -29,21 +29,21 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-subagent": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/subagent": "workspace:*",
+    "@liwa/tools": "workspace:*"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-subagent": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-tool-testkit": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/agent-loop-testkit": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/subagent": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/tool-testkit": "workspace:*"
   }
 }

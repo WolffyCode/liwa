@@ -18,7 +18,7 @@ it.skipIf(!built || process.platform === 'win32')(
   'runs the packed provider with its embedded Claude permission patch and no resolvable external OAR',
   { timeout: 120_000, retry: 0 },
   async (test) => {
-    const root = await mkdtemp(join(tmpdir(), 'dsh-oar-packed-'))
+    const root = await mkdtemp(join(tmpdir(), 'liwa-oar-packed-'))
     test.onTestFinished(() => rm(root, { recursive: true, force: true }))
     const run = async (command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv = {}) => {
       const result = await execa(command, args, {
@@ -55,7 +55,7 @@ it.skipIf(!built || process.platform === 'win32')(
     const argvPath = join(root, 'argv.json')
     const script = `
       import assert from 'node:assert/strict'
-      import { Context } from '@deepseek-ai/cordis'
+      import { Context } from '@liwa/cordis'
       import * as provider from './lib/index.js'
       assert.throws(() => import.meta.resolve('@botiverse/oar'), { code: 'ERR_MODULE_NOT_FOUND' })
       const ctx = new Context()

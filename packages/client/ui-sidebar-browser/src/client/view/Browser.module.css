@@ -83,8 +83,8 @@
 }
 
 .addressUnknown {
-  --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
-  --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
+  --liwa-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --liwa-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
 
   color: var(--dsw-alias-label-tertiary);
   background: var(--dsw-alias-bg-layer-2);

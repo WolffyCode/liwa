@@ -1,26 +1,26 @@
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
-import { ToolCallId, createMessage, createUserMessage } from '@deepseek-ai/dsh-llm'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
+import { ToolCallId, createMessage, createUserMessage } from '@liwa/llm'
 import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { appendFile, mkdtemp, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import LlmRuntime from '@deepseek-ai/dsh-llm'
-import type { ContextFormed } from '@deepseek-ai/dsh-llm'
-import SessionStore, { SessionLogOffset, SessionSeq, Session, SessionId, TOOL_NOT_STARTED, TOOL_OUTCOME_UNKNOWN } from '@deepseek-ai/dsh-session'
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
-import { defineContentToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
-import { SessionAlreadyExistsError, type SessionHandle } from '@deepseek-ai/dsh-session-persistence'
+import LlmRuntime from '@liwa/llm'
+import type { ContextFormed } from '@liwa/llm'
+import SessionStore, { SessionLogOffset, SessionSeq, Session, SessionId, TOOL_NOT_STARTED, TOOL_OUTCOME_UNKNOWN } from '@liwa/session'
+import type { SessionEvent } from '@liwa/session'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime from '@liwa/tools'
+import { defineContentToolFixture } from '@liwa/tool-testkit'
+import AgentRegistry, { type Agent } from '@liwa/agent'
+import { SessionAlreadyExistsError, type SessionHandle } from '@liwa/session-persistence'
 
-import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import * as JsonlSessionPersistence from '@liwa/session-persistence-jsonl'
+import AgentLoop from '@liwa/agent-loop'
+import SessionProjectionRegistry from '@liwa/session-projection'
 import { MockAdapter, textResponse } from './mock-adapter.ts'
 
-declare module '@deepseek-ai/dsh-llm' {
+declare module '@liwa/llm' {
   interface MessageSourceMap {
     'tool-bash': { kind: 'tool-bash' } & ContextFormed
   }
@@ -30,7 +30,7 @@ const dirs: string[] = []
 afterEach(async () => { for (const d of dirs.splice(0)) await rm(d, { recursive: true, force: true }) })
 
 async function persistentHarness(adapter: MockAdapter): Promise<{ ctx: Context; root: string }> {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-resume-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-resume-'))
   dirs.push(root)
   return { ctx: await mountPersistentHarness(root, adapter), root }
 }
@@ -577,7 +577,7 @@ describe('the session-persistence Agent Note: AgentLoop factory create/resume', 
 
   it('resume over a torn physical tail continues from the committed prefix', async () => {
     const sessionId = SessionId('torn-tail-resume')
-    const root = await mkdtemp(join(tmpdir(), 'dsh-resume-torn-'))
+    const root = await mkdtemp(join(tmpdir(), 'liwa-resume-torn-'))
     dirs.push(root)
     const ctx1 = await mountPersistentHarness(root, new MockAdapter([]), 'none')
     await seedStoredSession(ctx1, sessionId, [

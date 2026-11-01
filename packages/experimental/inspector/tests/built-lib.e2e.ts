@@ -10,12 +10,12 @@ import { pnpmInvocation } from '../../../../scripts/pnpm-invocation.ts'
 const packageDirectory = fileURLToPath(new URL('..', import.meta.url))
 const built = [
   'lib/index.js',
-  'node_modules/@deepseek-ai/schemastery/lib/index.mjs',
+  'node_modules/@liwa/schemastery/lib/index.mjs',
 ].every(file => existsSync(join(packageDirectory, file)))
 
 describe.skipIf(!built)('experimental Inspector built artifact', () => {
   it('packs its sibling Worker and evaluates the Host from the tarball through plain Node', { retry: 0 }, async (test) => {
-    const root = await mkdtemp(join(tmpdir(), 'dsh-inspector-packed-'))
+    const root = await mkdtemp(join(tmpdir(), 'liwa-inspector-packed-'))
     const consumer = join(root, 'package')
     const dependencies = join(consumer, 'node_modules')
     let linked = false
@@ -54,7 +54,7 @@ describe.skipIf(!built)('experimental Inspector built artifact', () => {
     await symlink(join(packageDirectory, 'node_modules'), dependencies, process.platform === 'win32' ? 'junction' : 'dir')
     linked = true
     const script = `
-      const { startInspector } = await import('@deepseek-ai/dsh-experimental-inspector')
+      const { startInspector } = await import('@liwa/experimental-inspector')
       const { default: WebSocket } = await import('ws')
       globalThis.__builtInspectorProbe = 42
       const inspector = await startInspector({ port: 0, captureFetch: false, startupTimeoutMs: ${String(test.task.timeout)} })

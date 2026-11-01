@@ -3,7 +3,7 @@ description: "Target-neutral 对话装配与浏览器 shell：事件和视图注
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-client-ui-conversation
+# @liwa/client-ui-conversation
 
 [English](README.md) | 中文
 
@@ -72,7 +72,7 @@ Queue 预览启用空白折叠和文档边缘 trim，保留 emoji，并使用 CS
 
 在粗指针设备上，composer 的草稿字号至少为 16px，以避免获得焦点时浏览器自动放大；更大的字号偏好仍然生效。
 
-控件组的尺寸、内容、可见性或字体加载状态变化后，composer 测量展开状态下的控件组。若无法排在同一行，控制栏为模型位设置 `--dsh-composer-model-text-display: none` 和 `--dsh-composer-model-icon-display: block`；两者默认值分别为 `block` 和 `none`。模型位按内容宽度（最多 360px）参与测量，而不是按行宽比例，因此长模型名在测量中保持可见。若连图标也放不下，仍允许换行。
+控件组的尺寸、内容、可见性或字体加载状态变化后，composer 测量展开状态下的控件组。若无法排在同一行，控制栏为模型位设置 `--liwa-composer-model-text-display: none` 和 `--liwa-composer-model-icon-display: block`；两者默认值分别为 `block` 和 `none`。模型位按内容宽度（最多 360px）参与测量，而不是按行宽比例，因此长模型名在测量中保持可见。若连图标也放不下，仍允许换行。
 
 上下文占用率入口遵循[统计控件圆角规则](../../../docs/ui-radius.zh.md#radius-scale)。
 
@@ -118,7 +118,7 @@ Session 首次绑定或缓存的 Session 成为 current 时，shell 会在渲染
 
 每次输入框提交都携带原始发生时间、操作来源、投递意图以及会话模型和运行状态快照，贯穿异步命令裁决。快照还记录会话是否仍为空白，以及会话记录的 Agent preset id。普通消息通知在引用序列化前发出一次，纯附件提交也遵循这一规则；已处理或认领的命令不发出通知。快照读取与通知消费异常不能阻断发送。在桌面端，该通知报告 `send_button_click`，携带 `is_new_session`（会话为空白时为 true）和表示 preset 类别的 `agent_preset`：`cordis` 记为 `creator`；`ptc`、`minimal` 与 `standard` 沿用各自的 id；其他 preset 记为 `other`。会话未记录 preset 时省略 `agent_preset`。不发送自定义 preset 的 id。
 
-默认发送等待 Host 接收：Enter 把草稿文字、引用胶囊和附件一起记入本次 attempt，composer 进入 `sending`，编辑器和附件栏只读，Send 显示发送中，直到 Host 接收该提示词（以回执或带有该请求 id 的 Inbox 行为准，先到者生效）。之后才在回显渲染之前、在同一事务里清空草稿、其附件、occurrence 表和撤销历史；被拒绝或失败时 composer 回到 `plain`，草稿和附件保持不变，因此同一时刻只有一条消息在途。只读输入阶段结束时，如果焦点停在页面 body 上，桌面端将焦点恢复到编辑器，移动端则将焦点移到输入卡片，避免重新弹出键盘。用户在此期间聚焦的其他控件会保留焦点。`sendSession` 在序列化之前用投递模式注册 Session 提交回显（`session.beginSubmission`），保留图片与文件的选择顺序；Host 接收提示词后，Session 才在 `pendingSubmissions` 中公开它，并按注册时的模式与运行状态推导位置，因此空闲发送进入 transcript（文本记录），繁忙时 Queue 进入 QueueDock，繁忙时 Steer 进入 pending-steering 区域。随后让出一帧，文件和已上传的图片引用已暂存凭证；没有上传的图片（例如 continuable 子代理草稿里的图片）经浏览器原生 `FileReader` data-URL 路径编码。命令提交也用同一凭证表示通用文件，因此发送 `/goal` 或 `/plan` 时不会再次读取这些浏览器文件。提示词复用提交 `requestId`；Session 按同一 `rpcId` 关联展示接管，并仅退休回显一次。命令提交保持冻结的 `submitting` 阶段。回显以 observed 退休时，durable 图片缓存立即公开每个预览 URL，读取 admitted 附件后用规范化 URL 替换预览，并在各 URL 停止使用后撤销，同时释放文件卡；已被接收但回显未被观察到就退休的提示词会释放其附件，Session scope 销毁时会释放尚未被 Host 接收的消息的附件。选中的通用文件以及普通 Session 草稿里的图片在加入时就进入同一个先进先出的后台上传队列，发送会等到每一项都取得凭证；`maxConcurrentFileUploads` 默认允许两个 Worker transport 同时运行，Conversation 服务在切换 Session 时继续持有排队和运行中的传输操作及字节进度，移除草稿会跳过排队中的传输或中止正在运行的传输。浏览器 shell 暴露 `__DSH_HOST_PATHS__` 时（桌面应用），拖入或粘贴的文件夹以及拖入、选择或粘贴的带真实路径的非图片文件会成为 `@路径` chip；图片仍然上传。拖放和粘贴通过浏览器 entry API 识别目录；该 API 不可用或没有返回 entry 时，粘贴项沿用普通文件处理。文件选择器不能选择目录。引用需要启用 `ui-reference` 插件，原路径也必须仍可由模型的文件工具读取。工作区内的路径使用相对形式，其他路径保留绝对形式。整批文件先校验再插入，保留来源顺序和已选中的文字，引用之间有空白分隔，含空格的路径使用闭合引号。没有该桥的浏览器会拒绝拖入或粘贴的文件夹，桌面端无法获取文件夹路径时单独报错。continuable 子代理允许粘贴和拖入 PNG、JPEG、WebP、GIF 图片，沿用相同的投影限制并以内联方式发送，因为 Host 只为普通 Session 暂存上传；包含通用文件、不支持的图片格式或目录的批次会在进入草稿前整批拒绝。它们的发送同样注册本地回显；continuation 请求携带回显的 `requestId`，Host 把它记录为子会话消息的 `rpcId`。
+默认发送等待 Host 接收：Enter 把草稿文字、引用胶囊和附件一起记入本次 attempt，composer 进入 `sending`，编辑器和附件栏只读，Send 显示发送中，直到 Host 接收该提示词（以回执或带有该请求 id 的 Inbox 行为准，先到者生效）。之后才在回显渲染之前、在同一事务里清空草稿、其附件、occurrence 表和撤销历史；被拒绝或失败时 composer 回到 `plain`，草稿和附件保持不变，因此同一时刻只有一条消息在途。只读输入阶段结束时，如果焦点停在页面 body 上，桌面端将焦点恢复到编辑器，移动端则将焦点移到输入卡片，避免重新弹出键盘。用户在此期间聚焦的其他控件会保留焦点。`sendSession` 在序列化之前用投递模式注册 Session 提交回显（`session.beginSubmission`），保留图片与文件的选择顺序；Host 接收提示词后，Session 才在 `pendingSubmissions` 中公开它，并按注册时的模式与运行状态推导位置，因此空闲发送进入 transcript（文本记录），繁忙时 Queue 进入 QueueDock，繁忙时 Steer 进入 pending-steering 区域。随后让出一帧，文件和已上传的图片引用已暂存凭证；没有上传的图片（例如 continuable 子代理草稿里的图片）经浏览器原生 `FileReader` data-URL 路径编码。命令提交也用同一凭证表示通用文件，因此发送 `/goal` 或 `/plan` 时不会再次读取这些浏览器文件。提示词复用提交 `requestId`；Session 按同一 `rpcId` 关联展示接管，并仅退休回显一次。命令提交保持冻结的 `submitting` 阶段。回显以 observed 退休时，durable 图片缓存立即公开每个预览 URL，读取 admitted 附件后用规范化 URL 替换预览，并在各 URL 停止使用后撤销，同时释放文件卡；已被接收但回显未被观察到就退休的提示词会释放其附件，Session scope 销毁时会释放尚未被 Host 接收的消息的附件。选中的通用文件以及普通 Session 草稿里的图片在加入时就进入同一个先进先出的后台上传队列，发送会等到每一项都取得凭证；`maxConcurrentFileUploads` 默认允许两个 Worker transport 同时运行，Conversation 服务在切换 Session 时继续持有排队和运行中的传输操作及字节进度，移除草稿会跳过排队中的传输或中止正在运行的传输。浏览器 shell 暴露 `__LIWA_HOST_PATHS__` 时（桌面应用），拖入或粘贴的文件夹以及拖入、选择或粘贴的带真实路径的非图片文件会成为 `@路径` chip；图片仍然上传。拖放和粘贴通过浏览器 entry API 识别目录；该 API 不可用或没有返回 entry 时，粘贴项沿用普通文件处理。文件选择器不能选择目录。引用需要启用 `ui-reference` 插件，原路径也必须仍可由模型的文件工具读取。工作区内的路径使用相对形式，其他路径保留绝对形式。整批文件先校验再插入，保留来源顺序和已选中的文字，引用之间有空白分隔，含空格的路径使用闭合引号。没有该桥的浏览器会拒绝拖入或粘贴的文件夹，桌面端无法获取文件夹路径时单独报错。continuable 子代理允许粘贴和拖入 PNG、JPEG、WebP、GIF 图片，沿用相同的投影限制并以内联方式发送，因为 Host 只为普通 Session 暂存上传；包含通用文件、不支持的图片格式或目录的批次会在进入草稿前整批拒绝。它们的发送同样注册本地回显；continuation 请求携带回显的 `requestId`，Host 把它记录为子会话消息的 `rpcId`。
 
 排队提交的本地回显在禁用的编辑、删除、插话按钮旁显示“发送中…”；折叠后的队列在标题栏保留发送状态。匹配的 Host 队列行替换回显后，各操作按原有的纯文本内容和运行状态要求启用。仅收到提示词确认不会启用队列操作。被拒绝或失败的提交不会公开回显，草稿留在 composer 中并显示错误提示。Agent 接纳阶段的拒绝（`session/prompt-rejected`）显示它自带的文字；若 `presented` 表明拒绝它的插件会在自己的界面里说明，composer 不再提示。
 
@@ -126,7 +126,7 @@ Send 和 Stop 按钮禁用时不显示提示气泡，轮次结束后由 Stop 切
 
 文件标签和可编辑的 skill 引用共用覆盖整个引用的悬停背景，并跟随输入框的行高与文字基线。首次点击立即由已注册的引用来源负责打开预览，包括双击序列的第一次点击。后续点击保留原生文本选择行为；已有非折叠选区时，指针点击不打开预览。预览不改变草稿、剪贴板文本或提交内容。
 
-当会话被其他写句柄占用时，发送失败的 toast 提示用户退出其他正在运行的 DSH 后重试。
+当会话被其他写句柄占用时，发送失败的 toast 提示用户退出其他正在运行的灵鲸后重试。
 
 在获得焦点的 Chat 或 Composer 中连续独立按下两次 Esc，可停止当前运行轮次并保留排队消息。间隔由 shortcuts 插件的 `stopSequenceMs` 配置决定，默认 500 ms。菜单、审批、模态层、终端、内嵌网页、输入法、重复按键，以及输入区域、Session 或轮次变化会清空序列。快捷键与 Stop 按钮调用同一作用域取消操作。插件将 Stop 注册为 `input` 展示分组中的固定操作。该注册使普通 Esc 不能分配给可编辑快捷键，并为 Stop 按钮的悬停和键盘聚焦提示提供 `Esc Esc` 序列。
 
@@ -150,9 +150,9 @@ interface ComposerChainProps {
 业务包仅可在一个 Remote waterfall request pending 期间安装 entry：
 
 ```tsx
-import type { ComposerChainProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
-import type { ChainSelect, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { ComposerChainProps } from '@liwa/client-ui-conversation/client'
+import type { ChainSelect, PropsRuntime } from '@liwa/client-ui-slots'
+import type { SessionId } from '@liwa/session/types'
 
 interface Request {
   readonly sessionId: SessionId

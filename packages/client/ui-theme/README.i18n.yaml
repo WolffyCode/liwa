@@ -3,56 +3,56 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/client/ui-theme/README.md
 /:
-  en: e9c14ae3732deb3a
-  zh: fee230def9844d2d
-/deepseek-ai-dsh-client-ui-theme:
-  en: 06c7d7624947a72a
-  zh: ac4ca82984564825
-/deepseek-ai-dsh-client-ui-theme/summary:
-  en: d9832b31c4cb3ca4
-  zh: f2ec42bb5ae66188
-/deepseek-ai-dsh-client-ui-theme/table-of-contents:
+  en: 28c2e2a6c35fa773
+  zh: 996b73c1adf73448
+/liwa-client-ui-theme:
+  en: 1a042b06d99611e1
+  zh: 5d0305a3bc2d67ed
+/liwa-client-ui-theme/summary:
+  en: 3649d57f186efbfc
+  zh: 76e1a39d22a95907
+/liwa-client-ui-theme/table-of-contents:
   en: d152484eb41ac6b4
   zh: 09388d293f9be9cb
-/deepseek-ai-dsh-client-ui-theme/use-this-package:
+/liwa-client-ui-theme/use-this-package:
   en: 5a279269e31713c1
   zh: dcd5c31fbdfd63e2
-/deepseek-ai-dsh-client-ui-theme/use-this-package/appearance-and-font-size:
+/liwa-client-ui-theme/use-this-package/appearance-and-font-size:
   en: 7dff01929847efd1
   zh: ec04b4c4485aba96
-/deepseek-ai-dsh-client-ui-theme/use-this-package/fonts:
+/liwa-client-ui-theme/use-this-package/fonts:
   en: b45d5b48ca799c3a
   zh: af65514b3759204f
-/deepseek-ai-dsh-client-ui-theme/use-this-package/registering-a-theme:
+/liwa-client-ui-theme/use-this-package/registering-a-theme:
   en: 5244fc168d0a03f8
   zh: c7ab12fdf8c6c55b
-/deepseek-ai-dsh-client-ui-theme/use-this-package/pre-plugin-palette:
-  en: 203523ddd7927c34
-  zh: 31dd89da78f9ab4f
-/deepseek-ai-dsh-client-ui-theme/understand-the-implementation:
-  en: 3eb9b0e3365b2db3
-  zh: c73acc55dd897266
-/deepseek-ai-dsh-client-ui-theme/understand-the-implementation/stylesheets:
-  en: 925119bd420325b4
-  zh: 384ef1f890b059da
-/deepseek-ai-dsh-client-ui-theme/understand-the-implementation/scrollbar-rebinding:
-  en: bf76e7c34a331595
-  zh: 5accd0260ef7c61e
-/deepseek-ai-dsh-client-ui-theme/understand-the-implementation/preference-persistence:
-  en: b1f0b0bce5e53bae
-  zh: 26ded298f85834ae
-/deepseek-ai-dsh-client-ui-theme/further-exploration:
-  en: 7d5b953aaeeaf591
-  zh: ff4bccb0f196f2b9
-/deepseek-ai-dsh-client-ui-theme/model-experience:
+/liwa-client-ui-theme/use-this-package/pre-plugin-palette:
+  en: 3df0da846fa2dff8
+  zh: 0aa9029c76676575
+/liwa-client-ui-theme/understand-the-implementation:
+  en: 44c587f575b1a665
+  zh: fe6449b2c1284472
+/liwa-client-ui-theme/understand-the-implementation/stylesheets:
+  en: 16e4b23a851312d8
+  zh: 102e4df3758a6faf
+/liwa-client-ui-theme/understand-the-implementation/scrollbar-rebinding:
+  en: 3d55c58df7e85225
+  zh: 1f13d738036ea704
+/liwa-client-ui-theme/understand-the-implementation/preference-persistence:
+  en: adf03452a6575ad2
+  zh: 85e42e40a7c2af30
+/liwa-client-ui-theme/further-exploration:
+  en: a1d757ed6957953a
+  zh: 97e72ca6053ded72
+/liwa-client-ui-theme/model-experience:
   en: 3120df665299c634
   zh: 1d9f365d091d0d2a
-/deepseek-ai-dsh-client-ui-theme/model-experience/kv-cache-effect:
+/liwa-client-ui-theme/model-experience/kv-cache-effect:
   en: ca75c51c89c2c9b0
   zh: de54f3467ef3b9be
-/deepseek-ai-dsh-client-ui-theme/known-limitations-and-deferred-work:
+/liwa-client-ui-theme/known-limitations-and-deferred-work:
   en: 2388061abb1dd40f
   zh: 1a4ad9a8e12472df
-/deepseek-ai-dsh-client-ui-theme/known-limitations-and-deferred-work/dev-note:
+/liwa-client-ui-theme/known-limitations-and-deferred-work/dev-note:
   en: e67f633dc6fe7773
   zh: 3bb0c20c93f16f98

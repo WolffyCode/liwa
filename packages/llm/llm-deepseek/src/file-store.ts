@@ -1,7 +1,7 @@
-/** DeepSeek Files API upload reuse, invalidation, and quota recovery. @module dsh-llm-deepseek/file-store */
+/** DeepSeek Files API upload reuse, invalidation, and quota recovery. @module liwa-llm-deepseek/file-store */
 
-import type { RequestImageAttachment } from '@deepseek-ai/dsh-attachment'
-import { LlmError } from '@deepseek-ai/dsh-llm'
+import type { RequestImageAttachment } from '@liwa/attachment'
+import { LlmError } from '@liwa/llm'
 import { DeepSeekFilesClient, isFilesQuotaError } from './files-api.ts'
 import type { DeepSeekFileId } from './file-id.ts'
 import { messagesApiRoot } from './messages-api.ts'
@@ -10,7 +10,7 @@ import type { DeepSeekUploadRecord } from './upload-index.ts'
 
 /** Shared Files-store limit for each request image, including file-id references. */
 export const MAX_IMAGE_BYTES = 32 * 1024 * 1024
-const OWNED_FILE_PREFIX = 'dsh-'
+const OWNED_FILE_PREFIX = 'liwa-'
 
 /** Resolved file-store policy from the plugin configuration. */
 export interface DeepSeekFilePolicy {
@@ -318,7 +318,7 @@ export class DeepSeekFileStore {
   }
 
   /**
-   * Delete every remote harness-owned file in the active API-key namespace and clear its index.
+   * Delete every remote Liwa-owned file in the active API-key namespace and clear its index.
    * @param connection - endpoint and API-key snapshot.
    * @param signal - request cancellation.
    * @returns number of deleted files.

@@ -3,13 +3,13 @@ description: "The local filesystem skill provider for users and maintainers auth
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-skill-filesystem
+# @liwa/skill-filesystem
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-Agents can use local skills from the repository, a custom directory, or the user's agent configuration: author a skill as a directory bundle with a `SKILL.md` or a flat `<name>.md` file under any scanned root, and it appears in the session catalog. The provider discovers the project, custom, and user roots, parses each skill's YAML frontmatter, and watches the directories, so new, renamed, or deleted skills reach agents without a restart. Choose it when skills live on disk — the registry (`dsh-skill`) accepts any provider, and another provider can supply skills from elsewhere.
+Agents can use local skills from the repository, a custom directory, or the user's agent configuration: author a skill as a directory bundle with a `SKILL.md` or a flat `<name>.md` file under any scanned root, and it appears in the session catalog. The provider discovers the project, custom, and user roots, parses each skill's YAML frontmatter, and watches the directories, so new, renamed, or deleted skills reach agents without a restart. Choose it when skills live on disk — the registry (`liwa-skill`) accepts any provider, and another provider can supply skills from elsewhere.
 
 ## Table of Contents
 
@@ -47,34 +47,34 @@ Default roots are scanned in this provider's rank order:
 
 | Rank | Source | Path |
 |---|---|---|
-| 100 | `project-dsh` | `<projectRoot>/.dsh/skills` |
+| 100 | `project-liwa` | `<projectRoot>/.liwa/skills` |
 | 200 | `project-agents` | `<projectRoot>/.agents/skills` |
 | 300 | `custom` | `Config.customSkillDirs` |
-| 400 | `user-dsh` | `<dshHome>/skills` |
+| 400 | `user-liwa` | `<liwaHome>/skills` |
 | 500 | `user-agents` | `<agentsHome>/skills` |
 
-The project root is the nearest ancestor containing `.git`; without one, the current cwd is used. The user DSH root skips its `.system` child. `includeDefaultRoots: false` omits the project and user rows plus the `$DSH_BUNDLED_SKILL_DIR` default so an isolated provider sees only its own configured roots; `bundledSkillDir` adds a bundled root at rank 600.
+The project root is the nearest ancestor containing `.git`; without one, the current cwd is used. The user Liwa root skips its `.system` child. `includeDefaultRoots: false` omits the project and user rows plus the `$LIWA_BUNDLED_SKILL_DIR` default so an isolated provider sees only its own configured roots; `bundledSkillDir` adds a bundled root at rank 600.
 
 ### Mount and configure
 
 Load the plugin alongside the skill registry; it requires `ctx.skills`.
 
 ```yaml
-- name: '@deepseek-ai/dsh-skill'
-- name: '@deepseek-ai/dsh-skill-filesystem'
+- name: '@liwa/skill'
+- name: '@liwa/skill-filesystem'
 ```
 
 | Field | Default | Meaning |
 |---|---|---|
 | `providerName` | `filesystem` | Unique provider name registered on `ctx.skills` |
 | `includeDefaultRoots` | `true` | Include project and user roots around `customSkillDirs` |
-| `dshHome` | `$DSH_HOME` or `~/.dsh` | Harness config root; its `skills` subdirectory is scanned |
-| `agentsHome` | `$DSH_AGENTS_HOME` or `~/.agents` | Shared agent config root scanned for compatible skills |
+| `liwaHome` | `$LIWA_HOME` or `~/.liwa` | Liwa config root; its `skills` subdirectory is scanned |
+| `agentsHome` | `$LIWA_AGENTS_HOME` or `~/.agents` | Shared agent config root scanned for compatible skills |
 | `customSkillDirs` | `[]` | Additional local skill roots, after project roots and before user roots |
 | `watch` | `true` | Watch local roots and invalidate the provider when the catalog may have changed |
 | `bundledSkillDir` | — | Bundled skill root scanned at rank 600 when configured |
 
-The remaining `watch*` fields tune Chokidar behavior — polling, stability window, interval, project cap, and symlink following. The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-skill-filesystem) is the exhaustive source for every field.
+The remaining `watch*` fields tune Chokidar behavior — polling, stability window, interval, project cap, and symlink following. The generated [configuration catalog](../../../docs/config-catalog.md#liwaskill-filesystem) is the exhaustive source for every field.
 
 ### Change detection
 
@@ -124,14 +124,14 @@ Read these pages when the package-level contract is not enough. They move from t
 - [Skill subsystem reference](../../../docs/subsystems/skills.md) — the registry contract and the local discovery priority table.
 - [skill package](../skill/README.md) — the registry this provider registers on.
 - [tool-skill package](../tool-skill/README.md) — how discovered skills reach the session catalog and the model.
-- [home-paths package](../../util/home-paths/README.md) — how `dshHome` and `agentsHome` resolve.
+- [home-paths package](../../util/home-paths/README.md) — how `liwaHome` and `agentsHome` resolve.
 
 -----
 
 <a id="model-experience"></a>
 ## Model Experience
 
-Indirectly, through `dsh-tool-skill`, which renders this provider's invocable names and capped descriptions into the initial or replacement catalog and a selected current instruction body plus resource-base guidance into retained tool history while paths, provider ranks, and disabled skills remain hidden.
+Indirectly, through `liwa-tool-skill`, which renders this provider's invocable names and capped descriptions into the initial or replacement catalog and a selected current instruction body plus resource-base guidance into retained tool history while paths, provider ranks, and disabled skills remain hidden.
 
 #### KV Cache effect
 

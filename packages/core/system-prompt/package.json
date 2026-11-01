@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-system-prompt",
-  "description": "System prompt assembly registry for the DeepSeek Harness",
+  "name": "@liwa/system-prompt",
+  "description": "System prompt assembly registry for Liwa",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/core/system-prompt"
   },
   "type": "module",
@@ -29,16 +29,16 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-scope": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/llm": "workspace:*",
+    "@liwa/scope": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-scope": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/llm": "workspace:*",
+    "@liwa/scope": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   }
 }

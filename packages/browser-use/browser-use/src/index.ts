@@ -1,12 +1,12 @@
 /**
  * Exclusive named registration for the browser-use capability.
- * @module @deepseek-ai/dsh-browser-use
+ * @module @liwa/browser-use
  */
 
-import { Context, Service } from '@deepseek-ai/cordis'
+import { Context, Service } from '@liwa/cordis'
 import type { BrowserUseProviderName } from './brand.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     browserUse: BrowserUseRegistry
   }

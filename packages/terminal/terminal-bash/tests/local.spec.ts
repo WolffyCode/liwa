@@ -1,22 +1,22 @@
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { unsupportedModel, provideWorkingDirectoryFixture, unsupportedInbox } from '@deepseek-ai/dsh-agent-loop-testkit'
+import { unsupportedModel, provideWorkingDirectoryFixture, unsupportedInbox } from '@liwa/agent-loop-testkit'
 import { spawnSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { Session, SessionId } from '@deepseek-ai/dsh-session'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import TerminalSessionService from '@deepseek-ai/dsh-terminal'
-import type { TerminalSendOperation } from '@deepseek-ai/dsh-terminal'
-import SandboxProvider from '@deepseek-ai/dsh-sandbox'
-import type { ConfinedArgv, SandboxPolicy } from '@deepseek-ai/dsh-sandbox'
-import SandboxPolicyService from '@deepseek-ai/dsh-sandbox-policy'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
-import { resolvePwshPath } from '@deepseek-ai/dsh-pwsh-local/src/resolve.ts'
-import * as ptyLocal from '@deepseek-ai/dsh-terminal-bash'
+import { Context } from '@liwa/cordis'
+import { Session, SessionId } from '@liwa/session'
+import AgentRegistry from '@liwa/agent'
+import type { Agent } from '@liwa/agent'
+import TerminalSessionService from '@liwa/terminal'
+import type { TerminalSendOperation } from '@liwa/terminal'
+import SandboxProvider from '@liwa/sandbox'
+import type { ConfinedArgv, SandboxPolicy } from '@liwa/sandbox'
+import SandboxPolicyService from '@liwa/sandbox-policy'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import LocalSubprocessRuntime from '@liwa/subprocess-local'
+import { resolvePwshPath } from '@liwa/pwsh-local/src/resolve.ts'
+import * as ptyLocal from '@liwa/terminal-bash'
 
 const roots: string[] = []
 const contexts: Context[] = []
@@ -57,7 +57,7 @@ async function harness(
   timing: { idleSilenceMs?: number; handoffGraceMs?: number; timeoutMs?: number } = {},
   dialect: 'bash' | 'pwsh' = 'bash',
 ) {
-  const root = mkdtempSync(join(tmpdir(), 'dsh-pty-local-'))
+  const root = mkdtempSync(join(tmpdir(), 'liwa-pty-local-'))
   roots.push(root)
   const ctx = new Context()
   provideWorkingDirectoryFixture(ctx)
@@ -139,24 +139,24 @@ function canReadLinuxProcessSyscall(pid: number): boolean {
 // Windows has no bash, and its pwsh counterpart lives in the describe below.
 describe.skipIf(process.platform === 'win32')('terminal-bash real shell', () => {
   it('persists cwd and environment across sends, scrubs secrets, and closes', async () => {
-    const previous = process.env.DSH_TEST_SECRET
-    process.env.DSH_TEST_SECRET = 'must-not-leak'
+    const previous = process.env.LIWA_TEST_SECRET
+    process.env.LIWA_TEST_SECRET = 'must-not-leak'
     try {
       const { ctx, root, agent } = await harness('danger-full-access')
       const created = await ctx.terminals.spawn(agent, { type: 'shell', name: 'main', cwd: root })
-      expect(created.motd).toContain('dsh> ')
+      expect(created.motd).toContain('liwa> ')
 
       const first = ctx.terminals.startSend(agent, created.sessionId, { text: 'export KEEP=ok; cd /', submit: true })
       expect((await first.done).waitReason).toBe('stdin_read')
-      const second = ctx.terminals.startSend(agent, created.sessionId, { text: 'printf "cwd=%s keep=%s secret=%s\\n" "$PWD" "$KEEP" "${DSH_TEST_SECRET-unset}"', submit: true })
+      const second = ctx.terminals.startSend(agent, created.sessionId, { text: 'printf "cwd=%s keep=%s secret=%s\\n" "$PWD" "$KEEP" "${LIWA_TEST_SECRET-unset}"', submit: true })
       expect((await second.done).viewport).toContain('cwd=/ keep=ok secret=unset')
 
       expect(ctx.terminals.read(agent, created.sessionId, { offset: 0, count: 20 }).text).toContain('cwd=/ keep=ok secret=unset')
       expect(await ctx.terminals.kill(agent, created.sessionId)).toBe(true)
       expect(ctx.terminals.list(agent)).toEqual([])
     } finally {
-      if (previous === undefined) delete process.env.DSH_TEST_SECRET
-      else process.env.DSH_TEST_SECRET = previous
+      if (previous === undefined) delete process.env.LIWA_TEST_SECRET
+      else process.env.LIWA_TEST_SECRET = previous
     }
   }, 10_000)
 
@@ -176,7 +176,7 @@ describe.skipIf(process.platform === 'win32')('terminal-bash real shell', () => 
     const after = ctx.terminals.startSend(agent, created.sessionId, { text: 'printf "healed=[%s]\\n" "$PS1"', submit: true })
     const result = await after.done
     expect(result.waitReason).toBe('stdin_read')
-    expect(result.viewport).toContain('healed=[dsh> ]')
+    expect(result.viewport).toContain('healed=[liwa> ]')
     await ctx.terminals.kill(agent, created.sessionId)
   }, 20_000)
 
@@ -189,7 +189,7 @@ describe.skipIf(process.platform === 'win32')('terminal-bash real shell', () => 
     const readerPidFile = join(root, 'tty-reader.pid')
 
     const waiting = ctx.terminals.startSend(agent, created.sessionId, {
-      text: `bash -c 'exec </dev/tty; printf "%s" "$BASHPID" > "$1"; printf "WAITING\\n"; read -r answer; printf "ANSWER=%s\\n" "$answer"' dsh "${readerPidFile}"`,
+      text: `bash -c 'exec </dev/tty; printf "%s" "$BASHPID" > "$1"; printf "WAITING\\n"; read -r answer; printf "ANSWER=%s\\n" "$answer"' liwa "${readerPidFile}"`,
       submit: true,
     })
     await waitForOutput(waiting, 'WAITING')
@@ -248,7 +248,7 @@ describe.skipIf(process.platform === 'win32')('terminal-bash real shell', () => 
     let pid: number | undefined
     try {
       const background = ctx.terminals.startSend(agent, created.sessionId, {
-        text: `sh -c 'trap "" TERM; printf "%s" "$$" > "$1"; sleep 60' dsh "${pidFile}" & disown`,
+        text: `sh -c 'trap "" TERM; printf "%s" "$$" > "$1"; sleep 60' liwa "${pidFile}" & disown`,
         submit: true,
       })
       await background.done
@@ -324,8 +324,8 @@ const hasPwsh = spawnSync(
 
 describe.skipIf(!hasPwsh)('terminal-bash pwsh real shell', () => {
   it.each([false, true])('bootstraps a persistent pwsh, persists state, and scrubs secrets (hold command: %s)', async (holdCommand) => {
-    const previous = process.env.DSH_TEST_SECRET
-    process.env.DSH_TEST_SECRET = 'must-not-leak'
+    const previous = process.env.LIWA_TEST_SECRET
+    process.env.LIWA_TEST_SECRET = 'must-not-leak'
     try {
       const { ctx, root, agent } = await harness('danger-full-access', {
         idleSilenceMs: 300,
@@ -335,7 +335,7 @@ describe.skipIf(!hasPwsh)('terminal-bash pwsh real shell', () => {
       const created = await ctx.terminals.spawn(agent, { type: 'shell', name: 'main', cwd: root })
       // stdin_read can precede delivery of the printable prompt to the PTY reader.
       await expect.poll(() => ctx.terminals.read(agent, created.sessionId, { offset: 0, count: 100 }).text,
-        { timeout: 8_000 }).toContain('dsh> ')
+        { timeout: 8_000 }).toContain('liwa> ')
 
       const releaseFile = join(root, 'release-command')
       // Hold the command across the silence settlement without relying on host load.
@@ -348,7 +348,7 @@ describe.skipIf(!hasPwsh)('terminal-bash pwsh real shell', () => {
       })
       expect(['stdin_read', 'inferred_idle']).toContain((await first.done).waitReason)
       const expected = 'keep=ok cwd=/ secret=END'
-      const command = "Write-Output ('keep={0} cwd={1} secret={2}END' -f $env:KEEP, (Get-Location).Path, $env:DSH_TEST_SECRET)"
+      const command = "Write-Output ('keep={0} cwd={1} secret={2}END' -f $env:KEEP, (Get-Location).Path, $env:LIWA_TEST_SECRET)"
       expect(command).not.toContain(expected)
       const second = ctx.terminals.startSend(agent, created.sessionId, { text: command, submit: true })
       const result = await second.done
@@ -367,8 +367,8 @@ describe.skipIf(!hasPwsh)('terminal-bash pwsh real shell', () => {
       expect(await ctx.terminals.kill(agent, created.sessionId)).toBe(true)
       expect(ctx.terminals.list(agent)).toEqual([])
     } finally {
-      if (previous === undefined) delete process.env.DSH_TEST_SECRET
-      else process.env.DSH_TEST_SECRET = previous
+      if (previous === undefined) delete process.env.LIWA_TEST_SECRET
+      else process.env.LIWA_TEST_SECRET = previous
     }
   }, 30_000)
 

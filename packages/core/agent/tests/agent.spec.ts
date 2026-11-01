@@ -1,10 +1,10 @@
-import { unsupportedModel } from '@deepseek-ai/dsh-agent-loop-testkit'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import { unsupportedModel } from '@liwa/agent-loop-testkit'
+import SessionProjectionRegistry from '@liwa/session-projection'
 import { describe, expect, expectTypeOf, it, onTestFinished } from 'vitest'
-import { Context, Service, symbols } from '@deepseek-ai/cordis'
-import { Session, SessionId } from '@deepseek-ai/dsh-session'
-import AgentRegistry, { agentEvents } from '@deepseek-ai/dsh-agent'
-import TypertRegistry from '@deepseek-ai/dsh-typert-registry'
+import { Context, Service, symbols } from '@liwa/cordis'
+import { Session, SessionId } from '@liwa/session'
+import AgentRegistry, { agentEvents } from '@liwa/agent'
+import TypertRegistry from '@liwa/typert-registry'
 
 import type {
   Agent,
@@ -13,7 +13,7 @@ import type {
   AgentStatus,
   CreateAgentOptions,
   ResumeAgentOptions,
-} from '@deepseek-ai/dsh-agent'
+} from '@liwa/agent'
 
 function stubAgent(rawId: string, overrides: Partial<Agent> = {}): Agent {
   const id = SessionId(rawId)
@@ -80,8 +80,8 @@ describe('AgentRegistry', () => {
       parameter: 'agent',
       wire: 'agentId',
       resource: 'session',
-      hostTypeSymbol: '@deepseek-ai/dsh-agent#Agent',
-      wireTypeSymbol: '@deepseek-ai/dsh-session/types#SessionId',
+      hostTypeSymbol: '@liwa/agent#Agent',
+      wireTypeSymbol: '@liwa/session/types#SessionId',
     })
     expect(lookup?.resolve(agent.id)).toBe(agent)
     const context = ctx.typert.contexts.getHost('agent')

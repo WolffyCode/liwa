@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-experimental-forge-session",
+  "name": "@liwa/experimental-forge-session",
   "description": "Binds change requests to the Session that created, pushed, or tracked them",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -28,60 +28,60 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/experimental/forge-session"
   },
   "dependencies": {
-    "@deepseek-ai/dsh-timeout": "workspace:*",
-    "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/timeout": "workspace:*",
+    "@liwa/util-values": "workspace:*",
+    "@liwa/schemastery": "workspace:~",
     "shell-quote": "^1.12.0",
     "zod": "^4.4.3"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-experimental-forge": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-shell": "workspace:*",
-    "@deepseek-ai/dsh-shell-env": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/experimental-forge": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/shell": "workspace:*",
+    "@liwa/shell-env": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop": "workspace:*",
-    "@deepseek-ai/dsh-bash-local": "workspace:*",
-    "@deepseek-ai/dsh-experimental-forge": "workspace:*",
-    "@deepseek-ai/dsh-experimental-forge-github": "workspace:*",
-    "@deepseek-ai/dsh-fs-local": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-shell-env": "workspace:*",
-    "@deepseek-ai/dsh-subprocess-local": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-tool-bash": "workspace:*",
-    "@deepseek-ai/dsh-tool-executor-native": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-working-directory": "workspace:*",
-    "@deepseek-ai/dsh-shell": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-loop": "workspace:*",
+    "@liwa/bash-local": "workspace:*",
+    "@liwa/experimental-forge": "workspace:*",
+    "@liwa/experimental-forge-github": "workspace:*",
+    "@liwa/fs-local": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/shell-env": "workspace:*",
+    "@liwa/subprocess-local": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/tool-bash": "workspace:*",
+    "@liwa/tool-executor-native": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/working-directory": "workspace:*",
+    "@liwa/shell": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-shell": {
+    "@liwa/shell": {
       "optional": true
     },
-    "@deepseek-ai/dsh-shell-env": {
+    "@liwa/shell-env": {
       "optional": true
     },
-    "@deepseek-ai/dsh-tools": {
+    "@liwa/tools": {
       "optional": true
     },
-    "@deepseek-ai/dsh-sandbox-policy": {
+    "@liwa/sandbox-policy": {
       "optional": true
     }
   }

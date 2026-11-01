@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-llm-pi-ai",
-  "description": "pi-ai-backed DeepSeek adapter for the DeepSeek Harness LLM seam (design-verification twin of dsh-llm-deepseek)",
+  "name": "@liwa/llm-pi-ai",
+  "description": "pi-ai-backed DeepSeek adapter for the Liwa LLM seam (design-verification twin of liwa-llm-deepseek)",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/llm/llm-pi-ai"
   },
   "type": "module",
@@ -29,43 +29,43 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-attachment": "workspace:*",
-    "@deepseek-ai/dsh-authorization": "workspace:*",
-    "@deepseek-ai/dsh-credentials": "workspace:*",
-    "@deepseek-ai/dsh-fs": "workspace:*",
-    "@deepseek-ai/dsh-launch-environment": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-timeout": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/attachment": "workspace:*",
+    "@liwa/authorization": "workspace:*",
+    "@liwa/credentials": "workspace:*",
+    "@liwa/fs": "workspace:*",
+    "@liwa/launch-environment": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/timeout": "workspace:*"
   },
   "dependencies": {
-    "@deepseek-ai/dsh-brand": "workspace:*",
-    "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/brand": "workspace:*",
+    "@liwa/util-values": "workspace:*",
+    "@liwa/schemastery": "workspace:~",
     "@earendil-works/pi-ai": "^1.3.0"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:*",
-    "@deepseek-ai/dsh-attachment": "workspace:*",
-    "@deepseek-ai/dsh-authorization": "workspace:*",
-    "@deepseek-ai/dsh-credentials": "workspace:*",
-    "@deepseek-ai/dsh-fs": "workspace:*",
-    "@deepseek-ai/dsh-http-proxy": "workspace:*",
-    "@deepseek-ai/dsh-launch-environment": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-llm-deepseek": "workspace:*",
-    "@deepseek-ai/dsh-llm-deepseek-api-key": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-settings": "workspace:*",
-    "@deepseek-ai/dsh-timeout": "workspace:*",
-    "@deepseek-ai/dsh-tool-testkit": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/agent-loop-testkit": "workspace:*",
+    "@liwa/attachment": "workspace:*",
+    "@liwa/authorization": "workspace:*",
+    "@liwa/credentials": "workspace:*",
+    "@liwa/fs": "workspace:*",
+    "@liwa/http-proxy": "workspace:*",
+    "@liwa/launch-environment": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/llm-deepseek": "workspace:*",
+    "@liwa/llm-deepseek-api-key": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/settings": "workspace:*",
+    "@liwa/timeout": "workspace:*",
+    "@liwa/tool-testkit": "workspace:*",
+    "@liwa/tools": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/cordis-plugin-loader": {
+    "@liwa/cordis-plugin-loader": {
       "optional": true
     }
   }

@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-29-reused-blank-runs-requested-preset.md
 /agent-note-a-reused-blank-session-runs-the-requested-preset:
-  en: 06173bc82e1d9f59
-  zh: 637352fd92142310
+  en: 982cdbdb2024cb59
+  zh: e77900f963723687
 /agent-note-a-reused-blank-session-runs-the-requested-preset/problem:
   en: 7514025504dc2ddd
   zh: 96249d3472005023
@@ -15,8 +15,8 @@
   en: ae99345e8df800e4
   zh: a4d0c257c4216337
 /agent-note-a-reused-blank-session-runs-the-requested-preset/consequences:
-  en: bc7dda06670b4d96
-  zh: 24f381b8cb6ed3f8
+  en: ce54617d85f093ac
+  zh: 191a7fcf454441a1
 /agent-note-a-reused-blank-session-runs-the-requested-preset/testing:
   en: 1aefca569f5dce81
   zh: 527c9aacf5a2f6b8

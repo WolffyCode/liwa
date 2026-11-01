@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-experimental-voice-input-bundle",
+  "name": "@liwa/experimental-voice-input-bundle",
   "description": "Experimental voice input with local SenseVoice; downloads its runtime on first use",
   "version": "0.2.2-alpha.2",
   "icon": "./icon.svg",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/experimental/voice-input-bundle"
   },
   "type": "module",
@@ -34,20 +34,20 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-experimental-speech-to-text": "workspace:*",
-    "@deepseek-ai/dsh-experimental-speech-to-text-sensevoice": "workspace:*",
-    "@deepseek-ai/dsh-experimental-api-speech-to-text": "workspace:*",
-    "@deepseek-ai/dsh-experimental-client-ui-voice-input": "workspace:*"
+    "@liwa/experimental-speech-to-text": "workspace:*",
+    "@liwa/experimental-speech-to-text-sensevoice": "workspace:*",
+    "@liwa/experimental-api-speech-to-text": "workspace:*",
+    "@liwa/experimental-client-ui-voice-input": "workspace:*"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-include": "workspace:~",
     "js-yaml": "^4.3.2"
   },
-  "dsh": {
+  "liwa": {
     "bundle": {
       "patch": "./cordis.patch.yml"
     }

@@ -11,7 +11,7 @@ export const REPLACED_EXTERNAL_PACKAGES: readonly string[] = [
   '@earendil-works/pi-coding-agent',
   '@vscode/ripgrep',
   '@deepseek-ai/libreoffice-kit',
-  '@deepseek-ai/node-addon-system/flock',
+  '@liwa/node-addon-system/flock',
   'koffi',
   'node-pty',
   'execa',

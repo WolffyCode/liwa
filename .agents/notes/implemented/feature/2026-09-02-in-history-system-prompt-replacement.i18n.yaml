@@ -3,32 +3,32 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-09-02-in-history-system-prompt-replacement.md
 /agent-note-in-history-system-prompt-replacement-for-cache-stable-prompt-changes:
-  en: 7b69ac848815886a
-  zh: db7a9f4000fe5359
+  en: ea5cef088fbcc1cb
+  zh: 84d738872369f373
 /agent-note-in-history-system-prompt-replacement-for-cache-stable-prompt-changes/problem:
-  en: 87965b88be0e831f
-  zh: d96767a2cef52269
+  en: 22b1397c49a9679c
+  zh: c499c6a6d26afc5a
 /agent-note-in-history-system-prompt-replacement-for-cache-stable-prompt-changes/decision:
-  en: da6d3f0677f0343b
-  zh: 8b5dcf7e1108edc9
+  en: 036ddd08722b8e01
+  zh: a2165df2b440acd7
 /agent-note-in-history-system-prompt-replacement-for-cache-stable-prompt-changes/decision/capability:
   en: 2f23fa55e1ce652c
   zh: 335695fc654ab1db
 /agent-note-in-history-system-prompt-replacement-for-cache-stable-prompt-changes/decision/the-decision-rule:
-  en: bd990101d220c905
-  zh: 98f54d523b9ffe52
+  en: 44f6a260f3753328
+  zh: 77ce4baa323a5f12
 /agent-note-in-history-system-prompt-replacement-for-cache-stable-prompt-changes/decision/presentation-and-accounting:
-  en: 800d579e2fcf2cce
-  zh: 1e92354d9161c50a
+  en: 0ef7838453fc875a
+  zh: c7531df06844dbb0
 /agent-note-in-history-system-prompt-replacement-for-cache-stable-prompt-changes/decision/compaction:
   en: c21a3e7a773860e5
   zh: 566669e245ccdbaf
 /agent-note-in-history-system-prompt-replacement-for-cache-stable-prompt-changes/alternatives-considered:
-  en: 02b49911bc4601d0
-  zh: bfa19fd7c4337812
+  en: e7af874737e32001
+  zh: 087afcb8f571af21
 /agent-note-in-history-system-prompt-replacement-for-cache-stable-prompt-changes/consequences:
   en: beda064bcd194a2a
   zh: 8a3bb81d5edcd60a
 /agent-note-in-history-system-prompt-replacement-for-cache-stable-prompt-changes/testing:
-  en: 3f9750d67404ac92
-  zh: 80cb9aced02e2950
+  en: b76c019d10f2d7a1
+  zh: 8b92ca0f5bbf4fdb

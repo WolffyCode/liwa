@@ -6,17 +6,17 @@
  * states the page's condition; which writes each Session offers comes from the calling Peer's access
  * snapshot, which every surface reads through its own access Hook.
  *
- * @module @deepseek-ai/dsh-experimental-liveshare/src/client/viewer-session-plugin
+ * @module @liwa/experimental-liveshare/src/client/viewer-session-plugin
  */
 
-import type { Context as ClientContext } from '@deepseek-ai/cordis'
-import type { ComposerBlock } from '@deepseek-ai/dsh-client-ui-conversation/client'
-import type { HostObservable } from '@deepseek-ai/dsh-client-ui-slots'
-import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'
+import type { Context as ClientContext } from '@liwa/cordis'
+import type { ComposerBlock } from '@liwa/client-ui-conversation/client'
+import type { HostObservable } from '@liwa/client-ui-slots'
+import type { ConnectionHandle } from '@liwa/client-connection/client'
 // Type-only: pulls the `remoteAccess` Client service merge.
-import type {} from '@deepseek-ai/dsh-api-remote-access/client'
+import type {} from '@liwa/api-remote-access/client'
 // Type-only: pulls the `locale` Client service merge.
-import type {} from '@deepseek-ai/dsh-client-locale/client'
+import type {} from '@liwa/client-locale/client'
 import { openSharedSession } from './viewer-session.ts'
 import {
   PAGE_WIDE_REFUSALS,
@@ -142,8 +142,8 @@ export function apply(ctx: ClientContext): void {
    */
   const act = (action: ViewerStatusAction): void => {
     const target = (globalThis as {
-      __DSH_LIVESHARE_VIEWER__?: { readonly shareId?: string; readonly basePath?: string }
-    }).__DSH_LIVESHARE_VIEWER__
+      __LIWA_LIVESHARE_VIEWER__?: { readonly shareId?: string; readonly basePath?: string }
+    }).__LIWA_LIVESHARE_VIEWER__
     const base = target?.basePath ?? ''
     if (action === 'reload') {
       location.reload()
@@ -195,12 +195,12 @@ export function apply(ctx: ClientContext): void {
     return stop
   }, 'liveshare: state a lost Connection as offline')
   const target = (globalThis as {
-    __DSH_LIVESHARE_VIEWER__?: {
+    __LIWA_LIVESHARE_VIEWER__?: {
       readonly shareId?: string
       readonly sessionId?: string
       readonly basePath?: string
     }
-  }).__DSH_LIVESHARE_VIEWER__
+  }).__LIWA_LIVESHARE_VIEWER__
   // The share's own answer says who owns it and what it grants this page. It arrives when it arrives:
   // every surface re-reads it, so the Session opens as soon as the list carries it rather than waiting
   // for an answer that a stalled Relay may never send.

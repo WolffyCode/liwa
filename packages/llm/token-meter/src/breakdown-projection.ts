@@ -7,11 +7,11 @@
  */
 
 import { z } from 'zod'
-import { canonicalHeader, deriveEventMessage, isSurfaceEvent, SessionSeq } from '@deepseek-ai/dsh-session'
-import type { SurfaceEvent } from '@deepseek-ai/dsh-session'
-import type { ProjectionDefinition } from '@deepseek-ai/dsh-session-projection'
+import { canonicalHeader, deriveEventMessage, isSurfaceEvent, SessionSeq } from '@liwa/session'
+import type { SurfaceEvent } from '@liwa/session'
+import type { ProjectionDefinition } from '@liwa/session-projection'
 // Type-only: the `compaction/*` SessionEventMap merges (shadow-price events).
-import type {} from '@deepseek-ai/dsh-compaction'
+import type {} from '@liwa/compaction'
 import { estimateMessage, estimateToolsTokens } from './estimate.ts'
 // Type-only: the client projection key and value declaration.
 import type {} from './projection.ts'

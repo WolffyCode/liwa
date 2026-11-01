@@ -1,9 +1,9 @@
-import { Context } from '@deepseek-ai/cordis'
-import type { Fiber } from '@deepseek-ai/cordis'
-import TypertGateway from '@deepseek-ai/dsh-api-gateway'
-import RemoteAccessService from '@deepseek-ai/dsh-api-remote-access'
-import type { PeerId, PeerScope } from '@deepseek-ai/dsh-typert-protocol'
-import TypertRegistry from '@deepseek-ai/dsh-typert-registry'
+import { Context } from '@liwa/cordis'
+import type { Fiber } from '@liwa/cordis'
+import TypertGateway from '@liwa/api-gateway'
+import RemoteAccessService from '@liwa/api-remote-access'
+import type { PeerId, PeerScope } from '@liwa/typert-protocol'
+import TypertRegistry from '@liwa/typert-registry'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import DynamicCordisRunnerService from '../src/index.ts'
 import { CordisInspectRegistryService } from '../src/inspect-registry.ts'
@@ -116,7 +116,7 @@ describe('Client inspect completion', () => {
     expect(requests).toEqual([])
     expect(vi.getTimerCount()).toBe(0)
     expect(await query.result).toEqual({
-      error: 'Error: Client inspect query Service.listService has no connected Harness page. Open or reconnect the Harness page, then retry.',
+      error: 'Error: Client inspect query Service.listService has no connected Liwa page. Open or reconnect the Liwa page, then retry.',
     })
     expect(registry.list()).toHaveLength(1)
   })
@@ -130,7 +130,7 @@ describe('Client inspect completion', () => {
     await vi.advanceTimersByTimeAsync(99)
     expect(query.settled()).toBe(false)
     await vi.advanceTimersByTimeAsync(1)
-    expect(await query.result).toEqual({ error: timeout + 'Open or reconnect the Harness page, then retry.' })
+    expect(await query.result).toEqual({ error: timeout + 'Open or reconnect the Liwa page, then retry.' })
     expect(answer(query)).toEqual({ accepted: false })
     expect(vi.getTimerCount()).toBe(0)
   })
@@ -187,7 +187,7 @@ describe('Client inspect completion', () => {
     const query = start()
     expect(registry.resolveClientQuery(AGENT_B, query.request.requestId, failure)).toEqual({ accepted: false })
     await vi.advanceTimersByTimeAsync(100)
-    expect(await query.result).toEqual({ error: timeout + 'Open or reconnect the Harness page, then retry.' })
+    expect(await query.result).toEqual({ error: timeout + 'Open or reconnect the Liwa page, then retry.' })
   })
 
   it('ends unanswered requests and accepts a fresh retry after manifest publication', async () => {
@@ -195,7 +195,7 @@ describe('Client inspect completion', () => {
     registry.syncClientManifest([manifest])
     expect(requests).toHaveLength(1)
     await vi.advanceTimersByTimeAsync(100)
-    expect(await first.result).toEqual({ error: timeout + 'Open or reconnect the Harness page, then retry.' })
+    expect(await first.result).toEqual({ error: timeout + 'Open or reconnect the Liwa page, then retry.' })
     const retry = start()
     expect(retry.request.requestId).not.toBe(first.request.requestId)
     expect(answer(first)).toEqual({ accepted: false })

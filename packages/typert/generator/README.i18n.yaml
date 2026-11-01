@@ -5,63 +5,63 @@
 /:
   en: 3fe330c4d51197ec
   zh: 5874f3bcd419dbbc
-/deepseek-ai-dsh-typert-generator:
-  en: 572884e8456e3876
-  zh: 766da5ce0943f314
-/deepseek-ai-dsh-typert-generator/summary:
-  en: c481285bb066ad9f
-  zh: b5d9e32c7747f04a
-/deepseek-ai-dsh-typert-generator/table-of-contents:
+/liwa-typert-generator:
+  en: e531a272ae637048
+  zh: 15ea43f5d0c1835c
+/liwa-typert-generator/summary:
+  en: 6df27d71fda5d280
+  zh: cecd1b8a8a067cdd
+/liwa-typert-generator/table-of-contents:
   en: d152484eb41ac6b4
   zh: 09388d293f9be9cb
-/deepseek-ai-dsh-typert-generator/use-this-package:
+/liwa-typert-generator/use-this-package:
   en: 949dec3bb987644a
   zh: 0ed333a6067465dc
-/deepseek-ai-dsh-typert-generator/use-this-package/publishing-typert-artifacts-from-a-package:
-  en: c7078becc8f12609
-  zh: 4b8838b559ecb677
-/deepseek-ai-dsh-typert-generator/use-this-package/ordinary-remote-metadata:
-  en: 6bb456bb03fc6617
-  zh: 029407c373b8e6a6
-/deepseek-ai-dsh-typert-generator/use-this-package/analyzing-a-workspace-statically:
+/liwa-typert-generator/use-this-package/publishing-typert-artifacts-from-a-package:
+  en: f05b321fa0afa9f9
+  zh: b6d0ba36323bf013
+/liwa-typert-generator/use-this-package/ordinary-remote-metadata:
+  en: 06a603d92732d5d4
+  zh: 8a4c738b70281476
+/liwa-typert-generator/use-this-package/analyzing-a-workspace-statically:
   en: 0a4f5896df9f2fab
   zh: e7d0d6cddd7a59e7
-/deepseek-ai-dsh-typert-generator/use-this-package/running-generation-inside-a-tsdown-build:
+/liwa-typert-generator/use-this-package/running-generation-inside-a-tsdown-build:
   en: 15ecce4f32b7a8c0
   zh: c7d6b449d7b20338
-/deepseek-ai-dsh-typert-generator/use-this-package/generating-without-a-bundler:
+/liwa-typert-generator/use-this-package/generating-without-a-bundler:
   en: cf6893be24bdc495
   zh: dafc23e2d2e8553e
-/deepseek-ai-dsh-typert-generator/understand-the-implementation:
+/liwa-typert-generator/understand-the-implementation:
   en: b90762df7a978580
   zh: 123ab225a2b5df2a
-/deepseek-ai-dsh-typert-generator/understand-the-implementation/design-concept:
+/liwa-typert-generator/understand-the-implementation/design-concept:
   en: 0a515742229bf442
   zh: dfd2c5eddd943af9
-/deepseek-ai-dsh-typert-generator/understand-the-implementation/source-map:
+/liwa-typert-generator/understand-the-implementation/source-map:
   en: 89d9205446b496a6
   zh: d7bcae876c1905ec
-/deepseek-ai-dsh-typert-generator/understand-the-implementation/analysis-and-faces:
-  en: a844aafcafbc27b6
-  zh: 8efe7d472361bbc2
-/deepseek-ai-dsh-typert-generator/understand-the-implementation/emission-and-publication-contract:
-  en: 2f6f72eecffc33c2
-  zh: ded33dbc1d9a4ea5
-/deepseek-ai-dsh-typert-generator/understand-the-implementation/catalog-projection:
+/liwa-typert-generator/understand-the-implementation/analysis-and-faces:
+  en: aa7de1129df003c4
+  zh: 927fe53f2a5176cf
+/liwa-typert-generator/understand-the-implementation/emission-and-publication-contract:
+  en: df3f9d04c412e081
+  zh: 9b030115e83d3b94
+/liwa-typert-generator/understand-the-implementation/catalog-projection:
   en: e85b521a1e01ab2c
   zh: 4416dca569de0f61
-/deepseek-ai-dsh-typert-generator/further-exploration:
-  en: 6df514142eaad512
-  zh: e1ca60bd9fa30096
-/deepseek-ai-dsh-typert-generator/model-experience:
+/liwa-typert-generator/further-exploration:
+  en: a70d17ea667e3e28
+  zh: 22d3ba0fbed2826a
+/liwa-typert-generator/model-experience:
   en: e6641e8b5e5f42ca
   zh: 2fdc0d3fde7e9216
-/deepseek-ai-dsh-typert-generator/model-experience/kv-cache-effect:
+/liwa-typert-generator/model-experience/kv-cache-effect:
   en: 09310605f7d136d4
   zh: 3535ec7eba83b90f
-/deepseek-ai-dsh-typert-generator/known-limitations-and-deferred-work:
+/liwa-typert-generator/known-limitations-and-deferred-work:
   en: fdc6707a82ceb4c3
   zh: 91fb8cab9fcf56bc
-/deepseek-ai-dsh-typert-generator/known-limitations-and-deferred-work/dev-note:
+/liwa-typert-generator/known-limitations-and-deferred-work/dev-note:
   en: e67f633dc6fe7773
   zh: 3bb0c20c93f16f98

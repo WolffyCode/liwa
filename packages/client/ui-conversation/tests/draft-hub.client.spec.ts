@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 /** InputHub restores drafts before views and follows Session-owned lexicon subscriptions. */
 import { randomUUID } from 'node:crypto'
-import { Context, Service } from '@deepseek-ai/cordis'
-import type { SessionReference } from '@deepseek-ai/dsh-api-session-controller/client'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import { makeTranslate, TestSessions } from '@deepseek-ai/dsh-client-test-runtime'
-import { SessionId } from '@deepseek-ai/dsh-session/types'
+import { Context, Service } from '@liwa/cordis'
+import type { SessionReference } from '@liwa/api-session-controller/client'
+import { createSnapshotStore } from '@liwa/client-store'
+import { makeTranslate, TestSessions } from '@liwa/client-test-runtime'
+import { SessionId } from '@liwa/session/types'
 import { $nodesOfType } from 'lexical'
 import { expect, it, onTestFinished, vi } from 'vitest'
 import type { DraftSnapshot } from '../src/client/contract/draft-editor.ts'
@@ -27,7 +27,7 @@ const saved: DraftSnapshot = {
 
 async function storedSession(draft: unknown) {
   const id = SessionId(`draft-hub-${randomUUID()}`)
-  const key = `dsh.conversation.${id}`
+  const key = `liwa.conversation.${id}`
   const previous = localStorage.getItem(key)
   onTestFinished(() => {
     if (previous === null) localStorage.removeItem(key)

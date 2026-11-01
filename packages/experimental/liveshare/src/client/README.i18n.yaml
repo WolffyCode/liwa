@@ -3,5 +3,5 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/experimental/liveshare/src/client/README.md
 /liveshare-viewer-access:
-  en: 914a93b7bcbb27ea
-  zh: e388e5d50a99b03b
+  en: 80a2bb6a323da365
+  zh: 723c974ac7d9a651

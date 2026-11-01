@@ -1,6 +1,6 @@
 /** Maps ordinary message occurrences to Desktop product events. */
-import type { Context } from '@deepseek-ai/cordis'
-import type { AnalyticsPreset } from '@deepseek-ai/dsh-client-product-analytics/client'
+import type { Context } from '@liwa/cordis'
+import type { AnalyticsPreset } from '@liwa/client-product-analytics/client'
 import type { MessageSubmission } from '../contract/composer-submission.ts'
 
 /**

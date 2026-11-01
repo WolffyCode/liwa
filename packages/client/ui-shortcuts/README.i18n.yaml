@@ -5,33 +5,33 @@
 /:
   en: 425afaf83c04db08
   zh: d9e6db1541ba0911
-/deepseek-ai-dsh-client-ui-shortcuts:
-  en: 736bacbd5c6483a5
-  zh: 1c49a7b2c6141a74
-/deepseek-ai-dsh-client-ui-shortcuts/summary:
+/liwa-client-ui-shortcuts:
+  en: 3e7d86a6764ab92d
+  zh: 3188331a3e20e3a6
+/liwa-client-ui-shortcuts/summary:
   en: 17b5fa1a23fa2756
   zh: ec6223b8d2a090f0
-/deepseek-ai-dsh-client-ui-shortcuts/table-of-contents:
+/liwa-client-ui-shortcuts/table-of-contents:
   en: d152484eb41ac6b4
   zh: 0cd57b7b8d8c9b59
-/deepseek-ai-dsh-client-ui-shortcuts/use-this-package:
-  en: 84a109505e902f0a
-  zh: 87053c34cf4da672
-/deepseek-ai-dsh-client-ui-shortcuts/understand-the-implementation:
+/liwa-client-ui-shortcuts/use-this-package:
+  en: 51bd378a13e62f06
+  zh: ff81a71226123758
+/liwa-client-ui-shortcuts/understand-the-implementation:
   en: f56f2610e7258825
   zh: 249d7cdd55c57166
-/deepseek-ai-dsh-client-ui-shortcuts/further-exploration:
-  en: 8fe02ef5221e434d
-  zh: 3aabfcfeb6d49a0e
-/deepseek-ai-dsh-client-ui-shortcuts/model-experience:
+/liwa-client-ui-shortcuts/further-exploration:
+  en: 6a184c90435237ef
+  zh: d4ee1fdbe39a6256
+/liwa-client-ui-shortcuts/model-experience:
   en: 3120df665299c634
   zh: e2dc75ed76d271bc
-/deepseek-ai-dsh-client-ui-shortcuts/model-experience/kv-cache-effect:
+/liwa-client-ui-shortcuts/model-experience/kv-cache-effect:
   en: ca75c51c89c2c9b0
   zh: a0e9f8d52b4b62ee
-/deepseek-ai-dsh-client-ui-shortcuts/known-limitations-and-deferred-work:
-  en: 4c1ee388c3bbb5b0
-  zh: f3e5d73036a449b5
-/deepseek-ai-dsh-client-ui-shortcuts/known-limitations-and-deferred-work/dev-note:
+/liwa-client-ui-shortcuts/known-limitations-and-deferred-work:
+  en: bff7e667ea1298b0
+  zh: 31913aa98931a9ca
+/liwa-client-ui-shortcuts/known-limitations-and-deferred-work/dev-note:
   en: e67f633dc6fe7773
   zh: e88aeb617ffb74ea

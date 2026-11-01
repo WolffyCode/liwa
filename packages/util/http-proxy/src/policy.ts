@@ -4,8 +4,8 @@
  * (if any) a given URL goes through.
  *
  * Nothing here imports `undici`, so the module stays loadable in the browser-worker runtime that
- * evaluates `dsh-web-fetch-http` without a Node transport.
- * @module @deepseek-ai/dsh-http-proxy/policy
+ * evaluates `liwa-web-fetch-http` without a Node transport.
+ * @module @liwa/http-proxy/policy
  */
 
 /**
@@ -23,7 +23,7 @@ export interface EnvLookup {
 }
 
 /**
- * Loopback entries merged into every policy's `noProxy`. A proxy that also serves the harness's own
+ * Loopback entries merged into every policy's `noProxy`. A proxy that also serves Liwa's own
  * loopback traffic turns the Web UI, the Connection transport, and every local test server into a
  * routing loop, so the bypass is not optional.
  *
@@ -328,7 +328,7 @@ export function resolveProxyPolicy(env: EnvLookup): ProxyResolution {
 /**
  * Resolve which proxy one URL goes through under a policy.
  *
- * This is the single answer both the installed dispatcher and `dsh-web-fetch-http` consult, so a URL
+ * This is the single answer both the installed dispatcher and `liwa-web-fetch-http` consult, so a URL
  * can never be pinned to a resolved address by one and tunnelled by the other.
  *
  * @param policy - the active policy.

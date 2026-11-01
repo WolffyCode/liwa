@@ -4,7 +4,7 @@
  * A served viewer page is the owner's own `apps/web` document with the carrier script placed first.
  * This helper reproduces that page in jsdom without a build: it installs the carrier through
  * {@link installViewerCarrier}, then a module-loader facade, a test-local roster
- * ({@link VIEWER_PAGE_ROSTER}) registered as module-table factories, a forged `__DSH_BOOT__` graph
+ * ({@link VIEWER_PAGE_ROSTER}) registered as module-table factories, a forged `__LIWA_BOOT__` graph
  * naming exactly those rows, and runs {@link AppWebEntry}. The forged boot graph and roster are test
  * infrastructure only: production pages receive the owner's real boot graph from the owner's Host.
  *
@@ -12,18 +12,18 @@
  * source here, and the Client entries that import them (the Remote assembly and the remote-access
  * plugin) are answered through `vi.doMock` before the roster is first imported.
  *
- * @module @deepseek-ai/dsh-experimental-liveshare/tests/viewer-page
+ * @module @liwa/experimental-liveshare/tests/viewer-page
  */
 
 import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { Context } from '@deepseek-ai/cordis'
-import { AppWebEntry } from '@deepseek-ai/dsh-client-web'
-import { createClientModuleSystem } from '@deepseek-ai/dsh-client-modules/client'
+import type { Context } from '@liwa/cordis'
+import { AppWebEntry } from '@liwa/client-web'
+import { createClientModuleSystem } from '@liwa/client-modules/client'
 import type {
   ClientBundleRegistration, ClientModuleCreateOptions, ClientModuleLoaderTarget, WebBootGraph,
-} from '@deepseek-ai/dsh-client-modules/client'
+} from '@liwa/client-modules/client'
 import { installViewerCarrier } from '../../liveshare-protocol/src/viewer-carrier.ts'
 import { act } from '@testing-library/react'
 import { afterAll, vi } from 'vitest'
@@ -35,7 +35,7 @@ const workspaceRoot = resolve(testsDir, '../../../..')
 /** Staging parent for generated faces; inside the workspace so their `zod` import resolves. */
 const stagingParent = resolve(testsDir, '../lib')
 /** Package whose Client plugin mounts its own generated Remote face rather than the assembly's. */
-const REMOTE_ACCESS_PACKAGE = '@deepseek-ai/dsh-api-remote-access'
+const REMOTE_ACCESS_PACKAGE = '@liwa/api-remote-access'
 /** Read budget the carrier receives; production pages receive the Relay's configured value. */
 const READ_TIMEOUT_MS = 30_000
 
@@ -54,8 +54,8 @@ afterAll(() => {
 
 /**
  * Generate every Host package's `./remote` face from source, then answer the Remote assembly
- * (`@deepseek-ai/dsh-api-remotes/client`) and the self-mounting remote-access Client plugin
- * (`@deepseek-ai/dsh-api-remote-access/client`) with their own sources whose `/remote` imports name
+ * (`@liwa/api-remotes/client`) and the self-mounting remote-access Client plugin
+ * (`@liwa/api-remote-access/client`) with their own sources whose `/remote` imports name
  * the generated faces.
  * @returns Resolves once the faces are mocked for later dynamic imports.
  */
@@ -68,14 +68,14 @@ async function generateRemoteFaces(): Promise<void> {
   const { generateViewerRemoteFaces } = await import(/* @vite-ignore */ generatorModule) as RemoteFaceGenerator
   const faces = generateViewerRemoteFaces(workspaceRoot, dir)
   const assembly = readFileSync(join(workspaceRoot, 'packages/api/remotes/src/client/index.ts'), 'utf8')
-    .replace(/^(import \w+ from )'(@deepseek-ai\/[^']+)\/remote'$/gmu, (_line, head: string, name: string) => {
+    .replace(/^(import \w+ from )'(@liwa\/[^']+)\/remote'$/gmu, (_line, head: string, name: string) => {
       const file = faces.get(name)
       if (file === undefined) throw new Error(`viewer page: no generated Remote face for ${name}`)
       return `${head}${JSON.stringify(file)}`
     })
   const assemblyFile = join(dir, 'api-remotes-client.ts')
   writeFileSync(assemblyFile, assembly)
-  vi.doMock('@deepseek-ai/dsh-api-remotes/client', () => import(/* @vite-ignore */ assemblyFile))
+  vi.doMock('@liwa/api-remotes/client', () => import(/* @vite-ignore */ assemblyFile))
   const accessFace = faces.get(REMOTE_ACCESS_PACKAGE)
   if (accessFace === undefined) throw new Error(`viewer page: no generated Remote face for ${REMOTE_ACCESS_PACKAGE}`)
   // The plugin's own `/remote` import must name the generated face in its source: module resolution
@@ -120,7 +120,7 @@ export interface AssembledViewerPage {
 }
 
 interface ViewerPageWindow {
-  __DSH_BOOT__?: WebBootGraph
+  __LIWA_BOOT__?: WebBootGraph
   __ModuleLoader__?: ClientModuleLoaderTarget
 }
 
@@ -169,7 +169,7 @@ export async function mountViewerPage(container: HTMLElement, target: ViewerPage
     facade.load({ id: row.id, factory: () => ({ ...row.exports }) })
   }
   const ids = rows.map(row => row.id)
-  page.__DSH_BOOT__ = {
+  page.__LIWA_BOOT__ = {
     rev: 'viewer-page',
     entries: ids.map(id => ({ id, url: `viewer-page:${id}`, rev: 'viewer-page' })),
     batches: [{ phase: 'application', url: 'viewer-page', rev: 'viewer-page', entries: ids }],
@@ -184,7 +184,7 @@ export async function mountViewerPage(container: HTMLElement, target: ViewerPage
     async dispose() {
       await act(async () => { await entry.dispose() })
       probed = undefined
-      for (const key of ['__DSH_BOOT__', '__ModuleLoader__', '__DSH_LIVESHARE_VIEWER__', '__DSH_TRANSPORT__']) {
+      for (const key of ['__LIWA_BOOT__', '__ModuleLoader__', '__LIWA_LIVESHARE_VIEWER__', '__LIWA_TRANSPORT__']) {
         Reflect.deleteProperty(globalThis, key)
       }
     },

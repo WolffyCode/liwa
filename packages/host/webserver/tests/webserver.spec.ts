@@ -18,10 +18,10 @@ import { dirname, join } from 'node:path'
 import type { Duplex } from 'node:stream'
 import { pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Context, FiberState } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import Include from '@deepseek-ai/cordis-plugin-include'
-import type { PeerScope } from '@deepseek-ai/dsh-typert-protocol'
+import { Context, FiberState } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
+import Include from '@liwa/cordis-plugin-include'
+import type { PeerScope } from '@liwa/typert-protocol'
 import HttpServer, {
   bindUrlHost, isLoopbackHost, normalizeBindAddress, renderIndexInjections, type TlsConfig, type WebResource, type WebRoute,
 } from '../src/index.ts'
@@ -77,7 +77,7 @@ afterEach(async () => {
 
 /** Materialize the generated TLS fixture into a temp root this file cleans up. */
 async function tlsFixture(): Promise<TlsFixture> {
-  tlsRoot ??= await mkdtemp(join(tmpdir(), 'dsh-webserver-tls-'))
+  tlsRoot ??= await mkdtemp(join(tmpdir(), 'liwa-webserver-tls-'))
   return materializeTlsFixture(tlsRoot)
 }
 
@@ -93,10 +93,10 @@ async function loadComposition(
   host = '127.0.0.1',
   tls?: Partial<TlsConfig> | null,
 ): Promise<Context> {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-webserver-loader-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-webserver-loader-'))
   const configPath = join(root, 'cordis.yml')
   await writeFile(configPath, [
-    "- name: '@deepseek-ai/dsh-host-webserver'",
+    "- name: '@liwa/host-webserver'",
     '  config:',
     `    host: '${host}'`,
     `    port: ${String(port)}`,
@@ -125,7 +125,7 @@ async function loadComposition(
   await context.plugin(Loader)
   context.loader.builtins.include = Include
   const modules = new Map<string, unknown>([
-    ['@deepseek-ai/dsh-host-webserver', HttpServer],
+    ['@liwa/host-webserver', HttpServer],
   ])
   context.loader.internal = {
     version: 'v2',
@@ -144,7 +144,7 @@ async function loadComposition(
 
 /** The webserver row's fiber in a Loaded composition. */
 function webserverFiber(context: Context) {
-  return [...context.loader.entries()].find(entry => entry.options.name === '@deepseek-ai/dsh-host-webserver')?.fiber
+  return [...context.loader.entries()].find(entry => entry.options.name === '@liwa/host-webserver')?.fiber
 }
 
 /** The port a started listener bound; a test that reads it before `listen` fails here. */
@@ -191,7 +191,7 @@ async function upgrade(listenerPort: number | undefined, path: string): Promise<
     `GET ${path} HTTP/1.1`,
     `Host: 127.0.0.1:${String(port)}`,
     'Connection: Upgrade',
-    'Upgrade: dsh-test',
+    'Upgrade: liwa-test',
     '',
     '',
   ].join('\r\n'))
@@ -236,7 +236,7 @@ function tlsUpgrade(port: number | undefined, path: string, ca: string): Promise
     port: boundPort(port),
     path,
     ca,
-    headers: { Connection: 'Upgrade', Upgrade: 'dsh-test' },
+    headers: { Connection: 'Upgrade', Upgrade: 'liwa-test' },
   })
   request.on('upgrade', (response, socket) => {
     resolve({ status: response.statusCode ?? 0, socket })
@@ -536,7 +536,7 @@ describe('real Loader composition', () => {
       path: '/events',
       handler: (_req, socket) => {
         socket.once('close', () => { upgradedServerClosed = true })
-        socket.write('HTTP/1.1 101 Switching Protocols\r\nConnection: Upgrade\r\nUpgrade: dsh-test\r\n\r\n')
+        socket.write('HTTP/1.1 101 Switching Protocols\r\nConnection: Upgrade\r\nUpgrade: liwa-test\r\n\r\n')
       },
     })
     expect(() => server.registerUpgrade({ path: '/events', handler: () => {} }))
@@ -562,7 +562,7 @@ describe('real Loader composition', () => {
       'GET /upgrade-error HTTP/1.1',
       `Host: 127.0.0.1:${String(port)}`,
       'Connection: Upgrade',
-      'Upgrade: dsh-test',
+      'Upgrade: liwa-test',
       '',
       '',
     ].join('\r\n'))
@@ -836,7 +836,7 @@ describe('real Loader composition', () => {
         { kind: 'script', placement: 'head', text: 'window.__Q__=1' },
         { kind: 'script-src', placement: 'head', src: '/plugins/a.js?rev="1"&x=<y>' },
         { kind: 'script-preload', src: '/plugins/b.js?rev="2"&x=<z>' },
-        { kind: 'global', name: '__DSH_BOOT__', value: { rev: '</script><b>' } },
+        { kind: 'global', name: '__LIWA_BOOT__', value: { rev: '</script><b>' } },
         { kind: 'style', text: 'body{margin:0}' },
         { kind: 'html', placement: 'head', html: '<meta name="probe">' },
         { kind: 'script', placement: 'body', text: `window.__P__=${JSON.stringify(flag)}` },
@@ -851,7 +851,7 @@ describe('real Loader composition', () => {
       '<script>window.__Q__=1</script>',
       '<script src="/plugins/a.js?rev=&quot;1&quot;&amp;x=&lt;y&gt;"></script>',
       '<link rel="preload" as="script" href="/plugins/b.js?rev=&quot;2&quot;&amp;x=&lt;z&gt;">',
-      'globalThis["__DSH_BOOT__"] = {"rev":"\\u003c/script>\\u003cb>"}',
+      'globalThis["__LIWA_BOOT__"] = {"rev":"\\u003c/script>\\u003cb>"}',
       '<style>body{margin:0}</style>',
       '<meta name="probe">',
       '<body>',
@@ -878,7 +878,7 @@ describe('real Loader composition', () => {
       { kind: 'script', placement: 'head', text: 'H' },
       { kind: 'script', placement: 'body', text: 'B' },
     ])).toBe('<script>H</script><main>x</main><script>B</script>'
-      + '<script>(globalThis.__DSH_BOOT_READY__ ??= Promise.withResolvers()).resolve()</script>')
+      + '<script>(globalThis.__LIWA_BOOT_READY__ ??= Promise.withResolvers()).resolve()</script>')
   })
 
   it('serves HTTPS to a verifying client and reports the https protocol', { timeout: 60_000 }, async () => {
@@ -998,7 +998,7 @@ describe('real Loader composition', () => {
       path: '/events',
       handler: (_req, socket) => {
         socket.once('close', () => { upgradeClosed = true })
-        socket.write('HTTP/1.1 101 Switching Protocols\r\nConnection: Upgrade\r\nUpgrade: dsh-test\r\n\r\n')
+        socket.write('HTTP/1.1 101 Switching Protocols\r\nConnection: Upgrade\r\nUpgrade: liwa-test\r\n\r\n')
       },
     })
     server.register({ kind: 'exact', path: '/probe', handler: (_req, res) => { res.writeHead(200); res.end('EXACT') } })

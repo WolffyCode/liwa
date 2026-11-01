@@ -1,10 +1,10 @@
 /** Tool definitions and invocation data shared by registries and executors. @module */
-import { HarnessError } from '@deepseek-ai/dsh-llm'
-import type { ToolCallId, ContentBlock, ToolSchema } from '@deepseek-ai/dsh-llm'
-import type { Agent, ModelSelection } from '@deepseek-ai/dsh-agent'
-import type { ScopeKey } from '@deepseek-ai/dsh-scope'
-import type { UserMessage } from '@deepseek-ai/dsh-session'
-import type { JsonValue } from '@deepseek-ai/dsh-util-values'
+import { LiwaError } from '@liwa/llm'
+import type { ToolCallId, ContentBlock, ToolSchema } from '@liwa/llm'
+import type { Agent, ModelSelection } from '@liwa/agent'
+import type { ScopeKey } from '@liwa/scope'
+import type { UserMessage } from '@liwa/session'
+import type { JsonValue } from '@liwa/util-values'
 import type { JsonSchemaNode } from './json-schema.ts'
 import type { ToolCallView, ToolResultView } from './presentation.ts'
 
@@ -61,7 +61,7 @@ export interface ToolDefinition extends ToolSchema {
   finalizeContent?(exec: Readonly<ToolExecution>, result: Readonly<ToolExecutionResult>): ContentBlock[] | undefined
   /**
    * Cooperative tool-call timeout budget in milliseconds. Omit for no deadline.
-   * Enforced by `@deepseek-ai/dsh-tool-call-timeout-policy` (a `tools/execute` wrapper); it
+   * Enforced by `@liwa/tool-call-timeout-policy` (a `tools/execute` wrapper); it
    * is NEVER sent to the model — `schemas()` whitelists only name/description/
    * parameters. Declaring it asserts this tool forwards `exec.signal` to a
    * cooperative implementation that can reach quiescence when the signal aborts.
@@ -136,7 +136,7 @@ export interface ResolvedToolSet {
 }
 
 /** Failure to determine a tool's step-time availability. */
-export class ToolActivationError extends HarnessError {
+export class ToolActivationError extends LiwaError {
   /**
    * Preserve a condition failure without treating it as normal unavailability.
    * @param name - tool whose condition rejected.
@@ -284,11 +284,11 @@ export interface ToolFailure {
 
 /**
  * Thrown (internally) when the model requests a tool that isn't registered.
- * Extends {@link HarnessError} (`code: 'UNKNOWN_TOOL'`) so an unknown-tool
+ * Extends {@link LiwaError} (`code: 'UNKNOWN_TOOL'`) so an unknown-tool
  * failure is as routable as a tool-thrown one — retry/sandbox/replay code can
  * distinguish it from a tool body's own error.
  */
-export class ToolNotFoundError extends HarnessError {
+export class ToolNotFoundError extends LiwaError {
   /**
    * @param toolName - the name the caller asked for.
    * @param reachableFrom - how the model reaches this tool instead, when the
@@ -307,7 +307,7 @@ export class ToolNotFoundError extends HarnessError {
 }
 
 /** Thrown when a tool body or post-policy value violates its declared output. */
-export class ToolOutputError extends HarnessError {
+export class ToolOutputError extends LiwaError {
   /** Schema/value violations in validation order. */
   readonly violations: string[]
 

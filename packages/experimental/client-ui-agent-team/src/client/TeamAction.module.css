@@ -44,8 +44,8 @@
 }
 
 .panel {
-  --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
-  --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
+  --liwa-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --liwa-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
 
   display: flex;
   flex-direction: column;
@@ -91,7 +91,7 @@
 }
 
 .body {
-  --dsh-scrollbar-track-margin: 8px;
+  --liwa-scrollbar-track-margin: 8px;
 
   flex: 1 1 auto;
   min-height: 0;

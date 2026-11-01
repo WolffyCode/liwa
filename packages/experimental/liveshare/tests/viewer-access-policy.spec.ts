@@ -4,15 +4,15 @@
  * reader page classifies, and the access snapshot the reader page opens with.
  */
 import { afterEach, describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import RemoteAccessService, {
   type RemoteAccessAction,
   type RemoteAccessGrant,
   type RemoteAccessResource,
-} from '@deepseek-ai/dsh-api-remote-access'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import TypertRegistry from '@deepseek-ai/dsh-typert-registry'
-import { WorkspaceId } from '@deepseek-ai/dsh-workspace'
+} from '@liwa/api-remote-access'
+import { SessionId } from '@liwa/session'
+import TypertRegistry from '@liwa/typert-registry'
+import { WorkspaceId } from '@liwa/workspace'
 import type { ForkPromptDecision, ForkRecord } from '../src/host/fork-registry.ts'
 import type { ForkShareState, ViewerSessionMode } from '../src/host/fork-policy.ts'
 import {
@@ -21,7 +21,7 @@ import {
   readerWriteRefusal,
   type ViewerAccessFacts,
 } from '../src/host/viewer-access-policy.ts'
-import type { RemoteAccessEndpoint } from '@deepseek-ai/dsh-api-remote-access/types'
+import type { RemoteAccessEndpoint } from '@liwa/api-remote-access/types'
 import type { ViewerCapabilityGroup } from '../src/host/viewer-declarations.ts'
 import { shareViewerPrincipal } from '../src/host/viewer-principal.ts'
 

@@ -47,7 +47,7 @@ Promotion requires a named product role, documented public behavior and limitati
 | [`session-search`](session-search/README.md) | Optional experimental global session search tools | — |
 | [`ralph-bundle`](ralph-bundle/README.md) | Optional repeated delegation with an isolated workflow engine | — |
 | [`terminal-bundle`](terminal-bundle/README.md) | Optional global persistent terminal tools | — |
-| [`badge-skill-bundle`](badge-skill-bundle/README.md) | Optional powered-by-dsh badge skill | — |
+| [`badge-skill-bundle`](badge-skill-bundle/README.md) | Optional powered-by-liwa badge skill | — |
 | [`session-titles-bundle`](session-titles-bundle/README.md) | Optional titles following human prompts in a conversation | — |
 | [`hook-protocol`](hook-protocol/README.md) | Hook bridge wire types and durable events | — |
 | [`hooks-claude-code`](hooks-claude-code/README.md) | Claude Code hook bridge | — |
@@ -57,7 +57,7 @@ Promotion requires a named product role, documented public behavior and limitati
 | [`session-title-all-prompts-llm`](session-title-all-prompts-llm/README.md) | Session titles from all human prompts | — |
 | [`tool-terminal`](tool-terminal/README.md) | Persistent terminal tools | — |
 | [`tool-ralph`](tool-ralph/README.md) | Bounded repeated delegated tasks | — |
-| [`skill-badge`](skill-badge/README.md) | The powered-by-dsh badge skill | — |
+| [`skill-badge`](skill-badge/README.md) | The powered-by-liwa badge skill | — |
 | [`translator`](translator/README.md) | Anonymous Google and Bing text translation | `ctx.translator` |
 | [`client-ui-cot-translation`](client-ui-cot-translation/README.md) | Expanded reasoning translation and original-text controls | `ctx.cotTranslation` |
 | [`cot-translation-bundle`](cot-translation-bundle/README.md) | Default-disabled reasoning translation composition | — |
@@ -94,7 +94,7 @@ Promotion requires a named product role, documented public behavior and limitati
 | [`tool-agent-team`](tool-agent-team/README.md) | Nine tools that let the model create, message, and coordinate teammates | registers scoped tools on `ctx.tools` |
 | [`tool-worktree`](tool-worktree/README.md) | Optional bundle and model tool for creating and entering worktrees | `ctx.tools` |
 | [`webworker-packer`](webworker-packer/README.md) | Builds the gzip-compressed VFS image consumed by the browser worker preview | library and CLI — no ctx key |
-| [`webworker-runtime`](webworker-runtime/README.md) | Runs the harness plugin tree inside a dedicated browser worker | library and worker entry — no ctx key |
+| [`webworker-runtime`](webworker-runtime/README.md) | Runs the Liwa plugin tree inside a dedicated browser worker | library and worker entry — no ctx key |
 | [`worktree`](worktree/README.md) | Creates a named Git worktree and changes the calling Session directory | `ctx.worktrees` |
 | [`forge`](forge/README.md) | Code host provider registry with shared change request polling | `ctx.forge` |
 | [`forge-github`](forge-github/README.md) | GitHub provider that reads pull requests through the host GitHub CLI | registers a provider on `ctx.forge` |

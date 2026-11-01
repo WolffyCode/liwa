@@ -1,16 +1,16 @@
 /**
- * pi-ai assistant event translation into the Harness streaming protocol.
+ * pi-ai assistant event translation into the Liwa streaming protocol.
  *
- * pi-ai tool-call arguments are parsed objects while the Harness keeps their
+ * pi-ai tool-call arguments are parsed objects while Liwa keeps their
  * raw JSON representation. pi-ai also reports failures as terminal stream
- * events, which this module maps into Harness finish chunks.
+ * events, which this module maps into Liwa finish chunks.
  *
- * @module dsh-llm-pi-ai/stream
+ * @module liwa-llm-pi-ai/stream
  */
 
-import { brandString } from '@deepseek-ai/dsh-brand'
-import { CONTEXT_WINDOW_EXCEEDED_CODE, EMPTY_RESPONSE_CODE, isContextWindowExceededError, isQuotaExceededError, LlmError, QUOTA_EXCEEDED_CODE } from '@deepseek-ai/dsh-llm'
-import type { FinishReason, StreamChunk, TokenUsage, ToolCallId } from '@deepseek-ai/dsh-llm'
+import { brandString } from '@liwa/brand'
+import { CONTEXT_WINDOW_EXCEEDED_CODE, EMPTY_RESPONSE_CODE, isContextWindowExceededError, isQuotaExceededError, LlmError, QUOTA_EXCEEDED_CODE } from '@liwa/llm'
+import type { FinishReason, StreamChunk, TokenUsage, ToolCallId } from '@liwa/llm'
 import { isContextOverflow } from '@earendil-works/pi-ai/utils/overflow'
 import type { AssistantMessage, AssistantMessageEvent, Usage as PiUsage } from '@earendil-works/pi-ai'
 import { toPiReplayState } from './replay.ts'
@@ -68,7 +68,7 @@ function classifyPiAiError(message: string): string {
 }
 
 /**
- * Map a terminal pi-ai event to the harness finish reason.
+ * Map a terminal pi-ai event to Liwa finish reason.
  * @param message - the assistant message carried by the `done` or `error` event.
  * @param contextWindow - resolved catalog capacity for usage-based overflow detection.
  * @returns the mapped harness reason. Recognized error text, `stop` usage above
@@ -130,13 +130,13 @@ export function mapStopReason(message: AssistantMessage, contextWindow?: number)
 /**
  * Translate the pi-ai event stream into StreamChunks. pi-ai never throws
  * mid-stream — failures arrive as `error` events, which become error/aborted
- * `finish` chunks (the harness protocol's other error-delivery style).
+ * `finish` chunks (the Liwa protocol's other error-delivery style).
  * @param events - one assistant turn's pi-ai event stream.
  * @param contextWindow - resolved catalog capacity for usage-based overflow detection.
  * @param callerSignal - caller cancellation state; an aborted caller makes any
  *   in-band terminal error an aborted finish.
  * @param requestedModel - request model identity recorded for durable replay.
- * @returns the harness chunks, ending with `usage` then `finish`; throws
+ * @returns Liwa chunks, ending with `usage` then `finish`; throws
  *   `LlmError` (`STREAM_CLOSED`) if the source ends without a terminal event, or
  *   `MALFORMED_RESPONSE` when completed tool arguments are invalid. Length-limited
  *   output retains its terminal reason so the assembler can discard incomplete calls.
@@ -206,7 +206,7 @@ export async function* toStreamChunks(
             type: 'tool-call',
             id: brandString<ToolCallId>(event.toolCall.id),
             name: event.toolCall.name,
-            // pi-ai hands back the PARSED arguments; the harness vocabulary
+            // pi-ai hands back the PARSED arguments; the Liwa vocabulary
             // keeps the raw string.
             arguments: JSON.stringify(event.toolCall.arguments),
           },
@@ -225,7 +225,7 @@ export async function* toStreamChunks(
         return
       case 'error':
         // In-stream error delivery (pi-ai's style) → error finish chunk
-        // (the harness's other sanctioned error path besides throwing).
+        // (Liwa's other sanctioned error path besides throwing).
         yield { type: 'usage', usage: mapUsage(event.error.usage) }
         yield {
           type: 'finish',

@@ -1,13 +1,13 @@
 /** Plugin configuration and complete request-local resolution for DeepSeek. */
-import type { Volatile } from '@deepseek-ai/cordis'
+import type { Volatile } from '@liwa/cordis'
 
-import z from '@deepseek-ai/schemastery'
-import { isVolatile } from '@deepseek-ai/cosmokit'
-import { deepEqualJson } from '@deepseek-ai/dsh-util-values'
-import { resolveRetryPolicy, RetryPolicySchema } from '@deepseek-ai/dsh-llm'
-import type { ModelModality, RetryPolicyConfig } from '@deepseek-ai/dsh-llm'
-import type { LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
-import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
+import z from '@liwa/schemastery'
+import { isVolatile } from '@liwa/cosmokit'
+import { deepEqualJson } from '@liwa/util-values'
+import { resolveRetryPolicy, RetryPolicySchema } from '@liwa/llm'
+import type { ModelModality, RetryPolicyConfig } from '@liwa/llm'
+import type { LaunchEnvironmentSnapshot } from '@liwa/launch-environment'
+import { MAX_TIMER_DELAY_MS } from '@liwa/timeout'
 import type { DeepSeekCatalogModel, DeepSeekConnectionOptions } from './types.ts'
 import { DEFAULT_MODELS } from './models.ts'
 import { DEFAULT_STREAM_IDLE_TIMEOUT_MS, DEFAULT_CONTEXT_WINDOW, DEFAULT_MAX_TOKENS, DEFAULT_MAX_INLINE_REQUEST_IMAGE_BYTES, DEFAULT_IMAGE_OFFLOAD_BYTE_QUANTUM, DEFAULT_INLINE_IMAGE_OFFLOAD_BYTE_QUANTUM, DEFAULT_IMAGE_OFFLOAD_COUNT_QUANTUM, DEFAULT_FILE_EXPIRY_SECONDS, DEFAULT_FILE_REFRESH_MARGIN_SECONDS, DEFAULT_FILE_QUOTA_CLEANUP_BATCH, DEFAULT_FILES_API_TIMEOUT_MS } from './defaults.ts'
@@ -49,7 +49,7 @@ export interface Config {
   fileExpiresAfterSeconds: Volatile<number>
   /** Remaining lifetime below which an indexed file is replaced (default one hour). */
   fileRefreshMarginSeconds: Volatile<number>
-  /** Oldest harness-owned files deleted before one quota-recovery upload retry (default 100). */
+  /** Oldest Liwa-owned files deleted before one quota-recovery upload retry (default 100). */
   fileQuotaCleanupBatch: Volatile<number>
   /** Provider-owned model-request retry policy; omission uses normal mode with five retries. */
   retryPolicy: Volatile<RetryPolicyConfig | undefined>

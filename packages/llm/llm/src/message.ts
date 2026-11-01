@@ -1,8 +1,8 @@
 /** Message value types, identity, and immutable construction helpers. */
 
-import { randomUUID } from '@deepseek-ai/dsh-util-crypto'
-import { brandString } from '@deepseek-ai/dsh-brand'
-import { deepFreeze } from '@deepseek-ai/dsh-util-values'
+import { randomUUID } from '@liwa/util-crypto'
+import { brandString } from '@liwa/brand'
+import { deepFreeze } from '@liwa/util-values'
 import type { MessageId, ToolCallId } from './brand.ts'
 import type { ContentBlock } from './types.ts'
 
@@ -101,7 +101,7 @@ export type ContextFormed =
   | { readonly form: 'recall' }
 
 /**
- * Where a message (or injected content) came from, in the harness's own
+ * Where a message (or injected content) came from, in Liwa's own
  * vocabulary. Merge-extensible sum type — each producer declares its own
  * `kind` in its own module; there is no shared catch-all `plugin` kind.
  * Model and tool sources answer their role messages; user messages carry any

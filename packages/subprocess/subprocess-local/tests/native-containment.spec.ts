@@ -3,14 +3,14 @@ import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import type { SubprocessSpawnSpec, SubprocessTerminalHandle } from '@deepseek-ai/dsh-subprocess'
+import { Context } from '@liwa/cordis'
+import type { SubprocessSpawnSpec, SubprocessTerminalHandle } from '@liwa/subprocess'
 import LocalSubprocessRuntime from '../src/index.ts'
 import { launchLinuxScope, probeLinuxScope } from '../src/linux-scope.ts'
 import { targetEnvironment } from '../src/runner-launch.ts'
 import { bindManagedProcess } from '../src/spawn.ts'
 
-const scratch = mkdtempSync(join(tmpdir(), 'dsh-native-containment-'))
+const scratch = mkdtempSync(join(tmpdir(), 'liwa-native-containment-'))
 afterAll(() => { rmSync(scratch, { recursive: true, force: true }) })
 
 function spec(argv: string[], graceMs = 100): SubprocessSpawnSpec {

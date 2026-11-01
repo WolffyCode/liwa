@@ -1,10 +1,10 @@
 /** Per-invocation plans use resolved Conversation locations for final Turn artifacts. */
-import type {} from '@deepseek-ai/dsh-tool-executor-ptc/client'
-import type { ChatNode } from '@deepseek-ai/dsh-client-ui-chat/client'
-import type { ConversationNodeDefinition } from '@deepseek-ai/dsh-client-ui-conversation/client'
+import type {} from '@liwa/tool-executor-ptc/client'
+import type { ChatNode } from '@liwa/client-ui-chat/client'
+import type { ConversationNodeDefinition } from '@liwa/client-ui-conversation/client'
 import { submittedPlan, type SubmittedPlan } from './plan.ts'
 
-declare module '@deepseek-ai/dsh-client-ui-chat/client' {
+declare module '@liwa/client-ui-chat/client' {
   interface ChatNodeDataMap {
     /** Complete plan submitted through exit_plan_mode, including rejected or dismissed reviews. */
     'submitted-plan': SubmittedPlan

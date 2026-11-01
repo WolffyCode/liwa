@@ -3,59 +3,59 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/client/ui-settings-models/README.md
 /:
-  en: d1bc4d9ef67bfb19
-  zh: d095e4dc76f1c5e0
-/deepseek-ai-dsh-client-ui-settings-models:
-  en: 0db6fa836e1ff511
-  zh: 0e2968763e1fb7a5
-/deepseek-ai-dsh-client-ui-settings-models/summary:
-  en: 51252c1e9fa6da0a
-  zh: 227b54d7898417fa
-/deepseek-ai-dsh-client-ui-settings-models/table-of-contents:
+  en: 5edb5e59a522b608
+  zh: cf9c330e75b59131
+/liwa-client-ui-settings-models:
+  en: f1027278a720506c
+  zh: f5703154522154c1
+/liwa-client-ui-settings-models/summary:
+  en: 1a1be8797e86c6e4
+  zh: 3d1b7d8e58f6a21c
+/liwa-client-ui-settings-models/table-of-contents:
   en: d152484eb41ac6b4
   zh: 09388d293f9be9cb
-/deepseek-ai-dsh-client-ui-settings-models/use-this-package:
-  en: db5aaf7f702e1f0c
-  zh: 409a78c14fb2b6e3
-/deepseek-ai-dsh-client-ui-settings-models/use-this-package/api-keys:
-  en: f4817eb2e3537ed9
-  zh: e589c193fa85473f
-/deepseek-ai-dsh-client-ui-settings-models/use-this-package/editing-a-provider:
+/liwa-client-ui-settings-models/use-this-package:
+  en: fd782e24431652b2
+  zh: ce4b210c40b62770
+/liwa-client-ui-settings-models/use-this-package/api-keys:
+  en: 4d9f035ea2b01d68
+  zh: be5175771aae5a7e
+/liwa-client-ui-settings-models/use-this-package/editing-a-provider:
   en: a4ac56de00a7e59b
   zh: 9b3f914dc43393c7
-/deepseek-ai-dsh-client-ui-settings-models/use-this-package/adding-and-deleting-providers:
+/liwa-client-ui-settings-models/use-this-package/adding-and-deleting-providers:
   en: c0b04b2b11af60d3
   zh: d195eec281e445cb
-/deepseek-ai-dsh-client-ui-settings-models/use-this-package/first-run-dialogs:
+/liwa-client-ui-settings-models/use-this-package/first-run-dialogs:
   en: 589397a35f82244e
   zh: 342fbceee2c173a2
-/deepseek-ai-dsh-client-ui-settings-models/use-this-package/extension-slots:
-  en: 79f8f80bdaba73cd
-  zh: f4d7496b293fbf81
-/deepseek-ai-dsh-client-ui-settings-models/understand-the-implementation:
+/liwa-client-ui-settings-models/use-this-package/extension-slots:
+  en: 9d1612e4b032b603
+  zh: 02acf8ab01cc1da4
+/liwa-client-ui-settings-models/understand-the-implementation:
   en: a87afbec5e339b36
   zh: 6348c81af7e650e1
-/deepseek-ai-dsh-client-ui-settings-models/understand-the-implementation/validation:
-  en: 74948a88fe1f9aac
-  zh: 8ad2200fa74c12c9
-/deepseek-ai-dsh-client-ui-settings-models/understand-the-implementation/concurrency-and-credentials:
+/liwa-client-ui-settings-models/understand-the-implementation/validation:
+  en: 6da0458b290abe7e
+  zh: 400fe57462c8999d
+/liwa-client-ui-settings-models/understand-the-implementation/concurrency-and-credentials:
   en: 6e04c00818f014cd
   zh: 2d57f8d8944e67ed
-/deepseek-ai-dsh-client-ui-settings-models/understand-the-implementation/onboarding-coordinator:
+/liwa-client-ui-settings-models/understand-the-implementation/onboarding-coordinator:
   en: dc515a31212e477a
   zh: 770ba77cd9a69f73
-/deepseek-ai-dsh-client-ui-settings-models/further-exploration:
-  en: 20abd8b98b6c20e2
-  zh: 6dfda7955ce5f33f
-/deepseek-ai-dsh-client-ui-settings-models/model-experience:
+/liwa-client-ui-settings-models/further-exploration:
+  en: df08ab32794557f5
+  zh: 1a3b7676a837f88c
+/liwa-client-ui-settings-models/model-experience:
   en: 3120df665299c634
   zh: 1d9f365d091d0d2a
-/deepseek-ai-dsh-client-ui-settings-models/model-experience/kv-cache-effect:
+/liwa-client-ui-settings-models/model-experience/kv-cache-effect:
   en: ca75c51c89c2c9b0
   zh: 9779c98fff4c949a
-/deepseek-ai-dsh-client-ui-settings-models/known-limitations-and-deferred-work:
+/liwa-client-ui-settings-models/known-limitations-and-deferred-work:
   en: cc69c9934bf22302
   zh: 4ea896f4b54aa203
-/deepseek-ai-dsh-client-ui-settings-models/known-limitations-and-deferred-work/dev-note:
+/liwa-client-ui-settings-models/known-limitations-and-deferred-work/dev-note:
   en: e67f633dc6fe7773
   zh: 3bb0c20c93f16f98

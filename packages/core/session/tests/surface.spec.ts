@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { SessionEvent, SurfaceEvent, SurfaceEventType } from '@deepseek-ai/dsh-session'
+import type { SessionEvent, SurfaceEvent, SurfaceEventType } from '@liwa/session'
 import {
   Session,
   SessionId,
@@ -11,8 +11,8 @@ import {
   isReplacementSurfaceEvent,
   isSurfaceEligibleType,
   isSurfaceEvent,
-} from '@deepseek-ai/dsh-session'
-import { SurfaceManager } from '@deepseek-ai/dsh-session/surface'
+} from '@liwa/session'
+import { SurfaceManager } from '@liwa/session/surface'
 import {
   MessageId,
   ToolCallId,
@@ -22,10 +22,10 @@ import {
   createToolResultMessage,
   createUserMessage,
   freezeMessage,
-} from '@deepseek-ai/dsh-llm'
-import type { ContextFormed, MessageSource } from '@deepseek-ai/dsh-llm'
+} from '@liwa/llm'
+import type { ContextFormed, MessageSource } from '@liwa/llm'
 
-declare module '@deepseek-ai/dsh-llm' {
+declare module '@liwa/llm' {
   interface MessageSourceMap {
     'test': { kind: 'test' } & ContextFormed
     'watcher': { kind: 'watcher' } & ContextFormed

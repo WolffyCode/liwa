@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/user/guide/providers.md
 /configure-models:
-  en: b1631dcf25e805a1
-  zh: 8ded02e2ae87f00b
+  en: 73f60a592de8c498
+  zh: f125af6400fe2df6
 /configure-models/configure-deepseek:
-  en: 44852da64a6a39ec
-  zh: 4c280e428f0fec08
+  en: 90a438de55108a83
+  zh: cbf60d6de40bbdd0
 /configure-models/add-a-third-party-provider:
-  en: f6fb44a85dc5e4dd
-  zh: 2b86ea4492c32ed7
+  en: 4707512a87f2e5eb
+  zh: bc4e361431e72511
 /configure-models/add-a-custom-model-api:
   en: 17867305a3e1b52a
   zh: 876fedf1f6f563e4
@@ -21,20 +21,20 @@
   en: 281b2f40645aa5eb
   zh: 861bfe9584d9d30f
 /configure-models/advanced-configuration:
-  en: b882ec69a6899d8a
-  zh: 66a1713aca0e6f1c
+  en: dde4e13e3068a288
+  zh: 471e4280dcdac7aa
 /configure-models/advanced-configuration/image-input:
-  en: 75350cb615da03a4
-  zh: 6f8b3510085e4ac4
+  en: 524fd81249cd6c79
+  zh: 7d486e3814d7ea74
 /configure-models/advanced-configuration/deepseek-account-models:
-  en: fc09d02a89b211a7
-  zh: e0f23a8912a24178
+  en: e00814dd38c66273
+  zh: 1bca7146ac0d3bc0
 /configure-models/advanced-configuration/reasoning-effort:
-  en: f2ffb493997dcc72
-  zh: dee9238f072e53ad
+  en: 2b365590f6038288
+  zh: ac8502d1bebd9139
 /configure-models/advanced-configuration/request-compatibility:
-  en: 6f52195d1502783e
-  zh: 34dbbeacb541afd4
+  en: 25e7082207fc8758
+  zh: 5e52a1fe656a9d0b
 /configure-models/troubleshooting:
   en: af9f866bec7701f0
   zh: 0e4f5e1da975be41

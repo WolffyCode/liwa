@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-The llm group provides the harness's model-call capability: one provider-neutral service through which any composition streams requests to a model provider, plus adapters, provider-specific request metadata, retry execution, and measurement. The core `llm` package defines the message, content-block, and stream-chunk vocabulary every plugin and the session log use; provider adapters translate a provider's wire format into that vocabulary; DeepSeek request-extension plugins contribute lifecycle-owned metadata outside model input; `llm-retry` re-runs failed requests at durable agent-step boundaries; and `token-meter` measures request and context pressure from the durable log. This page maps the group; each package README owns its per-package contract.
+The llm group provides Liwa's model-call capability: one provider-neutral service through which any composition streams requests to a model provider, plus adapters, provider-specific request metadata, retry execution, and measurement. The core `llm` package defines the message, content-block, and stream-chunk vocabulary every plugin and the session log use; provider adapters translate a provider's wire format into that vocabulary; DeepSeek request-extension plugins contribute lifecycle-owned metadata outside model input; `llm-retry` re-runs failed requests at durable agent-step boundaries; and `token-meter` measures request and context pressure from the durable log. This page maps the group; each package README owns its per-package contract.
 
 ## Table of Contents
 
@@ -24,7 +24,7 @@ The llm group provides the harness's model-call capability: one provider-neutral
 
 | Package | Role | ctx key |
 |---|---|---|
-| [`llm/`](llm/README.md) | Streams one model call through a registered provider adapter and shares the harness message, block, and chunk vocabulary | `ctx.llm` |
+| [`llm/`](llm/README.md) | Streams one model call through a registered provider adapter and shares the Liwa message, block, and chunk vocabulary | `ctx.llm` |
 | [`llm-deepseek/`](llm-deepseek/README.md) | Shared Messages protocol, request configuration, and model capabilities | — |
 | [`llm-deepseek-api-key/`](llm-deepseek-api-key/README.md) | API-key authentication and discovery for the official route | `ctx.llm` |
 | [`llm-deepseek-account/`](llm-deepseek-account/README.md) | Account-token authentication, invalidation, and discovery | `ctx.llm` |

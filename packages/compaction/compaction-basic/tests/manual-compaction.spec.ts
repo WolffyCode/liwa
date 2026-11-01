@@ -1,17 +1,17 @@
-import { imageOffloadProjection } from '@deepseek-ai/dsh-compaction-image-offload/projection'
+import { imageOffloadProjection } from '@liwa/compaction-image-offload/projection'
 import { describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
-import { CommandId } from '@deepseek-ai/dsh-commands/brand'
-import { BasicCompactionEngine } from '@deepseek-ai/dsh-compaction-basic'
-import { CompactionId, isCompactCheckpointSource, ManualCompactionError } from '@deepseek-ai/dsh-compaction'
-import type { CompactionResult } from '@deepseek-ai/dsh-compaction'
+import { Context } from '@liwa/cordis'
+import AgentLoop from '@liwa/agent-loop'
+import { mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
+import { CommandId } from '@liwa/commands/brand'
+import { BasicCompactionEngine } from '@liwa/compaction-basic'
+import { CompactionId, isCompactCheckpointSource, ManualCompactionError } from '@liwa/compaction'
+import type { CompactionResult } from '@liwa/compaction'
 import {
   createAssistantMessage,
   createUserMessage,
   LlmAdapter,
-} from '@deepseek-ai/dsh-llm'
+} from '@liwa/llm'
 import type {
   ContentBlock,
   LlmResolvedModelInfo,
@@ -19,19 +19,19 @@ import type {
   RequestMessage,
   StreamChunk,
   TokenUsage,
-} from '@deepseek-ai/dsh-llm'
-import SessionStore, { buildForkSeed, Session, SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import LlmRuntime from '@deepseek-ai/dsh-llm'
-import type { ContextFormed } from '@deepseek-ai/dsh-llm'
-import TokenMeter from '@deepseek-ai/dsh-token-meter'
-import type { Agent } from '@deepseek-ai/dsh-agent'
+} from '@liwa/llm'
+import SessionStore, { buildForkSeed, Session, SessionId, type SessionEvent } from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import LlmRuntime from '@liwa/llm'
+import type { ContextFormed } from '@liwa/llm'
+import TokenMeter from '@liwa/token-meter'
+import type { Agent } from '@liwa/agent'
 import type {
   SummarizationInput,
   SummaryResult,
-} from '@deepseek-ai/dsh-compaction-basic/src/summarizer.ts'
+} from '@liwa/compaction-basic/src/summarizer.ts'
 
-declare module '@deepseek-ai/dsh-llm' {
+declare module '@liwa/llm' {
   interface MessageSourceMap {
     'listener': { kind: 'listener' } & ContextFormed
     'rival': { kind: 'rival' } & ContextFormed

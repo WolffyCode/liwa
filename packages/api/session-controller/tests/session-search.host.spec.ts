@@ -5,18 +5,18 @@
  */
 
 import { describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import SessionStore, { SESSION_FORMAT_VERSION, SessionSeq } from '@deepseek-ai/dsh-session'
-import type { SessionHeader, SessionId } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import { Context } from '@liwa/cordis'
+import AgentRegistry from '@liwa/agent'
+import { createUserMessage } from '@liwa/llm'
+import SessionStore, { SESSION_FORMAT_VERSION, SessionSeq } from '@liwa/session'
+import type { SessionHeader, SessionId } from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
 import {
   SessionQueryEngine,
   SessionQueryError,
   type SessionSearchHit,
   type SessionSearchRequest,
-} from '@deepseek-ai/dsh-session-query'
+} from '@liwa/session-query'
 import { createSessionTestRemote, testSessionPersistence, TEST_IMAGE_LIMITS } from './test-remote.ts'
 import { ApiSessionList } from '../src/list.ts'
 

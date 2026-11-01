@@ -3,26 +3,26 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/defensive-patterns/package-surface.md
 /package-surface-rules:
-  en: 28d4c2d7da24269f
-  zh: d723b807815401d7
+  en: 22ffc5693e949958
+  zh: 70ac8cd3eaf7db9f
 /package-surface-rules/a-plugin-package-exports-what-the-loader-loads:
-  en: 44a06f50e751f06b
-  zh: 339dea7be403fd0b
+  en: db15986097b33976
+  zh: 8251e786d3f8e6b1
 /package-surface-rules/two-package-shapes-and-both-are-dynamic-plugin-packages:
-  en: bf79c6acf35c90a5
-  zh: 9f2ce6c7f6493b17
+  en: d8fe30b29aa49388
+  zh: 734ad2905d70d8fe
 /package-surface-rules/package-json-exports-uses-the-standard-key-set:
-  en: 692ded0ff903609d
-  zh: c871ab58ca92ad70
+  en: d18328306a7fa38c
+  zh: 765f80a6568054f3
 /package-surface-rules/dependency-declarations-and-version-consistency-are-enforced-by-the-dependency-scan:
-  en: e68bfcde70f845b4
-  zh: 73e5c4fb067c4fa1
+  en: a0f911179c0f8fca
+  zh: c1f9ddefad7a1e55
 /package-surface-rules/internal-dependency-syntax-follows-the-package-family:
-  en: d6bb855545b7b05b
-  zh: 6c489ed5a2ed0ae5
+  en: 1e85c525a2a24721
+  zh: 8789ce3501b98017
 /package-surface-rules/a-new-resolve-hook-is-refused-outright:
-  en: b420ae3e228432d5
-  zh: 0c49c4a9c3a5262c
+  en: a22da6d4a3437ccf
+  zh: a28b25fd5f827a71
 /package-surface-rules/package-modules-do-not-await-at-module-scope:
   en: 29a58b3f804be042
   zh: 8a83a21366dac897

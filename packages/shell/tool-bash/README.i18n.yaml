@@ -5,123 +5,123 @@
 /:
   en: aa0f6a31440050d2
   zh: 388fc575115b9a4f
-/deepseek-ai-dsh-tool-bash:
-  en: 76af715ac8c82942
-  zh: d24ef2eef9e8f386
-/deepseek-ai-dsh-tool-bash/summary:
-  en: fea9162fe27f9091
-  zh: 267c460b81aeddf6
-/deepseek-ai-dsh-tool-bash/table-of-contents:
+/liwa-tool-bash:
+  en: ae866f25e8386e0f
+  zh: 129f6a2b40bd1e47
+/liwa-tool-bash/summary:
+  en: 093b419bc01aad54
+  zh: b2e02d3ea64f04c6
+/liwa-tool-bash/table-of-contents:
   en: d152484eb41ac6b4
   zh: 09388d293f9be9cb
-/deepseek-ai-dsh-tool-bash/use-this-package:
-  en: b38c1a304e18185c
-  zh: 05275ff8d127c9c0
-/deepseek-ai-dsh-tool-bash/use-this-package/minimal-configuration:
-  en: 9a16909fc013c6e5
-  zh: ba740dbce3cd2e93
-/deepseek-ai-dsh-tool-bash/use-this-package/running-a-command:
+/liwa-tool-bash/use-this-package:
+  en: c34b17160db5fb89
+  zh: fbd163af527c9f32
+/liwa-tool-bash/use-this-package/minimal-configuration:
+  en: 944db910f083fec6
+  zh: a421df0d189fe6a5
+/liwa-tool-bash/use-this-package/running-a-command:
   en: 7610fa7c373e339a
   zh: e3001ca072f53734
-/deepseek-ai-dsh-tool-bash/use-this-package/running-long-commands-in-the-background:
-  en: a5eecea7bb7a75e8
-  zh: fae7f08e0e11594e
-/deepseek-ai-dsh-tool-bash/use-this-package/foreground-commands-as-jobs:
+/liwa-tool-bash/use-this-package/running-long-commands-in-the-background:
+  en: 957bc81282d7495e
+  zh: b12e4eae469b11f6
+/liwa-tool-bash/use-this-package/foreground-commands-as-jobs:
   en: d6da2d08afdca324
   zh: 606b7b1da7447874
-/deepseek-ai-dsh-tool-bash/use-this-package/sandboxed-execution-and-escalation:
-  en: 472beeb895ca46cf
-  zh: ba110c9f62f7d5b8
-/deepseek-ai-dsh-tool-bash/use-this-package/what-can-go-wrong:
-  en: cc9a6cc87468d73a
-  zh: aaa94162ef9de2f0
-/deepseek-ai-dsh-tool-bash/understand-the-implementation:
+/liwa-tool-bash/use-this-package/sandboxed-execution-and-escalation:
+  en: d325ce6f3cc7e28d
+  zh: 61c5a014566ffa0b
+/liwa-tool-bash/use-this-package/what-can-go-wrong:
+  en: 5be2f79cb9d60469
+  zh: 8df7dddccf4ff918
+/liwa-tool-bash/understand-the-implementation:
   en: 165313776a851b51
   zh: 828f48807036aff0
-/deepseek-ai-dsh-tool-bash/understand-the-implementation/design-philosophy:
-  en: 9332353fda6ac7be
-  zh: 45c17e5e83478032
-/deepseek-ai-dsh-tool-bash/understand-the-implementation/source-map:
+/liwa-tool-bash/understand-the-implementation/design-philosophy:
+  en: 5354e9968ffecd09
+  zh: 4629044fe2df0f12
+/liwa-tool-bash/understand-the-implementation/source-map:
   en: 0547d68864628d08
   zh: 5adb79f945b17a0d
-/deepseek-ai-dsh-tool-bash/understand-the-implementation/request-resolution:
+/liwa-tool-bash/understand-the-implementation/request-resolution:
   en: 56dae7757fab0a79
   zh: 7930235dc0490c73
-/deepseek-ai-dsh-tool-bash/understand-the-implementation/rendering-story:
-  en: 167c045d6a6278cc
-  zh: 3f17ee8d31e0bbad
-/deepseek-ai-dsh-tool-bash/further-exploration:
-  en: 15b7464d9a8ddd6a
-  zh: 471dba4b69e29aab
-/deepseek-ai-dsh-tool-bash/model-experience:
+/liwa-tool-bash/understand-the-implementation/rendering-story:
+  en: 20ed60c9f3c92849
+  zh: 0c1e349b24533408
+/liwa-tool-bash/further-exploration:
+  en: 59a7bb86b3ae4293
+  zh: 652c99b217912b3a
+/liwa-tool-bash/model-experience:
   en: 215e7ba838619b7b
   zh: a311da3843709f90
-/deepseek-ai-dsh-tool-bash/model-experience/system-prompt:
+/liwa-tool-bash/model-experience/system-prompt:
   en: cf78b9dd5596495f
   zh: bd44560f8c2435e8
-/deepseek-ai-dsh-tool-bash/model-experience/system-prompt/what-the-model-sees:
+/liwa-tool-bash/model-experience/system-prompt/what-the-model-sees:
   en: f8173d0103e0c6b6
   zh: ed8b92539ee74156
-/deepseek-ai-dsh-tool-bash/model-experience/system-prompt/what-the-model-sees/bash-guidance:
+/liwa-tool-bash/model-experience/system-prompt/what-the-model-sees/bash-guidance:
   en: 2d65d6ca9b82df1d
   zh: 016a14eee33eba62
-/deepseek-ai-dsh-tool-bash/model-experience/system-prompt/token-effect:
+/liwa-tool-bash/model-experience/system-prompt/token-effect:
   en: a38d59e3e6d8a1c9
   zh: 96d60abecd38307b
-/deepseek-ai-dsh-tool-bash/model-experience/system-prompt/kv-cache-effect:
+/liwa-tool-bash/model-experience/system-prompt/kv-cache-effect:
   en: 06f29b209347522f
   zh: 4dd39a5a3b738c59
-/deepseek-ai-dsh-tool-bash/model-experience/tool-schemas:
+/liwa-tool-bash/model-experience/tool-schemas:
   en: 3039bc5e7a796b21
   zh: 6b7a9eaf69c9ea53
-/deepseek-ai-dsh-tool-bash/model-experience/tool-schemas/what-the-model-sees:
-  en: d1ac6102f35ec68c
-  zh: 43d7e605b95096c5
-/deepseek-ai-dsh-tool-bash/model-experience/tool-schemas/token-effect:
+/liwa-tool-bash/model-experience/tool-schemas/what-the-model-sees:
+  en: 8e483a55cafd254d
+  zh: 5462066540a54966
+/liwa-tool-bash/model-experience/tool-schemas/token-effect:
   en: cdbd4262314e6856
   zh: e8c12c0cf5492386
-/deepseek-ai-dsh-tool-bash/model-experience/tool-schemas/kv-cache-effect:
+/liwa-tool-bash/model-experience/tool-schemas/kv-cache-effect:
   en: 8b821a8b34948af9
   zh: 858244c080bfc5cb
-/deepseek-ai-dsh-tool-bash/model-experience/foreground-result:
+/liwa-tool-bash/model-experience/foreground-result:
   en: d83f1f25a3719c54
   zh: 445ca808e28dc936
-/deepseek-ai-dsh-tool-bash/model-experience/foreground-result/what-the-model-sees:
-  en: 1cf435133078b803
-  zh: 3e7eb766a62b7e77
-/deepseek-ai-dsh-tool-bash/model-experience/foreground-result/token-effect:
+/liwa-tool-bash/model-experience/foreground-result/what-the-model-sees:
+  en: de054bee6c57d725
+  zh: fd961be579381b94
+/liwa-tool-bash/model-experience/foreground-result/token-effect:
   en: b2018adbda15b8a7
   zh: 79521073a45c7f80
-/deepseek-ai-dsh-tool-bash/model-experience/foreground-result/kv-cache-effect:
+/liwa-tool-bash/model-experience/foreground-result/kv-cache-effect:
   en: f5d5f97a153f7c70
   zh: 31911b4f3506d6c8
-/deepseek-ai-dsh-tool-bash/model-experience/background-job-context-and-results:
+/liwa-tool-bash/model-experience/background-job-context-and-results:
   en: 38ce70c1818a5694
   zh: ed3ad10f12ed1b8e
-/deepseek-ai-dsh-tool-bash/model-experience/background-job-context-and-results/what-the-model-sees:
-  en: b2586ae30256dda7
-  zh: 03000224da9a68d1
-/deepseek-ai-dsh-tool-bash/model-experience/background-job-context-and-results/token-effect:
+/liwa-tool-bash/model-experience/background-job-context-and-results/what-the-model-sees:
+  en: c1e20e0d6447ccb2
+  zh: 7327bdd3a51437e6
+/liwa-tool-bash/model-experience/background-job-context-and-results/token-effect:
   en: 3a0d2d43640158d6
   zh: 45ae711aedaa1d41
-/deepseek-ai-dsh-tool-bash/model-experience/background-job-context-and-results/kv-cache-effect:
+/liwa-tool-bash/model-experience/background-job-context-and-results/kv-cache-effect:
   en: f5d5f97a153f7c70
   zh: 31911b4f3506d6c8
-/deepseek-ai-dsh-tool-bash/model-experience/tool-errors:
+/liwa-tool-bash/model-experience/tool-errors:
   en: 2d4f2c8605eccab3
   zh: 67f1f0218f73c6bf
-/deepseek-ai-dsh-tool-bash/model-experience/tool-errors/what-the-model-sees:
-  en: d6d7068e23fc1b93
-  zh: 515e8aa586415179
-/deepseek-ai-dsh-tool-bash/model-experience/tool-errors/token-effect:
+/liwa-tool-bash/model-experience/tool-errors/what-the-model-sees:
+  en: 4b921e3a857081ae
+  zh: ba22feece987e676
+/liwa-tool-bash/model-experience/tool-errors/token-effect:
   en: a3a78ef476ec5e56
   zh: dd2c8ad0f69e8ff1
-/deepseek-ai-dsh-tool-bash/model-experience/tool-errors/kv-cache-effect:
+/liwa-tool-bash/model-experience/tool-errors/kv-cache-effect:
   en: f5d5f97a153f7c70
   zh: 31911b4f3506d6c8
-/deepseek-ai-dsh-tool-bash/known-limitations-and-deferred-work:
-  en: ccf18075dcff3d1f
-  zh: 3f4cf9e14465f3d8
-/deepseek-ai-dsh-tool-bash/known-limitations-and-deferred-work/dev-note:
+/liwa-tool-bash/known-limitations-and-deferred-work:
+  en: ae5b7964c519d0d7
+  zh: 48cfd21580b11c1a
+/liwa-tool-bash/known-limitations-and-deferred-work/dev-note:
   en: e67f633dc6fe7773
   zh: 3bb0c20c93f16f98

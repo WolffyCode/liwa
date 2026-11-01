@@ -1,25 +1,25 @@
 /**
  * Service Definition for the user-questions capability seam (`ctx.userQuestions`): a UI-backed service for
  * pausing an agent tool call until the human answers a question. The model-
- * facing tool lives in `@deepseek-ai/dsh-tool-ask-user`; UI packages compose
+ * facing tool lives in `@liwa/tool-ask-user`; UI packages compose
  * answerers on the Agent-scoped Cordis waterfall.
  *
- * @module @deepseek-ai/dsh-user-questions
+ * @module @liwa/user-questions
  */
 
-import { Context, Service } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-agent'
-import { createUserMessage, HarnessError, type MessageId, type ToolCallId, type UserMessage } from '@deepseek-ai/dsh-llm'
-import type { Session } from '@deepseek-ai/dsh-session'
-import { scopeTarget } from '@deepseek-ai/dsh-scope'
-import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { ProjectionHandle } from '@deepseek-ai/dsh-session-projection'
-import z from '@deepseek-ai/schemastery'
+import { Context, Service } from '@liwa/cordis'
+import type {} from '@liwa/agent'
+import { createUserMessage, LiwaError, type MessageId, type ToolCallId, type UserMessage } from '@liwa/llm'
+import type { Session } from '@liwa/session'
+import { scopeTarget } from '@liwa/scope'
+import { Remote, TypertRemoteService } from '@liwa/typert-protocol'
+import type { Agent } from '@liwa/agent'
+import type { ProjectionHandle } from '@liwa/session-projection'
+import z from '@liwa/schemastery'
 import { userQuestionProjectionDefinition, type UserQuestionProjectionState } from './projection.ts'
 import { TimedQuestionWait } from './timed-wait.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     userQuestions: UserQuestionService
   }
@@ -43,7 +43,7 @@ export interface AskUserQuestionRequest extends AskUserQuestionRequestEvent {}
 export type TimedUserQuestionResult = AskUserQuestionAnswer | { pending: true; callId: ToolCallId }
 
 /** Stable error taxonomy for user-questions failures. */
-export class UserQuestionError extends HarnessError {
+export class UserQuestionError extends LiwaError {
   constructor(message: string, code: string, options?: ErrorOptions) {
     super(message, code, options)
     this.name = 'UserQuestionError'

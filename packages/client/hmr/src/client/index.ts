@@ -1,5 +1,5 @@
 /** Web SSE transport for page-owned client entry reconciliation and rebuilt code replacement. */
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@liwa/cordis'
 import { EventSourceParserStream } from 'eventsource-parser/stream'
 import type { PluginsEventParseResult } from '../events.ts'
 import { EVENTS_ROUTE, parsePluginsEventFrame } from '../events.ts'
@@ -17,7 +17,7 @@ type PageTransportFetch = (input: string, init: RequestInit) => Promise<Response
 
 /** Page global carrying the shell transport; absent in the served web app. */
 interface PageTransportGlobal {
-  __DSH_TRANSPORT__?: { fetch?: PageTransportFetch }
+  __LIWA_TRANSPORT__?: { fetch?: PageTransportFetch }
 }
 
 /**
@@ -72,7 +72,7 @@ export function apply(ctx: Context): void {
   }
 
   ctx.effect(() => {
-    const transport = (globalThis as PageTransportGlobal).__DSH_TRANSPORT__
+    const transport = (globalThis as PageTransportGlobal).__LIWA_TRANSPORT__
     if (transport?.fetch !== undefined) {
       const controller = new AbortController()
       void readPageTransportEvents(transport.fetch, controller.signal, receive).catch((error: unknown) => {

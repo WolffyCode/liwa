@@ -1,9 +1,9 @@
-/** Unified JSON-value schema DSL, inference, compilation, and tool definition helpers. @module dsh-tools/schema */
+/** Unified JSON-value schema DSL, inference, compilation, and tool definition helpers. @module liwa-tools/schema */
 
-import { HarnessError } from '@deepseek-ai/dsh-llm'
-import type { ContentBlock, ToolSchema } from '@deepseek-ai/dsh-llm'
-import { snapshotJsonValue } from '@deepseek-ai/dsh-util-values'
-import type { JsonValue } from '@deepseek-ai/dsh-util-values'
+import { LiwaError } from '@liwa/llm'
+import type { ContentBlock, ToolSchema } from '@liwa/llm'
+import { snapshotJsonValue } from '@liwa/util-values'
+import type { JsonValue } from '@liwa/util-values'
 import type { ToolDefinition, ToolExecution, ToolExecutionResult, ToolRunContext, ToolResult } from './contracts.ts'
 import { assertSupportedJsonSchema, isJsonSchemaRecord, isPlainJsonArray, JsonSchemaError, validateJsonSchemaValue } from './json-schema.ts'
 import type { JsonSchemaNode, JsonSchemaScalar, ObjectJsonSchema } from './json-schema.ts'
@@ -459,7 +459,7 @@ export function parameterSchemaSpecToJsonSchema(spec: ParameterSchemaSpec): Para
 }
 
 /** Invalid model-generated arguments for a typed tool. */
-export class ToolArgsError extends HarnessError {
+export class ToolArgsError extends LiwaError {
   /** Individual violations in schema-walk order. */
   readonly violations: string[]
 
@@ -497,7 +497,7 @@ export interface DefineToolOptions<S extends ParameterSchemaSpec, O extends Valu
     /** Pure replayable presentation metadata for native and nested calls. */
     presentationMeta?(args: InferArgs<S>, value: InferValue<NoInfer<O>>): JsonValue
   }
-  /** Requests deferred loading of the tool definition; see {@link @deepseek-ai/dsh-llm#ToolSchema.deferLoading}. */
+  /** Requests deferred loading of the tool definition; see {@link @liwa/llm#ToolSchema.deferLoading}. */
   readonly deferLoading?: true
   /** Optional positive cooperative timeout budget in milliseconds. */
   readonly timeoutMs?: number

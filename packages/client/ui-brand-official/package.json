@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-client-ui-brand-official",
-  "description": "Official DeepSeek Harness brand occupants for the Web client's sidebar slots",
+  "name": "@liwa/client-ui-brand-official",
+  "description": "Official Liwa brand occupants for the Web client's sidebar slots",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/client/ui-brand-official"
   },
   "type": "module",
@@ -26,11 +26,11 @@
     "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json"
   },
-  "dsh": {
+  "liwa": {
     "client": {
       "inject": [
-        "@deepseek-ai/dsh-client-ui-renderer",
-        "@deepseek-ai/dsh-client-ui-sidebar"
+        "@liwa/client-ui-renderer",
+        "@liwa/client-ui-sidebar"
       ],
       "platform": "web"
     }
@@ -41,13 +41,13 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-client-ui-primitives": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-renderer": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-sidebar": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~",
+    "@liwa/client-ui-primitives": "workspace:*",
+    "@liwa/client-ui-renderer": "workspace:*",
+    "@liwa/client-ui-sidebar": "workspace:*",
+    "@liwa/cordis": "workspace:~",
     "@testing-library/react": "^16.3.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

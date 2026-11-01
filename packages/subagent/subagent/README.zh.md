@@ -3,13 +3,13 @@ description: "面向用户与维护者的 subagent 委派 seam，用于选择提
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-subagent
+# @liwa/subagent
 
 [English](README.md) | 中文
 
 ## 概述
 
-`dsh-subagent` 通过具名提供方委派工作，并收集受管理 activation 的结果。本地 spawn 和 fork 子级保留持久会话以接受后续消息；ACP、DSH SDK、Codex 与 Claude Code 执行一次。所有子级共享准入、取消、所有权与发现机制。使用时组合服务、提供方和委派工具。
+`liwa-subagent` 通过具名提供方委派工作，并收集受管理 activation 的结果。本地 spawn 和 fork 子级保留持久会话以接受后续消息；ACP、灵鲸 SDK、Codex 与 Claude Code 执行一次。所有子级共享准入、取消、所有权与发现机制。使用时组合服务、提供方和委派工具。
 
 ## 目录
 
@@ -31,12 +31,12 @@ kind: "package-reference"
 
 ### 启用委派
 
-一起挂载本服务、`@deepseek-ai/dsh-session-projection`、提供方与委派工具；本服务等待投影注册表可用后才初始化。提供方按配置名称注册，每个工具行选择一个提供方。最小配置如下：
+一起挂载本服务、`@liwa/session-projection`、提供方与委派工具；本服务等待投影注册表可用后才初始化。提供方按配置名称注册，每个工具行选择一个提供方。最小配置如下：
 
 ```yaml
-- name: '@deepseek-ai/dsh-subagent'
-- name: '@deepseek-ai/dsh-subagent-spawn-in-process'
-- name: '@deepseek-ai/dsh-tool-subagent'
+- name: '@liwa/subagent'
+- name: '@liwa/subagent-spawn-in-process'
+- name: '@liwa/tool-subagent'
   config:
     provider: spawn
     toolName: subagent
@@ -62,7 +62,7 @@ kind: "package-reference"
 
 ### 子级 preset
 
-进程内 spawn 接受独立的 `agentPreset`；fork 与外部后端拒绝此选项。省略选择时，本地子级加入父方当前的 preset 代际。显式 id 挂载当前可用代际，即使该 id 与父方相同。通过 [`dsh-tool-subagent`](../tool-subagent/README.zh.md#selecting-a-child-preset) 配置模型可选项，并在 [preset 组装](../../preset/agent-preset-registry/README.zh.md)中配置 persona 与工具。冷恢复保留历史子级 descriptor 记录的 persona 和工具限制。
+进程内 spawn 接受独立的 `agentPreset`；fork 与外部后端拒绝此选项。省略选择时，本地子级加入父方当前的 preset 代际。显式 id 挂载当前可用代际，即使该 id 与父方相同。通过 [`liwa-tool-subagent`](../tool-subagent/README.zh.md#selecting-a-child-preset) 配置模型可选项，并在 [preset 组装](../../preset/agent-preset-registry/README.zh.md)中配置 persona 与工具。冷恢复保留历史子级 descriptor 记录的 persona 和工具限制。
 
 ### 消息、中断与发现
 
@@ -150,7 +150,7 @@ kind: "package-reference"
 - [历史Subagent 能力 seam](../../../.agents/notes/archived/feature/2026-06-21-subagent-capability-seam.md)——委派能力家族的设计记录。
 - [可继续的 subagent](../../../.agents/notes/implemented/feature/2026-07-28-continuable-subagent-conversations.zh.md)——接受后续轮次的持久子级。
 - [进程内 spawn 后端](../subagent-spawn-in-process/README.zh.md)——最容易组合的提供方。
-- [Auto review](../../experimental/auto-review/README.zh.md)——只有进程内 DSH 子级继承的当前会话授权模式。
+- [Auto review](../../experimental/auto-review/README.zh.md)——只有进程内灵鲸子级继承的当前会话授权模式。
 - [进程外 ACP 后端](../subagent-acp/README.zh.md)——经 Agent Client Protocol 拥有自有运行时的子级。
 - [DeepSeek 输入转换](../../llm/llm-deepseek/README.zh.md#model-experience)——已保存结算通知的提供方回放规则。
 - [tool-subagent-control README](../tool-subagent-control/README.zh.md)——后续消息、中断与列举面。
@@ -202,12 +202,12 @@ You are a delegated subagent: your permission scope was fixed when you were star
 这些限制说明该 seam 何时不合适，或何时需要特别的运维注意。它们是当前包约束，不是通用委派对比或任务积压。
 
 - **后代读取串行执行**——每个可达目录（包括一次性子级）都需要一次观察。冷 Session 缺少有效的 prepared 观察时需要读取完整日志；大型冷会话树可能累积存储延迟。
-- **外部子级执行一次**——ACP、DSH SDK、Codex 与 Claude Code 没有本地子 Session，也不接受后续输入。释放后仍可发现父级拥有的执行记录。
+- **外部子级执行一次**——ACP、灵鲸 SDK、Codex 与 Claude Code 没有本地子 Session，也不接受后续输入。释放后仍可发现父级拥有的执行记录。
 - **仅允许相邻模型消息**——`sendMessage()` 要求确切在线 sender；每个 sender 都可以指定直接可继续 child，只有具备驻留可继续 Activation 的 sender 可以指定自己的直接 parent。浏览器提示使用独立的人类 Queue 或 Steer 控制路径。
 - **child 到 parent 的投递要求直接 parent 保持在线**——服务没有持久 parent mailbox；parent 缺失时会拒绝消息，而非接受无法唤醒的工作。
 - **取消收敛期间存在唤醒缺口**——中断信号发出后、Agent 进入 idle 前被接受的后续消息会保持排队，直到另一条唤醒发送到达。
 - **待处理的注入上下文会保留 Activation**——settlement 会保守地把每个 Inbox occurrence 都视为未完成。Agent 进入 idle 后停放的上下文会让 child 及其在线祖先继续驻留，直到唤醒投递将其 claim、queue 变更将其移除，或 manager teardown 将其丢弃。宿主完成检查等待活动工作、待创建子级与资源清理，但不会等待仅包含空闲停放 Inbox 的子树；它既不结算这些 activation 的结果，也不丢弃其消息。
-- **驻留仅限进程内**——Activation inbox 与所有权图不会在两个 harness 进程之间协调；对单个持久化存储的并发访问需要持久化邮箱与跨进程租约协议。
+- **驻留仅限进程内**——Activation inbox 与所有权图不会在两个灵鲸进程之间协调；对单个持久化存储的并发访问需要持久化邮箱与跨进程租约协议。
 - **不回放已接受但未记录的消息**——崩溃可能丢失从未写入子会话日志、已被接受的提示词；丢失的消息不会自动回放。
 - **没有持久化 parent mailbox**——child 到 parent 的消息要求驻留的可继续 child 与在线直接 parent，提供的是接受标识，不保证恰好一次投递。
 - **生命周期事件只供观察**——影响运行的 `subagent/end` 延续或决策接口仍需等待具体消费方。
@@ -220,7 +220,7 @@ You are a delegated subagent: your permission scope was fixed when you were star
 
 本开发备注是维护者的工作上下文：开放问题与尚未决定的探索方向。它明确不具权威性——已交付的行为与限制以上文和包代码为准。
 
-- **跨进程继续执行**——持久化邮箱与租约协议可让两个 harness 进程共享一个持久化存储。
+- **跨进程继续执行**——持久化邮箱与租约协议可让两个灵鲸进程共享一个持久化存储。
 - **可继续 ACP 子级**——需要持久化远程会话 id 与逐子级的继续执行能力声明。
 - **host-user 投递**——未来的 host 适配器需要具体的经认证交互，该 seam 才能获得用户投递能力。
 

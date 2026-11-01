@@ -5,36 +5,36 @@
 /:
   en: 13d891a226092817
   zh: 90bf6ff56dd3c096
-/deepseek-ai-dsh-client-ui-settings-account:
-  en: 9ff7ac2d70f70b59
-  zh: ded522c4cfd6e040
-/deepseek-ai-dsh-client-ui-settings-account/summary:
+/liwa-client-ui-settings-account:
+  en: 2dc841987b303928
+  zh: 2aac536fd6958c8b
+/liwa-client-ui-settings-account/summary:
   en: 54da65ea807d7af1
   zh: 359f85d16724d71d
-/deepseek-ai-dsh-client-ui-settings-account/table-of-contents:
+/liwa-client-ui-settings-account/table-of-contents:
   en: c26f81e8adf0128b
   zh: e11ab371f51f66bc
-/deepseek-ai-dsh-client-ui-settings-account/use-this-package:
-  en: 2e63a8b01d800894
-  zh: 42db1f28e2ddb2a3
-/deepseek-ai-dsh-client-ui-settings-account/use-this-package/desktop-onboarding:
+/liwa-client-ui-settings-account/use-this-package:
+  en: fdd5e5f03db485ba
+  zh: 2e7a1d3b5e40c0a8
+/liwa-client-ui-settings-account/use-this-package/desktop-onboarding:
   en: 7ae4e68f9491b068
   zh: f7478269bf8d28b3
-/deepseek-ai-dsh-client-ui-settings-account/understand-the-implementation:
-  en: 186b2046cfb5ef76
-  zh: 57b042a618fb612e
-/deepseek-ai-dsh-client-ui-settings-account/further-exploration:
-  en: f5ca95916ef486dc
-  zh: 1e238d8299e0d838
-/deepseek-ai-dsh-client-ui-settings-account/model-experience:
+/liwa-client-ui-settings-account/understand-the-implementation:
+  en: 0ff830fea3693afd
+  zh: 8bf2625d51c1b92f
+/liwa-client-ui-settings-account/further-exploration:
+  en: aacc6d3e7e5cf031
+  zh: 813d7c9860ec8520
+/liwa-client-ui-settings-account/model-experience:
   en: ee1df7ca3467ee3f
   zh: 84904a5148da3862
-/deepseek-ai-dsh-client-ui-settings-account/model-experience/kv-cache-effect:
+/liwa-client-ui-settings-account/model-experience/kv-cache-effect:
   en: ca3015e252db0114
   zh: ebca9253cf15e8e9
-/deepseek-ai-dsh-client-ui-settings-account/known-limitations-and-deferred-work:
-  en: 7afbd3f7afc20bd8
-  zh: f54c57e3d6738c7c
-/deepseek-ai-dsh-client-ui-settings-account/known-limitations-and-deferred-work/dev-note:
-  en: ebc93259d9f494e2
-  zh: dcc679e43cdbd594
+/liwa-client-ui-settings-account/known-limitations-and-deferred-work:
+  en: f72f30375ccb65d3
+  zh: 8ff2238276582f32
+/liwa-client-ui-settings-account/known-limitations-and-deferred-work/dev-note:
+  en: 26adf65924e6e343
+  zh: 823caf7e79aa26da

@@ -7,9 +7,9 @@ import { fileURLToPath } from 'node:url'
 import type { Browser, Page } from 'playwright'
 import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed, onTestFinished, vi } from 'vitest'
-import type { GenerateOptions, StreamChunk } from '@deepseek-ai/dsh-llm'
-import { LlmAdapter } from '@deepseek-ai/dsh-llm'
-import type {} from '@deepseek-ai/dsh-webhook'
+import type { GenerateOptions, StreamChunk } from '@liwa/llm'
+import { LlmAdapter } from '@liwa/llm'
+import type {} from '@liwa/webhook'
 import {
   captureExpandedTurnProcessAria,
   captureStableAria,
@@ -30,7 +30,7 @@ const EXPANDED_EXPECTED = fileURLToPath(
 const PROVIDER = 'github-webhook-review-test'
 const MODEL = 'reply'
 const SECRET = 'github-webhook-review-secret'
-const TITLE = 'Review deepseek-ai/deepseek-harness#314'
+const TITLE = 'Review WolffyCode/liwa#314'
 const REPLY = 'Review complete: no actionable findings.'
 
 /** Deterministic model response for the webhook-created Session. */
@@ -86,11 +86,11 @@ describe.skipIf(MODE === 'record')('web e2e: GitHub ready-for-review', () => {
   const adapter = new ReviewAdapter()
 
   beforeAll(async () => {
-    previousPort = process.env.DSH_GITHUB_WEBHOOK_PORT
-    previousSecret = process.env.DSH_GITHUB_WEBHOOK_SECRET
+    previousPort = process.env.LIWA_GITHUB_WEBHOOK_PORT
+    previousSecret = process.env.LIWA_GITHUB_WEBHOOK_SECRET
     const port = await freePort()
-    process.env.DSH_GITHUB_WEBHOOK_PORT = String(port)
-    process.env.DSH_GITHUB_WEBHOOK_SECRET = SECRET
+    process.env.LIWA_GITHUB_WEBHOOK_PORT = String(port)
+    process.env.LIWA_GITHUB_WEBHOOK_SECRET = SECRET
     webhookOrigin = `http://127.0.0.1:${String(port)}`
     scaffold = await launchWebScaffold({
       extraOverlayPath: OVERLAY,
@@ -107,7 +107,7 @@ describe.skipIf(MODE === 'record')('web e2e: GitHub ready-for-review', () => {
 
     browser = await chromium.launch()
     page = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: 'en-US' })
-    await page.addInitScript(() => { localStorage.setItem('dsh.locale', 'en') })
+    await page.addInitScript(() => { localStorage.setItem('liwa.locale', 'en') })
     tripwire = watchConsole(page)
     await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
     await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
@@ -116,10 +116,10 @@ describe.skipIf(MODE === 'record')('web e2e: GitHub ready-for-review', () => {
   afterAll(async () => {
     await browser?.close()
     await scaffold?.close()
-    if (previousPort === undefined) Reflect.deleteProperty(process.env, 'DSH_GITHUB_WEBHOOK_PORT')
-    else process.env.DSH_GITHUB_WEBHOOK_PORT = previousPort
-    if (previousSecret === undefined) Reflect.deleteProperty(process.env, 'DSH_GITHUB_WEBHOOK_SECRET')
-    else process.env.DSH_GITHUB_WEBHOOK_SECRET = previousSecret
+    if (previousPort === undefined) Reflect.deleteProperty(process.env, 'LIWA_GITHUB_WEBHOOK_PORT')
+    else process.env.LIWA_GITHUB_WEBHOOK_PORT = previousPort
+    if (previousSecret === undefined) Reflect.deleteProperty(process.env, 'LIWA_GITHUB_WEBHOOK_SECRET')
+    else process.env.LIWA_GITHUB_WEBHOOK_SECRET = previousSecret
   })
 
   it('isolates ingress and creates a browsable Workspace Session', async () => {
@@ -136,10 +136,10 @@ describe.skipIf(MODE === 'record')('web e2e: GitHub ready-for-review', () => {
     const payload = {
       action: 'ready_for_review',
       number: 314,
-      repository: { full_name: 'deepseek-ai/deepseek-harness' },
+      repository: { full_name: 'WolffyCode/liwa' },
       pull_request: {
         title: 'Fix session replay',
-        html_url: 'https://github.com/deepseek-ai/deepseek-harness/pull/314',
+        html_url: 'https://github.com/WolffyCode/liwa/pull/314',
         draft: false,
         user: { login: 'octocat' },
         base: { ref: 'master', sha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },

@@ -3,9 +3,9 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import { createScope } from '@deepseek-ai/dsh-scope'
-import type { ToolDefinition } from '@deepseek-ai/dsh-tools'
+import { Context } from '@liwa/cordis'
+import { createScope } from '@liwa/scope'
+import type { ToolDefinition } from '@liwa/tools'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { apply, publishedShareState, type Config, type OwnerShare } from '../src/host/share-host.ts'
 import type { ForkToolExecution } from '../src/host/fork-tool-guard.ts'
@@ -76,8 +76,8 @@ interface Mounted {
 async function mount(
   config: Partial<Config> & {
     readonly state?: ReturnType<typeof stateFile>
-    /** Mount with no owner state file configured, so the DSH_HOME default is read. */
-    readonly useDshHome?: boolean
+    /** Mount with no owner state file configured, so the LIWA_HOME default is read. */
+    readonly useLiwaHome?: boolean
   } = {},
 ): Promise<Mounted> {
   const handlers = new Map<string, (...args: unknown[]) => Promise<unknown>>()
@@ -99,10 +99,10 @@ async function mount(
     if (!handlers.has(name)) handlers.set(name, listener as (...args: unknown[]) => Promise<unknown>)
     return originalOn(name as never, listener as never)
   }) as never
-  const { state, useDshHome, ...rest } = config
+  const { state, useLiwaHome, ...rest } = config
   const files = state ?? stateFile()
   await apply(ctx, {
-    ...(useDshHome === true ? {} : { ownerStateFile: files.file }),
+    ...(useLiwaHome === true ? {} : { ownerStateFile: files.file }),
     ...rest,
   })
   return { ctx, handlers, routes }
@@ -157,25 +157,25 @@ describe('configuration guards', () => {
     })
   })
 
-  it('derives its default owner state file from DSH_HOME', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'liveshare-dsh-home-'))
+  it('derives its default owner state file from LIWA_HOME', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'liveshare-liwa-home-'))
     roots.push(root)
-    vi.stubEnv('DSH_HOME', root)
+    vi.stubEnv('LIWA_HOME', root)
     vi.stubEnv('LIVESHARE_OWNER_STATE_FILE', '')
     vi.stubEnv('LIVESHARE_OWNER_CREDENTIAL_FILE', '')
-    const mounted = await mount({ useDshHome: true })
+    const mounted = await mount({ useLiwaHome: true })
     expect(mounted.routes.size).toBeGreaterThan(0)
     await mounted.ctx.fiber.dispose()
   })
 
-  it('falls back to the user home when neither DSH_HOME nor a state file is named', async () => {
+  it('falls back to the user home when neither LIWA_HOME nor a state file is named', async () => {
     const root = mkdtempSync(join(tmpdir(), 'liveshare-home-'))
     roots.push(root)
     vi.stubEnv('HOME', root)
-    vi.stubEnv('DSH_HOME', '')
+    vi.stubEnv('LIWA_HOME', '')
     vi.stubEnv('LIVESHARE_OWNER_STATE_FILE', '')
     vi.stubEnv('LIVESHARE_OWNER_CREDENTIAL_FILE', '')
-    const mounted = await mount({ useDshHome: true })
+    const mounted = await mount({ useLiwaHome: true })
     expect(mounted.routes.size).toBeGreaterThan(0)
     await mounted.ctx.fiber.dispose()
   })

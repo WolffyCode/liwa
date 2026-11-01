@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for guide.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/upgrade-guide/v0.2.1-alpha.3/plugin-engines-liwa/guide.md
+/:
+  en: 6f79f5200c7a64b0
+  zh: ad476d2063e3a752
+/plugin-compatibility-reads-engines-liwa-first:
+  en: 0ac39b8869ae1942
+  zh: 557dead095193457
+/plugin-compatibility-reads-engines-liwa-first/change:
+  en: 70d41357617d54f0
+  zh: ef662f7505903fa7
+/plugin-compatibility-reads-engines-liwa-first/migration:
+  en: aecf000757b6592d
+  zh: 782156aedaf0af47

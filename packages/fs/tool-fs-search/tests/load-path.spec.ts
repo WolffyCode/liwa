@@ -1,5 +1,5 @@
 /**
- * Real-load-path guard for @deepseek-ai/dsh-tool-fs-search. `tool-fs-search` is
+ * Real-load-path guard for @liwa/tool-fs-search. `tool-fs-search` is
  * a NAMESPACE plugin with `inject` — so a stray `export default apply` would
  * make the cordis Loader's `unwrapExports` (`exports.default ?? exports`)
  * collapse the module to the bare `apply` function, DROPPING `inject`. The
@@ -14,17 +14,17 @@
  * red, revert.
  */
 
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
-import { provideWorkingDirectoryFixture } from '@deepseek-ai/dsh-agent-loop-testkit'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
+import { provideWorkingDirectoryFixture } from '@liwa/agent-loop-testkit'
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
-import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
-import * as toolFsSearch from '@deepseek-ai/dsh-tool-fs-search'
+import { Context } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime from '@liwa/tools'
+import LocalSubprocessRuntime from '@liwa/subprocess-local'
+import * as toolFsSearch from '@liwa/tool-fs-search'
 
-describe('dsh-tool-fs-search real-load-path guard', () => {
+describe('liwa-tool-fs-search real-load-path guard', () => {
   it('has no default export and keeps name/inject/Config through unwrapExports', () => {
     expect('default' in toolFsSearch).toBe(false)
 

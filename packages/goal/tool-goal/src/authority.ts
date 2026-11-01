@@ -1,11 +1,11 @@
 /** Execution-time authority checks for the model-facing goal tools. */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { GoalView } from '@deepseek-ai/dsh-goal'
-import { HarnessError } from '@deepseek-ai/dsh-llm'
-import type { SessionEvent, SessionSeq } from '@deepseek-ai/dsh-session'
-import type { ToolRunContext } from '@deepseek-ai/dsh-tools'
+import type { Context } from '@liwa/cordis'
+import type { Agent } from '@liwa/agent'
+import type { GoalView } from '@liwa/goal'
+import { LiwaError } from '@liwa/llm'
+import type { SessionEvent, SessionSeq } from '@liwa/session'
+import type { ToolRunContext } from '@liwa/tools'
 
 /** The calling agent plus the immutable event cut and open-turn start seq used for authority checks. */
 export interface GoalToolExecution {
@@ -21,7 +21,7 @@ export type GoalToolAuthority =
 
 /** Throw one structured tool-policy failure. */
 function reject(message: string, code = 'GOAL_TOOL_AUTHORITY_REQUIRED'): never {
-  throw new HarnessError(message, code)
+  throw new LiwaError(message, code)
 }
 
 /** Resolve the immutable event cut and open-turn boundary without copying the turn suffix. */

@@ -24,17 +24,17 @@
  * registered its factory before a consumer materializes.
  *
  * This file is the browser-safe contract face (zero node imports): the
- * `__DSH_BOOT__` wire types, the boot-manifest parser, and the boundaries around
+ * `__LIWA_BOOT__` wire types, the boot-manifest parser, and the boundaries around
  * {@link ClientModuleSystem}. The package root is the host-side service that
  * composes the wire.
  */
 
-import type {} from '@deepseek-ai/cordis'
-import type { DshClientManifest } from '@deepseek-ai/dsh-package-manifest'
+import type {} from '@liwa/cordis'
+import type { LiwaClientManifest } from '@liwa/package-manifest'
 import type { ClientEntries } from './entries.ts'
 import type { ClientModuleSystem } from './system.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     /** The client module system the web shell builds at boot (provided by the `./client` wrapper plugin). */
     modules: ClientModuleLoader
@@ -90,7 +90,7 @@ export interface WebBootRelease {
   commit?: string
 }
 
-/** The composed client entry graph the host injects as `window.__DSH_BOOT__`. */
+/** The composed client entry graph the host injects as `window.__LIWA_BOOT__`. */
 export interface WebBootGraph {
   /** Consistency anchor over the current entry and batch descriptors. */
   rev: string
@@ -145,7 +145,7 @@ export interface BootManifest {
 }
 
 /**
- * Validate an optional string-array field read from a `dsh.client` declaration
+ * Validate an optional string-array field read from a `liwa.client` declaration
  * or from the boot wire.
  * @param subject - diagnostic prefix naming the package or the wire row.
  * @param field - field name as it appears in the diagnostic.
@@ -162,27 +162,27 @@ export function optionalStringArray(subject: string, field: string, value: unkno
 }
 
 /**
- * Narrow an unknown parsed JSON value to the `dsh.client` declaration. Shared
+ * Narrow an unknown parsed JSON value to the `liwa.client` declaration. Shared
  * by the node half's Loader scan and the roster generator, so both read a
  * package's browser declaration through one validator.
  * @param pkgName - package name used as the diagnostic prefix.
- * @param value - the raw `dsh.client` field of the package manifest.
+ * @param value - the raw `liwa.client` field of the package manifest.
  * @returns the validated declaration, or undefined when the field is absent.
  * @throws {Error} when the field is present but any member is malformed.
  */
-export function parseDshClient(pkgName: string, value: unknown): DshClientManifest | undefined {
+export function parseLiwaClient(pkgName: string, value: unknown): LiwaClientManifest | undefined {
   if (value === undefined) return undefined
   if (typeof value !== 'object' || value === null) {
-    throw new Error(`client-modules: ${pkgName} has a non-object dsh.client declaration`)
+    throw new Error(`client-modules: ${pkgName} has a non-object liwa.client declaration`)
   }
   const decl = value as Record<string, unknown>
   if (typeof decl.platform !== 'string') {
-    throw new Error(`client-modules: ${pkgName} dsh.client.platform must be a string`)
+    throw new Error(`client-modules: ${pkgName} liwa.client.platform must be a string`)
   }
-  const inject = optionalStringArray(pkgName, 'dsh.client.inject', decl.inject)
-  const external = optionalStringArray(pkgName, 'dsh.client.external', decl.external)
+  const inject = optionalStringArray(pkgName, 'liwa.client.inject', decl.inject)
+  const external = optionalStringArray(pkgName, 'liwa.client.external', decl.external)
   if (decl.immediately !== undefined && typeof decl.immediately !== 'boolean') {
-    throw new Error(`client-modules: ${pkgName} dsh.client.immediately must be a boolean`)
+    throw new Error(`client-modules: ${pkgName} liwa.client.immediately must be a boolean`)
   }
   return {
     platform: decl.platform,
@@ -220,15 +220,15 @@ export function stripClientSuffix(spec: string): string {
 }
 
 /**
- * Parse `window.__DSH_BOOT__` into the two consumer views. Wire boundary:
+ * Parse `window.__LIWA_BOOT__` into the two consumer views. Wire boundary:
  * a missing or malformed graph throws (the shell shows the loud failure —
  * a page without a valid manifest cannot boot anything).
- * @param wire - the raw `window.__DSH_BOOT__` value.
+ * @param wire - the raw `window.__LIWA_BOOT__` value.
  * @returns the manifest with optional plugin-view fields normalized.
  */
 export function parseBootManifest(wire: unknown): BootManifest {
   if (typeof wire !== 'object' || wire === null) {
-    throw new Error('client-modules: window.__DSH_BOOT__ is missing or not an object')
+    throw new Error('client-modules: window.__LIWA_BOOT__ is missing or not an object')
   }
   const graph = wire as Record<string, unknown>
   if (typeof graph.rev !== 'string') {
@@ -406,9 +406,9 @@ export interface ClientModuleLoaderTarget {
 }
 
 /** Window API of the web boot protocol: the host-injected graph and registration facade. */
-export interface DshWindow {
+export interface LiwaWindow {
   /** Host-composed entry graph, injected before the shell bundle runs; wire-boundary raw until {@link parseBootManifest}. */
-  __DSH_BOOT__?: unknown
+  __LIWA_BOOT__?: unknown
   /** HTML-installed facade: a pending registration queue, then the live module-system target. */
   __ModuleLoader__?: ClientModuleLoaderTarget
 }

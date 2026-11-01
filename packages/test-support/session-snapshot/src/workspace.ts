@@ -66,7 +66,7 @@ function textContent(bytes: Buffer): string | undefined {
 /**
  * Capture one workspace without resolving links or depending on host path separators.
  * @param root - Absolute directory whose user-visible state is captured.
- * @param options - Harness-owned immediate children to omit.
+ * @param options - Liwa-owned immediate children to omit.
  * @returns Stable entries sorted by relative path.
  */
 export async function captureWorkspaceSnapshot(

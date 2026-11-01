@@ -6,14 +6,14 @@
  * manager host in `./manager.ts` — so this module stays the published
  * surface rather than a bag of everything type-shaped.
  *
- * @module @deepseek-ai/dsh-subagent/types
+ * @module @liwa/subagent/types
  */
 
-import type { Agent, AgentOptions } from '@deepseek-ai/dsh-agent'
-import type { Branded } from '@deepseek-ai/dsh-brand'
-import type { ContentBlock, MessageId } from '@deepseek-ai/dsh-llm'
-import type { SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
-import type { ObjectJsonSchema } from '@deepseek-ai/dsh-tools'
+import type { Agent, AgentOptions } from '@liwa/agent'
+import type { Branded } from '@liwa/brand'
+import type { ContentBlock, MessageId } from '@liwa/llm'
+import type { SessionEvent, SessionId } from '@liwa/session'
+import type { ObjectJsonSchema } from '@liwa/tools'
 
 /** Identifies one accepted subagent run across its lifecycle event pair. */
 export type SubagentRunId = Branded<'SubagentRunId'>
@@ -163,7 +163,7 @@ export interface SubagentStartRequest {
    * Optional host-Agent provider, model, reasoning-effort, and output-token
    * overrides. Requires {@link SubagentCapabilities.agentOptions}; in-process
    * providers merge them over the parent Agent's options when they create the
-   * child, while the DSH SDK provider merges them over its instance defaults
+   * child, while the Liwa SDK provider merges them over its instance defaults
    * before initializing the separate child runtime.
    */
   readonly agentOptions?: AgentOptions
@@ -227,7 +227,7 @@ export interface ContinuableCreateSpec {
 /**
  * Why a subagent run ended. Merge-extensible (a backend may add variants);
  * consumers branch on the known cases and fall through `default`. The known
- * cases mirror the harness turn-end vocabulary so the tool layer can map a
+ * cases mirror the Liwa turn-end vocabulary so the tool layer can map a
  * non-`completed` result to an `isError` tool result.
  */
 export interface SubagentStopReasonMap {

@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-api-workspace-controller",
+  "name": "@liwa/api-workspace-controller",
   "description": "Workspace Remote commands and reconnect-safe state transport",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/api/workspace-controller"
   },
   "type": "module",
@@ -42,14 +42,14 @@
     "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json"
   },
-  "dsh": {
+  "liwa": {
     "client": {
       "external": [
-        "@deepseek-ai/dsh-api-gateway/client"
+        "@liwa/api-gateway/client"
       ],
       "inject": [
-        "@deepseek-ai/dsh-api-gateway",
-        "@deepseek-ai/dsh-client-connection"
+        "@liwa/api-gateway",
+        "@liwa/client-connection"
       ],
       "platform": "web"
     }
@@ -71,33 +71,33 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-deque": "workspace:*",
-    "@deepseek-ai/dsh-native-command": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/deque": "workspace:*",
+    "@liwa/native-command": "workspace:*",
+    "@liwa/schemastery": "workspace:~",
     "zod": "4.4.3"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-api-gateway": "workspace:*",
-    "@deepseek-ai/dsh-client-connection": "workspace:*",
-    "@deepseek-ai/dsh-host-directory-picker": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-storage-domain": "workspace:*",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:*",
-    "@deepseek-ai/dsh-workspace": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/api-gateway": "workspace:*",
+    "@liwa/client-connection": "workspace:*",
+    "@liwa/host-directory-picker": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/storage-domain": "workspace:*",
+    "@liwa/typert-protocol": "workspace:*",
+    "@liwa/workspace": "workspace:*"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-api-gateway": "workspace:*",
-    "@deepseek-ai/dsh-api-remote-access": "workspace:*",
-    "@deepseek-ai/dsh-client-connection": "workspace:*",
-    "@deepseek-ai/dsh-client-store": "workspace:*",
-    "@deepseek-ai/dsh-client-test-runtime": "workspace:*",
-    "@deepseek-ai/dsh-host-directory-picker": "workspace:*",
-    "@deepseek-ai/dsh-remote-mock": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-storage-domain": "workspace:*",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:*",
-    "@deepseek-ai/dsh-workspace": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/api-gateway": "workspace:*",
+    "@liwa/api-remote-access": "workspace:*",
+    "@liwa/client-connection": "workspace:*",
+    "@liwa/client-store": "workspace:*",
+    "@liwa/client-test-runtime": "workspace:*",
+    "@liwa/host-directory-picker": "workspace:*",
+    "@liwa/remote-mock": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/storage-domain": "workspace:*",
+    "@liwa/typert-protocol": "workspace:*",
+    "@liwa/workspace": "workspace:*"
   }
 }

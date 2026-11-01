@@ -1,15 +1,15 @@
 ---
-description: "Experimental bridge that runs Claude Code mods as DSH plugins: their register(on, options) hooks guard tool calls, rewrite prompts, add commands and tools, and draw above the prompt, for users mounting a mod and maintainers extending the mapping."
+description: "Experimental bridge that runs Claude Code mods as Liwa plugins: their register(on, options) hooks guard tool calls, rewrite prompts, add commands and tools, and draw above the prompt, for users mounting a mod and maintainers extending the mapping."
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-experimental-claude-code-mods
+# @liwa/experimental-claude-code-mods
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-Run [Claude Code mods](https://code.claude.com/docs/en/plugins/mods/overview) inside agent runs: wrap a mod's `register(on, options)` with `defineMod`, mount it as a plugin after this bridge, and its hooks guard tool calls, rewrite prompts, add commands and tools, read session facts, and draw a band above the prompt through the same `$`, `e`, `next` chain. The bridge requires `dsh-working-directory` and `dsh-agent`, and each `$` call rides a composed harness service. It is an alpha interface-compatibility demonstration: an unserved event is reported at load, an unserved `$` member fails naming the gap, and [the compatibility page](../../../docs/subsystems/claude-code-mods.md) lists every difference.
+Run [Claude Code mods](https://code.claude.com/docs/en/plugins/mods/overview) inside agent runs: wrap a mod's `register(on, options)` with `defineMod`, mount it as a plugin after this bridge, and its hooks guard tool calls, rewrite prompts, add commands and tools, read session facts, and draw a band above the prompt through the same `$`, `e`, `next` chain. The bridge requires `liwa-working-directory` and `liwa-agent`, and each `$` call rides a composed harness service. It is an alpha interface-compatibility demonstration: an unserved event is reported at load, an unserved `$` member fails naming the gap, and [the compatibility page](../../../docs/subsystems/claude-code-mods.md) lists every difference.
 
 ## Table of Contents
 
@@ -29,7 +29,7 @@ A mod is a plugin. `defineMod` takes the mod's `register` function with the iden
 
 ```ts
 // mods/token-weather/index.ts — `register` is the mod's own hooks module (`./hooks/token-weather.mjs`).
-import { defineMod, type ModOn } from '@deepseek-ai/dsh-experimental-claude-code-mods'
+import { defineMod, type ModOn } from '@liwa/experimental-claude-code-mods'
 
 declare const register: (on: ModOn, options: Readonly<Record<string, unknown>>) => void
 
@@ -37,7 +37,7 @@ export default defineMod({ name: 'token-weather', version: '0.1.0', root: import
 ```
 
 ```yaml
-- name: '@deepseek-ai/dsh-experimental-claude-code-mods'
+- name: '@liwa/experimental-claude-code-mods'
 - name: './mods/blast-radius/index.ts'
 - name: './mods/token-weather/index.ts'
   config:
@@ -53,9 +53,9 @@ export default defineMod({ name: 'token-weather', version: '0.1.0', root: import
 | `bandColumns` | `120` | Columns the band above the prompt reports to `ui.render` as `bodyColumns` and `viewport.columns` |
 | `bandRows` | `10` | Rows the band reports as `maxRows` |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-experimental-claude-code-mods) is the exhaustive source for every accepted field. The [examples](examples/) directory holds the three mods from Anthropic's [Getting started with Claude Code mods](https://claude.dev/blog/getting-started-with-claude-code-mods/) post as plugin directories that also run under `claude --plugin-dir`: Token Weather with its published module, types, and test unchanged, and Blast Radius and Replay Theater completed from the published fragments. The [opt-in overlay](cordis.source.patch.yml) composes the bridge, the three mods, and the [Web band](../client-ui-claude-code-mods/README.md) for a source launch.
+The generated [configuration catalog](../../../docs/config-catalog.md#liwaexperimental-claude-code-mods) is the exhaustive source for every accepted field. The [examples](examples/) directory holds the three mods from Anthropic's [Getting started with Claude Code mods](https://claude.dev/blog/getting-started-with-claude-code-mods/) post as plugin directories that also run under `claude --plugin-dir`: Token Weather with its published module, types, and test unchanged, and Blast Radius and Replay Theater completed from the published fragments. The [opt-in overlay](cordis.source.patch.yml) composes the bridge, the three mods, and the [Web band](../client-ui-claude-code-mods/README.md) for a source launch.
 
-Blast Radius's DSH wrapper supplies a Node timer subprocess using the running executable, so its Proceed/Cancel hold does not require POSIX `sleep` on Windows. The wait still uses `$.process.run`, which pauses the hook's running-time budget and cancels the child with the event. The standalone Claude Code hooks module defaults to `sleep 0.25`; its dry-run commands also require the corresponding host utilities.
+Blast Radius's Liwa wrapper supplies a Node timer subprocess using the running executable, so its Proceed/Cancel hold does not require POSIX `sleep` on Windows. The wait still uses `$.process.run`, which pauses the hook's running-time budget and cancels the child with the event. The standalone Claude Code hooks module defaults to `sleep 0.25`; its dry-run commands also require the corresponding host utilities.
 
 ### Which events your mod receives
 
@@ -64,7 +64,7 @@ Blast Radius's DSH wrapper supplies a Node timer subprocess using the running ex
 | `session.start` | `agent/created` of a root agent, awaited before its first turn; `cwd` uses the validated directory, including persisted resume; cancelling creation abandons validation and a waiting hook | observe; register commands and tools |
 | `prompt.submit` | `agent/pre-step` with claimed messages; `e.text` joins the text blocks of the human's own (`user`-sourced) messages, and a rewrite touches only those | rewrite `text`, add `context` blocks after the prompt as typed, or `{ drop }` the prompt |
 | `turn.start` | the first `agent/pre-step` of a turn | observe |
-| `tool.call` | the `tools/execute` waterfall, after the harness permission decision; a call a mod raised with `$.tool.call` reaches only the mods loaded before it, attributed to the caller | observe before and after, `{ deny }`, answer with `{ result }`, or rewrite the result or its `isError` after `next` |
+| `tool.call` | the `tools/execute` waterfall, after the Liwa permission decision; a call a mod raised with `$.tool.call` reaches only the mods loaded before it, attributed to the caller | observe before and after, `{ deny }`, answer with `{ result }`, or rewrite the result or its `isError` after `next` |
 | `turn.complete` | the `turn/end` session event | observe; return `{ text }` for a line in the host log |
 | `command.run` | a command the mod registered with `$.command.register` is typed | answer with `{ text }` or `{}` |
 | `ui.render` | the band above the prompt redraws: `{ component: 'AbovePrompt' }` with `bodyColumns`, `hasSurvey`, `isWorking`, `maxRows` props | return a `Box`/`Text`/`Button` tree from `$.ui.resolve(e)`, or `next(e)` to yield the band |
@@ -96,12 +96,12 @@ The band is one instance per session, drawn by the first mod in load order whose
 | `$.http` | `fetch` | the process's `fetch`, bodies up to 4 MiB |
 | `$.env` | `get`, `set` | this process's environment, shared by every session and plugin |
 
-A call whose service is not composed rejects with the missing service's package name; a namespace or method outside this table rejects with `no implementation for <namespace>.<method>`. A mod runs in this process with its full authority: `$.env` reads and writes the harness environment, `$.http.fetch` reaches any URL, `$.fs` and `$.tool.call` act as the session does.
+A call whose service is not composed rejects with the missing service's package name; a namespace or method outside this table rejects with `no implementation for <namespace>.<method>`. A mod runs in this process with its full authority: `$.env` reads and writes the Liwa environment, `$.http.fetch` reaches any URL, `$.fs` and `$.tool.call` act as the session does.
 
 <a id="test-a-mod"></a>
 ### Test a mod
 
-`createModTestKit` from `@deepseek-ai/dsh-experimental-claude-code-mods/testing` loads `defineMod` plugins or bare definitions and raises events through them with stubs beneath, in the shape of `claude-code/testing`: `kit.on('tool.call', () => ({ result: 'ok' }))` answers in the engine's place, `kit.$.tool.call({ tool: 'Bash', command: 'ls' })` raises the event, `kit.$.ui.mount({ component: 'AbovePrompt' })` renders the band and finds or presses its elements, and `mock.store(kit.on)` answers `$.store` from memory. Inside this repository, `claude-code/testing` resolves to the kit plus Vitest's `describe`, `test`, and `expect`, so the [example mods' tests](examples/token-weather/tests/token-weather.test.ts) run as written for `claude plugin test`.
+`createModTestKit` from `@liwa/experimental-claude-code-mods/testing` loads `defineMod` plugins or bare definitions and raises events through them with stubs beneath, in the shape of `claude-code/testing`: `kit.on('tool.call', () => ({ result: 'ok' }))` answers in the engine's place, `kit.$.tool.call({ tool: 'Bash', command: 'ls' })` raises the event, `kit.$.ui.mount({ component: 'AbovePrompt' })` renders the band and finds or presses its elements, and `mock.store(kit.on)` answers `$.store` from memory. Inside this repository, `claude-code/testing` resolves to the kit plus Vitest's `describe`, `test`, and `expect`, so the [example mods' tests](examples/token-weather/tests/token-weather.test.ts) run as written for `claude plugin test`.
 
 -----
 
@@ -119,9 +119,9 @@ A call whose service is not composed rejects with the missing service's package 
 
 [`chain.ts`](src/chain.ts) runs one event through the selected hooks, outermost first, with the engine behavior at the bottom. Each hook's `next` delegates beneath once: a second call returns the first run, and a run a hook started is awaited before the hook's own answer settles. A hook that throws, times out, or settles without a result is skipped and reported once per failure kind, the result from beneath stands when it had already called `next`, and a `.catch` handler may answer in its place. The budget clock counts only the hook's own running time: it pauses inside `next` and inside every `$` call except `$.clock.sleep`. [`engine.ts`](src/engine.ts) owns the registry, per-session `$.state`, timers keyed by session and mod, and the two dispatch directions: an engine event reaches every selected hook, while a `$` call raised by one mod reaches only the mods loaded before it.
 
-### Mapping onto the harness
+### Mapping onto Liwa
 
-[`index.ts`](src/index.ts) registers the listeners. `tool.call` runs around `tools/execute`, so the harness permission decision precedes the chain; a `{ deny }` becomes an error result with the reason, a `{ result }` becomes a successful result when the tool is mod-registered or the value satisfies the tool's output schema, and an error-shaped result otherwise. A result a hook rewrote after `next` is installed as replacement content through `tools/post-execute`. A hook that passes rewritten arguments to `next` is skipped with a report, because the call's arguments are already logged. [`host-ops.ts`](src/host-ops.ts) holds the engine behavior for each `$` call over `ctx.get(...)` services; the directory owner is required and other services are read on demand. [`surfaces.ts`](src/surfaces.ts) keeps one band per session: it raises `ui.render`, validates and serializes the tree with [`elements.ts`](src/elements.ts), holds each `Button`'s `onPress` behind a per-drawing action id, subscribes the band to the `$.state` slots the drawing read, and streams generations to the Client through the `claudeCodeMods` Remote (`watchBand`, `pressBand`).
+[`index.ts`](src/index.ts) registers the listeners. `tool.call` runs around `tools/execute`, so the Liwa permission decision precedes the chain; a `{ deny }` becomes an error result with the reason, a `{ result }` becomes a successful result when the tool is mod-registered or the value satisfies the tool's output schema, and an error-shaped result otherwise. A result a hook rewrote after `next` is installed as replacement content through `tools/post-execute`. A hook that passes rewritten arguments to `next` is skipped with a report, because the call's arguments are already logged. [`host-ops.ts`](src/host-ops.ts) holds the engine behavior for each `$` call over `ctx.get(...)` services; the directory owner is required and other services are read on demand. [`surfaces.ts`](src/surfaces.ts) keeps one band per session: it raises `ui.render`, validates and serializes the tree with [`elements.ts`](src/elements.ts), holds each `Button`'s `onPress` behind a per-drawing action id, subscribes the band to the `$.state` slots the drawing read, and streams generations to the Client through the `claudeCodeMods` Remote (`watchBand`, `pressBand`).
 
 ### Source map
 
@@ -148,7 +148,7 @@ A call whose service is not composed rejects with the missing service's package 
 - [Claude Code mods reference](https://code.claude.com/docs/en/plugins/mods/reference) — the events, methods, and limits this bridge mirrors.
 - [The Web band](../client-ui-claude-code-mods/README.md) — the Client package that draws `ui.render` trees in the input dock.
 - [Experimental packages](../README.md) — publication policy and dependency isolation.
-- [Claude Code hook bridge](../hooks-claude-code/README.md) — the settings-hook bridge; a plugin's `hooks.json` settings hooks need `dsh-hooks-claude-code`.
+- [Claude Code hook bridge](../hooks-claude-code/README.md) — the settings-hook bridge; a plugin's `hooks.json` settings hooks need `liwa-hooks-claude-code`.
 - [Tool execution pipeline](../../../docs/tool-execution-pipeline.md) — the waterfalls `tool.call` runs around.
 - [Human commands](../../interaction/commands/README.md) — the registry `$.command.register` lands on.
 
@@ -202,12 +202,12 @@ These limits describe where a Claude Code mod behaves differently through this b
 - **`next` runs once** — a hook that calls `next` twice gets the first run; Claude Code runs the chain beneath again. A hook that answers while its `next` is still running waits for that run.
 - **Unserved events** — `tool.check`, `tool.describe`, `turn.step`, the other `prompt.*` events, `command.describe`, `config.*`, `session.compact`, `session.receive`, `session.send`, `session.append`, `session.attach`, `session.detach`, `session.measure`, `agent.*`, `plugin.register`, `engine.create`, and `telemetry.*` register, never fire, and are named in a warning at load; `classic.*` names are refused at `register` like any unknown event.
 - **Unserved `$` namespaces** — `$.model`, `$.agent`, `$.config`, `$.settings`, `$.mcp`, `$.audio`, `$.telemetry`, `$.turn`, `$.ui.notice`, `$.ui.blit`, `$.ui.copy`, `$.fs.ancestors`, `$.process.spawn`, and `$.session.repo`, `send`, `append`, `authorize`, `compact`, `surfaces` reject with `no implementation`. `$.model.complete` waits on a logged side-request event so a mod's model call stays reconstructable from the Session log.
-- **`tool.call` runs after the permission decision** — Claude Code runs mod `tool.call` hooks before its permission check; here the harness `tools/pre-execute` waterfall, including approval, settles first. A hook that rewrites the arguments it passes to `next`, or names another tool, is skipped with a report (the argument case names the [pre-tool input rewrite proposal](../../../.agents/notes/proposed/feature/2026-06-30-pre-tool-input-rewrite.md)), because the logged call runs as logged.
+- **`tool.call` runs after the permission decision** — Claude Code runs mod `tool.call` hooks before its permission check; here Liwa `tools/pre-execute` waterfall, including approval, settles first. A hook that rewrites the arguments it passes to `next`, or names another tool, is skipped with a report (the argument case names the [pre-tool input rewrite proposal](../../../.agents/notes/proposed/feature/2026-06-30-pre-tool-input-rewrite.md)), because the logged call runs as logged.
 - **One process, many sessions** — a mod's module-level variables and `$.env.set` writes are shared by every session and plugin in the process, where Claude Code runs one session per process; keep per-session values in `$.state`. `session.start` and `session.end` fire for root agents only.
 - **No sandbox, no static analysis, no hot reload** — the hooks module runs in-process with Node's globals and the process's full authority (its environment, network, filesystem, and tools); the `$`-only access rule, `claude plugin validate`, type generation, `--plugin-dir` watching, and the in-session mod authoring flow are not implemented. Mount only mods you would run as a plugin. Mounting a mod again re-runs `register` on the same evaluated module, so module-level variables keep their values.
 - **`turn.complete` text** — the `{ text }` a hook returns reaches the host log, not a line under the answer; `durationMs` counts from the turn's `turn/start`.
 - **`$.session.usage`** — `window` is `0` and `percent` absent until the route's context window and a provider usage report are known through the token meter; without the token-meter service, token counts are absent and `window` is `0`. `rateLimits` is always empty. `$.fs.stat` reports `mtimeMs: 0`.
-- **`plugin.json` and `hooks.json`** — not read; `defineMod` carries the identity, and a plugin's settings hooks need `@deepseek-ai/dsh-hooks-claude-code`.
+- **`plugin.json` and `hooks.json`** — not read; `defineMod` carries the identity, and a plugin's settings hooks need `@liwa/hooks-claude-code`.
 
 <a id="dev-note"></a>
 ### Dev Note

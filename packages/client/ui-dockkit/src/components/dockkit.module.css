@@ -5,7 +5,7 @@
  * a single `dockkit.module.css` makes that collision impossible.
  *
  * Colours come from the embedder's token layer; the kit names no literal. Type
- * follows the embedder's content axis (`--dsh-content-font-size` and its
+ * follows the embedder's content axis (`--liwa-content-font-size` and its
  * secondary step) so a surface reads at the same size as the page around it.
  * Emphasis — the drop caret, the drop-zone hint — takes the platform's accent
  * (`--dsw-alias-brand-primary-new-colorprimary-new-color`), not
@@ -146,7 +146,7 @@
   display: flex;
   min-width: 0;
   min-height: 0;
-  z-index: var(--dsh-dockkit-dock-layer, 10);
+  z-index: var(--liwa-dockkit-dock-layer, 10);
 }
 
 .tabCell[hidden] {
@@ -158,7 +158,7 @@
 .floatingCell {
   width: 0;
   height: 0;
-  z-index: var(--dsh-dockkit-float-layer, 60);
+  z-index: var(--liwa-dockkit-float-layer, 60);
 }
 
 .tabHost {
@@ -188,7 +188,7 @@
 .tabLayoutDivider {
   width: 0;
   cursor: col-resize;
-  z-index: calc(var(--dsh-dockkit-dock-layer, 10) + 1);
+  z-index: calc(var(--liwa-dockkit-dock-layer, 10) + 1);
   pointer-events: auto;
 }
 
@@ -245,7 +245,7 @@
   /* The start inset is a published variable so a host that pins the surface
      against window chrome (the right sidebar fullscreen under macOS traffic
      lights) can widen it per pane; the fallback is the design's own 10px. */
-  padding: 10px 6px 0 var(--dsh-dockkit-strip-inline-start, 10px);
+  padding: 10px 6px 0 var(--liwa-dockkit-strip-inline-start, 10px);
   touch-action: none;
 }
 
@@ -371,7 +371,7 @@
   height: 28px;
   padding: 0 10px;
   color: var(--dsw-alias-label-secondary);
-  font-size: var(--dsh-content-font-size-secondary, 13px);
+  font-size: var(--liwa-content-font-size-secondary, 13px);
   line-height: 1;
   white-space: nowrap;
   border-radius: var(--dsw-radius-sm);
@@ -595,7 +595,7 @@
 .menuItem {
   padding: 4px 7px;
   color: var(--dsw-alias-label-primary);
-  font-size: calc(var(--dsh-content-font-size-secondary, 13px) - 1px);
+  font-size: calc(var(--liwa-content-font-size-secondary, 13px) - 1px);
   text-align: left;
   background: transparent;
   border: none;
@@ -620,15 +620,15 @@
   overflow: auto;  /* This sheet draws elevated surfaces (the strip and the menu), so a scroller
      inside it rebinds the thumb indirection in a complete pair — a base-surface
      thumb on an elevated ground reads as a smudge. */
-  --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
-  --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
+  --liwa-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --liwa-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
 }
 
 .empty {
   margin: 0;
   padding: 12px;
   color: var(--dsw-alias-label-tertiary);
-  font-size: var(--dsh-content-font-size-secondary, 13px);
+  font-size: var(--liwa-content-font-size-secondary, 13px);
 }
 
 /* The drop hint is a scrim and, over it, one box pair per landing region.
@@ -730,7 +730,7 @@
 .dockHintLabel {
   max-width: 100%;
   overflow: hidden;
-  font-size: var(--dsh-content-font-size-secondary, 13px);
+  font-size: var(--liwa-content-font-size-secondary, 13px);
   font-weight: 500;
   line-height: 1.4;
   white-space: nowrap;
@@ -776,11 +776,11 @@
 }
 
 :global(html[data-windows-titlebar]) .float {
-  --dsh-dockkit-float-top: calc(var(--dsh-windows-titlebar-height) + 20px);
+  --liwa-dockkit-float-top: calc(var(--liwa-windows-titlebar-height) + 20px);
 }
 
 :global(html[data-windows-titlebar][data-fullscreen]) .float {
-  --dsh-dockkit-float-top: 20px;
+  --liwa-dockkit-float-top: 20px;
 }
 
 .float {
@@ -790,10 +790,10 @@
      caption floor even when the gesture hook read a stale viewport; `dvh`
      follows `window.innerHeight` as the hook does. A gesture or return writes
      left, top and the size inline instead. */
-  left: max(0px, min(var(--dsh-dockkit-float-x), 100vw - var(--dsh-dockkit-float-width)));
-  top: max(var(--dsh-dockkit-float-top, 0px), min(var(--dsh-dockkit-float-y), 100dvh - var(--dsh-dockkit-float-height)));
-  width: min(var(--dsh-dockkit-float-width), 100vw);
-  height: min(var(--dsh-dockkit-float-height), 100dvh - var(--dsh-dockkit-float-top, 0px));
+  left: max(0px, min(var(--liwa-dockkit-float-x), 100vw - var(--liwa-dockkit-float-width)));
+  top: max(var(--liwa-dockkit-float-top, 0px), min(var(--liwa-dockkit-float-y), 100dvh - var(--liwa-dockkit-float-height)));
+  width: min(var(--liwa-dockkit-float-width), 100vw);
+  height: min(var(--liwa-dockkit-float-height), 100dvh - var(--liwa-dockkit-float-top, 0px));
   display: flex;
   flex-direction: column;
   /* The body inside is unpadded and reaches the edges, so the frame clips it
@@ -845,8 +845,8 @@
   overflow: auto;  /* This sheet draws elevated surfaces (the strip and the menu), so a scroller
      inside it rebinds the thumb indirection in a complete pair — a base-surface
      thumb on an elevated ground reads as a smudge. */
-  --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
-  --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
+  --liwa-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --liwa-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
 }
 
 .floatResize {

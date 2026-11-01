@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
-import Storage, { storageBackendServiceKey } from '@deepseek-ai/dsh-storage'
-import type { KvUnit, KvUnitDescriptor } from '@deepseek-ai/dsh-storage'
+import Storage, { storageBackendServiceKey } from '@liwa/storage'
+import type { KvUnit, KvUnitDescriptor } from '@liwa/storage'
 import { runKvBackendContract } from '../../storage/tests/contract.ts'
 import * as StorageSqlite from '../src/index.ts'
 import { Config, SqliteStorageBackend, STORAGE_SQLITE_SCHEMA_VERSION } from '../src/index.ts'
@@ -25,7 +25,7 @@ afterEach(async () => {
 })
 
 async function freshDbPath(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'dsh-storage-sqlite-'))
+  const dir = await mkdtemp(join(tmpdir(), 'liwa-storage-sqlite-'))
   dirs.push(dir)
   return join(dir, 'storage.db')
 }
@@ -435,7 +435,7 @@ describe('sqlite backend specifics', () => {
 
   it('propagates filesystem errors other than an existing database file', async () => {
     if (process.platform === 'win32') return
-    const dir = await mkdtemp(join(tmpdir(), 'dsh-storage-sqlite-'))
+    const dir = await mkdtemp(join(tmpdir(), 'liwa-storage-sqlite-'))
     dirs.push(dir)
     await chmod(dir, 0o500)
     const backend = backendAt(join(dir, 'storage.db'))

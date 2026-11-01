@@ -1,21 +1,21 @@
 /**
  * Tool operation orchestration over session-query service capabilities.
  *
- * @module @deepseek-ai/dsh-tool-session-query/operations
+ * @module @liwa/tool-session-query/operations
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import { HarnessError } from '@deepseek-ai/dsh-llm'
-import { SessionSeq } from '@deepseek-ai/dsh-session'
-import type { SessionId } from '@deepseek-ai/dsh-session'
+import type { Context } from '@liwa/cordis'
+import { LiwaError } from '@liwa/llm'
+import { SessionSeq } from '@liwa/session'
+import type { SessionId } from '@liwa/session'
 import {
   SessionQueryError,
   type SessionEventSearchPage,
   type SessionEventSurface,
   type SessionRecord,
   type SessionSearchCursor,
-} from '@deepseek-ai/dsh-session-query'
-import type { ToolRunContext } from '@deepseek-ai/dsh-tools'
+} from '@liwa/session-query'
+import type { ToolRunContext } from '@liwa/tools'
 import { toolInput } from './input.ts'
 import { presentation } from './presentation.ts'
 import { serviceBoundary } from './service-boundary.ts'
@@ -61,7 +61,7 @@ async function executeSessionSearch(
   const caller = workspaceAccess.callerOf(exec, ctx)
   const cwd = caller.header.cwd
   if (cwd === undefined) {
-    throw new HarnessError(
+    throw new LiwaError(
       'cross-session search is unavailable because the caller session has no workspace',
       'SESSION_QUERY_TOOL_UNAUTHORIZED',
     )

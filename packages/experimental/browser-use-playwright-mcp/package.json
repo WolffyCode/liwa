@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-experimental-browser-use-playwright-mcp",
+  "name": "@liwa/experimental-browser-use-playwright-mcp",
   "description": "Experimental per-Session Chromium browser tools through @playwright/mcp",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/experimental/browser-use-playwright-mcp"
   },
   "type": "module",
@@ -29,29 +29,29 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-experimental-browser-use-runtime": "workspace:*",
+    "@liwa/experimental-browser-use-runtime": "workspace:*",
     "@playwright/mcp": "0.0.80"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-browser-use": "workspace:*",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-working-directory": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/browser-use": "workspace:*",
+    "@liwa/agent": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/working-directory": "workspace:*"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/dsh-browser-use": "workspace:*",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-working-directory": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/browser-use": "workspace:*",
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-loop": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/working-directory": "workspace:*"
   }
 }

@@ -1,15 +1,15 @@
 /** Declarative Agent capability sets, activation and session binding. */
-import type { ProjectionHandle } from '@deepseek-ai/dsh-session-projection'
-import { Context, Service } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { Remote, RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
-import { bindScopeParent, createScope, scopeOf, scopeParentOf, type Scope, type ScopeKey, type ScopeParentBinding } from '@deepseek-ai/dsh-scope'
-import { stringifyEntryYaml } from '@deepseek-ai/cordis-plugin-include'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { Session } from '@deepseek-ai/dsh-session'
+import type { ProjectionHandle } from '@liwa/session-projection'
+import { Context, Service } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import { Remote, RemoteError, TypertRemoteService } from '@liwa/typert-protocol'
+import { bindScopeParent, createScope, scopeOf, scopeParentOf, type Scope, type ScopeKey, type ScopeParentBinding } from '@liwa/scope'
+import { stringifyEntryYaml } from '@liwa/cordis-plugin-include'
+import type { Agent } from '@liwa/agent'
+import type { Session } from '@liwa/session'
 // Type-only: the optional `settings` service this registry keeps off the generated pages.
-import type {} from '@deepseek-ai/dsh-settings'
-import type {} from '@deepseek-ai/dsh-tools'
+import type {} from '@liwa/settings'
+import type {} from '@liwa/tools'
 import type { AgentPresetDocument, AgentPresetRoster } from './types.ts'
 import { entryListProblem, type PresetDefinition } from './definition.ts'
 import type { AgentPreset, Config } from './preset.ts'
@@ -23,7 +23,7 @@ export { auditRows, leakedServices, type PresetMount, type RowAudit } from './mo
 export type { AgentPresetInspection } from './composition-inventory.ts'
 export type { AgentPreset, Config } from './preset.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     agentPresets: AgentPresetRegistry
   }

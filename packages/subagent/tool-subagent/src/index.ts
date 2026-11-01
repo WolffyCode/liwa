@@ -3,23 +3,23 @@
  * Provider lifecycle controls tool registration and context-sensitive schema
  * wording. Every delegation starts a managed activation and returns its child
  * id; the subagent runtime owns result delivery and resource cleanup.
- * @module @deepseek-ai/dsh-tool-subagent
+ * @module @liwa/tool-subagent
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import type {} from '@deepseek-ai/dsh-agent-preset-registry'
-import { defineTool } from '@deepseek-ai/dsh-tools'
-import type { ToolDefinition } from '@deepseek-ai/dsh-tools'
-import type { AgentOptions } from '@deepseek-ai/dsh-agent'
-import { ReasoningEffortId } from '@deepseek-ai/dsh-llm'
-import type { ContentBlock } from '@deepseek-ai/dsh-llm'
+import type { Context } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import type {} from '@liwa/agent-preset-registry'
+import { defineTool } from '@liwa/tools'
+import type { ToolDefinition } from '@liwa/tools'
+import type { AgentOptions } from '@liwa/agent'
+import { ReasoningEffortId } from '@liwa/llm'
+import type { ContentBlock } from '@liwa/llm'
 import {
   assertSubagentMaxDepth,
   delegationDepthOf,
   parentAgentOptionsForDelegation,
-} from '@deepseek-ai/dsh-subagent'
-import type { SubagentProvider } from '@deepseek-ai/dsh-subagent'
+} from '@liwa/subagent'
+import type { SubagentProvider } from '@liwa/subagent'
 import {
   assertAllowedModelSelection,
   hasConfiguredLlmSelection,

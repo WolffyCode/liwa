@@ -3,7 +3,7 @@ description: "Reuse Computer Use application and window objects with authorized,
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-cua
+# @liwa/cua
 
 English | [中文](README.zh.md)
 
@@ -27,7 +27,7 @@ Application consent supplies English, Chinese, and Japanese display text from `s
 <a id="use-this-package"></a>
 ## Use this package
 
-Mount the [macOS provider](../cua-macos/README.md) to enable native operations. External PTC hosts import `connectCua` from `@deepseek-ai/dsh-cua/bridge` and supply the current `tools.cua` binding. Source compositions and native preparation belong to the provider.
+Mount the [macOS provider](../cua-macos/README.md) to enable native operations. External PTC hosts import `connectCua` from `@liwa/cua/bridge` and supply the current `tools.cua` binding. Source compositions and native preparation belong to the provider.
 
 Use App methods for a single-window task. `getApp` reads initial accessibility state; `getWindows` and `getWindow` select an explicit window when needed. Re-reading one app/window scope replaces its element indices without invalidating another window's snapshot. Keyboard input follows the application's focus. Invalid request arguments reject before dispatch with a readable method, parameter and requirement.
 
@@ -35,7 +35,7 @@ Observation methods emit and return their result. Use `void await app.getAXState
 
 `tools.cua` returns operation values directly. Screenshot values retain the encoded image Base64 and add a durable `attachment` reference for the tool renderer; model content contains coordinate metadata and one image, without the encoded bytes. Before capture, the tool requires an attachment store and a resolved model route declaring image input. Admission and storage failures reject the call. The object bridge preserves the screenshot bytes and validated metadata without uploading or emitting the same image again.
 
-Application consent precedes launch, observation, capture, and input. Session access is stored by conversation and application identity and survives DSH restart and Computer Use disablement. Other conversations require their own consent. Saved grants require a platform-provided reusable application identity. Refusal and revocation close affected Agent connections, so their old objects require fresh selection. No input is replayed after cancellation, timeout, or reconnect.
+Application consent precedes launch, observation, capture, and input. Session access is stored by conversation and application identity and survives Liwa restart and Computer Use disablement. Other conversations require their own consent. Saved grants require a platform-provided reusable application identity. Refusal and revocation close affected Agent connections, so their old objects require fresh selection. No input is replayed after cancellation, timeout, or reconnect.
 
 Actions return `dispatched:true, verified:false`; read fresh state to verify the result. Coordinate actions default to pixels in the latest returned screenshot; `relative: true` accepts integers from 0 to 999 after a successful window observation. Values are divided by 1000 and scaled to the window dimensions, then clamped inside the window. The Host resolves attachment normalization and the selected model route’s image projection before returning the screenshot, then converts input to native window points. Resizing invalidates the screenshot mapping; `SCREENSHOT_REQUIRED` requires a new screenshot for absolute coordinates. Resizing rejects old coordinates with `WINDOW_CHANGED`; movement alone preserves window-local coordinates.
 
@@ -45,9 +45,9 @@ Actions return `dispatched:true, verified:false`; read fresh state to verify the
 
 On the Computer Use detail page, permission cards, component rows, and source facts use l3 borders, with 32px gaps between sections. Application badges retain their l1 borders.
 
-The [Computer Use bundle](../cua-bundle/README.md) mounts this page with its native provider. **Authorize computer use** groups the new-session default, PTC execution mode, Accessibility, and Screen Recording inside one border, with dividers between the rows. Each system-permission row shows the system-reported responsible application’s `.app` bundle filename and icon together in a bordered label. **Manage applications computer use can access** places the application lists inside a separate bordered group. Choose **Request permission**, find that application in the macOS permission list, and enable its switch; if macOS names another application, follow that prompt. With no detected source, the page directs the user to the application named by macOS. Each system-permission row has one control: **Request permission** when access is missing, or an outlined **Allowed** button with a settings icon after authorization. Clicking it opens the corresponding privacy pane, where the user can revoke access; hovering shows **Open System Settings**. Unknown status uses the same button with an **Unknown** label; pending initial observations retain a single placeholder. The page refreshes on entry, when the window regains focus, and after permission actions. A failed query offers **Retry**. Follow any macOS quit-and-reopen prompt and restart DSH as needed.
+The [Computer Use bundle](../cua-bundle/README.md) mounts this page with its native provider. **Authorize computer use** groups the new-session default, PTC execution mode, Accessibility, and Screen Recording inside one border, with dividers between the rows. Each system-permission row shows the system-reported responsible application’s `.app` bundle filename and icon together in a bordered label. **Manage applications computer use can access** places the application lists inside a separate bordered group. Choose **Request permission**, find that application in the macOS permission list, and enable its switch; if macOS names another application, follow that prompt. With no detected source, the page directs the user to the application named by macOS. Each system-permission row has one control: **Request permission** when access is missing, or an outlined **Allowed** button with a settings icon after authorization. Clicking it opens the corresponding privacy pane, where the user can revoke access; hovering shows **Open System Settings**. Unknown status uses the same button with an **Unknown** label; pending initial observations retain a single placeholder. The page refreshes on entry, when the window regains focus, and after permission actions. A failed query offers **Retry**. Follow any macOS quit-and-reopen prompt and restart Liwa as needed.
 
-System-permission operations affect the computer running DSH. When accessing DSH remotely, complete authorization on that computer.
+System-permission operations affect the computer running Liwa. When accessing Liwa remotely, complete authorization on that computer.
 
 Enabling from the plugin list or detail page shows setup guidance when system permissions need attention, with **Later** and **Open settings** actions. The detail page provides **Set to PTC** under **Default mode for new sessions**; only this action saves the default. Existing sessions keep their preset. **Use persistent mode** in the **PTC execution mode** row separately enables `ptc-runtime.scriptPersistence` when Script mode is selected; otherwise it saves `ptc-runtime.executionMode: persistent-in-memory`. Switching reloads the shared PTC runtime and may interrupt an active call; subsequent calls retain variables and application objects in memory. Already-persistent runtimes show a disabled **Persistent mode enabled** button.
 
@@ -63,7 +63,7 @@ The Host marker has no configurable fields; platform providers own native config
 <details>
 <summary>Shared execution and platform ownership</summary>
 
-The [permission store](src/permission-store.ts) uses `storageDomain` with the configured backend. The default JSON backend writes `$DSH_HOME/storages/cua_permissions_<sha256>.json`, where the digest identifies the canonical profile directory. Each authorization check opens fresh state under the profile's file lock and closes its domain afterward; native dispatch uses a separate application lock. Revocation waits for operations already admitted by another process; after it completes, every process rejects old handles. Files on different machines or PID namespaces must not share this lock.
+The [permission store](src/permission-store.ts) uses `storageDomain` with the configured backend. The default JSON backend writes `$LIWA_HOME/storages/cua_permissions_<sha256>.json`, where the digest identifies the canonical profile directory. Each authorization check opens fresh state under the profile's file lock and closes its domain afterward; native dispatch uses a separate application lock. Revocation waits for operations already admitted by another process; after it completes, every process rejects old handles. Files on different machines or PID namespaces must not share this lock.
 
 Legacy `allowedApps` are imported on first store access and never reapplied after migration. The old configuration can be removed after checking the permission page. Grants, denials and the option to ask again are durable; the page still omits conversation-only grants. Standalone compositions without a profile retain only process-local decisions; a profile without domain storage refuses authorization operations.
 

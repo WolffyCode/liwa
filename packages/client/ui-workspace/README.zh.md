@@ -1,9 +1,9 @@
 ---
-description: "dsh Web 客户端的共享 Workspace 浏览器与选择器插件：分组或扁平的会话行、管理操作、由 slot 组合的 Session 行 action 与目录选择。"
+description: "liwa Web 客户端的共享 Workspace 浏览器与选择器插件：分组或扁平的会话行、管理操作、由 slot 组合的 Session 行 action 与目录选择。"
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-client-ui-workspace
+# @liwa/client-ui-workspace
 
 [English](README.md) | 中文
 
@@ -85,7 +85,7 @@ Workspace 和 Session 的启动基线均就绪后，空安装环境调用 `works
 
 首次使用的目录名与其存储标题都是固定的，都不跟随读者语言：`workspaces.initializeDefault` 不携带任何名称，同一安装环境在切换语言后仍只有一个磁盘路径和一个存储标题。仍保留该自动标题的工作区，在本包展示它的所有位置——侧栏行及其悬浮卡片、搜索结果元信息、hero 选择器菜单、重命名与删除对话框——都通过控制器的 `workspaceDisplayTitle` 显示为本地化的默认名称。重命名对话框以屏幕上的标签作为初值，而判断确认是否需要保存用的是存储标题，因此对这类工作区直接确认未改动的初值即可固定该名称，该行不再跟随语言；重名检查按工作区身份而非标题排除目标自身。
 
-本包注入 Client `remoteAccess` 服务，并提供根作用域标准 Hook `useWorkspaceAccess(workspaceId, action)`，回答当前 Peer 能否在某个 Workspace 资源上调用 `action`，以及 `ctx.uiWorkspace.whenAccess(workspaceId, action, callback)`，在该答案为 true 期间保持回调的效果，语义同 `ctx.remoteAccess.whenAccess`；快照语义归 [`dsh-api-remote-access`](../../api/remote-access/README.zh.md#client-face)。
+本包注入 Client `remoteAccess` 服务，并提供根作用域标准 Hook `useWorkspaceAccess(workspaceId, action)`，回答当前 Peer 能否在某个 Workspace 资源上调用 `action`，以及 `ctx.uiWorkspace.whenAccess(workspaceId, action, callback)`，在该答案为 true 期间保持回调的效果，语义同 `ctx.remoteAccess.whenAccess`；快照语义归 [`liwa-api-remote-access`](../../api/remote-access/README.zh.md#client-face)。
 
 <a id="understand-the-implementation"></a>
 ## 理解实现
@@ -124,20 +124,20 @@ Session 行的 "..." 菜单和行尾悬停按钮是 WorkspaceBrowser 注册项�
 按照 Client 依赖规则，将 `ui-workspace`、`ui-slots`、`ui-renderer`、`client-locale` 与 `ui-primitives` 声明为浏览器／类型开发依赖。纯类型的 `ui-workspace/client` import 会加载本包的 `SlotMap` 声明；缺少该 import 时，独立编译的插件不会知道这些 slot key。Component 保持模块级稳定身份；用户可见文案由贡献包自己的 locale namespace 持有。
 
 ```tsx
-import type { Context } from '@deepseek-ai/cordis'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import type {} from '@deepseek-ai/dsh-client-locale/client'
-import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
-import type {} from '@deepseek-ai/dsh-client-ui-workspace/client'
-import { MenuItemButton } from '@deepseek-ai/dsh-client-ui-primitives'
+import type { Context } from '@liwa/cordis'
+import type { SessionId } from '@liwa/session/types'
+import type {} from '@liwa/client-locale/client'
+import type {} from '@liwa/client-ui-renderer/client'
+import type {} from '@liwa/client-ui-workspace/client'
+import { MenuItemButton } from '@liwa/client-ui-primitives'
 import type {
   InjectFace, LocaleDictOf, PropsLocale, PropsRuntime,
-} from '@deepseek-ai/dsh-client-ui-slots'
+} from '@liwa/client-ui-slots'
 import { exportSession } from './export-session.ts'
 
 const NS = 'acme.sessionActions'
 
-declare module '@deepseek-ai/dsh-client-ui-slots' {
+declare module '@liwa/client-ui-slots' {
   interface LocaleNamespaceMap {
     'acme.sessionActions': 'export'
   }
@@ -184,7 +184,7 @@ export function apply(ctx: Context): void {
 
 #### 动态客户端包
 
-动态加载的 browser half 采用同一套组件协议，能拿到哪些模块取决于它走哪条 lane。Module Loader 包（`factory(require)`，即真实 Loader/Web fixture 那种）把 `@deepseek-ai/dsh-client-ui-primitives` 当作隐式 baseline external：通过 loader 的 `require` 解析 `MenuItemButton`，不要把 primitive 列为运行时依赖或打包另一份副本，仅在源码编译需要其类型时声明开发依赖。`cordis-client-runner` 闭包（生成的 Client Slot catalog 面向的读者）无法 import 任何东西：它用 `React.createElement` 渲染自己的 `role="menuitem"` `<button>`，样式经 `styles.insert` 注入，并通过同一个 `useMenuOpenState` hook 关闭菜单，catalog 里的示例就是这个写法。
+动态加载的 browser half 采用同一套组件协议，能拿到哪些模块取决于它走哪条 lane。Module Loader 包（`factory(require)`，即真实 Loader/Web fixture 那种）把 `@liwa/client-ui-primitives` 当作隐式 baseline external：通过 loader 的 `require` 解析 `MenuItemButton`，不要把 primitive 列为运行时依赖或打包另一份副本，仅在源码编译需要其类型时声明开发依赖。`cordis-client-runner` 闭包（生成的 Client Slot catalog 面向的读者）无法 import 任何东西：它用 `React.createElement` 渲染自己的 `role="menuitem"` `<button>`，样式经 `styles.insert` 注入，并通过同一个 `useMenuOpenState` hook 关闭菜单，catalog 里的示例就是这个写法。
 
 ### 视图状态
 
@@ -196,7 +196,7 @@ Workspace 基线就绪后，浏览器持久化的展开状态和 Session 顺序�
 
 行动画由 [AnimatedRows](../ui-primitives/src/AnimatedRows.tsx) 负责。它仅在 React 提交改变行成员或顺序时读取更新前后的位置，并使用浏览器原生位移与透明度动画。被移除的行以不可交互的副本在滚动列表外淡出，不会延迟 React 卸载，也不会扩大列表的滚动范围。初始加载、拖拽提交、展开其余会话和视图选项变化直接完成。动画组件不使用布局观察器或轮询，也不会因仅内容更新或滚动而测量位置。
 
-Workspace 和 Session 的原生拖拽预览使用不可交互的离屏副本，在主题侧栏底色上保留行尺寸和缩进。行组件显式请求 `--dsh-sidebar-row-padding`、`--dsh-sidebar-label-gap` 和 `--dsh-sidebar-paint-inset`；预览复制这些变量的计算值，计算后的起始侧内边距则保留 Workspace 树的层级缩进。[useRowDragPreview](../ui-primitives/src/useRowDragPreview.ts) 在拖拽结束、替换预览或行卸载时移除副本。预览不改变原行的背景或拖放事件处理。如果浏览器拒绝自定义拖拽图片，则移除副本并继续原生拖动。
+Workspace 和 Session 的原生拖拽预览使用不可交互的离屏副本，在主题侧栏底色上保留行尺寸和缩进。行组件显式请求 `--liwa-sidebar-row-padding`、`--liwa-sidebar-label-gap` 和 `--liwa-sidebar-paint-inset`；预览复制这些变量的计算值，计算后的起始侧内边距则保留 Workspace 树的层级缩进。[useRowDragPreview](../ui-primitives/src/useRowDragPreview.ts) 在拖拽结束、替换预览或行卸载时移除副本。预览不改变原行的背景或拖放事件处理。如果浏览器拒绝自定义拖拽图片，则移除副本并继续原生拖动。
 
 ### 悬浮卡片
 

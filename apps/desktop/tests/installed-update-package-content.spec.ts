@@ -47,7 +47,7 @@ async function fixture(body: (context: {
   seal: () => Promise<void>
   resealRuntime: () => Promise<void>
 }) => Promise<void>, version: string = versions[0]): Promise<void> {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-package-content-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-package-content-'))
   const archive = join(root, 'payload/resources/app.asar')
   try {
     const run = await createInstalledUpdateRun(root, versions, { version: '0.1.5-rc.2', commit: 'a'.repeat(40), dirtyFiles: [] })
@@ -64,27 +64,27 @@ async function fixture(body: (context: {
     await writeFile(join(source, 'renderer/index.html'), '<p>test</p>')
     await prepareInstalledUpdateApplication(manifest, source)
     await cp(join(run.root, 'application/files'), source, { recursive: true })
-    await writeFile(join(source, 'package.json'), JSON.stringify({ name: `dsh-update-test-${run.id}`, version,
-      dshDesktopAppId: run.appId, main: 'qualification-bootstrap.mjs', type: 'module',
-      dshMandatoryUpdatePolicy: { origin: 'https://policy.example.com', allowedPageOrigins: ['https://policy.example.com'],
+    await writeFile(join(source, 'package.json'), JSON.stringify({ name: `liwa-update-test-${run.id}`, version,
+      liwaDesktopAppId: run.appId, main: 'qualification-bootstrap.mjs', type: 'module',
+      liwaMandatoryUpdatePolicy: { origin: 'https://policy.example.com', allowedPageOrigins: ['https://policy.example.com'],
         authentication: 'feishu-test', allowedAuthOrigins: ['https://login.example.com'] } }))
     for (const name of ['electron-updater', 'semver']) {
       await mkdir(join(source, 'node_modules', name), { recursive: true })
       await cp(require.resolve(`${name}/package.json`), join(source, 'node_modules', name, 'package.json'))
     }
-    const dsh = join(run.root, version, 'dsh')
-    const descriptor = runtimeFixture(dsh, version)
-    await writeFile(join(dsh, 'tool.exe'), 'inert executable fixture')
+    const liwa = join(run.root, version, 'liwa')
+    const descriptor = runtimeFixture(liwa, version)
+    await writeFile(join(liwa, 'tool.exe'), 'inert executable fixture')
     const reseal = (directory: string): void => {
       writeDesktopRuntime(directory, descriptor.release, descriptor.sharedPackages.map(entry => entry.name), { platform: 'win32', arch: 'x64' })
     }
-    reseal(dsh)
-    await cp(dsh, join(source, 'dsh'), { recursive: true })
+    reseal(liwa)
+    await cp(liwa, join(source, 'liwa'), { recursive: true })
     const payload = join(root, 'payload')
     await mkdir(join(payload, 'resources'), { recursive: true })
     await writeFile(join(payload, 'resources/app-update.yml'), JSON.stringify({ provider: 'generic', channel: 'nightly',
       url: `${run.origin}/${run.feedKey.slice(0, -'nightly.yml'.length)}`, publisherName: [publisher],
-      updaterCacheDirName: `dsh-update-test-${run.id}-updater` }))
+      updaterCacheDirName: `liwa-update-test-${run.id}-updater` }))
     const seal = async () => {
       // ASAR 3 returns the output stream after end(), before its writes finish.
       const output = await createPackageWithOptions(source, archive, { unpack: '**/*.exe' })
@@ -93,7 +93,7 @@ async function fixture(body: (context: {
     }
     await seal()
     await body({ manifest, source, payload, version, seal, resealRuntime: async () => {
-      reseal(join(source, 'dsh'))
+      reseal(join(source, 'liwa'))
       await seal()
     } })
   } finally {
@@ -107,12 +107,12 @@ describe('installed update archive contents', () => {
     await fixture(async ({ manifest, payload }) => {
       expect(await verifyInstalledUpdatePackageContent(manifest, version, payload, publisher)).toMatchObject({
         version, applicationFiles: 8, dependenciesFrozen: false, installed: false,
-        resignedExecutables: [join(payload, 'resources/app.asar.unpacked/dsh/tool.exe')],
+        resignedExecutables: [join(payload, 'resources/app.asar.unpacked/liwa/tool.exe')],
       })
     }, version)
   })
 
-  it.each(['name', 'version', 'dshDesktopAppId', 'main', 'type', 'dshMandatoryUpdatePolicy'])(
+  it.each(['name', 'version', 'liwaDesktopAppId', 'main', 'type', 'liwaMandatoryUpdatePolicy'])(
     'rejects mismatched packaged %s', async (field) => {
       await fixture(async ({ manifest, source, payload, version, seal }) => {
         const path = join(source, 'package.json')
@@ -121,7 +121,7 @@ describe('installed update archive contents', () => {
         await writeFile(path, JSON.stringify(data))
         await seal()
         await expect(verifyInstalledUpdatePackageContent(manifest, version, payload, publisher))
-          .rejects.toThrow(field === 'dshMandatoryUpdatePolicy' ? 'desktop policy' : 'identity')
+          .rejects.toThrow(field === 'liwaMandatoryUpdatePolicy' ? 'desktop policy' : 'identity')
       })
     })
 
@@ -157,8 +157,8 @@ describe('installed update archive contents', () => {
 
   it('accepts only the builder transformation of runtime dependency manifests', async () => {
     await fixture(async ({ manifest, source, payload, version, seal }) => {
-      const preparedRoot = join(dirname(manifest), version, 'dsh')
-      const packagePath = 'node_modules/@deepseek-ai/dsh/package.json'
+      const preparedRoot = join(dirname(manifest), version, 'liwa')
+      const packagePath = 'node_modules/@liwa/cli/package.json'
       const preparedPath = join(preparedRoot, packagePath)
       const data = JSON.parse(await readFile(preparedPath, 'utf8')) as Record<string, unknown>
       data.scripts = { test: 'inert' }
@@ -167,8 +167,8 @@ describe('installed update archive contents', () => {
       const descriptor = readDesktopRuntime(preparedRoot)
       writeDesktopRuntime(preparedRoot, descriptor.release, descriptor.sharedPackages.map(entry => entry.name),
         { platform: 'win32', arch: 'x64' })
-      await cp(join(preparedRoot, 'desktop-runtime.json'), join(source, 'dsh/desktop-runtime.json'))
-      const packagedPath = join(source, 'dsh', packagePath)
+      await cp(join(preparedRoot, 'desktop-runtime.json'), join(source, 'liwa/desktop-runtime.json'))
+      const packagedPath = join(source, 'liwa', packagePath)
       const packaged = { ...data }
       delete packaged.scripts
       delete packaged.bugs
@@ -185,7 +185,7 @@ describe('installed update archive contents', () => {
   it.each(['unsealed', 'resealed-change', 'resealed-addition'])(
     'rejects %s runtime content even when metadata is regenerated', async (failure) => {
       await fixture(async ({ manifest, source, payload, version, seal, resealRuntime }) => {
-        await writeFile(join(source, 'dsh', failure === 'resealed-addition' ? 'extra.js' : 'package.json'), '{}')
+        await writeFile(join(source, 'liwa', failure === 'resealed-addition' ? 'extra.js' : 'package.json'), '{}')
         if (failure !== 'unsealed') await resealRuntime()
         else await seal()
         await expect(verifyInstalledUpdatePackageContent(manifest, version, payload, publisher)).rejects.toThrow()
@@ -194,8 +194,8 @@ describe('installed update archive contents', () => {
 
   it('identifies changed executable resources for separate signature verification', async () => {
     await fixture(async ({ manifest, source, payload, version, resealRuntime }) => {
-      const executable = join(payload, 'resources/app.asar.unpacked/dsh/tool.exe')
-      await writeFile(join(source, 'dsh/tool.exe'), 'inert changed executable, not a signature')
+      const executable = join(payload, 'resources/app.asar.unpacked/liwa/tool.exe')
+      await writeFile(join(source, 'liwa/tool.exe'), 'inert changed executable, not a signature')
       await resealRuntime()
       expect((await verifyInstalledUpdatePackageContent(manifest, version, payload, publisher)).resignedExecutables).toEqual([executable])
     })
@@ -225,7 +225,7 @@ describe('installed update verification records', () => {
         const root = join(manifest, '..')
         const output = join(root, version, 'installer')
         await mkdir(output)
-        const name = `deepseek-harness-${version}-win-x64.exe`
+        const name = `liwa-${version}-win-x64.exe`
         const bytes = Buffer.from('inert installer fixture, never executed')
         const installer = join(output, name)
         await writeFile(installer, bytes)

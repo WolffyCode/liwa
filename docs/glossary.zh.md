@@ -2,16 +2,16 @@
 
 [English](glossary.md) | 中文
 
-DeepSeek Harness 的领域词汇为每个概念规定一个规范术语。各术语通过标准 Markdown 锚点链接到相应条目；实现细节留在各包的 README 与 Agent Note 中。
+灵鲸的领域词汇为每个概念规定一个规范术语。各术语通过标准 Markdown 锚点链接到相应条目；实现细节留在各包的 README 与 Agent Note 中。
 
 ## capability-seam
 
-- **seam**：一种包含三种角色的*可替换能力*：**Service Definition**（拥有自身 `ctx.<key>` 和词汇类型的 Cordis `Service`——可以是 `ShellExecutor` 这样的抽象类，也可以是 `WebRuntime` 这样的具体注册表，绝不是 TypeScript `interface`）、一个或多个 **Service Provider**，以及一个或多个注入该服务的 **Consumer**。`packages/shell` 是规范范例：`dsh-shell`（Service Definition）、`dsh-bash-local` / `dsh-bash-sandbox`（提供方），以及 `dsh-tool-bash`（Consumer）。角色需要独立演进时通常位于不同包，但属于同一关注点时，一个包也可以承担多个角色（`dsh-user-approval` 在同一个包中承担 approval seam 的 Service Definition 与其具体实现）。seam 是完整能力，绝不是其中一个角色；该术语仅保留此义，能力成员应按其角色、类、服务、约定或扩展点命名。
+- **seam**：一种包含三种角色的*可替换能力*：**Service Definition**（拥有自身 `ctx.<key>` 和词汇类型的 Cordis `Service`——可以是 `ShellExecutor` 这样的抽象类，也可以是 `WebRuntime` 这样的具体注册表，绝不是 TypeScript `interface`）、一个或多个 **Service Provider**，以及一个或多个注入该服务的 **Consumer**。`packages/shell` 是规范范例：`liwa-shell`（Service Definition）、`liwa-bash-local` / `liwa-bash-sandbox`（提供方），以及 `liwa-tool-bash`（Consumer）。角色需要独立演进时通常位于不同包，但属于同一关注点时，一个包也可以承担多个角色（`liwa-user-approval` 在同一个包中承担 approval seam 的 Service Definition 与其具体实现）。seam 是完整能力，绝不是其中一个角色；该术语仅保留此义，能力成员应按其角色、类、服务、约定或扩展点命名。
 
 ## agent-scope
 
 - **scope**：按 agent（智能体）划分的注册单位。一项贡献（工具、提示词段、变量、限制、监听器）要么是*全局的*（对所有 agent 可见），要么是*带作用域的*（归属于恰好一个 [scope key](#scope-key)）。只有两层，采用扁平结构：带作用域的注册不会向下继承给 subagent；子树行为通过 [lineage](#lineage) 数据表达，从不通过 scope 结构。
-- **scope key**：scope 的不透明标识，按对象同一性比较。harness 约定：一个活跃的 agent 就是其自身 scope 的 key。<a id="scope-key"></a>
+- **scope key**：scope 的不透明标识，按对象同一性比较。灵鲸约定：一个活跃的 agent 就是其自身 scope 的 key。<a id="scope-key"></a>
 - **agent 上下文（`agent.ctx`）**：agent 的带作用域上下文；通过它进行的注册既具有 scope 可见性，其生命周期也绑定到该 scope（同一事实决定两者），其上的监听器参与该 agent 的 scope 过滤分发。注册表主体事件可以根据各自的事件约定有意保持不过滤。
 - **scope carrier**：scope 过滤分发所携带的 `thisArg`（由 `scopeTarget` 构建）；其过滤器放行无标签监听器加上主体自身的监听器。*无主体*的 carrier（没有 key）只放行无标签监听器。
 - **scoped dispatch**：规则是：关于某个 agent 的活动的事件以该 agent 的 carrier 进行分发。关于注册表本身的事件（如「一个工具被添加了」）属于*注册表主体*事件，保持不过滤。
@@ -30,7 +30,7 @@ DeepSeek Harness 的领域词汇为每个概念规定一个规范术语。各术
 
 - **人类命令**：以斜杠开头的指令，由面向人类的适配器通过 `ctx.commands` 解释并执行，不会成为模型消息。它既不同于面向模型的工具，也不同于通过 `ctx.shell` 执行 shell 命令。
 - **命令平面**：由 UI 适配器和命令插件负责的发现、解析、分发、取消与结果渲染机制。除非处理器另行改变持久领域，否则命令输出属于 UI 状态。
-- **目标命令**：`/goal` 是由 `dsh-command-goal` 提供的人类命令；它直接观察或更改当前目标，而目标领域拥有每条持久且模型可见的记录。
+- **目标命令**：`/goal` 是由 `liwa-command-goal` 提供的人类命令；它直接观察或更改当前目标，而目标领域拥有每条持久且模型可见的记录。
 
 ## 循环层级
 

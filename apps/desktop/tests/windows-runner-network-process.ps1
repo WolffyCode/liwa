@@ -7,7 +7,7 @@ try {
         $base = Join-Path $root $case
         $runner = Join-Path $base 'runner'
         $network = Join-Path $base 'network'
-        $null = New-Item -ItemType Directory -Path $network,(Join-Path $runner 'dsh-task') -Force
+        $null = New-Item -ItemType Directory -Path $network,(Join-Path $runner 'liwa-task') -Force
         @'
 Set-Content (Join-Path $PSScriptRoot 'child-pid') $PID
 Write-Output 'PRIVATE-OUTPUT-MUST-NOT-LEAK'
@@ -24,8 +24,8 @@ while (-not (Test-Path (Join-Path $network 'child-pid'))) {
 if (Test-Path (Join-Path $network 'fail')) { exit 1 }
 exit 0
 '@ | Set-Content (Join-Path $runner 'cold-boot-smoke.ps1')
-        "Set-Content (Join-Path `$PSScriptRoot 'listened') yes; exit 0" | Set-Content (Join-Path $runner 'dsh-task/start-runner.ps1')
-        if ($case -eq 'runner-failure') { Set-Content (Join-Path $runner 'dsh-task/start-runner.ps1') "Set-Content (Join-Path `$PSScriptRoot 'listened') yes; exit 7" }
+        "Set-Content (Join-Path `$PSScriptRoot 'listened') yes; exit 0" | Set-Content (Join-Path $runner 'liwa-task/start-runner.ps1')
+        if ($case -eq 'runner-failure') { Set-Content (Join-Path $runner 'liwa-task/start-runner.ps1') "Set-Content (Join-Path `$PSScriptRoot 'listened') yes; exit 7" }
         if ($case -in @('recovery','task-route')) {
             @'
 param([string]$RunnerRoot,[string]$ConfigRoot,[switch]$CheckOnly)
@@ -56,7 +56,7 @@ for ($iteration = 0; $iteration -lt 2; $iteration++) {
 }
 Write-Output 'RUNNER-SURVIVED-RECOVERY'
 exit 0
-'@ | Set-Content (Join-Path $runner 'dsh-task/start-runner.ps1')
+'@ | Set-Content (Join-Path $runner 'liwa-task/start-runner.ps1')
         }
         if ($case -eq 'provider-exit') {
             Set-Content (Join-Path $network 'fake.ps1') 'Set-Content (Join-Path $PSScriptRoot "child-pid") $PID; exit 0'
@@ -90,7 +90,7 @@ exit 0
             }
             [string[]]$options = @(if ($case -eq 'check-only') { '-CheckOnly' })
             if ($case -eq 'task-route') {
-                $taskRoot = Join-Path $runner 'dsh-task'
+                $taskRoot = Join-Path $runner 'liwa-task'
                 Copy-Item (Join-Path $PSScriptRoot '../scripts/run-windows-runner-task.ps1') (Join-Path $taskRoot 'run.ps1')
                 Copy-Item (Join-Path $PSScriptRoot '../scripts/run-windows-runner-network-process.ps1') $taskRoot
                 Copy-Item (Join-Path $taskRoot 'start-runner.ps1') (Join-Path $taskRoot 'start.ps1')
@@ -102,10 +102,10 @@ exit 0
                 $output = Get-Content (Get-ChildItem $taskRoot -Filter 'run-*.log').FullName -Raw
                 if ([int](Get-Content (Join-Path $taskRoot 'attempts.txt')) -ne 1) { throw 'Network recovery consumed task launch budget.' }
             } else {
-                $output = & (Join-Path $PSHOME 'pwsh.exe') -NoProfile -File (Join-Path $PSScriptRoot '../scripts/run-windows-runner-network-process.ps1') -RunnerRoot $runner -ConfigRoot $base -NetworkRoot $network -ReadinessScript (Join-Path $runner 'cold-boot-smoke.ps1') -StartScript (Join-Path $runner 'dsh-task/start-runner.ps1') @options 2>&1 | Out-String
+                $output = & (Join-Path $PSHOME 'pwsh.exe') -NoProfile -File (Join-Path $PSScriptRoot '../scripts/run-windows-runner-network-process.ps1') -RunnerRoot $runner -ConfigRoot $base -NetworkRoot $network -ReadinessScript (Join-Path $runner 'cold-boot-smoke.ps1') -StartScript (Join-Path $runner 'liwa-task/start-runner.ps1') @options 2>&1 | Out-String
             }
             if (($LASTEXITCODE -eq 0) -ne ($case -in @('ready','stale','reused','check-only','recovery'))) { throw "Unexpected exit: ${case}: $output" }
-            if ((Test-Path (Join-Path $runner 'dsh-task/listened')) -ne ($case -in @('ready','stale','reused','runner-failure','recovery','task-route'))) { throw "Listener admission failed: $case" }
+            if ((Test-Path (Join-Path $runner 'liwa-task/listened')) -ne ($case -in @('ready','stale','reused','runner-failure','recovery','task-route'))) { throw "Listener admission failed: $case" }
             if ($case -in @('recovery','task-route')) {
                 foreach ($expected in @('RUNNER-STDOUT','RUNNER-STDERR','RUNNER-SURVIVED-RECOVERY','Network process exited','Network process restarted (attempt 2)')) {
                     if (-not $output.Contains($expected)) { throw "Missing recovery evidence: $expected" }

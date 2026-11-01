@@ -47,7 +47,7 @@ kind: "package-group"
 | [`session-search`](session-search/README.zh.md) | 可选实验性全局会话搜索工具 | — |
 | [`ralph-bundle`](ralph-bundle/README.zh.md) | 带隔离 workflow 引擎的可选重复委派 | — |
 | [`terminal-bundle`](terminal-bundle/README.zh.md) | 可选全局持久终端工具 | — |
-| [`badge-skill-bundle`](badge-skill-bundle/README.zh.md) | 可选 powered-by-dsh 徽章技能 | — |
+| [`badge-skill-bundle`](badge-skill-bundle/README.zh.md) | 可选 powered-by-liwa 徽章技能 | — |
 | [`session-titles-bundle`](session-titles-bundle/README.zh.md) | 随对话中人类提示更新的可选标题 | — |
 | [`hook-protocol`](hook-protocol/README.zh.md) | 钩子桥接的通信类型与持久事件 | — |
 | [`hooks-claude-code`](hooks-claude-code/README.zh.md) | Claude Code 钩子桥接 | — |
@@ -57,7 +57,7 @@ kind: "package-group"
 | [`session-title-all-prompts-llm`](session-title-all-prompts-llm/README.zh.md) | 根据所有人类提示生成会话标题 | — |
 | [`tool-terminal`](tool-terminal/README.zh.md) | 持久终端工具 | — |
 | [`tool-ralph`](tool-ralph/README.zh.md) | 有界重复委派任务 | — |
-| [`skill-badge`](skill-badge/README.zh.md) | powered-by-dsh 徽章技能 | — |
+| [`skill-badge`](skill-badge/README.zh.md) | powered-by-liwa 徽章技能 | — |
 | [`translator`](translator/README.zh.md) | 免登录 Google 与 Bing 文本翻译 | `ctx.translator` |
 | [`client-ui-cot-translation`](client-ui-cot-translation/README.zh.md) | 展开的思考内容翻译与原文控件 | `ctx.cotTranslation` |
 | [`cot-translation-bundle`](cot-translation-bundle/README.zh.md) | 默认禁用的思考内容翻译组合 | — |
@@ -76,7 +76,7 @@ kind: "package-group"
 | [`auto-review`](auto-review/README.zh.md) | 显式 Web 层，在每个原生或 PTC inner 工具调用前使用同一模型审查 | — |
 | [`subagent-oar`](subagent-oar/README.zh.md) | 通过 OAR 执行外部编程智能体的独立任务 | `ctx.subagents` |
 | [`tool-subagent-oar`](tool-subagent-oar/README.zh.md) | 为每项委派任务选择配置的外部代理 | `ctx.tools` |
-| [`claude-code-mods`](claude-code-mods/README.zh.md) | 把 Claude Code 模组作为插件运行：钩子链落在 harness 扩展点上，并在提示框上方绘制横幅 | `ctx.claudeCodeMods` |
+| [`claude-code-mods`](claude-code-mods/README.zh.md) | 把 Claude Code 模组作为插件运行：钩子链落在灵鲸扩展点上，并在提示框上方绘制横幅 | `ctx.claudeCodeMods` |
 | [`client-ui-claude-code-mods`](client-ui-claude-code-mods/README.zh.md) | 在提示框上方绘制模组树并把按钮点击发回的 Web 横幅 | — |
 | [`ptc-runtime-python`](ptc-runtime-python/README.zh.md) | PTC 执行 seam 的 CPython 子进程后端 | `ctx.ptcRuntime` |
 | [CUA](cua/README.zh.md) | 应用与窗口对象、授权执行和权限控件。 | `ctx.cuaAccess` |
@@ -94,7 +94,7 @@ kind: "package-group"
 | [`tool-agent-team`](tool-agent-team/README.zh.md) | 让模型创建、发消息与协调 teammate 的九个工具 | 按作用域注册工具到 `ctx.tools` |
 | [`tool-worktree`](tool-worktree/README.zh.md) | 创建并进入工作树的可选 bundle 与模型工具 | `ctx.tools` |
 | [`webworker-packer`](webworker-packer/README.zh.md) | 构建浏览器 worker 预览所消费的 gzip 压缩虚拟文件系统（VFS）镜像 | 库与 CLI（命令行界面），不使用 ctx key |
-| [`webworker-runtime`](webworker-runtime/README.zh.md) | 在专用浏览器 worker 中运行 harness 插件树 | 库与 worker 入口，不使用 ctx key |
+| [`webworker-runtime`](webworker-runtime/README.zh.md) | 在专用浏览器 worker 中运行灵鲸插件树 | 库与 worker 入口，不使用 ctx key |
 | [`worktree`](worktree/README.zh.md) | 创建具名 Git 工作树并改变调用 Session 的当前目录 | `ctx.worktrees` |
 | [`forge`](forge/README.zh.md) | 代码托管提供方注册表，共享变更请求轮询 | `ctx.forge` |
 | [`forge-github`](forge-github/README.zh.md) | 通过宿主 GitHub CLI 读取 pull request 的 GitHub 提供方 | 在 `ctx.forge` 上注册提供方 |

@@ -23,7 +23,7 @@ const fixture = await vi.hoisted(async () => {
     destroyed = false
     readonly webContents = Object.assign(new EventEmitter(), {
       send: vi.fn(), focus: vi.fn(),
-      mainFrame: { url: 'dsh-app://shell/update-dialog.html' },
+      mainFrame: { url: 'liwa-app://shell/update-dialog.html' },
       setWindowOpenHandler: vi.fn<(handler: () => { action: 'deny' }) => void>(),
       isDestroyed: () => this.destroyed,
       loadURL: vi.fn(async () => { if (load.failure) throw new Error('load failed'); this.webContents.emit('did-finish-load') }),
@@ -193,7 +193,7 @@ it('denies foreign navigation, redirects, and new windows', async () => {
   const contents = fixture.views[0]!.webContents
   const event = { preventDefault: vi.fn() }
   contents.emit('will-navigate', event, 'https://example.com')
-  contents.emit('will-navigate', event, 'dsh-app://shell/update-dialog.html')
+  contents.emit('will-navigate', event, 'liwa-app://shell/update-dialog.html')
   expect(event.preventDefault).toHaveBeenCalledOnce()
   contents.emit('will-redirect', event)
   expect(event.preventDefault).toHaveBeenCalledTimes(2)

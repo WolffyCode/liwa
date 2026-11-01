@@ -10,18 +10,18 @@
  * catalog diagnostics beside serviceable models; writes validate every changed
  * provider before persistence. Self-contained profile constraints apply to both.
  *
- * @module dsh-llm-pi-ai/config
+ * @module liwa-llm-pi-ai/config
  */
-import type { Volatile } from '@deepseek-ai/cordis'
+import type { Volatile } from '@liwa/cordis'
 
 import type { CacheRetention, ChatTemplateKwargValue, ModelThinkingLevel, Provider, ThinkingBudgets, Transport } from '@earendil-works/pi-ai'
-import z from '@deepseek-ai/schemastery'
-import { credentialRef } from '@deepseek-ai/dsh-credentials'
-import type { CredentialRef } from '@deepseek-ai/dsh-credentials'
-import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
-import { resolveRetryPolicy, RetryPolicySchema } from '@deepseek-ai/dsh-llm'
-import type { ResolvedRetryPolicy, RetryPolicyConfig } from '@deepseek-ai/dsh-llm'
-import { deepEqualJson } from '@deepseek-ai/dsh-util-values'
+import z from '@liwa/schemastery'
+import { credentialRef } from '@liwa/credentials'
+import type { CredentialRef } from '@liwa/credentials'
+import { MAX_TIMER_DELAY_MS } from '@liwa/timeout'
+import { resolveRetryPolicy, RetryPolicySchema } from '@liwa/llm'
+import type { ResolvedRetryPolicy, RetryPolicyConfig } from '@liwa/llm'
+import { deepEqualJson } from '@liwa/util-values'
 import {
   CACHE_CONTROL_FORMATS,
   CHAT_TEMPLATE_VARS,
@@ -148,7 +148,7 @@ export interface PiAiProviderProfile {
    * to answer instead.
    */
   defaultInput?: PiAiModality[]
-  /** Provider request headers, validated against Fetch when the profile resolves; Harness attribution wins reserved names. */
+  /** Provider request headers, validated against Fetch when the profile resolves; Liwa attribution wins reserved names. */
   headers?: Record<string, string>
   /** Provider-neutral pi-ai reasoning level. */
   reasoning?: ModelThinkingLevel
@@ -185,7 +185,7 @@ export interface PiAiProviderProfile {
 /** Validated profile with its route stamped and every adapter-owned default resolved. */
 export interface ResolvedPiAiProviderProfile
   extends Omit<PiAiProviderProfile, 'apiKeyEnv' | 'retryPolicy' | 'models' | 'displayName'> {
-  /** Harness route key and the `Models` collection key (the configuration dict key). */
+  /** Liwa route key and the `Models` collection key (the configuration dict key). */
   provider: string
   /** Resolved display name for selectors and configuration surfaces. */
   displayName: string
@@ -380,7 +380,7 @@ function rejectRemovedFields(provider: string, source: PiAiProviderProfile): voi
   if ('maxRetries' in legacy || 'maxRetryDelayMs' in legacy) {
     throw new Error(
       `llm-pi-ai: provider "${provider}" sets maxRetries or maxRetryDelayMs, which were removed;`
-      + ' compose agent recovery with dsh-llm-retry',
+      + ' compose agent recovery with liwa-llm-retry',
     )
   }
 }

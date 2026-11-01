@@ -3,7 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createViewPins } from '../src/client/view-pins.ts'
 
-const KEY = 'dsh.slot.manual-order.conversation.view.v1'
+const KEY = 'liwa.slot.manual-order.conversation.view.v1'
 afterEach(() => { localStorage.clear() })
 
 describe('Conversation View pins', () => {

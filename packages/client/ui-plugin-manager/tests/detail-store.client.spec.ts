@@ -1,6 +1,6 @@
-import { Context } from '@deepseek-ai/cordis'
-import { RemoteError, TestRemote } from '@deepseek-ai/dsh-client-test-runtime'
-import type { BundleDetail } from '@deepseek-ai/dsh-api-remotes/client'
+import { Context } from '@liwa/cordis'
+import { RemoteError, TestRemote } from '@liwa/client-test-runtime'
+import type { BundleDetail } from '@liwa/api-remotes/client'
 import { expect, it, onTestFinished, vi } from 'vitest'
 import { BundleDetailController, bundleDetailKey } from '../src/client/detail-store.ts'
 
@@ -17,7 +17,7 @@ function setup() {
   }
   const probe = { fastest: vi.fn((): Promise<Answer<string | null>> => ok('https://registry.npmmirror.com/')) }
   new TestRemote(ctx, { pluginManager: manager, pluginRegistryProbe: probe })
-  const controller = new BundleDetailController(ctx, () => 'https://dsh.example/prefix/')
+  const controller = new BundleDetailController(ctx, () => 'https://liwa.example/prefix/')
   const state = (name: string, version: string | undefined, language: string) =>
     controller.store.getSnapshot()[bundleDetailKey(name, version, language)]
   return { controller, manager, probe, state }
@@ -118,7 +118,7 @@ it('drops a read whose registry comparison settles after a reset or disposal, wi
 it('addresses relative images through the Host route and leaves other destinations alone', () => {
   const { controller } = setup()
   expect(controller.image('@acme/x', 'guide/D.md', 'img/a b.png', false))
-    .toBe('https://dsh.example/prefix/api/plugin-manager/detail-file?bundle=%40acme%2Fx&document=guide%2FD.md&path=img%2Fa+b.png')
+    .toBe('https://liwa.example/prefix/api/plugin-manager/detail-file?bundle=%40acme%2Fx&document=guide%2FD.md&path=img%2Fa+b.png')
   for (const destination of ['https://example.com/a.png', 'data:image/png;base64,AA', '//cdn.example/a.png', '#top']) {
     expect(controller.image('x', 'README.md', destination, false)).toBeUndefined()
   }

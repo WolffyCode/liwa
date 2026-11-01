@@ -1,39 +1,39 @@
-import * as PtcToolExecutor from '@deepseek-ai/dsh-tool-executor-ptc'
+import * as PtcToolExecutor from '@liwa/tool-executor-ptc'
 import { randomUUID } from 'node:crypto'
-import { provideWorkingDirectoryFixture, mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
+import { provideWorkingDirectoryFixture, mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
 import { chmod, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { SandboxBashExecutor } from '@deepseek-ai/dsh-bash-sandbox'
-import { NodePtcRuntime } from '@deepseek-ai/dsh-ptc-runtime-node'
-import * as FsObservationPolicy from '@deepseek-ai/dsh-fs-observation-policy'
-import { SandboxedFileSystem } from '@deepseek-ai/dsh-fs-sandbox'
+import { Context } from '@liwa/cordis'
+import type { Agent } from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import { SandboxBashExecutor } from '@liwa/bash-sandbox'
+import { NodePtcRuntime } from '@liwa/ptc-runtime-node'
+import * as FsObservationPolicy from '@liwa/fs-observation-policy'
+import { SandboxedFileSystem } from '@liwa/fs-sandbox'
 import {
   createUserMessage, isAgentLoopRequest, ToolCallId,
   type StreamChunk,
-} from '@deepseek-ai/dsh-llm'
-import * as LlmDeepSeek from '@deepseek-ai/dsh-llm-deepseek-api-key'
-import PermissionPresetService, { AUTO_PRESET } from '@deepseek-ai/dsh-permission-presets'
-import SandboxProvider, { type ConfinedArgv, type SandboxPolicy } from '@deepseek-ai/dsh-sandbox'
-import SandboxPolicyService from '@deepseek-ai/dsh-sandbox-policy'
-import { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
-import * as ShellEnv from '@deepseek-ai/dsh-shell-env'
-import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
-import * as ToolBash from '@deepseek-ai/dsh-tool-bash'
-import * as ToolFs from '@deepseek-ai/dsh-tool-fs'
-import { RUN_CODE_NAME } from '@deepseek-ai/dsh-tools'
-import ApprovalService, { setApprovalPolicy } from '@deepseek-ai/dsh-user-approval'
+} from '@liwa/llm'
+import * as LlmDeepSeek from '@liwa/llm-deepseek-api-key'
+import PermissionPresetService, { AUTO_PRESET } from '@liwa/permission-presets'
+import SandboxProvider, { type ConfinedArgv, type SandboxPolicy } from '@liwa/sandbox'
+import SandboxPolicyService from '@liwa/sandbox-policy'
+import { SessionId, type SessionEvent } from '@liwa/session'
+import * as ShellEnv from '@liwa/shell-env'
+import LocalSubprocessRuntime from '@liwa/subprocess-local'
+import * as ToolBash from '@liwa/tool-bash'
+import * as ToolFs from '@liwa/tool-fs'
+import { RUN_CODE_NAME } from '@liwa/tools'
+import ApprovalService, { setApprovalPolicy } from '@liwa/user-approval'
 import { expect, it, vi } from 'vitest'
-import * as AutoReview from '@deepseek-ai/dsh-experimental-auto-review'
+import * as AutoReview from '@liwa/experimental-auto-review'
 
 const PROVIDER = 'deepseek-official'
 const FLASH = 'deepseek-v4-flash'
 const PRO = 'deepseek-v4-pro'
 const VISION = 'deepseek-v4-flash-vision-exp'
-const REAL = process.env.DSH_AUTO_REVIEW_CERTIFICATION === '1'
+const REAL = process.env.LIWA_AUTO_REVIEW_CERTIFICATION === '1'
 const DENIED = 'AUTO_REVIEW_DENIED'
 type Risk = 'low' | 'medium' | 'high'
 type Decision = 'allow' | 'deny'
@@ -129,7 +129,7 @@ async function* observe(
   observations.push(observation)
 }
 
-async function mount(ctx: Context, workspace: string, dshHome: string): Promise<void> {
+async function mount(ctx: Context, workspace: string, liwaHome: string): Promise<void> {
   await mountAgentLoopTestDependencies(ctx, {
     systemPrompt: {}, tools: { mode: 'native' },
   })
@@ -140,7 +140,7 @@ async function mount(ctx: Context, workspace: string, dshHome: string): Promise<
   await ctx.plugin(SandboxedFileSystem, { cwd: workspace })
   await ctx.plugin(FsObservationPolicy)
   await ctx.plugin(LocalSubprocessRuntime)
-  await ctx.plugin(ShellEnv, { dshHome })
+  await ctx.plugin(ShellEnv, { liwaHome })
   await ctx.plugin(SandboxBashExecutor, { cwd: workspace, timeoutMs: 30_000 })
   await ctx.plugin(ApprovalService, { policy: 'ask' })
   await ctx.plugin(PermissionPresetService, {
@@ -252,17 +252,17 @@ it('certifies eight Auto risk/authorization cases with zero retries and zero ski
   retry: 0, timeout: 1_800_000,
 }, async () => {
   if (REAL && !process.env.DEEPSEEK_API_KEY) throw new Error('Real Auto certification requires DEEPSEEK_API_KEY')
-  const root = await mkdtemp(join(tmpdir(), 'dsh-auto-review-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-auto-review-'))
   const ctx = new Context()
   provideWorkingDirectoryFixture(ctx)
   try {
     await chmod(root, 0o700)
     const workspace = join(root, 'workspace')
-    const dshHome = join(root, 'dsh-home')
+    const liwaHome = join(root, 'liwa-home')
     await mkdir(workspace)
-    await mkdir(dshHome, { mode: 0o700 })
-    vi.stubEnv('DSH_HOME', dshHome)
-    await mount(ctx, workspace, dshHome)
+    await mkdir(liwaHome, { mode: 0o700 })
+    vi.stubEnv('LIWA_HOME', liwaHome)
+    await mount(ctx, workspace, liwaHome)
     const runner = orchestrate(ctx, REAL)
     const cases: CaseResult[] = []
     const runCase = async (
@@ -361,14 +361,14 @@ it('certifies eight Auto risk/authorization cases with zero retries and zero ski
 it.each(['native', 'ptc-inner'] as const)('feeds denial back, re-reviews a new call and accepts narrowed work through %s', {
   retry: 0,
 }, async (path) => {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-auto-review-recovery-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-auto-review-recovery-'))
   const ctx = new Context()
   provideWorkingDirectoryFixture(ctx)
   try {
-    const dshHome = join(root, 'home')
-    await mkdir(dshHome)
-    vi.stubEnv('DSH_HOME', dshHome)
-    await mount(ctx, root, dshHome)
+    const liwaHome = join(root, 'home')
+    await mkdir(liwaHome)
+    vi.stubEnv('LIWA_HOME', liwaHome)
+    await mount(ctx, root, liwaHome)
     const runner = orchestrate(ctx, false)
     const target = join(root, 'existing.txt')
     await writeFile(target, 'keep\n')

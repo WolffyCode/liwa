@@ -1,11 +1,11 @@
 /** Register the HTTP(S) Browser tab type in the right Sidebar. */
-import type { ShortcutCommandId } from '@deepseek-ai/dsh-client-shortcuts/client'
-import type { Context } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-client-locale/client'
-import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
-import type {} from '@deepseek-ai/dsh-client-ui-session/client'
-import type {} from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
-import type {} from '@deepseek-ai/dsh-api-workspace-controller/client'
+import type { ShortcutCommandId } from '@liwa/client-shortcuts/client'
+import type { Context } from '@liwa/cordis'
+import type {} from '@liwa/client-locale/client'
+import type {} from '@liwa/client-ui-renderer/client'
+import type {} from '@liwa/client-ui-session/client'
+import type {} from '@liwa/client-ui-sidebar-right/client'
+import type {} from '@liwa/api-workspace-controller/client'
 import { BrowserBody, type BrowserBodyProps } from './view/BrowserBody.tsx'
 import { BrowserTitle } from './view/BrowserTitle.tsx'
 import { createBrowserControllers } from './browser/BrowserController.ts'
@@ -29,7 +29,7 @@ export type { SidebarBrowserKey } from './locales.ts'
 export type { BrowserState } from './browser/store.ts'
 export type { BrowserAddressFailure, BrowserAddressResult, BrowserTarget } from './browser/url.ts'
 
-declare module '@deepseek-ai/dsh-client-ui-sidebar-right/client' {
+declare module '@liwa/client-ui-sidebar-right/client' {
   interface SidebarRightTabParamsMap {
     /** Optional initial Browser URL. */
     browser: { readonly url?: string }
@@ -67,8 +67,8 @@ export function apply(ctx: Context): void {
   const store = createBrowserStore()
   const openTabs = ctx.sidebarRight.openTabs
   const carrier = (globalThis as typeof globalThis & {
-    dshDesktop?: { readonly protocolVersion: number; readonly browser?: DesktopBrowserBridge }
-  }).dshDesktop
+    liwaDesktop?: { readonly protocolVersion: number; readonly browser?: DesktopBrowserBridge }
+  }).liwaDesktop
   const desktop = carrier?.protocolVersion === 1 ? carrier.browser : undefined
   ctx.effect(() => ctx.locale.register(namespace, { zh, en, ja, es, fr, de, ru, pt }), 'ui-sidebar-browser.copy')
   ctx.effect(() => ctx.sidebarRightTabs.register({ ...browserDefinition(t), keepMounted: desktop !== undefined }), 'ui-sidebar-browser.type')

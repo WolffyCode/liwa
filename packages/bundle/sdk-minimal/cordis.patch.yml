@@ -1,48 +1,48 @@
 # Standalone minimal SDK application. Unlike the ordinary SDK profile, this
-# bundle does not layer over dsh-base: this insert is the complete Cordis tree.
+# bundle does not layer over liwa-base: this insert is the complete Cordis tree.
 # User profile, home, and invocation patches still apply above it.
 
 - insert:
     - id: sdk-app-startup
-      name: '@deepseek-ai/dsh-sdk-app'
+      name: '@liwa/sdk-app'
       config:
         profile: sdk-minimal
 
     - id: sdk-jsonrpc-server
-      name: '@deepseek-ai/dsh-sdk-jsonrpc-server'
+      name: '@liwa/sdk-jsonrpc-server'
       inject: [sdkAppStartup, loader]
       config:
         maxTokensAsSuccess: false
 
     - id: deepseek-llm-api-extensions
-      name: '@deepseek-ai/dsh-deepseek-llm-api-extensions'
+      name: '@liwa/deepseek-llm-api-extensions'
 
     - id: session-log-deepseek
-      name: '@deepseek-ai/dsh-session-log-deepseek'
+      name: '@liwa/session-log-deepseek'
 
     - id: plugin-package-inventory-deepseek
-      name: '@deepseek-ai/dsh-plugin-package-inventory-deepseek'
+      name: '@liwa/plugin-package-inventory-deepseek'
 
     - id: llm-deepseek
-      name: '@deepseek-ai/dsh-llm-deepseek-api-key'
+      name: '@liwa/llm-deepseek-api-key'
       config:
         apiKeyEnv: DEEPSEEK_API_KEY
-        defaultContextWindow: !!js Number(process.env.DSH_CONTEXT_WINDOW ?? 1000000)
+        defaultContextWindow: !!js Number(process.env.LIWA_CONTEXT_WINDOW ?? 1000000)
         streamIdleTimeoutMs: 172800000
 
     - id: sandbox
-      name: '@deepseek-ai/dsh-sandbox-local'
+      name: '@liwa/sandbox-local'
 
     # Shared projection registry: sandbox-policy and terminal-bash fold
     # sandbox-mode state through its units and require it as a hard injection.
     - id: filesystem
-      name: '@deepseek-ai/dsh-fs-local'
+      name: '@liwa/fs-local'
 
     - id: attachment-local
-      name: '@deepseek-ai/dsh-attachment-local'
+      name: '@liwa/attachment-local'
 
     - id: tool-fs
-      name: '@deepseek-ai/dsh-tool-fs'
+      name: '@liwa/tool-fs'
       config:
         read: false
         readImage: true
@@ -50,99 +50,99 @@
         edit: false
 
     - id: working-directory
-      name: '@deepseek-ai/dsh-working-directory'
+      name: '@liwa/working-directory'
 
     - id: tool-working-directory
-      name: '@deepseek-ai/dsh-tool-working-directory'
+      name: '@liwa/tool-working-directory'
 
     - id: session-projection
-      name: '@deepseek-ai/dsh-session-projection'
+      name: '@liwa/session-projection'
 
     - id: token-meter
-      name: '@deepseek-ai/dsh-token-meter'
+      name: '@liwa/token-meter'
 
     - id: compaction-basic
-      name: '@deepseek-ai/dsh-compaction-basic'
+      name: '@liwa/compaction-basic'
 
     - id: image-offload
-      name: '@deepseek-ai/dsh-compaction-image-offload'
+      name: '@liwa/compaction-image-offload'
 
     - id: sandbox-policy
-      name: '@deepseek-ai/dsh-sandbox-policy'
+      name: '@liwa/sandbox-policy'
       config:
         mode: danger-full-access
         workspaceRoot: !!js process.cwd()
 
     - id: subprocess
-      name: '@deepseek-ai/dsh-subprocess-local'
+      name: '@liwa/subprocess-local'
 
     - id: pty
-      name: '@deepseek-ai/dsh-terminal'
+      name: '@liwa/terminal'
 
     - id: terminal-bash
-      name: '@deepseek-ai/dsh-terminal-bash'
+      name: '@liwa/terminal-bash'
       disabled: !!js process.platform === 'win32'
       config:
         timeoutMs: 300000
 
     - id: terminal-pwsh
-      name: '@deepseek-ai/dsh-terminal-bash'
+      name: '@liwa/terminal-bash'
       disabled: !!js process.platform !== 'win32'
       config:
         shellDialect: pwsh
         timeoutMs: 300000
 
-    # Keep the minimal agent kernel explicit: unlike dsh-base, this profile
+    # Keep the minimal agent kernel explicit: unlike liwa-base, this profile
     # owns each service row and omits every optional producer it does not use.
     - id: timer
-      name: '@deepseek-ai/cordis-plugin-timer'
+      name: '@liwa/cordis-plugin-timer'
 
     - id: llm
-      name: '@deepseek-ai/dsh-llm'
+      name: '@liwa/llm'
 
     - id: session
-      name: '@deepseek-ai/dsh-session'
+      name: '@liwa/session'
 
     - id: session-title
-      name: '@deepseek-ai/dsh-session-title'
+      name: '@liwa/session-title'
       config:
         fallbackMaxWords: 5
         fallbackMaxBytes: 40
         maxTitleBytes: 80
 
     - id: system-prompt
-      name: '@deepseek-ai/dsh-system-prompt'
+      name: '@liwa/system-prompt'
       config:
-        includeHarnessIdentity: false
+        includeLiwaIdentity: false
         includeRuntimeContext: false
-        personaPrefix: !!js process.env.DSH_SYSTEM_PROMPT ?? 'You are a helpful software engineer assistant.'
+        personaPrefix: !!js process.env.LIWA_SYSTEM_PROMPT ?? 'You are a helpful software engineer assistant.'
 
     - id: tools
-      name: '@deepseek-ai/dsh-tools'
+      name: '@liwa/tools'
 
     - id: tool-executor-native
-      name: '@deepseek-ai/dsh-tool-executor-native'
+      name: '@liwa/tool-executor-native'
 
     - id: mcp-resources
-      name: '@deepseek-ai/dsh-mcp-resources'
+      name: '@liwa/mcp-resources'
 
     - id: agent
-      name: '@deepseek-ai/dsh-agent'
+      name: '@liwa/agent'
 
 
     - id: llm-retry
-      name: '@deepseek-ai/dsh-llm-retry'
+      name: '@liwa/llm-retry'
 
     - id: jobs
-      name: '@deepseek-ai/dsh-jobs-local'
+      name: '@liwa/jobs-local'
 
     - id: agent-loop
-      name: '@deepseek-ai/dsh-agent-loop'
+      name: '@liwa/agent-loop'
       config:
         agents: []
 
     - id: persistent-bash
-      name: '@deepseek-ai/dsh-tool-bash-persistent'
+      name: '@liwa/tool-bash-persistent'
       disabled: !!js process.platform === 'win32'
       config:
         timeoutMs: 300000
@@ -156,7 +156,7 @@
           * Please run long lived commands in the background, e.g. 'sleep 10 &' or start a server in the background.
 
     - id: persistent-pwsh
-      name: '@deepseek-ai/dsh-tool-pwsh-persistent'
+      name: '@liwa/tool-pwsh-persistent'
       disabled: !!js process.platform !== 'win32'
       config:
         timeoutMs: 300000
@@ -170,10 +170,10 @@
           * Please run long lived commands in the background, e.g. 'Start-Job' or start a server with Start-Process.
 
     - id: sessions
-      name: '@deepseek-ai/dsh-session-persistence-jsonl'
+      name: '@liwa/session-persistence-jsonl'
       config:
-        root: !!js dshHomePath('sessions')
+        root: !!js liwaHomePath('sessions')
         compression: none
 
     - id: session-checkpoint-policy
-      name: '@deepseek-ai/dsh-session-checkpoint-policy'
+      name: '@liwa/session-checkpoint-policy'

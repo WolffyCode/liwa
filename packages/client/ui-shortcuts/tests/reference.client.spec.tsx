@@ -1,14 +1,14 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import { bindSnapshotSelector, makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import type { ShortcutCatalogEntry, ShortcutCommandId, ShortcutFixedCatalogEntry } from '@deepseek-ai/dsh-client-shortcuts/client'
+import { bindSnapshotSelector, makeTranslate } from '@liwa/client-test-runtime'
+import { createSnapshotStore } from '@liwa/client-store'
+import type { ShortcutCatalogEntry, ShortcutCommandId, ShortcutFixedCatalogEntry } from '@liwa/client-shortcuts/client'
 import { ShortcutReference, ShortcutsRow } from '../src/client/Reference.tsx'
 import { createShortcutsStore } from '../src/client/store.ts'
 import { en, zh } from '../src/client/locales.ts'
-import { initialShortcutConfig, bindingIssue, normalizeBinding, presentBinding } from '@deepseek-ai/dsh-client-shortcuts/protocol'
-import type { ShortcutConfigSnapshot } from '@deepseek-ai/dsh-client-shortcuts/protocol'
+import { initialShortcutConfig, bindingIssue, normalizeBinding, presentBinding } from '@liwa/client-shortcuts/protocol'
+import type { ShortcutConfigSnapshot } from '@liwa/client-shortcuts/protocol'
 import { ShortcutRegistry } from '../../shortcuts/src/client/registry.ts'
 import { apply as hostApply } from '../src/index.ts'
 import { fixedCommands } from '../src/client/fixed.ts'
@@ -143,11 +143,11 @@ it('saves individual edits and disables changes when configuration cannot be rea
   await screen.findByText(en.saved)
   expect(screen.getAllByRole('dialog')).toHaveLength(1)
   act(() => { config.set({ ...config.getSnapshot(), status: 'unreadable', error: null }) })
-  expect(screen.getByRole('alert').textContent).toContain('this site’s localStorage entry dsh.keybindings.v1')
+  expect(screen.getByRole('alert').textContent).toContain('this site’s localStorage entry liwa.keybindings.v1')
   expect(screen.getByRole('alert').textContent).toContain('Check access permissions, then reload the page.')
   expect(screen.getByRole('alert').textContent).toContain(en['using-defaults'])
   act(() => { config.set({ ...config.getSnapshot(), error: 'future', usingDefaults: false }) })
-  expect(screen.getByRole('alert').textContent).toContain('Upgrade Harness and try again.')
+  expect(screen.getByRole('alert').textContent).toContain('Upgrade Liwa and try again.')
   expect(screen.getByRole('alert').textContent).toContain(en['using-accepted'])
   expect(screen.getByRole('dialog').contains(screen.getByRole('alert'))).toBe(false)
   expect(screen.getByRole('button', { name: en['reset-all'] }).hasAttribute('disabled')).toBe(true)
@@ -256,9 +256,9 @@ it.each((['web', 'desktop'] as const).flatMap(runtime => (['invalid', 'future'] 
   act(() => { f.config.set({ ...f.config.getSnapshot(), status: 'unreadable', error, usingDefaults: false,
     document: { schemaVersion: 1, profiles: { [`${runtime}:macos`]: { 'settings.open': null } } } }) })
   const text = screen.getByRole('alert').textContent
-  expect(text).toContain(runtime === 'web' ? 'dsh.keybindings.v1' : 'userData/keybindings.json')
+  expect(text).toContain(runtime === 'web' ? 'liwa.keybindings.v1' : 'userData/keybindings.json')
   expect(text).toContain(error === 'future'
-    ? dictionary === en ? 'Upgrade Harness' : '升级 Harness'
+    ? dictionary === en ? 'Upgrade Liwa' : '升级灵鲸'
     : dictionary === en ? 'Back up and repair' : '先备份并修复')
   expect(text).toContain(dictionary['using-accepted'])
   const reset = screen.getByRole('button', { name: dictionary['reset-all'] })

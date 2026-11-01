@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { RemoteResult } from '@deepseek-ai/dsh-api-remotes/client'
-import { RemoteError } from '@deepseek-ai/dsh-client-test-runtime'
+import type { RemoteResult } from '@liwa/api-remotes/client'
+import { RemoteError } from '@liwa/client-test-runtime'
 import type {
   ScheduleCatalogEntry, ScheduleDeleteResult, ScheduleId, ScheduleRecord,
-} from '@deepseek-ai/dsh-schedule/client'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+} from '@liwa/schedule/client'
+import type { SessionId } from '@liwa/session/types'
 import type { CatalogSnapshot } from '../src/client/catalog-source.ts'
 import {
   createSessionScheduleSource, selectSessionScheduleFacts,

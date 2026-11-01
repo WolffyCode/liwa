@@ -3,13 +3,13 @@ description: "Liveshare gateway frame codecs and the provider-neutral identity c
 kind: "package-library"
 ---
 
-# @deepseek-ai/dsh-experimental-liveshare-protocol
+# @liwa/experimental-liveshare-protocol
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-experimental-liveshare-protocol` gives the Liveshare owner bundle and the Relay one copy of what they must agree on: the owner/worker IPC frames, the gateway frames the Relay forwards without interpreting, the viewer carrier script the Relay places in the served page, and the provider-neutral identity contract with its loopback mock implementation. It exists so the owner bundle and the Relay share these definitions without either importing the other; the Relay never loads owner code. It depends on the stateless `dsh-brand` type library and declares `cordis` as a peer.
+`liwa-experimental-liveshare-protocol` gives the Liveshare owner bundle and the Relay one copy of what they must agree on: the owner/worker IPC frames, the gateway frames the Relay forwards without interpreting, the viewer carrier script the Relay places in the served page, and the provider-neutral identity contract with its loopback mock implementation. It exists so the owner bundle and the Relay share these definitions without either importing the other; the Relay never loads owner code. It depends on the stateless `liwa-brand` type library and declares `cordis` as a peer.
 
 ## Table of Contents
 
@@ -31,8 +31,8 @@ Import this package whenever code must speak the Liveshare wire or resolve one v
 ### Entry point
 
 ```ts
-import { parseGatewayFrame, rawText, sendFrame } from '@deepseek-ai/dsh-experimental-liveshare-protocol'
-import { identityKeyOf, normalizeIdentity } from '@deepseek-ai/dsh-experimental-liveshare-protocol'
+import { parseGatewayFrame, rawText, sendFrame } from '@liwa/experimental-liveshare-protocol'
+import { identityKeyOf, normalizeIdentity } from '@liwa/experimental-liveshare-protocol'
 ```
 
 The viewer carrier (`installViewerCarrier`) and the viewer-state vocabulary are published through the root entry, not through their own subpaths, because both faces of the owner page consume them together.

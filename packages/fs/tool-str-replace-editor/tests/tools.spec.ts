@@ -1,24 +1,24 @@
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import { executeToolFixture } from '@liwa/tool-testkit'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { FsVersion } from '@deepseek-ai/dsh-fs'
-import { ToolCallId } from '@deepseek-ai/dsh-llm'
-import { SESSION_FORMAT_VERSION, Session, SessionId } from '@deepseek-ai/dsh-session'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import LocalFileSystem from '@deepseek-ai/dsh-fs-local'
-import * as FsPolicy from '@deepseek-ai/dsh-fs-observation-policy'
-import SandboxedFileSystem from '@deepseek-ai/dsh-fs-sandbox'
-import SandboxPolicy from '@deepseek-ai/dsh-sandbox-policy'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
-import * as ToolStrReplaceEditor from '@deepseek-ai/dsh-tool-str-replace-editor'
-import { unsupportedModel, unsupportedInbox } from '@deepseek-ai/dsh-agent-loop-testkit'
+import { Context } from '@liwa/cordis'
+import { FsVersion } from '@liwa/fs'
+import { ToolCallId } from '@liwa/llm'
+import { SESSION_FORMAT_VERSION, Session, SessionId } from '@liwa/session'
+import AgentRegistry from '@liwa/agent'
+import type { Agent } from '@liwa/agent'
+import LocalFileSystem from '@liwa/fs-local'
+import * as FsPolicy from '@liwa/fs-observation-policy'
+import SandboxedFileSystem from '@liwa/fs-sandbox'
+import SandboxPolicy from '@liwa/sandbox-policy'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime from '@liwa/tools'
+import * as ToolStrReplaceEditor from '@liwa/tool-str-replace-editor'
+import { unsupportedModel, unsupportedInbox } from '@liwa/agent-loop-testkit'
 
 const contexts: Context[] = []
 const roots: string[] = []
@@ -73,7 +73,7 @@ async function setup(
   config: ToolStrReplaceEditor.Config = {},
   options: { fsPolicy?: boolean; sandboxMode?: 'read-only' | 'workspace-write' | 'danger-full-access'; root?: string } = {},
 ) {
-  const root = options.root ?? await mkdtemp(join(tmpdir(), 'dsh-tool-str-replace-editor-'))
+  const root = options.root ?? await mkdtemp(join(tmpdir(), 'liwa-tool-str-replace-editor-'))
   if (options.root === undefined) roots.push(root)
   const ctx = new Context()
   contexts.push(ctx)
@@ -612,7 +612,7 @@ describe('tool-str-replace-editor', () => {
   })
 
   it('reports missing sandbox-policy composition during plugin startup', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'dsh-tool-str-replace-editor-missing-policy-'))
+    const root = await mkdtemp(join(tmpdir(), 'liwa-tool-str-replace-editor-missing-policy-'))
     roots.push(root)
     const ctx = new Context()
     contexts.push(ctx)

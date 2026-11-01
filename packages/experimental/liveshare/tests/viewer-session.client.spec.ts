@@ -1,20 +1,20 @@
 // @vitest-environment jsdom
 /** Selecting the one Session a served viewer page presents, once the page's list carries it. */
 
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { describe, expect, it, vi } from 'vitest'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { SessionId } from '@liwa/session/types'
 import { openSharedSession } from '../src/client/viewer-session.ts'
 
 const SHARED = 'fx-shared' as SessionId
 
 interface ViewerTargetWindow {
-  __DSH_LIVESHARE_VIEWER__?: { shareId: string; sessionId: string; basePath: string }
+  __LIWA_LIVESHARE_VIEWER__?: { shareId: string; sessionId: string; basePath: string }
 }
 
 /** The page global one served viewer page installs. */
 function target(sessionId: string): void {
-  ;(globalThis as ViewerTargetWindow).__DSH_LIVESHARE_VIEWER__ = { shareId: 'share-1', sessionId, basePath: '' }
+  ;(globalThis as ViewerTargetWindow).__LIWA_LIVESHARE_VIEWER__ = { shareId: 'share-1', sessionId, basePath: '' }
 }
 
 describe('opening the shared Session', () => {
@@ -62,7 +62,7 @@ describe('opening the shared Session', () => {
     const openSession = vi.fn()
     ctx.provide('uiWorkspace', { openSession } as never)
     // No page global at all.
-    delete (globalThis as ViewerTargetWindow).__DSH_LIVESHARE_VIEWER__
+    delete (globalThis as ViewerTargetWindow).__LIWA_LIVESHARE_VIEWER__
     openSharedSession(ctx)
     // A page global that names no Session.
     target('')

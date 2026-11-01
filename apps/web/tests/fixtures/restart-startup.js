@@ -6,11 +6,11 @@ export const inject = ['typertGateway', 'connection', 'webServer']
 
 /**
  * Provide the test-only dependency after startup has been released.
- * @param {import('@deepseek-ai/cordis').Context} ctx - Host plugin context.
+ * @param {import('@liwa/cordis').Context} ctx - Host plugin context.
  * @returns {Promise<void>} Once the barrier is released or the plugin is disposed.
  */
 export async function apply(ctx) {
-  if (process.env.DSH_WEB_RESTART_HOLD_STARTUP === '1') {
+  if (process.env.LIWA_WEB_RESTART_HOLD_STARTUP === '1') {
     if (typeof process.send !== 'function') throw new Error('web restart startup fixture requires an IPC channel')
     const released = Promise.withResolvers()
     const resume = (message) => {

@@ -37,7 +37,7 @@ function repository() {
   return { dir, git, write, commit }
 }
 
-const bundle = (name: string, version: string, extra: object = {}) => JSON.stringify({ name, version, dsh: { bundle: { patch: './cordis.patch.yml' } }, ...extra })
+const bundle = (name: string, version: string, extra: object = {}) => JSON.stringify({ name, version, liwa: { bundle: { patch: './cordis.patch.yml' } }, ...extra })
 
 /**
  * Configure Git for the generator through a private home directory: the https REPOSITORY is routed to the fixture, protocol
@@ -96,7 +96,7 @@ it('lists Git versions from release tags and the default branch by reading objec
     'packages/a/locale/en.json': JSON.stringify({ meta: { title: 'Alpha', description: 'Does A' } }),
     'packages/a/icon.svg': '<svg/>',
     'packages/b/package.json': bundle('@s/b', '2.0.0', { keywords: ['head'] }),
-    'packages/d/package.json': JSON.stringify({ ...JSON.parse(bundle('@s/d', '0.1.0')), peerDependencies: { '@deepseek-ai/dsh': 'workspace:>=1' } }),
+    'packages/d/package.json': JSON.stringify({ ...JSON.parse(bundle('@s/d', '0.1.0')), peerDependencies: { '@liwa/cli': 'workspace:>=1' } }),
     // A package that turns private on the default branch is not listed, not even at its earlier public tag.
     'packages/e/package.json': bundle('@s/e', '1.0.1', { private: true }),
   })
@@ -120,7 +120,7 @@ it('lists Git versions from release tags and the default branch by reading objec
     },
     { name: '@s/b', title: '@s/b', metadata: { keywords: ['tagged'] }, versions: [{ version: '2.0.0', publishTimestamp: 1790000100, source: source(second, 'packages/b') }] },
   ])
-  expect([result.failures, warnings]).toEqual([[], [`${REPOSITORY}: @s/d@0.1.0 skipped: DSH range "workspace:>=1" is not a valid SemVer range`]])
+  expect([result.failures, warnings]).toEqual([[], [`${REPOSITORY}: @s/d@0.1.0 skipped: Liwa range "workspace:>=1" is not a valid SemVer range`]])
   expect([existsSync(marker), readdirSync(temporary)]).toEqual([false, []])
   expect(await generate(options(cacheDir, warnings))).toEqual(result)
 
@@ -149,29 +149,29 @@ it('reads a root package, reports repositories without a public one, and refuses
   repo.commit(1790000000)
   expect(await run(true)).toEqual([[], [expect.stringContaining("transport 'file' not allowed") as string]])
   expect(await run()).toEqual([[], []])
-  repo.write({ 'package.json': JSON.stringify({ version: '1.0.0', dsh: { bundle: { patch: 'p.yml' } } }) })
+  repo.write({ 'package.json': JSON.stringify({ version: '1.0.0', liwa: { bundle: { patch: 'p.yml' } } }) })
   repo.commit(1790000100)
   expect(await run()).toEqual([[], []])
   // A private package is not listed, and a release tag on a private manifest lists no version.
-  repo.write({ 'package.json': bundle('dsh-root', '0.9.0', { private: true }) })
+  repo.write({ 'package.json': bundle('liwa-root', '0.9.0', { private: true }) })
   repo.commit(1790000150)
   repo.git(['tag', 'v0.9.0'])
   expect(await run()).toEqual([[], []])
-  repo.write({ 'package.json': bundle('dsh-root', '1.0.0') })
+  repo.write({ 'package.json': bundle('liwa-root', '1.0.0') })
   const commit = repo.commit(1790000200)
   expect(await run()).toEqual([[{
-    name: 'dsh-root', title: 'dsh-root', versions: [{ version: '1.0.0', publishTimestamp: 1790000200, source: { type: 'git', url: REPOSITORY, commit } }],
+    name: 'liwa-root', title: 'liwa-root', versions: [{ version: '1.0.0', publishTimestamp: 1790000200, source: { type: 'git', url: REPOSITORY, commit } }],
   }], []])
   expect(warnings).toEqual([
-    `${REPOSITORY}: ${REPOSITORY}: no HEAD commit`, expect.stringContaining('not allowed') as string, `${REPOSITORY}: no package declares dsh.bundle`,
-    `${REPOSITORY}: package.json has no name`, `${REPOSITORY}: every package that declares dsh.bundle is private`,
+    `${REPOSITORY}: ${REPOSITORY}: no HEAD commit`, expect.stringContaining('not allowed') as string, `${REPOSITORY}: no package declares liwa.bundle`,
+    `${REPOSITORY}: package.json has no name`, `${REPOSITORY}: every package that declares liwa.bundle is private`,
   ])
 })
 
 it('skips a release tag it cannot read, refuses oversized manifests, and ignores Git overrides from the environment', GIT_TEST, async () => {
   const repo = repository()
   repo.write({
-    'package.json': bundle('dsh-root', '1.0.0'),
+    'package.json': bundle('liwa-root', '1.0.0'),
   })
   repo.commit(1790000000)
   const blob = repo.git(['hash-object', '-w', 'package.json'])
@@ -186,7 +186,7 @@ it('skips a release tag it cannot read, refuses oversized manifests, and ignores
   expect(result.failures).toEqual([])
   expect(warnings).toEqual([expect.stringMatching(new RegExp(`^${REPOSITORY}: ${blob}: skipped: `, 'u')) as string])
 
-  repo.write({ 'package.json': JSON.stringify({ name: 'dsh-root', version: '1.1.0', padding: 'x'.repeat(1024 * 1024) }) })
+  repo.write({ 'package.json': JSON.stringify({ name: 'liwa-root', version: '1.1.0', padding: 'x'.repeat(1024 * 1024) }) })
   repo.commit(1790000100)
   const oversized = await generate(options(scratch(), warnings))
   expect(oversized.failures).toEqual([`${REPOSITORY}: package.json exceeds 1048576 bytes`])

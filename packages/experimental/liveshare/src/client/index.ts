@@ -3,21 +3,21 @@
  *
  * The served viewer page is the owner's own Web shell with every owner plugin, so this one face
  * decides which half it mounts from the page global the Relay's carrier installs
- * (`__DSH_LIVESHARE_VIEWER__`): absent on the owner's page, present on a viewer page.
+ * (`__LIWA_LIVESHARE_VIEWER__`): absent on the owner's page, present on a viewer page.
  *
  * The owner half mounts the generated `liveshareShares` Remote before it contributes the header
  * action, because that action and its dialogs address every share-management call through it.
  */
 
-import type { Context as ClientContext } from '@deepseek-ai/cordis'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import liveshareSharesRemote from '@deepseek-ai/dsh-experimental-liveshare/remote'
-import type {} from '@deepseek-ai/dsh-api-remotes/client'
-import type {} from '@deepseek-ai/dsh-client-locale/client'
-import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
-import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
-import type {} from '@deepseek-ai/dsh-client-ui-session/client'
-import type {} from '@deepseek-ai/dsh-client-ui-workspace/client'
+import type { Context as ClientContext } from '@liwa/cordis'
+import type { SessionId } from '@liwa/session/types'
+import liveshareSharesRemote from '@liwa/experimental-liveshare/remote'
+import type {} from '@liwa/api-remotes/client'
+import type {} from '@liwa/client-locale/client'
+import type {} from '@liwa/client-ui-conversation/client'
+import type {} from '@liwa/client-ui-renderer/client'
+import type {} from '@liwa/client-ui-session/client'
+import type {} from '@liwa/client-ui-workspace/client'
 import { LIVESHARE_VIEWER_GLOBAL } from '../viewer-channel.ts'
 import { LiveshareShareAction } from './ShareAction.tsx'
 import type { OwnerShares } from './owner-shares.ts'
@@ -32,7 +32,7 @@ import * as viewerSession from './viewer-session-plugin.ts'
 import * as viewerSessionRow from './viewer-session-row.tsx'
 import * as viewerSharePath from './viewer-share-path.tsx'
 
-declare module '@deepseek-ai/dsh-client-ui-slots' {
+declare module '@liwa/client-ui-slots' {
   interface LocaleNamespaceMap {
     liveshare: LiveshareKey
   }

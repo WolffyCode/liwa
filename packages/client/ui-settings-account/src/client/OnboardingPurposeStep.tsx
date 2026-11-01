@@ -1,7 +1,7 @@
 /** Work-purpose selection with controlled, independently selectable cards. */
 import { useLayoutEffect, useRef, useState } from 'react'
 import type { RefObject } from 'react'
-import { Button, FileTypeIcon, IconCheckOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
+import { Button, FileTypeIcon, IconCheckOutlineRegular } from '@liwa/client-ui-primitives'
 import type { OnboardingPurpose } from '../onboarding-settings.ts'
 import type { DesktopOnboardingProps } from './onboarding-contract.ts'
 import officeIcon from './assets/onboarding-office.svg'
@@ -25,7 +25,7 @@ export function OnboardingPurposeStep({ t, heading, busy, purpose, onSelect, onC
   }
   return <div className={`${css.content} ${css.purpose}`}>
     <div className={css.copy}>
-      <h1 id="desktop-onboarding-title" ref={heading} tabIndex={-1}>{t('onboardingPurposePrefix')} <em className={css.brand}>{t('onboardingBrand')}</em> {t('onboardingPurposeSuffix')}</h1>
+      <h1 id="desktop-onboarding-title" ref={heading} tabIndex={-1}>{t('onboardingPurposePrefix')}<em className={css.brand}>{t('onboardingBrand')}</em>{t('onboardingPurposeSuffix')}</h1>
       <p className={css.subtitle}>{t('onboardingPurposeDescription')}</p>
     </div>
     <div className={css.purposeCards}>

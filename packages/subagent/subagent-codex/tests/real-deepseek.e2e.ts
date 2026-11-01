@@ -13,13 +13,13 @@ import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { promisify } from 'node:util'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import SubagentRuntime from '@deepseek-ai/dsh-subagent'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import type { SubprocessHandle } from '@deepseek-ai/dsh-subprocess'
-import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
+import type { Agent } from '@liwa/agent'
+import SubagentRuntime from '@liwa/subagent'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import type { SubprocessHandle } from '@liwa/subprocess'
+import LocalSubprocessRuntime from '@liwa/subprocess-local'
 import * as codex from '../src/index.ts'
 import {
   startDeepSeekResponsesBridge,
@@ -58,13 +58,13 @@ describe.skipIf(!process.env.DEEPSEEK_API_KEY)(
     it('returns one unique nonce through the production provider and real Codex', async () => {
       const apiKey = process.env.DEEPSEEK_API_KEY
       if (apiKey === undefined) throw new Error('e2e ran without DEEPSEEK_API_KEY')
-      const root = mkdtempSync(join(tmpdir(), 'dsh-codex-deepseek-e2e-'))
+      const root = mkdtempSync(join(tmpdir(), 'liwa-codex-deepseek-e2e-'))
       roots.push(root)
       const workspace = join(root, 'workspace')
       const codexHome = join(root, 'codex-home')
       mkdirSync(workspace)
       mkdirSync(codexHome)
-      const nonce = `DSH_CODEX_DEEPSEEK_${randomUUID()}`
+      const nonce = `LIWA_CODEX_DEEPSEEK_${randomUUID()}`
       const bridge = await startDeepSeekResponsesBridge(nonce)
       bridges.push(bridge)
       writeFileSync(join(codexHome, 'config.toml'), [

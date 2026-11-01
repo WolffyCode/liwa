@@ -826,7 +826,7 @@ select.input {
 }
 
 .deleteConfirm:not(:disabled) {
-  --dsh-button-outline-color: var(--dsw-alias-state-error-primary);
+  --liwa-button-outline-color: var(--dsw-alias-state-error-primary);
   color: var(--dsw-alias-state-error-primary);
 }
 
@@ -861,8 +861,8 @@ select.input {
      scrollbar indirection is rebound here rather than on the scrolling child:
      the elevation choice belongs with the surface and inherits down (see
      ui-theme styles/scrollbar.css for the contract). */
-  --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
-  --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
+  --liwa-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --liwa-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
 }
 
 .candidateToolbar {

@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-tool-str-replace-editor",
-  "description": "Model-facing view, create, literal replace, and line insert tool over the Harness filesystem service",
+  "name": "@liwa/tool-str-replace-editor",
+  "description": "Model-facing view, create, literal replace, and line insert tool over Liwa filesystem service",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/fs/tool-str-replace-editor"
   },
   "type": "module",
@@ -28,33 +28,33 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-fs": "workspace:*",
-    "@deepseek-ai/dsh-output-retention": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/fs": "workspace:*",
+    "@liwa/output-retention": "workspace:*",
+    "@liwa/sandbox": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:*",
-    "@deepseek-ai/dsh-fs": "workspace:*",
-    "@deepseek-ai/dsh-fs-local": "workspace:*",
-    "@deepseek-ai/dsh-fs-observation-policy": "workspace:*",
-    "@deepseek-ai/dsh-fs-sandbox": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-output-retention": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-tool-executor-native": "workspace:*",
-    "@deepseek-ai/dsh-tool-testkit": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-session-projection": "workspace:*"
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-loop-testkit": "workspace:*",
+    "@liwa/fs": "workspace:*",
+    "@liwa/fs-local": "workspace:*",
+    "@liwa/fs-observation-policy": "workspace:*",
+    "@liwa/fs-sandbox": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/output-retention": "workspace:*",
+    "@liwa/sandbox": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/tool-executor-native": "workspace:*",
+    "@liwa/tool-testkit": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/session-projection": "workspace:*"
   }
 }

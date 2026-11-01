@@ -1,6 +1,6 @@
 /** Document drag-and-drop listeners owned by one mounted attachment view. */
-import { FILE_DRAG_TOKEN_TYPE } from '@deepseek-ai/dsh-util-file-drag'
-import type { ComposerAttachmentsProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
+import { FILE_DRAG_TOKEN_TYPE } from '@liwa/util-file-drag'
+import type { ComposerAttachmentsProps } from '@liwa/client-ui-conversation/client'
 
 /**
  * Members of a drop that are directories. The `File` a directory drop yields

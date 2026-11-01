@@ -5,7 +5,7 @@ import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
   classifyFileType, FileTypeIcon, type CodeFileType, type FileTypeProjectContext,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+} from '@liwa/client-ui-primitives'
 import { CODE_FILE_ARTWORK, CODE_FILE_ICON_ID_TOKEN } from '../src/code-file-icon-artwork.ts'
 import { CODE_FILE_TYPES } from '../src/code-file-types.ts'
 
@@ -16,7 +16,7 @@ const flutter: FileTypeProjectContext = {
 }
 
 function normalizeCodeIconIds(html: string): string {
-  return html.replace(/dsh-code-icon-[A-Za-z0-9_-]+/gu, 'dsh-code-icon-instance')
+  return html.replace(/liwa-code-icon-[A-Za-z0-9_-]+/gu, 'liwa-code-icon-instance')
 }
 
 describe('code-file classification', () => {
@@ -125,7 +125,7 @@ describe('full-color code-file artwork', () => {
       sources: Array<{ kind: string; sha256: string; icons: string[] }>
       excluded: string[]
     }
-    expect(manifest.owner).toBe('DeepSeek Harness product design')
+    expect(manifest.owner).toBe('Liwa product design')
     expect(manifest.sources.every(source => source.kind === 'internal-design-export')).toBe(true)
     expect(manifest.sources.every(source => /^[0-9a-f]{64}$/u.test(source.sha256))).toBe(true)
     expect(manifest.sources.flatMap(source => source.icons).sort()).toEqual([...CODE_FILE_TYPES].sort())

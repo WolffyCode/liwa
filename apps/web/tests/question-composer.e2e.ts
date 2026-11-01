@@ -13,9 +13,9 @@ import { join } from 'node:path'
 import type { Browser, Locator, Page } from 'playwright'
 import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed, onTestFinished } from 'vitest'
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import { TIMED_WAIT_PARAMETER } from '@deepseek-ai/dsh-user-questions'
+import type { SessionEvent } from '@liwa/session'
+import type { SessionId } from '@liwa/session/types'
+import { TIMED_WAIT_PARAMETER } from '@liwa/user-questions'
 import {
   assertFixtureInventory, captureStableAria, compareOrRefreshGolden, fixtureUserPrompts,
   launchWebScaffold, recordFixture, seedSession, watchConsole, webSnapshotMode, type WebScaffold,
@@ -1058,7 +1058,7 @@ describe('web e2e: resident question composer round trip', () => {
       // The dragged width is a persisted preference; dropping it and resizing republishes the default.
       const cleanup = await Promise.allSettled([
         outcome,
-        page.evaluate(() => { localStorage.removeItem('dsh.conversation.contentWidth') })
+        page.evaluate(() => { localStorage.removeItem('liwa.conversation.contentWidth') })
           .then(() => page.setViewportSize(original)),
       ])
       if (bodyCompleted) {

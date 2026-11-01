@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { GlobalStandardProps } from '@deepseek-ai/dsh-client-ui-slots'
+import type { GlobalStandardProps } from '@liwa/client-ui-slots'
 import { act, cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import type { AccountSnapshot } from '../src/client/AccountSection.tsx'
@@ -11,7 +11,7 @@ let appRoot: HTMLDivElement
 
 it.each([false, true])('resizes only after eligibility resolves (completed=%s)', (done) => {
   const setActive = vi.fn()
-  vi.stubGlobal('dshOnboarding', { setActive })
+  vi.stubGlobal('liwaOnboarding', { setActive })
   const view = mount(done, true)
   expect(setActive).not.toHaveBeenCalled()
   view.resolve()
@@ -86,7 +86,7 @@ it('retains the last page while successful completion reveals the workspace', ()
   const view = mount()
   expect(appRoot.style.opacity).toBe('0')
   view.finish()
-  expect(screen.getByRole('heading', { name: `${zh.onboardingWelcome} ${zh.onboardingBrand}` })).toBeTruthy()
+  expect(screen.getByRole('heading', { name: `${zh.onboardingWelcome}${zh.onboardingBrand}` })).toBeTruthy()
   expect(document.querySelector('[data-exiting]')).not.toBeNull()
   expect(appRoot.style.opacity).toBe('')
   expect(appRoot.inert).toBe(true)
@@ -101,7 +101,7 @@ it('keeps a failed completion visible and the workspace hidden', () => {
   const view = mount()
   view.fail()
   act(() => { vi.advanceTimersByTime(200) })
-  expect(screen.getByRole('heading', { name: `${zh.onboardingWelcome} ${zh.onboardingBrand}` })).toBeTruthy()
+  expect(screen.getByRole('heading', { name: `${zh.onboardingWelcome}${zh.onboardingBrand}` })).toBeTruthy()
   expect(document.querySelector('[data-exiting]')).toBeNull()
   expect(appRoot.inert).toBe(true)
   expect(appRoot.style.opacity).toBe('0')

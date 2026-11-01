@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-09-13-liveshare-protocol-and-owner-surfaces.md
 /agent-note-liveshare-sharing-a-dsh-session-with-a-colleague:
-  en: e73b246e19c9b412
-  zh: c87594ad5eccbfb5
+  en: de26e96c84cd4324
+  zh: d77ef14314952ca0
 /agent-note-liveshare-sharing-a-dsh-session-with-a-colleague/problem:
   en: 17bc15d382139909
   zh: 3eff34b5ddea951e
@@ -21,11 +21,11 @@
   en: 0b9303333bf482ae
   zh: 6dfc68ad9e2924c3
 /agent-note-liveshare-sharing-a-dsh-session-with-a-colleague/decision/default-visibility:
-  en: 754705367c350b31
-  zh: e10b6541458c4a45
+  en: dbaad2ce7ff64bf3
+  zh: 6c7e4fbed0028b5b
 /agent-note-liveshare-sharing-a-dsh-session-with-a-colleague/decision/how-shared-work-stays-inside-its-grant:
-  en: fa3ab42895a16ce1
-  zh: 429be63cfb8e55a6
+  en: f605b7050af458cb
+  zh: 89c8fd3c3e5012c4
 /agent-note-liveshare-sharing-a-dsh-session-with-a-colleague/decision/keeping-one-branch-across-retries:
   en: 6b0369dafe34a5aa
   zh: aea9465216204122

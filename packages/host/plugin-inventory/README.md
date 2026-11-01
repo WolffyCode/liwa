@@ -3,7 +3,7 @@ description: "Read-only projection of the current Cordis Loader plugin state wit
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-host-plugin-inventory
+# @liwa/host-plugin-inventory
 
 English | [中文](README.zh.md)
 
@@ -103,7 +103,7 @@ These limits define what a point-in-time inventory cannot tell a client. They ar
 
 - **Point-in-time state only** — the result contains no durable failure history or subscription; a missing root Fiber is reported as `null`, regardless of why no live root exists.
 - **No layer attribution or mutation** — the service does not identify which bundle, profile, or override introduced an entry, and it cannot enable, disable, add, or remove plugins in either plane.
-- **Presets appear only with a roster** — a deployment without `dsh-agent-preset-registry` serves Loader entries alone; the `agentPresets` field is absent rather than empty.
+- **Presets appear only with a roster** — a deployment without `liwa-agent-preset-registry` serves Loader entries alone; the `agentPresets` field is absent rather than empty.
 
 <a id="dev-note"></a>
 ### Dev Note

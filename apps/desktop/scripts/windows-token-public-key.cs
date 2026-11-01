@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-public static class DshTokenPublicKey
+public static class LiwaTokenPublicKey
 {
     public const string Provider = "eToken Base Cryptographic Provider";
     public const uint PublicContextFlags = 0xF0000040; // CRYPT_VERIFYCONTEXT | CRYPT_SILENT

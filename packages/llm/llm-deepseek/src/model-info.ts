@@ -1,6 +1,6 @@
 /** Protocol-independent model capabilities and reasoning choices. */
-import { ReasoningEffortId } from '@deepseek-ai/dsh-llm'
-import type { LlmModelBadge, LlmModelInfo, LlmResolvedModelInfo } from '@deepseek-ai/dsh-llm'
+import { ReasoningEffortId } from '@liwa/llm'
+import type { LlmModelBadge, LlmModelInfo, LlmResolvedModelInfo } from '@liwa/llm'
 import type { DeepSeekCatalogModel, DeepSeekConnectionOptions } from './types.ts'
 
 const OFF_REASONING_EFFORT = ReasoningEffortId('off')

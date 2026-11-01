@@ -1,16 +1,16 @@
 /**
  * Registry for ordered system sections, dynamic context, tool schemas, and prompt variables.
  *
- * @module @deepseek-ai/dsh-system-prompt
+ * @module @liwa/system-prompt
  */
 
-import { Context, Service } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { AnonymousEntries, NamedEntries, ScopedLayers, scopeTarget } from '@deepseek-ai/dsh-scope'
-import type { ScopeKey, ScopeLayer, Scoped } from '@deepseek-ai/dsh-scope'
-import type { ContextSnapshotSection, ToolSchema } from '@deepseek-ai/dsh-llm'
+import { Context, Service } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import { AnonymousEntries, NamedEntries, ScopedLayers, scopeTarget } from '@liwa/scope'
+import type { ScopeKey, ScopeLayer, Scoped } from '@liwa/scope'
+import type { ContextSnapshotSection, ToolSchema } from '@liwa/llm'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     systemPrompt: SystemPrompt
   }
@@ -18,7 +18,7 @@ declare module '@deepseek-ai/cordis' {
   interface Events {
     /**
      * Presentation waterfall over assembled sections, contexts, and variables.
-     * Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): scoped listeners
+     * Scope-filtered dispatch (`@liwa/scope`): scoped listeners
      * receive only that scope's assemblies. The returned text is authoritative; tool declarations remain provider-owned.
      * A supplied signal controls only this explicit assembly request and must not
      * be retained to control later turns. A registered complete section is
@@ -134,7 +134,7 @@ export interface PromptAssembly extends PromptPresentation {
 }
 
 const SECTION_ORDERS = {
-  HARNESS_IDENTITY: -1000,
+  LIWA_IDENTITY: -1000,
   DEPLOYMENT_PERSONA_PREFIX: 0,
   PLAN_POLICY: 500,
   TEAM_POLICY: 600,
@@ -164,7 +164,7 @@ const SECTION_ORDERS = {
   DELIVERABLE_FILE_REFERENCES: 9000,
   STRUCTURED_OUTPUT: 9900,
   // Local paths and endpoints follow reusable instructions.
-  HARNESS_SOURCE: 10000,
+  LIWA_SOURCE: 10000,
   WEB_SURFACE: 10100,
   DEPLOYMENT_PERSONA_SUFFIX: 10200,
 } as const
@@ -179,7 +179,7 @@ const CONTEXT_ORDERS = {
   SUBAGENT_DELEGATION: 120,
   TEAM_IDENTITY: 125,
   // Process-specific paths and endpoints stay out of the cached system prompt.
-  HARNESS_SOURCE: 200,
+  LIWA_SOURCE: 200,
   WEB_SURFACE: 210,
 } as const
 
@@ -261,8 +261,8 @@ function compareToolNames(a: ToolSchema, b: ToolSchema): number {
 
 /** Plugin config: the deployment-authored fragment of the system prompt (see {@link Config.personaPrefix} for its contract). */
 export interface Config {
-  /** Include the fixed DeepSeek Harness identity before the deployment persona (default true). */
-  includeHarnessIdentity?: boolean
+  /** Include the fixed Liwa identity before the deployment persona (default true). */
+  includeLiwaIdentity?: boolean
   /** Include optional runtime-context snapshots in model history (default true); required context remains. */
   includeRuntimeContext?: boolean
   /**
@@ -433,7 +433,7 @@ class PromptLayer implements ScopeLayer {
 /** Registry service for the prompt inputs assembled before each model step. */
 export class SystemPrompt extends Service {
   static Config: z<Config> = z.object({
-    includeHarnessIdentity: z.boolean().default(true),
+    includeLiwaIdentity: z.boolean().default(true),
     includeRuntimeContext: z.boolean().default(true),
     personaPrefix: z.string().default(''),
     personaSuffix: z.string().default(''),
@@ -450,12 +450,12 @@ export class SystemPrompt extends Service {
   constructor(ctx: Context, config: Config) {
     super(ctx, 'systemPrompt')
     this.toolOrder = validateToolOrder(config.toolOrder)
-    // Keep harness-owned openers independent of the selected loop plugin.
-    if (config.includeHarnessIdentity ?? true) {
+    // Keep Liwa-owned openers independent of the selected loop plugin.
+    if (config.includeLiwaIdentity ?? true) {
       this.section({
-        name: 'harness:identity',
-        order: this.getSectionOrder('HARNESS_IDENTITY'),
-        text: 'You are an AI agent powered by DeepSeek Harness.',
+        name: 'liwa:identity',
+        order: this.getSectionOrder('LIWA_IDENTITY'),
+        text: 'You are an AI agent powered by Liwa.',
       })
     }
     this.section({

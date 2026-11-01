@@ -3,71 +3,71 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/bundle/web-app/README.md
 /:
-  en: af2e4e5296596e8f
-  zh: 70c0b5ac93209d00
-/deepseek-ai-dsh-web-app:
-  en: a85684740ecd278a
-  zh: 7c54099b9edccf01
-/deepseek-ai-dsh-web-app/summary:
-  en: 0a2a9876194543e5
-  zh: ff472776a44ae260
-/deepseek-ai-dsh-web-app/table-of-contents:
+  en: 6812c544bc9864ef
+  zh: 33f161717ee5da3a
+/liwa-web-app:
+  en: 0a23d2fb9815e59b
+  zh: 2f1aed11282481f4
+/liwa-web-app/summary:
+  en: 80779b77a9fc375d
+  zh: e4b00a78955ec893
+/liwa-web-app/table-of-contents:
   en: d152484eb41ac6b4
   zh: 09388d293f9be9cb
-/deepseek-ai-dsh-web-app/use-this-package:
+/liwa-web-app/use-this-package:
   en: 3bd37b85139d2fa7
   zh: ba86c807eb83866e
-/deepseek-ai-dsh-web-app/use-this-package/starting-the-web-gui:
-  en: e3cac911f080d8ef
-  zh: 60749e9f5c39c1bc
-/deepseek-ai-dsh-web-app/use-this-package/configuration:
-  en: b1787804544f2587
-  zh: ce09d2c248ffd999
-/deepseek-ai-dsh-web-app/use-this-package/listening-trust-and-public-deployments:
-  en: e6ddea1d2fc40501
-  zh: ff08b6fa3fc24136
-/deepseek-ai-dsh-web-app/use-this-package/running-over-ssh:
-  en: df205a26b6d49168
-  zh: e46ed7cf9e06248a
-/deepseek-ai-dsh-web-app/use-this-package/per-session-agent-setup:
-  en: fdf38cb6e1b24464
-  zh: c14a8bcac9d4e5cd
-/deepseek-ai-dsh-web-app/understand-the-implementation:
-  en: 323742a00cfe67b2
-  zh: eff5245a82fc16e7
-/deepseek-ai-dsh-web-app/understand-the-implementation/patch-semantics:
+/liwa-web-app/use-this-package/starting-the-web-gui:
+  en: 16f47604610f4fdf
+  zh: fbbc99063123b031
+/liwa-web-app/use-this-package/configuration:
+  en: ac1b003782a9b39c
+  zh: 43f5ae11fc5b6e74
+/liwa-web-app/use-this-package/listening-trust-and-public-deployments:
+  en: 08a34542e1ed3aae
+  zh: d640f05317374944
+/liwa-web-app/use-this-package/running-over-ssh:
+  en: 07cec46d2ea65fdd
+  zh: 2c7c9ce0a9db6327
+/liwa-web-app/use-this-package/per-session-agent-setup:
+  en: ffbf3368e3f7f37b
+  zh: 447e74871d32a83b
+/liwa-web-app/understand-the-implementation:
+  en: c247c255e3cf5c34
+  zh: 4d67038706a228e5
+/liwa-web-app/understand-the-implementation/patch-semantics:
   en: a6d126f30b1594d7
   zh: 7f0ccc8a55d6f743
-/deepseek-ai-dsh-web-app/understand-the-implementation/advertised-application-url:
-  en: 0b22e03e28d41420
-  zh: fd45a97dd4336c25
-/deepseek-ai-dsh-web-app/understand-the-implementation/readiness:
+/liwa-web-app/understand-the-implementation/advertised-application-url:
+  en: 1fe4914fb504d7bb
+  zh: 86fa2ac6a860c198
+/liwa-web-app/understand-the-implementation/readiness:
   en: 973128fd346869df
   zh: 54e6792f9f82a192
-/deepseek-ai-dsh-web-app/understand-the-implementation/source-map:
-  en: 58800b6f2142c34f
-  zh: 10bf512b16db1cb8
-/deepseek-ai-dsh-web-app/further-exploration:
-  en: f81694f7424e2988
-  zh: 6643f9227039e228
-/deepseek-ai-dsh-web-app/model-experience:
+/liwa-web-app/understand-the-implementation/source-map:
+  en: c01aa360bc709c95
+  zh: 1aa3dbb082069fed
+/liwa-web-app/further-exploration:
+  en: 33502d3e9fbc0f08
+  zh: b58cced20af4fb82
+/liwa-web-app/model-experience:
   en: 215e7ba838619b7b
   zh: a311da3843709f90
-/deepseek-ai-dsh-web-app/model-experience/web-runtime-variable:
+/liwa-web-app/model-experience/web-runtime-variable:
   en: 623bf8a0bf05599d
   zh: 398ded2e7b20c1ea
-/deepseek-ai-dsh-web-app/model-experience/web-runtime-variable/what-the-model-sees:
-  en: ebaddc153ad7a835
-  zh: 21aa60f73d14f26c
-/deepseek-ai-dsh-web-app/model-experience/web-runtime-variable/token-effect:
+/liwa-web-app/model-experience/web-runtime-variable/what-the-model-sees:
+  en: d031689cbc530d6e
+  zh: c4a8635730566e6e
+/liwa-web-app/model-experience/web-runtime-variable/token-effect:
   en: 449fbfa3986f98f0
   zh: a7d66333594ab2dd
-/deepseek-ai-dsh-web-app/model-experience/web-runtime-variable/kv-cache-effect:
+/liwa-web-app/model-experience/web-runtime-variable/kv-cache-effect:
   en: 37542a8b81a744f5
   zh: c0048aaadecae296
-/deepseek-ai-dsh-web-app/known-limitations-and-deferred-work:
-  en: 635c1336e2f4e821
-  zh: caabdecb02e2df14
-/deepseek-ai-dsh-web-app/known-limitations-and-deferred-work/dev-note:
+/liwa-web-app/known-limitations-and-deferred-work:
+  en: bd7a6c952e116d79
+  zh: 635e028bedd4169e
+/liwa-web-app/known-limitations-and-deferred-work/dev-note:
   en: 3f81b4f3beb74a0d
   zh: 2e377ca40822d093

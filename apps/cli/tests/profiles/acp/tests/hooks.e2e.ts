@@ -8,7 +8,7 @@ import {
   launchAcpTestAgent,
   type AgentUnderTest,
   type LaunchedAcpTestAgent,
-} from '@deepseek-ai/dsh-session-snapshot'
+} from '@liwa/session-snapshot'
 import { cleanupAcpExampleTest } from './cleanup.ts'
 
 /**
@@ -56,7 +56,7 @@ describe.skipIf(!process.env.DEEPSEEK_API_KEY)('acp-agent e2e: a PreToolUse hook
     spawned = launchAcpTestAgent({
       agent: AGENT,
       cwd: workdir,
-      env: { DSH_PERMISSION_MODE: 'danger-full-access' },
+      env: { LIWA_PERMISSION_MODE: 'danger-full-access' },
     })
     const { client, updates } = spawned
 

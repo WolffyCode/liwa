@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-experimental-inspector-profile",
+  "name": "@liwa/experimental-inspector-profile",
   "description": "Optional Web bundle for raw Session logs and Chat node inspection",
   "version": "0.2.2-alpha.2",
   "icon": "./icon.svg",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/experimental/inspector-profile"
   },
   "type": "module",
@@ -33,21 +33,21 @@
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
-  "dsh": {
+  "liwa": {
     "bundle": {
       "patch": "./cordis.patch.yml"
     }
   },
   "dependencies": {
-    "@deepseek-ai/dsh-experimental-inspector": "workspace:*",
-    "@deepseek-ai/dsh-experimental-session-inspector": "workspace:*",
-    "@deepseek-ai/dsh-experimental-client-ui-stats": "workspace:*"
+    "@liwa/experimental-inspector": "workspace:*",
+    "@liwa/experimental-session-inspector": "workspace:*",
+    "@liwa/experimental-client-ui-stats": "workspace:*"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-include": "workspace:~"
   }
 }

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-/** The assembled viewer page mounts the normal DSH client UI for the Session its carrier names. */
+/** The assembled viewer page mounts the normal Liwa client UI for the Session its carrier names. */
 
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -10,7 +10,7 @@ import type { ViewerInputFixture } from './viewer-input-fixture.client.ts'
 import { installViewerRelay } from './viewer-relay.client.ts'
 
 /** The generated contribution is a build artifact; the mount boundary is what this face test covers. */
-vi.mock('@deepseek-ai/dsh-experimental-liveshare/remote', () => ({ default: { package: '@deepseek-ai/dsh-experimental-liveshare', methods: {} } }))
+vi.mock('@liwa/experimental-liveshare/remote', () => ({ default: { package: '@liwa/experimental-liveshare', methods: {} } }))
 
 let inputFixture: ViewerInputFixture | undefined
 let owner: FixtureWorld | undefined
@@ -94,12 +94,12 @@ describe('Assembled liveshare viewer page', () => {
     await act(async () => { fireEvent.keyDown(document, { key: 'Escape' }) })
     expect(document.body.textContent).not.toContain('Fork session')
     expect(document.body.textContent).not.toContain('Archive session')
-    // Global settings belong to the owner's DSH, so the viewer page boots no settings surface at
+    // Global settings belong to the owner's Liwa, so the viewer page boots no settings surface at
     // all: the row that opens it comes from a module this roster never carries, and its label —
     // `settings.trigger` in ui-settings-general — is what a booted one would be named.
     expect(screen.queryByRole('button', { name: /^(设置|Settings)$/u })).toBeNull()
     // No write affordance reaches a viewer: the framework's own composer block makes the editor
-    // non-editable and states why, and the session management verbs belong to the owner's DSH,
+    // non-editable and states why, and the session management verbs belong to the owner's Liwa,
     // which refuses them server-side anyway.
     expect(document.querySelector('[contenteditable="true"]')).toBeNull()
     // This page never read an answer from the share, so it states that the share's state is
@@ -112,7 +112,7 @@ describe('Assembled liveshare viewer page', () => {
     expect(screen.queryByRole('button', { name: /发送|Send/ })).toBeNull()
     expect(screen.queryByRole('button', { name: /附件|Attach|上传|Upload/ })).toBeNull()
     expect(screen.queryByRole('button', { name: /重命名|Rename|归档|Archive|删除|Delete|Fork/ })).toBeNull()
-    // The model this Session runs on is stated where a DSH user looks for it, and it is a label: the
+    // The model this Session runs on is stated where a Liwa user looks for it, and it is a label: the
     // reader cannot change the owner's model, but nothing here hides which one the owner chose.
     await waitFor(() => { expect(document.querySelector('[data-liveshare-viewer-seat="model"]')).not.toBeNull() })
     const modelSeat = document.querySelector<HTMLElement>('[data-liveshare-viewer-seat="model"]')

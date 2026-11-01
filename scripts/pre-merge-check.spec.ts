@@ -29,7 +29,7 @@ describe('pre-merge check', () => {
   })
 
   it('reports a command that cannot start', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'dsh-pre-merge-'))
+    const root = mkdtempSync(join(tmpdir(), 'liwa-pre-merge-'))
     try {
       const outcome = await preMergeCheck(root, {
         steps: [{ name: 'missing', command: join(root, 'no-such-command'), args: [] }],

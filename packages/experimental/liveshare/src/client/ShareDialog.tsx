@@ -4,9 +4,9 @@ import { useEffect, useState, type ReactNode } from 'react'
 import {
   Button, IconCloseOutlineRegular, IconQuestionOutlineRegular, Input, Modal,
   Tooltip, writeClipboard,
-} from '@deepseek-ai/dsh-client-ui-primitives'
-import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+} from '@liwa/client-ui-primitives'
+import type { PropsLocale } from '@liwa/client-ui-slots'
+import type { SessionId } from '@liwa/session/types'
 import type { CreatedShare } from '../share-api-types.ts'
 import type { NS } from './locales.ts'
 import type { OwnerShares } from './owner-shares.ts'

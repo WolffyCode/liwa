@@ -33,15 +33,15 @@ describe('SidebarRoot.module.css', () => {
 
   it('shares and cancels the wide shell trailing padding structurally', () => {
     const root = declarations('.root')
-    expect(root?.get('--dsh-sidebar-inline-padding')).toBe('8px')
-    expect(root?.get('--dsh-sidebar-row-padding')).toBe('12px')
-    expect(root?.get('--dsh-sidebar-label-gap')).toBe('6px')
-    expect(root?.get('--dsh-sidebar-paint-inset')).toBe('3px')
-    expect(root?.get('padding')).toBe('6px var(--dsh-sidebar-inline-padding)')
+    expect(root?.get('--liwa-sidebar-inline-padding')).toBe('8px')
+    expect(root?.get('--liwa-sidebar-row-padding')).toBe('12px')
+    expect(root?.get('--liwa-sidebar-label-gap')).toBe('6px')
+    expect(root?.get('--liwa-sidebar-paint-inset')).toBe('3px')
+    expect(root?.get('padding')).toBe('6px var(--liwa-sidebar-inline-padding)')
     expect(declarations('.regionArea')?.get('margin-left')).toBe('-4px')
     expect(declarations('.regionArea')?.get('padding-left')).toBe('4px')
     expect(declarations('.regionArea')?.get('margin-right')).toBe(
-      'calc(-1 * var(--dsh-sidebar-inline-padding))',
+      'calc(-1 * var(--liwa-sidebar-inline-padding))',
     )
     expect(declarations('.collapsed .regionArea')?.get('margin-left')).toBe('0')
     expect(declarations('.collapsed .regionArea')?.get('padding-left')).toBe('0')
@@ -51,7 +51,7 @@ describe('SidebarRoot.module.css', () => {
   it('keeps the reviewed expanded spacing separate from rail and caption controls', () => {
     expect(declarations('.logoRow')?.get('padding')).toBe('8px 0 8px 8px')
     expect(declarations('.logoRow')?.get('margin-bottom')).toBe('0')
-    expect(declarations('.newSession')?.get('margin')).toBe('0 calc(var(--dsh-sidebar-paint-inset) + 1px) 10px')
+    expect(declarations('.newSession')?.get('margin')).toBe('0 calc(var(--liwa-sidebar-paint-inset) + 1px) 10px')
     expect(declarations('.newSessionContent')?.get('justify-content')).toBe('center')
     expect(declarations(":global(html[data-platform='darwin']:not([data-fullscreen])) .root:not(.collapsed) > .topStrip > .toggle")?.get('transform')).toBe('translateX(4px)')
     expect(css).not.toContain(':not(.fading)')

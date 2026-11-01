@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-sdk-protocol",
-  "description": "Shared wire protocol for the DeepSeek Harness SDK runtime: the newline-delimited JSON-RPC stdio transport and the named request, result, and notification types spoken between the runtime server and SDK clients",
+  "name": "@liwa/sdk-protocol",
+  "description": "Shared wire protocol for the Liwa SDK runtime: the newline-delimited JSON-RPC stdio transport and the named request, result, and notification types spoken between the runtime server and SDK clients",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/sdk/protocol"
   },
   "type": "module",
@@ -26,17 +26,17 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-subagent": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-user-questions": "workspace:*"
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/subagent": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/user-questions": "workspace:*"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-subagent": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-user-questions": "workspace:*"
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/subagent": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/user-questions": "workspace:*"
   }
 }

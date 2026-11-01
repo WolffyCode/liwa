@@ -1,6 +1,6 @@
 # AGENTS.md — packages
 
-本文件补充[根目录 AGENTS.md](../AGENTS.md) 的"技术约定"，内容继承自 DSH，改造之前仍然成立。
+本文件补充[根目录 AGENTS.md](../AGENTS.md) 的"技术约定"，内容继承自灵鲸，改造之前仍然成立。
 
 - **插件导出**：服务包默认导出它的服务类；函数插件具名导出 `name` / `inject` / `Config` / `apply`，不要默认导出。两种写法混用时，Loader 会丢掉函数插件的命名空间（[复盘](../docs/postmortem/0001-acp-default-export-drops-inject.md)）。
 - **可选服务用 `ctx.get(name)`**。`ctx.<name>` 只留给声明过的注入：属性代理受拓扑影响，严格的 `ctx.get` 读的是全局服务表（[复盘](../docs/postmortem/0001-acp-default-export-drops-inject.md)）。
@@ -24,4 +24,4 @@
 - **tsconfig**：继承 `tsconfig.base.json`（浏览器端用 `tsconfig.base.client.json`），设 `rootDir: src`、`outDir: lib/types`，引用工作区依赖，并登记到一个汇总配置里。同时有宿主端和浏览器端编译面的包，用 `tsconfig.host.json` 和 `tsconfig.client.json` 两个叶子加一个只做汇总的根；普通的双入口浏览器插件不拆（[布局](../docs/development.md#typescript-project-layout)）。
 - `src/types.ts` 只放类型，不放运行时代码。
 - 测试放在包级的 `tests/` 下，不放 `src/__tests__/`。
-- 行为变了，在同一次提交里更新包的 README 和 JSDoc 约定。分组 README 要声明子系统归属（`verify-subsystem-pages` 检查）；包 README 的"Model Experience"格式和 `## Known Limitations and Deferred Work` 一节由 `verify-package-readme-limitations` 等脚本检查。这几条 README 规范是 DSH 的文档体系，处理文档时再定去留。
+- 行为变了，在同一次提交里更新包的 README 和 JSDoc 约定。分组 README 要声明子系统归属（`verify-subsystem-pages` 检查）；包 README 的"Model Experience"格式和 `## Known Limitations and Deferred Work` 一节由 `verify-package-readme-limitations` 等脚本检查。这几条 README 规范是灵鲸的文档体系，处理文档时再定去留。

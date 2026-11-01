@@ -2,30 +2,30 @@
 
 English | [中文](web.zh.md)
 
-The web access seam — a [capability seam](../../.agents/notes/implemented/architecture/2026-06-24-web-capability-seam.md) that spans **two operations** (search and fetch) on one `ctx.web` service, split across packages: Service Definition ([dsh-web](../../packages/web/web), `ctx.web` + the provider registries), Service Providers ([dsh-web-search-exa](../../packages/web/web-search-exa), [dsh-web-search-perplexity](../../packages/web/web-search-perplexity), [dsh-web-search-deepseek](../../packages/web/web-search-deepseek), [dsh-web-deepseek-api](../../packages/web/web-deepseek-api), [dsh-web-fetch-http](../../packages/web/web-fetch-http)), and Consumer ([dsh-tool-web](../../packages/web/tool-web), the `web_search`/`web_fetch` tool schemas). Web is **one optional capability**, not part of the agent-loop spine — so its vocabulary lives here, not in [core.md](core.md). A search-provider swap does not change how the model asks for a query, and a fetch-provider swap does not change how the model asks for a URL.
+The web access seam — a [capability seam](../../.agents/notes/implemented/architecture/2026-06-24-web-capability-seam.md) that spans **two operations** (search and fetch) on one `ctx.web` service, split across packages: Service Definition ([liwa-web](../../packages/web/web), `ctx.web` + the provider registries), Service Providers ([liwa-web-search-exa](../../packages/web/web-search-exa), [liwa-web-search-perplexity](../../packages/web/web-search-perplexity), [liwa-web-search-deepseek](../../packages/web/web-search-deepseek), [liwa-web-deepseek-api](../../packages/web/web-deepseek-api), [liwa-web-fetch-http](../../packages/web/web-fetch-http)), and Consumer ([liwa-tool-web](../../packages/web/tool-web), the `web_search`/`web_fetch` tool schemas). Web is **one optional capability**, not part of the agent-loop spine — so its vocabulary lives here, not in [core.md](core.md). A search-provider swap does not change how the model asks for a query, and a fetch-provider swap does not change how the model asks for a URL.
 
 Source: [`packages/web/web/src/types.ts`](../../packages/web/web/src/types.ts)
 
 ## Why one capability has two operations
 
-Search and fetch share no request schema and no business logic, but they are deliberately one `ctx.web` middle layer: one provider-selection policy owner, one abort/error vocabulary, and one product-facing "how this harness reaches the web" configuration API. The cost is the parallel `searchX`/`fetchX` method pairs on the service; that parallelism is intentional, not a missed extraction. Providers register **capabilities** (a `WebSearchProvider` or `WebFetchProvider`), not tools; the model-facing names, schemas, prompt guidance, and presentation all live in the single `dsh-tool-web` consumer.
+Search and fetch share no request schema and no business logic, but they are deliberately one `ctx.web` middle layer: one provider-selection policy owner, one abort/error vocabulary, and one product-facing "how this harness reaches the web" configuration API. The cost is the parallel `searchX`/`fetchX` method pairs on the service; that parallelism is intentional, not a missed extraction. Providers register **capabilities** (a `WebSearchProvider` or `WebFetchProvider`), not tools; the model-facing names, schemas, prompt guidance, and presentation all live in the single `liwa-tool-web` consumer.
 
 ## Search request and result
 
-Each seam request carries exactly one `query`. The `dsh-tool-web` consumer accepts a required `queries` array and fans it out into separate seam requests; a one-item array performs one search. `maxResults` is a consumer-owned bound (`dsh-tool-web`'s `searchMaxResults` config, default `8`) passed through the seam and enforced on the way back — if a provider over-returns, the seam truncates `sources[]` and sets `truncated`.
+Each seam request carries exactly one `query`. The `liwa-tool-web` consumer accepts a required `queries` array and fans it out into separate seam requests; a one-item array performs one search. `maxResults` is a consumer-owned bound (`liwa-tool-web`'s `searchMaxResults` config, default `8`) passed through the seam and enforced on the way back — if a provider over-returns, the seam truncates `sources[]` and sets `truncated`.
 
 ```ts type-equiv
 /**
  * What one search-capable backend is asked to search. Each request carries one
  * query; a consumer may issue several requests. `maxResults` is a
- * `dsh-tool-web`-layer bound passed through unchanged and enforced on the way
+ * `liwa-tool-web`-layer bound passed through unchanged and enforced on the way
  * back by the seam (see {@link WebSearchResult}).
  */
 interface WebSearchRequest {
   readonly query: string
   /**
    * Upper bound on returned sources; the seam truncates to it. Omitted = no
-   * bound. `dsh-tool-web` always sets it. A provider whose API supports a
+   * bound. `liwa-tool-web` always sets it. A provider whose API supports a
    * result-count control (Exa's `numResults`) should apply it at the request
    * layer as a cost/latency optimization; the seam enforces the bound
    * regardless.
@@ -57,7 +57,7 @@ interface WebSearchResult {
  * One citeable source. A source always has a URL; `title`, `snippet`, `summary`,
  * and `publishedAt` are optional because not every provider returns them — forcing
  * adapters to invent them would make the seam lie (Perplexity citations may be
- * URL-only). `dsh-tool-web` renders `title ?? hostname(url)` for display.
+ * URL-only). `liwa-tool-web` renders `title ?? hostname(url)` for display.
  */
 interface WebSearchSource {
   readonly url: string
@@ -109,7 +109,7 @@ interface WebFetchResult {
 ```ts type-equiv
 /**
  * The decoded body of a fetched resource. A CLOSED discriminated union owned by
- * `dsh-web`: the provider decodes the kind and `dsh-tool-web` renders it, so a
+ * `liwa-web`: the provider decodes the kind and `liwa-tool-web` renders it, so a
  * new kind is a coordinated change across known packages, not a plugin
  * extension. Consumers `switch` on `kind` ending in `default: assertNever(...)`
  * so adding a kind breaks compilation at every consumer until handled. Each arm
@@ -125,7 +125,7 @@ type WebFetchBody =
 
 A provider's `available(): boolean` is a cheap LOCAL check (credential presence, parseable config) and **must not make network calls**. It is an input to execution-time selection, not a health system: `search()`/`fetch()` read it to pick a usable provider, and a selection failure surfaces as the structured `WebError` the caller routes on — which carries the branchable detail (the missing id or ambiguous candidate set) in its code and message.
 
-A search or fetch provider may also implement `ready(llmProvider): Promise<boolean>`, a configuration-only check that must not make network calls: it answers whether an operation made for a model request on that chat route has a credential to send. `searchReady(llmProvider?)` and `fetchReady(llmProvider?)` ask only the provider that `search()` or `fetch()` would select, treat a provider without `ready()` as ready, and answer true when selection fails, because the operation reports that failure as a `WebError`. Readiness is not a selection input; `dsh-tool-web` makes it the activation condition of `web_search` and `web_fetch`, so a model step whose route answers false neither declares nor dispatches the tool.
+A search or fetch provider may also implement `ready(llmProvider): Promise<boolean>`, a configuration-only check that must not make network calls: it answers whether an operation made for a model request on that chat route has a credential to send. `searchReady(llmProvider?)` and `fetchReady(llmProvider?)` ask only the provider that `search()` or `fetch()` would select, treat a provider without `ready()` as ready, and answer true when selection fails, because the operation reports that failure as a `WebError`. Readiness is not a selection input; `liwa-tool-web` makes it the activation condition of `web_search` and `web_fetch`, so a model step whose route answers false neither declares nor dispatches the tool.
 
 Selection never depends on registration, config, or HMR order: a capability has an explicit provider id (config `searchProvider`/`fetchProvider`, or the matching env var feeding the same field), or auto-selects when exactly one usable provider is registered; multiple usable providers with no configured id is `WEB_PROVIDER_AMBIGUOUS`, not first-wins. Each operation reads the configured id when it runs, so a saved settings change applies to the next search or fetch without remounting `ctx.web`.
 
@@ -137,7 +137,7 @@ The HTTP provider does not restrict destination addresses: `web_fetch` reaches l
 
 ## Errors
 
-`WebError extends HarnessError` ([core.md](core.md) error taxonomy) with a `code: string` (open, like every other seam's error — `LlmError`, `SubagentError`), not a closed union: a provider may raise its own codes without editing `dsh-web`, and consumers must tolerate an unknown code. The codes split by owner. Seam-neutral codes are raised by the shared `WebRuntime` contract: `WEB_PROVIDER_UNAVAILABLE`, `WEB_PROVIDER_CONFIGURED_MISSING`, `WEB_PROVIDER_CONFIGURED_UNAVAILABLE`, `WEB_PROVIDER_AMBIGUOUS`, `WEB_DUPLICATE_PROVIDER` (a registration-time programming error, the analogue of `LlmRuntime`'s `DUPLICATE_ADAPTER`), `WEB_ABORTED`, and `WEB_PROVIDER_ERROR` (the catch-all for a provider's own failure surfaced through the seam, including network/transport failure — DNS, connection refused, TLS). Fetch-transport codes are owned by the `dsh-web-fetch-http` implementation and a different fetch backend need not raise them: `WEB_INVALID_URL`, `WEB_BLOCKED_URL`, `WEB_REDIRECT_BLOCKED`, `WEB_FETCH_TOO_LARGE`, `WEB_FETCH_TIMEOUT`, `WEB_UNSUPPORTED_CONTENT_TYPE`.
+`WebError extends LiwaError` ([core.md](core.md) error taxonomy) with a `code: string` (open, like every other seam's error — `LlmError`, `SubagentError`), not a closed union: a provider may raise its own codes without editing `liwa-web`, and consumers must tolerate an unknown code. The codes split by owner. Seam-neutral codes are raised by the shared `WebRuntime` contract: `WEB_PROVIDER_UNAVAILABLE`, `WEB_PROVIDER_CONFIGURED_MISSING`, `WEB_PROVIDER_CONFIGURED_UNAVAILABLE`, `WEB_PROVIDER_AMBIGUOUS`, `WEB_DUPLICATE_PROVIDER` (a registration-time programming error, the analogue of `LlmRuntime`'s `DUPLICATE_ADAPTER`), `WEB_ABORTED`, and `WEB_PROVIDER_ERROR` (the catch-all for a provider's own failure surfaced through the seam, including network/transport failure — DNS, connection refused, TLS). Fetch-transport codes are owned by the `liwa-web-fetch-http` implementation and a different fetch backend need not raise them: `WEB_INVALID_URL`, `WEB_BLOCKED_URL`, `WEB_REDIRECT_BLOCKED`, `WEB_FETCH_TOO_LARGE`, `WEB_FETCH_TIMEOUT`, `WEB_UNSUPPORTED_CONTENT_TYPE`.
 
 ## The service
 

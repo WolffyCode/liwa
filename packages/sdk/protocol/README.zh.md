@@ -1,15 +1,15 @@
 ---
-description: "面向客户端与服务端实现者的 SDK 协议格式（wire format）说明：Harness 运行时与其 SDK 客户端之间使用的按换行分帧 JSON-RPC 传输，以及具名的请求、结果与通知类型。"
+description: "面向客户端与服务端实现者的 SDK 协议格式（wire format）说明：灵鲸运行时与其 SDK 客户端之间使用的按换行分帧 JSON-RPC 传输，以及具名的请求、结果与通知类型。"
 kind: "package-library"
 ---
 
-# @deepseek-ai/dsh-sdk-protocol
+# @liwa/sdk-protocol
 
 [English](README.md) | 中文
 
 ## 概述
 
-`dsh-sdk-protocol` 让 DeepSeek Harness 运行时与其 SDK 客户端通过按换行分帧的字节流交换 JSON-RPC 2.0 消息：一个传输类，加上协议两端共同使用的具名请求、结果与通知类型。服务端是 [`dsh-sdk-jsonrpc-server`](../server/README.zh.md) 插件；客户端是 TypeScript 的 [`dsh-sdk-client`](../client/README.zh.md) 与 [Python SDK](../../../python/README.zh.md)（后者复现这些结构但不导入它们）。当你实现或调试协议某一端时使用本包：分帧规则、方法名、载荷类型与错误语义都在这里。它是纯库——无插件、无配置、无注册。
+`liwa-sdk-protocol` 让灵鲸运行时与其 SDK 客户端通过按换行分帧的字节流交换 JSON-RPC 2.0 消息：一个传输类，加上协议两端共同使用的具名请求、结果与通知类型。服务端是 [`liwa-sdk-jsonrpc-server`](../server/README.zh.md) 插件；客户端是 TypeScript 的 [`liwa-sdk-client`](../client/README.zh.md) 与 [Python SDK](../../../python/README.zh.md)（后者复现这些结构但不导入它们）。当你实现或调试协议某一端时使用本包：分帧规则、方法名、载荷类型与错误语义都在这里。它是纯库——无插件、无配置、无注册。
 
 ## 目录
 
@@ -27,7 +27,7 @@ kind: "package-library"
 
 当你构建或调试 SDK 协议端——服务插件、客户端库或使用该协议的自定义工具——时使用本包。它为你提供一个在调用方持有的字节流上承载 JSON-RPC 2.0 的传输，以及每个 SDK 方法与通知的类型化结构。
 
-`InitializeParams.approvalRequests: true` 启用由 `HarnessSdkClientRequestMap` 索引的服务端请求 `approval/request`。`ApprovalRequestParams` 包含 `sessionId`、`toolName`，以及可选的 `callId` 和 `reason`；`ApprovalRequestResult` 为 `{ outcome: "allowed-once" | "rejected" | "cancelled" }`。省略或设为 `false` 时保留现有应答链。只有 `allowed-once` 批准单次操作。取消会丢弃待处理请求及迟到响应；shutdown 和传输断开使待处理决定拒绝放行。客户端等待 Agent 完成期间，必须继续读取并回答请求。
+`InitializeParams.approvalRequests: true` 启用由 `LiwaSdkClientRequestMap` 索引的服务端请求 `approval/request`。`ApprovalRequestParams` 包含 `sessionId`、`toolName`，以及可选的 `callId` 和 `reason`；`ApprovalRequestResult` 为 `{ outcome: "allowed-once" | "rejected" | "cancelled" }`。省略或设为 `false` 时保留现有应答链。只有 `allowed-once` 批准单次操作。取消会丢弃待处理请求及迟到响应；shutdown 和传输断开使待处理决定拒绝放行。客户端等待 Agent 完成期间，必须继续读取并回答请求。
 
 ### 分帧与传输
 
@@ -54,7 +54,7 @@ kind: "package-library"
 | server→client | `subagent.started` | `SubagentStartedNotification` |
 | server→client | `subagent.finished` | `SubagentFinishedNotification`（仅进程内运行） |
 
-`HarnessSdkRequestMap`、`HarnessSdkClientRequestMap`、`HarnessSdkHostRequestMap` 与 `HarnessSdkNotificationMap` 按方法名索引这些结构；包根与传输一起导出它们。
+`LiwaSdkRequestMap`、`LiwaSdkClientRequestMap`、`LiwaSdkHostRequestMap` 与 `LiwaSdkNotificationMap` 按方法名索引这些结构；包根与传输一起导出它们。
 
 `session/wait` 接受已有 SDK 会话的 `{ sessionId }`，在根 Agent 持续空闲且活跃的受管理后代工作结束后返回 `{}`。带有停放输入的空闲后代保持驻留，不阻塞这次等待。未知 id，以及没有后续终止事件记录的 Agent 运行时错误，都会使请求失败。等待期间提交的通知在同一传输上先于响应到达；原始 `session.status` 转换仍表示整个 Agent 的状态。
 
@@ -69,7 +69,7 @@ kind: "package-library"
 
 ### 载荷语义
 
-`SessionPromptResult.messageId` 标识已排队的用户消息；它不标识后续的助手消息、轮次结束或提示词结果。`SdkPromptContentBlock` 接受普通持久内容以及 `SdkEncodedImageBlock { type: "image", data, mimeType }`；服务器在入队前把编码图像转换为持久引用。`InitializeParams.reasoningEffort` 是所选提供方／模型路由可选的非空适配器自有标识符；省略时保留该模型的默认值。`InitializeParams.maxTokens` 是可选的正安全整数，用于限制 SDK 创建的 agent 及其进程内后代的每次对话模型输出；省略时应用所选适配器的确切模型默认值。服务器会在初始化期间解析确切路由，并在握手成功前拒绝 `session/prompt`，因此缺少适配器、模型不可用或推理强度不受支持时，不会回退到构造期默认值。`SubagentFinishedNotification.lastAssistantMessage` 携带子 agent 最后一条非空 assistant 消息；若不存在这类消息，则携带其累积的 assistant 文本；子 agent 两种输出均未产生时，该字段缺省。`serverInfo.name` 的协议值固定为 `deepseek-harness-sdk-runtime`。通知载荷依赖 `SessionEvent`（`dsh-session`）、`ContentBlock`（`dsh-llm`）与 `SubagentStopReason`（`dsh-subagent`），因此会话词汇是协议格式约定的一部分。
+`SessionPromptResult.messageId` 标识已排队的用户消息；它不标识后续的助手消息、轮次结束或提示词结果。`SdkPromptContentBlock` 接受普通持久内容以及 `SdkEncodedImageBlock { type: "image", data, mimeType }`；服务器在入队前把编码图像转换为持久引用。`InitializeParams.reasoningEffort` 是所选提供方／模型路由可选的非空适配器自有标识符；省略时保留该模型的默认值。`InitializeParams.maxTokens` 是可选的正安全整数，用于限制 SDK 创建的 agent 及其进程内后代的每次对话模型输出；省略时应用所选适配器的确切模型默认值。服务器会在初始化期间解析确切路由，并在握手成功前拒绝 `session/prompt`，因此缺少适配器、模型不可用或推理强度不受支持时，不会回退到构造期默认值。`SubagentFinishedNotification.lastAssistantMessage` 携带子 agent 最后一条非空 assistant 消息；若不存在这类消息，则携带其累积的 assistant 文本；子 agent 两种输出均未产生时，该字段缺省。`serverInfo.name` 的协议值固定为 `liwa-sdk-runtime`。通知载荷依赖 `SessionEvent`（`liwa-session`）、`ContentBlock`（`liwa-llm`）与 `SubagentStopReason`（`liwa-subagent`），因此会话词汇是协议格式约定的一部分。
 
 -----
 
@@ -109,7 +109,7 @@ kind: "package-library"
 - [JSON-RPC 服务插件](../server/README.zh.md) — 通过 stdio 服务该协议的运行时插件。
 - [TypeScript SDK 客户端](../client/README.zh.md) — 驱动该协议的客户端。
 - [Python SDK](../../../python/README.zh.md) — 复现这些结构的 Python 对应实现。
-- [SDK 应用组合包](../../bundle/sdk-app/README.zh.md) — 启动服务器的 `dsh --profile sdk` 应用。
+- [SDK 应用组合包](../../bundle/sdk-app/README.zh.md) — 启动服务器的 `liwa --profile sdk` 应用。
 
 -----
 

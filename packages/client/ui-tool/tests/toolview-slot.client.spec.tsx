@@ -1,21 +1,21 @@
 // @vitest-environment jsdom
 
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
+import { createSnapshotStore } from '@liwa/client-store'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent } from '@testing-library/react'
-import type { ISession } from '@deepseek-ai/dsh-api-session-controller/client'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import type { WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
+import type { ISession } from '@liwa/api-session-controller/client'
+import type { SessionId } from '@liwa/session/types'
+import type { WorkspaceId } from '@liwa/workspace/types'
 import {
   apply as applyChat, inject as injectChat, type ToolResultNode,
-} from '@deepseek-ai/dsh-client-ui-chat/client'
-import type { PropsRenderSlots } from '@deepseek-ai/dsh-client-ui-slots'
-import { SlotTestRuntime, stubConfigForm } from '@deepseek-ai/dsh-client-test-runtime'
-import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
-import { apply as applyConversation, inject as injectConversation } from '@deepseek-ai/dsh-client-ui-conversation/client'
-import { apply as applyTool, inject as injectTool } from '@deepseek-ai/dsh-client-ui-tool/client'
-import type { ToolCallViewProps } from '@deepseek-ai/dsh-client-ui-tool/client'
-import { PartialArguments } from '@deepseek-ai/dsh-util-values'
+} from '@liwa/client-ui-chat/client'
+import type { PropsRenderSlots } from '@liwa/client-ui-slots'
+import { SlotTestRuntime, stubConfigForm } from '@liwa/client-test-runtime'
+import { LocaleRuntime } from '@liwa/client-locale/client'
+import { apply as applyConversation, inject as injectConversation } from '@liwa/client-ui-conversation/client'
+import { apply as applyTool, inject as injectTool } from '@liwa/client-ui-tool/client'
+import type { ToolCallViewProps } from '@liwa/client-ui-tool/client'
+import { PartialArguments } from '@liwa/util-values'
 import { toolSessionEvents } from './tool-fixtures.client.ts'
 
 const SID = 's1' as SessionId
@@ -76,7 +76,7 @@ const LAYOUT_CHILDREN = {
  */
 async function bench(nodes: ToolResultNode[]) {
   const runtime = await SlotTestRuntime.create()
-  runtime.ctx.provide('fileDrag', { actions: { prepare: async () => ({ start: () => true, release: () => {} }), reportFailure: () => {} }, read: () => undefined } satisfies import('@deepseek-ai/cordis').Context['fileDrag'])
+  runtime.ctx.provide('fileDrag', { actions: { prepare: async () => ({ start: () => true, release: () => {} }), reportFailure: () => {} }, read: () => undefined } satisfies import('@liwa/cordis').Context['fileDrag'])
   const openWorkspacePath = vi.fn(async () => ({ ok: true, value: { opened: true } }))
   runtime.remote.provideNamespaces({ session: { openWorkspacePath } })
   runtime.ctx.provide('configForms', { developerTools: { enabled: createSnapshotStore(true) }, get: () => stubConfigForm().scope } as never)
@@ -225,7 +225,7 @@ describe('keyed toolview hole through the real machinery', () => {
     const view = b.runtime.renderRoot()
     view.getByText('src/a.ts').click()
     await vi.waitFor(() => {
-      expect(b.sidebarRight.openResource).toHaveBeenCalledWith('dsh-resource://file/session/s1/src/a.ts')
+      expect(b.sidebarRight.openResource).toHaveBeenCalledWith('liwa-resource://file/session/s1/src/a.ts')
     })
     // Nothing on this path reaches the local machine any more.
     expect(b.openWorkspacePath).not.toHaveBeenCalled()
@@ -296,7 +296,7 @@ describe('keyed toolview hole through the real machinery', () => {
 describe('registrant declaration injection', () => {
   it('runs a registrant before ui-tool and waits on the actual toolview declaration', async () => {
     const runtime = await SlotTestRuntime.create()
-    runtime.ctx.provide('fileDrag', { actions: { prepare: async () => ({ start: () => true, release: () => {} }), reportFailure: () => {} }, read: () => undefined } satisfies import('@deepseek-ai/cordis').Context['fileDrag'])
+    runtime.ctx.provide('fileDrag', { actions: { prepare: async () => ({ start: () => true, release: () => {} }), reportFailure: () => {} }, read: () => undefined } satisfies import('@liwa/cordis').Context['fileDrag'])
     runtime.remote.provideNamespaces({
       session: {
         openWorkspacePath: vi.fn(async () => ({ ok: true, value: { opened: true } })),

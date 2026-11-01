@@ -38,7 +38,7 @@ function rows(entries: readonly CatalogEntry[]): Row[] {
  */
 export function render(entries: readonly CatalogEntry[]): string {
   const lines = [
-    '# Loadable Harness plugin packages',
+    '# Loadable Liwa plugin packages',
     '',
     'This file is GENERATED from workspace manifests (`scripts/gen-plugin-packages.ts`) and verified fresh by `pnpm run verify-plugin-packages` (part of `doc-sync`); do not edit it by hand.',
     '',

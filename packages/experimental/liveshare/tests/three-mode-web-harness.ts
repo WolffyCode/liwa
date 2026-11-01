@@ -1,5 +1,5 @@
 /**
- * Isolated real `dsh web` instance for the three-mode acceptance driver.
+ * Isolated real `liwa web` instance for the three-mode acceptance driver.
  *
  * The harness boots the shipped web profile in a private temp home and workspace and exposes the
  * shipped HTTP carrier. The model route is the deterministic keyless fixture beside this module;
@@ -16,13 +16,13 @@ import { fileURLToPath } from 'node:url'
 import {
   parseRemoteStreamServerMessage,
   type RemoteStreamServerMessage,
-} from '@deepseek-ai/dsh-api-gateway/src/stream-protocol.ts'
+} from '@liwa/api-gateway/src/stream-protocol.ts'
 import { execa } from 'execa'
 import { expect, onTestFinished } from 'vitest'
-import { resolveExampleLaunch } from '@deepseek-ai/dsh-loader-smoke'
+import { resolveExampleLaunch } from '@liwa/loader-smoke'
 import { WebSocket } from 'ws'
 
-const dshBinScript = fileURLToPath(new URL('../../../../apps/cli/src/bin.ts', import.meta.url))
+const liwaBinScript = fileURLToPath(new URL('../../../../apps/cli/src/bin.ts', import.meta.url))
 const tsconfigPath = fileURLToPath(new URL('../../../../tsconfig.json', import.meta.url))
 const fixtureName = fileURLToPath(new URL('./fixtures/base-llm.mjs', import.meta.url))
 const repositoryRoot = fileURLToPath(new URL('../../../../', import.meta.url))
@@ -307,7 +307,7 @@ export interface WebOwnerOptions {
   /**
    * An instance directory this boot takes over instead of creating one.
    *
-   * A restart has to serve the same DSH home, workspace, and session logs as the process it replaces,
+   * A restart has to serve the same Liwa home, workspace, and session logs as the process it replaces,
    * so a resumed-session case boots the same tree twice rather than a second isolated one.
    */
   readonly existingCwd?: string
@@ -324,7 +324,7 @@ export interface WebOwnerOptions {
 export interface WebOwner {
   /** Private temp directory the instance owns. */
   readonly cwd: string
-  /** Private DSH home the instance owns. */
+  /** Private Liwa home the instance owns. */
   readonly home: string
   /** Origin the app serves its own page and `/api` on. */
   readonly origin: string
@@ -380,7 +380,7 @@ export interface WebOwner {
  */
 export async function bootWebOwner(options: WebOwnerOptions = {}): Promise<WebOwner> {
   const cwd = options.existingCwd ?? await mkdtemp(join(tmpdir(), 'liveshare-web-'))
-  const home = join(cwd, '.dsh')
+  const home = join(cwd, '.liwa')
   const sessionsRoot = join(home, 'sessions')
   const profileDir = join(home, 'profiles', 'web')
   // A restart reuses the tree its predecessor wrote, including the profile it composed.
@@ -393,11 +393,11 @@ export async function bootWebOwner(options: WebOwnerOptions = {}): Promise<WebOw
     for (const bundle of extraBundles) await installBundle(profileDir, bundle)
   }
   if (options.existingCwd === undefined) await writeFile(join(profileDir, 'package.json'), JSON.stringify({
-    name: 'dsh-profile-web',
+    name: 'liwa-profile-web',
     private: true,
     dependencies: Object.fromEntries(extraBundles.map(bundle => [bundle, 'workspace:^'])),
-    dsh: {
-      profile: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', ...extraBundles] },
+    liwa: {
+      profile: { bundles: ['@liwa/base', '@liwa/web-app', ...extraBundles] },
     },
   }, undefined, 2) + '\n')
   if (options.existingCwd === undefined) await writeFile(join(profileDir, 'cordis.patch.yml'), [
@@ -417,15 +417,15 @@ export async function bootWebOwner(options: WebOwnerOptions = {}): Promise<WebOw
   const configured = Object.fromEntries(Object.entries(options.env ?? {})
     .map(([key, value]) => [key, typeof value === 'function' ? value(cwd) : value]))
   const launch = resolveExampleLaunch({
-    srcBin: dshBinScript,
+    srcBin: liwaBinScript,
     // `--port 0` lets the app pick; its own startup line carries the real origin.
     configArgs: ['--profile', 'web', '--port', '0', '--no-open'],
     tsconfigPath,
     sourceImport: 'tsx/esm',
     env: {
-      DSH_HOME: home,
-      DSH_AGENTS_HOME: join(cwd, '.agents'),
-      DSH_TELEMETRY_DISABLED: '1',
+      LIWA_HOME: home,
+      LIWA_AGENTS_HOME: join(cwd, '.agents'),
+      LIWA_TELEMETRY_DISABLED: '1',
       DEEPSEEK_API_KEY: '',
       // Diagnostic only: the fixture appends one line per adapter call to this temp file.
       BASE_LLM_LOG: join(cwd, 'base-llm.log'),
@@ -447,9 +447,9 @@ export async function bootWebOwner(options: WebOwnerOptions = {}): Promise<WebOw
   child.stderr?.on('data', (chunk: Buffer) => { stderrText = (stderrText + chunk.toString()).slice(-8000) })
   // Real artifact evidence: `lib` mode spawns the built bin under plain Node, never tsx source.
   const launchBin = String(launch.args[0])
-  facts.push(`launch: mode=${process.env.DSH_EXAMPLE_MODE ?? 'src'} bin=${launchBin}`
+  facts.push(`launch: mode=${process.env.LIWA_EXAMPLE_MODE ?? 'src'} bin=${launchBin}`
     + ` args=${JSON.stringify(launch.args.slice(1))} envKeys=${JSON.stringify(Object.keys(launch.env).sort())}`)
-  if (process.env.DSH_EXAMPLE_MODE === 'lib') {
+  if (process.env.LIWA_EXAMPLE_MODE === 'lib') {
     expect(launchBin, 'built-lib launch').toContain('/lib/')
     expect(launch.args.some(argument => argument.includes('tsx')), 'no tsx loader in lib mode').toBe(false)
   }
@@ -757,7 +757,7 @@ function registerTeardown(
 }
 
 /**
- * Install one workspace bundle into a profile the way `dsh plugin install` would.
+ * Install one workspace bundle into a profile the way `liwa plugin install` would.
  *
  * The profile's own `node_modules` is the second anchor bundle resolution reads, so a bundle this
  * checkout provides has to appear there; the profile manifest declares the dependency it links.

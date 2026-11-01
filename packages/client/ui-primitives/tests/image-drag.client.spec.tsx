@@ -82,7 +82,7 @@ it('retains a pending local preparation after release inside the image for a lat
   const f = fixture()
   const pending = Promise.withResolvers<PreparedFileDrag>()
   f.actions.prepare.mockReturnValue(pending.promise)
-  f.view.rerender(<DraggableImage fileDrag={f.actions} src="/image.png" name="image.png" resourceAddress="dsh-resource://file/session/s/image.png" alt="source" />)
+  f.view.rerender(<DraggableImage fileDrag={f.actions} src="/image.png" name="image.png" resourceAddress="liwa-resource://file/session/s/image.png" alt="source" />)
   const image = f.view.getByRole('img')
   fireEvent.pointerEnter(image)
   expect(f.actions.prepare).not.toHaveBeenCalled()
@@ -158,7 +158,7 @@ it('keeps already-cancelled gestures inert and forwards loaded original bytes', 
   const f = fixture()
   const file = new File(['data'], 'loaded.png', { type: 'image/png' })
   f.view.rerender(<div onDragStartCapture={(event) => { event.preventDefault() }}>
-    <DraggableImage fileDrag={f.actions} src="blob:original" name={file.name} original={file} resourceAddress="dsh-resource://file/session/s/a.png" />
+    <DraggableImage fileDrag={f.actions} src="blob:original" name={file.name} original={file} resourceAddress="liwa-resource://file/session/s/a.png" />
   </div>)
   const image = f.view.getByRole('img')
   expect(fireEvent.dragStart(image, { dataTransfer: {} })).toBe(false)
@@ -166,5 +166,5 @@ it('keeps already-cancelled gestures inert and forwards loaded original bytes', 
   await act(async () => { fireEvent.pointerEnter(image) })
   expect(f.actions.prepare).not.toHaveBeenCalled()
   await act(async () => { fireEvent.pointerDown(image, { button: 0 }) })
-  expect(f.actions.prepare).toHaveBeenCalledWith(expect.objectContaining({ kind: 'blob', blob: file, resourceAddress: 'dsh-resource://file/session/s/a.png' }), expect.any(AbortSignal))
+  expect(f.actions.prepare).toHaveBeenCalledWith(expect.objectContaining({ kind: 'blob', blob: file, resourceAddress: 'liwa-resource://file/session/s/a.png' }), expect.any(AbortSignal))
 })

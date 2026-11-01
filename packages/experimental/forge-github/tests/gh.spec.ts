@@ -7,7 +7,7 @@ import { GhOutputLimitError, GhTimeoutError, GhUnavailableError, ghRunner } from
 let root = ''
 
 beforeEach(async () => {
-  root = await mkdtemp(join(tmpdir(), 'dsh-forge-gh-'))
+  root = await mkdtemp(join(tmpdir(), 'liwa-forge-gh-'))
 })
 
 afterEach(async () => {

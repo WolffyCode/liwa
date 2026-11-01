@@ -22,14 +22,14 @@ import {
   IconFlatListOutlineRegular, IconFolderCloseRegular, IconProjectAddOutlineRegular,
   IconQueueOutlineRegular, IconSearchOutlineRegular, IconSlidersTwoOutlineRegular,
   IconWorkspaceTreeOutlineRegular, Menu, Modal, Tooltip,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+} from '@liwa/client-ui-primitives'
 import type {
   SessionListState, SessionSearchResultItem,
-} from '@deepseek-ai/dsh-api-session-controller/client'
-import type { WorkspaceId, WorkspaceView } from '@deepseek-ai/dsh-api-workspace-controller/client'
-import { workspaceDisplayTitle } from '@deepseek-ai/dsh-api-workspace-controller/default-workspace'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import type { PropsRenderSlots } from '@deepseek-ai/dsh-client-ui-slots'
+} from '@liwa/api-session-controller/client'
+import type { WorkspaceId, WorkspaceView } from '@liwa/api-workspace-controller/client'
+import { workspaceDisplayTitle } from '@liwa/api-workspace-controller/default-workspace'
+import type { SessionId } from '@liwa/session/types'
+import type { PropsRenderSlots } from '@liwa/client-ui-slots'
 import type { WorkspaceBrowserProps } from '../contract/slots.ts'
 import type { ArchivedFilter, GroupNode, SessionNode, SessionOrderBy, SessionRowState } from '../tree.ts'
 import {
@@ -261,7 +261,7 @@ type SessionTreeProps = Pick<
   | 'sidebar.session.row.leading'
   | 'sidebar.session.row.hover'
 > & {
-  shortcuts: readonly import('@deepseek-ai/dsh-client-shortcuts/client').ShortcutCatalogEntry[]
+  shortcuts: readonly import('@liwa/client-shortcuts/client').ShortcutCatalogEntry[]
   /** Always-mounted Session list snapshot. */
   list: SessionListState
   /** Host account home for POSIX hover-path abbreviation. */
@@ -521,7 +521,7 @@ function SessionTree({
     // (WorkspaceBrowser.module.css).
       <div
         key={group.key}
-        style={{ '--dsh-workspace-indent': `${depth * 12}px` } as CSSProperties}
+        style={{ '--liwa-workspace-indent': `${depth * 12}px` } as CSSProperties}
         className={clsx(
           css.groupSection,
           workspaceMarker === 'before' && css.workspaceDropBefore,

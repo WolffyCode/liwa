@@ -5,33 +5,33 @@
 /:
   en: a7cd372176f1d476
   zh: 07276ed339e7bc02
-/deepseek-ai-dsh-experimental-terminal-bundle:
-  en: cc18693529aee09c
-  zh: fbf1c7d8388eeba8
-/deepseek-ai-dsh-experimental-terminal-bundle/summary:
+/liwa-experimental-terminal-bundle:
+  en: 82581b692f4f465a
+  zh: ee0fc71d65a85ed7
+/liwa-experimental-terminal-bundle/summary:
   en: 50f2c8029ae3233d
   zh: 00db7cd933a08ef8
-/deepseek-ai-dsh-experimental-terminal-bundle/table-of-contents:
+/liwa-experimental-terminal-bundle/table-of-contents:
   en: d152484eb41ac6b4
   zh: 988e839059414d27
-/deepseek-ai-dsh-experimental-terminal-bundle/use-this-package:
-  en: 8b2d9dd5727d0a27
-  zh: ca6c9b8e3d196a54
-/deepseek-ai-dsh-experimental-terminal-bundle/understand-the-implementation:
-  en: 0da35df3f93e3b7f
-  zh: 481b786e161616ab
-/deepseek-ai-dsh-experimental-terminal-bundle/further-exploration:
-  en: 9956186ebda37273
-  zh: eb622f1391f61ad4
-/deepseek-ai-dsh-experimental-terminal-bundle/model-experience:
-  en: 33b928765f080dbf
-  zh: a0ed945765c3b62f
-/deepseek-ai-dsh-experimental-terminal-bundle/model-experience/kv-cache-effect:
+/liwa-experimental-terminal-bundle/use-this-package:
+  en: ff019a716e99629a
+  zh: 2abc0f57282a64a3
+/liwa-experimental-terminal-bundle/understand-the-implementation:
+  en: 56e773fa6ff10ebc
+  zh: ed8a35adca6b4642
+/liwa-experimental-terminal-bundle/further-exploration:
+  en: 42e1410ab5020863
+  zh: aca538cc0e9fd3a0
+/liwa-experimental-terminal-bundle/model-experience:
+  en: ae7a0745f98d9f2e
+  zh: 722e4abe76e8052c
+/liwa-experimental-terminal-bundle/model-experience/kv-cache-effect:
   en: 25f20eda0e696067
   zh: 378c4a15a5704ba0
-/deepseek-ai-dsh-experimental-terminal-bundle/known-limitations-and-deferred-work:
+/liwa-experimental-terminal-bundle/known-limitations-and-deferred-work:
   en: 733d0915ef050bf3
   zh: 5a063b82230c73a4
-/deepseek-ai-dsh-experimental-terminal-bundle/known-limitations-and-deferred-work/dev-note:
+/liwa-experimental-terminal-bundle/known-limitations-and-deferred-work/dev-note:
   en: 279d01435256cd2a
   zh: 83780964e5de2f54

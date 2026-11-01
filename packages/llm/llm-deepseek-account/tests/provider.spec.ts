@@ -2,10 +2,10 @@
 import { createServer } from 'node:http'
 import type { IncomingMessage, Server, ServerResponse } from 'node:http'
 import { afterEach, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import LlmRuntime, { ReasoningEffortId } from '@deepseek-ai/dsh-llm'
-import type { DeepSeekAccount } from '@deepseek-ai/dsh-deepseek-account'
-import * as ApiKey from '@deepseek-ai/dsh-llm-deepseek-api-key'
+import { Context } from '@liwa/cordis'
+import LlmRuntime, { ReasoningEffortId } from '@liwa/llm'
+import type { DeepSeekAccount } from '@liwa/deepseek-account'
+import * as ApiKey from '@liwa/llm-deepseek-api-key'
 import * as Account from '../src/index.ts'
 
 const MESSAGES = { output_modalities: ['text'], api_capabilities: { anthropic_messages: {} } }
@@ -162,7 +162,7 @@ it('hides and refuses listed models this build cannot serve before any inference
   await expect(ctx.llm.prepareCall({ provider: 'deepseek-account', model: 'deepseek-v5' })).rejects.toMatchObject({ code: 'MODEL_UNSUPPORTED' })
   await expect(ctx.llm.prepareCall({ provider: 'deepseek-account', model: 'deepseek-v4-pro' })).rejects.toMatchObject({ code: 'MODEL_UNSUPPORTED' })
   await expect(ctx.llm.prepareCall({ provider: 'deepseek-account', model: 'deepseek-v5-next' }))
-    .rejects.toMatchObject({ code: 'CLIENT_UPGRADE_REQUIRED', message: expect.stringMatching(/requires DeepSeek Harness 99\.0\.0-alpha\.1 or later; current version is /) as string })
+    .rejects.toMatchObject({ code: 'CLIENT_UPGRADE_REQUIRED', message: expect.stringMatching(/requires Liwa 99\.0\.0-alpha\.1 or later; current version is /) as string })
   await expect(ctx.llm.prepareCall({ provider: 'deepseek-account', model: 'unlisted-pass-through' })).resolves.toBeDefined()
   expect(server.requests.map(request => request.url)).toEqual(['/models'])
   expect(diagnostic).toHaveBeenCalledExactlyOnceWith('[llm-deepseek-account]', expect.stringContaining('loaded 5 model(s), skipped 0 row(s)') as string)

@@ -5,8 +5,8 @@
  */
 import { createHash } from 'node:crypto'
 import { posix } from 'node:path'
-import { brandString } from '@deepseek-ai/dsh-brand'
-import { DetailFailure, detailImage, joinPath, markdownOf, readPackageDocument, type DetailFiles } from '@deepseek-ai/dsh-plugin-detail'
+import { brandString } from '@liwa/brand'
+import { DetailFailure, detailImage, joinPath, markdownOf, readPackageDocument, type DetailFiles } from '@liwa/plugin-detail'
 import hostedGitInfo from 'hosted-git-info'
 import { repositoryFiles, type RepositoryFileOptions, type RepositoryRef } from './detail-files.ts'
 import type { PluginDetail, PluginDetailDocumentId, PluginDetailOrigin } from './types.ts'
@@ -118,7 +118,7 @@ export class DetailReader {
    * Read a package's detail document, sharing concurrent reads and reusing a result, or a failure that reading again
    * would repeat, for `ttlMs`.
    * @param location - the package's sources.
-   * @param languages - the chain from `languageChain` of `dsh-plugin-detail`.
+   * @param languages - the chain from `languageChain` of `liwa-plugin-detail`.
    * @param refresh - read again instead of reusing a cached result.
    * @returns the first document the sources provide, or `none`.
    * @throws {DetailFailure} when a source that should provide a document cannot be read.

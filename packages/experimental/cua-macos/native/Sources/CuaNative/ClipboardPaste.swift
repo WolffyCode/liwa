@@ -43,7 +43,7 @@ private final class PasteDataProvider: NSObject, NSPasteboardItemDataProvider, @
 
 @MainActor final class ClipboardPaste {
     private struct SavedItem: Sendable { let values: [(NSPasteboard.PasteboardType, Data)] }
-    private static let ownerType = NSPasteboard.PasteboardType("org.deepseek-harness.cua.clipboard-owner")
+    private static let ownerType = NSPasteboard.PasteboardType("org.liwa.cua.clipboard-owner")
     private let pasteboard: NSPasteboard
     private var restorePending: (() throws -> Void)?
 

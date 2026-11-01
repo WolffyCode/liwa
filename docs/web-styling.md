@@ -44,7 +44,7 @@ On a mixed-input device, a mouse preview can appear while the primary-pointer CS
 <a id="corner-radii-and-settings-cards"></a>
 ## Corner radii and settings cards
 
-The [DSH unified corner-radius standard](ui-radius.md) defines the radius scale, component size mapping, circle and capsule exceptions, nested hover geometry, and settings-card fills and strokes.
+The [Liwa unified corner-radius standard](ui-radius.md) defines the radius scale, component size mapping, circle and capsule exceptions, nested hover geometry, and settings-card fills and strokes.
 
 ## Changing the system
 

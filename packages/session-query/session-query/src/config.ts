@@ -1,6 +1,6 @@
 /** Public configuration and typed failures for the combined session-query service. */
 
-import { HarnessError } from '@deepseek-ai/dsh-llm'
+import { LiwaError } from '@liwa/llm'
 
 /** Default maximum `before`/`after` raw-event window. */
 export const SESSION_QUERY_READ_WINDOW_MAX = 50
@@ -46,7 +46,7 @@ export type SessionQueryErrorCode =
   | 'SESSION_QUERY_SOURCE_CONFLICT'
 
 /** Typed session-query failure whose `code` is one closed taxonomy member. */
-export class SessionQueryError extends HarnessError {
+export class SessionQueryError extends LiwaError {
   declare readonly code: SessionQueryErrorCode
 
   // The base stores the value; this signature narrows its open string code.

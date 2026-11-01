@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-file-reference-local",
+  "name": "@liwa/file-reference-local",
   "description": "Local-filesystem ctx.fileReferences provider with bounded fuzzy indexes",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/context/file-reference-local"
   },
   "type": "module",
@@ -34,26 +34,26 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/schemastery": "workspace:~"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-file-reference": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-working-directory": "workspace:*"
+    "@liwa/agent": "workspace:*",
+    "@liwa/file-reference": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/working-directory": "workspace:*"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-file-reference": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-tool-executor-native": "workspace:*",
-    "@deepseek-ai/dsh-tool-testkit": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-working-directory": "workspace:*",
-    "@deepseek-ai/dsh-fs-local": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*"
+    "@liwa/agent": "workspace:*",
+    "@liwa/file-reference": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/tool-executor-native": "workspace:*",
+    "@liwa/tool-testkit": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/working-directory": "workspace:*",
+    "@liwa/fs-local": "workspace:*",
+    "@liwa/session-projection": "workspace:*"
   }
 }

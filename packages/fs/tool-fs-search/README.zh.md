@@ -3,13 +3,13 @@ description: "面向模型的 glob 与 grep 发现工具：供组合或排查 ag
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-tool-fs-search
+# @liwa/tool-fs-search
 
 [English](README.md) | 中文
 
 ## 概述
 
-使用 `dsh-tool-fs-search` 为模型提供本地工作区中的 `glob` 文件发现与 `grep` 内容搜索。搜索无需在宿主上安装 `rg`，也无需文件系统提供方；结果相对于工作目录，并包含隐藏与忽略文件但排除 VCS 元数据。可配置上限约束内联输出；挂载可选 spill 存储后，达到上限的结果仍可完整恢复。若需读取、写入或编辑文件，请选择同级 `dsh-tool-fs` 包。
+使用 `liwa-tool-fs-search` 为模型提供本地工作区中的 `glob` 文件发现与 `grep` 内容搜索。搜索无需在宿主上安装 `rg`，也无需文件系统提供方；结果相对于工作目录，并包含隐藏与忽略文件但排除 VCS 元数据。可配置上限约束内联输出；挂载可选 spill 存储后，达到上限的结果仍可完整恢复。若需读取、写入或编辑文件，请选择同级 `liwa-tool-fs` 包。
 
 ## 目录
 
@@ -34,11 +34,11 @@ kind: "package-reference"
 一个子进程后端，然后是工具；spill 后端为可选，使达到上限的结果可完整恢复。
 
 ```yaml
-- name: '@deepseek-ai/dsh-subprocess-local'
-- name: '@deepseek-ai/dsh-tool-fs-search'
+- name: '@liwa/subprocess-local'
+- name: '@liwa/tool-fs-search'
   config:
     sampleOverCapGlobResults: false
-- name: '@deepseek-ai/dsh-spill-local'
+- name: '@liwa/spill-local'
 ```
 
 `sampleOverCapGlobResults` 是必填项且没有回退值：部署必须显式选择超过上限时的排序约定。格式化 spill 成功时，两种模式都会在 spill 产物中保留完整排序列表。
@@ -68,7 +68,7 @@ kind: "package-reference"
 | `stderrMaxBytes` | `65536` | `rg` stderr 的诊断尾部预算 |
 | `searchMetaMaxBytes` | `65536` | 一次搜索序列化 `presentationMeta` 的字节上限；超出部分丢弃尾部的组/路径 |
 
-生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-tool-fs-search)是每个受支持字段及其 JSDoc 的穷尽式真源。
+生成的[配置目录](../../../docs/config-catalog.zh.md#liwatool-fs-search)是每个受支持字段及其 JSDoc 的穷尽式真源。
 
 ### 部署要求
 
@@ -117,9 +117,9 @@ Node 部署在受支持的 macOS、Linux 与 Windows 目标上获得 `@vscode/ri
 cd packages/fs/tool-fs-search
 node --input-type=module <<'JS'
 import { build } from 'tsdown';
-await build({ config: false, tsconfig: false, dts: false, entry: 'tests/glob-native.perf.ts', outDir: 'tests/.dsh-build', clean: false, deps: { neverBundle: [/^[^./]/] } });
+await build({ config: false, tsconfig: false, dts: false, entry: 'tests/glob-native.perf.ts', outDir: 'tests/.liwa-build', clean: false, deps: { neverBundle: [/^[^./]/] } });
 JS
-node tests/.dsh-build/glob-native.perf.mjs
+node tests/.liwa-build/glob-native.perf.mjs
 ```
 
 诊断脚本创建 20,000 个无关文件和六个匹配文件，然后通过 Native executor 测量五次 `ctx.tools.execute()` 调用，使用真实 Agent、工作目录服务和本地 subprocess 后端。输出包括原始耗时、中位数，以及完整值、文本和展示元数据的哈希。`--plugin <built-module>` 选择其他搜索包版本；`--workspace <directory>` 显式选择只读的现有工作区，替代合成目录。计时排除初始化、模型生成、UI 和 Session 持久化；不设耗时阈值。
@@ -142,7 +142,7 @@ node tests/.dsh-build/glob-native.perf.mjs
 - [子进程能力](../../../docs/subsystems/subprocess.zh.md)——这些工具执行所经由的 spawn seam。
 - [Spill 存储](../../spill/spill/README.zh.md)——使达到上限结果可完整恢复的可选后端。
 - [超时工具](../../util/timeout/README.zh.md)——终止宽限期的 `MAX_TIMER_DELAY_MS` 上限。
-- [生成工具目录](../../../docs/tool-catalog.zh.md#deepseek-aidsh-tool-fs-search)——本包注册的穷尽式 schema。
+- [生成工具目录](../../../docs/tool-catalog.zh.md#liwatool-fs-search)——本包注册的穷尽式 schema。
 
 -----
 
@@ -179,7 +179,7 @@ Use the grep tool — not shell grep or rg — to search file contents. Use read
 
 #### 模型看到的内容
 
-glob 描述声明了配置的超过上限排序方式。生成的 [`glob` 和 `grep` schema](../../../docs/tool-catalog.zh.md#deepseek-aidsh-tool-fs-search) 使用 `sampleOverCapGlobResults: true`；工具无条件注册。
+glob 描述声明了配置的超过上限排序方式。生成的 [`glob` 和 `grep` schema](../../../docs/tool-catalog.zh.md#liwatool-fs-search) 使用 `sampleOverCapGlobResults: true`；工具无条件注册。
 
 #### Token 影响
 

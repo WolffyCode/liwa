@@ -3,7 +3,7 @@ description: "完整的 V2 到 V3 会话转换：系统头节点、经过审计�
 kind: "package-library"
 ---
 
-# @deepseek-ai/dsh-session-format-v2-to-v3
+# @liwa/session-format-v2-to-v3
 
 [English](README.md) | 中文
 

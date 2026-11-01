@@ -2,8 +2,8 @@
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context, Service } from '@deepseek-ai/cordis'
-import { remoteErrorOf } from '@deepseek-ai/dsh-typert-protocol'
+import { Context, Service } from '@liwa/cordis'
+import { remoteErrorOf } from '@liwa/typert-protocol'
 import { afterEach, beforeEach, expect, it, onTestFinished, vi } from 'vitest'
 import { DetailReader } from '../src/detail.ts'
 import PluginMarket from '../src/index.ts'
@@ -19,7 +19,7 @@ const COMMIT = 'b'.repeat(40)
 let home: string
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), 'dsh-plugin-market-detail-remote-'))
+  home = mkdtempSync(join(tmpdir(), 'liwa-plugin-market-detail-remote-'))
   // Every repository of these tests is public; no test runs Git against a network host.
   vi.spyOn(RepositoryCache.prototype, 'isPublic').mockResolvedValue(true)
 })
@@ -45,22 +45,22 @@ const index = {
   format: 1, title: 'Market', plugins: [
     {
       name: 'from-git', repository: { url: 'https://github.com/o/mono', directory: 'other' },
-      versions: [{ version: '1.0.0', publishTimestamp: 1, source: { type: 'git', url: 'https://github.com/o/r', commit: COMMIT, path: 'pkg' }, engines: { dsh: '*' } }],
+      versions: [{ version: '1.0.0', publishTimestamp: 1, source: { type: 'git', url: 'https://github.com/o/r', commit: COMMIT, path: 'pkg' }, engines: { liwa: '*' } }],
     },
     {
       name: 'from-git-root', repository: { url: 'https://example.com/only' },
-      versions: [{ version: '1.0.0', publishTimestamp: 1, source: { type: 'git', url: 'https://github.com/o/root', commit: COMMIT }, engines: { dsh: '*' } }],
+      versions: [{ version: '1.0.0', publishTimestamp: 1, source: { type: 'git', url: 'https://github.com/o/root', commit: COMMIT }, engines: { liwa: '*' } }],
     },
     {
       name: 'from-git-self', repository: { url: 'https://github.com/o/self', directory: 'pkg' },
-      versions: [{ version: '1.0.0', publishTimestamp: 1, source: { type: 'git', url: 'https://github.com/o/self', commit: COMMIT, path: 'pkg' }, engines: { dsh: '*' } }],
+      versions: [{ version: '1.0.0', publishTimestamp: 1, source: { type: 'git', url: 'https://github.com/o/self', commit: COMMIT, path: 'pkg' }, engines: { liwa: '*' } }],
     },
-    { name: 'bare', versions: [{ version: '1.0.0', publishTimestamp: 1, source: { type: 'npm' }, engines: { dsh: '*' } }] },
+    { name: 'bare', versions: [{ version: '1.0.0', publishTimestamp: 1, source: { type: 'npm' }, engines: { liwa: '*' } }] },
     {
       name: 'from-npm', versions: [
-        { version: '2.0.0', publishTimestamp: 1, source: { type: 'npm' }, engines: { dsh: '*' } },
-        { version: '1.0.0', publishTimestamp: 1, source: { type: 'npm', registry: 'https://npm.corp.example/' }, engines: { dsh: '*' } },
-        { version: '0.9.0', publishTimestamp: 1, source: { type: 'npm', registry: 'https://registry.npmmirror.com/' }, engines: { dsh: '*' } },
+        { version: '2.0.0', publishTimestamp: 1, source: { type: 'npm' }, engines: { liwa: '*' } },
+        { version: '1.0.0', publishTimestamp: 1, source: { type: 'npm', registry: 'https://npm.corp.example/' }, engines: { liwa: '*' } },
+        { version: '0.9.0', publishTimestamp: 1, source: { type: 'npm', registry: 'https://registry.npmmirror.com/' }, engines: { liwa: '*' } },
       ],
       repository: { url: 'https://github.com/o/npm' },
     },
@@ -165,7 +165,7 @@ it('serves images beside a read document and maps failures to statuses', async (
   const detail = await market.readEntryDetail(INDEX, 'from-git', '1.0.0', 'en')
   if (detail.status !== 'found') throw new Error('expected a document')
   const route = routes.get('/api/plugin-market/detail-file')!
-  const get = (query: string) => route(new Request(`http://dsh.local/api/plugin-market/detail-file${query}`))
+  const get = (query: string) => route(new Request(`http://liwa.local/api/plugin-market/detail-file${query}`))
   const ok = await get(`?document=${detail.document}&path=a.png`)
   expect([ok.status, ok.headers.get('content-type'), ok.headers.get('x-content-type-options'), await ok.text()])
     .toEqual([200, 'image/png', 'nosniff', 'png'])

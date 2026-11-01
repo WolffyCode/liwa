@@ -1,7 +1,7 @@
 /** Coding Tools persist while Standard, Creator, and custom presets remain selectable when disabled. */
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import type {} from '@deepseek-ai/dsh-api-session-controller'
+import type {} from '@liwa/api-session-controller'
 import { chromium } from 'playwright'
 import { expect, it, onTestFinished } from 'vitest'
 import { launchWebScaffold, watchConsole } from './scaffold.ts'
@@ -22,10 +22,10 @@ it('persists Coding Tools and limits the built-in PTC and Minimal choices in ses
   await openSettings(page, 'en')
   const toggle = page.getByRole('switch', { name: 'Show coding view' })
   expect(await toggle.getAttribute('aria-checked')).toBe('true')
-  expect(await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')).not.toMatch(/id: ui-settings(?:\r?\n|$)/)
+  expect(await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')).not.toMatch(/id: ui-settings(?:\r?\n|$)/)
   await toggle.click()
   await expect.poll(() => toggle.getAttribute('aria-checked')).toBe('false')
-  expect(await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')).toContain('enabled: false')
+  expect(await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')).toContain('enabled: false')
   await page.reload()
   await openSettings(page, 'en')
   await expect.poll(() => toggle.getAttribute('aria-checked')).toBe('false')

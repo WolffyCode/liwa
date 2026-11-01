@@ -3,11 +3,11 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-09-19-windows-acl-mandatory-integrity-confinement.md
 /agent-note-windows-sandbox-delete-confinement-mandatory-integrity-plus-an-ambient-delete-deny:
-  en: 2255e36ca94e90fa
-  zh: 7bfa70db175ce842
+  en: 5cdecbb1a38d6b8e
+  zh: 6c86c9257b806ed5
 /agent-note-windows-sandbox-delete-confinement-mandatory-integrity-plus-an-ambient-delete-deny/problem:
-  en: adb85f1842b69545
-  zh: 42a0ebb3b8015a74
+  en: 952d705da0abe5e6
+  zh: bba24d88bbb1fddd
 /agent-note-windows-sandbox-delete-confinement-mandatory-integrity-plus-an-ambient-delete-deny/decision:
   en: 08406f9c720d66c1
   zh: b9c81901488d73b5
@@ -30,11 +30,11 @@
   en: c39c82f7b745d672
   zh: 7b38d3c4b889dac6
 /agent-note-windows-sandbox-delete-confinement-mandatory-integrity-plus-an-ambient-delete-deny/consequences:
-  en: 4930b2596686d377
-  zh: 022a62051a58181e
+  en: ec040e061ff3f3ca
+  zh: 8e1f8bdcfeaa0819
 /agent-note-windows-sandbox-delete-confinement-mandatory-integrity-plus-an-ambient-delete-deny/testing:
   en: 6c1deeacdbff418d
   zh: 4d7c546e19da5e53
 /agent-note-windows-sandbox-delete-confinement-mandatory-integrity-plus-an-ambient-delete-deny/related:
-  en: 7bcd65866358de4a
-  zh: a0fbb85274736365
+  en: 04a9767c7a3fbf9e
+  zh: 5fc5f8399c225f0d

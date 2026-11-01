@@ -1,13 +1,13 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
-import { setSandboxMode } from '@deepseek-ai/dsh-sandbox-policy'
+import { setSandboxMode } from '@liwa/sandbox-policy'
 import { setImmediate } from 'node:timers/promises'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import { Context } from '@deepseek-ai/cordis'
+import { SessionId } from '@liwa/session'
+import { Context } from '@liwa/cordis'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
-import type { PtcBindingFunction, PtcRunRequest } from '@deepseek-ai/dsh-ptc-runtime'
-import { SandboxUnavailableError } from '@deepseek-ai/dsh-sandbox'
-import type { ConfinedArgv } from '@deepseek-ai/dsh-sandbox'
-import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
+import type { PtcBindingFunction, PtcRunRequest } from '@liwa/ptc-runtime'
+import { SandboxUnavailableError } from '@liwa/sandbox'
+import type { ConfinedArgv } from '@liwa/sandbox'
+import { MAX_TIMER_DELAY_MS } from '@liwa/timeout'
 import type { Config } from '../src/index.ts'
 import { fakeChild, NO_INITIAL_FRAME } from './fake-child.ts'
 import { encodePtcJsonWire } from '../src/json-wire.ts'
@@ -456,15 +456,15 @@ describe('Node runtime host failures', () => {
     vi.stubEnv('TEMP', 'fixture-temp-first')
     vi.stubEnv('TMP', 'fixture-tmp-second')
     vi.stubEnv('ELECTRON_RUN_AS_NODE', '1')
-    vi.stubEnv('DSH_TEST_RUNTIME_SECRET', 'must-not-inherit')
+    vi.stubEnv('LIWA_TEST_RUNTIME_SECRET', 'must-not-inherit')
     h.onBoot(() => { h.complete({}) })
     expect((await h.start()).error).toBeUndefined()
     const env = h.spawn.mock.calls[0]?.[0].env ?? {}
     expect(Object.hasOwn(env, 'TEMP')).toBe(false)
     expect(Object.hasOwn(env, 'TMP')).toBe(false)
     expect(Object.hasOwn(env, 'ELECTRON_RUN_AS_NODE')).toBe(false)
-    expect(Object.hasOwn(env, 'DSH_TEST_RUNTIME_SECRET')).toBe(true)
-    expect(env.DSH_TEST_RUNTIME_SECRET).toBeUndefined()
+    expect(Object.hasOwn(env, 'LIWA_TEST_RUNTIME_SECRET')).toBe(true)
+    expect(env.LIWA_TEST_RUNTIME_SECRET).toBeUndefined()
   })
 
   it('selects the remote embedded bootstrap without leaking ambient environment', async () => {
@@ -472,11 +472,11 @@ describe('Node runtime host failures', () => {
     h.onBoot(() => { h.complete({}) })
     expect((await h.start()).error).toBeUndefined()
     const spec = h.spawn.mock.calls[0]?.[0]
-    expect(spec?.env?.DSH_PTC_RUNTIME_NODE).toBe('1')
+    expect(spec?.env?.LIWA_PTC_RUNTIME_NODE).toBe('1')
     expect(Object.hasOwn(spec?.env ?? {}, 'PATH')).toBe(false)
     expect(spec?.argv).toEqual([process.execPath, '134217728'])
     expect(Object.fromEntries(Object.entries(spec?.env ?? {}).filter(([, value]) => value !== undefined)))
-      .toEqual({ DSH_PTC_RUNTIME_NODE: '1', NODE_OPTIONS: '--max-old-space-size=512' })
+      .toEqual({ LIWA_PTC_RUNTIME_NODE: '1', NODE_OPTIONS: '--max-old-space-size=512' })
   })
 })
 

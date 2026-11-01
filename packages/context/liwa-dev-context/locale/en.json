@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Liwa development context",
+    "description": "Give the model the Liwa source directory and Web URL without changing its system prompt."
+  }
+}

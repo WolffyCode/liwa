@@ -12,7 +12,7 @@
  */
 import { bindAsyncContext } from '../builtin_modules/implemented/async_hooks.ts'
 
-/** Node `Timeout`/`Immediate` face the harness relies on. */
+/** Node `Timeout`/`Immediate` face Liwa relies on. */
 export interface TimerHandle {
   ref(): TimerHandle
   unref(): TimerHandle

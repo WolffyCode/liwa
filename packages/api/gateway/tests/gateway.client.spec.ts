@@ -1,11 +1,11 @@
 import { queryObjects } from 'node:v8'
-import { RemoteError, typertOwnedValue } from '@deepseek-ai/dsh-typert-protocol'
-import { Context, Service } from '@deepseek-ai/cordis'
-import type { Fiber } from '@deepseek-ai/cordis'
+import { RemoteError, typertOwnedValue } from '@liwa/typert-protocol'
+import { Context, Service } from '@liwa/cordis'
+import type { Fiber } from '@liwa/cordis'
 import { describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { z } from 'zod'
-import { RemoteMock } from '@deepseek-ai/dsh-remote-mock'
-import { openConnectionWebSocket } from '@deepseek-ai/dsh-client-connection/src/client/socket.ts'
+import { RemoteMock } from '@liwa/remote-mock'
+import { openConnectionWebSocket } from '@liwa/client-connection/src/client/socket.ts'
 import {
   apply as applyConnection,
   installConnection,
@@ -13,7 +13,7 @@ import {
   type ConnectionGeneration,
   type ConnectionGenerationSource,
   type ConnectionHandle,
-} from '@deepseek-ai/dsh-client-connection/client'
+} from '@liwa/client-connection/client'
 import type {
   InvocationDescriptor,
   RemoteResult,
@@ -24,8 +24,8 @@ import type {
   TypertLookup,
   TypertRemoteScopeApi,
   TypertRemoteNamespace,
-} from '@deepseek-ai/dsh-typert-protocol'
-import TypertRegistry from '@deepseek-ai/dsh-typert-registry'
+} from '@liwa/typert-protocol'
+import TypertRegistry from '@liwa/typert-registry'
 import type { ClientRemote } from '../src/client/index.ts'
 import { apply, inject, isRemoteFailure, RemoteStream } from '../src/client/index.ts'
 import {
@@ -44,7 +44,7 @@ interface FixtureAgent {
   readonly agentId: string
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Events {
     /**
      * Test-only forwarded Host event.
@@ -79,7 +79,7 @@ declare module '@deepseek-ai/cordis' {
   }
 }
 
-declare module '@deepseek-ai/dsh-typert-protocol' {
+declare module '@liwa/typert-protocol' {
   interface TypertRemoteEventSelection extends
     Record<'fixture/changed' | 'fixture/idle' | 'fixture/approval', true> {}
 
@@ -655,7 +655,7 @@ describe('Client Remote transport readiness', () => {
   it.each([false, true])('replaces a stalled carrier and restores events (socket opened: %s)', async (autoOpen) => {
     await withFakeWebSocket('https://harness.example', async () => {
       vi.useFakeTimers()
-      vi.stubGlobal('__DSH_CONNECTION_RECOVERY__', {
+      vi.stubGlobal('__LIWA_CONNECTION_RECOVERY__', {
         backoffBaseMs: 10, backoffMaxMs: 10, generationReadyTimeoutMs: 100,
       })
       Object.assign(globalThis.location, { hostname: 'harness.example', search: '' })
@@ -2106,13 +2106,13 @@ describe('Client Typert API', () => {
 
   it('publishes injected Host facts after Remote events report ready', async () => {
     const locationDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'location')
-    const transportDescriptor = Object.getOwnPropertyDescriptor(globalThis, '__DSH_TRANSPORT__')
+    const transportDescriptor = Object.getOwnPropertyDescriptor(globalThis, '__LIWA_TRANSPORT__')
     const mock = RemoteMock.create({ host: { home: '/home/mock' } })
     Object.defineProperty(globalThis, 'location', {
       configurable: true,
       value: { hostname: '127.0.0.1', search: '' },
     })
-    Object.defineProperty(globalThis, '__DSH_TRANSPORT__', {
+    Object.defineProperty(globalThis, '__LIWA_TRANSPORT__', {
       configurable: true,
       value: { rpc: mock.rpc } satisfies ClientTransportHooks,
     })
@@ -2131,8 +2131,8 @@ describe('Client Typert API', () => {
       await ctx.fiber.dispose()
       if (locationDescriptor === undefined) Reflect.deleteProperty(globalThis, 'location')
       else Object.defineProperty(globalThis, 'location', locationDescriptor)
-      if (transportDescriptor === undefined) Reflect.deleteProperty(globalThis, '__DSH_TRANSPORT__')
-      else Object.defineProperty(globalThis, '__DSH_TRANSPORT__', transportDescriptor)
+      if (transportDescriptor === undefined) Reflect.deleteProperty(globalThis, '__LIWA_TRANSPORT__')
+      else Object.defineProperty(globalThis, '__LIWA_TRANSPORT__', transportDescriptor)
     }
   })
 
@@ -2338,7 +2338,7 @@ describe('Client Typert API', () => {
   it('normalizes worker-local structural stream failures without sharing class identity', async () => {
     const cases = [{
       failure: Object.assign(new Error('fixture Host rejected the stream'), {
-        dshRemoteStreamFailure: {
+        liwaRemoteStreamFailure: {
           kind: 'remote' as const,
           code: 'fixture/rejected',
           details: { retry: false },
@@ -2354,7 +2354,7 @@ describe('Client Typert API', () => {
       },
     }, {
       failure: Object.assign(new Error('worker carrier stopped'), {
-        dshRemoteStreamFailure: { kind: 'carrier' as const },
+        liwaRemoteStreamFailure: { kind: 'carrier' as const },
       }),
       assert: (error: unknown) => {
         expect(error).toBeInstanceOf(RemoteStreamCarrierError)
@@ -2987,8 +2987,8 @@ describe('Remote stream client carrier lifecycle', () => {
   })
 
   it('connects to the shell-owned Host while the document uses a local asset origin', async () => {
-    await withFakeWebSocket('dsh-app://app', async () => {
-      vi.stubGlobal('__DSH_TRANSPORT__', { streamBaseUrl: 'http://127.0.0.1:43210' })
+    await withFakeWebSocket('liwa-app://app', async () => {
+      vi.stubGlobal('__LIWA_TRANSPORT__', { streamBaseUrl: 'http://127.0.0.1:43210' })
       const client = new RemoteStreamMuxClient()
       try {
         client.start()

@@ -1,8 +1,8 @@
 /**
  * One-shot OAR execution, root-answer selection, and owned session disposal.
- * Native records remain in OAR; DSH receives assistant text and fixed failure facts.
+ * Native records remain in OAR; Liwa receives assistant text and fixed failure facts.
  *
- * @module @deepseek-ai/dsh-experimental-subagent-oar/run
+ * @module @liwa/experimental-subagent-oar/run
  */
 
 import { randomUUID } from 'node:crypto'
@@ -15,9 +15,9 @@ import type {
   TurnOutcome,
 } from '@botiverse/oar'
 import { awaitTurnEnd } from '@botiverse/oar/observe'
-import { brandString } from '@deepseek-ai/dsh-brand'
-import type { ContentBlock } from '@deepseek-ai/dsh-llm'
-import type { SessionId } from '@deepseek-ai/dsh-session'
+import { brandString } from '@liwa/brand'
+import type { ContentBlock } from '@liwa/llm'
+import type { SessionId } from '@liwa/session'
 import {
   assertUsableCwd,
   settleRunResult,
@@ -26,8 +26,8 @@ import {
   type SubagentResult,
   type SubagentRun,
   type SubagentStopReason,
-} from '@deepseek-ai/dsh-subagent'
-import { assertNever } from '@deepseek-ai/dsh-util-values'
+} from '@liwa/subagent'
+import { assertNever } from '@liwa/util-values'
 import { oarEnvironment } from './environment.ts'
 
 /** Resolved deployment settings and the runtime owned by one provider instance. */
@@ -234,7 +234,7 @@ function publishRun(
 }
 
 /**
- * Open one OAR session and return a one-shot DSH run. OAR cannot interrupt session
+ * Open one OAR session and return a one-shot Liwa run. OAR cannot interrupt session
  * startup; cancellation during that await disposes the returned session before rejection.
  * @param request - text task, resolved child directory, parent, and cancellation signal.
  * @param spec - selected runtime, native settings, deadline, and safe diagnostic observer.

@@ -11,7 +11,7 @@ import {
   sendFrame,
   unsupportedFrameRefusal,
   viewerRequestFields,
-} from '@deepseek-ai/dsh-experimental-liveshare-protocol'
+} from '@liwa/experimental-liveshare-protocol'
 
 /** One registration token; the parsers accept only this UUID-v4 shape. */
 const REGISTRATION = '11111111-1111-4111-8111-111111111111'
@@ -196,7 +196,7 @@ describe('tunnel worker commands', () => {
       { ...spec(), ownerDisplayName: 4 },
       { ...spec(), ownerProviderId: 4 },
       { ...spec(), ownerTenantId: 4 },
-      { ...spec(), dshVersion: 4 },
+      { ...spec(), liwaVersion: 4 },
       { ...spec(), ownerInstanceId: 4 },
       { ...spec(), ownerCredential: 4 },
       { ...spec(), expiresAt: 4 },
@@ -214,7 +214,7 @@ describe('tunnel worker commands', () => {
 
     const allOptional = {
       ...spec(),
-      ownerProviderId: 'p', ownerTenantId: 't', dshVersion: '1.0.0', ownerInstanceId: 'i',
+      ownerProviderId: 'p', ownerTenantId: 't', liwaVersion: '1.0.0', ownerInstanceId: 'i',
       ownerCredential: 'credential', expiresAt: '2026-10-03T00:00:00.000Z',
       allowsFork: true, sessionMode: 'write',
     }

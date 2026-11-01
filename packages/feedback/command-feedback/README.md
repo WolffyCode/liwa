@@ -3,13 +3,13 @@ description: "Session feedback: the `/feedback` command, the `sessionFeedback` H
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-command-feedback
+# @liwa/command-feedback
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-command-feedback` lets a user tell the harness what they think of a session. Typing `/feedback` plus a remark records it and acknowledges the session and anonymous user ids; the Web feedback dialog records a category and an optional description through the `sessionFeedback` Host Remote. Recording is immediate and never starts model work: the model neither sees the remark nor is interrupted by it. The package also owns the fixed category taxonomy every feedback surface files under. It ships with the standard `dsh` base and needs no configuration; headless, ACP, and JSON-RPC entry points provide no slash commands.
+`liwa-command-feedback` lets a user tell Liwa what they think of a session. Typing `/feedback` plus a remark records it and acknowledges the session and anonymous user ids; the Web feedback dialog records a category and an optional description through the `sessionFeedback` Host Remote. Recording is immediate and never starts model work: the model neither sees the remark nor is interrupted by it. The package also owns the fixed category taxonomy every feedback surface files under. It ships with the standard `liwa` base and needs no configuration; headless, ACP, and JSON-RPC entry points provide no slash commands.
 
 ## Table of Contents
 
@@ -25,7 +25,7 @@ English | [中文](README.zh.md)
 <a id="use-this-package"></a>
 ## Use this package
 
-Users can record feedback from the Web client out of the box: the `/feedback` command ships with the standard `dsh` base, needs no configuration, and works in any conversation. A custom app gets the same command by mounting the Session store, command registry, and this plugin together.
+Users can record feedback from the Web client out of the box: the `/feedback` command ships with the standard `liwa` base, needs no configuration, and works in any conversation. A custom app gets the same command by mounting the Session store, command registry, and this plugin together.
 
 ### The `/feedback` command
 
@@ -61,11 +61,11 @@ Feedback does not have to come from the slash command or the dialog: any UI, hoo
 
 ```yaml
 - id: session
-  name: '@deepseek-ai/dsh-session'
+  name: '@liwa/session'
 - id: commands
-  name: '@deepseek-ai/dsh-commands'
+  name: '@liwa/commands'
 - id: command-feedback
-  name: '@deepseek-ai/dsh-command-feedback'
+  name: '@liwa/command-feedback'
 ```
 
 The Web client ships the command. Headless mode, ACP automation, and JSON-RPC provide no slash commands, so `/feedback` is unavailable there.
@@ -84,7 +84,7 @@ The remark is one append-only fact in the session log, owned by the event rather
 
 ### How a remark is recorded
 
-The producer trims the text, records blank text as absent, and writes one event into the session log even when the entry carries neither text nor category; the `/feedback` handler rejects empty input itself and is otherwise a thin wrapper over that same producer, and the `sessionFeedback.record` Remote resolves the live Session by id and calls it too, answering `session-not-found` when no live owner carries the id. Neither path starts model work. The write is eager but not flushed: the acknowledgement means the entry reached the log, not the disk. The first accepted command remark for a harness home also mints the anonymous user id the acknowledgement reports. The exact producer contract lives in [`src/index.ts`](src/index.ts); the event payload, the taxonomy, and the Remote vocabulary live in [`src/types.ts`](src/types.ts).
+The producer trims the text, records blank text as absent, and writes one event into the session log even when the entry carries neither text nor category; the `/feedback` handler rejects empty input itself and is otherwise a thin wrapper over that same producer, and the `sessionFeedback.record` Remote resolves the live Session by id and calls it too, answering `session-not-found` when no live owner carries the id. Neither path starts model work. The write is eager but not flushed: the acknowledgement means the entry reached the log, not the disk. The first accepted command remark for a Liwa home also mints the anonymous user id the acknowledgement reports. The exact producer contract lives in [`src/index.ts`](src/index.ts); the event payload, the taxonomy, and the Remote vocabulary live in [`src/types.ts`](src/types.ts).
 
 ### Source map
 
@@ -102,7 +102,7 @@ The producer trims the text, records blank text as absent, and writes one event 
 
 Read these pages when the package-level contract is not enough. They cover the command registry, persistence, and identity facts this capture path relies on.
 
-- [dsh-commands](../../interaction/commands/README.md) — the registry that discovers the global command and its `recordInput` semantics.
+- [liwa-commands](../../interaction/commands/README.md) — the registry that discovers the global command and its `recordInput` semantics.
 - [Session persistence subsystem](../../../docs/subsystems/persistence.md) — how appended events become durable and what a flush barrier means.
 - [Anonymous user identity](../../identity/anonymous-user-id/README.md) — the id the acknowledgement reports.
 - [ui-message-feedback](../../client/ui-message-feedback/README.md) — the Web feedback dialog that records through the `sessionFeedback` Remote.

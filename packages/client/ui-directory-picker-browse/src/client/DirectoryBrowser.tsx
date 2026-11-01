@@ -1,5 +1,5 @@
 /**
- * The in-app workspace-directory browser (figma Harness 813-23126 family): a
+ * The in-app workspace-directory browser (figma Liwa 813-23126 family): a
  * 680×500 dialog (clamped to short/narrow viewports — the Miller row scrolls
  * sideways, the columns scroll down) whose header carries the title, the selection-path
  * breadcrumb, and a click-to-edit path zone; below it a Miller view — one
@@ -39,9 +39,9 @@ import clsx from 'clsx'
 import {
   Button, IconCheckOutlineRegular, IconChevronRightOutlineRegular, IconEditOutlineRegular, IconFolderCloseRegular, IconFolderOpenRegular,
   IconPlusOutlineRegular, Modal,
-} from '@deepseek-ai/dsh-client-ui-primitives'
-import type { DirectoryEntry, DirectoryListing } from '@deepseek-ai/dsh-api-remotes/client'
-import type { Translate } from '@deepseek-ai/dsh-client-locale/client'
+} from '@liwa/client-ui-primitives'
+import type { DirectoryEntry, DirectoryListing } from '@liwa/api-remotes/client'
+import type { Translate } from '@liwa/client-locale/client'
 import css from './DirectoryBrowser.module.css'
 
 /** Owner-supplied browser props: browse calls, pick semantics, and copy. */

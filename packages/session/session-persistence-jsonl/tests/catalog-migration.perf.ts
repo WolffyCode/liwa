@@ -1,8 +1,8 @@
 /** Threshold-free, built-runtime measurements of historical catalog reads as the corpus grows. */
 
-import { Context } from '@deepseek-ai/cordis'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
+import { Context } from '@liwa/cordis'
+import { SessionId } from '@liwa/session'
+import * as JsonlSessionPersistence from '@liwa/session-persistence-jsonl'
 import { spawnSync } from 'node:child_process'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -15,7 +15,7 @@ const CHILD_EVENTS = 1_000
 const SAMPLES = 3
 
 async function measure(unrelated: number) {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-catalog-perf-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-catalog-perf-'))
   const ctx = new Context()
   try {
     for (let i = 0; i < unrelated + CHILDREN + 1; i++) {

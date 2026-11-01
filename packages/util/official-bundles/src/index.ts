@@ -1,9 +1,9 @@
 /**
  * Installation-owned bundle lists and the plugin manager's protected and presented packages, kept apart from the code that applies them.
- * @module @deepseek-ai/dsh-official-bundles
+ * @module @liwa/official-bundles
  */
 
-import type { DshBundleManifest, PluginLocalizedMeta } from '@deepseek-ai/dsh-package-manifest'
+import type { LiwaBundleManifest, PluginLocalizedMeta } from '@liwa/package-manifest'
 
 export {
   DEFAULT_PROFILE_BUNDLES, INSTALLATION_OWNED_PROFILE_TUPLES, ON_DEMAND_BUNDLES, OPTIONAL_BUNDLES, PROFILE_TEMPLATES,
@@ -16,7 +16,7 @@ export interface OfficialBundleCatalogEntry {
   /** Exact npm package name accepted by the existing bundle installer. */
   readonly packageName: string
   /** Package-owned Host platform declaration, available before installation. */
-  readonly platforms?: DshBundleManifest['platforms']
+  readonly platforms?: LiwaBundleManifest['platforms']
   /** Package-owned localized text and a self-contained icon, embedded without provider code. */
   readonly meta: Required<Pick<PluginLocalizedMeta, 'title' | 'description' | 'icon'>>
 }

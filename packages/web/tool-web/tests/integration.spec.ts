@@ -1,28 +1,28 @@
 /**
- * Integration: the real fetch backend (`dsh-web-fetch-http`) + a real search provider
- * (`dsh-web-search-exa`) + the real seam (`dsh-web`) + the model tool (`dsh-tool-web`) + the
- * tool-call timeout policy (`dsh-tool-call-timeout-policy`), exercised through `executeToolFixture()` —
+ * Integration: the real fetch backend (`liwa-web-fetch-http`) + a real search provider
+ * (`liwa-web-search-exa`) + the real seam (`liwa-web`) + the model tool (`liwa-tool-web`) + the
+ * tool-call timeout policy (`liwa-tool-call-timeout-policy`), exercised through `executeToolFixture()` —
  * nothing bypasses the tool registry. Fetch verifies world effects against loopback HTTP; search uses the real Exa provider
  * with only its network boundary stubbed.
  */
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
+import { executeToolFixture } from '@liwa/tool-testkit'
 
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
 import { AddressInfo } from 'node:net'
-import { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import { ToolCallId } from '@deepseek-ai/dsh-llm'
-import { createScope } from '@deepseek-ai/dsh-scope'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime, { type ToolExecutionResult } from '@deepseek-ai/dsh-tools'
-import WebRuntime from '@deepseek-ai/dsh-web'
-import * as WebFetchLocal from '@deepseek-ai/dsh-web-fetch-http'
-import * as WebSearchExa from '@deepseek-ai/dsh-web-search-exa'
-import * as ToolWeb from '@deepseek-ai/dsh-tool-web'
-import * as TimeoutPolicy from '@deepseek-ai/dsh-tool-call-timeout-policy'
+import { Context } from '@liwa/cordis'
+import type { Agent } from '@liwa/agent'
+import { ToolCallId } from '@liwa/llm'
+import { createScope } from '@liwa/scope'
+import { SessionId } from '@liwa/session'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime, { type ToolExecutionResult } from '@liwa/tools'
+import WebRuntime from '@liwa/web'
+import * as WebFetchLocal from '@liwa/web-fetch-http'
+import * as WebSearchExa from '@liwa/web-search-exa'
+import * as ToolWeb from '@liwa/tool-web'
+import * as TimeoutPolicy from '@liwa/tool-call-timeout-policy'
 
 const testToolSignal = new AbortController().signal
 
@@ -167,7 +167,7 @@ describe('tool-call timeout returns TOOL_TIMEOUT (deadline wins over a slow fetc
   it('returns a structured TOOL_TIMEOUT (not the provider WEB_FETCH_TIMEOUT) when the tool-call budget wins', async () => {
     const out = await call('web_fetch', { url: slowBase }, tctx)
     expect(out.isError).toBe(true)
-    // The outer tool-call deadline won: TOOL_TIMEOUT, owned by dsh-tool-call-timeout-policy,
+    // The outer tool-call deadline won: TOOL_TIMEOUT, owned by liwa-tool-call-timeout-policy,
     // NOT the provider's own WEB_FETCH_TIMEOUT (its 30s backstop never fired).
     expect(out.error?.info?.code).toBe('TOOL_TIMEOUT')
     const text = out.content.map(b => (b.type === 'text' ? b.text : '')).join('')

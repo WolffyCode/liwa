@@ -1,6 +1,6 @@
 /** Plugin dispatch is synchronous, scoped, and independent of browser default cancellation. */
-import { Context } from '@deepseek-ai/cordis'
-import { SessionId } from '@deepseek-ai/dsh-session/types'
+import { Context } from '@liwa/cordis'
+import { SessionId } from '@liwa/session/types'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import type { TextInteractionRequest } from '../src/client/contract/text-interaction.ts'
 import { ConversationInteractionRegistry } from '../src/client/conversation/interaction-registry.ts'

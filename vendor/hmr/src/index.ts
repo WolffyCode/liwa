@@ -1,19 +1,19 @@
-import { Context, Inject, Service, type Fiber, type Plugin } from '@deepseek-ai/cordis'
-import type { Awaitable, Dict } from '@deepseek-ai/cosmokit'
-import type { ModuleJob, ModuleLoader, ResolveResult } from '@deepseek-ai/cordis-plugin-loader'
+import { Context, Inject, Service, type Fiber, type Plugin } from '@liwa/cordis'
+import type { Awaitable, Dict } from '@liwa/cosmokit'
+import type { ModuleJob, ModuleLoader, ResolveResult } from '@liwa/cordis-plugin-loader'
 import { FSWatcher, watch, type ChokidarOptions } from 'chokidar'
 import { relative, resolve, sep } from 'node:path'
 import { handleError } from './error.ts'
-import type {} from '@deepseek-ai/cordis-plugin-timer'
+import type {} from '@liwa/cordis-plugin-timer'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createRequire } from 'node:module'
 import picomatch from 'picomatch'
-import z from '@deepseek-ai/schemastery'
+import z from '@liwa/schemastery'
 
 // A Windows drive-letter path, e.g. `C:\app\cordis.yml` or `C:/app/cordis.yml`.
 const driveLetter = /^[A-Za-z]:[\\/]/
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     hmr: Hmr
   }
@@ -524,7 +524,7 @@ namespace Hmr {
     ]),
     debounce: z.natural().role('ms').default(100),
   })
-  // [deepseek-harness] vendored modification: removed `.i18n({ 'en-US': enUS, 'zh-CN': zhCN })`
+  // [liwa] vendored modification: removed `.i18n({ 'en-US': enUS, 'zh-CN': zhCN })`
   // and the corresponding `./locales/*.yml` imports, to avoid a runtime YAML import hook
   // (@cordisjs/unyaml) that we don't vendor. See vendor/README.md.
 }

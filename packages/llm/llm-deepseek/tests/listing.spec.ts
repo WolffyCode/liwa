@@ -2,8 +2,8 @@
 import { createServer } from 'node:http'
 import type { IncomingMessage, Server, ServerResponse } from 'node:http'
 import { afterEach, describe, expect, it } from 'vitest'
-import { APP_IDENTITY } from '@deepseek-ai/dsh-llm'
-import { deadline } from '@deepseek-ai/dsh-timeout'
+import { APP_IDENTITY } from '@liwa/llm'
+import { deadline } from '@liwa/timeout'
 import { LISTING_TIMEOUT, MAX_BADGE_TEXT_LENGTH, parseModelListing, requestModelListing } from '../src/listing.ts'
 import type { ListedCapabilities } from '../src/listing.ts'
 
@@ -77,8 +77,8 @@ describe('parseModelListing', () => {
     [{ api_capabilities: { anthropic_messages: 'yes' } }, 'declares no api_capabilities.anthropic_messages'],
     [{ ...MESSAGES, output_modalities: ['image'] }, 'declares no text output'],
     [{ ...MESSAGES, output_modalities: 'text' }, 'declares no text output'],
-    [{ ...MESSAGES, input_modalities: ['audio'] }, 'declares no input modality DeepSeek Harness supports'],
-    [{ ...MESSAGES, input_modalities: 'text' }, 'declares no input modality DeepSeek Harness supports'],
+    [{ ...MESSAGES, input_modalities: ['audio'] }, 'declares no input modality Liwa supports'],
+    [{ ...MESSAGES, input_modalities: 'text' }, 'declares no input modality Liwa supports'],
     [{ ...MESSAGES, context_window: 0 }, 'declares an invalid context_window or max_output_tokens'],
     [{ ...MESSAGES, max_output_tokens: 1.5 }, 'declares an invalid context_window or max_output_tokens'],
   ])('marks %j unusable', (row, reason) => {

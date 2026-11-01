@@ -1,15 +1,15 @@
 /**
  * Service Definition for the `ctx.shell` capability seam, covering foreground commands and background process
  * handles. Job ids, ownership, polling, and notices belong to
- * `@deepseek-ai/dsh-jobs`, keeping executors independent of sessions.
- * @module @deepseek-ai/dsh-shell
+ * `@liwa/jobs`, keeping executors independent of sessions.
+ * @module @liwa/shell
  */
 
-import { Context, Service } from '@deepseek-ai/cordis'
-import type { SandboxMode } from '@deepseek-ai/dsh-sandbox'
+import { Context, Service } from '@liwa/cordis'
+import type { SandboxMode } from '@liwa/sandbox'
 import type { ShellExecRequest, ShellExecSpec, ShellExecution } from './types.ts'
 
-export { DSH_ENV_PREFIX } from './types.ts'
+export { LIWA_ENV_PREFIX } from './types.ts'
 export type {
   ShellExecRequest,
   ShellExecSpec,
@@ -21,13 +21,13 @@ export type {
   ShellRunResult,
   ShellSandboxInfo,
   CollectedOutput,
-  DshEnvironment,
-  DshEnvironmentKey,
+  LiwaEnvironment,
+  LiwaEnvironmentKey,
 } from './types.ts'
 export { parseExitStatus } from './render.ts'
 export type { ParsedExitStatus } from './render.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     shell: ShellExecutor
   }

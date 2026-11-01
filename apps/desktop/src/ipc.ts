@@ -1,41 +1,41 @@
 /** Typed preload operations exposed only by the Electron shell. */
 
-import type { DesktopKeyboardApi, DesktopShortcutsApi } from '@deepseek-ai/dsh-client-shortcuts/protocol'
+import type { DesktopKeyboardApi, DesktopShortcutsApi } from '@liwa/client-shortcuts/protocol'
 import type { IpcMainInvokeEvent } from 'electron'
-import type { DesktopBrowserBridge } from '@deepseek-ai/dsh-client-ui-sidebar-browser/types'
-import type { DesktopFileDrag } from '@deepseek-ai/dsh-util-file-drag'
+import type { DesktopBrowserBridge } from '@liwa/client-ui-sidebar-browser/types'
+import type { DesktopFileDrag } from '@liwa/util-file-drag'
 
 /** IPC channel names kept private to the desktop application bundle. */
 export const DESKTOP_IPC = {
-  shortcutsInput: 'dsh-desktop:shortcuts-input',
-  shortcutsCloseWindow: 'dsh-desktop:shortcuts-close-window',
-  shortcutsGet: 'dsh-desktop:shortcuts-get',
-  shortcutsEdit: 'dsh-desktop:shortcuts-edit',
-  shortcutsChanged: 'dsh-desktop:shortcuts-changed',
-  shortcutsRecording: 'dsh-desktop:shortcuts-recording',
-  boot: 'dsh-desktop:boot',
-  enterWorkspace: 'dsh-desktop:enter-workspace',
-  onboardingActive: 'dsh-desktop:onboarding-active',
-  onboardingApiKey: 'dsh-desktop:onboarding-api-key',
-  bootFailed: 'dsh-desktop:boot-failed',
-  browserAcquire: 'dsh-desktop:browser-acquire',
-  browserRelease: 'dsh-desktop:browser-release',
-  browserOpenRequested: 'dsh-desktop:browser-open-requested',
-  directoryPick: 'dsh-desktop:directory-pick',
-  fileDragPrepare: 'dsh-desktop:file-drag-prepare',
-  fileDragCancel: 'dsh-desktop:file-drag-cancel',
-  fileDragStart: 'dsh-desktop:file-drag-start',
-  fileDragRelease: 'dsh-desktop:file-drag-release',
-  deviceInfo: 'dsh-desktop:device-info',
-  localeBootstrap: 'dsh-desktop:locale-bootstrap',
-  localeChanged: 'dsh-desktop:locale-changed',
-  updatesStatus: 'dsh-desktop:updates-status',
-  updatesOpen: 'dsh-desktop:updates-open',
-  updatesPresentation: 'dsh-desktop:updates-presentation',
-  nativeThemeSet: 'dsh-desktop:native-theme-set',
-  windowFullscreen: 'dsh-desktop:window-fullscreen',
-  windowsAppearance: 'dsh-desktop:windows-appearance',
-  windowsMenu: 'dsh-desktop:windows-menu',
+  shortcutsInput: 'liwa-desktop:shortcuts-input',
+  shortcutsCloseWindow: 'liwa-desktop:shortcuts-close-window',
+  shortcutsGet: 'liwa-desktop:shortcuts-get',
+  shortcutsEdit: 'liwa-desktop:shortcuts-edit',
+  shortcutsChanged: 'liwa-desktop:shortcuts-changed',
+  shortcutsRecording: 'liwa-desktop:shortcuts-recording',
+  boot: 'liwa-desktop:boot',
+  enterWorkspace: 'liwa-desktop:enter-workspace',
+  onboardingActive: 'liwa-desktop:onboarding-active',
+  onboardingApiKey: 'liwa-desktop:onboarding-api-key',
+  bootFailed: 'liwa-desktop:boot-failed',
+  browserAcquire: 'liwa-desktop:browser-acquire',
+  browserRelease: 'liwa-desktop:browser-release',
+  browserOpenRequested: 'liwa-desktop:browser-open-requested',
+  directoryPick: 'liwa-desktop:directory-pick',
+  fileDragPrepare: 'liwa-desktop:file-drag-prepare',
+  fileDragCancel: 'liwa-desktop:file-drag-cancel',
+  fileDragStart: 'liwa-desktop:file-drag-start',
+  fileDragRelease: 'liwa-desktop:file-drag-release',
+  deviceInfo: 'liwa-desktop:device-info',
+  localeBootstrap: 'liwa-desktop:locale-bootstrap',
+  localeChanged: 'liwa-desktop:locale-changed',
+  updatesStatus: 'liwa-desktop:updates-status',
+  updatesOpen: 'liwa-desktop:updates-open',
+  updatesPresentation: 'liwa-desktop:updates-presentation',
+  nativeThemeSet: 'liwa-desktop:native-theme-set',
+  windowFullscreen: 'liwa-desktop:window-fullscreen',
+  windowsAppearance: 'liwa-desktop:windows-appearance',
+  windowsMenu: 'liwa-desktop:windows-menu',
 } as const
 
 /** Desktop release update state rendered by desktop-owned UI. */
@@ -75,7 +75,7 @@ export interface DesktopUpdatePresentation {
 }
 
 /** Product documents cannot supply update versions, package URLs, or installation authorization. */
-export interface DshDesktopProductApi {
+export interface LiwaDesktopProductApi {
   readonly protocolVersion: 1
   readonly browser: DesktopBrowserBridge
   readonly fileDrag: DesktopFileDrag
@@ -94,7 +94,7 @@ export interface DshDesktopProductApi {
 }
 
 /** Scheme of Desktop-owned application documents. */
-export const SCHEME = 'dsh-app'
+export const SCHEME = 'liwa-app'
 
 /**
  * Reject IPC outside the allowed Desktop document origins.
@@ -103,9 +103,9 @@ export const SCHEME = 'dsh-app'
  */
 export function assertDesktopSender(event: IpcMainInvokeEvent, hostnames: readonly string[]): void {
   const senderFrame = event.senderFrame
-  if (senderFrame === null) throw new Error('dsh desktop: rejected IPC without a sender frame')
+  if (senderFrame === null) throw new Error('liwa desktop: rejected IPC without a sender frame')
   const url = new URL(senderFrame.url)
   if (url.protocol !== `${SCHEME}:` || !hostnames.includes(url.hostname)) {
-    throw new Error('dsh desktop: rejected IPC from an unowned renderer')
+    throw new Error('liwa desktop: rejected IPC from an unowned renderer')
   }
 }

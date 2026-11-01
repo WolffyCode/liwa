@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-attachment-local",
-  "description": "Private content-addressed DSH_HOME attachment storage",
+  "name": "@liwa/attachment-local",
+  "description": "Private content-addressed LIWA_HOME attachment storage",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/attachment/attachment-local"
   },
   "type": "module",
@@ -29,18 +29,18 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-attachment": "workspace:*",
-    "@deepseek-ai/dsh-home-paths": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/attachment": "workspace:*",
+    "@liwa/home-paths": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "dependencies": {
-    "@deepseek-ai/dsh-lazy-require": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/lazy-require": "workspace:*",
+    "@liwa/schemastery": "workspace:~",
     "sharp": "0.35.5"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-attachment": "workspace:*",
-    "@deepseek-ai/dsh-home-paths": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/attachment": "workspace:*",
+    "@liwa/home-paths": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   }
 }

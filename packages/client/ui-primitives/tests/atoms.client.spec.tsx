@@ -2,7 +2,7 @@
 import { createRef, useState } from 'react'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
-import { Button, ConnectionIndicator, Input, Menu, MenuItemButton, Modal, Pill } from '@deepseek-ai/dsh-client-ui-primitives'
+import { Button, ConnectionIndicator, Input, Menu, MenuItemButton, Modal, Pill } from '@liwa/client-ui-primitives'
 import { POINTER_GRACE_MS } from '../src/pointer-grace.ts'
 import { focusWithoutRing } from '../src/focus.ts'
 import buttonCss from '../src/Button.module.css'
@@ -45,7 +45,7 @@ describe('isMobileDevice', () => {
     expect(first.isMobileDevice()).toBe(mobile)
 
     ua.mockReturnValue(mobile ? desktopUA : mobileUA)
-    const other = await import('@deepseek-ai/dsh-client-ui-primitives/src/focus.ts')
+    const other = await import('@liwa/client-ui-primitives/src/focus.ts')
     expect(other.isMobileDevice()).toBe(mobile)
     expect(ua).toHaveBeenCalledTimes(1)
 
@@ -61,9 +61,9 @@ it('retains automatic focus styling while typing and restores it for keyboard na
   const button = screen.getByRole('button')
   focusWithoutRing(button)
   fireEvent.keyDown(button, { key: 'a' })
-  expect(button.hasAttribute('data-dsh-automatic-focus')).toBe(true)
+  expect(button.hasAttribute('data-liwa-automatic-focus')).toBe(true)
   fireEvent.keyDown(button, { key: 'ArrowDown' })
-  expect(button.hasAttribute('data-dsh-automatic-focus')).toBe(false)
+  expect(button.hasAttribute('data-liwa-automatic-focus')).toBe(false)
 })
 
 describe('Button', () => {
@@ -335,9 +335,9 @@ describe('Menu', () => {
     // autoFocus parks the keyboard on the first row; Tab settles it like Enter.
     const alpha = screen.getByRole('menuitem', { name: 'Alpha' })
     expect(document.activeElement).toBe(alpha)
-    expect(alpha.getAttribute('data-dsh-automatic-focus')).toBe('')
+    expect(alpha.getAttribute('data-liwa-automatic-focus')).toBe('')
     expect(fireEvent.keyDown(alpha, { key: 'Tab' })).toBe(false)
-    expect(alpha.getAttribute('data-dsh-automatic-focus')).toBeNull()
+    expect(alpha.getAttribute('data-liwa-automatic-focus')).toBeNull()
     expect(onSelect).toHaveBeenCalledExactlyOnceWith('a')
 
     // Shift+Tab leaves like Escape: closed, with the trigger taking the keyboard.

@@ -2,17 +2,17 @@
  * Authentication and redirect-rejecting transport shared by the Search and
  * Fetch API providers in this package. Credential resolution and its readiness
  * check, the dispatch call, and the cancellation helpers deliberately repeat
- * `dsh-web-search-deepseek`, so neither plugin depends on the other; the
+ * `liwa-web-search-deepseek`, so neither plugin depends on the other; the
  * `jscpd:ignore` regions mark those repeats
  * ([rationale](../../../../.agents/notes/implemented/feature/2026-10-15-deepseek-search-fetch-api.md)).
- * @module @deepseek-ai/dsh-web-deepseek-api/transport
+ * @module @liwa/web-deepseek-api/transport
  */
-import type { Context } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-agent'
-import { credentialRef, type CredentialRef } from '@deepseek-ai/dsh-credentials'
-import type {} from '@deepseek-ai/dsh-deepseek-account'
-import { launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment'
-import { WebError } from '@deepseek-ai/dsh-web'
+import type { Context } from '@liwa/cordis'
+import type {} from '@liwa/agent'
+import { credentialRef, type CredentialRef } from '@liwa/credentials'
+import type {} from '@liwa/deepseek-account'
+import { launchEnvironmentOf } from '@liwa/launch-environment'
+import { WebError } from '@liwa/web'
 
 const ACCOUNT_PROVIDER = 'deepseek-account'
 const USER_AGENT = 'deepseek-harness/0.0.1'

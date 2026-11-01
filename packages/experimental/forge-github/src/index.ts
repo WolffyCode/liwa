@@ -1,9 +1,9 @@
 /** Registers the GitHub provider of `ctx.forge`, which reads pull requests through the GitHub CLI on the host. */
 
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import type {} from '@deepseek-ai/dsh-experimental-forge'
-import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
+import type { Context } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import type {} from '@liwa/experimental-forge'
+import { MAX_TIMER_DELAY_MS } from '@liwa/timeout'
 import { ghRunner } from './gh.ts'
 import { GitHubProvider } from './provider.ts'
 

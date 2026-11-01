@@ -3,13 +3,13 @@ description: "计算机操作提供方注册：供每次启用一个桌面驱动
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-computer-use
+# @liwa/computer-use
 
 [English](README.md) | 中文
 
 ## 概述
 
-部署每次可启用一个计算机操作提供方。加载另一个提供方时会失败，并报告已注册的提供方名称。DSH 原生 CUA 和 Cua Driver 适配包都使用此注册器。各提供方提供自己的工具和桌面操作。本包不添加模型可见工具，也不协调并发 Session。
+部署每次可启用一个计算机操作提供方。加载另一个提供方时会失败，并报告已注册的提供方名称。灵鲸原生 CUA 和 Cua Driver 适配包都使用此注册器。各提供方提供自己的工具和桌面操作。本包不添加模型可见工具，也不协调并发 Session。
 
 ## 目录
 
@@ -28,10 +28,10 @@ kind: "package-reference"
 在 Cordis 组合中，将服务与选定的提供方一起挂载一次：
 
 ```yaml
-- name: '@deepseek-ai/dsh-computer-use'
+- name: '@liwa/computer-use'
 ```
 
-服务没有配置项。提供方插件注入 `computerUse` 并调用 `ctx.computerUse.register(ComputerUseProviderName(name))`；该品牌类型从 `@deepseek-ai/dsh-computer-use/brand` 导出。返回的 effect 清理函数释放此次注册。
+服务没有配置项。提供方插件注入 `computerUse` 并调用 `ctx.computerUse.register(ComputerUseProviderName(name))`；该品牌类型从 `@liwa/computer-use/brand` 导出。返回的 effect 清理函数释放此次注册。
 
 提供方先停止接收工具调用、关闭资源并等待自有工作结束，再释放注册。释放前，`ctx.computerUse.providerName` 始终报告已注册的名称。
 
@@ -53,9 +53,9 @@ kind: "package-reference"
 ## 延伸阅读
 
 - [计算机操作](../../../docs/subsystems/computer-use.zh.md) — 提供方选择和共享桌面限制。
-- [Computer Use 组合包](../../experimental/cua-bundle/README.zh.md)：启用 DSH 原生 CUA 和权限管理功能。
+- [Computer Use 组合包](../../experimental/cua-bundle/README.zh.md)：启用灵鲸原生 CUA 和权限管理功能。
 - [共享 CUA 库](../../experimental/cua/README.zh.md)：应用与窗口对象、工具执行和应用授权。
-- [macOS CUA 提供方](../../experimental/cua-macos/README.zh.md)：DSH 的 Swift 实现和原生辅助进程生命周期。
+- [macOS CUA 提供方](../../experimental/cua-macos/README.zh.md)：灵鲸的 Swift 实现和原生辅助进程生命周期。
 - [Cua Driver MCP 提供方](../../experimental/computer-use-cua-driver-mcp/README.zh.md) — 使用已安装的驱动。
 - [Cua Driver 原生提供方](../../experimental/computer-use-cua-driver-native/README.zh.md) — 使用 npm 运行时。
 
@@ -76,7 +76,7 @@ kind: "package-reference"
 
 服务在其 Cordis 服务实例内限制注册。
 
-- **共享桌面** — 并发 Session 和独立 DSH 进程可以操作同一桌面；调用方协调完整的计算机操作流程。
+- **共享桌面** — 并发 Session 和独立灵鲸进程可以操作同一桌面；调用方协调完整的计算机操作流程。
 - **提供方选择** — 由配置选择提供方；模型不能在运行时切换已注册的驱动。
 
 <a id="dev-note"></a>

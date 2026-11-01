@@ -1,7 +1,7 @@
 /** Coalesced Session state observations with Host-local revisions. */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type { SessionId } from '@deepseek-ai/dsh-session'
+import type { Context } from '@liwa/cordis'
+import type { SessionId } from '@liwa/session'
 import type { SessionState } from '../types.ts'
 
 /** One complete state with its listener-local revision. */

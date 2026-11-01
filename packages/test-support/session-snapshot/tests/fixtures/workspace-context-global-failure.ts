@@ -3,16 +3,16 @@
 import assert from 'node:assert/strict'
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { Context } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-agent'
-import type {} from '@deepseek-ai/dsh-fs'
-import type {} from '@deepseek-ai/dsh-tools'
+import type { Context } from '@liwa/cordis'
+import type {} from '@liwa/agent'
+import type {} from '@liwa/fs'
+import type {} from '@liwa/tools'
 
 export const name = 'workspace-context-global-failure'
 export const inject = ['fs']
 
 /**
- * Change the harness-home file while its duplicate is unavailable, then restore observation.
+ * Change the Liwa-home file while its duplicate is unavailable, then restore observation.
  * @param ctx - scenario context with its real filesystem provider.
  */
 export function apply(ctx: Context): void {
@@ -43,7 +43,7 @@ export function apply(ctx: Context): void {
       || !('file_path' in exec.arguments)) return downstream
     const cwd = exec.agent.session.header.cwd
     if (cwd === undefined) throw new Error('Global instruction snapshot requires a session cwd')
-    const homeFile = join(cwd, '.dsh', 'AGENTS.md')
+    const homeFile = join(cwd, '.liwa', 'AGENTS.md')
     const sharedFile = join(cwd, '.agents', 'AGENTS.md')
     switch (exec.arguments.file_path) {
       case 'first.txt':

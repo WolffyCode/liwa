@@ -35,7 +35,7 @@
 
 - insert:
     - id: agent-team
-      name: '@deepseek-ai/dsh-experimental-agent-team'
+      name: '@liwa/experimental-agent-team'
       config:
         maxMembers: 8
         maxTasks: 256
@@ -43,7 +43,7 @@
         disposalTimeoutMs: 5000
 
     - id: tool-agent-team
-      name: '@deepseek-ai/dsh-experimental-tool-agent-team'
+      name: '@liwa/experimental-tool-agent-team'
       config:
         freshProvider: spawn
         forkProvider: fork
@@ -54,5 +54,5 @@
 - id: sandbox-policy
   inject: []
   config:
-    mode: !!js process.env.DSH_PERMISSION_MODE ?? 'workspace-write'
+    mode: !!js process.env.LIWA_PERMISSION_MODE ?? 'workspace-write'
     workspaceRoot: !!js process.cwd()

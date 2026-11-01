@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
-import SubagentRuntime from '@deepseek-ai/dsh-subagent'
-import * as spawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
-import { STRUCTURED_OUTPUT_TOOL } from '@deepseek-ai/dsh-subagent'
+import { Context } from '@liwa/cordis'
+import { SessionId } from '@liwa/session'
+import AgentLoop from '@liwa/agent-loop'
+import { mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
+import SubagentRuntime from '@liwa/subagent'
+import * as spawn from '@liwa/subagent-spawn-in-process'
+import { STRUCTURED_OUTPUT_TOOL } from '@liwa/subagent'
 import { MockAdapter, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import PtcWorkflowEngine from '../src/index.ts'
 import { mountPtcRuntime } from './setup.ts'
@@ -26,7 +26,7 @@ async function setup(script: Script) {
   return { ctx, parent, adapter }
 }
 
-describe('dsh-workflow-ptc over the real in-process stack', () => {
+describe('liwa-workflow-ptc over the real in-process stack', () => {
   it('runs a two-stage workflow: a plain child, then a schema child through the structured runtime', async () => {
     const { ctx, parent } = await setup([
       textResponse('the file list is a.ts'),

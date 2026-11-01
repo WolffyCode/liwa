@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-workspace-changes",
-  "description": "Per-turn workspace file changes recorded from git working-tree snapshots and whole-file captures, with per-file comparisons, for the DeepSeek Harness",
+  "name": "@liwa/workspace-changes",
+  "description": "Per-turn workspace file changes recorded from git working-tree snapshots and whole-file captures, with per-file comparisons, for Liwa",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/deliverables/workspace-changes"
   },
   "type": "module",
@@ -34,33 +34,33 @@
     "lib/types/**/*.d.ts"
   ],
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/schemastery": "workspace:~",
     "diff": "^9.0.0"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-subprocess": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-fs": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/subprocess": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/fs": "workspace:*"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-subprocess": "workspace:*",
-    "@deepseek-ai/dsh-subprocess-local": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-fs": "workspace:*",
-    "@deepseek-ai/dsh-fs-local": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop": "workspace:*",
-    "@deepseek-ai/dsh-working-directory": "workspace:*",
-    "@deepseek-ai/dsh-tool-fs": "workspace:*",
-    "@deepseek-ai/dsh-tool-str-replace-editor": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/subprocess": "workspace:*",
+    "@liwa/subprocess-local": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/fs": "workspace:*",
+    "@liwa/fs-local": "workspace:*",
+    "@liwa/agent-loop-testkit": "workspace:*",
+    "@liwa/agent-loop": "workspace:*",
+    "@liwa/working-directory": "workspace:*",
+    "@liwa/tool-fs": "workspace:*",
+    "@liwa/tool-str-replace-editor": "workspace:*"
   }
 }

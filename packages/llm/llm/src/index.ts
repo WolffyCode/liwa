@@ -3,12 +3,12 @@
  * API. Exports the `LlmRuntime` default, the abstract `LlmAdapter` for
  * provider backends, and `BlockAssembler` for chunk assembly.
  *
- * @module @deepseek-ai/dsh-llm
+ * @module @liwa/llm
  */
 
-import { Context } from '@deepseek-ai/cordis'
-import { Remote, RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
-import { deepFreeze } from '@deepseek-ai/dsh-util-values'
+import { Context } from '@liwa/cordis'
+import { Remote, RemoteError, TypertRemoteService } from '@liwa/typert-protocol'
+import { deepFreeze } from '@liwa/util-values'
 import type {
   GenerateOptions,
   RequestMessage,
@@ -33,13 +33,13 @@ import type { ResolvedRetryPolicy } from './retry-policy.ts'
 import type { ProviderRequestId } from './brand.ts'
 import { callConfigEquals } from './call-config.ts'
 import type { ConfigureCall, LlmCallConfig, LlmCallConfigAdapterDefaults } from './call-config.ts'
-import { HarnessError, INVALID_CREDENTIAL_CODE } from './error.ts'
+import { LiwaError, INVALID_CREDENTIAL_CODE } from './error.ts'
 import { normalizeLlmFailure } from './adapter-failure.ts'
 import { normalizeApiKey } from './api-key.ts'
 import {
   contentHasFile, contentHasImage, fileHandleText, projectFilesToText, projectImagesForTextModel, projectToolUpdates,
 } from './content.ts'
-import type { FileAttachmentRef, ImageAttachmentRef, ImageRequestTarget } from '@deepseek-ai/dsh-attachment'
+import type { FileAttachmentRef, ImageAttachmentRef, ImageRequestTarget } from '@liwa/attachment'
 
 export * from './attribution.ts'
 export * from './brand.ts'
@@ -54,7 +54,7 @@ export { BlockAssembler } from './assembler.ts'
 export { callConfigEquals, isAgentLoopRequest, markAgentLoopRequest } from './call-config.ts'
 export type { ConfigureCall, LlmCallConfig, LlmCallConfigAdapterDefaults, LlmCallControls } from './call-config.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     llm: LlmRuntime
   }
@@ -90,10 +90,10 @@ export interface LlmErrorOptions extends ErrorOptions {
 }
 
 /**
- * Typed error for LLM-related failures. Extends {@link HarnessError}, so the
+ * Typed error for LLM-related failures. Extends {@link LiwaError}, so the
  * `code` string (e.g. `AUTH`, `RATE_LIMIT`, `NO_ADAPTER`) is shared taxonomy.
  */
-export class LlmError extends HarnessError {
+export class LlmError extends LiwaError {
   /** Serializable facts retained beside this live Error. */
   readonly failure: LlmFailure
 
@@ -200,7 +200,7 @@ export interface PreparedAdapterCall {
 }
 
 /**
- * Provider-wire adapter for the harness message and stream vocabulary. Register implementations
+ * Provider-wire adapter for the Liwa message and stream vocabulary. Register implementations
  * with `ctx.llm.registerAdapter(providers, adapter)`. Every provider HTTP request must include
  * `attributionHeaders()`; prove the headers are added in the wire request or library header hook. The direct-fetch
  * DeepSeek and library-backed pi-ai adapters meet this contract through different internals.
@@ -1054,7 +1054,7 @@ export class LlmRuntime extends TypertRemoteService {
       return undefined
     }
     if (hostPath === undefined) return undefined
-    // Structural face: dsh-llm cannot depend on the filesystem package, and
+    // Structural face: liwa-llm cannot depend on the filesystem package, and
     // only this one mapping method is consumed.
     const fs = this.ctx.get('fs') as { processPathFromHostPath(hostPath: string): string | undefined } | undefined
     return fs?.processPathFromHostPath(hostPath)

@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
-import type { PluginDetailDocumentId } from '@deepseek-ai/dsh-api-remotes/client'
-import { brandString } from '@deepseek-ai/dsh-brand'
-import { bindSnapshotSelector } from '@deepseek-ai/dsh-client-test-runtime'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import type { LocaleSnapshot } from '@deepseek-ai/dsh-client-locale/client'
+import type { PluginDetailDocumentId } from '@liwa/api-remotes/client'
+import { brandString } from '@liwa/brand'
+import { bindSnapshotSelector } from '@liwa/client-test-runtime'
+import { createSnapshotStore } from '@liwa/client-store'
+import type { LocaleSnapshot } from '@liwa/client-locale/client'
 import { PluginDetailSection, type PluginDetailSectionProps } from '../src/client/PluginDetailSection.tsx'
 import { detailKey, type DetailRequest, type DetailsState } from '../src/client/market-store.ts'
 import { en, zh, type PluginMarketLocaleKey } from '../src/client/locales.ts'
@@ -27,7 +27,7 @@ function setup(initial: DetailsState = {}, language = 'en') {
   const locale = createSnapshotStore<LocaleSnapshot>({ active: language, locales: [], revision: 0 })
   const face = {
     loadDetail: vi.fn(), retryDetail: vi.fn(),
-    detailImage: vi.fn((document: PluginDetailDocumentId, destination: string) => `https://dsh.example/api/plugin-market/detail-file?document=${document}&path=${destination}`),
+    detailImage: vi.fn((document: PluginDetailDocumentId, destination: string) => `https://liwa.example/api/plugin-market/detail-file?document=${document}&path=${destination}`),
     useDetails: bindSnapshotSelector(details), useLocale: bindSnapshotSelector(locale),
   }
   const set = (key: string, state: DetailsState[string]): void => { act(() => { details.set({ ...details.getSnapshot(), [key]: state }) }) }
@@ -43,7 +43,7 @@ it('reads the document of the request in the active language and renders its Mar
   set(detailKey(REQUEST, 'en'), { status: 'ready', detail: { status: 'found', origin: 'readme', markdown: '# Alpha\n\n![shot](img/shot.png) [guide](docs/guide.md)', document: DOCUMENT } })
   expect(screen.queryByRole('heading', { name: en.detailTitle })).toBeNull()
   expect(screen.getByRole('heading', { name: 'Alpha' })).toBeTruthy()
-  expect(screen.getByRole('img', { name: 'shot' }).getAttribute('src')).toBe('https://dsh.example/api/plugin-market/detail-file?document=doc&path=img/shot.png')
+  expect(screen.getByRole('img', { name: 'shot' }).getAttribute('src')).toBe('https://liwa.example/api/plugin-market/detail-file?document=doc&path=img/shot.png')
   // Relative links stay text.
   expect(screen.queryByRole('link', { name: 'guide' })).toBeNull()
   expect(screen.getByText('guide')).toBeTruthy()

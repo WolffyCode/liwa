@@ -3,7 +3,7 @@ description: "Enable personalized page proposals and built-in plugin recommendat
 kind: "package-bundle"
 ---
 
-# @deepseek-ai/dsh-personalized-recommendations
+# @liwa/personalized-recommendations
 
 English | [中文](README.zh.md)
 

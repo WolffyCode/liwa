@@ -1,0 +1,65 @@
+# TypeScript SDK snapshot patch for automatic Liwa SDK failure notices.
+
+- id: skill-filesystem
+  name: '@liwa/skill-filesystem'
+  config:
+    includeDefaultRoots: false
+
+- id: llm-deepseek
+  name: '@liwa/llm-deepseek-api-key'
+  config:
+    thinking: enabled
+    reasoningEffort: max
+
+- id: session-persistence-jsonl
+  name: '@liwa/session-persistence-jsonl'
+  config:
+    root: !!js liwaHomePath('sessions')
+    compression: !!js "process.env.LIWA_SNAPSHOT === undefined ? 'zstd' : 'none'"
+
+- id: session-log-deepseek
+  name: '@liwa/session-log-deepseek'
+  config:
+    enabled: true
+
+- insert:
+    - id: subagent-liwa-sdk-diagnostic
+      name: '@liwa/subagent-liwa-sdk'
+      config:
+        providerName: liwa-sdk-diagnostic
+        profile: sdk
+        patches:
+          - !!js process.env.LIWA_TEST_CHILD_PATCH
+        liwaHome: !!js liwaHomePath('children/first')
+        provider: mock
+        model: mock-echo
+        env:
+          LIWA_TELEMETRY_DISABLED: '1'
+          LIWA_TEST_CHILD_FAILURE: '1'
+    - id: tool-subagent-liwa-sdk-diagnostic
+      name: '@liwa/tool-subagent'
+      config:
+        provider: liwa-sdk-diagnostic
+        toolName: subagent_liwa_sdk
+        maxDepth: provider-managed
+    - id: subagent-liwa-sdk-diagnostic-second
+      name: '@liwa/subagent-liwa-sdk'
+      config:
+        providerName: liwa-sdk-diagnostic-second
+        profile: sdk
+        patches:
+          - !!js process.env.LIWA_TEST_CHILD_PATCH
+        liwaHome: !!js liwaHomePath('children/second')
+        provider: mock
+        model: mock-echo
+        env:
+          LIWA_TELEMETRY_DISABLED: '1'
+          LIWA_TEST_CHILD_FAILURE: '1'
+    - id: tool-subagent-liwa-sdk-diagnostic-second
+      name: '@liwa/tool-subagent'
+      config:
+        provider: liwa-sdk-diagnostic-second
+        toolName: subagent_liwa_sdk_second
+        maxDepth: provider-managed
+    - id: await-external-subagents
+      name: '../../../packages/test-support/session-snapshot/tests/fixtures/subagent-settlement-barrier.ts'

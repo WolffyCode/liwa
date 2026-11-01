@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-agent-tool-presentation",
-  "description": "Deprecated tool presentation selector; use dsh-tool-executor-native or dsh-tool-executor-ptc directly",
+  "name": "@liwa/agent-tool-presentation",
+  "description": "Deprecated tool presentation selector; use liwa-tool-executor-native or liwa-tool-executor-ptc directly",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/core/agent-tool-presentation"
   },
   "type": "module",
@@ -29,21 +29,21 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-tool-executor-native": "workspace:*",
-    "@deepseek-ai/dsh-tool-executor-ptc": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/tool-executor-native": "workspace:*",
+    "@liwa/tool-executor-ptc": "workspace:*",
+    "@liwa/schemastery": "workspace:~"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/tools": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-ptc-runtime": "workspace:*",
-    "@deepseek-ai/dsh-scope": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/agent": "workspace:*",
+    "@liwa/ptc-runtime": "workspace:*",
+    "@liwa/scope": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   }
 }

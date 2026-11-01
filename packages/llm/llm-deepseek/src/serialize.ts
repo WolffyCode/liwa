@@ -1,8 +1,8 @@
 /** Map system snapshots, tool changes, and conversation turns to Messages using the configured route capability. */
 
-import { LlmError, requestImageHandleText } from '@deepseek-ai/dsh-llm'
-import type { ContentBlock, GenerateOptions, ImageAttachmentAccessResolver, Message, RequestMessage } from '@deepseek-ai/dsh-llm'
-import type { ImageAttachmentRef, RequestImageAttachment } from '@deepseek-ai/dsh-attachment'
+import { LlmError, requestImageHandleText } from '@liwa/llm'
+import type { ContentBlock, GenerateOptions, ImageAttachmentAccessResolver, Message, RequestMessage } from '@liwa/llm'
+import type { ImageAttachmentRef, RequestImageAttachment } from '@liwa/attachment'
 import type { DeepSeekConnectionOptions as Connection } from './types.ts'
 import type { DeepSeekFileId } from './file-id.ts'
 import { readReplay } from './replay.ts'
@@ -80,7 +80,7 @@ export function serialize(
   const messages: WireMessage[] = []
   let historySystem: string | undefined
   const systemUpdates: WireMessage[] = []
-  // Harness admits system updates before user input. Messages places the same
+  // Liwa admits system updates before user input. Messages places the same
   // update after that user/tool-result turn and before the next assistant.
   const flushSystemUpdates = () => {
     if (systemUpdates.length === 0) return

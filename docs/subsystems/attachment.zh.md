@@ -4,7 +4,7 @@
 
 附件 seam 将二进制图片和通用文件的所有权与会话日志分离。生产方把字节交给 [`ctx.attachments`](#ctxattachments--attachmentstore-abstract-seam)；只有对象完成持久化后，该服务才会发布不可变的内容寻址引用。会话事件和模型可见的附件块包含该引用及其元数据，绝不包含浏览器对象 URL、宿主临时路径、提供方 URL 或 base64 数据。独立的 [`ctx.fileUploads`](#ctxfileuploads--fileuploads) 服务把浏览器文件传输与暂存凭证绑定到接收方 Agent。
 
-未发送的浏览器草稿可以保留在内存中，原生客户端也可以将其暂存于操作系统临时存储。浏览器通用文件取得暂存 prompt 凭证前会完成持久化。宿主接受用户消息后，会先把消息中的图片移到 `<DSH_HOME>/attachments/v1` 下，再追加用户事件。结构化模型图片输出遵循同样的先持久化、后追加事件规则。
+未发送的浏览器草稿可以保留在内存中，原生客户端也可以将其暂存于操作系统临时存储。浏览器通用文件取得暂存 prompt 凭证前会完成持久化。宿主接受用户消息后，会先把消息中的图片移到 `<LIWA_HOME>/attachments/v1` 下，再追加用户事件。结构化模型图片输出遵循同样的先持久化、后追加事件规则。
 
 来源：[`packages/attachment/attachment/src/types.ts`](../../packages/attachment/attachment/src/types.ts)
 
@@ -252,7 +252,7 @@ abstract saveImage(input: SaveImageAttachment): Promise<ImageAttachmentRef>
 abstract readImage(ref: ImageAttachmentRef, signal?: AbortSignal): Promise<StoredImageAttachment>
 
 /**
- * Locate the provider-owned normalized object in the harness host filesystem.
+ * Locate the provider-owned normalized object in the Liwa host filesystem.
  * @param ref - durable normalized attachment reference.
  * @returns an absolute host path, or undefined when this backend is not host-file-backed.
  * @throws an AttachmentError when the durable reference is invalid.
@@ -289,7 +289,7 @@ saveFileStream(input: SaveFileStreamAttachment): Promise<FileAttachmentRef>
 async *readFileStream( ref: FileAttachmentRef, signal?: AbortSignal, ): AsyncIterable<Uint8Array>
 
 /**
- * Locate the verbatim stored file object in the harness host filesystem.
+ * Locate the verbatim stored file object in the Liwa host filesystem.
  * @param ref - durable file reference.
  * @returns an absolute host path, or undefined when this backend is not host-file-backed.
  * @throws an AttachmentError when the durable reference is invalid.

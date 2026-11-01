@@ -3,13 +3,13 @@ description: "The local PowerShell executor for deployments and maintainers choo
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-pwsh-local
+# @liwa/pwsh-local
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-pwsh-local` is the PowerShell executor: every command runs as a fresh, non-interactive `pwsh -Command` process with no profile files, so no shell state survives between calls. It mirrors `dsh-bash-local`'s semantics call-for-call and adds PowerShell-shaped concerns: executable resolution, UTF-8 output pinning, and the model-friendly terminal environment. Commands run with the harness process's own authority — this executor confines nothing; compose `dsh-pwsh-sandbox` when commands need the sandbox capability. The model-facing `pwsh` tool talks to it once it is mounted.
+`liwa-pwsh-local` is the PowerShell executor: every command runs as a fresh, non-interactive `pwsh -Command` process with no profile files, so no shell state survives between calls. It mirrors `liwa-bash-local`'s semantics call-for-call and adds PowerShell-shaped concerns: executable resolution, UTF-8 output pinning, and the model-friendly terminal environment. Commands run with the Liwa process's own authority — this executor confines nothing; compose `liwa-pwsh-sandbox` when commands need the sandbox capability. The model-facing `pwsh` tool talks to it once it is mounted.
 
 ## Table of Contents
 
@@ -29,7 +29,7 @@ Mount this executor when a composition needs PowerShell command execution — ty
 
 ### When to choose it
 
-It is the Windows counterpart of `dsh-bash-local`: choose it where `pwsh` is the platform shell, so a composition can swap the POSIX rows for the pwsh rows and keep the same semantics. The executor resolves the `pwsh` executable from an explicit `pwshPath`, well-known Windows install locations, PATH entries, or Windows PowerShell 5.1 as a last resort. For unconfined execution it is the default; compose `dsh-pwsh-sandbox` when commands need the sandbox capability.
+It is the Windows counterpart of `liwa-bash-local`: choose it where `pwsh` is the platform shell, so a composition can swap the POSIX rows for the pwsh rows and keep the same semantics. The executor resolves the `pwsh` executable from an explicit `pwshPath`, well-known Windows install locations, PATH entries, or Windows PowerShell 5.1 as a last resort. For unconfined execution it is the default; compose `liwa-pwsh-sandbox` when commands need the sandbox capability.
 
 ### Minimal configuration
 
@@ -37,7 +37,7 @@ Load the executor with the budgets you want; every field has a default, so the s
 
 ```yaml
 - id: bash
-  name: '@deepseek-ai/dsh-pwsh-local'
+  name: '@liwa/pwsh-local'
   config:
     cwd: C:\path\to\workspace
     timeoutMs: 120000
@@ -53,7 +53,7 @@ Load the executor with the budgets you want; every field has a default, so the s
 | `graceMs` | `3,000` | Grace period for kill escalation and post-exit pipe draining |
 | `pwshPath` | resolved | Explicit pwsh executable; else well-known locations, then PATH |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-pwsh-local) is the exhaustive source for every accepted field and its JSDoc.
+The generated [configuration catalog](../../../docs/config-catalog.md#liwapwsh-local) is the exhaustive source for every accepted field and its JSDoc.
 
 ### Running commands
 
@@ -105,7 +105,7 @@ The foreground deadline starts before argv preparation and retains the same sign
 ### Invariants and ownership
 
 - The `graceMs` budget must be positive, finite, and no greater than `MAX_TIMER_DELAY_MS` so Node can represent it with one timer; invalid values are refused where they are written.
-- Environment layering is fixed: terminal overrides first, then the caller's `env`, then the trusted `dshEnv` snapshot last; the subprocess service scrubs ambient credentials and inherited `DSH_*` names independently.
+- Environment layering is fixed: terminal overrides first, then the caller's `env`, then the trusted `liwaEnv` snapshot last; the subprocess service scrubs ambient credentials and inherited `LIWA_*` names independently.
 - Executable resolution is a pure function of `(configured, env, platform)` and re-probes the filesystem only when the stored `pwshPath` differs from the one the current executable was resolved from.
 - A background process belongs to the subprocess service: it survives an executor-only reload and is killed and joined when the service disposes.
 
@@ -129,7 +129,7 @@ Read these pages when the executor contract is not enough. They move from the se
 <a id="model-experience"></a>
 ## Model Experience
 
-Indirectly, through `dsh-tool-pwsh`, which renders this executor's bounded stdout/stderr tails, background-process deltas (through the generic job runtime), spill-file paths, and infrastructure failures.
+Indirectly, through `liwa-tool-pwsh`, which renders this executor's bounded stdout/stderr tails, background-process deltas (through the generic job runtime), spill-file paths, and infrastructure failures.
 
 #### KV Cache effect
 
@@ -142,7 +142,7 @@ No direct invalidation; the named consumer owns any request-prefix changes.
 
 These limits define when this executor is a poor fit. They are current package constraints, not a roadmap.
 
-- **Unconfined by itself** — commands run with the harness process's authority; deployments needing confinement compose a sandboxing executor or policy instead.
+- **Unconfined by itself** — commands run with the Liwa process's authority; deployments needing confinement compose a sandboxing executor or policy instead.
 - **No persistent shell or PTY** — every call starts a fresh `pwsh -Command`.
 - **The command string is PowerShell text** — the `-Command` domain has no shell-quoting layer, but a model-facing command is parsed by PowerShell itself, so PowerShell syntax errors are command failures, not launch failures.
 - **A background provider-failure note is the whole stderr stream** — `SubprocessHandle.done` can reject before or after target execution begins, and the subprocess service buffers no output for a target that never reported, so the executor serves the stage-neutral `subprocess failed before reporting an outcome: …` as the observed stderr stream (offset readers re-read it at their own offsets) and folds it into exactly one `readOutput()` delta; a consuming reader that discards that delta recovers it only through `observed.stderr`.

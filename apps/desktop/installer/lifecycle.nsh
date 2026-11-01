@@ -69,7 +69,7 @@ Function InstallerProgressShow
         SetErrorLevel 2
         Quit
     ${EndIf}
-    System::Call 'user32::SetPropW(p $HWNDPARENT, w "HarnessInstaller.Ready", p 1)'
+    System::Call 'user32::SetPropW(p $HWNDPARENT, w "LiwaInstaller.Ready", p 1)'
     ShowWindow $HWNDPARENT 5
 FunctionEnd
 

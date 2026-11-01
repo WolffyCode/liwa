@@ -97,7 +97,7 @@ describe('package source corpus', () => {
   })
 
   function fixture(files: Record<string, string>): string {
-    const directory = mkdtempSync(join(tmpdir(), 'dsh-top-level-await-'))
+    const directory = mkdtempSync(join(tmpdir(), 'liwa-top-level-await-'))
     roots.push(directory)
     mkdirSync(join(directory, 'packages'), { recursive: true })
     for (const [path, text] of Object.entries(files)) {

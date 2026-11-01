@@ -18,7 +18,7 @@ function store(ttlMs = 5 * 60 * 1000) {
 }
 
 /** The bindings one environment states when a completion arrives. */
-const bound = { relay: 'https://relay.example', instanceKey: 'instance-one', origin: 'https://dsh.example.test' }
+const bound = { relay: 'https://relay.example', instanceKey: 'instance-one', origin: 'https://liwa.example.test' }
 
 describe('owner authorization transactions', () => {
   it('hands one completion the verifier and its bindings, and consumes the transaction', () => {
@@ -85,9 +85,9 @@ describe('owner authorization transactions', () => {
       state: 'state-one',
       challenge: 'challenge-one',
       instanceKey: 'instance-one',
-      origin: 'https://dsh.example.test',
+      origin: 'https://liwa.example.test',
     })).toBe('https://relay.example/__liveshare/owner-authorize?state=state-one&code_challenge=challenge-one'
-      + '&instance=instance-one&origin=https%3A%2F%2Fdsh.example.test')
+      + '&instance=instance-one&origin=https%3A%2F%2Fliwa.example.test')
   })
 
   it('gives a transaction the production lifetime and clock when the host passes neither', () => {

@@ -1,20 +1,20 @@
 /** Host Remote of the forge panel: checkout, code host, sign-in, change request, and worktree state per Session. */
 
-import { Context, Service } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type {} from '@deepseek-ai/dsh-api-remote-access'
-import { changeRequestKey } from '@deepseek-ai/dsh-experimental-forge'
-import type { ForgeActionFailure, ForgeFailure, MergeMethod } from '@deepseek-ai/dsh-experimental-forge'
-import type { SessionChangeRequest } from '@deepseek-ai/dsh-experimental-forge-session'
-import type {} from '@deepseek-ai/dsh-experimental-worktree'
-import { appendPluginRecord } from '@deepseek-ai/dsh-session'
-import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
-import type { ProjectionHandle } from '@deepseek-ai/dsh-session-projection'
-import type {} from '@deepseek-ai/dsh-session-projection-cache'
-import type {} from '@deepseek-ai/dsh-session-query'
-import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
-import { Remote, RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
+import { Context, Service } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import type { Agent } from '@liwa/agent'
+import type {} from '@liwa/api-remote-access'
+import { changeRequestKey } from '@liwa/experimental-forge'
+import type { ForgeActionFailure, ForgeFailure, MergeMethod } from '@liwa/experimental-forge'
+import type { SessionChangeRequest } from '@liwa/experimental-forge-session'
+import type {} from '@liwa/experimental-worktree'
+import { appendPluginRecord } from '@liwa/session'
+import type { Session, SessionEvent } from '@liwa/session'
+import type { ProjectionHandle } from '@liwa/session-projection'
+import type {} from '@liwa/session-projection-cache'
+import type {} from '@liwa/session-query'
+import { MAX_TIMER_DELAY_MS } from '@liwa/timeout'
+import { Remote, RemoteError, TypertRemoteService } from '@liwa/typert-protocol'
 import { gitIn, inspectCheckout, listBranches } from './git.ts'
 import type { Inspection } from './git.ts'
 import { parseDiff } from './diff.ts'
@@ -32,7 +32,7 @@ import type { HeldWork } from './worktree.ts'
 
 export type * from './types.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     /** Remote that serves the forge panel of the GUI. */
     forgePanel: ForgePanelController
@@ -69,7 +69,7 @@ export class ForgePanelController extends TypertRemoteService {
     maxOutputBytes: z.number().default(1_048_576),
     readinessTimeoutMs: z.number().default(15_000),
     maxBranches: z.number().default(50),
-    worktreePrefix: z.string().default('dsh-'),
+    worktreePrefix: z.string().default('liwa-'),
     maxDiffBytes: z.number().default(8_388_608),
     maxUntrackedFiles: z.number().default(100),
     maxCachedDiffBytes: z.number().default(16_777_216),

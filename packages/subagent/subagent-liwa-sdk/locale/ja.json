@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Liwa SDK サブエージェントバックエンド",
+    "description": "TypeScript SDK と標準入出力の JSON-RPC で、子プロセス内の Liwa を操作します。"
+  }
+}

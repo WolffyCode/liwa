@@ -1,9 +1,9 @@
 /** One reconnecting Host readiness mirror shared by every voice UI occurrence. */
-import type { Context } from '@deepseek-ai/cordis'
-import { RemoteStreamCarrierError } from '@deepseek-ai/dsh-api-gateway/client'
-import { createSnapshotStore, type SnapshotStore } from '@deepseek-ai/dsh-client-store'
-import type { SpeechCatalog } from '@deepseek-ai/dsh-experimental-api-speech-to-text/types'
-import type {} from '@deepseek-ai/dsh-experimental-api-speech-to-text/remote'
+import type { Context } from '@liwa/cordis'
+import { RemoteStreamCarrierError } from '@liwa/api-gateway/client'
+import { createSnapshotStore, type SnapshotStore } from '@liwa/client-store'
+import type { SpeechCatalog } from '@liwa/experimental-api-speech-to-text/types'
+import type {} from '@liwa/experimental-api-speech-to-text/remote'
 
 /** Complete provider state, with a separate transport failure that never rewrites Host readiness. */
 export interface SpeechReadiness {

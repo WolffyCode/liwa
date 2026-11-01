@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-cua-bundle",
+  "name": "@liwa/cua-bundle",
   "description": "Optional macOS Computer Use and permission setup",
   "version": "0.2.2-alpha.2",
   "icon": "./icon.svg",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/experimental/cua-bundle"
   },
   "type": "module",
@@ -33,7 +33,7 @@
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
-  "dsh": {
+  "liwa": {
     "bundle": {
       "listedByDefault": false,
       "patch": "./cordis.patch.yml",
@@ -43,18 +43,18 @@
     }
   },
   "dependencies": {
-    "@deepseek-ai/dsh-computer-use": "workspace:*",
-    "@deepseek-ai/dsh-cua": "workspace:*"
+    "@liwa/computer-use": "workspace:*",
+    "@liwa/cua": "workspace:*"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~"
   },
   "optionalDependencies": {
-    "@deepseek-ai/dsh-experimental-cua-macos": "workspace:*"
+    "@liwa/experimental-cua-macos": "workspace:*"
   }
 }

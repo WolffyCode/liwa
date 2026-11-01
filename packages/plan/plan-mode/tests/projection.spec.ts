@@ -1,18 +1,18 @@
 /** Plan projection behavior. */
 
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import SessionStore from '@deepseek-ai/dsh-session'
-import type { Session } from '@deepseek-ai/dsh-session'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import UserQuestionService from '@deepseek-ai/dsh-user-questions'
-import { CommandId } from '@deepseek-ai/dsh-commands/brand'
-import PlanModeController from '@deepseek-ai/dsh-plan-mode'
+import { Context } from '@liwa/cordis'
+import AgentRegistry from '@liwa/agent'
+import type { Agent } from '@liwa/agent'
+import SessionStore from '@liwa/session'
+import type { Session } from '@liwa/session'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime from '@liwa/tools'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import UserQuestionService from '@liwa/user-questions'
+import { CommandId } from '@liwa/commands/brand'
+import PlanModeController from '@liwa/plan-mode'
 
 interface Bench {
   ctx: Context

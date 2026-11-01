@@ -1,15 +1,15 @@
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import UserQuestions from '@deepseek-ai/dsh-user-questions'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import type { JsonRpcTransportPeer } from '@deepseek-ai/dsh-sdk-protocol'
+import { Context } from '@liwa/cordis'
+import { mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
+import AgentLoop from '@liwa/agent-loop'
+import UserQuestions from '@liwa/user-questions'
+import { SessionId } from '@liwa/session'
+import type { JsonRpcTransportPeer } from '@liwa/sdk-protocol'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import { expect, it, onTestFinished, vi } from 'vitest'
-import { HarnessSdkJsonRpcServer } from '../src/server.ts'
+import { LiwaSdkJsonRpcServer } from '../src/server.ts'
 
 const questions = [{ id: 'format', question: 'Which format?', options: [{ label: 'CSV' }, { label: 'JSON' }] }]
 const answer = { answers: [{ id: 'format', selected: ['CSV'], custom: 'include a header' }] }
@@ -17,7 +17,7 @@ const answer = { answers: [{ id: 'format', selected: ['CSV'], custom: 'include a
 async function fixture(request: JsonRpcTransportPeer['request'], hostQuestions = true) {
   const root = await mkdtemp(join(tmpdir(), 'sdk-user-questions-'))
   const ctx = new Context()
-  const state: { server?: HarnessSdkJsonRpcServer } = {}
+  const state: { server?: LiwaSdkJsonRpcServer } = {}
   onTestFinished(async () => {
     try { await state.server?.shutdown() } finally {
       try { await ctx.fiber.dispose() } finally { await rm(root, { recursive: true, force: true }) }
@@ -28,7 +28,7 @@ async function fixture(request: JsonRpcTransportPeer['request'], hostQuestions =
   await ctx.plugin(UserQuestions)
   ctx.llm.registerAdapter(['mock'], new MockAdapter([textResponse('ready')]))
   const transport = { request: vi.fn(request), notify: vi.fn() }
-  const server = state.server = new HarnessSdkJsonRpcServer(ctx, transport)
+  const server = state.server = new LiwaSdkJsonRpcServer(ctx, transport)
   await server.initialize({ cwd: root, provider: 'mock', model: 'mock', capabilities: { userQuestions: hostQuestions } })
   await server.prompt({ sessionId: 'main', contentBlocks: [{ type: 'text', text: 'start' }] })
   await server.wait({ sessionId: 'main' })

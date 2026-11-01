@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-client-hmr",
+  "name": "@liwa/client-hmr",
   "description": "Web client graph synchronization and rebuilt-bundle reload transport",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/client/hmr"
   },
   "type": "module",
@@ -26,10 +26,10 @@
     "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json"
   },
-  "dsh": {
+  "liwa": {
     "client": {
       "inject": [
-        "@deepseek-ai/dsh-client-modules"
+        "@liwa/client-modules"
       ],
       "platform": "web",
       "immediately": true
@@ -37,16 +37,16 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/schemastery": "workspace:~"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-client-modules": "workspace:*",
-    "@deepseek-ai/dsh-host-webserver": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/client-modules": "workspace:*",
+    "@liwa/host-webserver": "workspace:*",
+    "@liwa/cordis": "workspace:~",
     "eventsource-parser": "^3.1.0"
   },
   "files": [

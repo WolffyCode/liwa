@@ -1,20 +1,20 @@
 !include "LogicLib.nsh"
 
-Var dshFinalDirectory
-Var dshNewDirectory
-Var dshOldDirectory
-Var dshOldMoved
-Var dshNewMoved
-Var dshDirectoryError
-Var dshDirectorySource
-Var dshDirectoryDestination
-Var dshRestoreError
-Var dshDirectoryLogDirectory
-Var dshRecoveryStopped
+Var liwaFinalDirectory
+Var liwaNewDirectory
+Var liwaOldDirectory
+Var liwaOldMoved
+Var liwaNewMoved
+Var liwaDirectoryError
+Var liwaDirectorySource
+Var liwaDirectoryDestination
+Var liwaRestoreError
+Var liwaDirectoryLogDirectory
+Var liwaRecoveryStopped
 
 ; MoveFileEx preserves the destination and exposes the Windows error before rollback changes it.
 ; Open files inside a directory can make its rename return access denied (5).
-!macro dshDirectoryOperation SOURCE DESTINATION RESULT PHASE
+!macro liwaDirectoryOperation SOURCE DESTINATION RESULT PHASE
   Push $0
   Push $1
   Push $2
@@ -60,28 +60,28 @@ Var dshRecoveryStopped
   Pop $0
 !macroend
 
-!macro dshReportDirectoryFailure
-  ${If} $dshRestoreError != 0
-    StrCpy $dshRecoveryStopped "1"
+!macro liwaReportDirectoryFailure
+  ${If} $liwaRestoreError != 0
+    StrCpy $liwaRecoveryStopped "1"
   ${EndIf}
   !ifmacrodef customInstallerDirectoryFailed
     !insertmacro customInstallerDirectoryFailed
   !else
-    DetailPrint "Directory operation failed ($dshDirectoryError): $dshDirectorySource -> $dshDirectoryDestination; restore error: $dshRestoreError"
+    DetailPrint "Directory operation failed ($liwaDirectoryError): $liwaDirectorySource -> $liwaDirectoryDestination; restore error: $liwaRestoreError"
   !endif
 !macroend
 
-!macro dshExtractPayload FILE
+!macro liwaExtractPayload FILE
   !ifmacrodef customInstallerExtract
     !insertmacro customInstallerExtract "${FILE}"
   !else
-    nsExec::ExecToStack '"$PLUGINSDIR\dsh-7za.exe" x -y -bd -bb0 "-o$INSTDIR" "${FILE}"'
+    nsExec::ExecToStack '"$PLUGINSDIR\liwa-7za.exe" x -y -bd -bb0 "-o$INSTDIR" "${FILE}"'
     Pop $R0
     Pop $R1
   !endif
   ${If} $R0 != 0
     DetailPrint $R1
-    Call dshRollbackDirectories
+    Call liwaRollbackDirectories
     !ifmacrodef customInstallerExtractFailed
       !insertmacro customInstallerExtractFailed "${FILE}"
     !else
@@ -92,133 +92,133 @@ Var dshRecoveryStopped
   ${EndIf}
 !macroend
 
-!macro dshStageApplication
-  !ifdef DSH_INSTALLER_LOG_DIR
+!macro liwaStageApplication
+  !ifdef LIWA_INSTALLER_LOG_DIR
     ; electron-builder defines the cache name after including our function bodies, before this section expands.
-    StrCpy $dshDirectoryLogDirectory "${DSH_INSTALLER_LOG_DIR}"
+    StrCpy $liwaDirectoryLogDirectory "${LIWA_INSTALLER_LOG_DIR}"
   !endif
-  StrCpy $dshFinalDirectory $INSTDIR
+  StrCpy $liwaFinalDirectory $INSTDIR
   System::Call 'ole32::CoCreateGuid(g .r0) i .r1'
   ${If} $1 != 0
     SetErrorLevel 2
     Quit
   ${EndIf}
-  StrCpy $dshNewDirectory "$INSTDIR.new-$0"
-  StrCpy $dshOldDirectory "$INSTDIR.old-$0"
-  StrCpy $dshOldMoved ""
-  StrCpy $dshNewMoved ""
-  StrCpy $dshDirectoryError 0
-  StrCpy $dshRestoreError 0
-  StrCpy $dshRecoveryStopped ""
+  StrCpy $liwaNewDirectory "$INSTDIR.new-$0"
+  StrCpy $liwaOldDirectory "$INSTDIR.old-$0"
+  StrCpy $liwaOldMoved ""
+  StrCpy $liwaNewMoved ""
+  StrCpy $liwaDirectoryError 0
+  StrCpy $liwaRestoreError 0
+  StrCpy $liwaRecoveryStopped ""
   ClearErrors
-  CreateDirectory $dshNewDirectory
+  CreateDirectory $liwaNewDirectory
   ${If} ${Errors}
     SetErrorLevel 2
     Quit
   ${EndIf}
-  File /oname=$PLUGINSDIR\dsh-7za.exe "${DSH_SEVENZIP_PATH}"
-  StrCpy $INSTDIR $dshNewDirectory
+  File /oname=$PLUGINSDIR\liwa-7za.exe "${LIWA_SEVENZIP_PATH}"
+  StrCpy $INSTDIR $liwaNewDirectory
   SetOutPath $INSTDIR
   !insertmacro installApplicationFiles
-  !ifdef DSH_SEVENZIP_LICENSE_DIR
-    File /oname=7zip-installer-LICENSE.txt "${DSH_SEVENZIP_LICENSE_DIR}\LICENSE.txt"
-    File /oname=7zip-installer-COPYING.txt "${DSH_SEVENZIP_LICENSE_DIR}\COPYING"
+  !ifdef LIWA_SEVENZIP_LICENSE_DIR
+    File /oname=7zip-installer-LICENSE.txt "${LIWA_SEVENZIP_LICENSE_DIR}\LICENSE.txt"
+    File /oname=7zip-installer-COPYING.txt "${LIWA_SEVENZIP_LICENSE_DIR}\COPYING"
   !endif
   !ifdef UNINSTALLER_ICON
     File /oname=uninstallerIcon.ico "${UNINSTALLER_ICON}"
   !endif
-  StrCpy $INSTDIR $dshFinalDirectory
+  StrCpy $INSTDIR $liwaFinalDirectory
   SetOutPath $PLUGINSDIR
 !macroend
 
 Function .onGUIEnd
-  Call dshCleanupDirectories
+  Call liwaCleanupDirectories
 FunctionEnd
 
-Function dshCleanupDirectories
-  ${If} $dshRecoveryStopped == "1"
+Function liwaCleanupDirectories
+  ${If} $liwaRecoveryStopped == "1"
     Return
   ${EndIf}
-  ${If} $dshFinalDirectory != ""
-    Call dshRollbackDirectories
+  ${If} $liwaFinalDirectory != ""
+    Call liwaRollbackDirectories
   ${EndIf}
 FunctionEnd
 
 ; Only directories created or renamed by this installer are removed during rollback.
-Function dshRollbackDirectories
+Function liwaRollbackDirectories
   SetOutPath $PLUGINSDIR
-  ${If} $dshNewMoved == "1"
-    RMDir /r "\\?\$dshFinalDirectory"
-    StrCpy $dshNewMoved ""
+  ${If} $liwaNewMoved == "1"
+    RMDir /r "\\?\$liwaFinalDirectory"
+    StrCpy $liwaNewMoved ""
   ${EndIf}
-  ${If} $dshOldMoved == "1"
-    !insertmacro dshDirectoryOperation "$dshOldDirectory" "$dshFinalDirectory" $dshRestoreError "restore"
-    ${If} $dshRestoreError != 0
+  ${If} $liwaOldMoved == "1"
+    !insertmacro liwaDirectoryOperation "$liwaOldDirectory" "$liwaFinalDirectory" $liwaRestoreError "restore"
+    ${If} $liwaRestoreError != 0
       ; Leave the complete backup in place if another process prevents restoration.
-      DetailPrint $dshOldDirectory
-      RMDir /r "\\?\$dshNewDirectory"
+      DetailPrint $liwaOldDirectory
+      RMDir /r "\\?\$liwaNewDirectory"
       Return
     ${EndIf}
-    StrCpy $dshOldMoved ""
+    StrCpy $liwaOldMoved ""
   ${EndIf}
-  ${If} $dshNewDirectory != ""
-    RMDir /r "\\?\$dshNewDirectory"
+  ${If} $liwaNewDirectory != ""
+    RMDir /r "\\?\$liwaNewDirectory"
   ${EndIf}
-  StrCpy $INSTDIR $dshFinalDirectory
+  StrCpy $INSTDIR $liwaFinalDirectory
 FunctionEnd
 
-Function dshPromoteDirectories
+Function liwaPromoteDirectories
   !ifmacrodef InstallerPublishStage
     !insertmacro InstallerPublishStage 2
   !endif
   ; SetOutPath opens a directory handle; release it before either rename.
   SetOutPath $PLUGINSDIR
   ClearErrors
-  ${If} ${FileExists} "$dshFinalDirectory\*.*"
-    StrCpy $dshDirectorySource $dshFinalDirectory
-    StrCpy $dshDirectoryDestination $dshOldDirectory
-    !insertmacro dshDirectoryOperation "$dshDirectorySource" "$dshDirectoryDestination" $dshDirectoryError "backup"
-    ${If} $dshDirectoryError != 0
-      Call dshRollbackDirectories
-      !insertmacro dshReportDirectoryFailure
+  ${If} ${FileExists} "$liwaFinalDirectory\*.*"
+    StrCpy $liwaDirectorySource $liwaFinalDirectory
+    StrCpy $liwaDirectoryDestination $liwaOldDirectory
+    !insertmacro liwaDirectoryOperation "$liwaDirectorySource" "$liwaDirectoryDestination" $liwaDirectoryError "backup"
+    ${If} $liwaDirectoryError != 0
+      Call liwaRollbackDirectories
+      !insertmacro liwaReportDirectoryFailure
       SetErrors
       Return
     ${EndIf}
-    StrCpy $dshOldMoved "1"
+    StrCpy $liwaOldMoved "1"
   ${Else}
     ; NSIS can create the destination before the install section starts.
-    StrCpy $dshDirectorySource $dshFinalDirectory
-    StrCpy $dshDirectoryDestination ""
-    !insertmacro dshDirectoryOperation "$dshDirectorySource" "" $dshDirectoryError "remove-empty"
-    ${If} $dshDirectoryError != 0
-      Call dshRollbackDirectories
-      !insertmacro dshReportDirectoryFailure
+    StrCpy $liwaDirectorySource $liwaFinalDirectory
+    StrCpy $liwaDirectoryDestination ""
+    !insertmacro liwaDirectoryOperation "$liwaDirectorySource" "" $liwaDirectoryError "remove-empty"
+    ${If} $liwaDirectoryError != 0
+      Call liwaRollbackDirectories
+      !insertmacro liwaReportDirectoryFailure
       SetErrors
       Return
     ${EndIf}
   ${EndIf}
   ClearErrors
-  StrCpy $dshDirectorySource $dshNewDirectory
-  StrCpy $dshDirectoryDestination $dshFinalDirectory
-  !insertmacro dshDirectoryOperation "$dshDirectorySource" "$dshDirectoryDestination" $dshDirectoryError "promote"
-  ${If} $dshDirectoryError != 0
-    Call dshRollbackDirectories
-    !insertmacro dshReportDirectoryFailure
+  StrCpy $liwaDirectorySource $liwaNewDirectory
+  StrCpy $liwaDirectoryDestination $liwaFinalDirectory
+  !insertmacro liwaDirectoryOperation "$liwaDirectorySource" "$liwaDirectoryDestination" $liwaDirectoryError "promote"
+  ${If} $liwaDirectoryError != 0
+    Call liwaRollbackDirectories
+    !insertmacro liwaReportDirectoryFailure
     SetErrors
     Return
   ${EndIf}
-  StrCpy $dshNewMoved "1"
-  SetOutPath $dshFinalDirectory
+  StrCpy $liwaNewMoved "1"
+  SetOutPath $liwaFinalDirectory
   !ifmacrodef InstallerPublishStage
     !insertmacro InstallerPublishStage 3
   !endif
   ClearErrors
 FunctionEnd
 
-!macro dshFinishDirectories
-  StrCpy $dshNewMoved ""
-  ${If} $dshOldMoved == "1"
-    RMDir /r "\\?\$dshOldDirectory"
-    StrCpy $dshOldMoved ""
+!macro liwaFinishDirectories
+  StrCpy $liwaNewMoved ""
+  ${If} $liwaOldMoved == "1"
+    RMDir /r "\\?\$liwaOldDirectory"
+    StrCpy $liwaOldMoved ""
   ${EndIf}
 !macroend

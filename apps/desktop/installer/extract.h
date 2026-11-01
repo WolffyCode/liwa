@@ -80,7 +80,7 @@ static int ExtractApplication(HWND parent, LPCWSTR tool, LPCWSTR archive, LPCWST
         if (!ReadFile(input.value, buffer, sizeof(buffer), &count, nullptr)) { readError = GetLastError(); break; }
         if (!count) break;
         progress.Read(buffer, count);
-        if (parent) SetPropW(parent, L"HarnessInstaller.ExtractProgress", reinterpret_cast<HANDLE>(static_cast<UINT_PTR>(progress.value)));
+        if (parent) SetPropW(parent, L"LiwaInstaller.ExtractProgress", reinterpret_cast<HANDLE>(static_cast<UINT_PTR>(progress.value)));
     }
     if (readError != ERROR_BROKEN_PIPE && readError != ERROR_SUCCESS) {
         TerminateJobObject(job.value, readError);
@@ -90,7 +90,7 @@ static int ExtractApplication(HWND parent, LPCWSTR tool, LPCWSTR archive, LPCWST
     if (WaitForSingleObject(process.value, INFINITE) != WAIT_OBJECT_0) return LaunchFailure(GetLastError());
     DWORD result;
     if (!GetExitCodeProcess(process.value, &result)) return LaunchFailure(GetLastError());
-    if (result == 0 && parent) SetPropW(parent, L"HarnessInstaller.ExtractProgress", reinterpret_cast<HANDLE>(100));
+    if (result == 0 && parent) SetPropW(parent, L"LiwaInstaller.ExtractProgress", reinterpret_cast<HANDLE>(100));
     // A crash status such as 0xC0000005 comes back bit-for-bit; the report prints anything beyond 7-Zip's exit codes in hex.
     return static_cast<int>(result);
 }

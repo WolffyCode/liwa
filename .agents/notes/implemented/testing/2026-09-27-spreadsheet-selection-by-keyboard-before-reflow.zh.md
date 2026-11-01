@@ -22,7 +22,7 @@ Status: implemented
 
 **点击前等待选区框渲染。** 这会恢复点击落在 A1 自身拖拽手柄上、什么也不选的通过路径，断言于是验证的是初始选区而不是一次交互。改为点击初始选区以外的单元格则会保留几何绑定的 updater，其重新执行窗口跨越随后的重排。
 
-**第一次重排前等待渲染器空闲。** 没有产品状态能表达“React 没有待重新执行的更新”；按 runner 调校的空闲等待或固定等待正是 [dsh-ci-test-reliability](../../../skills/dsh-ci-test-reliability/SKILL.md) 拒绝的掩盖式等待。
+**第一次重排前等待渲染器空闲。** 没有产品状态能表达“React 没有待重新执行的更新”；按 runner 调校的空闲等待或固定等待正是 [dsh-ci-test-reliability](../../../skills/liwa-ci-test-reliability/SKILL.md) 拒绝的掩盖式等待。
 
 **扩展既有的 `@fortune-sheet/react` 补丁，在 updater 之外解析单元格。** `handleCellAreaMouseDown` 位于 `@fortune-sheet/core`，而用户需要命中的窗口是一次指针按下与一次侧栏重排落在同一次延迟渲染内。它仍是上游问题；产品改动不在本次测试修复范围内。
 

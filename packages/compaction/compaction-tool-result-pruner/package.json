@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-compaction-tool-result-pruner",
+  "name": "@liwa/compaction-tool-result-pruner",
   "description": "Replay-safe model-free head/middle/tail pruning for tool-result surface nodes",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/compaction/compaction-tool-result-pruner"
   },
   "type": "module",
@@ -29,25 +29,25 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-compaction": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-token-meter": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/compaction": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/token-meter": "workspace:*"
   },
   "dependencies": {
-    "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/util-values": "workspace:*",
+    "@liwa/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-compaction": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-token-meter": "workspace:*",
-    "@deepseek-ai/dsh-compaction-image-offload": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/compaction": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/token-meter": "workspace:*",
+    "@liwa/compaction-image-offload": "workspace:*"
   }
 }

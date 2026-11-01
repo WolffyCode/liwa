@@ -1,15 +1,15 @@
 /**
  * Public package manifest and plugin display types, with no runtime exports.
- * @module @deepseek-ai/dsh-package-manifest
+ * @module @liwa/package-manifest
  */
 
 export type {
-  DshBundleManifest,
-  DshClientManifest,
-  DshEnginesManifest,
-  DshManifest,
-  DshPackageManifest,
-  DshProfileManifest,
+  LiwaBundleManifest,
+  LiwaClientManifest,
+  LiwaEnginesManifest,
+  LiwaManifest,
+  LiwaPackageManifest,
+  LiwaProfileManifest,
   LocalizedText,
   PluginLocalizedMeta,
 } from './types.ts'

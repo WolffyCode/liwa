@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { SessionEventEntry, SessionEventsPage } from '@deepseek-ai/dsh-api-session-controller/types'
-import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
+import type { SessionEventEntry, SessionEventsPage } from '@liwa/api-session-controller/types'
+import { RemoteError } from '@liwa/typert-protocol'
 import { planResourceProvider } from '../src/client/plan-resource.ts'
 
-const address = 'dsh-resource://plan/session/call'
+const address = 'liwa-resource://plan/session/call'
 const event: SessionEventEntry['event'] = {
   type: 'tool/call', seq: 1, time: 1,
   data: { callId: 'call', name: 'exit_plan_mode', arguments: '{"plan":"# Saved plan"}' },
@@ -46,7 +46,7 @@ describe('plan history resource', () => {
   })
   it.each(['one-shot', 'continuable', 'unknown'] as const)('restores a %s subagent plan with its complete parent address on every page', async (mode) => {
     const b = setup([olderUserEntry], true)
-    const url = `dsh-resource://plan/subagent/parent/child/${mode}/call`
+    const url = `liwa-resource://plan/subagent/parent/child/${mode}/call`
     const session = { kind: 'subagent', parentSessionId: 'parent', childSessionId: 'child', mode }
     expect(await read(b.provider, url)).toMatchObject([{ ok: true, value: { title: 'Saved plan' } }])
     expect(b.events).toHaveBeenCalledWith({ address: session }, expect.any(AbortSignal))
@@ -55,7 +55,7 @@ describe('plan history resource', () => {
   it('reports missing plans and invalid saved addresses', async () => {
     const b = setup([])
     expect(await read(b.provider)).toMatchObject([{ ok: false, error: { code: 'plan/not-found' } }])
-    expect(await read(b.provider, 'dsh-resource://plan/s/%')).toMatchObject([{ ok: false, error: { code: 'plan/invalid-address' } }])
+    expect(await read(b.provider, 'liwa-resource://plan/s/%')).toMatchObject([{ ok: false, error: { code: 'plan/invalid-address' } }])
     expect(b.events).toHaveBeenCalledOnce()
   })
   it('does not publish a response after cancellation', async () => {

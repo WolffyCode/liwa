@@ -10,16 +10,16 @@
  * VM-realm schemas and canonical values are rebuilt as host objects, while rendered content and
  * presentation metadata are shape-checked before entering the registry. Common JSON-Schema spellings are normalized when they
  * have one meaning; invalid vocabulary fails during registration with a teaching error.
- * @module @deepseek-ai/dsh-cordis-host-runner/guard
+ * @module @liwa/cordis-host-runner/guard
  */
 
-import { Context } from '@deepseek-ai/cordis'
-import type { Plugin } from '@deepseek-ai/cordis'
-import { scopeOf } from '@deepseek-ai/dsh-scope'
-import { assertSupportedJsonSchema, defineTool } from '@deepseek-ai/dsh-tools'
-import type { ToolDefinition } from '@deepseek-ai/dsh-tools'
-import type { ContentBlock } from '@deepseek-ai/dsh-llm'
-import type { JsonValue } from '@deepseek-ai/dsh-util-values'
+import { Context } from '@liwa/cordis'
+import type { Plugin } from '@liwa/cordis'
+import { scopeOf } from '@liwa/scope'
+import { assertSupportedJsonSchema, defineTool } from '@liwa/tools'
+import type { ToolDefinition } from '@liwa/tools'
+import type { ContentBlock } from '@liwa/llm'
+import type { JsonValue } from '@liwa/util-values'
 
 const DYNAMIC_TOOL = Symbol('cordis-host-runner.dynamic-tool')
 const SCHEMA_TYPES = new Set<unknown>(['string', 'number', 'integer', 'boolean', 'null', 'object', 'array', 'json'])
@@ -655,7 +655,7 @@ function sandboxTools(ctx: Context): Record<string, unknown> {
 }
 
 /**
- * Reject any injected-service return that is a cordis `Context`. Harness
+ * Reject any injected-service return that is a cordis `Context`. Liwa
  * services return data, never a context; a value that is one would be a
  * fresh, unguarded handle back into the runtime — the exact escape the façade
  * exists to close — so it fails loud instead of reaching sandbox code.
@@ -744,7 +744,7 @@ function sandboxContext(ctx: Context, reportFailure: (error: Error) => void): Co
   }
   const get = (name: string): unknown => readService(name, false)
   // The browser half builds the same façade over its own Context
-  // (`@deepseek-ai/dsh-cordis-client-runner`, whose CTX_VERBS names this one its
+  // (`@liwa/cordis-client-runner`, whose CTX_VERBS names this one its
   // twin), and the sameness is the point: a package author meets ONE contract on
   // both halves. Folding them together is not available — the two halves compile
   // in separate programs where `Context` merges different service keys — so the

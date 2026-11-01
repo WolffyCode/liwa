@@ -117,7 +117,7 @@ export interface ModTestKit {
   readonly on: KitOn
   /** Raise any event through the mods; a stub, a built-in default, or `no implementation for <event>` answers at the bottom. */
   raise<R>(event: string, input: unknown): Promise<R>
-  /** Typed raisers for the events this bridge sends from the harness, plus `ui.mount`. */
+  /** Typed raisers for the events this bridge sends from Liwa, plus `ui.mount`. */
   readonly $: TestKitRaisers
   /** Diagnostic lines the engine reported: skipped hooks, failed fire-and-forget calls, timer errors. */
   readonly reports: string[]

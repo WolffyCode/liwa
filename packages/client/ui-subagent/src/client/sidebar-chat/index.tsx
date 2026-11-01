@@ -1,24 +1,24 @@
 /** Right-Sidebar presentation of an existing subagent Conversation. */
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@liwa/cordis'
 import type {
   ISessions, SessionReference,
-} from '@deepseek-ai/dsh-api-session-controller/client'
-import type { ResourceProvider } from '@deepseek-ai/dsh-client-resources/client'
-import type { ConversationViewsProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
-import type { SidebarRightTabDefinition } from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
+} from '@liwa/api-session-controller/client'
+import type { ResourceProvider } from '@liwa/client-resources/client'
+import type { ConversationViewsProps } from '@liwa/client-ui-conversation/client'
+import type { SidebarRightTabDefinition } from '@liwa/client-ui-sidebar-right/client'
 import type {
   PropsRenderFactories, PropsRenderSlots, PropsRuntime, TranslateNS,
-} from '@deepseek-ai/dsh-client-ui-slots'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import type { SubagentAddress } from '@deepseek-ai/dsh-subagent/client'
+} from '@liwa/client-ui-slots'
+import type { SessionId } from '@liwa/session/types'
+import type { SubagentAddress } from '@liwa/subagent/client'
 import type { NS } from '../locales.ts'
 import css from './SidebarChat.module.css'
 
 /** Stable implementation identity for the Sidebar tab body. */
-export const SUBAGENT_CHAT_ID = '@deepseek-ai/dsh-client-ui-subagent'
+export const SUBAGENT_CHAT_ID = '@liwa/client-ui-subagent'
 
 /** Resource-address prefix for an embedded Session chat. */
-export const SUBAGENT_CHAT_ADDRESS = 'dsh-resource://subagentchat/session/'
+export const SUBAGENT_CHAT_ADDRESS = 'liwa-resource://subagentchat/session/'
 
 /** Value retained by one live chat resource occurrence. */
 export interface SubagentChatResource {
@@ -26,13 +26,13 @@ export interface SubagentChatResource {
   readonly reference: SessionReference
 }
 
-declare module '@deepseek-ai/dsh-api-session-controller/client' {
+declare module '@liwa/api-session-controller/client' {
   interface SessionReferenceSourceMap {
     sidebarChat: unknown
   }
 }
 
-declare module '@deepseek-ai/dsh-client-ui-slots' {
+declare module '@liwa/client-ui-slots' {
   interface ResourceProtocolMap {
     subagentchat: SubagentChatResource
   }
@@ -68,7 +68,7 @@ export function parseSubagentChatAddress(value: string): SubagentAddress | undef
   } catch (_invalidUrl) {
     return undefined
   }
-  if (url.protocol !== 'dsh-resource:' || url.hostname.toLowerCase() !== 'subagentchat') return undefined
+  if (url.protocol !== 'liwa-resource:' || url.hostname.toLowerCase() !== 'subagentchat') return undefined
   const parts = url.pathname.split('/').filter(Boolean)
   if (parts.length !== 2 || parts[0] !== 'session') return undefined
   const parentSessionId = url.searchParams.get('parent')

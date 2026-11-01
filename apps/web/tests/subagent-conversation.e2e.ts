@@ -6,14 +6,14 @@ import { zstdCompressSync } from 'node:zlib'
 import type { Browser, Page } from 'playwright'
 import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed, vi } from 'vitest'
-import { prepareSessionSnapshotFixtureForComparison } from '@deepseek-ai/dsh-llm-replay'
+import { prepareSessionSnapshotFixtureForComparison } from '@liwa/llm-replay'
 import {
   SESSION_FORMAT_VERSION, SessionId as sessionId, SessionLogOffset, SessionSeq,
   type SessionEvent, type SessionHeader, type SessionId,
-} from '@deepseek-ai/dsh-session'
-import type {} from '@deepseek-ai/dsh-agent'
-import { snapshotSubagentDescriptor, SUBAGENT_DESCRIPTOR_VERSION } from '@deepseek-ai/dsh-subagent'
-import { checkpointRecord, projectionCacheDomainSpec } from '@deepseek-ai/dsh-session-projection-cache'
+} from '@liwa/session'
+import type {} from '@liwa/agent'
+import { snapshotSubagentDescriptor, SUBAGENT_DESCRIPTOR_VERSION } from '@liwa/subagent'
+import { checkpointRecord, projectionCacheDomainSpec } from '@liwa/session-projection-cache'
 import {
   acknowledgeReloadConnectionLoss, captureExpandedTurnProcessAria, captureStableAria,
   compareOrRefreshGolden,
@@ -117,7 +117,7 @@ describe('web e2e: persisted subagent conversation and human continuation', () =
     const baseFixture = prepareSessionSnapshotFixtureForComparison(
       await readFile(selectedBaseFixture, 'utf8'),
     )
-    sidecarRoot = await mkdtemp(join(tmpdir(), 'dsh-web-subagent-'))
+    sidecarRoot = await mkdtemp(join(tmpdir(), 'liwa-web-subagent-'))
     const childFixturePath = join(sidecarRoot, 'child.jsonl')
     await writeFile(childFixturePath, childFixture(baseFixture, 'recorded-subagent', true))
     scaffold = await launchWebScaffold({

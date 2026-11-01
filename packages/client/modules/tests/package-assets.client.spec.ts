@@ -6,9 +6,9 @@ import { request } from 'node:http'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { Context, LoggerLevel } from '@deepseek-ai/cordis'
-import { ModuleLoader } from '@deepseek-ai/cordis-plugin-loader'
-import WebServer from '@deepseek-ai/dsh-host-webserver'
+import { Context, LoggerLevel } from '@liwa/cordis'
+import { ModuleLoader } from '@liwa/cordis-plugin-loader'
+import WebServer from '@liwa/host-webserver'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { packageAssetReference } from '../src/assets.ts'
 import { ClientModuleRegistry } from '../src/index.ts'
@@ -50,7 +50,7 @@ afterEach(async () => {
 
 /** Own one fresh temporary directory per test. */
 function fixtureRoot(): string {
-  root ??= realpathSync(mkdtempSync(join(tmpdir(), 'dsh-client-assets-')))
+  root ??= realpathSync(mkdtempSync(join(tmpdir(), 'liwa-client-assets-')))
   return root
 }
 
@@ -67,7 +67,7 @@ function writeClientPackage(packageName: string, exports: Record<string, string 
   writeFile(join(pkgRoot, 'package.json'), JSON.stringify({
     name: packageName,
     exports: { '.': './lib/index.js', './client': './lib/client.js', './package.json': './package.json', ...exports },
-    dsh: { client: { platform: 'web' } },
+    liwa: { client: { platform: 'web' } },
   }))
   writeFile(join(pkgRoot, 'lib', 'index.js'), 'export default {}\n')
   writeFile(join(pkgRoot, 'lib', 'client.js'), 'module.exports = {}\n')

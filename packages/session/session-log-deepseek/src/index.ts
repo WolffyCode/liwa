@@ -2,15 +2,15 @@
  * Incremental session-log contribution for official DeepSeek LLM API requests.
  * Accepted sequence watermarks live in the canonical log, so restart recovery
  * can conservatively resend uncertain tails without maintaining another store.
- * @module @deepseek-ai/dsh-session-log-deepseek
+ * @module @liwa/session-log-deepseek
  */
 
 import { Buffer } from 'node:buffer'
-import type { Context, Volatile } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { brandString } from '@deepseek-ai/dsh-brand'
-import type {} from '@deepseek-ai/dsh-deepseek-llm-api-extensions'
-import { KNOWN_SESSION_EVENT_TYPES, SessionLogOffset, SessionSeq } from '@deepseek-ai/dsh-session'
+import type { Context, Volatile } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import { brandString } from '@liwa/brand'
+import type {} from '@liwa/deepseek-llm-api-extensions'
+import { KNOWN_SESSION_EVENT_TYPES, SessionLogOffset, SessionSeq } from '@liwa/session'
 import type {
   Session,
   SessionEvent,
@@ -19,8 +19,8 @@ import type {
   SessionSeq as SessionSeqType,
   SessionSeqCursor,
   SurfaceOp,
-} from '@deepseek-ai/dsh-session'
-import type { JsonValue } from '@deepseek-ai/dsh-util-values'
+} from '@liwa/session'
+import type { JsonValue } from '@liwa/util-values'
 import type {
   DeepSeekSessionLogExtension,
   DeepSeekSessionLogWireEvent,

@@ -3,7 +3,7 @@ window.__ModuleLoader__.load({
   id: '@fixture/live-client',
   factory(require) {
     const React = require('react')
-    const { IconFolderCloseRegular, IconNewChatOutlineRegular, MenuItemButton } = require('@deepseek-ai/dsh-client-ui-primitives')
+    const { IconFolderCloseRegular, IconNewChatOutlineRegular, MenuItemButton } = require('@liwa/client-ui-primitives')
     const style = document.createElement('style')
     style.dataset.plugin = '@fixture/live-client'
     style.textContent = '[data-live-client] { color: rgb(12, 34, 56); position: absolute; bottom: 20px; right: 20px; }'
@@ -108,9 +108,9 @@ window.__ModuleLoader__.load({
         })
         ctx.effect(() => {
           const ping = () => { counters.liveHits = String(Number(counters.liveHits ?? 0) + 1) }
-          window.addEventListener('dsh-fixture-ping', ping)
+          window.addEventListener('liwa-fixture-ping', ping)
           return async () => {
-            window.removeEventListener('dsh-fixture-ping', ping)
+            window.removeEventListener('liwa-fixture-ping', ping)
             await Promise.resolve()
             counters.liveDisposals = String(Number(counters.liveDisposals ?? 0) + 1)
           }

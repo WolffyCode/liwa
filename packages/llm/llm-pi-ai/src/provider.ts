@@ -11,12 +11,12 @@
  * catalog route pointed at a different protocol — is built by `createProvider`
  * over the protocol table below.
  *
- * Credentials never reach this module's storage: the harness resolves a route's
+ * Credentials never reach this module's storage: Liwa resolves a route's
  * key through `ctx.credentials` before the request enters pi-ai and hands it
  * over as a stream option, which `Models` presents to `resolve()` as the
  * credential key.
  *
- * @module dsh-llm-pi-ai/provider
+ * @module liwa-llm-pi-ai/provider
  */
 
 import type { Api, ApiKeyAuth, Model, Provider, ProviderStreams } from '@earendil-works/pi-ai'
@@ -63,7 +63,7 @@ export function supportedProtocols(): readonly string[] {
 }
 
 /**
- * Api-key auth for a route the harness authenticates itself. `Models` calls
+ * Api-key auth for a route Liwa authenticates itself. `Models` calls
  * this after the adapter has already resolved the route's credential, so a
  * missing key here is not this layer's failure: a named-but-unresolvable
  * reference has already failed the request with `MISSING_CREDENTIAL`, and a
@@ -99,7 +99,7 @@ export interface ProviderSpec {
   /**
    * Whether the profile names a credential, which it does through `apiKeyEnv`
    * alone: configuration carries the reference, never the secret. Only that
-   * decides whether {@link routeAuth} adds the harness's own api-key method to
+   * decides whether {@link routeAuth} adds Liwa's own api-key method to
    * a catalog provider that offers none; the key itself still arrives per
    * request, never at construction.
    */
@@ -120,7 +120,7 @@ export interface ProviderSpec {
  * declares one (`resolveProviderAuth` checks `provider.auth.apiKey` before
  * honouring the override), so an OAuth-only provider — `openai-codex` is the
  * one the installed catalog ships — would refuse a profile's explicit key with
- * `Provider is not configured` before any request went out. Adding the harness
+ * `Provider is not configured` before any request went out. Adding Liwa
  * method beside the provider's own restores that route. A keyless profile adds
  * nothing and still reports the honest refusal, because this adapter resolves
  * credentials through its own seam and holds no OAuth store to fall back on.

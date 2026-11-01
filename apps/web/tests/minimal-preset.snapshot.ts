@@ -1,18 +1,18 @@
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
+import { executeToolFixture } from '@liwa/tool-testkit'
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Browser, Locator, Page } from 'playwright'
 import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed } from 'vitest'
-import type { AgentHandle } from '@deepseek-ai/dsh-agent'
-import type { SessionAttachmentValue } from '@deepseek-ai/dsh-api-session-controller'
-import { ToolCallId, createUserMessage } from '@deepseek-ai/dsh-llm'
-import type { GenerateOptions } from '@deepseek-ai/dsh-llm'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import type { Session } from '@deepseek-ai/dsh-session'
-import type {} from '@deepseek-ai/dsh-agent-preset-registry'
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type { AgentHandle } from '@liwa/agent'
+import type { SessionAttachmentValue } from '@liwa/api-session-controller'
+import { ToolCallId, createUserMessage } from '@liwa/llm'
+import type { GenerateOptions } from '@liwa/llm'
+import { SessionId } from '@liwa/session'
+import type { Session } from '@liwa/session'
+import type {} from '@liwa/agent-preset-registry'
+import type {} from '@liwa/system-prompt'
 import {
   assertFixtureInventory,
   captureStableAria,
@@ -107,14 +107,14 @@ describe('minimal agent preset', () => {
       signal,
       callId: ToolCallId('minimal-bash-state-setup'),
       name: 'bash',
-      arguments: { command: `cd ${JSON.stringify(stateDir)} && export DSH_MINIMAL_STATE=PERSISTED` },
+      arguments: { command: `cd ${JSON.stringify(stateDir)} && export LIWA_MINIMAL_STATE=PERSISTED` },
       agent: agentHandle.agent,
     })
     const bash = await executeToolFixture(scaffold.ctx, {
       signal,
       callId: ToolCallId('minimal-bash-state-read'),
       name: 'bash',
-      arguments: { command: 'printf \'%s:%s\n\' "$DSH_MINIMAL_STATE" "$PWD"' },
+      arguments: { command: 'printf \'%s:%s\n\' "$LIWA_MINIMAL_STATE" "$PWD"' },
       agent: agentHandle.agent,
     })
     const text = (result: typeof bash): string => result.content

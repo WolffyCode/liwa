@@ -2,35 +2,35 @@
 
 [English](github-review.md) | 中文
 
-此可选 overlay 会为 `dsh web` 增加一个签名 GitHub 端点。当已配置仓库中的 pull request 从 draft 变为 ready for review 时，规则会在该仓库的 Web Workspace 下创建带标题的根 Session，并启动只读评审提示词。
+此可选 overlay 会为 `liwa web` 增加一个签名 GitHub 端点。当已配置仓库中的 pull request 从 draft 变为 ready for review 时，规则会在该仓库的 Web Workspace 下创建带标题的根 Session，并启动只读评审提示词。
 
 ## 前置条件
 
-- 一个可由 DSH 注册为 Web Workspace 的本地 checkout。
-- 一个可通过 `DSH_GITHUB_WEBHOOK_SECRET` 凭据引用访问的高熵 GitHub webhook 密钥。
+- 一个可由灵鲸注册为 Web Workspace 的本地 checkout。
+- 一个可通过 `LIWA_GITHUB_WEBHOOK_SECRET` 凭据引用访问的高熵 GitHub webhook 密钥。
 - 一个可以把单个公共 URL 转发到 loopback 监听器的 TLS 反向代理或 tunnel。
 - GitHub webhook 订阅 Pull requests 事件，且 content type 为 `application/json`。
 
-overlay 默认使用启动目录作为 Workspace，并监听 `127.0.0.1:3081`。可通过 `DSH_GITHUB_REVIEW_WORKSPACE` 与 `DSH_GITHUB_WEBHOOK_PORT` 覆盖它们。
+overlay 默认使用启动目录作为 Workspace，并监听 `127.0.0.1:3081`。可通过 `LIWA_GITHUB_REVIEW_WORKSPACE` 与 `LIWA_GITHUB_WEBHOOK_PORT` 覆盖它们。
 
-## 启动 DSH
+## 启动灵鲸
 
 生成密钥，并在重启后继续使用同一值：
 
 ```sh
-export DSH_GITHUB_WEBHOOK_SECRET="$(openssl rand -hex 32)"
-printf '%s\n' "$DSH_GITHUB_WEBHOOK_SECRET"
+export LIWA_GITHUB_WEBHOOK_SECRET="$(openssl rand -hex 32)"
+printf '%s\n' "$LIWA_GITHUB_WEBHOOK_SECRET"
 ```
 
 先把两个实验包安装到 Web profile。Profile 不会自动安装 peer；GitHub 适配器需要显式安装 webhook 运行时：
 
 ```sh
-dsh plugin --profile web add @deepseek-ai/dsh-webhook @deepseek-ai/dsh-webhook-github
-export DSH_GITHUB_REVIEW_WORKSPACE=/path/to/deepseek-harness
-dsh web --patch "${DSH_HOME:-$HOME/.dsh}/profiles/web/node_modules/@deepseek-ai/dsh-webhook-github/examples/github-review/cordis.yml"
+liwa plugin --profile web add @liwa/webhook @liwa/webhook-github
+export LIWA_GITHUB_REVIEW_WORKSPACE=/path/to/liwa
+liwa web --patch "${LIWA_HOME:-$HOME/.liwa}/profiles/web/node_modules/@liwa/webhook-github/examples/github-review/cordis.yml"
 ```
 
-示例随 GitHub 适配器发布，并从 profile 的安装目录加载，因此规则模块能解析该 profile 安装的 peer。不要把规则单独放到 profile 之外的任意目录运行。需要定制时，将示例的两个文件复制到 `$DSH_HOME/profiles/web/github-review/`，修改其配置并把 `--patch` 指向复制后的 `cordis.yml`；未设置 `DSH_HOME` 时使用 `~/.dsh`。
+示例随 GitHub 适配器发布，并从 profile 的安装目录加载，因此规则模块能解析该 profile 安装的 peer。不要把规则单独放到 profile 之外的任意目录运行。需要定制时，将示例的两个文件复制到 `$LIWA_HOME/profiles/web/github-review/`，修改其配置并把 `--patch` 指向复制后的 `cordis.yml`；未设置 `LIWA_HOME` 时使用 `~/.liwa`。
 
 仓库中的示例位于 `packages/experimental/webhook-github/examples/github-review/`。Webhook 包不随 CLI 安装，也不出现在官方插件列表中；安装包与提供 overlay 是两个独立步骤。
 
@@ -55,14 +55,14 @@ GitHub 配置如下：
 ```text
 Payload URL:  https://hooks.example.com/github
 Content type: application/json
-Secret:       DSH_GITHUB_WEBHOOK_SECRET value
+Secret:       LIWA_GITHUB_WEBHOOK_SECRET value
 Events:       Pull requests
 Active:       yes
 ```
 
 ## 规则行为
 
-规则只接受来源 `primary-github`、仓库 `deepseek-ai/deepseek-harness`、事件 `pull_request` 与动作 `ready_for_review`。它会把精确 head SHA 和选定 PR 字段传给评审提示词，把 JSON 标为不受信任的元数据，并禁止修改文件、分支、PR 或 GitHub 状态。
+规则只接受来源 `primary-github`、仓库 `WolffyCode/liwa`、事件 `pull_request` 与动作 `ready_for_review`。它会把精确 head SHA 和选定 PR 字段传给评审提示词，把 JSON 标为不受信任的元数据，并禁止修改文件、分支、PR 或 GitHub 状态。
 
 Session 请求选择 `standard` agent preset 与 `read-only` permission preset。`workspacePath` 通过 `WorkspaceRegistry.create()` 规范化，因此第一次匹配交付会在 Workspace 不存在时创建它，后续交付会复用它。
 
@@ -86,8 +86,8 @@ if (!response.ok || (await response.json()).automaticReview !== true) return nul
 
 ```js
 const workspacePath = {
-  'deepseek-ai/deepseek-harness': '/path/to/deepseek-harness',
-  'deepseek-harness/dsh-sdk': '/path/to/dsh-sdk',
+  'WolffyCode/liwa': '/path/to/liwa',
+  'liwa/liwa-sdk': '/path/to/liwa-sdk',
 }[payload.repository.full_name]
 if (workspacePath === undefined) return null
 ```

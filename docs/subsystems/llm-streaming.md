@@ -76,7 +76,7 @@ Where a message came from is itself a merge-extensible sum type:
 
 ```ts type-equiv
 /**
- * Where a message (or injected content) came from, in the harness's own
+ * Where a message (or injected content) came from, in Liwa's own
  * vocabulary. Merge-extensible sum type — each producer declares its own
  * `kind` in its own module; there is no shared catch-all `plugin` kind.
  * Model and tool sources answer their role messages; user messages carry any
@@ -172,7 +172,7 @@ A streaming response interleaves several typed blocks (text, reasoning, multiple
 /**
  * Adapter-private lossless-JSON state for replaying a successful response,
  * carried by a terminal `finish` chunk and stored on the assembled assistant
- * message's model source. Both halves stay opaque to the harness; only the
+ * message's model source. Both halves stay opaque to Liwa; only the
  * split is shared vocabulary, so assembly can keep stored metadata aligned
  * with stored content without reading either half.
  */
@@ -245,7 +245,7 @@ interface LlmFailure {
   /**
    * With code `IMAGE_OFFLOAD_REQUIRED`: how many more of the oldest retained
    * image occurrences the route needs offloaded before the same request fits
-   * its exact byte accounting. `dsh-compaction-image-offload` records the
+   * its exact byte accounting. `liwa-compaction-image-offload` records the
    * selected occurrences in an `image/offload` event and retries the step.
    */
   readonly offloadImages?: number
@@ -301,9 +301,9 @@ Every adapter MUST obey these, and every consumer may rely on them:
 - **One adapter call is one provider attempt.** Adapters disable library retries. Agent-level recovery opens another durable numbered turn; direct `ctx.llm.stream()` callers remain single-attempt.
 - **Provider stalls are bounded at the transport.** Both shipping remote adapters expose positive finite `streamIdleTimeoutMs` with a five-minute default. The watchdog arms only while iterator `next()` is outstanding, uses one stable signal for the whole request, maps its own expiry to `TIMEOUT`, and keeps an earlier caller abort as `ABORTED`.
 - **Context overflow has one canonical code.** Both DeepSeek adapters classify explicit provider detail through `isContextWindowExceededError()` and surface `CONTEXT_WINDOW_EXCEEDED`, whether the failure arrives as a thrown HTTP `LlmError` or an in-band finish error. Consumers route on the code, never provider text.
-- **An empty completion is a retryable error, not a silent success.** Both adapters map a terminal `stop` finish that carried no content blocks to `finish {kind:'error'}` with the canonical `EMPTY_RESPONSE` code, and `dsh-llm-retry` retries it by default.
+- **An empty completion is a retryable error, not a silent success.** Both adapters map a terminal `stop` finish that carried no content blocks to `finish {kind:'error'}` with the canonical `EMPTY_RESPONSE` code, and `liwa-llm-retry` retries it by default.
 - **Every provider HTTP request carries the app-attribution header.** Adapters send `attributionHeaders()` (below) - the `User-Agent` baseline - and prove it with a wire-level test.
-- **Replay state is adapter-owned; its split is shared.** A successful `finish` may carry a `ReplayEnvelope`: opaque response-level metadata plus optional per-block entries aligned with the emitted block sequence. The alignment is the harness's vocabulary — when assembly drops a block it drops the entry at the same position, so stored metadata always describes stored content. The loop stores the pruned envelope with the assembled assistant message. On a later request, `LlmRuntime` passes the state only when the historical provider and target provider are currently registered to the exact same adapter instance. That adapter validates the state and owns any cross-model or cross-provider conversion; other adapters receive the provider-neutral content plus provider/model fields without the private state. Durable content stays authoritative: a stored state the reading adapter cannot use degrades that one message to provider-neutral conversion with a diagnostic instead of failing the request.
+- **Replay state is adapter-owned; its split is shared.** A successful `finish` may carry a `ReplayEnvelope`: opaque response-level metadata plus optional per-block entries aligned with the emitted block sequence. The alignment is Liwa's vocabulary — when assembly drops a block it drops the entry at the same position, so stored metadata always describes stored content. The loop stores the pruned envelope with the assembled assistant message. On a later request, `LlmRuntime` passes the state only when the historical provider and target provider are currently registered to the exact same adapter instance. That adapter validates the state and owns any cross-model or cross-provider conversion; other adapters receive the provider-neutral content plus provider/model fields without the private state. Durable content stays authoritative: a stored state the reading adapter cannot use degrades that one message to provider-neutral conversion with a diagnostic instead of failing the request.
 
 ## `ResolvedRetryPolicy`
 
@@ -651,7 +651,7 @@ interface GenerateOptions {
   reasoningEffort?: ReasoningEffortId
   /**
    * Ordered conversation messages, exactly as the provider sees them. A
-   * loop-built request passes the derived history (dsh-agent-loop), whose
+   * loop-built request passes the derived history (liwa-agent-loop), whose
    * leading system-role message carries the system prompt; a hand-built
    * one-shot may include identity-free user inputs.
    */
@@ -706,14 +706,14 @@ interface FinishReasonMap {
 
 `FinishReason = FinishReasonMap[keyof FinishReasonMap]`. `TokenUsage` (per-call accounting with disjoint cache fields) is detailed [below](#tokenusage).
 
-`GenerateOptions.tools` carries `ToolSchema` — the JSON-schema description of a tool, as sent to the model. It is declared in dsh-llm (not dsh-tools) precisely because it is part of the request the loop assembles every step:
+`GenerateOptions.tools` carries `ToolSchema` — the JSON-schema description of a tool, as sent to the model. It is declared in liwa-llm (not liwa-tools) precisely because it is part of the request the loop assembles every step:
 
 ```ts type-equiv
 /**
  * JSON-schema description of a tool, as sent to the model.
  *
- * Declared here (not in dsh-tools) because it is part of {@link GenerateOptions};
- * dsh-tools' ToolDefinition and dsh-system-prompt's PromptAssembly both import
+ * Declared here (not in liwa-tools) because it is part of {@link GenerateOptions};
+ * liwa-tools' ToolDefinition and liwa-system-prompt's PromptAssembly both import
  * it from this package.
  */
 interface ToolSchema {
@@ -756,7 +756,7 @@ interface LlmModelDiscoveryRequest {
   baseURL?: string
   /** Wire protocol the endpoint speaks, when the draft names one. */
   api?: string
-  /** Credential for this interrogation alone; the harness never stores it. */
+  /** Credential for this interrogation alone; Liwa never stores it. */
   apiKey?: string
 }
 ```
@@ -881,7 +881,7 @@ interface PreparedLlmCall {
 
 ```ts public-api
 /**
- * Provider-wire adapter for the harness message and stream vocabulary. Register implementations
+ * Provider-wire adapter for the Liwa message and stream vocabulary. Register implementations
  * with `ctx.llm.registerAdapter(providers, adapter)`. Every provider HTTP request must include
  * `attributionHeaders()`; prove the headers are added in the wire request or library header hook. The direct-fetch
  * DeepSeek and library-backed pi-ai adapters meet this contract through different internals.

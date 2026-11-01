@@ -12,7 +12,7 @@ const targetSchema = z.enum(['mac-arm64', 'mac-x64', 'win-x64'])
 
 /** Machine labels are unique; a scalar target is shorthand for a one-element target list. */
 export const desktopPublishRunnersSchema = z.record(z.string(), z.object({
-  label: z.string().regex(/^dsh-[a-z0-9-]+$/u),
+  label: z.string().regex(/^liwa-[a-z0-9-]+$/u),
   target: z.union([targetSchema, z.array(targetSchema).min(1)])
     .transform(value => typeof value === 'string' ? [value] : value),
 }))

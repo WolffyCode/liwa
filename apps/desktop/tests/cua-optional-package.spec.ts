@@ -9,8 +9,8 @@ import { expect, it, onTestFinished } from 'vitest'
 import { pnpmCommand } from '../../../scripts/release/process.ts'
 
 const repository = resolve(import.meta.dirname, '../../..')
-const providerName = '@deepseek-ai/dsh-experimental-cua-macos'
-const bundleName = '@deepseek-ai/dsh-cua-bundle'
+const providerName = '@liwa/experimental-cua-macos'
+const bundleName = '@liwa/cua-bundle'
 const readManifest = async (path: string): Promise<Record<string, unknown>> =>
   JSON.parse(await readFile(join(repository, path, 'package.json'), 'utf8')) as Record<string, unknown>
 
@@ -52,7 +52,7 @@ it('fetches the macOS optional tarball only for Darwin, with an empty cache for 
   const packages = new Map<string, { manifest: Record<string, unknown>; bytes: Buffer }>()
   for (const manifest of manifests) {
     const name = String(manifest.name)
-    const directory = join(root, name.replace('@deepseek-ai/', ''))
+    const directory = join(root, name.replace('@liwa/', ''))
     await mkdir(directory)
     await writeFile(join(directory, 'package.json'), JSON.stringify(manifest))
     if (name === providerName) {
@@ -60,14 +60,14 @@ it('fetches the macOS optional tarball only for Darwin, with an empty cache for 
       for (const file of ['.gitignore', '.npmignore']) {
         await writeFile(join(directory, 'native', file), await readFile(join(repository, 'packages/experimental/cua-macos/native', file)))
       }
-      await writeFile(join(directory, 'native/bin/darwin-arm64/dsh-cua-native'), 'inert native payload')
+      await writeFile(join(directory, 'native/bin/darwin-arm64/liwa-cua-native'), 'inert native payload')
     }
     await command(['pack', '--out', 'package.tgz'], directory)
     const bytes = await readFile(join(directory, 'package.tgz'))
     packages.set(name, { manifest, bytes })
     if (name === providerName) {
       const result = await execa('tar', ['-tzf', join(directory, 'package.tgz')])
-      expect(result.stdout).toContain('package/native/bin/darwin-arm64/dsh-cua-native')
+      expect(result.stdout).toContain('package/native/bin/darwin-arm64/liwa-cua-native')
     }
   }
   const requests: string[] = []
@@ -114,7 +114,7 @@ it('fetches the macOS optional tarball only for Darwin, with an empty cache for 
       `--config.cache-dir=${join(project, 'cache')}`, `--config.state-dir=${join(project, 'state')}`,
     ], project)
     expect(requests).toContain(`/${bundleName}.tgz`)
-    expect(requests).toContain('/@deepseek-ai/dsh-cua.tgz')
+    expect(requests).toContain('/@liwa/cua.tgz')
     expect(requests.includes(`/${providerName}.tgz`), `${target}: ${JSON.stringify(requests)}\n${output}`)
       .toBe(target === 'darwin' || unrestricted)
   }

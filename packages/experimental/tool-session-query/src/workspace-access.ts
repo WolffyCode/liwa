@@ -1,22 +1,22 @@
 /**
  * Caller identity, workspace authorization, and visible lineage projection.
  *
- * @module @deepseek-ai/dsh-tool-session-query/workspace-access
+ * @module @liwa/tool-session-query/workspace-access
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import { brandString } from '@deepseek-ai/dsh-brand'
-import { HarnessError } from '@deepseek-ai/dsh-llm'
+import type { Context } from '@liwa/cordis'
+import { brandString } from '@liwa/brand'
+import { LiwaError } from '@liwa/llm'
 import {
   type SessionHeader,
   type SessionId as SessionIdValue,
-} from '@deepseek-ai/dsh-session'
-import type { TurnBoundaryProjection } from '@deepseek-ai/dsh-agent'
+} from '@liwa/session'
+import type { TurnBoundaryProjection } from '@liwa/agent'
 import type {
   SessionLineageNode,
   SessionRecord,
-} from '@deepseek-ai/dsh-session-query'
-import type { ToolRunContext } from '@deepseek-ai/dsh-tools'
+} from '@liwa/session-query'
+import type { ToolRunContext } from '@liwa/tools'
 import { serviceBoundary } from './service-boundary.ts'
 
 interface Caller {
@@ -55,7 +55,7 @@ interface DescendantVisit {
 function callerOf(exec: ToolRunContext, ctx: Context): Caller {
   const agent = exec.agent
   if (agent === undefined) {
-    throw new HarnessError(
+    throw new LiwaError(
       'session query tools require an agent-bound caller',
       'SESSION_QUERY_TOOL_MISSING_AGENT',
     )

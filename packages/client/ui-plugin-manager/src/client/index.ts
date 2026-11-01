@@ -6,23 +6,23 @@
  * A plugin that carries its own configuration renders it on this page through
  * the slots the page declares (`slot-contract.ts`).
  */
-import type {} from '@deepseek-ai/dsh-client-product-analytics/client'
-import type {} from '@deepseek-ai/dsh-client-locale/client'
-import type { Context as ClientContext } from '@deepseek-ai/cordis'
+import type {} from '@liwa/client-product-analytics/client'
+import type {} from '@liwa/client-locale/client'
+import type { Context as ClientContext } from '@liwa/cordis'
 // Type-only: the root `main` keyed slot the page registers into, declared by
 // ui-layout with the panel id brand, and the `sidebar.panellist` list the
 // entry registers into, declared by ui-sidebar.
-import type { HostObservable } from '@deepseek-ai/dsh-client-ui-slots'
-import type { MainPanelId } from '@deepseek-ai/dsh-client-ui-layout/client'
-import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
-import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
+import type { HostObservable } from '@liwa/client-ui-slots'
+import type { MainPanelId } from '@liwa/client-ui-layout/client'
+import type {} from '@liwa/client-ui-sidebar/client'
+import type {} from '@liwa/client-ui-renderer/client'
 // Type-only: the ctx.remoteAccess Context merge.
-import type {} from '@deepseek-ai/dsh-api-remote-access/client'
+import type {} from '@liwa/api-remote-access/client'
 // Type-only: the ctx.remote Context merge and the forwarded-event key face.
-import type {} from '@deepseek-ai/dsh-api-remotes/client'
+import type {} from '@liwa/api-remotes/client'
 // Type-only: the forwarded events' own declaration (`$on`'s key face resolves
 // through the owning package's client-safe types subpath).
-import type {} from '@deepseek-ai/dsh-plugin-manager/types'
+import type {} from '@liwa/plugin-manager/types'
 import { PluginManagerPage } from './PluginManagerPage.tsx'
 import { createPluginHeaderRef } from './header-scroll.ts'
 import { PluginRefreshToast, type PluginRefreshToastFace } from './PluginRefreshToast.tsx'
@@ -34,7 +34,7 @@ import { en, ja, es, fr, de, ru, pt, zh, type PluginManagerLocaleKey } from './l
 import { createNavigationStore } from './navigation-store.ts'
 import type {} from './slot-contract.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     /** Read-only management activity, independent of the visible Plugins page. */
     pluginChanges: {
@@ -69,7 +69,7 @@ export type {
   PluginConfigViewProps, PluginDetailProps, PluginPackageRef, PluginRowRef, PluginsSubject,
 } from './slot-contract.ts'
 
-declare module '@deepseek-ai/dsh-client-ui-slots' {
+declare module '@liwa/client-ui-slots' {
   interface LocaleNamespaceMap {
     /** Plugin manager tab copy. */
     'pluginManager': PluginManagerLocaleKey

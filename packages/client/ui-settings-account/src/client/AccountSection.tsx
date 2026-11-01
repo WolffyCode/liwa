@@ -1,10 +1,10 @@
 /** Account settings renders safe Host state and explicit login actions. */
 import { Big } from 'big.js'
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
-import { Button, IconRightUpOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { AccountDetails, AccountView, SignInAttemptId } from '@deepseek-ai/dsh-deepseek-account/types'
-import type { PropsRuntime, PropsLocale, InjectFace, HostObservable } from '@deepseek-ai/dsh-client-ui-slots'
-import type { ThemeSnapshot } from '@deepseek-ai/dsh-client-ui-theme/client'
+import { Button, IconRightUpOutlineRegular } from '@liwa/client-ui-primitives'
+import type { AccountDetails, AccountView, SignInAttemptId } from '@liwa/deepseek-account/types'
+import type { PropsRuntime, PropsLocale, InjectFace, HostObservable } from '@liwa/client-ui-slots'
+import type { ThemeSnapshot } from '@liwa/client-ui-theme/client'
 import type { PlatformPage, PlatformPages } from './platform-pages.ts'
 import { formatBalance } from './formatBalance.ts'
 import { AccountAvatar } from './AccountAvatar.tsx'
@@ -132,7 +132,7 @@ export function AccountSection({ t, useAccount, useTheme, start, cancel, openPla
   /**
    * The Platform entry the balance rows share with the Usage action: an embedded page on
    * Desktop, a new tab elsewhere. A wallet read that failed still reaches the same
-   * destination, so the user can inspect the balance the Harness could not load; the
+   * destination, so the user can inspect the balance Liwa could not load; the
    * destination comes from the account links, not from the wallet response.
    * @param label - localized link copy.
    * @param className - link treatment for the row that renders it, absent when the sheet has no such rule.

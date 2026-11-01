@@ -3,13 +3,13 @@ description: "面向用户与维护者的 web GUI 客户端模块系统说明：
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-client-modules
+# @liwa/client-modules
 
 [English](README.md) | 中文
 
 ## 概述
 
-`dsh-client-modules` 把插件包的 `dsh.client` 声明变成可加载的浏览器 bundle：宿主半侧扫描已启用的 Loader 条目并组合启动图，可用的 Web 载体通过 `/plugins` 提供每个 bundle，由 shell 持有的载体则通过 `fetchBundle()` 分派完全相同的 bundle 响应。浏览器半侧按需惰性加载这些 bundle。插件 bundle 惰性执行——运行 bundle 只注册 factory，模块副作用在物化时运行——因此插件首次被使用之前什么都不会运行。这里的一切都是浏览器内核机制；模型永远看不到它。
+`liwa-client-modules` 把插件包的 `liwa.client` 声明变成可加载的浏览器 bundle：宿主半侧扫描已启用的 Loader 条目并组合启动图，可用的 Web 载体通过 `/plugins` 提供每个 bundle，由 shell 持有的载体则通过 `fetchBundle()` 分派完全相同的 bundle 响应。浏览器半侧按需惰性加载这些 bundle。插件 bundle 惰性执行——运行 bundle 只注册 factory，模块副作用在物化时运行——因此插件首次被使用之前什么都不会运行。这里的一切都是浏览器内核机制；模型永远看不到它。
 
 ## 目录
 
@@ -25,13 +25,13 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-声明类型使用 [`DshClientManifest`](../../util/package-manifest/README.zh.md)。Client-modules 校验 JSON，并持有归一化后的启动图。
+声明类型使用 [`LiwaClientManifest`](../../util/package-manifest/README.zh.md)。Client-modules 校验 JSON，并持有归一化后的启动图。
 
-组合或构建浏览器客户端插件时使用它：本包把包的 `dsh.client` 声明变成可加载的浏览器 bundle，无需任何逐插件接线。它随 web 组合激活；外壳在任何插件运行前启动它。
+组合或构建浏览器客户端插件时使用它：本包把包的 `liwa.client` 声明变成可加载的浏览器 bundle，无需任何逐插件接线。它随 web 组合激活；外壳在任何插件运行前启动它。
 
 ### 声明客户端插件
 
-浏览器插件包在其 `package.json` 中以 `platform: 'web'` 声明 `dsh.client`，导出 `./client` bundle，并在 `dsh.client.external` 下列出任何基座之外的模块请求。宿主半侧把每份声明变成 `/plugins` 下提供的 bundle，并让动态提供方先于其消费方加载。
+浏览器插件包在其 `package.json` 中以 `platform: 'web'` 声明 `liwa.client`，导出 `./client` bundle，并在 `liwa.client.external` 下列出任何基座之外的模块请求。宿主半侧把每份声明变成 `/plugins` 下提供的 bundle，并让动态提供方先于其消费方加载。
 
 <a id="package-assets"></a>
 ### 包资源
@@ -53,7 +53,7 @@ application combo 脚本只携带每个插件的 `client.js` 入口，并在启�
 
 ### 共享模块
 
-外壳初始化一张冻结的模块表（[`PLATFORM_MODULES`](../web/README.zh.md#the-shared-module-table)）；每个动态 bundle 都精确针对该基座解析其 external。`dsh.client.external` 只添加基座之外的精确请求；系统会将每个请求解析到其指定的动态包 row 或完全匹配的静态表键。纯类型 import 会被擦除，不产生请求。组合阶段会拒绝畸形请求、缺失提供方、自请求与同步请求环。
+外壳初始化一张冻结的模块表（[`PLATFORM_MODULES`](../web/README.zh.md#the-shared-module-table)）；每个动态 bundle 都精确针对该基座解析其 external。`liwa.client.external` 只添加基座之外的精确请求；系统会将每个请求解析到其指定的动态包 row 或完全匹配的静态表键。纯类型 import 会被擦除，不产生请求。组合阶段会拒绝畸形请求、缺失提供方、自请求与同步请求环。
 
 ### 构建要求
 
@@ -71,7 +71,7 @@ application combo 脚本只携带每个插件的 `client.js` 入口，并在启�
 
 ### 设计理念
 
-本包分为两侧：Node 半侧负责组合与提供（`ctx.clientModules`，`ClientModuleRegistry`），浏览器半侧负责加载（`ctx.modules`，`ClientModuleSystem`）。两者之间的协议是启动图——以 `window.__DSH_BOOT__` 注入的 `WebBootEntry` 行，`<` 已转义，插件控制的字符串无法逃出 script 元素。vendored Loader 唯一的消费点是 `EntryTree.import`，因此模块系统就是「插件代码如何到达」的唯一可替换实现。
+本包分为两侧：Node 半侧负责组合与提供（`ctx.clientModules`，`ClientModuleRegistry`），浏览器半侧负责加载（`ctx.modules`，`ClientModuleSystem`）。两者之间的协议是启动图——以 `window.__LIWA_BOOT__` 注入的 `WebBootEntry` 行，`<` 已转义，插件控制的字符串无法逃出 script 元素。vendored Loader 唯一的消费点是 `EntryTree.import`，因此模块系统就是「插件代码如何到达」的唯一可替换实现。
 
 ### 惰性 CJS 模型
 
@@ -79,7 +79,7 @@ application combo 脚本只携带每个插件的 `client.js` 入口，并在启�
 
 ### 增量组合
 
-Node 半侧逐包增量扫描——没有全量重扫路径。每次发出 `internal/plugin` 事件时，系统都会把该 fiber 的 entry 名标脏；微任务 flush 会把每个脏名与当前 loader 条目对账，激活 pass 会初始化同一个脏集合并同步 flush，因此首次扫描与稳态共用同一实现。每次对账都会重新读取包 manifest 与 bundle 元数据，因此包在重新安装、升级或移动之后重启的条目会发布其当前的 `dsh.client` 声明与客户端导出；读到相同 manifest 与 bundle 元数据的对账不发布任何内容，也不读取 bundle 字节；未变化的 bundle 保留其 revision，因此浏览器会保留已加载的插件。解析出的 manifest 包名作为浏览器模块身份。若不同的 active Loader source 解析到同一包名，组合会失败；移除冲突来源后，剩余来源无需重启 fiber 即可接替。没有伴随条目重启的 bundle 重建经 `rebuilt()`（HMR 钩子）进入图。
+Node 半侧逐包增量扫描——没有全量重扫路径。每次发出 `internal/plugin` 事件时，系统都会把该 fiber 的 entry 名标脏；微任务 flush 会把每个脏名与当前 loader 条目对账，激活 pass 会初始化同一个脏集合并同步 flush，因此首次扫描与稳态共用同一实现。每次对账都会重新读取包 manifest 与 bundle 元数据，因此包在重新安装、升级或移动之后重启的条目会发布其当前的 `liwa.client` 声明与客户端导出；读到相同 manifest 与 bundle 元数据的对账不发布任何内容，也不读取 bundle 字节；未变化的 bundle 保留其 revision，因此浏览器会保留已加载的插件。解析出的 manifest 包名作为浏览器模块身份。若不同的 active Loader source 解析到同一包名，组合会失败；移除冲突来源后，剩余来源无需重启 fiber 即可接替。没有伴随条目重启的 bundle 重建经 `rebuilt()`（HMR 钩子）进入图。
 
 Node 半侧会在发布前快照每个 `client.js` 入口，并在不构建响应 body 的情况下创建 combo descriptor。它把资源分组为 combo 路由键（`/plugins/??...&rev=...`）：modules row 使用一个 bootstrap combo，其余 row 使用一个或多个 application combo；每个阶段都会在 URL 超过 3 KiB 之前分区。启动图与批次描述符携带同一路由键的应用目录相对形式（`plugins/??...&rev=...`），浏览器文档会按其自身挂载解析它，而响应表仍以绝对路由为键；source-map trailer 则相对该 combo 脚本自身目录解析。脚本 body 在首次 `GET` 时只组合一次，并以对应的 map 引用结尾；map 文件则在首次 map `GET` 时单独读取、校验并组合，`HEAD` 不会物化任一 body。Host 不扫描也不预加载同级 chunk：精确的 `/plugins/<package>/client.<name>.js?rev=<rev>` 请求会通过异步文件 API 读取该脚本并缓存，因此首次异步读取时才物化文件的文件系统也能提供它；其 map 仍会等到 map URL 被请求后才计算。浏览器从所属 row 派生出该 chunk 引用，因此它同样是文档相对形式（`plugins/<package>/client.<name>.js?rev=<rev>`）；chunk 脚本携带的 map trailer 则是裸文件名 `client.<name>.js.map?rev=<rev>`，由该脚本自身目录解析。每个 combo 或 chunk map 都是 Indexed Source Map v3，并在可用时使用作者提供的 section，否则为已打包 bundle 生成 identity section。首次发布与 HMR 都从入口的 `mtimeMs`、`ctimeMs` 和大小派生逐插件 revision，不对产物内容求哈希。状态变更时间用于区分保留 mtime 和大小的重写。未变化的产物因此会跨 Host 重启保持 revision，SSE 重连不会替换其浏览器插件。共享预设会在该包所有输出写完后标记 `client.js`，因此仅 chunk 发生重建也会更换 owner revision，无需 Host 扫描 chunk。combo revision 从有序 row revision 派生。已公告的 combo 响应与已请求的 chunk 响应会跨无关图重组保持不可变；未知资源或 revision 返回 404。
 
@@ -103,7 +103,7 @@ bundle 路由随注入的 `webServer` 生命周期注册：服务就绪时注册
 | [`src/client/system.ts`](src/client/system.ts) | `ClientModuleSystem`：加载／物化／失效机制 |
 | [`src/client/entries.ts`](src/client/entries.ts) | 页面条目对账、重试与代码替换 |
 | [`src/client/entry-lifecycle.ts`](src/client/entry-lifecycle.ts) | 通过注册表清理 Loader fiber，回收模块自身样式 |
-| [`src/client/manifest.ts`](src/client/manifest.ts) | 协议类型、启动清单解析与 `dsh.client` 声明解析器 |
+| [`src/client/manifest.ts`](src/client/manifest.ts) | 协议类型、启动清单解析与 `liwa.client` 声明解析器 |
 
 </details>
 
@@ -117,7 +117,7 @@ bundle 路由随注入的 `webServer` 生命周期注册：服务就绪时注册
 - [客户端模块子系统](../../../docs/subsystems/client-modules.zh.md)——web 插件表、`WebBootGraph` 协议与 bundle 路由。
 - [Web 启动内核](../web/README.zh.md)——创建模块系统并启动插件树的外壳。
 - [客户端 HMR 驱动器](../hmr/README.zh.md)——在重建 bundle 上驱动 `invalidate`/`prefetch` 的重载链路。
-- [客户端编写规则](../AGENTS.md#shared-modules-and-the-module-graph)——共享模块基座与 `dsh.client.external` 语义。
+- [客户端编写规则](../AGENTS.md#shared-modules-and-the-module-graph)——共享模块基座与 `liwa.client.external` 语义。
 - [客户端组地图](../README.zh.md)——本包所属的浏览器半侧。
 
 -----

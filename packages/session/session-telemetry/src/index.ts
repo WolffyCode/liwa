@@ -1,5 +1,5 @@
 /**
- * SessionTelemetryBackend Service Definition for the DeepSeek Harness.
+ * SessionTelemetryBackend Service Definition for Liwa.
  *
  * This package owns the CAPTURE side of session-event reporting — the complete
  * one-record-per-event ledger mirror, what records carry, when
@@ -11,13 +11,13 @@
  * backend responsibilities are documented in the
  * [Session telemetry reference](../README.md#understand-the-implementation).
  *
- * @module @deepseek-ai/dsh-session-telemetry
+ * @module @liwa/session-telemetry
  */
 
-import { Context, Service } from '@deepseek-ai/cordis'
-import type { SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
+import { Context, Service } from '@liwa/cordis'
+import type { SessionEvent, SessionId } from '@liwa/session'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     sessionTelemetry: SessionTelemetryBackend
   }

@@ -25,7 +25,7 @@
 import { Fragment, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode, RefObject } from 'react'
 import clsx from 'clsx'
-import { IconCloseFillRegular, IconPlusOutlineRegular, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconCloseFillRegular, IconPlusOutlineRegular, Tooltip } from '@liwa/client-ui-primitives'
 import type { DockZone, LayoutState, PaneId, PaneNode, TabId } from '../contract/types.ts'
 import { getTab } from '../engine/tree.ts'
 import type { PaneCallbacks, SplitBlock } from './render.ts'

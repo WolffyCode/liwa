@@ -1,18 +1,18 @@
 /** Remote contribution and slot registrations of the forge panel. */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type { RemoteHostFacts } from '@deepseek-ai/dsh-api-remotes/client'
-import type {} from '@deepseek-ai/dsh-api-session-controller/client'
-import type {} from '@deepseek-ai/dsh-client-locale/client'
-import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
-import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
-import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
-import type {} from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
-import type { HostObservable } from '@deepseek-ai/dsh-client-ui-slots'
-import type {} from '@deepseek-ai/dsh-client-ui-workspace/client'
-import type {} from '@deepseek-ai/dsh-experimental-client-ui-forge/remote'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import type { RemoteResult, TypertRemoteContribution } from '@deepseek-ai/dsh-typert-protocol'
+import type { Context } from '@liwa/cordis'
+import type { RemoteHostFacts } from '@liwa/api-remotes/client'
+import type {} from '@liwa/api-session-controller/client'
+import type {} from '@liwa/client-locale/client'
+import type {} from '@liwa/client-ui-conversation/client'
+import type {} from '@liwa/client-ui-layout/client'
+import type {} from '@liwa/client-ui-renderer/client'
+import type {} from '@liwa/client-ui-sidebar-right/client'
+import type { HostObservable } from '@liwa/client-ui-slots'
+import type {} from '@liwa/client-ui-workspace/client'
+import type {} from '@liwa/experimental-client-ui-forge/remote'
+import type { SessionId } from '@liwa/session/types'
+import type { RemoteResult, TypertRemoteContribution } from '@liwa/typert-protocol'
 import type { ForgeChangeRequestListState, ForgeChangeRequestStatesFrame, ForgePanelChangeRequest } from '../types.ts'
 import { ActionToast } from './ActionToast.tsx'
 import { CHANGES_ID, changesDefinition } from './changes-address.ts'
@@ -37,7 +37,7 @@ import { WorktreeToggle, type WorktreeToggleInjected } from './WorktreeToggle.ts
 export const inject = ['remote', 'slots', 'locale', 'sidebarRightTabs', 'sidebarRight', 'sessions']
 
 /** Registry id of the forge tab type, also its slot key. */
-export const TAB_ID = '@deepseek-ai/dsh-experimental-client-ui-forge'
+export const TAB_ID = '@liwa/experimental-client-ui-forge'
 
 /** Kind of the forge tab. */
 export const TAB_KIND = 'forge-panel'

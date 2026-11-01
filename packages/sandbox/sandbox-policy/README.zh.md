@@ -3,7 +3,7 @@ description: "面向需要在各项负责强制执行的能力之间组合、配
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-sandbox-policy
+# @liwa/sandbox-policy
 
 [English](README.md) | 中文
 
@@ -36,7 +36,7 @@ kind: "package-reference"
 用默认模式加载本包；故障安全默认值是 `read-only`，需要 agent（智能体）可写入工作区的部署必须显式选择 `workspace-write`。
 
 ```yaml
-- name: '@deepseek-ai/dsh-sandbox-policy'
+- name: '@liwa/sandbox-policy'
   config:
     mode: workspace-write
     workspaceRoot: /absolute/path/to/workspace
@@ -50,7 +50,7 @@ kind: "package-reference"
 
 对于关联的 Git worktree，调用方可通过 `additionalWritableRoots` 授予共享 Git 目录的写权限。调用方必须显式选择该目录；策略不会读取 Git 文件或授权父检出目录。这些授权是组合中所有会话共享的部署配置，而非保存的 Session 权限。授权整个 Git 目录也允许修改钩子和配置，后续主机 Git 调用可能在沙箱之外执行它们；仅对可信任务使用此授权。使用物理绝对目录路径。执行限制的主机拒绝不存在的路径、文件和符号链接根目录，包括两次调用之间被替换为符号链接的目录。远端授权在远端主机上验证。
 
-生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-sandbox-policy)是每个受支持字段及其 JSDoc 的穷尽式真源。
+生成的[配置目录](../../../docs/config-catalog.zh.md#liwasandbox-policy)是每个受支持字段及其 JSDoc 的穷尽式真源。
 
 ### 切换会话模式
 
@@ -72,7 +72,7 @@ kind: "package-reference"
 
 ### 解析优先级
 
-`resolve({ session, mode })` 返回一份完整的逐调用策略：已批准的显式模式优先于会话最后一条 `sandbox/mode` 事件，后者又优先于部署默认值。会话的不可变 `cwd` 提供工作区根目录；否则使用配置的回退值。执行环境中的绝对路径写法保持不变。执行限制的提供方在自己的文件系统上规范化根目录，因此远端 `symlink/..` 路径绝不会在 Harness 主机上解析。
+`resolve({ session, mode })` 返回一份完整的逐调用策略：已批准的显式模式优先于会话最后一条 `sandbox/mode` 事件，后者又优先于部署默认值。会话的不可变 `cwd` 提供工作区根目录；否则使用配置的回退值。执行环境中的绝对路径写法保持不变。执行限制的提供方在自己的文件系统上规范化根目录，因此远端 `symlink/..` 路径绝不会在灵鲸主机上解析。
 
 ### 逐会话存储
 
@@ -80,7 +80,7 @@ kind: "package-reference"
 
 ### 模型可见文本
 
-`sandbox:policy` 贡献说明该模式与具体能力无关的文件操作约定，以及 `workspace-write` 下已记录的会话工作区和显式额外目录。它不枚举已挂载能力；工具插件保留特定于操作的拒绝与升权引导，批准策略单独贡献给同一份快照，计划引导仍由 `dsh-plan-mode` 的系统段落管理。
+`sandbox:policy` 贡献说明该模式与具体能力无关的文件操作约定，以及 `workspace-write` 下已记录的会话工作区和显式额外目录。它不枚举已挂载能力；工具插件保留特定于操作的拒绝与升权引导，批准策略单独贡献给同一份快照，计划引导仍由 `liwa-plan-mode` 的系统段落管理。
 
 ### 源码地图
 
@@ -111,30 +111,30 @@ kind: "package-reference"
 
 #### 模型看到什么
 
-每个 agent 会话的当前运行时上下文快照中都有一项 `sandbox:policy` 贡献。它不枚举已挂载的能力。工具插件继续负责操作与升权引导，批准策略单独贡献给同一份快照，计划引导仍由 `dsh-plan-mode` 的系统段落管理。
+每个 agent 会话的当前运行时上下文快照中都有一项 `sandbox:policy` 贡献。它不枚举已挂载的能力。工具插件继续负责操作与升权引导，批准策略单独贡献给同一份快照，计划引导仍由 `liwa-plan-mode` 的系统段落管理。
 
 ##### 只读
 
 ```markdown
-Current DSH file policy: read-only. Any available operation enforced by the DSH file sandbox cannot modify files in the standing mode. Do not refuse a required modification from this policy alone: try an available tool normally and follow any denial and escalation guidance it returns.
+Current Liwa file policy: read-only. Any available operation enforced by the Liwa file sandbox cannot modify files in the standing mode. Do not refuse a required modification from this policy alone: try an available tool normally and follow any denial and escalation guidance it returns.
 ```
 
 ##### 工作区写入
 
 ```markdown
-Current DSH file policy: workspace-write. Any available operation enforced by the DSH file sandbox may modify files under the session workspace: "<workspace root>". Some platform temporary areas may also be writable.
+Current Liwa file policy: workspace-write. Any available operation enforced by the Liwa file sandbox may modify files under the session workspace: "<workspace root>". Some platform temporary areas may also be writable.
 ```
 
 ##### 带额外目录的工作区写入
 
 ```markdown
-Current DSH file policy: workspace-write. Any available operation enforced by the DSH file sandbox may modify files under the session workspace: "<workspace root>". Additional writable directories: ["/repo/.git"]. Some platform temporary areas may also be writable.
+Current Liwa file policy: workspace-write. Any available operation enforced by the Liwa file sandbox may modify files under the session workspace: "<workspace root>". Additional writable directories: ["/repo/.git"]. Some platform temporary areas may also be writable.
 ```
 
 ##### 完全访问
 
 ```markdown
-Current DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations.
+Current Liwa file policy: danger-full-access. The Liwa file sandbox does not restrict file modifications by available operations.
 ```
 
 #### Token 影响

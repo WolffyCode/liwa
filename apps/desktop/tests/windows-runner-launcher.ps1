@@ -1,7 +1,7 @@
 # Windowless launcher acceptance without Task Scheduler, GitHub registration or signing credentials.
 $ErrorActionPreference = 'Stop'
 if (-not $IsWindows) { throw 'Requires PowerShell 7 on Windows.' }
-$root = Join-Path ([IO.Path]::GetTempPath()) ('dsh-launcher-' + [guid]::NewGuid().ToString('N'))
+$root = Join-Path ([IO.Path]::GetTempPath()) ('liwa-launcher-' + [guid]::NewGuid().ToString('N'))
 $taskRoot = Join-Path $root 'task with spaces'
 $null = New-Item -ItemType Directory -Path $taskRoot
 $launcher = Join-Path $taskRoot 'launcher.exe'

@@ -1,7 +1,7 @@
 /**
  * Default Agent driver over queued turns and step-boundary input. Every request
  * is derived from the session log.
- * @module dsh-agent-loop/agent
+ * @module liwa-agent-loop/agent
  */
 
 import type {
@@ -17,26 +17,26 @@ import type {
   InboxState,
   PreStepDecision,
   RequestErrorAction,
-} from '@deepseek-ai/dsh-agent'
-import { AgentModel, agentEvents, assembleContextFor } from '@deepseek-ai/dsh-agent'
-import type { GenerateOptions, LlmCallConfig, Message, PreparedLlmCall } from '@deepseek-ai/dsh-llm'
+} from '@liwa/agent'
+import { AgentModel, agentEvents, assembleContextFor } from '@liwa/agent'
+import type { GenerateOptions, LlmCallConfig, Message, PreparedLlmCall } from '@liwa/llm'
 import {
   LlmError,
   createAssistantMessage,
   createDeveloperMessage,
   errorChain,
   markAgentLoopRequest,
-} from '@deepseek-ai/dsh-llm'
-import { assertNever, deepFreeze } from '@deepseek-ai/dsh-util-values'
-import type { Scope } from '@deepseek-ai/dsh-scope'
-import { createScope } from '@deepseek-ai/dsh-scope'
-import type { EpochHeader, RequestContext, Session, SessionId, SessionSeq, TurnEndReason, UserMessage } from '@deepseek-ai/dsh-session'
-import { canonicalHeader, headerEquals, ToolCallRecovery } from '@deepseek-ai/dsh-session'
-import { joinContextSections, renderContextSections, renderPrompt } from '@deepseek-ai/dsh-system-prompt'
-import type { PromptAssembly } from '@deepseek-ai/dsh-system-prompt'
-import { ToolActivationError, ToolBatchExecutionError } from '@deepseek-ai/dsh-tools'
-import type { ResolvedToolSet } from '@deepseek-ai/dsh-tools'
-import type { Context } from '@deepseek-ai/cordis'
+} from '@liwa/llm'
+import { assertNever, deepFreeze } from '@liwa/util-values'
+import type { Scope } from '@liwa/scope'
+import { createScope } from '@liwa/scope'
+import type { EpochHeader, RequestContext, Session, SessionId, SessionSeq, TurnEndReason, UserMessage } from '@liwa/session'
+import { canonicalHeader, headerEquals, ToolCallRecovery } from '@liwa/session'
+import { joinContextSections, renderContextSections, renderPrompt } from '@liwa/system-prompt'
+import type { PromptAssembly } from '@liwa/system-prompt'
+import { ToolActivationError, ToolBatchExecutionError } from '@liwa/tools'
+import type { ResolvedToolSet } from '@liwa/tools'
+import type { Context } from '@liwa/cordis'
 import { ReactLoopInbox } from './inbox.ts'
 import { RuntimeContextProjection } from './runtime-context.ts'
 import { AssistantStreamAttempt } from './assistant-stream.ts'

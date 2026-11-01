@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-19-sdk-native-user-questions.md
 /agent-note-sdk-native-user-questions:
-  en: b506991bd07d87dc
-  zh: 9f3e1ecb42163d72
+  en: ac43607207066f34
+  zh: f3df60f8c5a39f3d
 /agent-note-sdk-native-user-questions/problem:
   en: b3dbcdb4b5bce2d1
   zh: 60df882dc253fcf5
 /agent-note-sdk-native-user-questions/decision:
-  en: 0f7b71f0ef58f5f8
-  zh: 07bb12acad27d2fc
+  en: 01393d70009a1e1f
+  zh: 8f0069a479a672b8
 /agent-note-sdk-native-user-questions/consequences:
   en: 46e3a450c6dce54e
   zh: 9f99efc6f8d2ab8d

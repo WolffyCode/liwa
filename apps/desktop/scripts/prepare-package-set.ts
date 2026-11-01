@@ -1,4 +1,4 @@
-/** Select and copy the local npm tarball closures that supply Desktop dsh and its private Host. */
+/** Select and copy the local npm tarball closures that supply Desktop liwa and its private Host. */
 
 import { createHash } from 'node:crypto'
 import {
@@ -27,8 +27,8 @@ import { capture } from '../../../scripts/release/process.ts'
 import { tarballFiles } from '../../../scripts/release/tarball.ts'
 import { desktopTargetPlatform, resolveDesktopBuildTarget, resolveDesktopTargetBuildPaths } from './desktop-build-paths.mjs'
 
-const DSH_PACKAGE = '@deepseek-ai/dsh'
-const ROOT_PACKAGES = [DSH_PACKAGE, DESKTOP_HOST_PACKAGE] as const
+const LIWA_PACKAGE = '@liwa/cli'
+const ROOT_PACKAGES = [LIWA_PACKAGE, DESKTOP_HOST_PACKAGE] as const
 const APP_ROOT = resolve(import.meta.dirname, '..')
 const REPOSITORY_ROOT = resolve(APP_ROOT, '..', '..')
 
@@ -62,7 +62,7 @@ function dependencyNames(manifest: Readonly<Record<string, unknown>>, section: s
 }
 
 /**
- * Select workspace dependencies rooted at dsh and its private Host; npm resolves external packages.
+ * Select workspace dependencies rooted at liwa and its private Host; npm resolves external packages.
  * Reads the repository workspace manifest and package manifests to distinguish required local packages from npm-resolved externals.
  * @param available - Packed packages indexed by package name.
  * @param target - Platform and architecture of the installer payload.
@@ -183,7 +183,7 @@ export function prepareDesktopPackageSet(
 function main(): void {
   const buildPaths = resolveDesktopTargetBuildPaths()
   const defaultInputs = [
-    buildPaths.packedDsh,
+    buildPaths.packedLiwa,
     buildPaths.packedVendor,
     buildPaths.packedLandlock,
   ]

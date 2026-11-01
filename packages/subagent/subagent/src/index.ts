@@ -8,8 +8,8 @@
  * select one by name.
  *
  * This package owns the Service Definition role of the capability seam. Service Providers
- * (`@deepseek-ai/dsh-subagent-spawn-in-process`, `-fork`, `-acp`) and the model-facing
- * consumer (`@deepseek-ai/dsh-tool-subagent`) are separate packages.
+ * (`@liwa/subagent-spawn-in-process`, `-fork`, `-acp`) and the model-facing
+ * consumer (`@liwa/tool-subagent`) are separate packages.
  *
  * `startActivation` establishes every child under the activation manager, which
  * owns execution, result delivery, and resource release. Local providers seed
@@ -25,22 +25,22 @@
  * serialization and hostile-input validation belong at real process, worker,
  * persistence, and model boundaries.
  *
- * @module @deepseek-ai/dsh-subagent
+ * @module @liwa/subagent
  */
-import type { Volatile } from '@deepseek-ai/cordis'
+import type { Volatile } from '@liwa/cordis'
 
-import { Context, Service } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import type {} from '@deepseek-ai/dsh-working-directory'
-import type {} from '@deepseek-ai/dsh-attachment'
-import { scopeTarget } from '@deepseek-ai/dsh-scope'
-import type { Scoped } from '@deepseek-ai/dsh-scope'
-import { assertObjectJsonSchema } from '@deepseek-ai/dsh-tools'
-import type { ContentBlock, MessageId, MessageSource } from '@deepseek-ai/dsh-llm'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { SessionId } from '@deepseek-ai/dsh-session'
-import { canonicalClientTimeZone } from '@deepseek-ai/dsh-util-time'
-import { Remote, RemoteError, TypertRemoteService, principalOf, type Principal } from '@deepseek-ai/dsh-typert-protocol'
+import { Context, Service } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import type {} from '@liwa/working-directory'
+import type {} from '@liwa/attachment'
+import { scopeTarget } from '@liwa/scope'
+import type { Scoped } from '@liwa/scope'
+import { assertObjectJsonSchema } from '@liwa/tools'
+import type { ContentBlock, MessageId, MessageSource } from '@liwa/llm'
+import type { Agent } from '@liwa/agent'
+import type { SessionId } from '@liwa/session'
+import { canonicalClientTimeZone } from '@liwa/util-time'
+import { Remote, RemoteError, TypertRemoteService, principalOf, type Principal } from '@liwa/typert-protocol'
 import {
   rejectPrompt, validateControlRequest,
 } from './control.ts'
@@ -128,7 +128,7 @@ export type { SubagentDescendantListEntry } from './list-children.ts'
 export type { SubagentRunEndInfo, SubagentRunInfo } from './types.ts'
 export type { SubagentCatalogEntry, SubagentIdentityProjection, SubagentTimingProjection } from './projection-types.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     subagents: SubagentRuntime
   }

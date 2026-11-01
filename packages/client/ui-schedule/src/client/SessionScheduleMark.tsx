@@ -11,9 +11,9 @@
 
 import {
   IconClockOutlineRegular,
-} from '@deepseek-ai/dsh-client-ui-primitives'
-import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
-import type {} from '@deepseek-ai/dsh-client-ui-workspace/client'
+} from '@liwa/client-ui-primitives'
+import type { InjectFace, PropsLocale, PropsRuntime } from '@liwa/client-ui-slots'
+import type {} from '@liwa/client-ui-workspace/client'
 import {
   useSessionScheduleFacts, type SessionScheduleCatalogObservable,
 } from './session-schedule-state.ts'

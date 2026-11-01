@@ -3,13 +3,13 @@ description: "面向用户与维护者的系统提示词组装说明，用于添
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-system-prompt
+# @liwa/system-prompt
 
 [English](README.md) | 中文
 
 ## 概述
 
-`dsh-system-prompt` 让 agent 在每个模型步骤收到一份有序系统提示词与可用工具 schema。需要添加提示词段、动态运行时事实、可复用变量或工具 schema，或者控制固定 harness 身份、部署 persona、运行时上下文和面向模型的工具顺序时，请使用本包。agent 作用域的贡献会遮蔽同名全局默认值，而不影响其他 agent。无效的完整提示词组合与未解析变量会使组装失败，不会向模型发送格式错误的提示词。
+`liwa-system-prompt` 让 agent 在每个模型步骤收到一份有序系统提示词与可用工具 schema。需要添加提示词段、动态运行时事实、可复用变量或工具 schema，或者控制固定灵鲸身份、部署 persona、运行时上下文和面向模型的工具顺序时，请使用本包。agent 作用域的贡献会遮蔽同名全局默认值，而不影响其他 agent。无效的完整提示词组合与未解析变量会使组装失败，不会向模型发送格式错误的提示词。
 
 ## 目录
 
@@ -25,7 +25,7 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-在任何运行 agent 的地方挂载 `dsh-system-prompt`：它提供 `ctx.systemPrompt`，即每个提示词贡献所落入的注册表。贡献带作用域——通过 `agent.ctx` 注册只影响该 agent，并遮蔽同名全局项。
+在任何运行 agent 的地方挂载 `liwa-system-prompt`：它提供 `ctx.systemPrompt`，即每个提示词贡献所落入的注册表。贡献带作用域——通过 `agent.ctx` 注册只影响该 agent，并遮蔽同名全局项。
 
 <a id="configure-the-prompt"></a>
 ### 配置提示词
@@ -33,9 +33,9 @@ kind: "package-reference"
 配置拥有固定开场白、runtime 上下文、部署 persona 前缀与后缀与工具顺序；其余一切来自已注册的贡献。
 
 ```yaml
-- name: '@deepseek-ai/dsh-system-prompt'
+- name: '@liwa/system-prompt'
   config:
-    includeHarnessIdentity: true
+    includeLiwaIdentity: true
     includeRuntimeContext: true
     personaPrefix: 'You are the deployment assistant.'
     toolOrder: ['<unlisted-tools>']
@@ -43,13 +43,13 @@ kind: "package-reference"
 
 | 字段 | 默认值 | 含义 |
 |---|---|---|
-| `includeHarnessIdentity` | `true` | 是否包含顺序为 −1000 的第一方固定开场白 `You are an AI agent powered by DeepSeek Harness.`。仅当兼容性部署拥有完整系统提示词时设为 false。 |
+| `includeLiwaIdentity` | `true` | 是否包含顺序为 −1000 的第一方固定开场白 `You are an AI agent powered by 灵鲸.`。仅当兼容性部署拥有完整系统提示词时设为 false。 |
 | `includeRuntimeContext` | `true` | 是否在组装中包含可选的有序动态 runtime 上下文 |
 | `personaPrefix` | `''` | 全局 persona 前缀模板，顺序为 `0`，位于第一方指导之前 |
 | `personaSuffix` | `''` | 全局 `deployment:persona-suffix` 模板，顺序为 `10200`，位于第一方指导之后 |
 | `toolOrder` | — | 显式面向模型工具顺序，含一个 `'<unlisted-tools>'` 其余项标记 |
 
-生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-system-prompt)是每个受支持字段的穷尽式真源。没有恰好一个其余项或存在重复项的 `toolOrder` 列表会在加载时失败；已列名称没有对应已注册工具会使每次 `assemble()` 被拒绝。
+生成的[配置目录](../../../docs/config-catalog.zh.md#liwasystem-prompt)是每个受支持字段的穷尽式真源。没有恰好一个其余项或存在重复项的 `toolOrder` 列表会在加载时失败；已列名称没有对应已注册工具会使每次 `assemble()` 被拒绝。
 
 ### 贡献提示词段
 
@@ -139,12 +139,12 @@ ctx.systemPrompt.variable('response_language', () => 'English')
 
 #### 模型看到什么
 
-第一方段落依次渲染 harness 身份、部署 persona 前缀（含模型名称介绍）、可复用指令（包括生成的工具 SDK 和结构化输出指导），最后是携带环境信息的后缀：harness 源码（`10000`）、Web 表层（`10100`）和部署 persona 后缀（`10200`）。外部段落的顺序与组装监听器仍决定其最终结果。`includeHarnessIdentity: false` 仅省略这个固定开场白。空段会消失；带作用域的段与变量可以为一个 agent 遮蔽全局项。`system-prompt/assemble` waterfall 决定交付的提示词，除非一个有效段声明自身为 complete——此时该确切段会成为完整的系统提示词，而 waterfall 得到的上下文与变量保持不变。工具声明仍由提供方持有。渲染后的提示词作为派生历史中的 system 角色消息——surface 第 0 号节点，或历史内更新之后最新的系统节点——到达模型；循环请求与 `request/header` 均不含单独的 `system` 字段。完整渲染结果为空时，循环通过有日志记录的空内容替换清除所有生效的系统节点，模型历史不再保留任何旧提示词。有序动态上下文与段分离，只在存在时才会成为带来源的 user 角色快照；`includeRuntimeContext: false` 或带作用域的抑制器会移除可选贡献；必需的操作上下文仍然保留。
+第一方段落依次渲染灵鲸身份、部署 persona 前缀（含模型名称介绍）、可复用指令（包括生成的工具 SDK 和结构化输出指导），最后是携带环境信息的后缀：灵鲸源码（`10000`）、Web 表层（`10100`）和部署 persona 后缀（`10200`）。外部段落的顺序与组装监听器仍决定其最终结果。`includeLiwaIdentity: false` 仅省略这个固定开场白。空段会消失；带作用域的段与变量可以为一个 agent 遮蔽全局项。`system-prompt/assemble` waterfall 决定交付的提示词，除非一个有效段声明自身为 complete——此时该确切段会成为完整的系统提示词，而 waterfall 得到的上下文与变量保持不变。工具声明仍由提供方持有。渲染后的提示词作为派生历史中的 system 角色消息——surface 第 0 号节点，或历史内更新之后最新的系统节点——到达模型；循环请求与 `request/header` 均不含单独的 `system` 字段。完整渲染结果为空时，循环通过有日志记录的空内容替换清除所有生效的系统节点，模型历史不再保留任何旧提示词。有序动态上下文与段分离，只在存在时才会成为带来源的 user 角色快照；`includeRuntimeContext: false` 或带作用域的抑制器会移除可选贡献；必需的操作上下文仍然保留。
 
-##### harness 身份
+##### 灵鲸身份
 
 ```markdown
-You are an AI agent powered by DeepSeek Harness.
+You are an AI agent powered by Liwa.
 ```
 
 #### Token 影响
@@ -159,7 +159,7 @@ You are an AI agent powered by DeepSeek Harness.
 
 #### 模型看到什么
 
-对于已交付工具，模型会收到[生成工具 schema](../../../docs/tool-catalog.zh.md#deepseek-aidsh-tool-executor-ptc)中对每个 agent 可见的子集；限制与步骤时激活完成后，按配置或字典序排列。扩展可以通过同一注册表贡献其他定义。段与 schema 提供方是独立的组装输入。限制不会移除段落注册：工具指导插件通过 `text({ scope, toolSet })` 与 `ctx.tools.get(name, scope, toolSet)` 返回空文本或选择适用片段。任意静态段落不会被自动改写。
+对于已交付工具，模型会收到[生成工具 schema](../../../docs/tool-catalog.zh.md#liwatool-executor-ptc)中对每个 agent 可见的子集；限制与步骤时激活完成后，按配置或字典序排列。扩展可以通过同一注册表贡献其他定义。段与 schema 提供方是独立的组装输入。限制不会移除段落注册：工具指导插件通过 `text({ scope, toolSet })` 与 `ctx.tools.get(name, scope, toolSet)` 返回空文本或选择适用片段。任意静态段落不会被自动改写。
 
 #### Token 影响
 

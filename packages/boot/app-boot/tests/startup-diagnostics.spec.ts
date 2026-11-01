@@ -11,7 +11,7 @@ afterEach(async () => {
 })
 
 async function configuration(): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-startup-diagnostic-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-startup-diagnostic-'))
   roots.push(root)
   await writeFile(join(root, 'consumer.mjs'), 'export const inject = ["agents"]; export function apply() {}\n')
   await writeFile(join(root, 'provider.mjs'), 'export function apply(ctx) { ctx.provide("agents", {}) }\n')

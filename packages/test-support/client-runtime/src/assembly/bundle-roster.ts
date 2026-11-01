@@ -1,9 +1,9 @@
 /**
- * The browser roster of a `dsh --profile`, read from its bundle patch files
- * the way the launcher composes them: each bundle's `dsh.bundle.patch` file list is
+ * The browser roster of a `liwa --profile`, read from its bundle patch files
+ * the way the launcher composes them: each bundle's `liwa.bundle.patch` file list is
  * parsed with the include plugin's YAML dialect (`parseEntryYaml`) and
  * composed by its `applyPatches`; every enabled row whose package
- * declares `dsh.client.platform === 'web'` becomes a roster row carrying that
+ * declares `liwa.client.platform === 'web'` becomes a roster row carrying that
  * declaration's `inject` and `immediately`; rows nested in Loader groups count
  * like the Loader counts them, a disabled group disabling every row beneath
  * it. A patch that matches nothing
@@ -11,26 +11,26 @@
  * bundle change is visible at the next import. Node only — the
  * whole-client tier runs under vitest, and this is the one place it reads the
  * repository.
- * @module @deepseek-ai/dsh-client-test-runtime/src/assembly/bundle-roster
+ * @module @liwa/client-test-runtime/src/assembly/bundle-roster
  */
 import { existsSync, readFileSync, realpathSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { basename, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { evaluate, isJsExpr, type EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
-import { applyPatches, parseEntryYaml, type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
-import { exactPackageSpecifier, parseDshClient } from '@deepseek-ai/dsh-client-modules/client'
+import { evaluate, isJsExpr, type EntryOptions } from '@liwa/cordis-plugin-loader'
+import { applyPatches, parseEntryYaml, type PatchOptions } from '@liwa/cordis-plugin-include'
+import { exactPackageSpecifier, parseLiwaClient } from '@liwa/client-modules/client'
 import { ClientRoster, type ClientRosterRow } from './roster.ts'
 
 /**
- * The `web` profile's bundle layers, in the order `dsh --profile web` applies them
- * (`PROFILE_TEMPLATES.web` in `@deepseek-ai/dsh-official-bundles`).
+ * The `web` profile's bundle layers, in the order `liwa --profile web` applies them
+ * (`PROFILE_TEMPLATES.web` in `@liwa/official-bundles`).
  */
-export const WEB_PROFILE_BUNDLES: readonly string[] = ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app']
+export const WEB_PROFILE_BUNDLES: readonly string[] = ['@liwa/base', '@liwa/web-app']
 
 interface PackageManifest {
   name?: unknown
-  dsh?: { bundle?: { patch?: unknown }; client?: unknown }
+  liwa?: { bundle?: { patch?: unknown }; client?: unknown }
 }
 
 /** One bundle: where its package.json is (plugin names resolve from there) and its parsed patch list. */
@@ -74,7 +74,7 @@ export function bundleRoster(
     if (manifest.name !== name) {
       throw new Error(`client-test-runtime: ${manifestPath} names ${JSON.stringify(manifest.name)}, expected ${name}`)
     }
-    const declaration = parseDshClient(name, manifest.dsh?.client)
+    const declaration = parseLiwaClient(name, manifest.liwa?.client)
     if (declaration === undefined || declaration.platform !== 'web') continue
     if (disabled.some(value => value !== undefined && value !== null && typeof value !== 'boolean'
       && !(disabledContext !== undefined && isJsExpr(value)))) {
@@ -88,10 +88,10 @@ export function bundleRoster(
 function readLayer(bundle: string, anchor: string): BundleLayer {
   const manifestPath = locateManifest([anchor], bundle)
   if (manifestPath === undefined) throw new Error(`client-test-runtime: cannot resolve bundle ${bundle} from ${anchor}`)
-  const declared = readManifest(manifestPath).dsh?.bundle?.patch
+  const declared = readManifest(manifestPath).liwa?.bundle?.patch
   const files = typeof declared === 'string' ? [declared] : declared
   if (!Array.isArray(files) || !files.every(file => typeof file === 'string')) {
-    throw new Error(`client-test-runtime: bundle ${bundle} declares no dsh.bundle.patch file list in ${manifestPath}`)
+    throw new Error(`client-test-runtime: bundle ${bundle} declares no liwa.bundle.patch file list in ${manifestPath}`)
   }
   const patches = files.flatMap((patch) => {
     const file = join(dirname(manifestPath), patch)

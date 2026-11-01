@@ -8,7 +8,7 @@ import { RepositoryCleaner } from './clean.ts'
 const roots: string[] = []
 
 function fixture(): string {
-  const root = mkdtempSync(join(tmpdir(), 'dsh-clean-'))
+  const root = mkdtempSync(join(tmpdir(), 'liwa-clean-'))
   roots.push(root)
   return root
 }
@@ -43,7 +43,7 @@ describe('RepositoryCleaner', () => {
     write(join(root, 'products/shell/lib/types/index.js'))
     write(join(root, 'products/shell/lib/index.js'))
     write(join(root, '.typecheck/legacy.tsbuildinfo'))
-    write(join(root, '.dsh-build/client-build-environment.json'))
+    write(join(root, '.liwa-build/client-build-environment.json'))
     write(join(root, 'apps/desktop/renderer/assets/welcome-brand.svg'))
     write(join(root, 'apps/desktop/renderer/assets/welcome-loading.svg'))
     write(join(root, 'apps/desktop/renderer/welcome.css'))
@@ -55,7 +55,7 @@ describe('RepositoryCleaner', () => {
     expect(existsSync(join(root, 'products/shell/lib'))).toBe(false)
     expect(existsSync(join(root, 'products/shell/src/index.ts'))).toBe(true)
     expect(existsSync(join(root, '.typecheck'))).toBe(false)
-    expect(existsSync(join(root, '.dsh-build'))).toBe(false)
+    expect(existsSync(join(root, '.liwa-build'))).toBe(false)
     expect(existsSync(join(root, 'apps/desktop/renderer/assets/welcome-brand.svg'))).toBe(true)
     expect(existsSync(join(root, 'apps/desktop/renderer/assets/welcome-loading.svg'))).toBe(true)
     expect(existsSync(join(root, 'apps/desktop/renderer/welcome.css'))).toBe(true)
@@ -93,19 +93,19 @@ describe('RepositoryCleaner', () => {
     write(join(root, 'packages/core/live/package.json'), '{}')
     write(join(root, 'packages/hooks/stale/lib/index.js'))
     const hoisted = join(root, 'node_modules/.pnpm/node_modules')
-    link(join(root, 'packages/core/live'), join(hoisted, '@deepseek-ai/dsh-live'))
-    link(join(root, 'packages/hooks/gone'), join(hoisted, '@deepseek-ai/dsh-gone'))
-    link(join(root, 'packages/hooks/stale'), join(hoisted, '@deepseek-ai/dsh-stale'))
+    link(join(root, 'packages/core/live'), join(hoisted, '@liwa/live'))
+    link(join(root, 'packages/hooks/gone'), join(hoisted, '@liwa/gone'))
+    link(join(root, 'packages/hooks/stale'), join(hoisted, '@liwa/stale'))
     link(join(root, 'packages/hooks/plain'), join(hoisted, 'plain'))
     link(join(hoisted, 'loop'), join(hoisted, 'loop'))
-    link(join(root, 'packages/hooks/top'), join(root, 'node_modules/@deepseek-ai/dsh-top'))
+    link(join(root, 'packages/hooks/top'), join(root, 'node_modules/@liwa/top'))
 
     await new RepositoryCleaner(root).clean()
 
-    expect(readdirSync(join(hoisted, '@deepseek-ai'))).toEqual(['dsh-live'])
-    expect(readdirSync(hoisted)).toEqual(['@deepseek-ai'])
-    expect(readdirSync(join(root, 'node_modules/@deepseek-ai'))).toEqual([])
-    expect(existsSync(join(hoisted, '@deepseek-ai/dsh-live/package.json'))).toBe(true)
+    expect(readdirSync(join(hoisted, '@liwa'))).toEqual(['live'])
+    expect(readdirSync(hoisted)).toEqual(['@liwa'])
+    expect(readdirSync(join(root, 'node_modules/@liwa'))).toEqual([])
+    expect(existsSync(join(hoisted, '@liwa/live/package.json'))).toBe(true)
   })
 
   it('does not scan node_modules outside the repository', async () => {

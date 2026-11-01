@@ -1,10 +1,10 @@
 /** Select program syntax and own temporary or retained Node processes. */
 import { stripTypeScriptTypes } from 'node:module'
 import { isAbsolute } from 'node:path'
-import type { Context } from '@deepseek-ai/cordis'
-import type { PtcProgramFormat, PtcRunRequest, PtcRunResult, PtcRunSpec } from '@deepseek-ai/dsh-ptc-runtime'
-import { assertNever } from '@deepseek-ai/dsh-util-values'
-import { clampTimeout } from '@deepseek-ai/dsh-timeout'
+import type { Context } from '@liwa/cordis'
+import type { PtcProgramFormat, PtcRunRequest, PtcRunResult, PtcRunSpec } from '@liwa/ptc-runtime'
+import { assertNever } from '@liwa/util-values'
+import { clampTimeout } from '@liwa/timeout'
 import type { ResolvedConfig } from './config.ts'
 import { validateBindings } from './bindings.ts'
 import type { PolicyProcesses } from './policy-processes.ts'
@@ -140,7 +140,7 @@ function sameAdditionalRoots(left: readonly string[] | undefined, right: readonl
   return a.length === b.length && a.every((root, index) => root === b[index])
 }
 
-const STRIP_PREFIX = 'async function __dsh_program__() {\n'
+const STRIP_PREFIX = 'async function __liwa_program__() {\n'
 const STRIP_SUFFIX = '\n}'
 const RETAINED_STATE_INSTRUCTIONS = 'Changing the session sandbox mode clears retained variables. An approved sandbox escalation runs in a separate temporary environment: it cannot access retained variables, and its declarations are discarded afterward. Restart, Agent disposal, cancellation, timeout, output overflow, or process failure clears the environment. If a variable is undefined, recreate it and reacquire its resources. State is not restored from the conversation, and failed evaluations can leave earlier mutations in memory. Redeclaring an existing let, const, or class name fails; assign to a mutable binding or use a new name. Await all tool calls; background callbacks cannot call tools after their evaluation ends. Await child-process completion before ending an evaluation; raw subprocess output belongs to whichever evaluation is active when it arrives.'
 

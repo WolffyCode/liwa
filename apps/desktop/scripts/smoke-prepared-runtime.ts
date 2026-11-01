@@ -1,4 +1,4 @@
-/** Check payloads and Host boot with private native-cache and Harness directories. */
+/** Check payloads and Host boot with private native-cache and Liwa directories. */
 import { execFile } from 'node:child_process'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -13,7 +13,7 @@ import { verifyRuntimeArchive } from './verify-runtime-archive.ts'
 
 /**
  * Exercise real runtime files and Host composition, including an ASAR root when packaged.
- * @param root Prepared or archived dsh directory.
+ * @param root Prepared or archived liwa directory.
  * @param node Target Electron executable.
  * @param resourcesRuntime External runtime directory beside the archive.
  * @param descriptor Runtime descriptor already verified against the selected target, which may differ from the build host.

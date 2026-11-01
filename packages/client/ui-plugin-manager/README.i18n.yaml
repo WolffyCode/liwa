@@ -5,63 +5,63 @@
 /:
   en: 65c981be6a40344b
   zh: 468873de4e2db85f
-/deepseek-ai-dsh-client-ui-plugin-manager:
-  en: 719d90bd71d7b957
-  zh: 492767e7ea9f88f8
-/deepseek-ai-dsh-client-ui-plugin-manager/summary:
+/liwa-client-ui-plugin-manager:
+  en: b1f8ba8f75ed14ae
+  zh: f40afd781dd6f84a
+/liwa-client-ui-plugin-manager/summary:
   en: 0dc67850ca5358de
   zh: 4ff1bb5bdc184e3e
-/deepseek-ai-dsh-client-ui-plugin-manager/table-of-contents:
+/liwa-client-ui-plugin-manager/table-of-contents:
   en: d152484eb41ac6b4
   zh: 09388d293f9be9cb
-/deepseek-ai-dsh-client-ui-plugin-manager/use-this-package:
-  en: 3717372a7e5833ba
-  zh: d6acff6684413a82
-/deepseek-ai-dsh-client-ui-plugin-manager/use-this-package/installing-a-bundle:
-  en: fcb2e69c8b028c0a
-  zh: d505a075679974eb
-/deepseek-ai-dsh-client-ui-plugin-manager/use-this-package/updating-a-registry-bundle:
-  en: 9312d8b1b381378f
-  zh: 8d0ae7ad26ada2ac
-/deepseek-ai-dsh-client-ui-plugin-manager/use-this-package/switching-a-bundle:
+/liwa-client-ui-plugin-manager/use-this-package:
+  en: 0cea26722df81157
+  zh: c1d3927106c327f6
+/liwa-client-ui-plugin-manager/use-this-package/installing-a-bundle:
+  en: b20e7fb803d477d7
+  zh: fb949f34b2536b43
+/liwa-client-ui-plugin-manager/use-this-package/updating-a-registry-bundle:
+  en: 1e658a066c248d27
+  zh: e204a1e44a64c387
+/liwa-client-ui-plugin-manager/use-this-package/switching-a-bundle:
   en: 390dc85aceac033a
   zh: 746ceae45f70dd33
-/deepseek-ai-dsh-client-ui-plugin-manager/use-this-package/switching-one-row-of-a-bundle:
-  en: d3627d4dba5e6cc2
-  zh: e0d0eada4c20331f
-/deepseek-ai-dsh-client-ui-plugin-manager/use-this-package/configuration-pages:
-  en: e9da90f03691101b
-  zh: 902cda935a4ce3c8
-/deepseek-ai-dsh-client-ui-plugin-manager/use-this-package/detail-page-extension-points:
+/liwa-client-ui-plugin-manager/use-this-package/switching-one-row-of-a-bundle:
+  en: 4e3a9a9fdfcc06fc
+  zh: 092a38f9b964455e
+/liwa-client-ui-plugin-manager/use-this-package/configuration-pages:
+  en: f854c351bf9e1f40
+  zh: a2f3392f2af93d35
+/liwa-client-ui-plugin-manager/use-this-package/detail-page-extension-points:
   en: d5e3cad5c31cae59
   zh: 6dc38f09b410d247
-/deepseek-ai-dsh-client-ui-plugin-manager/use-this-package/page-tabs:
-  en: fc469bab4fbd6028
-  zh: 8f5a04e1b9a46471
-/deepseek-ai-dsh-client-ui-plugin-manager/understand-the-implementation:
+/liwa-client-ui-plugin-manager/use-this-package/page-tabs:
+  en: bfebb2b7cb2ec1ff
+  zh: 43be463fb24a9a7a
+/liwa-client-ui-plugin-manager/understand-the-implementation:
   en: 203168fc87e939bd
   zh: 72d0ccd2c54f3f44
-/deepseek-ai-dsh-client-ui-plugin-manager/understand-the-implementation/registration:
+/liwa-client-ui-plugin-manager/understand-the-implementation/registration:
   en: 93871919adaf1082
   zh: 67c9ef0b500e6917
-/deepseek-ai-dsh-client-ui-plugin-manager/understand-the-implementation/the-store:
+/liwa-client-ui-plugin-manager/understand-the-implementation/the-store:
   en: 21a0bbe8eb92229c
   zh: 096ff63db61992bb
-/deepseek-ai-dsh-client-ui-plugin-manager/understand-the-implementation/configuration-slots:
-  en: 45e324f5663be635
-  zh: 674ddf55c1581569
-/deepseek-ai-dsh-client-ui-plugin-manager/further-exploration:
-  en: f9a42dfed0360d6a
-  zh: 455a70bcb6c69624
-/deepseek-ai-dsh-client-ui-plugin-manager/model-experience:
+/liwa-client-ui-plugin-manager/understand-the-implementation/configuration-slots:
+  en: aae8f12a31b62fe3
+  zh: 270377d699f5cc82
+/liwa-client-ui-plugin-manager/further-exploration:
+  en: 251e8caedf717ba5
+  zh: 2d3ba178bddbc721
+/liwa-client-ui-plugin-manager/model-experience:
   en: 8dcc6c6fbfb567d2
   zh: 43690ae350f1d6a7
-/deepseek-ai-dsh-client-ui-plugin-manager/model-experience/kv-cache-effect:
+/liwa-client-ui-plugin-manager/model-experience/kv-cache-effect:
   en: ca75c51c89c2c9b0
   zh: 2064958b0754647e
-/deepseek-ai-dsh-client-ui-plugin-manager/known-limitations-and-deferred-work:
-  en: 149c0d23a56a4944
-  zh: e2feaadc871581ae
-/deepseek-ai-dsh-client-ui-plugin-manager/known-limitations-and-deferred-work/dev-note:
+/liwa-client-ui-plugin-manager/known-limitations-and-deferred-work:
+  en: 4277f9dd25f8526a
+  zh: 4c843aac0ea9739a
+/liwa-client-ui-plugin-manager/known-limitations-and-deferred-work/dev-note:
   en: e67f633dc6fe7773
   zh: 3bb0c20c93f16f98

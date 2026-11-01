@@ -5,12 +5,12 @@
  */
 import { act, cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
-import type { SessionListState } from '@deepseek-ai/dsh-api-session-controller/client'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import { bindSnapshotSelector, makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import type { BindingState } from '@deepseek-ai/dsh-experimental-forge-session/types'
-import { SessionId } from '@deepseek-ai/dsh-session/types'
-import type { SessionProjectionSummaryValues } from '@deepseek-ai/dsh-session-projection/types'
+import type { SessionListState } from '@liwa/api-session-controller/client'
+import { createSnapshotStore } from '@liwa/client-store'
+import { bindSnapshotSelector, makeTranslate } from '@liwa/client-test-runtime'
+import type { BindingState } from '@liwa/experimental-forge-session/types'
+import { SessionId } from '@liwa/session/types'
+import type { SessionProjectionSummaryValues } from '@liwa/session-projection/types'
 import { en } from '../src/client/locales.ts'
 import { sessionForgeFacts, type ChangeRequestStates } from '../src/client/session-list.ts'
 import { HOVER_CHANGE_REQUEST_LIMIT, SessionHoverForge, type SessionHoverForgeProps } from '../src/client/SessionHoverForge.tsx'
@@ -148,7 +148,7 @@ describe('SessionHoverForge', () => {
 
   it('names the worktree branch and what it started from, the requested base or else the short base commit', () => {
     const from = renderHover({ forgeWorktree: created() })
-    screen.getByText('dsh/0a1b2c3d')
+    screen.getByText('liwa/0a1b2c3d')
     screen.getByText('Worktree · from main')
     from.unmount()
 

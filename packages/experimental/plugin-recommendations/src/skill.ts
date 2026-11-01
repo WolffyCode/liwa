@@ -1,8 +1,8 @@
 /** On-demand official-plugin catalog for explicit product-use needs. */
 import { readFile } from 'node:fs/promises'
-import type { Context } from '@deepseek-ai/cordis'
-import { BUNDLED_SKILL_RANK, type SkillCandidate } from '@deepseek-ai/dsh-skill'
-import type { BundleInfo } from '@deepseek-ai/dsh-plugin-manager/types'
+import type { Context } from '@liwa/cordis'
+import { BUNDLED_SKILL_RANK, type SkillCandidate } from '@liwa/skill'
+import type { BundleInfo } from '@liwa/plugin-manager/types'
 
 /** Shipped optional plugins only; no arbitrary install target is accepted.
  * @param bundle - a profile bundle as the plugin manager reports it.
@@ -27,9 +27,9 @@ function catalogOf(bundles: readonly BundleInfo[]): string {
 export function registerOfficialPluginsSkill(ctx: Context): void {
   const candidate: SkillCandidate = {
     name: 'official-plugins',
-    description: 'Check DSH’s optional plugins when the user asks how to do or use something in this app, whether it can, or says a capability is missing or should change: tools, input, thinking or title display, session search, terminals, worktrees, agent teams, desktop control, automation, access, approvals, badges or signatures, plugins or plugin sources. Not a request to develop DSH, even in its own repository: load before reading files or source. Not for ordinary tasks, quoted wishes or declined offers.',
+    description: 'Check Liwa’s optional plugins when the user asks how to do or use something in this app, whether it can, or says a capability is missing or should change: tools, input, thinking or title display, session search, terminals, worktrees, agent teams, desktop control, automation, access, approvals, badges or signatures, plugins or plugin sources. Not a request to develop Liwa, even in its own repository: load before reading files or source. Not for ordinary tasks, quoted wishes or declined offers.',
     invocation: { modelInvocable: true, userInvocable: false },
-    provider: 'dsh-official-plugins', source: 'bundled', rank: BUNDLED_SKILL_RANK, locator: null,
+    provider: 'liwa-official-plugins', source: 'bundled', rank: BUNDLED_SKILL_RANK, locator: null,
   }
   ctx.skills.registerProvider(() => ({
     name: candidate.provider,

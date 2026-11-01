@@ -3,11 +3,11 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-06-21-bounded-llm-request-recovery.md
 /agent-note-bounded-recovery-for-transient-llm-request-failures:
-  en: fb8e336ecd4bf571
-  zh: 23e40e4cb224163f
+  en: 4f5da8e228322718
+  zh: d23625c6df76852d
 /agent-note-bounded-recovery-for-transient-llm-request-failures/problem:
-  en: ac1641f64d0e0a25
-  zh: 2ddb6a3fd290ea31
+  en: fc70ecf16aaa3c52
+  zh: b8a5e0b2424acbf7
 /agent-note-bounded-recovery-for-transient-llm-request-failures/decision:
   en: a15c7c13f167e5ac
   zh: 63bcc2ef60c2f344
@@ -15,8 +15,8 @@
   en: 943322e6cdbfa440
   zh: 82288531f6194ed2
 /agent-note-bounded-recovery-for-transient-llm-request-failures/decision/put-retry-policy-on-the-existing-failed-step-extension-point:
-  en: ed4d295378d94a26
-  zh: 1fee5ef4947bac8f
+  en: 57798aae69cbbeca
+  zh: 1ad6b22a9db6e777
 /agent-note-bounded-recovery-for-transient-llm-request-failures/decision/make-one-layer-own-visible-attempts:
   en: 57dbdd385f48bb3e
   zh: 5e15463fae4be582
@@ -39,5 +39,5 @@
   en: 08659e8606455ada
   zh: 862080f8df5f28ec
 /agent-note-bounded-recovery-for-transient-llm-request-failures/related:
-  en: f2c8539b6836eba1
-  zh: 7c292611d09665a7
+  en: 6343302bfed26ed8
+  zh: b513a3e60ab90b01

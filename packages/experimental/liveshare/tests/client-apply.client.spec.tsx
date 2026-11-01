@@ -1,7 +1,7 @@
-import { Context, FiberState, type Fiber } from '@deepseek-ai/cordis'
-import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
-import { SlotRegistry } from '@deepseek-ai/dsh-client-ui-renderer/client'
-import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
+import { Context, FiberState, type Fiber } from '@liwa/cordis'
+import { LocaleRuntime } from '@liwa/client-locale/client'
+import { SlotRegistry } from '@liwa/client-ui-renderer/client'
+import type {} from '@liwa/client-ui-conversation/client'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { LiveshareShareAction } from '../src/client/ShareAction.tsx'
 import { apply, inject } from '../src/client/index.ts'
@@ -9,7 +9,7 @@ import { openManagedSession } from '../src/client/share-navigation.ts'
 import { SharedSessionOrigin } from '../src/client/user-origin.tsx'
 
 /** The generated contribution is a build artifact; the mount boundary is what this face test covers. */
-vi.mock('@deepseek-ai/dsh-experimental-liveshare/remote', () => ({ default: { package: '@deepseek-ai/dsh-experimental-liveshare', methods: {} } }))
+vi.mock('@liwa/experimental-liveshare/remote', () => ({ default: { package: '@liwa/experimental-liveshare', methods: {} } }))
 
 afterEach(() => { vi.unstubAllGlobals() })
 

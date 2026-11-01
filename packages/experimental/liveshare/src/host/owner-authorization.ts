@@ -2,7 +2,7 @@
  * The host's half of one owner-authorization: a transaction the browser starts here, a single-use code the
  * Relay issues on its own origin, and the verifier only this host holds.
  *
- * The owner authorizes one DSH instance to be reported by one Relay address. The long-term credential
+ * The owner authorizes one Liwa instance to be reported by one Relay address. The long-term credential
  * never travels through the browser: the Relay issues a code to the page it served, the page reports that
  * code back to the exact origin this transaction bound, and this host redeems it over TLS with the PKCE
  * verifier that never left the process. Every binding — Relay, instance, origin, state — is checked again

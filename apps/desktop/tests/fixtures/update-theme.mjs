@@ -13,7 +13,7 @@ const directory = fileURLToPath(new URL('../../.desktop-build/qualification/', i
 mkdirSync(directory, { recursive: true })
 const root = mkdtempSync(join(directory, 'update-theme-'))
 app.setPath('userData', root)
-protocol.registerSchemesAsPrivileged([{ scheme: 'dsh-app', privileges: { standard: true, secure: true, supportFetchAPI: true } }])
+protocol.registerSchemesAsPrivileged([{ scheme: 'liwa-app', privileges: { standard: true, secure: true, supportFetchAPI: true } }])
 app.on('window-all-closed', () => {})
 
 async function main() {
@@ -23,7 +23,7 @@ async function main() {
   const results = []
   const windows = []
   const deadline = setTimeout(() => { console.error('Theme qualification deadline exceeded'); app.exit(1) }, 30000)
-  protocol.handle('dsh-app', async request => {
+  protocol.handle('liwa-app', async request => {
     const name = new URL(request.url).pathname.slice(1)
     const file = new URL(`${name === 'design-platform.css' ? '../../lib/welcome' : '../../renderer'}/${name}`, import.meta.url)
     const mime = name.endsWith('.css') ? 'text/css' : name.endsWith('.js') ? 'text/javascript'
@@ -47,7 +47,7 @@ async function main() {
         windows.push(window)
         // Palette checks exclude the user's pointer so hover cannot select an interaction color.
         window.setIgnoreMouseEvents(true)
-        await window.loadURL(`dsh-app://shell/${document}.html`)
+        await window.loadURL(`liwa-app://shell/${document}.html`)
         for (const source of [initial, initial === 'light' ? 'dark' : 'light', 'system']) {
           nativeTheme.themeSource = source
           const dark = nativeTheme.shouldUseDarkColors
@@ -94,7 +94,7 @@ async function main() {
     for (const window of windows) if (!window.isDestroyed()) window.destroy()
     ipcMain.removeHandler(UPDATE_DIALOG_IPC.status)
     ipcMain.removeHandler(MANDATORY_IPC.status)
-    protocol.unhandle('dsh-app')
+    protocol.unhandle('liwa-app')
     nativeTheme.themeSource = original
   }
 }

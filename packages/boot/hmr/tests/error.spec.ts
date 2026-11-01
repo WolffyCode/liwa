@@ -2,7 +2,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { expect, it, onTestFinished, vi } from 'vitest'
 import { handleError } from '../src/error.ts'
 
@@ -16,7 +16,7 @@ it.each([null, 'failure', {}, { errors: null }, { errors: [null] }, { errors: [7
 })
 
 it('formats compiler source locations and reports unavailable source files', async () => {
-  const root = mkdtempSync(join(tmpdir(), 'dsh-hmr-diagnostics-'))
+  const root = mkdtempSync(join(tmpdir(), 'liwa-hmr-diagnostics-'))
   const file = join(root, 'broken.ts')
   writeFileSync(file, 'const broken = ;\n')
   const ctx = new Context()

@@ -1,6 +1,6 @@
 /** Performance detail preference, live immediately and reconciled with accepted Host settings. */
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import type { ConfigForm } from '@deepseek-ai/dsh-client-ui-settings/client'
+import { createSnapshotStore } from '@liwa/client-store'
+import type { ConfigForm } from '@liwa/client-ui-settings/client'
 import { DEFAULT_PERFORMANCE_USAGE, type ChatSettings, type PerformanceUsageMode } from '../chat-settings.ts'
 
 /** Shared live preference for the settings row and chat statistics. */

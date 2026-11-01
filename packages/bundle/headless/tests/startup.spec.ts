@@ -8,10 +8,10 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import Include from '@deepseek-ai/cordis-plugin-include'
-import { internals as cmdlineInternals, provideCmdline } from '@deepseek-ai/dsh-cmdline'
+import { Context } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
+import Include from '@liwa/cordis-plugin-include'
+import { internals as cmdlineInternals, provideCmdline } from '@liwa/cmdline'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
   apply,
@@ -55,7 +55,7 @@ async function bootStartup(
   args: string[],
   options: { stdinIsTty?: boolean } = {},
 ): Promise<{ task: HeadlessStartupValues | undefined; observed: Observed }> {
-  const dir = mkdtempSync(join(tmpdir(), 'dsh-headless-startup-'))
+  const dir = mkdtempSync(join(tmpdir(), 'liwa-headless-startup-'))
   tempDirs.push(dir)
   const observed: Observed = { exits: [], out: '', err: '' }
   writeFileSync(join(dir, 'row.mjs'), 'export function apply(_ctx, config) { globalThis.__headlessStartupObserved.runnerConfig = config }\n')
@@ -207,7 +207,7 @@ describe('headless command-line provider', () => {
     const first = JSON.parse(observed.out.trim().split('\n')[0] ?? '{}') as { type: string; message: string }
     expect(first).toEqual({
       type: 'error',
-      message: 'a task is required, for example: dsh --profile headless "run the tests"',
+      message: 'a task is required, for example: liwa --profile headless "run the tests"',
     })
     expect(task).toBeUndefined()
     expect(observed.err).toBe('')
@@ -269,7 +269,7 @@ describe('headless command-line provider', () => {
 
   it('prints its own help and leaves the runner pending', async () => {
     const { task, observed } = await bootStartup(['--help'])
-    expect(observed.out).toContain('dsh --profile headless')
+    expect(observed.out).toContain('liwa --profile headless')
     expect(observed.out).toContain('the answer goes to stdout and diagnostics to stderr')
     expect(observed.out).toContain('--session-id')
     expect(task).toBeUndefined()

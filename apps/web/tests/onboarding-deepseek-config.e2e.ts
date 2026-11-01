@@ -1,6 +1,6 @@
 // Keyless browser e2e: the shipped DeepSeek adapter stays mounted while its
 // credential is absent, both ordered steps share the shipped modal chrome,
-// and the inline key write lands in an isolated harness home without a reload
+// and the inline key write lands in an isolated Liwa home without a reload
 // or model call.
 import { randomBytes } from 'node:crypto'
 import { assertModelInputLayout } from './model-input-layout.ts'
@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import type { Browser, Page } from 'playwright'
 import { chromium } from 'playwright'
-import { credentialRef } from '@deepseek-ai/dsh-credentials'
+import { credentialRef } from '@liwa/credentials'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed } from 'vitest'
 import {
   acknowledgeReloadConnectionLoss, assertFixtureInventory, captureStableAria, compareOrRefreshGolden,
@@ -86,19 +86,19 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
     const initial = await captureStableAria(page, '[role="dialog"]', scaffold.workspaceCwd)
     await compareOrRefreshGolden(MISSING_EXPECTED, initial, MODE)
 
-    const secret = `dsh_onboarding_${randomBytes(12).toString('hex')}`
+    const secret = `liwa_onboarding_${randomBytes(12).toString('hex')}`
     await keyInput.fill(secret)
     await credentialStep.getByRole('button', { name: '保存并继续' }).click()
     await credentialStep.waitFor({ state: 'detached', timeout: 15_000 })
     expect(await page.locator('#root').evaluate(root => (root as HTMLElement).inert)).toBe(false)
 
-    const stored = await readFile(join(scaffold.harnessHome, '.credentials.yaml'), 'utf8')
+    const stored = await readFile(join(scaffold.liwaHome, '.credentials.yaml'), 'utf8')
     expect(stored.includes(`DEEPSEEK_API_KEY: ${secret}`)).toBe(true)
     expect((await page.content()).includes(secret)).toBe(false)
     expect((await page.locator('body').ariaSnapshot()).includes(secret)).toBe(false)
     expect(browserConsole.some(line => line.includes(secret))).toBe(false)
 
-    const acknowledgedSettings = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
+    const acknowledgedSettings = await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(acknowledgedSettings).toContain(`${WELCOME_NOTICE_ACK_FIELD}: ${WELCOME_NOTICE_VERSION}`)
 
     // The ordinary Models surface reuses the refreshed join and exposes the
@@ -227,7 +227,7 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
     await settings.getByLabel('模型 ID 1').waitFor({ state: 'detached', timeout: 15_000 })
     // The save notice settles the directory refresh before Edit clears it for the next draft.
     await settings.getByText('已保存 DeepSeek (deepseek-official)。', { exact: true }).waitFor({ timeout: 15_000 })
-    const savedDefaults = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
+    const savedDefaults = await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(savedDefaults).toContain('id: deepseek-flash')
     expect(savedDefaults).toContain('inputModalities:')
     expect(savedDefaults).toContain('- text')
@@ -264,7 +264,7 @@ describe.skipIf(MODE === 'record')('web e2e: first-run DeepSeek credential setup
     await customModelId.waitFor({ state: 'detached', timeout: 15_000 })
     await settings.getByText('已保存 DeepSeek (deepseek-official)。', { exact: true }).waitFor({ timeout: 15_000 })
 
-    const document = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
+    const document = await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(document).toContain('id: private-preview')
     expect(document).toContain('name: Private Preview')
     expect(document).toContain('contextWindow: 131072')

@@ -13,11 +13,11 @@ import type { Browser, Page, Response } from 'playwright'
 import { chromium } from 'playwright'
 import { strFromU8, unzipSync } from 'fflate'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, onTestFailed, onTestFinished } from 'vitest'
-import { ToolCallId, createToolResultMessage } from '@deepseek-ai/dsh-llm'
-import type SessionToolResults from '@deepseek-ai/dsh-client-ui-trajectory'
-import { defineTool } from '@deepseek-ai/dsh-tools'
-import { parseSessionLog } from '@deepseek-ai/dsh-llm-replay'
-import { SESSION_FORMAT_VERSION, SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
+import { ToolCallId, createToolResultMessage } from '@liwa/llm'
+import type SessionToolResults from '@liwa/client-ui-trajectory'
+import { defineTool } from '@liwa/tools'
+import { parseSessionLog } from '@liwa/llm-replay'
+import { SESSION_FORMAT_VERSION, SessionId, type SessionEvent } from '@liwa/session'
 import {
   assertFixtureInventory, captureStableAria, compareOrRefreshGolden, fixtureUserPrompts,
   launchWebScaffold, recordFixture, seedSession, watchConsole, webSnapshotMode, type WebScaffold,
@@ -362,7 +362,7 @@ describe('web e2e: navigation & panes over a rich seeded session', () => {
     const response = await responsePromise
     expect(response.status()).toBe(200)
     const download = await downloadPromise
-    expect(download.suggestedFilename()).toMatch(/^dsh-session-.+\.zip$/)
+    expect(download.suggestedFilename()).toMatch(/^liwa-session-.+\.zip$/)
     const dialog = page.getByRole('dialog', { name: 'Session download started' })
     await dialog.waitFor({ timeout: 30_000 })
     // The real host streamed the ZIP; its root entry is the persisted log
@@ -441,11 +441,11 @@ describe('web e2e: navigation & panes over a rich seeded session', () => {
     await page.evaluate(() => {
       const clipboard = navigator.clipboard
       const originalWrite = clipboard.write.bind(clipboard)
-      Reflect.set(globalThis, '__dshClipboardWrites', 0)
+      Reflect.set(globalThis, '__liwaClipboardWrites', 0)
       Object.defineProperty(clipboard, 'write', {
         configurable: true,
         value: (...args: Parameters<typeof originalWrite>) => {
-          Reflect.set(globalThis, '__dshClipboardWrites', Number(Reflect.get(globalThis, '__dshClipboardWrites')) + 1)
+          Reflect.set(globalThis, '__liwaClipboardWrites', Number(Reflect.get(globalThis, '__liwaClipboardWrites')) + 1)
           return originalWrite(...args)
         },
       })
@@ -460,7 +460,7 @@ describe('web e2e: navigation & panes over a rich seeded session', () => {
     expect(response.status()).toBe(200)
     expect(response.headers()['content-type']).toBe('text/markdown; charset=utf-8')
     await page.getByText('Session copied as Markdown.', { exact: true }).waitFor({ timeout: 30_000 })
-    expect(await page.evaluate(() => Number(Reflect.get(globalThis, '__dshClipboardWrites')))).toBe(1)
+    expect(await page.evaluate(() => Number(Reflect.get(globalThis, '__liwaClipboardWrites')))).toBe(1)
 
     const sourcePath = (await scaffold.ctx.sessionPersistence.stat(SessionId(SEED_ID)))?.location?.path
     if (sourcePath === undefined) throw new Error('seeded Session has no materialized artifact location')

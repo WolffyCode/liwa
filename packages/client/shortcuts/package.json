@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-client-shortcuts",
+  "name": "@liwa/client-shortcuts",
   "description": "Application keyboard command registry and physical-key routing",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/client/shortcuts"
   },
   "type": "module",
@@ -30,10 +30,10 @@
     },
     "./locale/*.json": "./locale/*.json"
   },
-  "dsh": {
+  "liwa": {
     "client": {
       "inject": [
-        "@deepseek-ai/dsh-client-locale"
+        "@liwa/client-locale"
       ],
       "platform": "web"
     }
@@ -44,16 +44,16 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-client-locale": "workspace:*",
-    "@deepseek-ai/dsh-client-store": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-primitives": "workspace:*",
-    "@deepseek-ai/dsh-brand": "workspace:*",
-    "@deepseek-ai/dsh-client-test-runtime": "workspace:*",
-    "@deepseek-ai/dsh-host-webserver": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/client-locale": "workspace:*",
+    "@liwa/client-store": "workspace:*",
+    "@liwa/client-ui-primitives": "workspace:*",
+    "@liwa/brand": "workspace:*",
+    "@liwa/client-test-runtime": "workspace:*",
+    "@liwa/host-webserver": "workspace:*"
   },
   "files": [
     "locale/*.json",
@@ -63,8 +63,8 @@
     "lib/types/**/*.d.ts"
   ],
   "dependencies": {
-    "@deepseek-ai/dsh-util-crypto": "workspace:*",
-    "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/util-crypto": "workspace:*",
+    "@liwa/util-values": "workspace:*",
+    "@liwa/schemastery": "workspace:~"
   }
 }

@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-deliverable-file-references",
-  "description": "Shared model guidance for file links and deliverables across DeepSeek Harness hosts",
+  "name": "@liwa/deliverable-file-references",
+  "description": "Shared model guidance for file links and deliverables across Liwa hosts",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/deliverables/deliverable-file-references"
   },
   "type": "module",
@@ -29,11 +29,11 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/system-prompt": "workspace:*"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/system-prompt": "workspace:*"
   }
 }

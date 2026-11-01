@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-skill",
-  "description": "Agent skill provider registry for the DeepSeek Harness",
+  "name": "@liwa/skill",
+  "description": "Agent skill provider registry for Liwa",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/skill/skill"
   },
   "type": "module",
@@ -29,17 +29,17 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-scope": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/llm": "workspace:*",
+    "@liwa/scope": "workspace:*"
   },
   "dependencies": {
-    "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/util-values": "workspace:*",
+    "@liwa/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-scope": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/llm": "workspace:*",
+    "@liwa/scope": "workspace:*"
   }
 }

@@ -1,22 +1,22 @@
 /**
  * A per-agent persona as a composable row.
  *
- * `dsh-system-prompt` owns the global persona as its own config, and registers
+ * `liwa-system-prompt` owns the global persona as its own config, and registers
  * that section unconditionally — so this row is **scope-only**. Mounted inside
  * an agent preset it shadows the deployment persona for that one session,
- * exactly like the per-child persona `dsh-subagent` installs; mounted globally
+ * exactly like the per-child persona `liwa-subagent` installs; mounted globally
  * it collides with the registry's own registration and fails loud.
  *
  * That constraint is the reason the row exists. An agent preset cannot mount
  * the prompt registry itself, so without a row of its own a preset could
  * change an agent's tools but never its identity.
- * @module @deepseek-ai/dsh-persona
+ * @module @liwa/persona
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import type {} from '@deepseek-ai/dsh-system-prompt'
-import { PERSONA_PREFIX_SECTION, PERSONA_SUFFIX_SECTION } from '@deepseek-ai/dsh-system-prompt'
+import type { Context } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import type {} from '@liwa/system-prompt'
+import { PERSONA_PREFIX_SECTION, PERSONA_SUFFIX_SECTION } from '@liwa/system-prompt'
 
 export { PERSONA_PREFIX_SECTION, PERSONA_SUFFIX_SECTION }
 

@@ -1,16 +1,16 @@
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@liwa/cordis'
 import { useEffect, useId, useMemo, useState } from 'react'
-import type { FileAttachmentRef, ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
-import type { PropsLocale, PropsRenderFactories, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { FileAttachmentRef, ImageAttachmentRef } from '@liwa/attachment'
+import type { PropsLocale, PropsRenderFactories, PropsRuntime } from '@liwa/client-ui-slots'
+import type { SessionId } from '@liwa/session/types'
 import {
   IconCheckOutlineRegular, IconChevronDownOutlineRegular, IconChevronUpOutlineRegular, IconCloseOutlineRegular,
   FileTypeIcon, fileSizeText, IconEditOutlineRegular, InlineEditor, IconQueueOutlineRegular, IconSendOutlineRegular,
   IconTrashOutlineRegular, Tooltip,
-} from '@deepseek-ai/dsh-client-ui-primitives'
-import type { InboxState } from '@deepseek-ai/dsh-agent/types'
-import type { QueueAction } from '@deepseek-ai/dsh-api-session-controller/types'
-import type { MessageId } from '@deepseek-ai/dsh-llm/brand'
+} from '@liwa/client-ui-primitives'
+import type { InboxState } from '@liwa/agent/types'
+import type { QueueAction } from '@liwa/api-session-controller/types'
+import type { MessageId } from '@liwa/llm/brand'
 import type { UserTextFacts } from '../index.ts'
 import { NS } from '../locales.ts'
 import css from './QueueDock.module.css'

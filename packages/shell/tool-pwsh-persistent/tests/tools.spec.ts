@@ -1,14 +1,14 @@
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import { executeToolFixture } from '@liwa/tool-testkit'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
+import SessionProjectionRegistry from '@liwa/session-projection'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { unsupportedModel, provideWorkingDirectoryFixture, unsupportedInbox } from '@deepseek-ai/dsh-agent-loop-testkit'
-import { Context } from '@deepseek-ai/cordis'
-import { ToolCallId } from '@deepseek-ai/dsh-llm'
-import { SESSION_FORMAT_VERSION, Session, SessionId } from '@deepseek-ai/dsh-session'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import TerminalSessionService from '@deepseek-ai/dsh-terminal'
+import { unsupportedModel, provideWorkingDirectoryFixture, unsupportedInbox } from '@liwa/agent-loop-testkit'
+import { Context } from '@liwa/cordis'
+import { ToolCallId } from '@liwa/llm'
+import { SESSION_FORMAT_VERSION, Session, SessionId } from '@liwa/session'
+import AgentRegistry from '@liwa/agent'
+import type { Agent } from '@liwa/agent'
+import TerminalSessionService from '@liwa/terminal'
 import type {
   TerminalBackend,
   TerminalBackendSession,
@@ -18,10 +18,10 @@ import type {
   TerminalSessionStatus,
   TerminalSignal,
   TerminalWaitReason,
-} from '@deepseek-ai/dsh-terminal'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRegistry from '@deepseek-ai/dsh-tools'
-import * as ToolPwshPersistent from '@deepseek-ai/dsh-tool-pwsh-persistent'
+} from '@liwa/terminal'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRegistry from '@liwa/tools'
+import * as ToolPwshPersistent from '@liwa/tool-pwsh-persistent'
 
 const contexts: Context[] = []
 let callNumber = 0
@@ -109,8 +109,8 @@ type StubMode =
   | 'exit-after-send'
   | 'prompt-collision'
 
-const START_PATTERN = /__DSH_PERSISTENT_PWSH_START_[^_]+(?:-[^_]+)*__/
-const END_PATTERN = /__DSH_PERSISTENT_PWSH_END_[^:]+:/
+const START_PATTERN = /__LIWA_PERSISTENT_PWSH_START_[^_]+(?:-[^_]+)*__/
+const END_PATTERN = /__LIWA_PERSISTENT_PWSH_END_[^:]+:/
 
 class StubTerminalSession implements TerminalBackendSession {
   readonly motd = 'stub> '
@@ -198,7 +198,7 @@ class StubTerminalSession implements TerminalBackendSession {
       return this.operation(Promise.resolve(this.result(this.motd, 'stdin_read')), incremental)
     }
     if (this.mode === 'status-tail' || this.mode === 'continue-status-tail') {
-      const prefix = this.mode === 'status-tail' ? `${start ?? ''}\nkept  \ndsh> \n${end ?? ''}` : ''
+      const prefix = this.mode === 'status-tail' ? `${start ?? ''}\nkept  \nliwa> \n${end ?? ''}` : ''
       const fragment = this.statusChunks.shift()
       if (fragment === undefined) throw new Error('missing scripted completion fragment')
       const output = prefix + fragment
@@ -371,8 +371,8 @@ describe('tool-pwsh-persistent', () => {
     stub.sessions[0]!.mode = 'with-echo'
     const result = text(await call(ctx, owner, 'Write-Output hi'))
     expect(result).toBe('hello from stub')
-    expect(result).not.toContain('__DSH_PERSISTENT_PWSH_START_')
-    expect(result).not.toContain('__DSH_PERSISTENT_PWSH_END_')
+    expect(result).not.toContain('__LIWA_PERSISTENT_PWSH_START_')
+    expect(result).not.toContain('__LIWA_PERSISTENT_PWSH_END_')
     expect(result).not.toContain('Invoke-Expression')
   })
 
@@ -399,7 +399,7 @@ describe('tool-pwsh-persistent', () => {
 
     const result = await call(ctx, owner, 'padded completion')
     expect(result.isError).not.toBe(true)
-    expect(text(result)).toBe('kept  \ndsh> ' + (exitCode === 0 ? '' : `\n[exit code: ${exitCode}]`))
+    expect(text(result)).toBe('kept  \nliwa> ' + (exitCode === 0 ? '' : `\n[exit code: ${exitCode}]`))
     expect(session.sends).toBe(2)
   })
 
@@ -412,7 +412,7 @@ describe('tool-pwsh-persistent', () => {
     session.statusChunks = [tail.slice(0, split), tail.slice(split)]
     const send = vi.spyOn(session, 'startSend')
 
-    expect(text(await call(ctx, owner, 'split completion'))).toBe('kept  \ndsh> \n[exit code: 7]')
+    expect(text(await call(ctx, owner, 'split completion'))).toBe('kept  \nliwa> \n[exit code: 7]')
     expect(send).toHaveBeenCalledTimes(2)
     expect(send.mock.calls[1]?.[0]).toMatchObject({ text: '', submit: false })
   })
@@ -586,7 +586,7 @@ describe('tool-pwsh-persistent', () => {
     expect(result).toContain('pwsh: syntax error')
     // The backend owns the prompt text, so the fallback retains it verbatim.
     expect(result.endsWith('stub> ')).toBe(true)
-    expect(result).not.toContain('DSH_PERSISTENT_PWSH_START')
+    expect(result).not.toContain('LIWA_PERSISTENT_PWSH_START')
   })
 
   it('does not attribute old scrollback truncation to a complete current command', async () => {

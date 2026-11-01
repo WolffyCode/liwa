@@ -16,8 +16,8 @@ const { createPackageWithOptions } = builderRequire('@electron/asar') as {
 }
 const packageDirectory = fileURLToPath(new URL('../../../packages/sandbox/sandbox-windows-acl/', import.meta.url))
 
-it.skipIf(process.platform !== 'win32' || process.env.DSH_EXAMPLE_MODE !== 'lib')('executes the archived ACL skill through external PowerShell and disposes its copy', { retry: 0 }, async () => {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-acl-asar-'))
+it.skipIf(process.platform !== 'win32' || process.env.LIWA_EXAMPLE_MODE !== 'lib')('executes the archived ACL skill through external PowerShell and disposes its copy', { retry: 0 }, async () => {
+  const root = await mkdtemp(join(tmpdir(), 'liwa-acl-asar-'))
   try {
     const source = join(root, 'package')
     // Electron reads the archived package here; full installer layout and SEA execution have separate coverage needs.
@@ -43,8 +43,8 @@ registerHooks({ resolve(specifier, context, next) {
   }
   return next(specifier, context);
 } });
-const { Context } = await import(pathToFileURL(require.resolve('@deepseek-ai/cordis')));
-const { default: SkillRegistry } = await import(pathToFileURL(require.resolve('@deepseek-ai/dsh-skill')));
+const { Context } = await import(pathToFileURL(require.resolve('@liwa/cordis')));
+const { default: SkillRegistry } = await import(pathToFileURL(require.resolve('@liwa/skill')));
 const { registerAclDiagnosisSkill, ACL_DIAGNOSIS_SKILL } = await import(pathToFileURL(join(archive, 'lib/index.js')));
 const ctx = new Context();
 try {

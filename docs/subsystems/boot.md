@@ -22,11 +22,11 @@ The [boot package group](../../packages/boot/README.md) owns launcher-provided p
 
 ## Market records
 
-[Plugin Market](../../packages/boot/plugin-market/README.md) reads index format 1, validated by [`dsh-plugin-market-index`](../../packages/util/plugin-market-index/README.md).
+[Plugin Market](../../packages/boot/plugin-market/README.md) reads index format 1, validated by [`liwa-plugin-market-index`](../../packages/util/plugin-market-index/README.md).
 
 `MarketIndexSummary` carries one configured index URL with the `title` and `description` of its last successful read and, when the last read failed, its `error`.
 
-`MarketQuery` selects one page of an index: fuzzy `text`, a `category`, `labels` that must all be present, a `MarketSort`, `offset`, `limit` up to 100, `refresh` to fetch again instead of using a cached document, and `fetchedAt` to continue the pages of one document. `MarketSearchResult` carries the index URL, `title`, optional `description`, market `metadata`, the document's `fetchedAt`, the page's `entries`, the `total` number of matches, and the `nextOffset`. Each `MarketListingEntry` adds `defaultVersion`, the version installed by default, and `installation`, the profile's status for the package name; each of its `versions` adds `install`, the exact spec and optional first registry for `installBundle`, and `compatibility`, the evaluation of its `engines.dsh` including a version exemption.
+`MarketQuery` selects one page of an index: fuzzy `text`, a `category`, `labels` that must all be present, a `MarketSort`, `offset`, `limit` up to 100, `refresh` to fetch again instead of using a cached document, and `fetchedAt` to continue the pages of one document. `MarketSearchResult` carries the index URL, `title`, optional `description`, market `metadata`, the document's `fetchedAt`, the page's `entries`, the `total` number of matches, and the `nextOffset`. Each `MarketListingEntry` adds `defaultVersion`, the version installed by default, and `installation`, the profile's status for the package name; each of its `versions` adds `install`, the exact spec and optional first registry for `installBundle`, and `compatibility`, the evaluation of its `engines.liwa` including a version exemption.
 
 `PluginDetail` is a market entry's long description: `{ status: 'found' }` with its `origin` (`locale`, `readme`, or `repository`), its `markdown`, and a `document` id whose images `GET /api/plugin-market/detail-file` serves, or `{ status: 'none' }`. The [plugin market documents the order](../../packages/boot/plugin-market/README.md#plugin-detail-documents) its sources are read in.
 
@@ -172,7 +172,7 @@ runExclusive<T>(operation: () => Promise<T>): Promise<T>
 async watchConfig(filename: string, refresh: () => Promise<void>): Promise<() => Promise<void>>
 
 /**
- * Watch one file through the reload queue: the `ctx.hmr.watch()` contract of `@deepseek-ai/cordis-plugin-hmr`,
+ * Watch one file through the reload queue: the `ctx.hmr.watch()` contract of `@liwa/cordis-plugin-hmr`,
  * which Include uses to refresh its config file. The callback runs for additions, changes and removals once the
  * application is ready, serialized with module replacement and profile reloads; the path is watched even outside
  * {@link HmrConfig.root}.
@@ -235,7 +235,7 @@ Manage profile files and apply their declared reload lifecycle.
 
 /** Grant or revoke one exact plugin/runtime exemption and reevaluate live plugins.
  * @param packageVersion Exact manifest package name followed by @ and its version; never an installation spec or alias.
- * @param runtimeVersion Exact current DSH version for grants; revocation may name a previous runtime.
+ * @param runtimeVersion Exact current Liwa version for grants; revocation may name a previous runtime.
  * @param enabled Whether to grant rather than revoke the exemption.
  * @param acceptRisk Required true for grants after the user accepts possible crashes and data loss.
  * @returns Saved and runtime outcomes. Startup-only profiles require restart.
@@ -268,18 +268,18 @@ Manage profile files and apply their declared reload lifecycle.
 @Remote async inspect(spec: string, options?: InspectOptions, signal?: AbortSignal): Promise<PluginSpecInspection>
 
 /** Read the published versions newer than an installed registry package's version, from the first registry that answers.
- * Official bundles follow the DSH version and are not listed.
+ * Official bundles follow the Liwa version and are not listed.
  * @param name Installed profile dependency name.
  * @param options The registry asked first; absent, the one the package was installed from in this process, else the configured one.
  * @param signal Ends the lookups early.
  * @returns At most `versionListLimit` newer versions, newest first, with their tags, deprecation, bundle declaration,
- * and DSH compatibility, and the registry that answered; or why no list could be read, with every registry asked.
+ * and Liwa compatibility, and the registry that answered; or why no list could be read, with every registry asked.
  */
 @Remote async listVersions(name: string, options?: ListVersionsOptions, signal?: AbortSignal): Promise<PluginVersionList>
 
 /**
  * Replace an installed registry bundle with a newer published version. The target is checked on the registry first:
- * it must exist, declare a bundle, and accept the running DSH version, or nothing changes. With HMR the installed
+ * it must exist, declare a bundle, and accept the running Liwa version, or nothing changes. With HMR the installed
  * version is removed, so its plugins stop, and the target is installed with the same selection; when that
  * installation fails or is cancelled, the removed version is installed again from the registry it came from.
  * Without HMR the target is installed over the running version and the result reports the restart.
@@ -306,7 +306,7 @@ Manage profile files and apply their declared reload lifecycle.
 @Remote setBundleEnabled(name: string, enabled: boolean): Promise<ChangeResult>
 
 /**
- * Install a package using the same pnpm implementation as dsh plugin. GitHub
+ * Install a package using the same pnpm implementation as liwa plugin. GitHub
  * repositories get a connection check bounded by githubConnectionTimeoutMs before pnpm starts;
  * only network failures or timeouts stop installation, while pnpm owns authentication and transport fallback. An
  * HTTP(S) Git URL on another host is installed over SSH instead when access probes bounded by gitTransportTimeoutMs
@@ -334,7 +334,7 @@ Manage profile files and apply their declared reload lifecycle.
  */
 @Remote async cancelInstall(requestId: PluginInstallRequestId): Promise<PluginInstallCancellation>
 
-/** Unload and remove a profile-owned bundle dependency through dsh plugin's pnpm path; a selected name no
+/** Unload and remove a profile-owned bundle dependency through liwa plugin's pnpm path; a selected name no
  * dependency holds is only deselected.
  * @param name Installed dependency or selected bundle name.
  * @returns Removal diagnostics and the remaining profile state.

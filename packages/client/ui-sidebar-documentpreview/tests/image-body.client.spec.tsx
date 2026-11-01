@@ -3,8 +3,8 @@
 import { useSyncExternalStore } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import type { TabId } from '@deepseek-ai/dsh-client-ui-dockkit'
+import type { SessionId } from '@liwa/session/types'
+import type { TabId } from '@liwa/client-ui-dockkit'
 import { ImageBody, imageMediaType, type ImageBodyProps } from '../src/client/image/ImageBody.tsx'
 import { en } from '../src/client/image/locales.ts'
 import { createZoomStore, type ZoomState } from '../src/client/zoom/store.ts'
@@ -44,7 +44,7 @@ function props(path = 'asset.png', data: Uint8Array<ArrayBuffer> = new Uint8Arra
   }
   return {
     fileDrag,
-    resourceAddress: `dsh-resource://file/session/image/${path}`,
+    resourceAddress: `liwa-resource://file/session/image/${path}`,
     content: { kind: 'bytes', data },
     wrap: false,
     sessionId: 'image' as SessionId,

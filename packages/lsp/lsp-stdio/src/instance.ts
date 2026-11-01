@@ -4,16 +4,16 @@
  * instance owns one `(provider id, canonical workspace)` process. Queries serialize through a single
  * queue so a cancellation that fails to stop the server can terminate it without killing unrelated
  * work; distinct instances run in parallel.
- * @module @deepseek-ai/dsh-lsp-stdio/instance
+ * @module @liwa/lsp-stdio/instance
  */
 
-import { LspError } from '@deepseek-ai/dsh-lsp'
+import { LspError } from '@liwa/lsp'
 import type {
   LspOperation,
   LspProviderQuery,
   LspQueryResult,
-} from '@deepseek-ai/dsh-lsp'
-import { deadline } from '@deepseek-ai/dsh-timeout'
+} from '@liwa/lsp'
+import { deadline } from '@liwa/timeout'
 import { abortable, abortError } from './abort.ts'
 import { LspConnection } from './connection.ts'
 import type { ConnectionSpawner, ConnectionSpec, ConnectionWriter } from './connection.ts'
@@ -240,7 +240,7 @@ export class LspInstance {
       return { kind: 'hover', hover: normalizeHover(payload) }
     }
     // The filesystem provider owns URI syntax for the execution platform, which may differ from the
-    // harness host. Preserve that coordinate through rendering instead of reparsing `spec.cwd` there.
+    // Liwa host. Preserve that coordinate through rendering instead of reparsing `spec.cwd` there.
     return { kind: 'locations', locations: normalizeLocations(payload), resolvedWorkspaceUri: this.spec.workspaceUri }
   }
 

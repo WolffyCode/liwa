@@ -7,7 +7,7 @@ export const inject = ['tools']
 
 /**
  * Record an explicit initial choice and a switch after `todo_write`.
- * @param {import('@deepseek-ai/cordis').Context} ctx - composition context.
+ * @param {import('@liwa/cordis').Context} ctx - composition context.
  */
 export function apply(ctx) {
   ctx.on('agent/created', ({ agent }) => {

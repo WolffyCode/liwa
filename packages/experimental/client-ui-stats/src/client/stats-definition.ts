@@ -9,10 +9,10 @@
  * (`replaceWindow`/`prepend`) cannot misattribute events.
  */
 
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@liwa/cordis'
 import type {
   ConversationLocation, ConversationNodeContext, ConversationNodeDefinition,
-} from '@deepseek-ai/dsh-client-ui-conversation/client'
+} from '@liwa/client-ui-conversation/client'
 import type {
   StatsCompactionState, StatsEventMetrics, StatsStepState, StatsViewNode,
 } from './stats-contract.ts'

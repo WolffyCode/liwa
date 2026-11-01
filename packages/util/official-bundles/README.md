@@ -1,15 +1,15 @@
 ---
-description: "Installation-owned lists of official dsh bundles (shipped profile templates, the default list, and the optional, on-demand, and retired bundles) and the plugin manager's protected and presented packages."
+description: "Installation-owned lists of official liwa bundles (shipped profile templates, the default list, and the optional, on-demand, and retired bundles) and the plugin manager's protected and presented packages."
 kind: "package-library"
 ---
 
-# @deepseek-ai/dsh-official-bundles
+# @liwa/official-bundles
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-`@deepseek-ai/dsh-official-bundles` holds the bundle package names the dsh installation decides on: which bundles each shipped profile starts with, which bundles it ships switched off, which official bundles install on request, which bundles earlier releases shipped and profiles drop, and which packages the plugin manager protects, hides, orders, or marks experimental. [`dsh-app-boot`](../../boot/app-boot/README.md) applies these lists when it loads a profile; the plugin manager, the CLI, Desktop, the image packer, and repository checks read them directly. The package holds data only, so changing a list leaves app-boot and the plugin manager untouched. Use it as a direct library dependency, not through `cordis.yml`.
+`@liwa/official-bundles` holds the bundle package names the liwa installation decides on: which bundles each shipped profile starts with, which bundles it ships switched off, which official bundles install on request, which bundles earlier releases shipped and profiles drop, and which packages the plugin manager protects, hides, orders, or marks experimental. [`liwa-app-boot`](../../boot/app-boot/README.md) applies these lists when it loads a profile; the plugin manager, the CLI, Desktop, the image packer, and repository checks read them directly. The package holds data only, so changing a list leaves app-boot and the plugin manager untouched. Use it as a direct library dependency, not through `cordis.yml`.
 
 ## Table of Contents
 
@@ -28,11 +28,11 @@ Edit this package when the installation's bundle selection or the plugin manager
 
 ### Profile templates
 
-`PROFILE_TEMPLATES` maps each shipped profile name (`web`, `headless`, `acp`, `sdk`, `sdk-minimal`) to its ordered bundle layer list. App-boot initializes a missing shipped profile from its template, and `dsh --profile <name> --from-default-profile <template>` copies one into a custom profile. `DEFAULT_PROFILE_BUNDLES` is the list `dsh plugin` uses for a profile name with no template. `INSTALLATION_OWNED_PROFILE_TUPLES` names bundle lists that an earlier release wrote into a shipped profile; app-boot replaces an exact match with the current template.
+`PROFILE_TEMPLATES` maps each shipped profile name (`web`, `headless`, `acp`, `sdk`, `sdk-minimal`) to its ordered bundle layer list. App-boot initializes a missing shipped profile from its template, and `liwa --profile <name> --from-default-profile <template>` copies one into a custom profile. `DEFAULT_PROFILE_BUNDLES` is the list `liwa plugin` uses for a profile name with no template. `INSTALLATION_OWNED_PROFILE_TUPLES` names bundle lists that an earlier release wrote into a shipped profile; app-boot replaces an exact match with the current template.
 
 ### Optional and retired bundles
 
-`OPTIONAL_BUNDLES` names the bundles the installation ships for a person to switch on. Each must be a runtime dependency of the `dsh` app that declares `dsh.bundle.patch`, an icon, and `./locale/*.json` display metadata, and no template may select it; [`verify-default-product-isolation`](../../../scripts/verify-default-product-isolation.ts) checks these rules. The [plugin manager](../../boot/plugin-manager/README.md#use-this-package) reports these bundles as `optional`. `RETIRED_BUNDLES` names bundles the installation no longer carries; app-boot removes them from a profile's bundle list when it loads the profile.
+`OPTIONAL_BUNDLES` names the bundles the installation ships for a person to switch on. Each must be a runtime dependency of the `liwa` app that declares `liwa.bundle.patch`, an icon, and `./locale/*.json` display metadata, and no template may select it; [`verify-default-product-isolation`](../../../scripts/verify-default-product-isolation.ts) checks these rules. The [plugin manager](../../boot/plugin-manager/README.md#use-this-package) reports these bundles as `optional`. `RETIRED_BUNDLES` names bundles the installation no longer carries; app-boot removes them from a profile's bundle list when it loads the profile.
 
 <a id="plugin-manager-lists"></a>
 ### Plugin manager lists
@@ -41,7 +41,7 @@ Edit this package when the installation's bundle selection or the plugin manager
 
 ### On-demand bundles
 
-`ON_DEMAND_BUNDLES` names the public Official packages installed only on request. `OFFICIAL_ON_DEMAND_CATALOG` embeds their package-owned localized metadata, icons, and optional `dsh.bundle.platforms` declarations for offline discovery and Host platform checks before installation; `pnpm gen-official-bundle-catalog` explicitly updates generated content, and `verify-official-bundle-catalog` checks resource completeness and freshness; builds consume the committed catalog without importing provider code. The catalog contains no install target: the plugin manager derives it from the running version and installation and uses the ordinary bundle installer. The [product-use check](../../../scripts/verify-product-use.ts) composes shipped and on-demand selections against Web without executing providers.
+`ON_DEMAND_BUNDLES` names the public Official packages installed only on request. `OFFICIAL_ON_DEMAND_CATALOG` embeds their package-owned localized metadata, icons, and optional `liwa.bundle.platforms` declarations for offline discovery and Host platform checks before installation; `pnpm gen-official-bundle-catalog` explicitly updates generated content, and `verify-official-bundle-catalog` checks resource completeness and freshness; builds consume the committed catalog without importing provider code. The catalog contains no install target: the plugin manager derives it from the running version and installation and uses the ordinary bundle installer. The [product-use check](../../../scripts/verify-product-use.ts) composes shipped and on-demand selections against Web without executing providers.
 
 -----
 
@@ -69,7 +69,7 @@ Repository checks read the lists in `src/bundles.ts` as TypeScript literals with
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [dsh-app-boot](../../boot/app-boot/README.md) — profile loading that applies the templates and retired list.
+- [liwa-app-boot](../../boot/app-boot/README.md) — profile loading that applies the templates and retired list.
 - [Shipped optional bundles](../../../.agents/notes/implemented/process/2026-09-15-shipped-optional-bundles.md) — why the installation owns the optional list.
 - [Official on-demand bundles](../../../.agents/notes/implemented/architecture/2026-10-05-official-on-demand-bundles.md) — the offline catalog decision.
 
@@ -79,7 +79,7 @@ Repository checks read the lists in `src/bundles.ts` as TypeScript literals with
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **Lists are compiled into the installation** — changing a list requires a new dsh release; a profile cannot extend the optional or on-demand lists.
+- **Lists are compiled into the installation** — changing a list requires a new liwa release; a profile cannot extend the optional or on-demand lists.
 
 <a id="dev-note"></a>
 ### Dev Note

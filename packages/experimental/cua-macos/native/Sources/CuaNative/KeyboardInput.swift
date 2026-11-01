@@ -1,4 +1,4 @@
-// Keyboard semantics follow DSH's MIT-licensed Cua Driver adaptation.
+// Keyboard semantics follow Liwa's MIT-licensed Cua Driver adaptation.
 import CoreGraphics
 import Foundation
 

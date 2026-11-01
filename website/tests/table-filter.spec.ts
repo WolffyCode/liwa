@@ -204,25 +204,25 @@ describe('documentation table filtering', () => {
     vi.spyOn(head, 'offsetHeight', 'get').mockReturnValue(40)
     install()
     paint()
-    expect(head.style.getPropertyValue('--dsh-table-header-offset')).toBe('0px')
+    expect(head.style.getPropertyValue('--liwa-table-header-offset')).toBe('0px')
     layout.top = -120
     fireEvent.scroll(window)
     fireEvent.scroll(window)
     expect(frames.size).toBe(1)
     paint()
-    expect(head.style.getPropertyValue('--dsh-table-header-offset')).toBe('184px')
+    expect(head.style.getPropertyValue('--liwa-table-header-offset')).toBe('184px')
     layout.nav = 48
     fireEvent.resize(window)
     paint()
-    expect(head.style.getPropertyValue('--dsh-table-header-offset')).toBe('168px')
+    expect(head.style.getPropertyValue('--liwa-table-header-offset')).toBe('168px')
     layout.top = -450
     observers[0]?.notify()
     paint()
-    expect(head.style.getPropertyValue('--dsh-table-header-offset')).toBe('460px')
+    expect(head.style.getPropertyValue('--liwa-table-header-offset')).toBe('460px')
     layout.height = 40
     filter(section, 'unmatched')
     paint()
-    expect(head.style.getPropertyValue('--dsh-table-header-offset')).toBe('0px')
+    expect(head.style.getPropertyValue('--liwa-table-header-offset')).toBe('0px')
   })
 
   it('restores initial visibility and stops pending frames, input handlers, and layout subscriptions on disposal', () => {
@@ -237,7 +237,7 @@ describe('documentation table filtering', () => {
     expect(frames.size).toBe(0)
     expect(queryAllByRole(section, 'searchbox')).toHaveLength(0)
     expect(table.className).toBe('')
-    expect(table.tHead?.style.getPropertyValue('--dsh-table-header-offset')).toBe('')
+    expect(table.tHead?.style.getPropertyValue('--liwa-table-header-offset')).toBe('')
     expect(visible(table)).toEqual(rows.slice(1))
     expect(observers[0]?.disconnect).toHaveBeenCalledOnce()
     fireEvent.input(input, { target: { value: 'unmatched' } })

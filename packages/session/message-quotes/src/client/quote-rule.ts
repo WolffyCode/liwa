@@ -1,8 +1,8 @@
 /** Markdown blockquotes produce atomic quote nodes and inline separator replacements. */
 import { messageQuoteRanges, quoteTextOf } from './quote-text.ts'
-import type { UserTextRule } from '@deepseek-ai/dsh-client-ui-conversation/client'
+import type { UserTextRule } from '@liwa/client-ui-conversation/client'
 
-declare module '@deepseek-ai/dsh-client-ui-conversation/client' {
+declare module '@liwa/client-ui-conversation/client' {
   interface UserTextDataMap {
     quote: { readonly text: string }
   }

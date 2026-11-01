@@ -2,18 +2,18 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write python/sdk-runtime/README.md
-/deepseek-harness-runtime-bin:
-  en: 1ea1d8e6d2c14b02
-  zh: 8e0b9903158667a1
-/deepseek-harness-runtime-bin/installed-commands-and-artifacts:
-  en: 29707be30d04287f
-  zh: c9dfd1e37f31078b
-/deepseek-harness-runtime-bin/python-module-api:
-  en: 78a200e328d96637
-  zh: f3b7a0b69b7a39e0
-/deepseek-harness-runtime-bin/packaged-profile-resolution:
-  en: f1123b8835b57bbe
-  zh: 05af612c33c5d855
-/deepseek-harness-runtime-bin/build-and-distribution:
-  en: a41e8eb7e99b9532
-  zh: 2789d8f43b1b54be
+/liwa-runtime-bin:
+  en: 1cd36bf6bad81e8c
+  zh: e1969fa3a24f7d23
+/liwa-runtime-bin/installed-commands-and-artifacts:
+  en: 6b425ddfbebc9ff6
+  zh: e58345102c903240
+/liwa-runtime-bin/python-module-api:
+  en: 1d8331fed1d0533f
+  zh: 54c43229fc820bed
+/liwa-runtime-bin/packaged-profile-resolution:
+  en: 2f2933635871602f
+  zh: 754bb780c6062dd6
+/liwa-runtime-bin/build-and-distribution:
+  en: b52b931a671cc601
+  zh: 166459c7ffc4dde9

@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 /** Dynamic ui-theme entry owns the global styles in dependency order. */
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { installThemeStyles } from '../src/client/styles.ts'
 
-const PLUGIN_ID = '@deepseek-ai/dsh-client-ui-theme'
-const HAIRLINE_WIDTH = '--dsh-hairline-width'
+const PLUGIN_ID = '@liwa/client-ui-theme'
+const HAIRLINE_WIDTH = '--liwa-hairline-width'
 const contexts = new Set<Context>()
 let previousWidth: string
 let previousPriority: string

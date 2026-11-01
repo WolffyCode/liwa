@@ -1,22 +1,22 @@
 /**
- * Unit + real-load-path coverage for @deepseek-ai/dsh-tool-call-timeout-policy. The
+ * Unit + real-load-path coverage for @liwa/tool-call-timeout-policy. The
  * timeout-wins cases drive the deadline under fake timers (deterministic — no
  * wall-clock race) and use a COOPERATIVE tool that settles only when its
  * `exec.signal` aborts, mirroring how a real capability forwards the signal and
  * reaches quiescence.
  */
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
+import { executeToolFixture } from '@liwa/tool-testkit'
 
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import { ToolCallId, HarnessError } from '@deepseek-ai/dsh-llm'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime, { TOOL_ABORTED, type ToolExecutionInput, type PostToolDecision } from '@deepseek-ai/dsh-tools'
-import { defineContentToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import * as timeoutPolicy from '@deepseek-ai/dsh-tool-call-timeout-policy'
-import { TOOL_TIMEOUT } from '@deepseek-ai/dsh-tool-call-timeout-policy'
+import { Context } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
+import { ToolCallId, LiwaError } from '@liwa/llm'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime, { TOOL_ABORTED, type ToolExecutionInput, type PostToolDecision } from '@liwa/tools'
+import { defineContentToolFixture } from '@liwa/tool-testkit'
+import * as timeoutPolicy from '@liwa/tool-call-timeout-policy'
+import { TOOL_TIMEOUT } from '@liwa/tool-call-timeout-policy'
 
 const testToolSignal = new AbortController().signal
 
@@ -44,8 +44,8 @@ const cooperativeTool = defineContentToolFixture({
 const abortThrowingTool = defineContentToolFixture({
   name: 'aborter', description: 'throws WEB_ABORTED when aborted', parameters: {}, timeoutMs: 100,
   execute(_args, exec): Promise<never> {
-    if (exec.signal.aborted) return Promise.reject(new HarnessError('web fetch aborted', 'WEB_ABORTED'))
-    return new Promise((_resolve, reject) => { exec.signal.addEventListener('abort', () => { reject(new HarnessError('web fetch aborted', 'WEB_ABORTED')) }) })
+    if (exec.signal.aborted) return Promise.reject(new LiwaError('web fetch aborted', 'WEB_ABORTED'))
+    return new Promise((_resolve, reject) => { exec.signal.addEventListener('abort', () => { reject(new LiwaError('web fetch aborted', 'WEB_ABORTED')) }) })
   },
 })
 
@@ -222,7 +222,7 @@ describe('timeout-policy disposal (HMR safety)', () => {
   })
 })
 
-describe('dsh-tool-call-timeout-policy real-load-path guard', () => {
+describe('liwa-tool-call-timeout-policy real-load-path guard', () => {
   it('has no default export and keeps name/inject through unwrapExports', () => {
     expect('default' in timeoutPolicy).toBe(false)
     const loader = Object.create(Loader.prototype) as Loader

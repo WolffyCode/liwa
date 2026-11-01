@@ -20,9 +20,9 @@ private func fixtureApplication(_ directory: URL, name: String, identifier: Stri
 
 @Test(arguments: ["process-query", "authorization", "metadata"])
 func failedLaunchInspectionInvalidatesThePendingHandle(failure: String) async throws {
-    let root = FileManager.default.temporaryDirectory.appendingPathComponent("dsh-cua-launch-" + UUID().uuidString)
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("liwa-cua-launch-" + UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: root) }
-    let app = try fixtureApplication(root, name: "Fixture", identifier: "test.dsh.launch." + UUID().uuidString)
+    let app = try fixtureApplication(root, name: "Fixture", identifier: "test.liwa.launch." + UUID().uuidString)
     let worker = AXWorker(cancellation: CancellationLatch(), axTimeout: 1, textEventInterval: 0, maxClickHoldMs: 5000,
                           sessionState: { false })
     let catalog = ApplicationCatalogSnapshot(applications: [], frontPID: nil)
@@ -61,9 +61,9 @@ func failedLaunchInspectionInvalidatesThePendingHandle(failure: String) async th
 }
 
 @Test @MainActor func findsStoppedApplicationsAndIdentifiesRunningMatchesWithoutLaunching() throws {
-    let root = FileManager.default.temporaryDirectory.appendingPathComponent("dsh-cua-apps-" + UUID().uuidString)
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("liwa-cua-apps-" + UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: root) }
-    let app = try fixtureApplication(root, name: "Fixture Editor", identifier: "test.dsh.cua." + UUID().uuidString)
+    let app = try fixtureApplication(root, name: "Fixture Editor", identifier: "test.liwa.cua." + UUID().uuidString)
     let matches = try ApplicationDiscovery.applications(matching: "fixture editor", exact: true, limit: 2,
                                                        cancellation: CancellationLatch(), roots: [root])
     #expect(matches == [app])
@@ -77,10 +77,10 @@ func failedLaunchInspectionInvalidatesThePendingHandle(failure: String) async th
 }
 
 @Test @MainActor func broadQueriesRejectInsteadOfHidingApplicationAmbiguity() throws {
-    let root = FileManager.default.temporaryDirectory.appendingPathComponent("dsh-cua-apps-" + UUID().uuidString)
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("liwa-cua-apps-" + UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: root) }
-    _ = try fixtureApplication(root, name: "Fixture One", identifier: "test.dsh.one." + UUID().uuidString)
-    _ = try fixtureApplication(root, name: "Fixture Two", identifier: "test.dsh.two." + UUID().uuidString)
+    _ = try fixtureApplication(root, name: "Fixture One", identifier: "test.liwa.one." + UUID().uuidString)
+    _ = try fixtureApplication(root, name: "Fixture Two", identifier: "test.liwa.two." + UUID().uuidString)
     #expect(throws: NativeFailure.self) {
         try ApplicationDiscovery.applications(matching: "Fixture", exact: false, limit: 1, cancellation: CancellationLatch(), roots: [root])
     }
@@ -92,7 +92,7 @@ func failedLaunchInspectionInvalidatesThePendingHandle(failure: String) async th
 }
 
 @Test(arguments: [nil, ""] as [String?]) func applicationsWithoutBundleIdentifiersRetainPathConsentAcrossUpdates(identifier: String?) throws {
-    let root = FileManager.default.temporaryDirectory.appendingPathComponent("dsh-cua-apps-" + UUID().uuidString)
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("liwa-cua-apps-" + UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: root) }
     let app = try fixtureApplication(root, name: "Fixture", identifier: identifier)
     let before = try ApplicationAuthorization.describeInstalled(app)
@@ -109,9 +109,9 @@ func failedLaunchInspectionInvalidatesThePendingHandle(failure: String) async th
 }
 
 @Test func unsignedVersionsShareConsentOnlyForTheSameBundleIdentifier() throws {
-    let root = FileManager.default.temporaryDirectory.appendingPathComponent("dsh-cua-apps-" + UUID().uuidString)
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("liwa-cua-apps-" + UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: root) }
-    let identifier = "test.dsh.consent." + UUID().uuidString
+    let identifier = "test.liwa.consent." + UUID().uuidString
     let first = try fixtureApplication(root, name: "Editor One", identifier: identifier)
     let second = try fixtureApplication(root, name: "Editor Two", identifier: identifier)
     let other = try fixtureApplication(root, name: "Other", identifier: identifier + ".other")
@@ -129,9 +129,9 @@ func failedLaunchInspectionInvalidatesThePendingHandle(failure: String) async th
 
 @Test(arguments: ["identifier", "missing-identifier", "executable", "missing-plist"])
 func changedBundleMetadataInvalidatesACachedSelection(change: String) throws {
-    let root = FileManager.default.temporaryDirectory.appendingPathComponent("dsh-cua-apps-" + UUID().uuidString)
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("liwa-cua-apps-" + UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: root) }
-    let selected = try fixtureApplication(root, name: "Fixture", identifier: "test.dsh.consent." + UUID().uuidString)
+    let selected = try fixtureApplication(root, name: "Fixture", identifier: "test.liwa.consent." + UUID().uuidString)
     let url = URL(fileURLWithPath: selected.path)
     let plist = url.appendingPathComponent("Contents/Info.plist")
     let cachedBundle = try #require(Bundle(url: url))
@@ -139,7 +139,7 @@ func changedBundleMetadataInvalidatesACachedSelection(change: String) throws {
     _ = try ApplicationAuthorization.describeInstalled(selected)
     var info = try #require(PropertyListSerialization.propertyList(from: Data(contentsOf: plist), format: nil) as? [String: String])
     switch change {
-    case "identifier": info["CFBundleIdentifier"] = "test.dsh.replacement"
+    case "identifier": info["CFBundleIdentifier"] = "test.liwa.replacement"
     case "missing-identifier": info.removeValue(forKey: "CFBundleIdentifier")
     case "executable":
         info["CFBundleExecutable"] = "replacement"

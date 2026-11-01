@@ -2,22 +2,22 @@
  * Active Loader-backed plugin package inventory for official DeepSeek requests.
  * Host entries and the requesting agent's standing preset are resolved at request time;
  * installed dependencies and plugin fibers without Loader-backed package identity are excluded.
- * @module @deepseek-ai/dsh-plugin-package-inventory-deepseek
+ * @module @liwa/plugin-package-inventory-deepseek
  */
 
 import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, isAbsolute, join, parse } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { FiberState, type Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { brandString } from '@deepseek-ai/dsh-brand'
-import type { EntryTree } from '@deepseek-ai/cordis-plugin-loader'
-import type {} from '@deepseek-ai/dsh-agent'
-import type {} from '@deepseek-ai/dsh-deepseek-llm-api-extensions'
-import type { SessionId } from '@deepseek-ai/dsh-session'
-import type {} from '@deepseek-ai/dsh-agent-preset-registry'
-import type {} from '@deepseek-ai/dsh-app-boot'
+import { FiberState, type Context } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import { brandString } from '@liwa/brand'
+import type { EntryTree } from '@liwa/cordis-plugin-loader'
+import type {} from '@liwa/agent'
+import type {} from '@liwa/deepseek-llm-api-extensions'
+import type { SessionId } from '@liwa/session'
+import type {} from '@liwa/agent-preset-registry'
+import type {} from '@liwa/app-boot'
 import type { DeepSeekPluginPackageIdentity, DeepSeekPluginPackageInventoryExtension } from './types.ts'
 import type {} from './types.ts'
 

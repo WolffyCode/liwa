@@ -14,14 +14,14 @@
  * so one save covers everything the page shows.
  */
 
-import type { Context as ClientContext } from '@deepseek-ai/cordis'
+import type { Context as ClientContext } from '@liwa/cordis'
 // Type-only: pulls the ctx.remote merge into this program.
-import type {} from '@deepseek-ai/dsh-api-remotes/client'
-import { createSnapshotStore, type SnapshotStore } from '@deepseek-ai/dsh-client-store'
+import type {} from '@liwa/api-remotes/client'
+import { createSnapshotStore, type SnapshotStore } from '@liwa/client-store'
 import {
   SettingsFormModel, settingsNumberField, settingsTextField,
   type SettingsFieldState, type SettingsFormActions, type SettingsFormShell, type SettingsFormScope, type SettingsFormScopeSnapshot,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+} from '@liwa/client-ui-primitives'
 
 /**
  * Namespaces this page edits. Spelled here rather than imported: a client

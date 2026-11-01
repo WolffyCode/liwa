@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 /** Assembled viewer page privacy against the production Owner reader; ordinary Session data uses a scripted Owner. */
-import type { ClientConnectionRpc, ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'
-import type {} from '@deepseek-ai/dsh-client-locale/client'
-import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
-import type {} from '@deepseek-ai/dsh-client-ui-theme/client'
+import type { ClientConnectionRpc, ConnectionHandle } from '@liwa/client-connection/client'
+import type {} from '@liwa/client-locale/client'
+import type {} from '@liwa/client-ui-settings/client'
+import type {} from '@liwa/client-ui-theme/client'
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import type { PrivacyOwnerModule, PrivacyOwnerReader } from './viewer-privacy-bridge.ts'
@@ -16,7 +16,7 @@ import type { ViewerInputFixture } from './viewer-input-fixture.client.ts'
 import { installViewerRelay } from './viewer-relay.client.ts'
 
 /** The generated contribution is a build artifact; the mount boundary is what this face test covers. */
-vi.mock('@deepseek-ai/dsh-experimental-liveshare/remote', () => ({ default: { package: '@deepseek-ai/dsh-experimental-liveshare', methods: {} } }))
+vi.mock('@liwa/experimental-liveshare/remote', () => ({ default: { package: '@liwa/experimental-liveshare', methods: {} } }))
 
 const blockedEndpoints = ['settings/describe', 'credentials/describe', 'agentPresets/list', 'agentPresets/read']
 const sentinels = ['SYNTHETIC_SECRET_NEVER_RETURN', 'private-provider.invalid', '/fixture/private-root', 'private-tenant']
@@ -150,7 +150,7 @@ describe('Assembled viewer page global configuration privacy', () => {
     const context = input.context()
     expect(context.get('connection')?.isLoopback).toBe(authority === 'loopback')
     expect(context.get('remote')?.$host.isLoopback).toBe(authority === 'loopback')
-    const transport = Reflect.get(globalThis, '__DSH_TRANSPORT__') as { readonly ownsHost?: boolean }
+    const transport = Reflect.get(globalThis, '__LIWA_TRANSPORT__') as { readonly ownsHost?: boolean }
     expect(transport.ownsHost).toBeUndefined()
     const forms = context.get('configForms')
     if (forms === undefined) throw new Error('assembled viewer page configuration forms did not activate')
@@ -192,7 +192,7 @@ describe('Assembled viewer page global configuration privacy', () => {
     expect(context.get('locale')?.getLocale().active).toBe(locale)
     expect(document.documentElement.lang).toBe(locale === 'zh' ? 'zh-CN' : 'en')
     expect(document.documentElement.style.colorScheme).toMatch(/^(light|dark)$/u)
-    expect(document.body.style.getPropertyValue('--dsh-content-font-size')).toBe('14px')
+    expect(document.body.style.getPropertyValue('--liwa-content-font-size')).toBe('14px')
     expect(document.body.textContent).toContain('问题 51：fixture 历史消息')
     expect(document.querySelector('pre.shiki code')).not.toBeNull()
     const delivered = document.querySelector<HTMLElement>('[data-presented-files-row]')

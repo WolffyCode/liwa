@@ -5,63 +5,63 @@
 /:
   en: 14d3fdd57b94c86f
   zh: abcd3b4f9dd908fa
-/deepseek-ai-dsh-sandbox-windows-acl:
-  en: e7cdbd2652fe80ab
-  zh: 04e1d187313a0bd5
-/deepseek-ai-dsh-sandbox-windows-acl/summary:
-  en: 777921135c23ee55
-  zh: 7c726cc63995d443
-/deepseek-ai-dsh-sandbox-windows-acl/table-of-contents:
+/liwa-sandbox-windows-acl:
+  en: d5040bf4904dd173
+  zh: fddc1346d14e6bf9
+/liwa-sandbox-windows-acl/summary:
+  en: 517884a42aa3707b
+  zh: 59cdf83df4635fae
+/liwa-sandbox-windows-acl/table-of-contents:
   en: d152484eb41ac6b4
   zh: 09388d293f9be9cb
-/deepseek-ai-dsh-sandbox-windows-acl/use-this-package:
-  en: 58b220faa66b2f05
-  zh: dda42e4197d80bfe
-/deepseek-ai-dsh-sandbox-windows-acl/use-this-package/when-to-choose-it:
+/liwa-sandbox-windows-acl/use-this-package:
+  en: d9722a8994910e9c
+  zh: 4753ec7fed84af6c
+/liwa-sandbox-windows-acl/use-this-package/when-to-choose-it:
   en: 510d0b1ef7db159d
   zh: dc2cf25b3db14c63
-/deepseek-ai-dsh-sandbox-windows-acl/use-this-package/direct-api:
+/liwa-sandbox-windows-acl/use-this-package/direct-api:
   en: 16596607bbccc2a3
   zh: 30bc370a5281bf0d
-/deepseek-ai-dsh-sandbox-windows-acl/use-this-package/what-confinement-gives-you:
+/liwa-sandbox-windows-acl/use-this-package/what-confinement-gives-you:
   en: 289e65bddf20dd79
   zh: 7ff72ed64c4b4d1c
-/deepseek-ai-dsh-sandbox-windows-acl/use-this-package/failures-and-recovery:
-  en: 7fc0707debb1e67c
-  zh: e3b5529bf82f868e
-/deepseek-ai-dsh-sandbox-windows-acl/understand-the-implementation:
+/liwa-sandbox-windows-acl/use-this-package/failures-and-recovery:
+  en: 605be1787fc20100
+  zh: cc256460ccb920bb
+/liwa-sandbox-windows-acl/understand-the-implementation:
   en: c2cde86c85c2c619
   zh: a29a114e591f9d3f
-/deepseek-ai-dsh-sandbox-windows-acl/understand-the-implementation/mechanism:
-  en: a37ea37f2d527693
-  zh: 749b5a263d0e1534
-/deepseek-ai-dsh-sandbox-windows-acl/understand-the-implementation/modes-and-token-lists:
+/liwa-sandbox-windows-acl/understand-the-implementation/mechanism:
+  en: 83a9e22745c16b3c
+  zh: 0bc38139633040fc
+/liwa-sandbox-windows-acl/understand-the-implementation/modes-and-token-lists:
   en: 9c8d9af84f9abd99
   zh: 1c82b355aa5f210f
-/deepseek-ai-dsh-sandbox-windows-acl/understand-the-implementation/the-confinement-runner:
-  en: 0847de0e53e50061
-  zh: 90fa3dcaf080c3be
-/deepseek-ai-dsh-sandbox-windows-acl/understand-the-implementation/verified-boundaries:
-  en: ad02570eae90037f
-  zh: fd78c2318de18dda
-/deepseek-ai-dsh-sandbox-windows-acl/understand-the-implementation/header-verification-and-source-map:
-  en: c19df6b7a756b779
-  zh: b8267b26bd191d97
-/deepseek-ai-dsh-sandbox-windows-acl/further-exploration:
-  en: 7850da9522bf984b
-  zh: a9f2273a85bafcf9
-/deepseek-ai-dsh-sandbox-windows-acl/model-experience:
-  en: bbb19594a2c2e4d4
-  zh: 075a65d9b9182aad
-/deepseek-ai-dsh-sandbox-windows-acl/model-experience/kv-cache-effect:
+/liwa-sandbox-windows-acl/understand-the-implementation/the-confinement-runner:
+  en: 816f25742ffb4fde
+  zh: 27c417bbec44e4fa
+/liwa-sandbox-windows-acl/understand-the-implementation/verified-boundaries:
+  en: 62ed086108971781
+  zh: 232bd7a5dfe1c48d
+/liwa-sandbox-windows-acl/understand-the-implementation/header-verification-and-source-map:
+  en: a4dc834f956d6cc6
+  zh: 78759739dfa75862
+/liwa-sandbox-windows-acl/further-exploration:
+  en: 5b137a14b37e6b7e
+  zh: c1a0c9b0618e25c4
+/liwa-sandbox-windows-acl/model-experience:
+  en: 28a9c53c0fa2e9de
+  zh: 7ef0eddf18a3bec5
+/liwa-sandbox-windows-acl/model-experience/kv-cache-effect:
   en: 817eb1b7de13872e
   zh: 06fe175e41e7459b
-/deepseek-ai-dsh-sandbox-windows-acl/known-limitations-and-deferred-work:
-  en: 046831a864786b2a
-  zh: 4a261fbab3396ea4
-/deepseek-ai-dsh-sandbox-windows-acl/known-limitations-and-deferred-work/dev-note:
+/liwa-sandbox-windows-acl/known-limitations-and-deferred-work:
+  en: 21908a887f37f062
+  zh: 700446b2a73ebbcc
+/liwa-sandbox-windows-acl/known-limitations-and-deferred-work/dev-note:
   en: cc273320f6a1beaf
   zh: 5c57a312ddc50651
-/deepseek-ai-dsh-sandbox-windows-acl/known-limitations-and-deferred-work/dev-note/future-warnings-and-cleanup-surfaces:
+/liwa-sandbox-windows-acl/known-limitations-and-deferred-work/dev-note/future-warnings-and-cleanup-surfaces:
   en: 8872c7b4c8ce1cc7
   zh: c7fb4eefa013c7b0

@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-tool-web",
-  "description": "Model-facing web tools (web_search, web_fetch) over the DeepSeek Harness web capability seam (ctx.web)",
+  "name": "@liwa/tool-web",
+  "description": "Model-facing web tools (web_search, web_fetch) over the Liwa web capability seam (ctx.web)",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/web/tool-web"
   },
   "type": "module",
@@ -29,36 +29,36 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-web": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/llm": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/web": "workspace:*"
   },
   "dependencies": {
-    "@deepseek-ai/dsh-output-retention": "workspace:*",
-    "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/output-retention": "workspace:*",
+    "@liwa/util-values": "workspace:*",
+    "@liwa/schemastery": "workspace:~",
     "@joplin/turndown-plugin-gfm": "^1.0.67",
     "turndown": "^7.2.4"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-spill-local": "workspace:*",
-    "@deepseek-ai/dsh-spill-policy": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-tool-call-timeout-policy": "workspace:*",
-    "@deepseek-ai/dsh-tool-executor-native": "workspace:*",
-    "@deepseek-ai/dsh-tool-testkit": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-web": "workspace:*",
-    "@deepseek-ai/dsh-web-fetch-http": "workspace:*",
-    "@deepseek-ai/dsh-web-search-exa": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/spill-local": "workspace:*",
+    "@liwa/spill-policy": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/tool-call-timeout-policy": "workspace:*",
+    "@liwa/tool-executor-native": "workspace:*",
+    "@liwa/tool-testkit": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/web": "workspace:*",
+    "@liwa/web-fetch-http": "workspace:*",
+    "@liwa/web-search-exa": "workspace:*",
     "@types/turndown": "^5.0.6",
-    "@deepseek-ai/dsh-scope": "workspace:*",
-    "@deepseek-ai/dsh-token-meter": "workspace:*"
+    "@liwa/scope": "workspace:*",
+    "@liwa/token-meter": "workspace:*"
   }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/cordis-plugin-loader",
+  "name": "@liwa/cordis-plugin-loader",
   "description": "Plugin loader for cordis",
   "version": "1.0.7-alpha.1",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "vendor/loader"
   },
   "type": "module",
@@ -30,7 +30,7 @@
   "author": "Shigma <shigma10826@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
+    "@liwa/cordis": "workspace:~",
     "node-addon-require-builtin": "^0.1.9"
   },
   "peerDependenciesMeta": {
@@ -39,7 +39,7 @@
     }
   },
   "dependencies": {
-    "@deepseek-ai/cosmokit": "workspace:~",
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/cosmokit": "workspace:~",
+    "@liwa/schemastery": "workspace:~"
   }
 }

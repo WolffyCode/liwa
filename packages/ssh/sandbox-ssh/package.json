@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-sandbox-ssh",
+  "name": "@liwa/sandbox-ssh",
   "description": "Remote POSIX sandbox argv provider over the shared SSH helper",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/ssh/sandbox-ssh"
   },
   "type": "module",
@@ -29,17 +29,17 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-ssh": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/ssh": "workspace:*",
+    "@liwa/sandbox": "workspace:*"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/schemastery": "workspace:~",
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-ssh": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/ssh": "workspace:*",
+    "@liwa/sandbox": "workspace:*"
   }
 }

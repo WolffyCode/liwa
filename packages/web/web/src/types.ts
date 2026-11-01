@@ -2,22 +2,22 @@
  * Vocabulary for the web capability seam (`ctx.web`). Search and fetch deliberately share one
  * seam so provider selection, cancellation, errors, and product configuration have one owner,
  * while retaining separate request and result types.
- * @module @deepseek-ai/dsh-web/types
+ * @module @liwa/web/types
  */
 
-import { HarnessError } from '@deepseek-ai/dsh-llm'
+import { LiwaError } from '@liwa/llm'
 
 /**
  * What one search-capable backend is asked to search. Each request carries one
  * query; a consumer may issue several requests. `maxResults` is a
- * `dsh-tool-web`-layer bound passed through unchanged and enforced on the way
+ * `liwa-tool-web`-layer bound passed through unchanged and enforced on the way
  * back by the seam (see {@link WebSearchResult}).
  */
 export interface WebSearchRequest {
   readonly query: string
   /**
    * Upper bound on returned sources; the seam truncates to it. Omitted = no
-   * bound. `dsh-tool-web` always sets it. A provider whose API supports a
+   * bound. `liwa-tool-web` always sets it. A provider whose API supports a
    * result-count control (Exa's `numResults`) should apply it at the request
    * layer as a cost/latency optimization; the seam enforces the bound
    * regardless.
@@ -45,7 +45,7 @@ export interface WebSearchResult {
  * One citeable source. A source always has a URL; `title`, `snippet`, `summary`,
  * and `publishedAt` are optional because not every provider returns them — forcing
  * adapters to invent them would make the seam lie (Perplexity citations may be
- * URL-only). `dsh-tool-web` renders `title ?? hostname(url)` for display.
+ * URL-only). `liwa-tool-web` renders `title ?? hostname(url)` for display.
  */
 export interface WebSearchSource {
   readonly url: string
@@ -87,7 +87,7 @@ export interface WebFetchResult {
 
 /**
  * The decoded body of a fetched resource. A CLOSED discriminated union owned by
- * `dsh-web`: the provider decodes the kind and `dsh-tool-web` renders it, so a
+ * `liwa-web`: the provider decodes the kind and `liwa-tool-web` renders it, so a
  * new kind is a coordinated change across known packages, not a plugin
  * extension. Consumers `switch` on `kind` ending in `default: assertNever(...)`
  * so adding a kind breaks compilation at every consumer until handled. Each arm
@@ -146,4 +146,4 @@ export interface WebFetchProvider {
  * size and timeout limits, and unsupported content types. Tool execution exposes the code in
  * structured error metadata.
  */
-export class WebError extends HarnessError {}
+export class WebError extends LiwaError {}

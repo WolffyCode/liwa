@@ -1,7 +1,7 @@
 /**
  * Two real OS processes writing one fork registry file.
  *
- * One DSH home can be served by several Host processes, and the registry keeps its children, its
+ * One Liwa home can be served by several Host processes, and the registry keeps its children, its
  * logical operations, and its withdrawals in that one file. A process that rewrites the file from the
  * snapshot it read earlier drops whatever the other process committed in between, which loses a
  * withdrawal it can no longer enforce or a served request it forks a second time. Each case here
@@ -103,7 +103,7 @@ let script: Promise<string> | undefined
  */
 async function writerScript(): Promise<string> {
   script ??= (async (): Promise<string> => {
-    const directory = await mkdtemp(join(tmpdir(), 'dsh-fork-registry-writer-'))
+    const directory = await mkdtemp(join(tmpdir(), 'liwa-fork-registry-writer-'))
     scriptDirectories.push(directory)
     const path = join(directory, 'writer.mts')
     await writeFile(path, WRITER_SOURCE)
@@ -114,7 +114,7 @@ async function writerScript(): Promise<string> {
 
 /** One temporary directory holding the registry both writers share. */
 async function directory(): Promise<string> {
-  const created = await mkdtemp(join(tmpdir(), 'dsh-fork-registry-2proc-'))
+  const created = await mkdtemp(join(tmpdir(), 'liwa-fork-registry-2proc-'))
   directories.push(created)
   return created
 }

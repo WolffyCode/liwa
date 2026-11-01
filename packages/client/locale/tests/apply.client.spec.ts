@@ -2,15 +2,15 @@ import { SHIPPED_LOCALE_IDS } from '../../../../scripts/shipped-locales.ts'
 /** locale apply wiring: service + dictionaries provision, declaration-aware
  * Language row registration, snapshot projection into the row store, and
  * recovery after an HMR collapse of the declaring entry. */
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
-import { SlotRegistry } from '@deepseek-ai/dsh-client-ui-renderer/client'
-import { apply as settingsApply, inject as settingsInject } from '@deepseek-ai/dsh-client-ui-settings/client'
-import { TestRemote } from '@deepseek-ai/dsh-client-test-runtime'
+import { SlotRegistry } from '@liwa/client-ui-renderer/client'
+import { apply as settingsApply, inject as settingsInject } from '@liwa/client-ui-settings/client'
+import { TestRemote } from '@liwa/client-test-runtime'
 import {
   apply, inject, SETTINGS_NS,
-} from '@deepseek-ai/dsh-client-locale/client'
-import type { LanguageRowInjected, LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
+} from '@liwa/client-locale/client'
+import type { LanguageRowInjected, LocaleRuntime } from '@liwa/client-locale/client'
 import { LOCALE_SETTINGS_NAMESPACE, LocaleSettingsSchema } from '../src/locale-settings.ts'
 import { LanguageRow } from '../src/client/LanguageRow.tsx'
 import type { createLanguageRowStore } from '../src/client/settings-store.ts'
@@ -71,7 +71,7 @@ describe('locale apply', () => {
     const ready = Promise.withResolvers<unknown>()
     const read = vi.fn(() => ready.promise)
     const onChange = vi.fn()
-    vi.stubGlobal('__DSH_LOCALE__', { read, onChange })
+    vi.stubGlobal('__LIWA_LOCALE__', { read, onChange })
     const fiber = b.ctx.plugin({ inject: [...inject], apply })
     try {
       await vi.waitFor(() => { expect(read).toHaveBeenCalledOnce() })
@@ -91,7 +91,7 @@ describe('locale apply', () => {
     const b = await bench('zh')
     const ready = Promise.withResolvers<unknown>()
     const onChange = vi.fn()
-    vi.stubGlobal('__DSH_LOCALE__', { read: () => ready.promise, onChange })
+    vi.stubGlobal('__LIWA_LOCALE__', { read: () => ready.promise, onChange })
     const fiber = b.ctx.plugin({ inject: [...inject], apply })
     try {
       expect(b.ctx.get('locale')).toBeUndefined()

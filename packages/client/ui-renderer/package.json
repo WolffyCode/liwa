@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-client-ui-renderer",
+  "name": "@liwa/client-ui-renderer",
   "description": "Browser UI renderer: React slot bindings, ctx.uiRenderer, and the assembled application root",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/client/ui-renderer"
   },
   "type": "module",
@@ -26,7 +26,7 @@
     "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json"
   },
-  "dsh": {
+  "liwa": {
     "client": {
       "platform": "web",
       "immediately": true
@@ -38,12 +38,12 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-client-test-runtime": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-slots": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/client-test-runtime": "workspace:*",
+    "@liwa/client-ui-slots": "workspace:*",
     "@types/use-sync-external-store": "^1.5.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

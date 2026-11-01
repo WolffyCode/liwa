@@ -10,7 +10,7 @@ import {
 import type { OwnerIdentityStatus } from '../src/client/owner-identity.ts'
 
 const ORIGIN = 'https://relay.example.test'
-const PAGE_ORIGIN = 'https://dsh.example.test'
+const PAGE_ORIGIN = 'https://liwa.example.test'
 const OTHER_RELAY = 'https://other.example.test'
 const TICKET: OwnerLoginTicket = {
   authorizeUrl: `${ORIGIN}/__liveshare/auth/start?state=s1`,

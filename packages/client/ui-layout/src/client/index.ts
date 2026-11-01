@@ -7,17 +7,17 @@
  * selection belongs to the Session Controller. A second effect seats the theme
  * presenter, which projects ctx.theme snapshots onto document.body.
  */
-import type { Context as ClientContext } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-client-locale/client'
-import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
-import type {} from '@deepseek-ai/dsh-client-ui-session/client'
-import type {} from '@deepseek-ai/dsh-client-ui-theme/client'
-import type { HostObservable, SnapshotSelectorHook } from '@deepseek-ai/dsh-client-ui-slots'
+import type { Context as ClientContext } from '@liwa/cordis'
+import type {} from '@liwa/client-locale/client'
+import type {} from '@liwa/client-ui-renderer/client'
+import type {} from '@liwa/client-ui-session/client'
+import type {} from '@liwa/client-ui-theme/client'
+import type { HostObservable, SnapshotSelectorHook } from '@liwa/client-ui-slots'
 import type { PanelInfo } from './service.ts'
 import { AppFrame } from './AppFrame.tsx'
 import { createLayoutStore } from './stores.ts'
 import { LayoutController } from './service.ts'
-import type { ShortcutCommandId } from '@deepseek-ai/dsh-client-shortcuts/client'
+import type { ShortcutCommandId } from '@liwa/client-shortcuts/client'
 import { en, ja, es, fr, de, ru, pt, zh } from './shortcut-locales.ts'
 import { ThemePresenter } from './theme-presenter.ts'
 
@@ -32,14 +32,14 @@ export type { ILayout, MainPanelId, PanelInfo } from './service.ts'
 /** Selector hook over root-scoped panel selection. */
 export type UsePanelInfo = SnapshotSelectorHook<PanelInfo>
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     /** The outward face only; the concrete service stays inside this plugin. */
     layout: import('./service.ts').ILayout
   }
 }
 
-declare module '@deepseek-ai/dsh-client-ui-slots' {
+declare module '@liwa/client-ui-slots' {
   interface LocaleNamespaceMap {
     /** Layout keyboard command labels. */
     'shortcuts.layout': keyof typeof zh
@@ -111,7 +111,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      * OCCUPIED by ui-sidebar's reopen/New Session controls.
      *
      * While the seat is mounted the frame publishes
-     * `--dsh-frame-leading-clearance` (the inline inset the seat's band
+     * `--liwa-frame-leading-clearance` (the inline inset the seat's band
      * occupies, measured from the frame's left edge); a main panel whose
      * content reaches the top-left corner pads by it so nothing lands under
      * the lights or the controls.

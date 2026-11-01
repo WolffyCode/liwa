@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execa } from 'execa'
-import { SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
+import { SESSION_FORMAT_VERSION } from '@liwa/session'
 import { describe, expect, it } from 'vitest'
 
 const packageRoot = fileURLToPath(new URL('..', import.meta.url))
@@ -16,9 +16,9 @@ describe.skipIf(!built)('built migration verifier (plain node)', () => {
       import { tmpdir } from 'node:os'
       import { join } from 'node:path'
       import { Worker } from 'node:worker_threads'
-      import { Context } from '@deepseek-ai/cordis'
-      import { SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
-      import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
+      import { Context } from '@liwa/cordis'
+      import { SESSION_FORMAT_VERSION } from '@liwa/session'
+      import * as JsonlSessionPersistence from '@liwa/session-persistence-jsonl'
 
       const terminate = Worker.prototype.terminate
       let terminations = 0
@@ -26,7 +26,7 @@ describe.skipIf(!built)('built migration verifier (plain node)', () => {
         terminations += 1
         return terminate.call(this)
       }
-      const root = await mkdtemp(join(tmpdir(), 'dsh-built-migration-'))
+      const root = await mkdtemp(join(tmpdir(), 'liwa-built-migration-'))
       const id = 'built-migration-worker'
       const directory = join(root, '_no-cwd', id)
       const ctx = new Context()

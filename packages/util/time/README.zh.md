@@ -3,7 +3,7 @@ description: "面向在协议边界接收调用方所报时区、墙钟选择器
 kind: "package-library"
 ---
 
-# dsh-util-time
+# liwa-util-time
 
 [English](README.md) | 中文
 
@@ -29,13 +29,13 @@ kind: "package-library"
 
 它是**库，不是服务也不是插件**：无 `ctx`、不注册任何东西、不持有状态。
 
-在接收时区或墙钟选择器的那个边界上调用它，让值在进入任何持久物之前先过一遍。`dsh-api-session-controller` 与 `dsh-subagent` 通过 `canonicalClientTimeZone` 接收调用方所报时区；`dsh-time-context` 通过 `canonicalizeTimeZone` 接收某一轮请求所报时区，并拒绝别名而不是把它改写；`dsh-schedule` 通过严格解析器读取每一个绝对选择器与墙钟选择器，并通过 `resolveLocalInstant` 解析其本地目标；`dsh-session-format-v0-to-v1` 通过 `fourDigitYearEpoch` 校验持久记录里的调度时刻，同时保留它自己的已发布日志错误。`dsh-time-context` 通过 `Duration` 读取其耗时读数，并保留它注入那一行的措辞。自行拥有日历或间隔运算的消费方保留那部分运算，只在边界值上调用这些入口。
+在接收时区或墙钟选择器的那个边界上调用它，让值在进入任何持久物之前先过一遍。`liwa-api-session-controller` 与 `liwa-subagent` 通过 `canonicalClientTimeZone` 接收调用方所报时区；`liwa-time-context` 通过 `canonicalizeTimeZone` 接收某一轮请求所报时区，并拒绝别名而不是把它改写；`liwa-schedule` 通过严格解析器读取每一个绝对选择器与墙钟选择器，并通过 `resolveLocalInstant` 解析其本地目标；`liwa-session-format-v0-to-v1` 通过 `fourDigitYearEpoch` 校验持久记录里的调度时刻，同时保留它自己的已发布日志错误。`liwa-time-context` 通过 `Duration` 读取其耗时读数，并保留它注入那一行的措辞。自行拥有日历或间隔运算的消费方保留那部分运算，只在边界值上调用这些入口。
 
 
 ### 入口
 
 ```ts
-import { Duration, canonicalClientTimeZone, fourDigitYearEpoch, parseLocalCalendar, resolveLocalInstant } from '@deepseek-ai/dsh-util-time'
+import { Duration, canonicalClientTimeZone, fourDigitYearEpoch, parseLocalCalendar, resolveLocalInstant } from '@liwa/util-time'
 
 const zone = canonicalClientTimeZone('US/Eastern')            // 'America/New_York' or undefined
 const stored = fourDigitYearEpoch('2026-03-08T02:30:00.000Z') // { kind: 'accepted', epoch } or a rejection reason
@@ -91,7 +91,7 @@ Duration.fromMilliseconds(1_500).decompose() // { days: 0, hours: 0, minutes: 0,
 <a id="model-experience"></a>
 ## 模型体验
 
-间接影响，取决于把规范时区或已提交 UTC 时刻记到持久记录上的那些消费方：`dsh-time-context` 据时区渲染本轮模型可见的时区指令与时间戳，`dsh-schedule` 据已提交时刻渲染其模型可见的调度文本。
+间接影响，取决于把规范时区或已提交 UTC 时刻记到持久记录上的那些消费方：`liwa-time-context` 据时区渲染本轮模型可见的时区指令与时间戳，`liwa-schedule` 据已提交时刻渲染其模型可见的调度文本。
 
 #### KV Cache 影响
 
@@ -105,7 +105,7 @@ Duration.fromMilliseconds(1_500).decompose() // { days: 0, hours: 0, minutes: 0,
 - **不含重复规则运算**——只做时刻有效性、本地日历解析、时区解析、规范格式化与毫秒精度的时间段；遍历候选日期或间隔的搜索由调用方自己拥有。
 - **`Duration` 没有日历单位**——一天恰好是 24 小时，月没有固定长度；需要本地日历天的调用方从时区推导。
 - **`Duration` 只发布消费方会调用的部分**——`fromMilliseconds` 与 `decompose()`；某个换算、某个算术运算或 `zero` 恒等元都随第一个需要它的调用方落地，公开契约跟着调用方长，而不是长在它前面。
-- **以秒为单位的跨度仍在自行相乘**——`dsh-schedule` 的间隔与延迟字段、DeepSeek 文件存储的刷新余量都是以秒为单位的跨度，用 `* 1_000` 换算；它们都还没迁移到本库，而以秒表示的纪元不是跨度，不得构造成跨度。
+- **以秒为单位的跨度仍在自行相乘**——`liwa-schedule` 的间隔与延迟字段、DeepSeek 文件存储的刷新余量都是以秒为单位的跨度，用 `* 1_000` 换算；它们都还没迁移到本库，而以秒表示的纪元不是跨度，不得构造成跨度。
 - **`Temporal` polyfill 是运行时依赖**——只导入 `canonicalClientTimeZone` 的消费方在模块加载时同样会解析它，因为两个入口共用一个模块。
 
 <a id="dev-note"></a>

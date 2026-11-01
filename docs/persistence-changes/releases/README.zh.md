@@ -1,14 +1,14 @@
 ---
-description: "浏览全部已捕获 DSH alpha/RC tag 之间的 Session 持久化类型变化，并离线校验历史快照。"
+description: "浏览全部已捕获灵鲸 alpha/RC tag 之间的 Session 持久化类型变化，并离线校验历史快照。"
 ---
 
-# DSH 预发行版本的持久化变化
+# 灵鲸预发行版本的持久化变化
 
 [English](README.md) | 中文
 
 ## 概述
 
-本归档提供 26 个 DSH alpha/RC tag 及其 25 次相邻转换的近似历史视图。每个版本包含简要说明、源码 tag、before/after 摘要以及变化类型的完整快照，供阅读和格式校验使用。它不确认历史运行时兼容性，也不替代[当前源码的确认记录](../README.zh.md)。
+本归档提供 26 个灵鲸 alpha/RC tag 及其 25 次相邻转换的近似历史视图。每个版本包含简要说明、源码 tag、before/after 摘要以及变化类型的完整快照，供阅读和格式校验使用。它不确认历史运行时兼容性，也不替代[当前源码的确认记录](../README.zh.md)。
 
 ## 目录
 
@@ -23,38 +23,38 @@ description: "浏览全部已捕获 DSH alpha/RC tag 之间的 Session 持久化
 <a id="releases"></a>
 ## 已归档版本
 
-[清单](manifest.json)记录了 2026-09-12 捕获的全部 DSH alpha/RC tag：16 个有发行记录，最早的 10 个只有 tag。版本按语义版本顺序排列；不存在的 tag 不补造。首条记录是历史起点，变化数包含其所有根。
+[清单](manifest.json)记录了 2026-09-12 捕获的全部灵鲸 alpha/RC tag：16 个有发行记录，最早的 10 个只有 tag。版本按语义版本顺序排列；不存在的 tag 不补造。首条记录是历史起点，变化数包含其所有根。
 
 <!-- persistence-release-index:start -->
 
 | Tag | 源码日期（UTC） | Session 版本 | 根 / 类型 | 变化根 |
 |---|---|---|---|---|
-| [dsh-v0.0.1-rc.1](dsh-v0.0.1-rc.1.zh.md) | 2026-08-10 | 0 | 42 / 341 | 42 |
-| [dsh-v0.0.1-rc.2](dsh-v0.0.1-rc.2.zh.md) | 2026-08-11 | 0 | 47 / 374 | 45 |
-| [dsh-v0.0.1-rc.3](dsh-v0.0.1-rc.3.zh.md) | 2026-08-12 | 0 | 47 / 374 | 12 |
-| [dsh-v0.0.1-rc.4](dsh-v0.0.1-rc.4.zh.md) | 2026-08-12 | 0 | 47 / 374 | 0 |
-| [dsh-v0.0.1-rc.5](dsh-v0.0.1-rc.5.zh.md) | 2026-08-12 | 0 | 47 / 374 | 0 |
-| [dsh-v0.1.0-rc.1](dsh-v0.1.0-rc.1.zh.md) | 2026-08-13 | 0 | 47 / 374 | 0 |
-| [dsh-v0.1.0-rc.2](dsh-v0.1.0-rc.2.zh.md) | 2026-08-13 | 0 | 47 / 374 | 0 |
-| [dsh-v0.1.0-rc.3](dsh-v0.1.0-rc.3.zh.md) | 2026-08-13 | 0 | 47 / 374 | 0 |
-| [dsh-v0.1.0-rc.5](dsh-v0.1.0-rc.5.zh.md) | 2026-08-13 | 0 | 47 / 374 | 0 |
-| [dsh-v0.1.0-rc.6](dsh-v0.1.0-rc.6.zh.md) | 2026-08-13 | 0 | 47 / 374 | 0 |
-| [dsh-v0.1.0-rc.7](dsh-v0.1.0-rc.7.zh.md) | 2026-08-17 | 0 | 47 / 376 | 1 |
-| [dsh-v0.1.0-rc.8](dsh-v0.1.0-rc.8.zh.md) | 2026-08-19 | 0 | 51 / 403 | 8 |
-| [dsh-v0.1.1-rc.1](dsh-v0.1.1-rc.1.zh.md) | 2026-08-21 | 0 | 51 / 407 | 1 |
-| [dsh-v0.1.1-rc.2](dsh-v0.1.1-rc.2.zh.md) | 2026-08-21 | 0 | 51 / 404 | 10 |
-| [dsh-v0.1.2-alpha.1](dsh-v0.1.2-alpha.1.zh.md) | 2026-08-27 | 0 | 54 / 417 | 52 |
-| [dsh-v0.1.2-alpha.2](dsh-v0.1.2-alpha.2.zh.md) | 2026-08-30 | 0 | 54 / 417 | 52 |
-| [dsh-v0.1.2-alpha.3](dsh-v0.1.2-alpha.3.zh.md) | 2026-08-31 | 0 | 54 / 417 | 0 |
-| [dsh-v0.1.2-alpha.4](dsh-v0.1.2-alpha.4.zh.md) | 2026-09-01 | 0 | 54 / 415 | 4 |
-| [dsh-v0.1.2-alpha.5](dsh-v0.1.2-alpha.5.zh.md) | 2026-09-02 | 0 | 54 / 415 | 0 |
-| [dsh-v0.1.2-rc.1](dsh-v0.1.2-rc.1.zh.md) | 2026-09-03 | 0 | 54 / 415 | 0 |
-| [dsh-v0.1.3-alpha.1](dsh-v0.1.3-alpha.1.zh.md) | 2026-09-04 | 2 | 54 / 425 | 17 |
-| [dsh-v0.1.3-alpha.2](dsh-v0.1.3-alpha.2.zh.md) | 2026-09-07 | 2 | 56 / 435 | 2 |
-| [dsh-v0.1.5-alpha.1](dsh-v0.1.5-alpha.1.zh.md) | 2026-09-08 | 3 | 57 / 443 | 12 |
-| [dsh-v0.1.5-alpha.2](dsh-v0.1.5-alpha.2.zh.md) | 2026-09-09 | 3 | 59 / 462 | 4 |
-| [dsh-v0.1.5-rc.1](dsh-v0.1.5-rc.1.zh.md) | 2026-09-10 | 3 | 59 / 462 | 0 |
-| [dsh-v0.1.5-rc.2](dsh-v0.1.5-rc.2.zh.md) | 2026-09-10 | 3 | 59 / 462 | 0 |
+| [liwa-v0.0.1-rc.1](liwa-v0.0.1-rc.1.zh.md) | 2026-08-10 | 0 | 42 / 341 | 42 |
+| [liwa-v0.0.1-rc.2](liwa-v0.0.1-rc.2.zh.md) | 2026-08-11 | 0 | 47 / 374 | 45 |
+| [liwa-v0.0.1-rc.3](liwa-v0.0.1-rc.3.zh.md) | 2026-08-12 | 0 | 47 / 374 | 12 |
+| [liwa-v0.0.1-rc.4](liwa-v0.0.1-rc.4.zh.md) | 2026-08-12 | 0 | 47 / 374 | 0 |
+| [liwa-v0.0.1-rc.5](liwa-v0.0.1-rc.5.zh.md) | 2026-08-12 | 0 | 47 / 374 | 0 |
+| [liwa-v0.1.0-rc.1](liwa-v0.1.0-rc.1.zh.md) | 2026-08-13 | 0 | 47 / 374 | 0 |
+| [liwa-v0.1.0-rc.2](liwa-v0.1.0-rc.2.zh.md) | 2026-08-13 | 0 | 47 / 374 | 0 |
+| [liwa-v0.1.0-rc.3](liwa-v0.1.0-rc.3.zh.md) | 2026-08-13 | 0 | 47 / 374 | 0 |
+| [liwa-v0.1.0-rc.5](liwa-v0.1.0-rc.5.zh.md) | 2026-08-13 | 0 | 47 / 374 | 0 |
+| [liwa-v0.1.0-rc.6](liwa-v0.1.0-rc.6.zh.md) | 2026-08-13 | 0 | 47 / 374 | 0 |
+| [liwa-v0.1.0-rc.7](liwa-v0.1.0-rc.7.zh.md) | 2026-08-17 | 0 | 47 / 376 | 1 |
+| [liwa-v0.1.0-rc.8](liwa-v0.1.0-rc.8.zh.md) | 2026-08-19 | 0 | 51 / 403 | 8 |
+| [liwa-v0.1.1-rc.1](liwa-v0.1.1-rc.1.zh.md) | 2026-08-21 | 0 | 51 / 407 | 1 |
+| [liwa-v0.1.1-rc.2](liwa-v0.1.1-rc.2.zh.md) | 2026-08-21 | 0 | 51 / 404 | 10 |
+| [liwa-v0.1.2-alpha.1](liwa-v0.1.2-alpha.1.zh.md) | 2026-08-27 | 0 | 54 / 417 | 52 |
+| [liwa-v0.1.2-alpha.2](liwa-v0.1.2-alpha.2.zh.md) | 2026-08-30 | 0 | 54 / 417 | 52 |
+| [liwa-v0.1.2-alpha.3](liwa-v0.1.2-alpha.3.zh.md) | 2026-08-31 | 0 | 54 / 417 | 0 |
+| [liwa-v0.1.2-alpha.4](liwa-v0.1.2-alpha.4.zh.md) | 2026-09-01 | 0 | 54 / 415 | 4 |
+| [liwa-v0.1.2-alpha.5](liwa-v0.1.2-alpha.5.zh.md) | 2026-09-02 | 0 | 54 / 415 | 0 |
+| [liwa-v0.1.2-rc.1](liwa-v0.1.2-rc.1.zh.md) | 2026-09-03 | 0 | 54 / 415 | 0 |
+| [liwa-v0.1.3-alpha.1](liwa-v0.1.3-alpha.1.zh.md) | 2026-09-04 | 2 | 54 / 425 | 17 |
+| [liwa-v0.1.3-alpha.2](liwa-v0.1.3-alpha.2.zh.md) | 2026-09-07 | 2 | 56 / 435 | 2 |
+| [liwa-v0.1.5-alpha.1](liwa-v0.1.5-alpha.1.zh.md) | 2026-09-08 | 3 | 57 / 443 | 12 |
+| [liwa-v0.1.5-alpha.2](liwa-v0.1.5-alpha.2.zh.md) | 2026-09-09 | 3 | 59 / 462 | 4 |
+| [liwa-v0.1.5-rc.1](liwa-v0.1.5-rc.1.zh.md) | 2026-09-10 | 3 | 59 / 462 | 0 |
+| [liwa-v0.1.5-rc.2](liwa-v0.1.5-rc.2.zh.md) | 2026-09-10 | 3 | 59 / 462 | 0 |
 
 <!-- persistence-release-index:end -->
 
@@ -90,7 +90,7 @@ pnpm run doc-sync
 
 标记区间内的索引、清单单元格和结构变化事实由快照生成。默认校验会拒绝陈旧事实。运行 `pnpm run verify-persistence-releases --write` 可在全部机器数据校验通过后刷新这些区间和配对记录；人工概述、源码证据、机器声明和 schema 文件保持不变。
 
-tag 的完整性以清单的捕获范围为准；离线检查不会自动发现后续新 tag。配对记录及 Markdown 链接由常规文档检查校验。[格式模板](../../../.agents/skills/dsh-doc/templates/persistence-release.md)规定单条记录的字段。
+tag 的完整性以清单的捕获范围为准；离线检查不会自动发现后续新 tag。配对记录及 Markdown 链接由常规文档检查校验。[格式模板](../../../.agents/skills/liwa-doc/templates/persistence-release.md)规定单条记录的字段。
 
 <a id="dev-note"></a>
 ## 开发备注

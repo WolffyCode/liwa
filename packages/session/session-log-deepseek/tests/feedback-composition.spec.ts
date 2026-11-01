@@ -3,17 +3,17 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterEach, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import Include from '@deepseek-ai/cordis-plugin-include'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import MessageFeedback from '@deepseek-ai/dsh-message-feedback'
-import { recordFeedback } from '@deepseek-ai/dsh-command-feedback'
-import LlmRuntime, { createAssistantMessage, createUserMessage } from '@deepseek-ai/dsh-llm'
-import * as LlmDeepSeek from '@deepseek-ai/dsh-llm-deepseek-api-key'
-import DeepSeekLlmApiExtensions from '@deepseek-ai/dsh-deepseek-llm-api-extensions'
-import { startMockLlmServer, type MockLlmServer, type MockLlmServerOptions } from '@deepseek-ai/dsh-llm-mock-server'
+import { Context } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
+import Include from '@liwa/cordis-plugin-include'
+import SessionStore, { SessionId } from '@liwa/session'
+import * as JsonlSessionPersistence from '@liwa/session-persistence-jsonl'
+import MessageFeedback from '@liwa/message-feedback'
+import { recordFeedback } from '@liwa/command-feedback'
+import LlmRuntime, { createAssistantMessage, createUserMessage } from '@liwa/llm'
+import * as LlmDeepSeek from '@liwa/llm-deepseek-api-key'
+import DeepSeekLlmApiExtensions from '@liwa/deepseek-llm-api-extensions'
+import { startMockLlmServer, type MockLlmServer, type MockLlmServerOptions } from '@liwa/llm-mock-server'
 import * as SessionLogDeepSeek from '../src/index.ts'
 import type { DeepSeekSessionLogExtension } from '../src/types.ts'
 
@@ -35,29 +35,29 @@ afterEach(async () => {
 async function boot(
   sessionLog: { enabled: boolean; maxBytes?: number }, mock: MockLlmServerOptions,
 ): Promise<{ ctx: Context; server: MockLlmServer }> {
-  root = await mkdtemp(join(tmpdir(), 'dsh-feedback-upload-'))
-  vi.stubEnv('DSH_HOME', root)
+  root = await mkdtemp(join(tmpdir(), 'liwa-feedback-upload-'))
+  vi.stubEnv('LIWA_HOME', root)
   vi.stubEnv('DEEPSEEK_API_KEY', 'feedback-test-key')
   server = await startMockLlmServer(mock)
   const modules = new Map<string, unknown>([
-    ['@deepseek-ai/dsh-session', SessionStore],
-    ['@deepseek-ai/dsh-session-persistence-jsonl', JsonlSessionPersistence],
-    ['@deepseek-ai/dsh-message-feedback', MessageFeedback],
-    ['@deepseek-ai/dsh-llm', LlmRuntime],
-    ['@deepseek-ai/dsh-llm-deepseek-api-key', LlmDeepSeek],
-    ['@deepseek-ai/dsh-deepseek-llm-api-extensions', DeepSeekLlmApiExtensions],
-    ['@deepseek-ai/dsh-session-log-deepseek', SessionLogDeepSeek],
+    ['@liwa/session', SessionStore],
+    ['@liwa/session-persistence-jsonl', JsonlSessionPersistence],
+    ['@liwa/message-feedback', MessageFeedback],
+    ['@liwa/llm', LlmRuntime],
+    ['@liwa/llm-deepseek-api-key', LlmDeepSeek],
+    ['@liwa/deepseek-llm-api-extensions', DeepSeekLlmApiExtensions],
+    ['@liwa/session-log-deepseek', SessionLogDeepSeek],
   ])
   const config = join(root, 'cordis.yml')
   await writeFile(config, JSON.stringify([...modules.keys()].map(name => ({
     name,
-    ...name === '@deepseek-ai/dsh-session-persistence-jsonl'
+    ...name === '@liwa/session-persistence-jsonl'
       ? { config: { root: join(root!, 'sessions'), compression: 'none' } }
-      : name === '@deepseek-ai/dsh-message-feedback'
+      : name === '@liwa/message-feedback'
         ? { config: { maxNoteBytes: 1024 } }
-        : name === '@deepseek-ai/dsh-llm-deepseek-api-key'
+        : name === '@liwa/llm-deepseek-api-key'
           ? { config: { baseURL: server!.baseURL } }
-          : name === '@deepseek-ai/dsh-session-log-deepseek'
+          : name === '@liwa/session-log-deepseek'
             ? { config: sessionLog }
             : {},
   }))))
@@ -136,7 +136,7 @@ it('uploads freeform feedback and message put/edit/delete through the unchanged 
     expect(await ctx.messageFeedback.list({ sessionId: session.id })).toEqual({ ok: true, value: { items: [] } })
     for (const wire of server.requests) {
       expect(wire.path).toBe('/v1/messages')
-      expect(wire.body).not.toHaveProperty('dsh_feedback')
+      expect(wire.body).not.toHaveProperty('liwa_feedback')
       expect(wire.body).toMatchObject({ model: 'deepseek-v4-flash', messages: [
         { role: 'user', content: [{ type: 'text', text: 'Question' }] },
         { role: 'assistant', content: [{ type: 'text', text: 'Answer' }] },
@@ -182,7 +182,7 @@ it('changes API log upload on the next request without replacing the plugin fibe
   const { ctx, server } = await boot({ enabled: true }, { sequence: ['success'], repeatLast: true })
   const session = ctx.sessions.create(SessionId('live-upload-setting'))
   session.append('user/message', createUserMessage({ content: [{ type: 'text', text: 'Hello' }], source: { kind: 'user' } }), { surfaceOp: 'append' })
-  const entry = [...ctx.loader.entries()].find(entry => entry.options.name === '@deepseek-ai/dsh-session-log-deepseek')!
+  const entry = [...ctx.loader.entries()].find(entry => entry.options.name === '@liwa/session-log-deepseek')!
   const fiber = entry.fiber
   const request = async () => {
     const chunks = []

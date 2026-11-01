@@ -2,13 +2,13 @@
 .sessionRow {
   display: flex;
   align-items: center;
-  gap: var(--dsh-sidebar-label-gap);
+  gap: var(--liwa-sidebar-label-gap);
   border-radius: var(--dsw-radius-md);
-  border-inline: var(--dsh-sidebar-paint-inset) solid transparent;
+  border-inline: var(--liwa-sidebar-paint-inset) solid transparent;
   background-clip: padding-box;
   box-sizing: border-box;
   padding: 0 8px;
-  padding-inline-start: calc(var(--dsh-sidebar-row-padding) - var(--dsh-sidebar-paint-inset) + var(--dsh-workspace-indent, 0px));
+  padding-inline-start: calc(var(--liwa-sidebar-row-padding) - var(--liwa-sidebar-paint-inset) + var(--liwa-workspace-indent, 0px));
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
@@ -38,8 +38,8 @@
   box-sizing: border-box;
   border: none;
   border-radius: var(--dsw-radius-lg);
-  padding: 4px calc(var(--dsh-sidebar-row-padding) - var(--dsh-sidebar-paint-inset));
-  border-inline: var(--dsh-sidebar-paint-inset) solid transparent;
+  padding: 4px calc(var(--liwa-sidebar-row-padding) - var(--liwa-sidebar-paint-inset));
+  border-inline: var(--liwa-sidebar-paint-inset) solid transparent;
   background: transparent;
   background-clip: padding-box;
   cursor: pointer;
@@ -66,7 +66,7 @@
 .searchResultTitle {
   flex: 0 1 auto;
   min-width: 0;
-  margin: 0 var(--dsh-sidebar-label-gap);
+  margin: 0 var(--liwa-sidebar-label-gap);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -79,7 +79,7 @@
   align-items: center;
   gap: 6px;
   min-width: 0;
-  margin-left: calc(16px + var(--dsh-sidebar-label-gap));
+  margin-left: calc(16px + var(--liwa-sidebar-label-gap));
 }
 
 .searchResultWorkspace,
@@ -126,7 +126,7 @@
 }
 
 .sessionRow .title {
-  margin: 0 6px 0 var(--dsh-sidebar-label-gap);
+  margin: 0 6px 0 var(--liwa-sidebar-label-gap);
 }
 
 .slot {
@@ -368,8 +368,8 @@
   content: '';
   position: absolute;
   z-index: 1;
-  left: calc(-1 * var(--dsh-sidebar-paint-inset));
-  right: calc(4px - var(--dsh-sidebar-paint-inset));
+  left: calc(-1 * var(--liwa-sidebar-paint-inset));
+  right: calc(4px - var(--liwa-sidebar-paint-inset));
   height: 12px;
   background:
     linear-gradient(

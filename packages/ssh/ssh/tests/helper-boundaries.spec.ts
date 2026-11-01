@@ -5,7 +5,7 @@ import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { PassThrough } from 'node:stream'
 import { fileURLToPath } from 'node:url'
-import { LocalFileSystem } from '@deepseek-ai/dsh-fs-local'
+import { LocalFileSystem } from '@liwa/fs-local'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import { z } from 'zod'
 import { createHelperHarness } from './fixtures/helper.ts'
@@ -223,7 +223,7 @@ describe.skipIf(process.platform === 'win32')('SSH helper wire and lifecycle bou
   })
 
   it('validates explicit physical writable roots over the wire without granting aliases', async () => {
-    const base = await realpath(await mkdtemp(join(homedir(), '.dsh-ssh-policy-')))
+    const base = await realpath(await mkdtemp(join(homedir(), '.liwa-ssh-policy-')))
     onTestFinished(() => rm(base, { recursive: true, force: true }))
     const test = await createHelperHarness()
     onTestFinished(() => test.close())

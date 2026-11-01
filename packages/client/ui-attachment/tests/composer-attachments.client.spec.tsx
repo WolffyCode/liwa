@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render } from '@testing-library/react'
 import type {
   ComposerAttachment, ComposerAttachmentsOwnerProps, ComposerAttachmentsProps,
-} from '@deepseek-ai/dsh-client-ui-conversation/client'
+} from '@liwa/client-ui-conversation/client'
 import { ComposerAttachments } from '../src/client/ComposerAttachments.tsx'
 
 beforeEach(() => {
@@ -384,10 +384,10 @@ it('accepts internal file tokens only inside the composer without the full-page 
   const file = new File([Uint8Array.of(1, 2)], 'original.pdf', { type: 'application/pdf' })
   const onAddFiles = vi.fn()
   const view = render(<div data-composer-card data-testid="composer"><ComposerAttachments {...props({ onAddFiles })}
-    readFileDrag={transfer => transfer.getData('application/x-dsh-file') === 'token' ? file : undefined} /></div>)
-  const data = new Map([['application/x-dsh-file', 'token']])
+    readFileDrag={transfer => transfer.getData('application/x-liwa-file') === 'token' ? file : undefined} /></div>)
+  const data = new Map([['application/x-liwa-file', 'token']])
   const transfer = {
-    types: ['application/x-dsh-file'], items: [], files: [],
+    types: ['application/x-liwa-file'], items: [], files: [],
     getData: (key: string) => data.get(key) ?? '',
   }
   fireEvent.dragEnter(document.body, { dataTransfer: transfer })
@@ -400,7 +400,7 @@ it('accepts internal file tokens only inside the composer without the full-page 
   expect(view.queryByText('文件或图片拖动到此处即可添加')).toBeNull()
   fireEvent.drop(target, { dataTransfer: transfer })
   expect(onAddFiles).toHaveBeenCalledExactlyOnceWith([file], new Set())
-  data.set('application/x-dsh-file', 'foreign')
+  data.set('application/x-liwa-file', 'foreign')
   fireEvent.drop(target, { dataTransfer: transfer })
   expect(onAddFiles).toHaveBeenCalledOnce()
 })

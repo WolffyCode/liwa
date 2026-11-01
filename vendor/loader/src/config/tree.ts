@@ -1,5 +1,5 @@
-import { composeError, Context } from '@deepseek-ai/cordis'
-import { isNonNullable, type Dict } from '@deepseek-ai/cosmokit'
+import { composeError, Context } from '@liwa/cordis'
+import { isNonNullable, type Dict } from '@liwa/cosmokit'
 import url from 'node:url'
 import { Entry, type EntryOptions } from './entry.ts'
 import { EntryGroup } from './group.ts'

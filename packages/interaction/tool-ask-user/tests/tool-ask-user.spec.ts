@@ -1,22 +1,22 @@
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
-import { unsupportedModel } from '@deepseek-ai/dsh-agent-loop-testkit'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import { executeToolFixture } from '@liwa/tool-testkit'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
+import { unsupportedModel } from '@liwa/agent-loop-testkit'
+import SessionProjectionRegistry from '@liwa/session-projection'
 import { describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { createToolResultMessage, ToolCallId, type ToolSchema } from '@deepseek-ai/dsh-llm'
-import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
-import { Session, SessionId, SessionSeq, SESSION_FORMAT_VERSION, type SessionEvent } from '@deepseek-ai/dsh-session'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
+import { Context } from '@liwa/cordis'
+import { createToolResultMessage, ToolCallId, type ToolSchema } from '@liwa/llm'
+import AgentRegistry, { type Agent } from '@liwa/agent'
+import { Session, SessionId, SessionSeq, SESSION_FORMAT_VERSION, type SessionEvent } from '@liwa/session'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime from '@liwa/tools'
 import UserQuestionService, {
   isTimedAskUserQuestionSchema,
   type AskUserQuestionAnswer,
   type AskUserQuestionRequest,
-} from '@deepseek-ai/dsh-user-questions'
+} from '@liwa/user-questions'
 // The fold is the projection's own reader of a recorded result, not a service method.
-import { foldUserQuestions } from '@deepseek-ai/dsh-user-questions/src/projection.ts'
-import * as toolAskUser from '@deepseek-ai/dsh-tool-ask-user'
+import { foldUserQuestions } from '@liwa/user-questions/src/projection.ts'
+import * as toolAskUser from '@liwa/tool-ask-user'
 
 const testToolSignal = new AbortController().signal
 

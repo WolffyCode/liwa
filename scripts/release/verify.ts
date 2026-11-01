@@ -79,7 +79,7 @@ function main(): void {
     },
     allowPositionals: false,
   })
-  if (values.family === undefined) throw new Error('usage: verify.ts --family <dsh|vendor>')
+  if (values.family === undefined) throw new Error('usage: verify.ts --family <liwa|vendor>')
 
   const family = releaseFamily(values.family)
   const members = family.members(process.cwd())

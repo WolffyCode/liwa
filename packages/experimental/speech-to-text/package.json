@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-experimental-speech-to-text",
+  "name": "@liwa/experimental-speech-to-text",
   "description": "Experimental speech recognition with independently selectable providers",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/experimental/speech-to-text"
   },
   "type": "module",
@@ -38,23 +38,23 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-brand": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/brand": "workspace:*",
+    "@liwa/schemastery": "workspace:~"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-settings": "workspace:*",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/settings": "workspace:*",
+    "@liwa/cordis-plugin-loader": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-app-boot": "workspace:*",
-    "@deepseek-ai/dsh-config-editor": "workspace:*",
-    "@deepseek-ai/dsh-settings": "workspace:*",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/app-boot": "workspace:*",
+    "@liwa/config-editor": "workspace:*",
+    "@liwa/settings": "workspace:*",
+    "@liwa/cordis-plugin-loader": "workspace:~"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/cordis-plugin-loader": {
+    "@liwa/cordis-plugin-loader": {
       "optional": true
     }
   }

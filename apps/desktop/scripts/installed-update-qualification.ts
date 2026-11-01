@@ -47,7 +47,7 @@ export async function createInstalledUpdateRun(
   const id = randomBytes(12).toString('hex')
   const run: InstalledUpdateRun = {
     schemaVersion: 1, id, root, createdAt: new Date().toISOString(), source, versions,
-    appId: `com.deepseek.dsh.qualification.q${id}`, productName: `DSH Update Test ${id}`,
+    appId: `com.deepseek.dsh.qualification.q${id}`, productName: `Liwa Update Test ${id}`,
     environment: 'test', origin: 'https://download-test.deepseek.com', bucket: 'bj-toc-download-test-1320056602',
     feedKey: `dsh-desk/feeds/qualification/${id}/win-x64/nightly.yml`,
     binPrefix: `dsh-desk/bin/qualification/${id}/win-x64`,
@@ -76,7 +76,7 @@ export async function readInstalledUpdateRun(path: string): Promise<InstalledUpd
   if (row.schemaVersion !== 1 || typeof row.id !== 'string' || !/^[a-f0-9]{24}$/u.test(row.id)
     || row.root !== resolve(dirname(path)) || row.environment !== 'test'
     || row.origin !== 'https://download-test.deepseek.com' || row.bucket !== 'bj-toc-download-test-1320056602'
-    || row.appId !== `com.deepseek.dsh.qualification.q${row.id}` || row.productName !== `DSH Update Test ${row.id}`
+    || row.appId !== `com.deepseek.dsh.qualification.q${row.id}` || row.productName !== `Liwa Update Test ${row.id}`
     || row.feedKey !== `dsh-desk/feeds/qualification/${row.id}/win-x64/nightly.yml`
     || row.binPrefix !== `dsh-desk/bin/qualification/${row.id}/win-x64`
     || !Array.isArray(row.versions) || row.versions.length !== 2 || row.versions.some(version => typeof version !== 'string')) {
@@ -250,7 +250,7 @@ function inspectJournalRuns(runs: readonly JournalRun[], versions: readonly [str
  */
 export async function collectInstalledUpdateJournals(manifest: string, directory: string): Promise<string> {
   const run = await readInstalledUpdateRun(manifest)
-  if (!resolve(directory).replaceAll('\\', '/').endsWith(`/dsh-update-qualification/${run.id}/journals`)) {
+  if (!resolve(directory).replaceAll('\\', '/').endsWith(`/liwa-update-qualification/${run.id}/journals`)) {
     throw new Error('installed update: matching installed-app journal directory is required')
   }
   const snapshots = await readJournalRuns(directory, run.versions)

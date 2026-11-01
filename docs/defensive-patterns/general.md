@@ -116,7 +116,7 @@ const sessions = ctx.get('sessions')   // one owner, lifetime tied to the servic
 ```
 
 ```ts ignore-check
-globalThis.__dshCache = new Map()   // shared across instances, reclaimed never
+globalThis.__liwaCache = new Map()   // shared across instances, reclaimed never
 ```
 
 The wrong form lets instances overwrite each other, makes reclamation timing unknowable, and leaks state between tests.
@@ -199,7 +199,7 @@ The judged condition is whether teardown awaits actual quiescence or only reques
 
 ## Contain callback exceptions in the dispatcher
 
-Catch and report each listener's exception without rejecting the dispatch promise or starving later listeners. The listener's owner must handle state it mutates under the [error-handling rules](../../.agents/skills/dsh-error-handling/SKILL.md#catch-recover-or-stop); catching alone does not restore state.
+Catch and report each listener's exception without rejecting the dispatch promise or starving later listeners. The listener's owner must handle state it mutates under the [error-handling rules](../../.agents/skills/liwa-error-handling/SKILL.md#catch-recover-or-stop); catching alone does not restore state.
 
 The judged condition is whether a throwing listener can reject the dispatch promise or prevent later listeners from running. The boundary is the caller's own await: an error the dispatcher deliberately propagates to the operation that requested it is not a containment failure.
 

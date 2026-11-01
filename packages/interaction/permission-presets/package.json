@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-permission-presets",
-  "description": "User-facing permission presets (ctx.permissionPresets) for the DeepSeek Harness: one product-level Permissions select bundling the sandbox-mode and approval-policy knobs, written through to their own session events",
+  "name": "@liwa/permission-presets",
+  "description": "User-facing permission presets (ctx.permissionPresets) for Liwa: one product-level Permissions select bundling the sandbox-mode and approval-policy knobs, written through to their own session events",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/interaction/permission-presets"
   },
   "type": "module",
@@ -50,33 +50,33 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-shell": "workspace:*",
-    "@deepseek-ai/dsh-commands": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:*",
-    "@deepseek-ai/dsh-user-approval": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/agent": "workspace:*",
+    "@liwa/shell": "workspace:*",
+    "@liwa/commands": "workspace:*",
+    "@liwa/sandbox": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/typert-protocol": "workspace:*",
+    "@liwa/user-approval": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/schemastery": "workspace:~",
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-shell": "workspace:*",
-    "@deepseek-ai/dsh-commands": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:*",
-    "@deepseek-ai/dsh-user-approval": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-settings": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:*"
+    "@liwa/agent": "workspace:*",
+    "@liwa/shell": "workspace:*",
+    "@liwa/commands": "workspace:*",
+    "@liwa/sandbox": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/typert-protocol": "workspace:*",
+    "@liwa/user-approval": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/settings": "workspace:*",
+    "@liwa/agent-loop-testkit": "workspace:*"
   }
 }

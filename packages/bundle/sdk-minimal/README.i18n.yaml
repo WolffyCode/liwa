@@ -5,45 +5,45 @@
 /:
   en: b2fce08b0fa865da
   zh: 97e214d87ded4b54
-/deepseek-ai-dsh-sdk-minimal:
-  en: 807c43eedba7d53e
-  zh: 9f1efe5d6ac393f7
-/deepseek-ai-dsh-sdk-minimal/summary:
-  en: 31b83af058b212f9
-  zh: 289678ac3738ee5e
-/deepseek-ai-dsh-sdk-minimal/table-of-contents:
+/liwa-sdk-minimal:
+  en: 2630fbf51eb23af6
+  zh: 9f674a584fe11c97
+/liwa-sdk-minimal/summary:
+  en: 447cb3f1a37ebca9
+  zh: 8f10e17f7885eff3
+/liwa-sdk-minimal/table-of-contents:
   en: d152484eb41ac6b4
   zh: 09388d293f9be9cb
-/deepseek-ai-dsh-sdk-minimal/use-this-package:
-  en: 44072e053b253924
-  zh: fecb1b7986ac05d4
-/deepseek-ai-dsh-sdk-minimal/understand-the-implementation:
-  en: 5db5d8f041867958
-  zh: bff5ef3a2e140712
-/deepseek-ai-dsh-sdk-minimal/understand-the-implementation/source-map:
+/liwa-sdk-minimal/use-this-package:
+  en: 36199416f29e400b
+  zh: 366486799f33447e
+/liwa-sdk-minimal/understand-the-implementation:
+  en: 1c7debd2dcab0e99
+  zh: 96a3837fa2613a2c
+/liwa-sdk-minimal/understand-the-implementation/source-map:
   en: 3784c554e96ab004
   zh: 0a05d4fe1e26b3b1
-/deepseek-ai-dsh-sdk-minimal/further-exploration:
-  en: 6909fc128c321153
-  zh: 7d2a0866efdc5a69
-/deepseek-ai-dsh-sdk-minimal/model-experience:
+/liwa-sdk-minimal/further-exploration:
+  en: da68f8b886bb776a
+  zh: 938410d5dbeaff95
+/liwa-sdk-minimal/model-experience:
   en: 215e7ba838619b7b
   zh: a311da3843709f90
-/deepseek-ai-dsh-sdk-minimal/model-experience/minimal-coding-agent-composition:
+/liwa-sdk-minimal/model-experience/minimal-coding-agent-composition:
   en: bd87e16b0c6e0506
   zh: c8ee5e3b4578754e
-/deepseek-ai-dsh-sdk-minimal/model-experience/minimal-coding-agent-composition/what-the-model-sees:
-  en: df40d9529b566cfa
-  zh: 4678769b4f85120b
-/deepseek-ai-dsh-sdk-minimal/model-experience/minimal-coding-agent-composition/token-effect:
-  en: 9b7a23c7a447eb22
-  zh: e01bfd06d19b7d18
-/deepseek-ai-dsh-sdk-minimal/model-experience/minimal-coding-agent-composition/kv-cache-effect:
+/liwa-sdk-minimal/model-experience/minimal-coding-agent-composition/what-the-model-sees:
+  en: 5cbb7ae46ae131da
+  zh: 5de10369e596f45e
+/liwa-sdk-minimal/model-experience/minimal-coding-agent-composition/token-effect:
+  en: 6828b5953bea637b
+  zh: 8db3ad5cc68b3569
+/liwa-sdk-minimal/model-experience/minimal-coding-agent-composition/kv-cache-effect:
   en: dd887b6519f40ab3
   zh: a98e56411fdc79df
-/deepseek-ai-dsh-sdk-minimal/known-limitations-and-deferred-work:
-  en: 00c4192d6af9f621
-  zh: 460451ab6dc07c3a
-/deepseek-ai-dsh-sdk-minimal/known-limitations-and-deferred-work/dev-note:
+/liwa-sdk-minimal/known-limitations-and-deferred-work:
+  en: 7350f0aaddcf01a5
+  zh: 8e38659783687fa0
+/liwa-sdk-minimal/known-limitations-and-deferred-work/dev-note:
   en: e67f633dc6fe7773
   zh: e88aeb617ffb74ea

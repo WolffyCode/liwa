@@ -1,9 +1,9 @@
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@liwa/cordis'
 import type {
   ContextMessageNode, ConversationContextReader, ConversationLocation, ConversationNodeDefinition,
   SteeringMessageNode, UserMessageNode,
-} from '@deepseek-ai/dsh-client-ui-conversation/client'
-import { isAppendSurfaceEvent, isReplacementSurfaceEvent } from '@deepseek-ai/dsh-session/surface'
+} from '@liwa/client-ui-conversation/client'
+import { isAppendSurfaceEvent, isReplacementSurfaceEvent } from '@liwa/session/surface'
 import type { InboxState } from './inbox.ts'
 import type { ProcessEvidenceState } from './turn-process.ts'
 import { chatNode, contextLocation } from './common.ts'

@@ -3,7 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createPanelPins } from '../src/client/panel-pins.ts'
 
-const KEY = 'dsh.slot.manual-order.sidebar.panellist.v1'
+const KEY = 'liwa.slot.manual-order.sidebar.panellist.v1'
 afterEach(() => { localStorage.clear(); vi.restoreAllMocks() })
 
 describe('sidebar panel pins', () => {

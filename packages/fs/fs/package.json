@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-fs",
-  "description": "Abstract filesystem capability seam (ctx.fs) for the DeepSeek Harness — vocabulary types, the FileSystem service (text IO + optional version-guarded atomic mutations), and the fs/* policy event vocabulary",
+  "name": "@liwa/fs",
+  "description": "Abstract filesystem capability seam (ctx.fs) for the Liwa — vocabulary types, the FileSystem service (text IO + optional version-guarded atomic mutations), and the fs/* policy event vocabulary",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/fs/fs"
   },
   "type": "module",
@@ -27,15 +27,15 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-brand": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/brand": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/sandbox": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-brand": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/brand": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/sandbox": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   }
 }

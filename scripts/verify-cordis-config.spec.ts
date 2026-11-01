@@ -20,7 +20,7 @@ import {
 describe('verify-cordis-config metadata expressions', () => {
   it('accepts a disabled !!js expression', () => {
     const problems = metadataExpressionErrors(
-      { id: 'tool-bash', name: '@deepseek-ai/dsh-tool-bash', disabled: { __jsExpr: "process.platform === 'win32'" } },
+      { id: 'tool-bash', name: '@liwa/tool-bash', disabled: { __jsExpr: "process.platform === 'win32'" } },
       '[0]',
     )
     expect(problems).toEqual([])
@@ -51,28 +51,28 @@ describe('verify-cordis-config metadata expressions', () => {
 describe('workspace Bundle discovery and product dependency closures', () => {
   it('allows scoped executors on both planes while retaining other plugin rows', () => {
     expect([...exclusivePlaneRowIds([{ insert: [
-      { id: 'native', name: '@deepseek-ai/dsh-tool-executor-native' },
-      { id: 'ptc', name: '@deepseek-ai/dsh-tool-executor-ptc' },
-      { id: 'tools', name: '@deepseek-ai/dsh-tools' },
+      { id: 'native', name: '@liwa/tool-executor-native' },
+      { id: 'ptc', name: '@liwa/tool-executor-ptc' },
+      { id: 'tools', name: '@liwa/tools' },
       { id: 'group', name: 'cordis:group', group: true, config: [
-        { id: 'tool-executor-ptc', name: '@deepseek-ai/dsh-tool-fs' },
+        { id: 'tool-executor-ptc', name: '@liwa/tool-fs' },
       ] },
     ] }])]).toEqual(['tools', 'group', 'tool-executor-ptc'])
   })
 
   it('discovers a Bundle outside packages/bundle from its manifest declaration', () => {
-    const fixture = mkdtempSync(join(tmpdir(), 'dsh-bundle-discovery-'))
+    const fixture = mkdtempSync(join(tmpdir(), 'liwa-bundle-discovery-'))
     try {
       const bundleDir = join(fixture, 'packages/subagent/example')
       const plainDir = join(fixture, 'packages/bundle/plain')
       mkdirSync(bundleDir, { recursive: true })
       mkdirSync(plainDir, { recursive: true })
       writeFileSync(join(bundleDir, 'package.json'), JSON.stringify({
-        name: '@deepseek-ai/dsh-subagent-example',
-        dsh: { bundle: { patch: './cordis.patch.yml' } },
+        name: '@liwa/subagent-example',
+        liwa: { bundle: { patch: './cordis.patch.yml' } },
       }))
       writeFileSync(join(plainDir, 'package.json'), JSON.stringify({
-        name: '@deepseek-ai/dsh-plain',
+        name: '@liwa/plain',
       }))
 
       expect(bundleManifestPaths(fixture)).toEqual([
@@ -87,19 +87,19 @@ describe('workspace Bundle discovery and product dependency closures', () => {
     const manifestPath = 'packages/subagent/example/package.json'
     const file = 'packages/subagent/example/cordis.patch.yml'
     const manifest = {
-      name: '@deepseek-ai/dsh-subagent-example',
+      name: '@liwa/subagent-example',
       dependencies: {},
     }
-    const self = { file, name: '@deepseek-ai/dsh-subagent-example' }
+    const self = { file, name: '@liwa/subagent-example' }
     expect(bundlePluginDependencyErrors(manifestPath, manifest, [self])).toEqual([])
     expect(bundlePluginDependencyErrors(manifestPath, {
-      ...manifest, optionalDependencies: { '@deepseek-ai/dsh-platform-plugin': 'workspace:*' },
-    }, [{ file, name: '@deepseek-ai/dsh-platform-plugin' }])).toEqual([])
+      ...manifest, optionalDependencies: { '@liwa/platform-plugin': 'workspace:*' },
+    }, [{ file, name: '@liwa/platform-plugin' }])).toEqual([])
     expect(bundlePluginDependencyErrors(manifestPath, manifest, [
       self,
-      { file, name: '@deepseek-ai/dsh-missing-plugin' },
+      { file, name: '@liwa/missing-plugin' },
     ])).toEqual([
-      `${file}: @deepseek-ai/dsh-missing-plugin must be declared in ${manifestPath} dependencies or optionalDependencies`,
+      `${file}: @liwa/missing-plugin must be declared in ${manifestPath} dependencies or optionalDependencies`,
     ])
   })
 })
@@ -109,47 +109,47 @@ describe('package-owned Loader test dependency closures', () => {
     const manifestPath = 'packages/example/owner/package.json'
     const file = 'packages/example/owner/tests/fixtures/cordis.yml'
     const manifest = {
-      name: '@deepseek-ai/dsh-owner',
+      name: '@liwa/owner',
       dependencies: {},
       devDependencies: {
-        '@deepseek-ai/dsh-declared': 'workspace:^',
+        '@liwa/declared': 'workspace:^',
       },
     }
     expect(packageTestPluginDependencyErrors(manifestPath, manifest, [
-      { file, name: '@deepseek-ai/dsh-owner' },
-      { file, name: '@deepseek-ai/dsh-declared' },
-      { file, name: '@deepseek-ai/dsh-missing' },
+      { file, name: '@liwa/owner' },
+      { file, name: '@liwa/declared' },
+      { file, name: '@liwa/missing' },
     ])).toEqual([
-      `${file}: @deepseek-ai/dsh-missing must be declared in ${manifestPath} dependencies or devDependencies`,
+      `${file}: @liwa/missing must be declared in ${manifestPath} dependencies or devDependencies`,
     ])
   })
 
   it('requires executable package test fixtures to declare their bare imports', () => {
-    const fixture = mkdtempSync(join(tmpdir(), 'dsh-package-test-entrypoint-'))
+    const fixture = mkdtempSync(join(tmpdir(), 'liwa-package-test-entrypoint-'))
     try {
       const packageDir = join(fixture, 'packages/example/owner')
       const driverDir = join(packageDir, 'tests/fixtures/loader')
       mkdirSync(driverDir, { recursive: true })
       writeFileSync(join(packageDir, 'package.json'), JSON.stringify({
-        name: '@deepseek-ai/dsh-owner',
+        name: '@liwa/owner',
         devDependencies: {
-          '@deepseek-ai/dsh-declared': 'workspace:^',
+          '@liwa/declared': 'workspace:^',
         },
       }))
       writeFileSync(join(driverDir, 'driver.ts'), [
-        "import '@deepseek-ai/dsh-owner'",
-        "import '@deepseek-ai/dsh-declared'",
-        "import '@deepseek-ai/dsh-missing'",
+        "import '@liwa/owner'",
+        "import '@liwa/declared'",
+        "import '@liwa/missing'",
       ].join('\n'))
       writeFileSync(join(driverDir, 'cordis.yml'), '[]\n')
-      writeFileSync(join(driverDir, 'fixture.mjs'), "import '@deepseek-ai/dsh-declared'\n")
+      writeFileSync(join(driverDir, 'fixture.mjs'), "import '@liwa/declared'\n")
       const unrelatedDir = join(packageDir, 'tests/fixtures/unrelated')
       mkdirSync(unrelatedDir, { recursive: true })
-      writeFileSync(join(unrelatedDir, 'driver.ts'), "import '@deepseek-ai/dsh-unrelated'\n")
+      writeFileSync(join(unrelatedDir, 'driver.ts'), "import '@liwa/unrelated'\n")
 
       expect(packageTestFixtureDependencyErrors(fixture)).toEqual([
         'packages/example/owner/tests/fixtures/loader/driver.ts: '
-        + '@deepseek-ai/dsh-missing must be declared in '
+        + '@liwa/missing must be declared in '
         + 'packages/example/owner/package.json dependencies or devDependencies',
       ])
     } finally {
@@ -158,7 +158,7 @@ describe('package-owned Loader test dependency closures', () => {
   })
 
   it('fails loud when package-owned Loader fixtures disappear from the scan', () => {
-    const fixture = mkdtempSync(join(tmpdir(), 'dsh-empty-package-test-entrypoint-'))
+    const fixture = mkdtempSync(join(tmpdir(), 'liwa-empty-package-test-entrypoint-'))
     try {
       expect(packageTestFixtureDependencyErrors(fixture)).toEqual([
         'package test fixture dependency scan found no package-owned Loader configs',

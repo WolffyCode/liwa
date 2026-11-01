@@ -4,37 +4,37 @@
 #   pnpm run verify-translation-pairing --write packages/bundle/sdk-app/README.md
 /:
   en: 8148fef9eb6f852e
-  zh: f4419bed153c9760
-/deepseek-ai-dsh-sdk-app:
-  en: 1393fc0c2c6cf60c
-  zh: 61e2f2c46463101b
-/deepseek-ai-dsh-sdk-app/summary:
-  en: 5583f814d74d685f
-  zh: 7d52ecc2cdcd78d4
-/deepseek-ai-dsh-sdk-app/table-of-contents:
+  zh: b3ce789d8711a1c8
+/liwa-sdk-app:
+  en: 6aa9449af0935bb7
+  zh: 630e6b5164ce2bd2
+/liwa-sdk-app/summary:
+  en: af02fbb476332b66
+  zh: 5450c9d1fe25525d
+/liwa-sdk-app/table-of-contents:
   en: 4e53164159b5ce41
   zh: 89582dc0294d0776
-/deepseek-ai-dsh-sdk-app/use-this-package:
-  en: b9a0e01492ffe278
-  zh: 7c6ffd1f9e9c0906
-/deepseek-ai-dsh-sdk-app/model-experience:
+/liwa-sdk-app/use-this-package:
+  en: b45e422e29c9fc9d
+  zh: ce1ba2efb53e531a
+/liwa-sdk-app/model-experience:
   en: 215e7ba838619b7b
   zh: a311da3843709f90
-/deepseek-ai-dsh-sdk-app/model-experience/sdk-model-context:
+/liwa-sdk-app/model-experience/sdk-model-context:
   en: 4f88e647c6df4f42
   zh: 2bd3e4b0bdfe9412
-/deepseek-ai-dsh-sdk-app/model-experience/sdk-model-context/what-the-model-sees:
-  en: 0cce2b88aae3a0e5
-  zh: fcb31314096ef15e
-/deepseek-ai-dsh-sdk-app/model-experience/sdk-model-context/token-effect:
+/liwa-sdk-app/model-experience/sdk-model-context/what-the-model-sees:
+  en: 1638b261b7f90e83
+  zh: 0b0b4f29c2d883c8
+/liwa-sdk-app/model-experience/sdk-model-context/token-effect:
   en: 0d4a38b2448396b3
   zh: e63408a146bf0100
-/deepseek-ai-dsh-sdk-app/model-experience/sdk-model-context/kv-cache-effect:
+/liwa-sdk-app/model-experience/sdk-model-context/kv-cache-effect:
   en: 0503df0971e5f8d7
   zh: 18cae8c6e25cda04
-/deepseek-ai-dsh-sdk-app/known-limitations-and-deferred-work:
-  en: 451497677de7e6b9
-  zh: dcfdc671c38d54d4
-/deepseek-ai-dsh-sdk-app/known-limitations-and-deferred-work/dev-note:
+/liwa-sdk-app/known-limitations-and-deferred-work:
+  en: 36cf865e71c79b0f
+  zh: a411e79470860ada
+/liwa-sdk-app/known-limitations-and-deferred-work/dev-note:
   en: e67f633dc6fe7773
   zh: e88aeb617ffb74ea

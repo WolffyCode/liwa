@@ -9,8 +9,8 @@
 在插件中导出一个 `Config` 类型和同名的 Schemastery schema；默认值直接写在 schema 中：
 
 ```ts
-import type { Context } from '@deepseek-ai/cordis'
-import Schema from '@deepseek-ai/schemastery'
+import type { Context } from '@liwa/cordis'
+import Schema from '@liwa/schemastery'
 
 export const name = 'my-plugin'
 
@@ -49,8 +49,8 @@ export function apply(ctx: Context, config: Config) {
 对于需要严格校验的场景，使用 Schemastery 定义 schema：
 
 ```ts
-import type { Context } from '@deepseek-ai/cordis'
-import Schema from '@deepseek-ai/schemastery'
+import type { Context } from '@liwa/cordis'
+import Schema from '@liwa/schemastery'
 
 export const name = 'validated-plugin'
 
@@ -77,7 +77,7 @@ Schema 在插件加载时执行校验。如果配置不合法，插件会加载�
 
 ### 无硬编码可调参数
 
-Harness 的约定：**凡是不同部署可能需要采用不同值的参数，都必须定义为配置字段**。
+灵鲸的约定：**凡是不同部署可能需要采用不同值的参数，都必须定义为配置字段**。
 
 ```ts
 // Wrong: hardcoded timeout.

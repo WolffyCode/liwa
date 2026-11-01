@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-plugin-market-index",
+  "name": "@liwa/plugin-market-index",
   "description": "Plugin market index format 1: JSON validation, relative icon resolution, and pinned install arguments",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/util/plugin-market-index"
   },
   "type": "module",
@@ -27,14 +27,14 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-package-manifest": "workspace:*",
+    "@liwa/package-manifest": "workspace:*",
     "semver": "^7.8.5"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
+    "@liwa/cordis": "workspace:~",
     "@types/semver": "^7.8.0"
   }
 }

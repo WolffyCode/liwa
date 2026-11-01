@@ -2,7 +2,7 @@
 import { randomUUID } from 'node:crypto'
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { resolveDragFileName, type DragFileName, type FileDragHandle } from '@deepseek-ai/dsh-util-file-drag'
+import { resolveDragFileName, type DragFileName, type FileDragHandle } from '@liwa/util-file-drag'
 
 // Aggregate temporary bytes, including incomplete writes and failed removals.
 const MAX_TOTAL_DRAG_FILE_BYTES = 64 * 1024 * 1024
@@ -43,7 +43,7 @@ export class DragFiles {
 
   private async write(bytes: Uint8Array, name: string): Promise<FileDragHandle> {
     let directory: string
-    try { directory = await mkdtemp(join(this.temporaryDirectory, 'dsh-file-drag-')) }
+    try { directory = await mkdtemp(join(this.temporaryDirectory, 'liwa-file-drag-')) }
     catch (error) { this.stagedBytes -= bytes.byteLength; throw error }
     const handle = randomUUID() as FileDragHandle
     const file: DragFile = { directory, path: join(directory, name), bytes: bytes.byteLength, used: false, ready: false }

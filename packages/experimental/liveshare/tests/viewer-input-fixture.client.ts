@@ -1,7 +1,7 @@
 /** Test-only access to the assembled viewer page's real input facade and quiescent boot disposal. */
-import type { Context } from '@deepseek-ai/cordis'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
+import type { Context } from '@liwa/cordis'
+import type { SessionId } from '@liwa/session/types'
+import type {} from '@liwa/client-ui-conversation/client'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { mountViewerPage, type AssembledViewerPage, type ViewerPageTarget } from './viewer-page.client.ts'
 
@@ -26,7 +26,7 @@ export interface ViewerInputFixture {
  * @returns Access to the assembled input API and async cleanup.
  */
 export function installViewerInputFixture(): ViewerInputFixture {
-  const globals = ['__DSH_BOOT__', '__ModuleLoader__', '__DSH_LIVESHARE_VIEWER__', '__DSH_TRANSPORT__']
+  const globals = ['__LIWA_BOOT__', '__ModuleLoader__', '__LIWA_LIVESHARE_VIEWER__', '__LIWA_TRANSPORT__']
   const saved = globals.map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)] as const)
   const savedLanguages = ['languages', 'language'].map(key =>
     [key, Object.getOwnPropertyDescriptor(navigator, key)] as const)
@@ -101,9 +101,9 @@ function restore(target: object, key: string, descriptor: PropertyDescriptor | u
  * @returns The unique durable user echo for the request.
  */
 export function promptEcho(
-  events: readonly import('@deepseek-ai/dsh-session/types').SessionEvent[],
+  events: readonly import('@liwa/session/types').SessionEvent[],
   request: { readonly requestId: string; readonly content: readonly { readonly type: string; readonly text?: string }[] },
-): import('@deepseek-ai/dsh-session/types').SessionEvent {
+): import('@liwa/session/types').SessionEvent {
   const matches = events.filter(event => event.type === 'user/message'
     && Reflect.get(event.data.source, 'rpcId') === request.requestId)
   if (matches.length !== 1) throw new Error(`viewer input probe: expected one durable echo, got ${String(matches.length)}`)

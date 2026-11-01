@@ -1,5 +1,5 @@
 /**
- * Generic pi-ai-backed implementation of the Harness LLM seam.
+ * Generic pi-ai-backed implementation of the Liwa LLM seam.
  *
  * Each resolution produces one **immutable** snapshot — the profiles plus a
  * `Models` collection holding the `Provider` each route built — and an
@@ -13,7 +13,7 @@
  * way down: switching models mid-reply takes effect on the next step, never
  * inside the one in flight.
  *
- * A route naming a credential reference still resolves it through the harness
+ * A route naming a credential reference still resolves it through Liwa
  * seam and passes it as the request's `apiKey` option, which pi-ai treats as
  * the highest-priority auth override — that is what keeps the fail-loud
  * reference semantics. Everything that override does not cover reaches pi-ai
@@ -23,7 +23,7 @@
  * so a configuration change rebuilds the collection without forgetting who is
  * signed in.
  *
- * @module dsh-llm-pi-ai/adapter
+ * @module liwa-llm-pi-ai/adapter
  */
 
 import type {
@@ -43,7 +43,7 @@ import {
   LlmAdapter,
   LlmError,
   ReasoningEffortId,
-} from '@deepseek-ai/dsh-llm'
+} from '@liwa/llm'
 import type {
   GenerateOptions,
   ImageAttachmentAccess,
@@ -55,9 +55,9 @@ import type {
   ResolvedRetryPolicy,
   StreamChunk,
   ToolSchema,
-} from '@deepseek-ai/dsh-llm'
-import type { AttachmentStore, ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
-import { idleWatchdog, timeoutOf } from '@deepseek-ai/dsh-timeout'
+} from '@liwa/llm'
+import type { AttachmentStore, ImageAttachmentRef } from '@liwa/attachment'
+import { idleWatchdog, timeoutOf } from '@liwa/timeout'
 import type { ResolvedPiAiProviderProfile } from './config.ts'
 import { requestImageTarget, toPiContext } from './context.ts'
 import { conversationUpdates, createModels, getSupportedThinkingLevels } from './models.ts'
@@ -166,7 +166,7 @@ function describableReasoningLevel(
     : undefined
 }
 
-/** Validate an explicit Harness/profile effort without invoking pi-ai's clamp. */
+/** Validate an explicit Liwa/profile effort without invoking pi-ai's clamp. */
 function resolveReasoningLevel(
   model: Model<Api>,
   effort: ReasoningEffortIdType | ModelThinkingLevel | undefined,
@@ -420,7 +420,7 @@ export class PiAiAdapter extends LlmAdapter {
         ...options.sessionId === undefined ? {} : { sessionId: String(options.sessionId) },
         signal: watchdog.signal,
         // Profile headers are deployment-owned; attribution names are
-        // Harness-owned and therefore win collisions.
+        // Liwa-owned and therefore win collisions.
         headers: requestHeaders(profile.headers),
       })
       const iterator = toStreamChunks(events, model.contextWindow, options.signal, model.id)[Symbol.asyncIterator]()

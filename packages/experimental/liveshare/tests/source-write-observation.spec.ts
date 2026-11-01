@@ -19,17 +19,17 @@ import {
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { provideWorkingDirectoryFixture } from '@deepseek-ai/dsh-agent-loop-testkit'
-import { Context } from '@deepseek-ai/cordis'
-import { createScope, type Scope } from '@deepseek-ai/dsh-scope'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import { SESSION_FORMAT_VERSION, Session, SessionId } from '@deepseek-ai/dsh-session'
-import { ToolCallId } from '@deepseek-ai/dsh-llm'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime, { type ToolExecutionToken, type ToolRunContext } from '@deepseek-ai/dsh-tools'
-import LocalFileSystem from '@deepseek-ai/dsh-fs-local'
-import * as FsPolicy from '@deepseek-ai/dsh-fs-observation-policy'
-import * as ToolFs from '@deepseek-ai/dsh-tool-fs'
+import { provideWorkingDirectoryFixture } from '@liwa/agent-loop-testkit'
+import { Context } from '@liwa/cordis'
+import { createScope, type Scope } from '@liwa/scope'
+import type { Agent } from '@liwa/agent'
+import { SESSION_FORMAT_VERSION, Session, SessionId } from '@liwa/session'
+import { ToolCallId } from '@liwa/llm'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime, { type ToolExecutionToken, type ToolRunContext } from '@liwa/tools'
+import LocalFileSystem from '@liwa/fs-local'
+import * as FsPolicy from '@liwa/fs-observation-policy'
+import * as ToolFs from '@liwa/tool-fs'
 import {
   installSourceSessionAccess,
   type ForkEnforcementFs,
@@ -37,7 +37,7 @@ import {
 } from '../src/host/fork-enforcement.ts'
 import type { ForkToolExecution } from '../src/host/fork-tool-guard.ts'
 import { executeOneTool } from './tool-call.ts'
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 
 const testToolSignal = new AbortController().signal
 const session = 'session-shared'

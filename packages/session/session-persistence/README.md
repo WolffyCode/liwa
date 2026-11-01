@@ -3,7 +3,7 @@ description: "The durable session-storage seam for users and maintainers choosin
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-session-persistence
+# @liwa/session-persistence
 
 English | [中文](README.zh.md)
 
@@ -64,7 +64,7 @@ Persistence returns the physically valid log; semantic repair belongs to the rea
 
 For versioned artifacts, `stat` and `list` expose `formatStatus` as `current` or `migration-required`. The separate `header` remains current logical metadata. This status describes storage, not an in-memory preparation or migration task; providers without this information omit it. A materialized snapshot also carries `location` with the backend-resolved selected per-Session artifact path when the backend keeps one; this observational metadata supports diagnostics and export, is not persisted Session content, and is omitted for an unmaterialized pending Session.
 
-A stored log the current build cannot faithfully interpret is refused with a direction-aware error, never misread. `SessionHandle` exposes only current logical records identified by `SESSION_FORMAT_VERSION`; a provider must convert any supported historical storage before returning a handle, and the shipped JSONL provider migrates supported historical generations through its static catalog. A newer format instructs the operator to upgrade the harness. An event type unknown to this build refuses unless its envelope marks it `ignorable`, and committed-prefix corruption rejects as `SessionPersistenceCorruptionError`.
+A stored log the current build cannot faithfully interpret is refused with a direction-aware error, never misread. `SessionHandle` exposes only current logical records identified by `SESSION_FORMAT_VERSION`; a provider must convert any supported historical storage before returning a handle, and the shipped JSONL provider migrates supported historical generations through its static catalog. A newer format instructs the operator to upgrade Liwa. An event type unknown to this build refuses unless its envelope marks it `ignorable`, and committed-prefix corruption rejects as `SessionPersistenceCorruptionError`.
 
 -----
 

@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { createServer, type Server } from 'node:http'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { chromium, type Browser, type Page } from 'playwright'
 import WebSocket, { type RawData } from 'ws'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -294,7 +294,7 @@ function browserFixture(bootstrap: InspectorHandle['endpoint']['client']): strin
   const boot = {
     rev: 'browser-test',
     entries: [{
-      id: '@deepseek-ai/dsh-experimental-inspector',
+      id: '@liwa/experimental-inspector',
       url: '/client.js?rev=browser-test',
       rev: 'browser-test',
     }],
@@ -302,8 +302,8 @@ function browserFixture(bootstrap: InspectorHandle['endpoint']['client']): strin
   return `<!doctype html>
 <title>Inspector Browser Client</title>
 <script>
-globalThis.__DSH_INSPECTOR__ = ${JSON.stringify(bootstrap)};
-globalThis.__DSH_BOOT__ = ${JSON.stringify(boot)};
+globalThis.__LIWA_INSPECTOR__ = ${JSON.stringify(bootstrap)};
+globalThis.__LIWA_BOOT__ = ${JSON.stringify(boot)};
 globalThis.__ModuleLoader__ = { load(registration) { globalThis.__INSPECTOR_REGISTRATION__ = registration; } };
 </script>
 <script src="/client.js?rev=browser-test"></script>
@@ -322,7 +322,7 @@ const root = {
 root.root = root;
 const cordis = { Context: { is(value) { return value?.__inspectorContext === true; } } };
 const plugin = registration.factory(specifier => {
-  if (specifier === '@deepseek-ai/cordis') return cordis;
+  if (specifier === '@liwa/cordis') return cordis;
   throw new Error('Unexpected Client bundle dependency ' + specifier);
 });
 await plugin.apply(root);

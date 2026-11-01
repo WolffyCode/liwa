@@ -5,7 +5,7 @@ import { syncBuiltinESMExports } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { ModuleLoader } from '@deepseek-ai/cordis-plugin-loader'
+import { ModuleLoader } from '@liwa/cordis-plugin-loader'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { readPluginMeta, resolvePluginResource } from '../src/package-meta.ts'
 import { installRuntimeInterception } from '../src/profile-resolution/resolver.ts'
@@ -29,7 +29,7 @@ function dictionary(language: string, contents: unknown, directory = join(dir, '
 }
 
 beforeEach(() => {
-  root = mkdtempSync(join(tmpdir(), 'dsh-plugin-meta-'))
+  root = mkdtempSync(join(tmpdir(), 'liwa-plugin-meta-'))
   dir = join(root, 'node_modules', 'localized')
   parentURL = pathToFileURL(join(root, 'entry.mjs')).href
   manifest({ '.': './index.js', './locale/*.json': './locale/*.json' }, { description: 'Not local display text.' })

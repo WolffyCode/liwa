@@ -3,7 +3,7 @@ description: "Native function calls with scoped tools and bounded batch executio
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-tool-executor-native
+# @liwa/tool-executor-native
 
 English | [中文](README.zh.md)
 
@@ -25,10 +25,10 @@ Use this executor when models should call each visible tool directly. Mount it b
 <a id="use-this-package"></a>
 ## Use this package
 
-Add this row to a composition with `dsh-tools` mounted. The nearest scoped executor selects tool behavior; one scope permits only one executor.
+Add this row to a composition with `liwa-tools` mounted. The nearest scoped executor selects tool behavior; one scope permits only one executor.
 
 ```yaml
-- name: '@deepseek-ai/dsh-tool-executor-native'
+- name: '@liwa/tool-executor-native'
 ```
 
 Configure [agent-loop concurrency](../agent-loop/README.md) for Agent steps; the loop reads the limit once per batch. This plugin has no configuration fields. Direct `NativeToolExecutor` callers may pass a constructor callback, defaulting to `10`, which is sampled for each tool group when the batch omits `maxParallelToolCalls`. Limits must be positive integers; `1` selects serial execution.

@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-ptc-runtime",
-  "description": "Abstract PTC execution seam (ctx.ptcRuntime) for the DeepSeek Harness",
+  "name": "@liwa/ptc-runtime",
+  "description": "Abstract PTC execution seam (ctx.ptcRuntime) for Liwa",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/ptc-runtime/ptc-runtime"
   },
   "type": "module",
@@ -27,11 +27,11 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-sandbox": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/sandbox": "workspace:*"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-sandbox": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/sandbox": "workspace:*"
   }
 }

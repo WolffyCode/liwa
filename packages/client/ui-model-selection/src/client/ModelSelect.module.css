@@ -67,7 +67,7 @@
 
 /* The Models glyph replaces the text when the composer row cannot fit it. */
 .triggerIcon {
-  display: var(--dsh-composer-model-icon-display, none);
+  display: var(--liwa-composer-model-icon-display, none);
   flex: 0 0 auto;
 }
 
@@ -75,7 +75,7 @@
    Outside a composer, the trigger retains its text. */
 .triggerLabel,
 .triggerEffort {
-  display: var(--dsh-composer-model-text-display, block);
+  display: var(--liwa-composer-model-text-display, block);
 }
 
 .chevron {
@@ -115,8 +115,8 @@
      elevation choice sits with the surface; the custom properties inherit
      down to whichever descendant actually scrolls (see ui-theme
      styles/scrollbar.css for the rebinding contract). */
-  --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
-  --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
+  --liwa-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --liwa-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
 }
 
 .status,

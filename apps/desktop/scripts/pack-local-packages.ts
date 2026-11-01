@@ -1,4 +1,4 @@
-/** Stage local-branded DSH packages for unsigned Desktop builds without a publication record. */
+/** Stage local-branded Liwa packages for unsigned Desktop builds without a publication record. */
 
 import { resolve } from 'node:path'
 import { parseArgs } from 'node:util'
@@ -21,7 +21,7 @@ async function main(): Promise<void> {
   const environment = resolveClientBuildEnvironment(repositoryClientBuildEnvironment(root), 'local')
   readClientBuildRecord(root, environment)
   const destination = resolve(root, values.out)
-  const packed = await packFamilyMembers(root, releaseFamily('dsh'), destination, concurrency)
+  const packed = await packFamilyMembers(root, releaseFamily('liwa'), destination, concurrency)
   console.log(`desktop local pack: ${String(packed.length)} tarball(s) in ${destination}`)
 }
 

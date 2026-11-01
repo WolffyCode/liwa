@@ -3,7 +3,7 @@ description: "Strict RFC 3339 instant, local-calendar, and IANA zone parsing, pl
 kind: "package-library"
 ---
 
-# dsh-util-time
+# liwa-util-time
 
 English | [中文](README.zh.md)
 
@@ -29,13 +29,13 @@ Shared time vocabulary for the boundaries that accept a caller's zone, a wall-cl
 
 It is a **library, not a service or plugin**: no `ctx`, registers nothing, holds no state.
 
-Call it at the boundary that receives the zone or the wall-clock selector, before the value reaches anything durable. `dsh-api-session-controller` and `dsh-subagent` admit a caller-reported zone through `canonicalClientTimeZone`; `dsh-time-context` admits the zone a request turn reports through `canonicalizeTimeZone` and refuses an alias rather than rewriting it; `dsh-schedule` reads every absolute and wall-clock selector through the strict parsers and resolves its local targets through `resolveLocalInstant`; `dsh-session-format-v0-to-v1` validates a stored schedule instant through `fourDigitYearEpoch` while keeping its own released-log error. `dsh-time-context` reads its elapsed reading through `Duration` and keeps the wording of the line it injects. A consumer that owns calendar or interval arithmetic of its own keeps that arithmetic and calls these entries only for the boundary value.
+Call it at the boundary that receives the zone or the wall-clock selector, before the value reaches anything durable. `liwa-api-session-controller` and `liwa-subagent` admit a caller-reported zone through `canonicalClientTimeZone`; `liwa-time-context` admits the zone a request turn reports through `canonicalizeTimeZone` and refuses an alias rather than rewriting it; `liwa-schedule` reads every absolute and wall-clock selector through the strict parsers and resolves its local targets through `resolveLocalInstant`; `liwa-session-format-v0-to-v1` validates a stored schedule instant through `fourDigitYearEpoch` while keeping its own released-log error. `liwa-time-context` reads its elapsed reading through `Duration` and keeps the wording of the line it injects. A consumer that owns calendar or interval arithmetic of its own keeps that arithmetic and calls these entries only for the boundary value.
 
 
 ### Entry point
 
 ```ts
-import { Duration, canonicalClientTimeZone, fourDigitYearEpoch, parseLocalCalendar, resolveLocalInstant } from '@deepseek-ai/dsh-util-time'
+import { Duration, canonicalClientTimeZone, fourDigitYearEpoch, parseLocalCalendar, resolveLocalInstant } from '@liwa/util-time'
 
 const zone = canonicalClientTimeZone('US/Eastern')            // 'America/New_York' or undefined
 const stored = fourDigitYearEpoch('2026-03-08T02:30:00.000Z') // { kind: 'accepted', epoch } or a rejection reason
@@ -91,7 +91,7 @@ The strict parsers match a fixed regular expression before constructing any date
 <a id="model-experience"></a>
 ## Model Experience
 
-Indirectly, through the consumers that store a canonical zone or a committed UTC instant on durable records: `dsh-time-context` renders the turn's model-visible zone instruction and timestamp from the zone, and `dsh-schedule` renders its model-visible scheduler text from the committed instant.
+Indirectly, through the consumers that store a canonical zone or a committed UTC instant on durable records: `liwa-time-context` renders the turn's model-visible zone instruction and timestamp from the zone, and `liwa-schedule` renders its model-visible scheduler text from the committed instant.
 
 #### KV Cache effect
 
@@ -105,7 +105,7 @@ None of its own. The consumer that injects a zone- or schedule-derived line into
 - **No recurrence arithmetic** — instant validity, local-calendar parsing, zone resolution, canonical formatting, and a millisecond span only; a caller that walks candidate dates or intervals owns that search.
 - **`Duration` has no calendar units** — a day is exactly 24 hours and a month has no fixed length, so a caller that needs local calendar days derives them from the zone.
 - **`Duration` publishes only what a consumer calls** — `fromMilliseconds` and `decompose()`; a conversion, an arithmetic operation, or a `zero` identity lands with the caller that needs it, so the published contract grows with a caller rather than ahead of one.
-- **Seconds-unit spans still multiply** — `dsh-schedule`'s interval and delay fields and the DeepSeek file store's refresh margin are second-valued spans converted with `* 1_000`; none has moved onto this library, and an epoch expressed in seconds is not a span and must not be built into one.
+- **Seconds-unit spans still multiply** — `liwa-schedule`'s interval and delay fields and the DeepSeek file store's refresh margin are second-valued spans converted with `* 1_000`; none has moved onto this library, and an epoch expressed in seconds is not a span and must not be built into one.
 - **The `Temporal` polyfill is a runtime dependency** — a consumer that imports only `canonicalClientTimeZone` still resolves it at module load, because both entries share one module.
 
 <a id="dev-note"></a>

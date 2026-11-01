@@ -2,7 +2,7 @@
 param([switch]$CheckStartup)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '../scripts/windows-runner-network.ps1')
-$root = Join-Path ([IO.Path]::GetTempPath()) ('dsh-network-' + [guid]::NewGuid().ToString('N'))
+$root = Join-Path ([IO.Path]::GetTempPath()) ('liwa-network-' + [guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $root
 $null = New-Item -ItemType Directory -Path (Join-Path $root 'tools')
 $pwshLink = Join-Path $root 'tools/pwsh-7.6.6'

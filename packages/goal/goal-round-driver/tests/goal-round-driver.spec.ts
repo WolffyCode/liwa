@@ -1,20 +1,20 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
-import { agentEvents } from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
-import GoalService, { GoalId } from '@deepseek-ai/dsh-goal'
-import type { GoalView } from '@deepseek-ai/dsh-goal'
-import { createUserMessage, LlmAdapter, LlmError  } from '@deepseek-ai/dsh-llm'
-import type { GenerateOptions, StreamChunk } from '@deepseek-ai/dsh-llm'
-import type { ContextFormed } from '@deepseek-ai/dsh-llm'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import type { UserMessage } from '@deepseek-ai/dsh-session'
-import type { SubagentRuntime } from '@deepseek-ai/dsh-subagent'
+import { Context } from '@liwa/cordis'
+import type { Agent, PreStepDecision } from '@liwa/agent'
+import { agentEvents } from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import { mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
+import GoalService, { GoalId } from '@liwa/goal'
+import type { GoalView } from '@liwa/goal'
+import { createUserMessage, LlmAdapter, LlmError  } from '@liwa/llm'
+import type { GenerateOptions, StreamChunk } from '@liwa/llm'
+import type { ContextFormed } from '@liwa/llm'
+import { SessionId } from '@liwa/session'
+import type { UserMessage } from '@liwa/session'
+import type { SubagentRuntime } from '@liwa/subagent'
 import * as goalSession from '../src/index.ts'
 
-declare module '@deepseek-ai/dsh-llm' {
+declare module '@liwa/llm' {
   interface MessageSourceMap {
     'test': { kind: 'test' } & ContextFormed
   }

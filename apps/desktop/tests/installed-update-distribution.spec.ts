@@ -10,13 +10,13 @@ import { planInstalledUpdateDistribution } from '../scripts/installed-update-dis
 const versions = ['0.1.6-nightly.20260914.1', '0.1.6-nightly.20260914.2'] as const
 
 async function fixture<T>(body: (manifest: string) => Promise<T>): Promise<T> {
-  const directory = await mkdtemp(join(tmpdir(), 'dsh-update-distribution-'))
+  const directory = await mkdtemp(join(tmpdir(), 'liwa-update-distribution-'))
   try {
     const run = await createInstalledUpdateRun(directory, versions, { version: '0.1.5-rc.2', commit: 'a'.repeat(40), dirtyFiles: [] })
     for (const version of versions) {
       const output = join(run.root, version, 'installer')
       await mkdir(output, { recursive: true })
-      const filename = `deepseek-harness-${version}-win-x64.exe`
+      const filename = `liwa-${version}-win-x64.exe`
       const body = Buffer.from(`inert fixture ${version}`)
       await writeFile(join(output, filename), body)
       await writeFile(join(output, `${filename}.blockmap`), 'inert map')

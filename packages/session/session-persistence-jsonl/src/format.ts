@@ -5,7 +5,7 @@
  * per-project/session directory layout, header-line (de)serialization, and the
  * truncation-repair offset computation.
  *
- * @module dsh-session-persistence-jsonl/format
+ * @module liwa-session-persistence-jsonl/format
  */
 
 import { isAbsolute, join } from 'node:path'
@@ -13,23 +13,23 @@ import {
   SESSION_FORMAT_VERSION,
   KNOWN_SESSION_EVENT_TYPES,
   SessionLogOffset,
-} from '@deepseek-ai/dsh-session'
+} from '@liwa/session'
 import type {
   SessionEvent,
   SessionHeader,
   SessionId,
   SessionLogOffset as SessionLogOffsetType,
-} from '@deepseek-ai/dsh-session'
-import { parseSessionFormatLogFilename, sessionFormatLogFilename, SessionFormatUnsupportedMigrationError } from '@deepseek-ai/dsh-session-format'
-import type { SessionFormatEvent } from '@deepseek-ai/dsh-session-format'
-import type { SessionFormatRecovery, SessionFormatRestore } from '@deepseek-ai/dsh-session-format'
-import { sessionFormatCatalog } from '@deepseek-ai/dsh-session-format-catalog'
-import { assertV4RowAdmission, assertReleasedV4Relationships } from '@deepseek-ai/dsh-session-format-v3-to-v4'
+} from '@liwa/session'
+import { parseSessionFormatLogFilename, sessionFormatLogFilename, SessionFormatUnsupportedMigrationError } from '@liwa/session-format'
+import type { SessionFormatEvent } from '@liwa/session-format'
+import type { SessionFormatRecovery, SessionFormatRestore } from '@liwa/session-format'
+import { sessionFormatCatalog } from '@liwa/session-format-catalog'
+import { assertV4RowAdmission, assertReleasedV4Relationships } from '@liwa/session-format-v3-to-v4'
 import {
   SessionFormatUnsupportedError,
   sessionFormatVersionRefusal,
   type SessionStorageMetadata,
-} from '@deepseek-ai/dsh-session-persistence'
+} from '@liwa/session-persistence'
 
 /** Physical encoding selected for JSONL session artifacts. */
 export type JsonlCompression = 'zstd' | 'none'
@@ -334,7 +334,7 @@ interface SessionLogScan {
  * Refuse a header carrying a format version this build does not read BEFORE
  * validating the current header shape or decoding any event row: a future
  * format need not satisfy this build's structural checks at all, and its user
- * must see "upgrade the harness", never "corrupt session log".
+ * must see "upgrade Liwa", never "corrupt session log".
  * @param parsed - the JSON-parsed first line of a session artifact.
  */
 function refuseForeignFormatVersion(parsed: object): void {

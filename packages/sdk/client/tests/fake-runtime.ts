@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Scripted stand-in for the DeepSeek Harness SDK runtime, driven entirely by
+ * Scripted stand-in for the Liwa SDK runtime, driven entirely by
  * env vars — no model, no network, no harness imports. Speaks the runtime's
  * newline-delimited JSON-RPC protocol on stdio: answers `initialize`,
  * `session/prompt` (streaming scripted `session.event` notifications, then
@@ -271,7 +271,7 @@ reader.on('line', (line) => {
         const poll = setInterval(() => {
           if (!existsSync(go)) return
           clearInterval(poll)
-          write({ jsonrpc: '2.0', id, result: { serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' } } })
+          write({ jsonrpc: '2.0', id, result: { serverInfo: { name: 'liwa-sdk-runtime', version: '0.0.1' } } })
         }, 5)
         return
       }
@@ -289,10 +289,10 @@ reader.on('line', (line) => {
         return
       }
       if (env.FAKE_ECHO_CWD_IN_INIT !== undefined) {
-        respond({ serverInfo: { name: 'deepseek-harness-sdk-runtime', version: process.cwd() } })
+        respond({ serverInfo: { name: 'liwa-sdk-runtime', version: process.cwd() } })
         return
       }
-      respond({ serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' } })
+      respond({ serverInfo: { name: 'liwa-sdk-runtime', version: '0.0.1' } })
       if (env.FAKE_APPROVAL !== undefined) write({ jsonrpc: '2.0', id: 'approval-client-test', method: 'approval/request', params: { sessionId: 'main', toolName: 'bash' } })
       return
     case 'session/resume':

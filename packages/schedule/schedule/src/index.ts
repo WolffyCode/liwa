@@ -1,14 +1,14 @@
 /** Host-wide durable reminders and shared human/model management. */
 import { randomUUID } from 'node:crypto'
-import z from '@deepseek-ai/schemastery'
-import { Context, Service } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type {} from '@deepseek-ai/dsh-api-session-controller'
-import { TypertRemoteService, Remote } from '@deepseek-ai/dsh-typert-protocol'
-import type { Domain } from '@deepseek-ai/dsh-storage-domain'
-import { delegationDepthOf } from '@deepseek-ai/dsh-subagent'
-import type { SessionId } from '@deepseek-ai/dsh-session'
-import type { SessionActivity } from '@deepseek-ai/dsh-workspace'
+import z from '@liwa/schemastery'
+import { Context, Service } from '@liwa/cordis'
+import type { Agent } from '@liwa/agent'
+import type {} from '@liwa/api-session-controller'
+import { TypertRemoteService, Remote } from '@liwa/typert-protocol'
+import type { Domain } from '@liwa/storage-domain'
+import { delegationDepthOf } from '@liwa/subagent'
+import type { SessionId } from '@liwa/session'
+import type { SessionActivity } from '@liwa/workspace'
 import { ScheduleRuntime } from './runtime.ts'
 import { scheduleDomain } from './storage.ts'
 import { deliveryHistoryPage } from './delivery-history.ts'
@@ -63,7 +63,7 @@ export {
 } from './domain.ts'
 
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Events {
     /**
      * Restore a reminder's Session through its embedding's owning controller.

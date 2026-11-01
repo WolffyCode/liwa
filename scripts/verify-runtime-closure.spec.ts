@@ -1,20 +1,20 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
-import { parseEntryYaml } from '@deepseek-ai/cordis-plugin-include'
+import { parseEntryYaml } from '@liwa/cordis-plugin-include'
 import { afterEach, describe, expect, it } from 'vitest'
 import { verifyRuntimeClosure } from './verify-runtime-closure.ts'
 
 const roots: string[] = []
 
 function fixture(files: Record<string, string | Record<string, unknown>>): string {
-  const root = mkdtempSync(join(tmpdir(), 'dsh-runtime-closure-'))
+  const root = mkdtempSync(join(tmpdir(), 'liwa-runtime-closure-'))
   roots.push(root)
   for (const [relative, value] of Object.entries(files)) {
     const preset = /^preset:(.+)$/.exec(relative)
     const path = join(root, preset === null ? relative : `packages/bundle/web-app/presets/${preset[1]}.patch.yml`)
     mkdirSync(dirname(path), { recursive: true })
-    writeFileSync(path, preset === null ? (typeof value === 'string' ? value : `${JSON.stringify(value, null, 2)}\n`) : JSON.stringify([{ insert: [{ name: '@deepseek-ai/dsh-agent-preset', config: { id: preset[1], plugins: typeof value === 'string' ? parseEntryYaml(value) : value } }] }]))
+    writeFileSync(path, preset === null ? (typeof value === 'string' ? value : `${JSON.stringify(value, null, 2)}\n`) : JSON.stringify([{ insert: [{ name: '@liwa/agent-preset', config: { id: preset[1], plugins: typeof value === 'string' ? parseEntryYaml(value) : value } }] }]))
   }
   return root
 }
@@ -89,7 +89,7 @@ describe('verifyRuntimeClosure', () => {
       'preset:standard': `
 - id: conditional
   name: '@scope/conditional'
-  disabled: !!js process.env.DSH_DISABLE_CONDITIONAL === '1'
+  disabled: !!js process.env.LIWA_DISABLE_CONDITIONAL === '1'
 `,
     })
 

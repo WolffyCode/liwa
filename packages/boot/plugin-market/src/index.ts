@@ -1,18 +1,18 @@
 /** Host reader of configured plugin market indexes for the Discover page and the `plugin_market` tool. */
 
 import { isAbsolute, join, resolve } from 'node:path'
-import type { Context, Volatile } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
+import type { Context, Volatile } from '@liwa/cordis'
+import z from '@liwa/schemastery'
 import semver from 'semver'
-import { evaluatePluginCompatibility, getDshRuntimeVersion } from '@deepseek-ai/dsh-app-boot'
-import { marketInstallTarget, type MarketIndex, type MarketPlugin, type MarketVersion } from '@deepseek-ai/dsh-plugin-market-index'
-import type { BundleInfo } from '@deepseek-ai/dsh-plugin-manager/types'
-import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
-import { Remote, RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
+import { evaluatePluginCompatibility, getLiwaRuntimeVersion } from '@liwa/app-boot'
+import { marketInstallTarget, type MarketIndex, type MarketPlugin, type MarketVersion } from '@liwa/plugin-market-index'
+import type { BundleInfo } from '@liwa/plugin-manager/types'
+import { MAX_TIMER_DELAY_MS } from '@liwa/timeout'
+import { Remote, RemoteError, TypertRemoteService } from '@liwa/typert-protocol'
 import {
   DetailFailure, detailImageResponse, languageChain, NPM_FILE_SOURCES, npmFileSourceOrder, npmFiles,
-} from '@deepseek-ai/dsh-plugin-detail'
-import type { NpmFileSource } from '@deepseek-ai/dsh-plugin-detail/types'
+} from '@liwa/plugin-detail'
+import type { NpmFileSource } from '@liwa/plugin-detail/types'
 import { DetailReader, repositoryOf, type DetailLocation, type RepositoryLocation } from './detail.ts'
 import { repositoryFiles, type RepositoryFileOptions } from './detail-files.ts'
 import { normalizeIndexUrl } from './index-url.ts'
@@ -21,10 +21,10 @@ import { parseIndexInWorker } from './parse-thread.ts'
 import { MarketSearch } from './search.ts'
 // Type-only: the `pluginManager` service, `settings.update`, the Loader's `loader/volatile-update` event, and the
 // `connection` Fetch routes.
-import type {} from '@deepseek-ai/dsh-plugin-manager'
-import type {} from '@deepseek-ai/dsh-settings'
-import type {} from '@deepseek-ai/cordis-plugin-loader'
-import type {} from '@deepseek-ai/dsh-client-connection'
+import type {} from '@liwa/plugin-manager'
+import type {} from '@liwa/settings'
+import type {} from '@liwa/cordis-plugin-loader'
+import type {} from '@liwa/client-connection'
 import type {
   MarketCompatibility, MarketIndexSummary, MarketInstallation, MarketListingEntry, MarketListingVersion, MarketQuery, MarketSearchResult,
   PluginDetail,
@@ -32,7 +32,7 @@ import type {
 
 export type * from './types.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     /** Configured plugin market index sources and their validated listings. */
     pluginMarket: PluginMarket
@@ -138,7 +138,7 @@ export default class PluginMarket extends TypertRemoteService {
     const cacheDir = profile === undefined
       ? config.detailCacheDir
       : resolve(profile.dir, config.detailCacheDir ?? join('.plugin-market', 'repositories'))
-    if (cacheDir === undefined || !isAbsolute(cacheDir)) throw new Error('plugin-market: detailCacheDir must be an absolute path when the service runs without a dsh profile')
+    if (cacheDir === undefined || !isAbsolute(cacheDir)) throw new Error('plugin-market: detailCacheDir must be an absolute path when the service runs without a liwa profile')
     const lifetime = this.lifetime.signal
     this.repositories = new RepositoryCache({
       dir: cacheDir, maxRepositoryBytes: config.detailRepositoryMaxBytes, maxCacheBytes: config.detailCacheMaxBytes,
@@ -374,7 +374,7 @@ export default class PluginMarket extends TypertRemoteService {
   /** Annotate plugins with the profile's bundles and exemptions as they are now. */
   private async annotator(): Promise<(plugin: MarketPlugin) => MarketListingEntry> {
     const [bundles, { exemptions }] = [await this.ctx.pluginManager.listBundles(), this.ctx.pluginManager.listVersionExemptions()]
-    const runtimeVersion = getDshRuntimeVersion()
+    const runtimeVersion = getLiwaRuntimeVersion()
     return plugin => listingOf(plugin, bundles, exemptions, runtimeVersion)
   }
 
@@ -509,7 +509,8 @@ function installationOf(name: string, version: string, bundles: readonly BundleI
 function compatibilityOf(
   name: string, version: MarketVersion, exemptions: Readonly<Record<string, readonly string[]>>, runtimeVersion: string,
 ): MarketCompatibility {
-  const manifest = { name, version: version.version, ...version.engines.dsh === undefined ? {} : { engines: { dsh: version.engines.dsh } } }
+  const engines = version.engines.liwa === undefined ? {} : { engines: { liwa: version.engines.liwa } }
+  const manifest = { name, version: version.version, ...engines }
   const issue = evaluatePluginCompatibility(manifest, exemptions, runtimeVersion)
   if (issue === undefined) return { compatible: true }
   return { compatible: false, runtimeVersion: issue.runtimeVersion, requirements: issue.requirements, exempted: issue.exempted }

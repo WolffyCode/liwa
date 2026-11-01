@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-shell-env",
-  "description": "Tool-independent managed DSH_* shell environment registry",
+  "name": "@liwa/shell-env",
+  "description": "Tool-independent managed LIWA_* shell environment registry",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/shell/shell-env"
   },
   "type": "module",
@@ -29,22 +29,22 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-app-boot": "workspace:*",
-    "@deepseek-ai/dsh-home-paths": "workspace:*",
-    "@deepseek-ai/dsh-shell": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/app-boot": "workspace:*",
+    "@liwa/home-paths": "workspace:*",
+    "@liwa/shell": "workspace:*",
+    "@liwa/tools": "workspace:*"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-app-boot": "workspace:*",
-    "@deepseek-ai/dsh-home-paths": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-shell": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/app-boot": "workspace:*",
+    "@liwa/home-paths": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/shell": "workspace:*",
+    "@liwa/tools": "workspace:*"
   }
 }

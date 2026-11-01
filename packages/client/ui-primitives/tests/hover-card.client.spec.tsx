@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { HoverCard, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
+import { HoverCard, Tooltip } from '@liwa/client-ui-primitives'
 import { POINTER_GRACE_MS } from '../src/pointer-grace.ts'
 
 afterEach(cleanup)
@@ -244,9 +244,9 @@ describe('HoverCard', () => {
   })
 
   it('keeps previews clear of the frame top strip except below an anchor inside it', () => {
-    const prior = document.documentElement.style.getPropertyValue('--dsh-frame-top-clearance')
-    const priority = document.documentElement.style.getPropertyPriority('--dsh-frame-top-clearance')
-    document.documentElement.style.setProperty('--dsh-frame-top-clearance', '100px')
+    const prior = document.documentElement.style.getPropertyValue('--liwa-frame-top-clearance')
+    const priority = document.documentElement.style.getPropertyPriority('--liwa-frame-top-clearance')
+    document.documentElement.style.setProperty('--liwa-frame-top-clearance', '100px')
     try {
       const { wrapper } = mount({ variant: 'preview' })
       wrapper.getBoundingClientRect = () => DOMRect.fromRect({ x: 100, y: 600, width: 600, height: 32 })
@@ -263,8 +263,8 @@ describe('HoverCard', () => {
       fireEvent(window, new Event('resize'))
       expect(card.style.top).toBe('50px')
     } finally {
-      if (prior === '') document.documentElement.style.removeProperty('--dsh-frame-top-clearance')
-      else document.documentElement.style.setProperty('--dsh-frame-top-clearance', prior, priority)
+      if (prior === '') document.documentElement.style.removeProperty('--liwa-frame-top-clearance')
+      else document.documentElement.style.setProperty('--liwa-frame-top-clearance', prior, priority)
     }
   })
 

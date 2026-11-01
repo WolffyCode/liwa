@@ -17,7 +17,7 @@ const signal = new AbortController().signal
 const lifetime = new AbortController().signal
 const options = { timeoutMs: 5000, lifetime }
 
-beforeEach(() => { root = mkdtempSync(join(tmpdir(), 'dsh-plugin-market-detail-files-')) })
+beforeEach(() => { root = mkdtempSync(join(tmpdir(), 'liwa-plugin-market-detail-files-')) })
 afterEach(() => {
   rmSync(root, { recursive: true, force: true })
   vi.unstubAllGlobals()

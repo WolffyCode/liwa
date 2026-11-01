@@ -21,15 +21,15 @@ it.each([
   await mkdir(artifacts, { recursive: true })
   await mkdir(join(config, 'presets'), { recursive: true })
   await writeFile(join(appRoot, 'package.json'), '{"version":"1.0.0"}')
-  await writeFile(join(config, 'presets/test.env'), `DSH_DESKTOP_AUTO_UPDATE_ENV=test\nDOWNLOAD_TEST_RELEASE_ID=${'a'.repeat(32)}\n`)
-  const names = debug ? (target === 'win-x64' ? [`deepseek-harness-1.0.0-win-x64-${qualification}.exe`]
-    : [`deepseek-harness-1.0.0-${target}-${qualification}.dmg`, `deepseek-harness-1.0.0-${target}-${qualification}.zip`]) : target === 'win-x64'
-    ? ['deepseek-harness-1.0.0-win-x64.exe', 'deepseek-harness-1.0.0-win-x64.exe.blockmap', 'win-x64-release.json', 'nightly.yml']
-    : [`deepseek-harness-1.0.0-${target}.dmg`, `deepseek-harness-1.0.0-${target}.zip`, `deepseek-harness-1.0.0-${target}.zip.blockmap`, `${target}-release.json`, 'nightly-mac.yml']
+  await writeFile(join(config, 'presets/test.env'), `LIWA_DESKTOP_AUTO_UPDATE_ENV=test\nDOWNLOAD_TEST_RELEASE_ID=${'a'.repeat(32)}\n`)
+  const names = debug ? (target === 'win-x64' ? [`liwa-1.0.0-win-x64-${qualification}.exe`]
+    : [`liwa-1.0.0-${target}-${qualification}.dmg`, `liwa-1.0.0-${target}-${qualification}.zip`]) : target === 'win-x64'
+    ? ['liwa-1.0.0-win-x64.exe', 'liwa-1.0.0-win-x64.exe.blockmap', 'win-x64-release.json', 'nightly.yml']
+    : [`liwa-1.0.0-${target}.dmg`, `liwa-1.0.0-${target}.zip`, `liwa-1.0.0-${target}.zip.blockmap`, `${target}-release.json`, 'nightly-mac.yml']
   await Promise.all(names.map(name => writeFile(join(artifacts, name), 'fixture')))
   const env = {
-    DSH_PACKAGING_CONFIG_DIR: config, DSH_PACKAGING_PRESET: 'test', DSH_DESKTOP_TARGET_PLATFORM: target === 'win-x64' ? 'win32' : 'darwin',
-    DSH_DESKTOP_TARGET_ARCH: target === 'mac-arm64' ? 'arm64' : 'x64', PACKAGE_SOURCE_REF: 'master', PACKAGE_SOURCE_SHA: 'b'.repeat(40), PACKAGE_VERSION: '1.0.0',
+    LIWA_PACKAGING_CONFIG_DIR: config, LIWA_PACKAGING_PRESET: 'test', LIWA_DESKTOP_TARGET_PLATFORM: target === 'win-x64' ? 'win32' : 'darwin',
+    LIWA_DESKTOP_TARGET_ARCH: target === 'mac-arm64' ? 'arm64' : 'x64', PACKAGE_SOURCE_REF: 'master', PACKAGE_SOURCE_SHA: 'b'.repeat(40), PACKAGE_VERSION: '1.0.0',
     PACKAGE_SIGNING: qualification === 'unsigned' ? 'unsigned' : 'signed', PACKAGE_SKIP_NOTARIZATION: qualification === 'unnotarized' ? 'true' : 'false', GITHUB_RUN_ID: '123', GITHUB_RUN_ATTEMPT: '2',
     GITHUB_STEP_SUMMARY: join(root, 'summary.md'),
     GITHUB_REPOSITORY: 'owner/repository', GITHUB_SHA: 'b'.repeat(40), RUNNER_NAME: 'dedicated',

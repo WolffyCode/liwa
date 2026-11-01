@@ -1,4 +1,4 @@
-- text: dsh-{{worktree}} 工作树 · 基于 release
+- text: liwa-{{worktree}} 工作树 · 基于 release
 - button "复制工作树路径"
 - heading "本会话的变更请求 · 1" [level=3]
 - button "刷新状态"

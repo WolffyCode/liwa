@@ -6,11 +6,11 @@ import { join } from 'node:path'
 import { afterEach, expect, it, onTestFinished, vi } from 'vitest'
 import type { BrowserWindow, WebContents, WebFrameMain } from 'electron'
 import type { DesktopShortcutInput, ShortcutBinding, ShortcutCommandId, ShortcutConfigSnapshot,
-  ShortcutDefinition, ShortcutSaveResult } from '@deepseek-ai/dsh-client-shortcuts/protocol'
-import { ShortcutRegistry } from '@deepseek-ai/dsh-client-shortcuts/src/client/registry.ts'
-import { installKeyboard } from '@deepseek-ai/dsh-client-shortcuts/src/client/dom.ts'
-import { installNativeKeyboard } from '@deepseek-ai/dsh-client-shortcuts/src/client/native.ts'
-import type { DesktopBrowserLeaseId, DesktopBrowserReservation } from '@deepseek-ai/dsh-client-ui-sidebar-browser/types'
+  ShortcutDefinition, ShortcutSaveResult } from '@liwa/client-shortcuts/protocol'
+import { ShortcutRegistry } from '@liwa/client-shortcuts/src/client/registry.ts'
+import { installKeyboard } from '@liwa/client-shortcuts/src/client/dom.ts'
+import { installNativeKeyboard } from '@liwa/client-shortcuts/src/client/native.ts'
+import type { DesktopBrowserLeaseId, DesktopBrowserReservation } from '@liwa/client-ui-sidebar-browser/types'
 import { DESKTOP_IPC } from '../src/ipc.ts'
 
 const ipc = vi.hoisted(() => ({ handle: vi.fn(), removeHandler: vi.fn() }))
@@ -82,9 +82,9 @@ function browserGuest(reservation: DesktopBrowserReservation) {
 }
 
 async function fixture(platform: 'macos' | 'windows' | 'linux' = 'macos') {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-keyboard-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-keyboard-'))
   onTestFinished(async () => { await rm(root, { recursive: true, force: true }) })
-  const frame: FrameFixture = { url: 'dsh-app://app/', name: '', parent: null }
+  const frame: FrameFixture = { url: 'liwa-app://app/', name: '', parent: null }
   const contents = Object.assign(new EventEmitter(), { mainFrame: frame, focusedFrame: frame,
     isDestroyed: () => false, isFocused: () => true, send: vi.fn(),
     setIgnoreMenuShortcuts: vi.fn(), focus: vi.fn(), sendInputEvent: vi.fn() })
@@ -138,7 +138,7 @@ it('mirrors only successful bindings, suppresses recording menus, and invalidate
   press('KeyW'); expect(f.contents.setIgnoreMenuShortcuts).toHaveBeenLastCalledWith(true)
   f.window.isFocused.mockReturnValue(false)
   press('KeyW'); expect(f.contents.setIgnoreMenuShortcuts).toHaveBeenLastCalledWith(false)
-  f.contents.emit('did-start-navigation', { isMainFrame: true, isSameDocument: false }, 'dsh-app://app/', false, true)
+  f.contents.emit('did-start-navigation', { isMainFrame: true, isSameDocument: false }, 'liwa-app://app/', false, true)
   expect((await f.call<ShortcutSaveResult>(DESKTOP_IPC.shortcutsEdit, { type: 'reset-all' }, saved.snapshot.revision)).status).toBe('not-ready')
   await f.call(DESKTOP_IPC.shortcutsGet, f.definitions)
   expect((await f.call<ShortcutSaveResult>(DESKTOP_IPC.shortcutsEdit, { type: 'reset-all' }, saved.snapshot.revision)).status).toBe('stale')
@@ -259,11 +259,11 @@ it('rejects other windows, subframes, remote/shell pages, and malformed edits', 
   for (const event of [{ ...f.event, sender: {} }, { ...f.event, senderFrame: null }, { ...f.event, senderFrame: {} }]) {
     await expect(get(event, f.definitions)).rejects.toThrow('rejected sender')
   }
-  for (const url of ['dsh-app://shell/', 'https://example.com/', 'http://localhost/']) {
+  for (const url of ['liwa-app://shell/', 'https://example.com/', 'http://localhost/']) {
     f.frame.url = url
     await expect(get(f.event, f.definitions)).rejects.toThrow('unowned renderer')
   }
-  f.frame.url = 'dsh-app://app/'
+  f.frame.url = 'liwa-app://app/'
   const ready = await f.call<ShortcutConfigSnapshot>(DESKTOP_IPC.shortcutsGet, f.definitions)
   await expect(f.call(DESKTOP_IPC.shortcutsEdit, { type: 'reset-all', path: '/tmp' }, ready.revision)).rejects.toThrow('Invalid')
   await expect(f.call(DESKTOP_IPC.shortcutsEdit, { type: 'reset-all' }, 1)).rejects.toThrow('revision')

@@ -4,7 +4,7 @@ import { standardDecoratorPlugin, vitestExecArgv } from './vitest.shared.ts'
 
 /**
  * CI performance gate. Node CPU cases use compiled plain-Node workers under
- * `benchmarks/.dsh-build/`; browser cases drive built Client artifacts through
+ * `benchmarks/.liwa-build/`; browser cases drive built Client artifacts through
  * the shared shipped-composition Web scaffold.
  * Two files run at a time so the four-vCPU CI runner keeps both cores busy.
  * Budgets keep their reviewed CI scale and headroom; a pairing that inflates an
@@ -15,7 +15,7 @@ export default defineConfig({
   test: {
     execArgv: vitestExecArgv,
     setupFiles: ['./scripts/test-proxy-environment.ts'],
-    // Clears recorded timings before the run and renders benchmarks/.dsh-report/report.html after it.
+    // Clears recorded timings before the run and renders benchmarks/.liwa-report/report.html after it.
     globalSetup: ['./benchmarks/support/scaling-report.ts'],
     include: [
       'benchmarks/**/*.bench.ts',

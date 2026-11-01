@@ -6,20 +6,20 @@
  * React over jsdom per the client testing discipline; the machine is real.
  */
 import './control-row-dom.ts'
-import type { GlobalStandardProps } from '@deepseek-ai/dsh-client-ui-slots'
+import type { GlobalStandardProps } from '@liwa/client-ui-slots'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render } from '@testing-library/react'
-import type { Context } from '@deepseek-ai/cordis'
-import type { SessionSnapshot } from '@deepseek-ai/dsh-api-session-controller/client'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
+import type { Context } from '@liwa/cordis'
+import type { SessionSnapshot } from '@liwa/api-session-controller/client'
+import { createSnapshotStore } from '@liwa/client-store'
 import {
   allowAllAccess, bindSnapshotSelector, conversationSnapshot, sessionSnapshot,
-} from '@deepseek-ai/dsh-client-test-runtime'
-import type { SessionStatusSnapshot } from '@deepseek-ai/dsh-client-ui-session/client'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+} from '@liwa/client-test-runtime'
+import type { SessionStatusSnapshot } from '@liwa/client-ui-session/client'
+import type { SessionId } from '@liwa/session/types'
 import type { SubmitAttachment, SubmitOutcome } from '../src/client/contract/input.ts'
-import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { makeTranslate } from '@liwa/client-test-runtime'
+import { zh as commonZh } from '@liwa/client-locale/src/locales/zh.ts'
 import type { DraftAttachmentId } from '../src/client/contract/input.ts'
 import { SessionInputShell } from '../src/client/input/facade.ts'
 import { InputBar } from '../src/client/skeleton/InputBar.tsx'
@@ -173,13 +173,13 @@ describe('matrix row: claimed', () => {
     expect(chip?.getAttribute('contenteditable')).toBe('false')
     expect(shell.snapshot.draft).toBe('/goal ')
     // The zh dictionary owns a hint.goal entry, which overrides the raw claim hint (production behavior).
-    expect(textarea.style.getPropertyValue('--dsh-composer-hint')).toBe(JSON.stringify('输入目标，智能体将持续执行'))
+    expect(textarea.style.getPropertyValue('--liwa-composer-hint')).toBe(JSON.stringify('输入目标，智能体将持续执行'))
     expect(textarea.getAttribute('contenteditable')).toBe('true')
     // Free editing after the chip: hint drops, claim holds.
     typeAtCaret('发布版本')
     expect(shell.snapshot.draft).toBe('/goal 发布版本')
     expect(shell.snapshot.phase).toBe('claimed')
-    expect(textarea.style.getPropertyValue('--dsh-composer-hint')).toBe('')
+    expect(textarea.style.getPropertyValue('--liwa-composer-hint')).toBe('')
   })
 
   it('enter routes to claim.submit (command lane, never the queue sink)', async () => {

@@ -5,13 +5,13 @@
  */
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { RemoteHostFacts } from '@deepseek-ai/dsh-api-remotes/client'
-import type { MergeRequest } from '@deepseek-ai/dsh-experimental-forge/types'
-import type { PaneId, SidebarRightTabActions, SidebarRightTabInfo, TabId } from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import { bindSnapshotSelector, makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { IconBranchOutlineRegular, IconFolderCloseRegular, IconWarningTriangleOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
-import { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { RemoteHostFacts } from '@liwa/api-remotes/client'
+import type { MergeRequest } from '@liwa/experimental-forge/types'
+import type { PaneId, SidebarRightTabActions, SidebarRightTabInfo, TabId } from '@liwa/client-ui-sidebar-right/client'
+import { createSnapshotStore } from '@liwa/client-store'
+import { bindSnapshotSelector, makeTranslate } from '@liwa/client-test-runtime'
+import { IconBranchOutlineRegular, IconFolderCloseRegular, IconWarningTriangleOutlineRegular } from '@liwa/client-ui-primitives'
+import { SessionId } from '@liwa/session/types'
 import { changesAddress } from '../src/client/changes-address.ts'
 import { ForgeTab, type ForgeTabProps } from '../src/client/ForgeTab.tsx'
 import { en } from '../src/client/locales.ts'
@@ -177,20 +177,20 @@ describe('ForgeTab checkout', () => {
   })
 
   it.each([
-    ['its base branch', created({ path: '/work/repo-dsh' }), 'Worktree · from main'],
-    ['the commit it started from', created({ path: '/work/repo-dsh', from: null, baseCommit: '0123456789abcdef' }), 'Worktree · from 0123456'],
+    ['its base branch', created({ path: '/work/repo-liwa' }), 'Worktree · from main'],
+    ['the commit it started from', created({ path: '/work/repo-liwa', from: null, baseCommit: '0123456789abcdef' }), 'Worktree · from 0123456'],
   ])('names the worktree this Session created with %s', (_label, made, kind) => {
-    const b = tab(ready({ directory: '/work/repo-dsh', worktree: worktree({ created: made }) }, { root: '/work/repo-dsh', branch: 'other', linked: true }))
+    const b = tab(ready({ directory: '/work/repo-liwa', worktree: worktree({ created: made }) }, { root: '/work/repo-liwa', branch: 'other', linked: true }))
     const row = checkoutRow(b.view)
     if (row === null) throw new Error('no checkout row')
     expect(row.textContent).toBe(`other${kind}`)
     fireEvent.click(within(row).getByRole('button', { name: en['checkout.copyWorktreePath'] }))
-    expect(b.copyPath).toHaveBeenCalledWith('/work/repo-dsh')
+    expect(b.copyPath).toHaveBeenCalledWith('/work/repo-liwa')
   })
 
   it('shows detached HEAD in the worktree the Session created', () => {
-    const b = tab(ready({ directory: '/work/repo-dsh', worktree: worktree({ created: created({ path: '/work/repo-dsh' }) }) },
-      { root: '/work/repo-dsh', branch: null, commit: 'abc1234', linked: true }))
+    const b = tab(ready({ directory: '/work/repo-liwa', worktree: worktree({ created: created({ path: '/work/repo-liwa' }) }) },
+      { root: '/work/repo-liwa', branch: null, commit: 'abc1234', linked: true }))
     expect(checkoutRow(b.view)?.textContent).toBe(`${en['checkout.detached']}·abc1234Worktree · from main`)
   })
 
@@ -199,13 +199,13 @@ describe('ForgeTab checkout', () => {
     const row = checkoutRow(b.view)
     if (row === null) throw new Error('no checkout row')
     expect(row.hasAttribute('data-missing')).toBe(true)
-    expect(within(row).getByText('dsh/0a1b2c3d')).toBeTruthy()
+    expect(within(row).getByText('liwa/0a1b2c3d')).toBeTruthy()
     expect(within(row).getByText(en['missing.title'])).toBeTruthy()
     fireEvent.click(within(row).getByRole('button', { name: en['checkout.restore'] }))
     expect(b.restore).toHaveBeenCalledOnce()
     // A removed worktree still offers the path it was created at.
     fireEvent.click(within(row).getByRole('button', { name: en['checkout.copyWorktreePath'] }))
-    expect(b.copyPath).toHaveBeenCalledWith('/work/repo-dsh')
+    expect(b.copyPath).toHaveBeenCalledWith('/work/repo-liwa')
   })
 
   it('turns the restore button into a disabled spinner while a restoration runs', () => {
@@ -221,7 +221,7 @@ describe('ForgeTab checkout', () => {
     ['a folder for the project directory', () => ready(), IconFolderCloseRegular],
     ['a branch for a linked worktree', () => ready({}, { linked: true }), IconBranchOutlineRegular],
     ['a branch for the worktree this Session created',
-      () => ready({ directory: '/work/repo-dsh', worktree: worktree({ created: created({ path: '/work/repo-dsh' }) }) }, { root: '/work/repo-dsh', branch: 'other', linked: true }),
+      () => ready({ directory: '/work/repo-liwa', worktree: worktree({ created: created({ path: '/work/repo-liwa' }) }) }, { root: '/work/repo-liwa', branch: 'other', linked: true }),
       IconBranchOutlineRegular],
     ['a warning for a removed worktree', () => removed(), IconWarningTriangleOutlineRegular],
   ])('marks the checkout with %s', (_label, state, Icon) => {

@@ -1,10 +1,10 @@
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@liwa/cordis'
 import type {
   ConversationMatch, ConversationNodeContext, ConversationNodeDefinition, StartedToolCall,
   ToolResultNode,
-} from '@deepseek-ai/dsh-client-ui-conversation/client'
-import type {} from '@deepseek-ai/dsh-tool-executor-ptc/client'
-import { PartialArguments } from '@deepseek-ai/dsh-util-values'
+} from '@liwa/client-ui-conversation/client'
+import type {} from '@liwa/tool-executor-ptc/client'
+import { PartialArguments } from '@liwa/util-values'
 import { trajectoryNode } from './trajectory-definition-common.ts'
 
 /* jscpd:ignore-start -- Target-owned Definitions intentionally keep their event

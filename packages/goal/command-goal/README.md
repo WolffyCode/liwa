@@ -3,13 +3,13 @@ description: "The human-facing /goal slash command for users and maintainers cho
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-command-goal
+# @liwa/command-goal
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-command-goal` gives users the `/goal` command to create, edit, pause, resume, clear, and inspect the current goal directly in an interactive UI. Commands and their direct output stay in the UI and do not enter model requests. Accepted changes persist, and ordered image or file attachments on a create or edit become one ordinary user message that later goal rounds can read. Use this package in interactive deployments with a command adapter; headless and automation apps without one do not need it.
+`liwa-command-goal` gives users the `/goal` command to create, edit, pause, resume, clear, and inspect the current goal directly in an interactive UI. Commands and their direct output stay in the UI and do not enter model requests. Accepted changes persist, and ordered image or file attachments on a create or edit become one ordinary user message that later goal rounds can read. Use this package in interactive deployments with a command adapter; headless and automation apps without one do not need it.
 
 ## Table of Contents
 
@@ -25,7 +25,7 @@ English | [中文](README.zh.md)
 <a id="use-this-package"></a>
 ## Use this package
 
-Use `dsh-command-goal` in interactive deployments that mount a command adapter — the shipped Web client is the reference. It gives users direct control over the goal lifecycle without a model turn: commands execute in the UI command plane and the adapter renders their results directly.
+Use `liwa-command-goal` in interactive deployments that mount a command adapter — the shipped Web client is the reference. It gives users direct control over the goal lifecycle without a model turn: commands execute in the UI command plane and the adapter renders their results directly.
 
 ### Command reference
 
@@ -54,14 +54,14 @@ The command injects the commands registry and the goal service. A custom app mou
 
 ```yaml
 - id: commands
-  name: '@deepseek-ai/dsh-commands'
+  name: '@liwa/commands'
 - id: goal
-  name: '@deepseek-ai/dsh-goal'
+  name: '@liwa/goal'
 - id: command-goal
-  name: '@deepseek-ai/dsh-command-goal'
+  name: '@liwa/command-goal'
 ```
 
-The shipped `dsh` base enables the persisted-goal stack and this command. The Web bundle keeps the goal service and driver on the Host, disables the base command producer, and mounts the producer in the `standard`, `code`, and `cordis` agent presets; `minimal` omits it. The ACP automation app enables the domain and model tools without a command adapter. The standalone `sdk-minimal` profile omits the complete goal stack so its result API still settles one correlated physical turn.
+The shipped `liwa` base enables the persisted-goal stack and this command. The Web bundle keeps the goal service and driver on the Host, disables the base command producer, and mounts the producer in the `standard`, `code`, and `cordis` agent presets; `minimal` omits it. The ACP automation app enables the domain and model tools without a command adapter. The standalone `sdk-minimal` profile omits the complete goal stack so its result API still settles one correlated physical turn.
 
 -----
 
@@ -96,7 +96,7 @@ The command is a thin adapter over the goal domain; read these pages for the sta
 
 - [Goal service](../goal/README.md) — the state and lifecycle the command mutates.
 - [Commands service](../../interaction/commands/README.md) — the command registry contract and dispatch.
-- [historical Harness-level goal-execution Agent Note](../../../.agents/notes/archived/feature/2026-07-16-harness-level-loop.md) — the UX and composition decisions.
+- [historical Liwa-level goal-execution Agent Note](../../../.agents/notes/archived/feature/2026-07-16-harness-level-loop.md) — the UX and composition decisions.
 
 -----
 

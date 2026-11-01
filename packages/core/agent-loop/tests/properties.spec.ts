@@ -9,19 +9,19 @@
  * idle→running→idle, while teardown is a registry lifecycle.
  */
 
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import LlmRuntime from '@deepseek-ai/dsh-llm'
-import { createUserMessage, LlmAdapter } from '@deepseek-ai/dsh-llm'
-import type { GenerateOptions, StreamChunk } from '@deepseek-ai/dsh-llm'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
-import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
+import { Context } from '@liwa/cordis'
+import LlmRuntime from '@liwa/llm'
+import { createUserMessage, LlmAdapter } from '@liwa/llm'
+import type { GenerateOptions, StreamChunk } from '@liwa/llm'
+import SessionStore, { SessionId } from '@liwa/session'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime from '@liwa/tools'
+import AgentRegistry, { type Agent } from '@liwa/agent'
 
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import AgentLoop from '@liwa/agent-loop'
+import SessionProjectionRegistry from '@liwa/session-projection'
 import fc from 'fast-check'
 
 /** A never-exhausting adapter: every model call returns the same short reply. */

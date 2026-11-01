@@ -1,10 +1,10 @@
 /** Typed Agent Teams failures. */
 
 import { inspect } from 'node:util'
-import { HarnessError } from '@deepseek-ai/dsh-llm'
+import { LiwaError } from '@liwa/llm'
 
 /** Stable failure raised by the Team domain. */
-export class TeamError extends HarnessError {
+export class TeamError extends LiwaError {
   constructor(message: string, code: string, options?: ErrorOptions) {
     super(message, code, options)
     this.name = 'TeamError'

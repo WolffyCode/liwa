@@ -1,5 +1,5 @@
 /**
- * Real-process tests for `@deepseek-ai/dsh-pwsh-local`: the LOCAL subprocess
+ * Real-process tests for `@liwa/pwsh-local`: the LOCAL subprocess
  * service plus a REAL pwsh executable, exercised through the executor seam
  * (`resolve` → `run`/`start`). These verify the world — actual PowerShell
  * runs, output capture, truncation and spill, deadlines, kill escalation, and
@@ -14,13 +14,13 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { PwshLocalExecutor, ENCODING_PREAMBLE, candidatePwshPaths, resolvePwshPath } from '@deepseek-ai/dsh-pwsh-local'
-import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
-import SubprocessRuntime from '@deepseek-ai/dsh-subprocess'
-import type { SubprocessHandle, SubprocessOutcome, SubprocessOutputReader, SubprocessSpawnSpec } from '@deepseek-ai/dsh-subprocess'
-import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
-import type { ShellExecSpec, ShellExecution, ShellProcess, ShellRunResult } from '@deepseek-ai/dsh-shell'
+import { Context } from '@liwa/cordis'
+import { PwshLocalExecutor, ENCODING_PREAMBLE, candidatePwshPaths, resolvePwshPath } from '@liwa/pwsh-local'
+import LocalSubprocessRuntime from '@liwa/subprocess-local'
+import SubprocessRuntime from '@liwa/subprocess'
+import type { SubprocessHandle, SubprocessOutcome, SubprocessOutputReader, SubprocessSpawnSpec } from '@liwa/subprocess'
+import { MAX_TIMER_DELAY_MS } from '@liwa/timeout'
+import type { ShellExecSpec, ShellExecution, ShellProcess, ShellRunResult } from '@liwa/shell'
 
 /** Historical foreground shorthand over the unified execute() seam. */
 async function run(x: { execute(spec: ShellExecSpec): Promise<ShellExecution> }, spec: ShellExecSpec): Promise<ShellRunResult> {
@@ -33,7 +33,7 @@ function start(x: { execute(spec: ShellExecSpec): Promise<ShellExecution> }, spe
 }
 
 
-const spillDir = mkdtempSync(join(tmpdir(), 'dsh-pwsh-exec-spec-'))
+const spillDir = mkdtempSync(join(tmpdir(), 'liwa-pwsh-exec-spec-'))
 
 afterAll(() => {
   rmSync(spillDir, { recursive: true, force: true })
@@ -59,12 +59,12 @@ function createContext(): Context {
 
 /** A private file barrier keeps the command alive until the test releases it. */
 function commandBarrier() {
-  const dir = mkdtempSync(join(tmpdir(), 'dsh-pwsh-barrier-'))
+  const dir = mkdtempSync(join(tmpdir(), 'liwa-pwsh-barrier-'))
   tempDirs.push(dir)
   const path = join(dir, 'release')
   return {
-    command: 'while (-not (Test-Path -LiteralPath $env:DSH_TEST_RELEASE)) { Start-Sleep -Milliseconds 20 }',
-    env: { DSH_TEST_RELEASE: path },
+    command: 'while (-not (Test-Path -LiteralPath $env:LIWA_TEST_RELEASE)) { Start-Sleep -Milliseconds 20 }',
+    env: { LIWA_TEST_RELEASE: path },
     release: () => { writeFileSync(path, '') },
   }
 }
@@ -155,7 +155,7 @@ describe('resolvePwshPath and candidatePwshPaths (pure, every platform)', () => 
   })
 
   it('returns the first EXISTING win32 candidate, else pwsh', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dsh-pwsh-resolve-'))
+    const dir = mkdtempSync(join(tmpdir(), 'liwa-pwsh-resolve-'))
     tempDirs.push(dir)
     const store = join(dir, 'store')
     mkdirSync(store, { recursive: true })
@@ -173,7 +173,7 @@ describe('resolvePwshPath and candidatePwshPaths (pure, every platform)', () => 
   it('accepts a link-shaped PATH candidate whose target cannot be stat-ed', () => {
     // Store app execution aliases stat as EACCES but lstat as a link; a
     // dangling symlink reproduces that split on every platform.
-    const dir = mkdtempSync(join(tmpdir(), 'dsh-pwsh-resolve-link-'))
+    const dir = mkdtempSync(join(tmpdir(), 'liwa-pwsh-resolve-link-'))
     tempDirs.push(dir)
     const store = join(dir, 'store')
     mkdirSync(store, { recursive: true })
@@ -184,7 +184,7 @@ describe('resolvePwshPath and candidatePwshPaths (pure, every platform)', () => 
   })
 
   it('skips a directory candidate and falls through to the PATH-resolution default', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dsh-pwsh-resolve-dir-'))
+    const dir = mkdtempSync(join(tmpdir(), 'liwa-pwsh-resolve-dir-'))
     tempDirs.push(dir)
     const store = join(dir, 'store')
     mkdirSync(join(store, 'pwsh.exe'), { recursive: true })
@@ -444,8 +444,8 @@ describe.skipIf(!hasPwsh)('PwshLocalExecutor.run', () => {
   })
 
   it('uses config cwd, overridable per call', async () => {
-    const first = mkdtempSync(join(tmpdir(), 'dsh-pwsh-cwd-a-'))
-    const second = mkdtempSync(join(tmpdir(), 'dsh-pwsh-cwd-b-'))
+    const first = mkdtempSync(join(tmpdir(), 'liwa-pwsh-cwd-a-'))
+    const second = mkdtempSync(join(tmpdir(), 'liwa-pwsh-cwd-b-'))
     tempDirs.push(first, second)
     const { bash } = await setup({ cwd: first })
     const fromConfig = await run(bash, bash.resolve({ command: '(Get-Location).Path' }))
@@ -536,31 +536,31 @@ describe.skipIf(!hasPwsh)('PwshLocalExecutor.run', () => {
 
   it('rejects on spawn failure (bad workdir)', async () => {
     const { bash } = await setup()
-    await expect(run(bash, bash.resolve({ command: 'Write-Output ok', workdir: '/nonexistent-dsh' }))).rejects.toThrow(/ENOENT/)
+    await expect(run(bash, bash.resolve({ command: 'Write-Output ok', workdir: '/nonexistent-liwa' }))).rejects.toThrow(/ENOENT/)
   })
 
-  it('resolve() carries stdin/env/dshEnv onto the spec, and run() threads them to the command', async () => {
+  it('resolve() carries stdin/env/liwaEnv onto the spec, and run() threads them to the command', async () => {
     const { bash } = await setup()
     const spec = bash.resolve({
-      command: '$s = ([Console]::In.ReadToEnd()).TrimEnd(); Write-Output $s; Write-Output "[$env:SEAM_VAR][$env:DSH_SEAM_VAR]"',
+      command: '$s = ([Console]::In.ReadToEnd()).TrimEnd(); Write-Output $s; Write-Output "[$env:SEAM_VAR][$env:LIWA_SEAM_VAR]"',
       stdin: 'piped\n',
       env: { SEAM_VAR: 'env-ok' },
-      dshEnv: { DSH_SEAM_VAR: 'dsh-ok' },
+      liwaEnv: { LIWA_SEAM_VAR: 'liwa-ok' },
     })
     // resolve() keeps the optional input/environment fields verbatim.
     expect(spec.stdin).toBe('piped\n')
     expect(spec.env).toEqual({ SEAM_VAR: 'env-ok' })
-    expect(spec.dshEnv).toEqual({ DSH_SEAM_VAR: 'dsh-ok' })
+    expect(spec.liwaEnv).toEqual({ LIWA_SEAM_VAR: 'liwa-ok' })
     const result = await run(bash, spec)
-    expect(lf(result.stdout.text)).toBe('piped\n[env-ok][dsh-ok]\n')
+    expect(lf(result.stdout.text)).toBe('piped\n[env-ok][liwa-ok]\n')
   })
 
-  it('resolve() omits stdin/env/dshEnv when the request supplies none', async () => {
+  it('resolve() omits stdin/env/liwaEnv when the request supplies none', async () => {
     const { bash } = await setup()
     const spec = bash.resolve({ command: 'Write-Output ok' })
     expect('stdin' in spec).toBe(false)
     expect('env' in spec).toBe(false)
-    expect('dshEnv' in spec).toBe(false)
+    expect('liwaEnv' in spec).toBe(false)
   })
 })
 
@@ -586,16 +586,16 @@ describe.skipIf(!hasPwsh)('PwshLocalExecutor.start (background process handles)'
   it('threads stdin and extra env into a background process', async () => {
     const { bash } = await setup()
     const proc = (await start(bash, bash.resolve({
-      command: '$s = ([Console]::In.ReadToEnd()).TrimEnd(); Write-Output $s; Write-Output "[$env:BG_VAR][$env:DSH_BG_VAR]"',
+      command: '$s = ([Console]::In.ReadToEnd()).TrimEnd(); Write-Output $s; Write-Output "[$env:BG_VAR][$env:LIWA_BG_VAR]"',
       stdin: 'bg-stdin\n',
       env: { BG_VAR: 'bg-env' },
-      dshEnv: { DSH_BG_VAR: 'bg-dsh-env' },
+      liwaEnv: { LIWA_BG_VAR: 'bg-liwa-env' },
     })))
     await proc.done
     expect(proc.status).toBe('completed')
     expect(proc.signal).toBeNull()
     expect(proc.exitCode).toBe(0)
-    expect(lf(proc.readOutput().delta)).toBe('bg-stdin\n[bg-env][bg-dsh-env]\n')
+    expect(lf(proc.readOutput().delta)).toBe('bg-stdin\n[bg-env][bg-liwa-env]\n')
   })
 
   it('readOutput is consuming: increments are never re-delivered, and reads stay valid after exit', async ({ task }) => {
@@ -699,7 +699,7 @@ describe.skipIf(!hasPwsh)('PwshLocalExecutor.start (background process handles)'
 
   it('an asynchronous creation failure settles as killed with a stage-neutral note', async () => {
     const { bash } = await setup()
-    const proc = (await start(bash, bash.resolve({ command: 'Write-Output ok', workdir: '/nonexistent-dsh' })))
+    const proc = (await start(bash, bash.resolve({ command: 'Write-Output ok', workdir: '/nonexistent-liwa' })))
     // done resolves (never rejects) even though the process never ran.
     await expect(proc.done).resolves.toBeUndefined()
     expect(proc.status).toBe('killed')

@@ -13,11 +13,11 @@ import {
   Button, IconChevronDownOutlineRegular, IconChevronsUpDownOutlineRegular, IconCompareSplitOutlineRegular, IconInfoOutlineRegular,
   IconListPenOutlineRegular, IconNowrapFillRegular, IconRightUpOutlineRegular, IconWrapFillRegular, Menu, StateDot, Tooltip,
   type MenuEntry,
-} from '@deepseek-ai/dsh-client-ui-primitives'
-import type { HostObservable, InjectFace, PropsLocale, PropsRuntime, PropsStore } from '@deepseek-ai/dsh-client-ui-slots'
-import type {} from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
-import type { RemoteResult } from '@deepseek-ai/dsh-typert-protocol'
-import { fileAddressFor, pathPartsOf } from '@deepseek-ai/dsh-util-workspace-path'
+} from '@liwa/client-ui-primitives'
+import type { HostObservable, InjectFace, PropsLocale, PropsRuntime, PropsStore } from '@liwa/client-ui-slots'
+import type {} from '@liwa/client-ui-sidebar-right/client'
+import type { RemoteResult } from '@liwa/typert-protocol'
+import { fileAddressFor, pathPartsOf } from '@liwa/util-workspace-path'
 import type {
   ForgeChangeRequestDiff, ForgeDiffFile, ForgeLocalDiff, ForgeLocalScope, ForgePanelChangeRequest, ForgePanelState,
 } from '../types.ts'

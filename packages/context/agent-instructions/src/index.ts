@@ -6,16 +6,16 @@
  * Plugin lifecycle reads use the optional `ctx.fs` provider, so providerless products
  * mount it as a no-op.
  *
- * @module @deepseek-ai/dsh-agent-instructions
+ * @module @liwa/agent-instructions
  */
 
-import type {} from '@deepseek-ai/dsh-working-directory'
-import type { Context } from '@deepseek-ai/cordis'
+import type {} from '@liwa/working-directory'
+import type { Context } from '@liwa/cordis'
 import { isDeepStrictEqual } from 'node:util'
-import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import type { Session, UserMessage } from '@deepseek-ai/dsh-session'
-import type { ToolExecution, ToolExecutionResult, ToolExecutionToken } from '@deepseek-ai/dsh-tools'
+import type { Agent, PreStepDecision } from '@liwa/agent'
+import { createUserMessage } from '@liwa/llm'
+import type { Session, UserMessage } from '@liwa/session'
+import type { ToolExecution, ToolExecutionResult, ToolExecutionToken } from '@liwa/tools'
 import { Config, resolveConfig, workspaceBaselineIdentity, type ResolvedConfig } from './config.ts'
 import { findProjectRoot, loadBaselineInstructionSet } from './files.ts'
 import { trimmedInstructionDigest } from './digest.ts'
@@ -140,7 +140,7 @@ export function apply(ctx: Context, config: Config): void {
       const replacePreviousBaseline = baselinePresent && !keepVisibleBaseline
       const instructions = await loadBaselineInstructionSet({
         cwd,
-        dshHome: resolved.dshHome,
+        liwaHome: resolved.liwaHome,
         agentsHome: resolved.agentsHome,
         projectRootMarkers: resolved.projectRootMarkers,
         maxBytes: resolved.maxBytes,

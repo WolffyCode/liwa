@@ -4,15 +4,15 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import Storage from '@deepseek-ai/dsh-storage'
-import * as StorageDomain from '@deepseek-ai/dsh-storage-domain'
-import * as StorageJson from '@deepseek-ai/dsh-storage-json'
+import { Context } from '@liwa/cordis'
+import type { Agent } from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import { mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
+import { SessionId } from '@liwa/session'
+import * as JsonlSessionPersistence from '@liwa/session-persistence-jsonl'
+import Storage from '@liwa/storage'
+import * as StorageDomain from '@liwa/storage-domain'
+import * as StorageJson from '@liwa/storage-json'
 import { createAfterScheduleRecord, ScheduleId } from '../src/domain.ts'
 import ScheduleService from '../src/index.ts'
 import { scheduleDomain } from '../src/storage.ts'
@@ -35,7 +35,7 @@ async function core(persistenceRoot: string) {
 
 describe('due delivery during Agent creation', () => {
   it('enqueues the reminder without starting a turn before every creation listener finishes', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'dsh-schedule-serial-'))
+    const root = await mkdtemp(join(tmpdir(), 'liwa-schedule-serial-'))
     roots.push(root)
     const ctx = await core(join(root, 'sessions'))
     await ctx.plugin(Storage)

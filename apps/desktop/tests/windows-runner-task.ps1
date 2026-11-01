@@ -1,7 +1,7 @@
 # Opt-in Windows Task Scheduler acceptance: isolated fake runner, no GitHub registration or signing access.
 $ErrorActionPreference = 'Stop'
 if (-not $IsWindows) { throw 'Requires PowerShell 7 on Windows.' }
-$root = Join-Path ([IO.Path]::GetTempPath()) ('dsh-runner-task-' + [guid]::NewGuid().ToString('N'))
+$root = Join-Path ([IO.Path]::GetTempPath()) ('liwa-runner-task-' + [guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $root
 $source = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../scripts'))
 $runner = Join-Path $root 'runner with spaces'
@@ -43,13 +43,13 @@ function Wait-Condition([scriptblock]$Condition, [string]$Description, [int]$Sec
 $installed = $false
 $primaryFailure = $null
 $digest = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($runner.ToUpperInvariant())))
-$taskName = 'DSH-Packaging-' + $digest.Substring(0,16)
+$taskName = 'Liwa-Packaging-' + $digest.Substring(0,16)
 try {
     Invoke-Manager install
     $installed = $true
-    $config = Get-Content -LiteralPath (Join-Path $runner 'dsh-task/config.json') -Raw | ConvertFrom-Json
+    $config = Get-Content -LiteralPath (Join-Path $runner 'liwa-task/config.json') -Raw | ConvertFrom-Json
     $task = Get-ScheduledTask -TaskName $config.TaskName -TaskPath '\'
-    $launcher = Join-Path $runner 'dsh-task/launcher.exe'
+    $launcher = Join-Path $runner 'liwa-task/launcher.exe'
     if ($task.Actions.Execute -ne $launcher) { throw 'Task must start the windowless launcher.' }
     $image = [IO.File]::ReadAllBytes($launcher)
     $peOffset = [BitConverter]::ToInt32($image, 0x3c)
@@ -57,9 +57,9 @@ try {
     if ($task.State -ne 'Disabled' -or $task.Settings.ExecutionTimeLimit -ne 'PT0S' -or $task.Settings.MultipleInstances -ne 'IgnoreNew') { throw 'Unexpected task scheduling settings.' }
     if ($task.Settings.Priority -ne 4) { throw 'Runner task must use normal CPU, I/O and memory priority.' }
     Invoke-Manager install -ExpectFailure
-    $runScript = Join-Path $runner 'dsh-task/run.ps1'
+    $runScript = Join-Path $runner 'liwa-task/run.ps1'
     $originalRun = Get-Content -LiteralPath $runScript -Raw
-    Set-Content -LiteralPath (Join-Path $runner 'dsh-task/pipe-writer.ps1') -Value 'Start-Sleep -Seconds 240'
+    Set-Content -LiteralPath (Join-Path $runner 'liwa-task/pipe-writer.ps1') -Value 'Start-Sleep -Seconds 240'
     $inheritedWriter = @'
 if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'inherited-writer-started'))) {
     $info = [Diagnostics.ProcessStartInfo]::new((Join-Path $PSHOME 'pwsh.exe'))
@@ -78,7 +78,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'inherited-writer-star
     if ((Get-ScheduledTask -TaskName $taskName -TaskPath '\').State -eq 'Disabled') { throw 'Drain timeout disabled automatic recovery.' }
     # The one-minute scheduler trigger and cold PowerShell/CIM startup share the busy Windows host.
     Wait-Condition { (Test-Path -LiteralPath $starts) -and @(Get-Content -LiteralPath $starts).Count -ge 2 } 'automatic retry after unexpected clean exit' 180
-    if ([int](Get-Content -LiteralPath (Join-Path $runner 'dsh-task/attempts.txt') -Raw) -ne 2) { throw 'Drain recovery did not consume the normal restart budget.' }
+    if ([int](Get-Content -LiteralPath (Join-Path $runner 'liwa-task/attempts.txt') -Raw) -ne 2) { throw 'Drain recovery did not consume the normal restart budget.' }
     $consoles = @(Get-Content -LiteralPath (Join-Path $runner 'consoles.txt'))
     if ($consoles.Count -ne 2 -or @($consoles | Where-Object { $_ -ne '0' }).Count) { throw 'Initial or recovered runner allocated a console.' }
     $priorities = @(Get-Content -LiteralPath (Join-Path $runner 'priorities.jsonl') | ForEach-Object { $_ | ConvertFrom-Json })
@@ -89,7 +89,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'inherited-writer-star
     Invoke-Manager status
     if (@(Get-Content -LiteralPath $starts).Count -ne 2) { throw 'Duplicate runner started.' }
     Invoke-Manager uninstall -ExpectFailure
-    $recordFile = Join-Path $runner 'dsh-task/process.json'
+    $recordFile = Join-Path $runner 'liwa-task/process.json'
     $originalRecord = Get-Content -LiteralPath $recordFile -Raw
     $record = $originalRecord | ConvertFrom-Json
     $record.Started = 0
@@ -105,12 +105,12 @@ if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'inherited-writer-star
     $child = Get-Process -Id ([int]@(Get-Content -LiteralPath $starts)[-1])
     Invoke-Manager stop
     Wait-Condition { $child.Refresh(); $child.HasExited } 'restarted child termination'
-    Set-Content -LiteralPath (Join-Path $runner 'dsh-task/attempts.txt') -Value '3'
+    Set-Content -LiteralPath (Join-Path $runner 'liwa-task/attempts.txt') -Value '3'
     $null = Enable-ScheduledTask -TaskName $config.TaskName -TaskPath '\'
     Start-ScheduledTask -TaskName $config.TaskName -TaskPath '\'
     Wait-Condition { (Get-ScheduledTask -TaskName $config.TaskName -TaskPath '\').State -eq 'Disabled' } 'exhausted restart budget disables task'
     if (@(Get-Content -LiteralPath $starts).Count -ne 3) { throw 'Exhausted budget launched another runner.' }
-    Set-Content -LiteralPath (Join-Path $runner 'dsh-task/attempts.txt') -Value 'invalid'
+    Set-Content -LiteralPath (Join-Path $runner 'liwa-task/attempts.txt') -Value 'invalid'
     $null = Enable-ScheduledTask -TaskName $config.TaskName -TaskPath '\'
     Start-ScheduledTask -TaskName $config.TaskName -TaskPath '\'
     Wait-Condition { (Get-ScheduledTask -TaskName $config.TaskName -TaskPath '\').State -eq 'Disabled' } 'invalid restart budget disables task'
@@ -118,13 +118,13 @@ if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'inherited-writer-star
     $savedAction = (Get-ScheduledTask -TaskName $taskName -TaskPath '\').Actions
     $missingAction = New-ScheduledTaskAction -Execute $launcher -Argument ('"' + (Join-Path $root 'missing.exe') + '"') -WorkingDirectory $runner
     $null = Set-ScheduledTask -TaskName $taskName -TaskPath '\' -Action $missingAction
-    Set-Content -LiteralPath (Join-Path $runner 'dsh-task/attempts.txt') -Value '0'
+    Set-Content -LiteralPath (Join-Path $runner 'liwa-task/attempts.txt') -Value '0'
     $null = Enable-ScheduledTask -TaskName $taskName -TaskPath '\'
     Start-ScheduledTask -TaskName $taskName -TaskPath '\'
     Wait-Condition { (Get-ScheduledTask -TaskName $taskName -TaskPath '\').State -eq 'Disabled' } 'launcher startup failure disables periodic starts'
     Wait-Condition { (Get-ScheduledTaskInfo -TaskName $taskName -TaskPath '\').LastTaskResult -eq 2 } 'launcher startup failure result'
     $null = Set-ScheduledTask -TaskName $taskName -TaskPath '\' -Action $savedAction
-    $taskDirectory = Join-Path $runner 'dsh-task'
+    $taskDirectory = Join-Path $runner 'liwa-task'
     $originalAcl = Get-Acl -LiteralPath $taskDirectory
     try {
         $blockedAcl = Get-Acl -LiteralPath $taskDirectory

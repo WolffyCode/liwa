@@ -112,7 +112,7 @@ describe('creation recommendation after an explicit wish', () => {
     acknowledgeReloadConnectionLoss(tripwire, warnings)
     expect(await card.getByRole('button', { name: 'Create', exact: true }).count()).toBe(0)
     expect(await card.getByRole('button', { name: 'Show more', exact: true }).isVisible()).toBe(true)
-    expect((await scaffold.ctx.pluginManager.listBundles()).some(bundle => bundle.name.startsWith('@dsh-local/view-'))).toBe(false)
+    expect((await scaffold.ctx.pluginManager.listBundles()).some(bundle => bundle.name.startsWith('@liwa-local/view-'))).toBe(false)
     await compareOrRefreshGolden(join(directory, 'dismissed.expected.md'), await captureStableAria(page, '[data-action-card]', scaffold.workspaceCwd), scaffold.mode)
     const statusSettled = scaffold.whenTurnSettled()
     await input.fill(fixtureUserPrompts(await readFile(fixture, 'utf8'))[1]!)

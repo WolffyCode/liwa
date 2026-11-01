@@ -2,16 +2,16 @@
 import type { ReactNode } from 'react'
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@liwa/cordis'
 import type {
   ISessions, SessionListState, SessionReference, SessionSnapshot,
-} from '@deepseek-ai/dsh-api-session-controller/client'
-import type { ResourceProvider } from '@deepseek-ai/dsh-client-resources/client'
-import { sessionSnapshot } from '@deepseek-ai/dsh-client-test-runtime'
-import type { ConversationViewsProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
-import type { SidebarRightTabDefinition } from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import type { SubagentAddress } from '@deepseek-ai/dsh-subagent/client'
+} from '@liwa/api-session-controller/client'
+import type { ResourceProvider } from '@liwa/client-resources/client'
+import { sessionSnapshot } from '@liwa/client-test-runtime'
+import type { ConversationViewsProps } from '@liwa/client-ui-conversation/client'
+import type { SidebarRightTabDefinition } from '@liwa/client-ui-sidebar-right/client'
+import type { SessionId } from '@liwa/session/types'
+import type { SubagentAddress } from '@liwa/subagent/client'
 import {
   ConversationSlotPanel, FixedChatConversationView, parseSubagentChatAddress,
   registerSidebarChat, subagentChatAddress, SUBAGENT_CHAT_ID, type SidebarChatTabProps,
@@ -34,7 +34,7 @@ afterEach(() => {
 describe('Sidebar chat address', () => {
   it('round-trips the child identity and direct-parent routing metadata', () => {
     const resource = subagentChatAddress(ADDRESS)
-    expect(resource).toBe('dsh-resource://subagentchat/session/child%231?parent=parent%2Fa&mode=continuable')
+    expect(resource).toBe('liwa-resource://subagentchat/session/child%231?parent=parent%2Fa&mode=continuable')
     expect(parseSubagentChatAddress(resource)).toEqual(ADDRESS)
     expect(parseSubagentChatAddress(subagentChatAddress({ ...ADDRESS, mode: 'one-shot' })))
       .toEqual({ ...ADDRESS, mode: 'one-shot' })
@@ -45,12 +45,12 @@ describe('Sidebar chat address', () => {
   it.each([
     'not an address',
     'https://chat/session/child?parent=parent&mode=continuable',
-    'dsh-resource://other/session/child?parent=parent&mode=continuable',
-    'dsh-resource://subagentchat/other/child?parent=parent&mode=continuable',
-    'dsh-resource://subagentchat/session/child?mode=continuable',
-    'dsh-resource://subagentchat/session/child?parent=&mode=continuable',
-    'dsh-resource://subagentchat/session/child?parent=parent&mode=invalid',
-    'dsh-resource://subagentchat/session/%?parent=parent&mode=continuable',
+    'liwa-resource://other/session/child?parent=parent&mode=continuable',
+    'liwa-resource://subagentchat/other/child?parent=parent&mode=continuable',
+    'liwa-resource://subagentchat/session/child?mode=continuable',
+    'liwa-resource://subagentchat/session/child?parent=&mode=continuable',
+    'liwa-resource://subagentchat/session/child?parent=parent&mode=invalid',
+    'liwa-resource://subagentchat/session/%?parent=parent&mode=continuable',
   ])('rejects %s', (address) => {
     expect(parseSubagentChatAddress(address)).toBeUndefined()
   })
@@ -104,7 +104,7 @@ describe('Sidebar chat registration', () => {
     expect(definition?.id).toBe(SUBAGENT_CHAT_ID)
     expect(definition?.kind).toBe('subagentchat')
     expect(definition?.canOpen?.(subagentChatAddress(ADDRESS))).toBe(true)
-    expect(definition?.canOpen?.('dsh-resource://subagentchat/invalid')).toBe(false)
+    expect(definition?.canOpen?.('liwa-resource://subagentchat/invalid')).toBe(false)
     expect(definition?.title(subagentChatAddress(ADDRESS))).toBe('Worker')
     expect(definition?.title(subagentChatAddress({ ...ADDRESS, childSessionId: 'unknown' as SessionId }))).toBe('unknown')
     expect(definition?.title('invalid')).toBe('Chat')

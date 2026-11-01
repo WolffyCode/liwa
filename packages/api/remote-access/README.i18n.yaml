@@ -5,30 +5,30 @@
 /:
   en: bbd88553f12d4f3d
   zh: c5fa4ac3f9746170
-/deepseek-ai-dsh-api-remote-access:
-  en: 15713a51f827c9c1
-  zh: a1349a5f83efc82c
-/deepseek-ai-dsh-api-remote-access/summary:
-  en: ee81bdee09f42c9b
-  zh: 41c6864e59c24519
-/deepseek-ai-dsh-api-remote-access/table-of-contents:
+/liwa-api-remote-access:
+  en: 66bc2a15aee87248
+  zh: 47301db26d4085aa
+/liwa-api-remote-access/summary:
+  en: ecf87544fd09c48c
+  zh: 6df01528f6e6bca4
+/liwa-api-remote-access/table-of-contents:
   en: a18ecc232e3c3933
   zh: b8e43580403f6d77
-/deepseek-ai-dsh-api-remote-access/host-service-remoteaccessservice-ctx-key-remoteaccess:
-  en: 3d009c4a86374cbf
-  zh: ba3c624639ed18b9
-/deepseek-ai-dsh-api-remote-access/client-face:
-  en: d4cf8f646fdf2d39
-  zh: 247f643e991aa806
-/deepseek-ai-dsh-api-remote-access/model-experience:
+/liwa-api-remote-access/host-service-remoteaccessservice-ctx-key-remoteaccess:
+  en: 35cd82a54fb9dbda
+  zh: 66cc770f8fc73399
+/liwa-api-remote-access/client-face:
+  en: 2f9ddc426f003e0e
+  zh: 6cc840bba0e57f53
+/liwa-api-remote-access/model-experience:
   en: 8b07250cecacd3aa
   zh: d28ab93980bdcdad
-/deepseek-ai-dsh-api-remote-access/model-experience/kv-cache-effect:
+/liwa-api-remote-access/model-experience/kv-cache-effect:
   en: 60835eca1cee4e0e
   zh: 3b5579ceccd5b5e7
-/deepseek-ai-dsh-api-remote-access/known-limitations-and-deferred-work:
+/liwa-api-remote-access/known-limitations-and-deferred-work:
   en: 66b483bf5144ac46
   zh: 84bde5e0b1af270b
-/deepseek-ai-dsh-api-remote-access/known-limitations-and-deferred-work/dev-note:
+/liwa-api-remote-access/known-limitations-and-deferred-work/dev-note:
   en: e67f633dc6fe7773
   zh: e88aeb617ffb74ea

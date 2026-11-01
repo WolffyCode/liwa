@@ -1,24 +1,24 @@
 /**
  * Log-backed session title service, deterministic fallback, and provider contract.
- * @module @deepseek-ai/dsh-session-title
+ * @module @liwa/session-title
  */
 
-import { Context, FiberState, Service, type Fiber } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
+import { Context, FiberState, Service, type Fiber } from '@liwa/cordis'
+import z from '@liwa/schemastery'
 import { z as zod } from 'zod'
 import type { ZodType } from 'zod'
-import type { Branded } from '@deepseek-ai/dsh-brand'
-import { isAgentLoopRequest } from '@deepseek-ai/dsh-llm'
-import type { GenerateOptions } from '@deepseek-ai/dsh-llm'
-import { assertNever, deepFreeze } from '@deepseek-ai/dsh-util-values'
+import type { Branded } from '@liwa/brand'
+import { isAgentLoopRequest } from '@liwa/llm'
+import type { GenerateOptions } from '@liwa/llm'
+import { assertNever, deepFreeze } from '@liwa/util-values'
 import type {
   Session,
   SessionEvent,
-} from '@deepseek-ai/dsh-session'
-import { SessionSeq } from '@deepseek-ai/dsh-session'
-import type {} from '@deepseek-ai/dsh-session-projection'
-import type { ProjectionDefinition, ProjectionHandle } from '@deepseek-ai/dsh-session-projection'
-import type {} from '@deepseek-ai/dsh-agent'
+} from '@liwa/session'
+import { SessionSeq } from '@liwa/session'
+import type {} from '@liwa/session-projection'
+import type { ProjectionDefinition, ProjectionHandle } from '@liwa/session-projection'
+import type {} from '@liwa/agent'
 export type {
   SessionTitleEventData,
   SessionTitleModelIdentity,
@@ -62,13 +62,13 @@ export interface Config {
   readonly maxTitleBytes: number
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     sessionTitle: SessionTitleService
   }
 }
 
-declare module '@deepseek-ai/dsh-session/types' {
+declare module '@liwa/session/types' {
   interface SessionEventMap {
     /**
      * Latest-wins session title snapshot. Log-only: it never enters the model

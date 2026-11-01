@@ -2,9 +2,9 @@
 /** The process row reads the card title from the recorded arguments and expands only a refused call. */
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
-import type { StartedToolCall, ToolResultNode } from '@deepseek-ai/dsh-client-ui-chat/client'
-import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { PartialArguments } from '@deepseek-ai/dsh-util-values'
+import type { StartedToolCall, ToolResultNode } from '@liwa/client-ui-chat/client'
+import { makeTranslate } from '@liwa/client-test-runtime'
+import { PartialArguments } from '@liwa/util-values'
 import { ProposeRow } from '../src/client/ProposeRow.tsx'
 import { en } from '../src/client/locales.ts'
 

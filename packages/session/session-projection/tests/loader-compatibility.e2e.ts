@@ -1,13 +1,13 @@
 /** Published/source Loader composition preserves old projection plugins and bounded diagnostics. */
 import { fileURLToPath } from 'node:url'
 import { expect, it } from 'vitest'
-import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
+import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@liwa/loader-smoke'
 
 it('loads a legacy projection plugin, reads Session state, and warns once for its deprecated keyed read', async () => {
   const driver = fileURLToPath(new URL('./fixtures/driver.ts', import.meta.url))
   const { stdout } = await runLoaderSmoke({
     label: 'legacy projection registration',
-    tempDirPrefix: 'dsh-projection-compatibility-',
+    tempDirPrefix: 'liwa-projection-compatibility-',
     binScript: driver,
     libBinScript: driver,
     configPath: fileURLToPath(new URL('./fixtures/cordis.yml', import.meta.url)),

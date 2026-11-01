@@ -1,4 +1,4 @@
-/** Generic keyless ACP v1 automation-control conformance over the real dsh profile. */
+/** Generic keyless ACP v1 automation-control conformance over the real liwa profile. */
 
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -9,7 +9,7 @@ import {
   launchAcpTestAgent,
   type AgentUnderTest,
   type LaunchedAcpTestAgent,
-} from '@deepseek-ai/dsh-session-snapshot'
+} from '@liwa/session-snapshot'
 import { describe, expect, it } from 'vitest'
 
 const repoRoot = fileURLToPath(new URL('../../../../../../', import.meta.url))
@@ -38,9 +38,9 @@ function selectValue(
 
 describe('standard ACP v1 control surface', () => {
   it('selects, mounts MCP, closes, restarts, resumes, and cancels through the SDK only', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'dsh-acp-control-'))
+    const cwd = await mkdtemp(join(tmpdir(), 'liwa-acp-control-'))
     const persistenceRoot = join(cwd, '.sessions')
-    const env = { DSH_CONFORMANCE_PERSISTENCE_ROOT: persistenceRoot, DSH_TELEMETRY_DISABLED: '1' }
+    const env = { LIWA_CONFORMANCE_PERSISTENCE_ROOT: persistenceRoot, LIWA_TELEMETRY_DISABLED: '1' }
     const mcpServers = [{ name: 'fixture', command: process.execPath, args: [mcpServer], env: [] }]
     let first: LaunchedAcpTestAgent | undefined
     let second: LaunchedAcpTestAgent | undefined

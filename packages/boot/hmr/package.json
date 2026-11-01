@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-hmr",
+  "name": "@liwa/hmr",
   "description": "Coordinated module and profile configuration hot reload",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/boot/hmr"
   },
   "type": "module",
@@ -30,29 +30,29 @@
   "author": "Shigma <shigma10826@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis-plugin-timer": "workspace:~",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-app-boot": "workspace:*",
-    "@deepseek-ai/dsh-cmdline": "workspace:*"
+    "@liwa/cordis-plugin-timer": "workspace:~",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/app-boot": "workspace:*",
+    "@liwa/cmdline": "workspace:*"
   },
   "dependencies": {
     "@babel/code-frame": "^7.29.0",
     "chokidar": "5.0.0",
     "node-addon-require-builtin": "^0.1.9",
     "picomatch": "^4.0.7",
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/schemastery": "workspace:~"
   },
   "devDependencies": {
     "@types/babel__code-frame": "^7.27.0",
     "@types/picomatch": "^4.0.3",
     "esbuild": "^0.28.2",
-    "@deepseek-ai/cordis-plugin-timer": "workspace:~",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/dsh-app-boot": "workspace:*",
-    "@deepseek-ai/dsh-cmdline": "workspace:*",
-    "@deepseek-ai/dsh-atomic-write": "workspace:*"
+    "@liwa/cordis-plugin-timer": "workspace:~",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/app-boot": "workspace:*",
+    "@liwa/cmdline": "workspace:*",
+    "@liwa/atomic-write": "workspace:*"
   }
 }

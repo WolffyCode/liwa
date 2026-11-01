@@ -1,12 +1,12 @@
 /** Retained readers follow Session events independently of registry participation. */
-import { Context } from '@deepseek-ai/cordis'
-import SessionStore from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import type { ProjectionDefinition } from '@deepseek-ai/dsh-session-projection'
+import { Context } from '@liwa/cordis'
+import SessionStore from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import type { ProjectionDefinition } from '@liwa/session-projection'
 import { describe, expect, expectTypeOf, it, onTestFinished, vi } from 'vitest'
 import { z } from 'zod'
 
-declare module '@deepseek-ai/dsh-session-projection/types' {
+declare module '@liwa/session-projection/types' {
   interface SessionProjectionMap {
     'test/reader': number
   }

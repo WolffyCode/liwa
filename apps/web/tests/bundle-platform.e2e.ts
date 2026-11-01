@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium, type Browser } from 'playwright'
-import type {} from '@deepseek-ai/dsh-ptc-runtime'
+import type {} from '@liwa/ptc-runtime'
 import { expect, it, onTestFinished } from 'vitest'
 import { captureStableAria, compareOrRefreshGolden, launchWebScaffold, webSnapshotMode, type WebScaffold } from './scaffold.ts'
 import { connectFreshWorkspaceZh, ZH_BROWSER_LOCALE } from './support.ts'
@@ -18,7 +18,7 @@ it('disables unsupported bundles, shows the Host restriction, and refuses direct
     }
   })
   const name = 'host-platform-only'
-  await writeFile(join(root, 'package.json'), JSON.stringify({ name, version: '1.0.0', dsh: { bundle: {
+  await writeFile(join(root, 'package.json'), JSON.stringify({ name, version: '1.0.0', liwa: { bundle: {
     patch: './cordis.patch.yml', platforms: [process.platform === 'darwin' ? 'win32' : 'darwin'],
   } } }))
   await writeFile(join(root, 'cordis.patch.yml'), '- id: ptc-runtime\n  config:\n    executionMode: persistent-in-memory\n')
@@ -28,14 +28,14 @@ it('disables unsupported bundles, shows the Host restriction, and refuses direct
   await page.goto(scaffold.authenticatedUrl)
   await connectFreshWorkspaceZh(page, scaffold.workspaceCwd)
   await page.getByRole('navigation', { name: '全局面板' }).getByRole('button', { name: '插件', exact: true }).click()
-  const reason = '此插件不支持运行 DSH 的主机操作系统'
+  const reason = '此插件不支持运行灵鲸的主机操作系统'
   const card = page.locator(`[data-plugin-package="${name}"]`)
   await card.getByText(reason, { exact: true }).waitFor()
   expect(await card.getByRole('switch').isEnabled()).toBe(false)
   expect(await card.getByRole('switch').getAttribute('aria-checked')).toBe('false')
   await compareOrRefreshGolden(fileURLToPath(new URL('./expected/bundle-platform/unsupported-platform.expected.md', import.meta.url)),
     await captureStableAria(page, `[data-plugin-package="${name}"] p[role="status"]`, scaffold.workspaceCwd), webSnapshotMode())
-  const manifest = join(scaffold.harnessHome, 'profiles/scaffold/package.json')
+  const manifest = join(scaffold.liwaHome, 'profiles/scaffold/package.json')
   const before = await readFile(manifest, 'utf8')
   const runtimeId = () => [...scaffold.ctx.loader.entries()].find(entry => entry.options.id === 'ptc-runtime')?.fiber?.uid
   const beforeRuntime = runtimeId()
@@ -43,12 +43,12 @@ it('disables unsupported bundles, shows the Host restriction, and refuses direct
   expect(scaffold.ctx.ptcRuntime.programFormat).toBe('function-body')
   const names = [name]
   await page.locator('[data-plugin-panel]').getByRole('button', { name: '更多', exact: true }).click()
-  const cua = page.locator('[data-plugin-package="@deepseek-ai/dsh-cua-bundle"]')
+  const cua = page.locator('[data-plugin-package="@liwa/cua-bundle"]')
   expect(await cua.count()).toBe(0)
   if (process.platform !== 'darwin') {
-    expect((await scaffold.ctx.pluginManager.listBundles()).find(bundle => bundle.name === '@deepseek-ai/dsh-cua-bundle'))
+    expect((await scaffold.ctx.pluginManager.listBundles()).find(bundle => bundle.name === '@liwa/cua-bundle'))
       .toMatchObject({ listedByDefault: false, enabled: false, error: { code: 'unsupported-platform' } })
-    names.push('@deepseek-ai/dsh-cua-bundle')
+    names.push('@liwa/cua-bundle')
   }
   for (const bundle of names) {
     expect(await scaffold.ctx.pluginManager.setBundleEnabled(bundle, true)).toMatchObject({

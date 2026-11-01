@@ -8,8 +8,8 @@
   padding: 0;
   vertical-align: baseline;
   color: var(--dsw-alias-state-business-primary);
-  font-size: var(--dsh-content-font-size, 14px);
-  line-height: calc(20px + var(--dsh-content-font-delta, 0px));
+  font-size: var(--liwa-content-font-size, 14px);
+  line-height: calc(20px + var(--liwa-content-font-delta, 0px));
 }
 
 .popoverText {

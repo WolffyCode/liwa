@@ -3,7 +3,7 @@ description: "Workspace entity registry (ctx.workspaceRegistry) for hosts choosi
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-workspace
+# @liwa/workspace
 
 English | [中文](README.zh.md)
 
@@ -29,21 +29,21 @@ Use this package to give the product a project list: named directories the user 
 
 ### When to use it
 
-Use it when the product shows a persistent workspace surface — a sidebar, session grouping, or automation that names directories and orders them. It is invisible to the model, so it adds no token or request cost. Skip it when there is no grouping surface; nothing else in the harness needs it.
+Use it when the product shows a persistent workspace surface — a sidebar, session grouping, or automation that names directories and orders them. It is invisible to the model, so it adds no token or request cost. Skip it when there is no grouping surface; nothing else in Liwa needs it.
 
 ### Setting up
 
 The package needs a session store, a session persistence backend, and the storage rows that keep its records. A minimal composition:
 
 ```yaml
-- name: '@deepseek-ai/dsh-session'
-- name: '@deepseek-ai/dsh-session-persistence-jsonl'
-- name: '@deepseek-ai/dsh-storage'
-- name: '@deepseek-ai/dsh-storage-json'
-- name: '@deepseek-ai/dsh-storage-domain'
+- name: '@liwa/session'
+- name: '@liwa/session-persistence-jsonl'
+- name: '@liwa/storage'
+- name: '@liwa/storage-json'
+- name: '@liwa/storage-domain'
   config:
     backend: json
-- name: '@deepseek-ai/dsh-workspace'
+- name: '@liwa/workspace'
 ```
 
 With these rows mounted, creating a project shows up in the list immediately and survives a restart; the first start also groups existing sessions by the directory they ran in. If a required peer is missing, the workspace feature stays unavailable until it is mounted.

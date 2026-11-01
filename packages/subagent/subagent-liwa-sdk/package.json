@@ -1,0 +1,66 @@
+{
+  "name": "@liwa/subagent-liwa-sdk",
+  "description": "Out-of-process SDK subagent backend: drives a child Liwa runtime subprocess over stdio JSON-RPC through the TypeScript SDK client",
+  "version": "0.2.2-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
+    "directory": "packages/subagent/subagent-liwa-sdk"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./locale/*.json": "./locale/*.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "locale/*.json",
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/sdk-client": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/subagent": "workspace:*",
+    "@liwa/subprocess": "workspace:*"
+  },
+  "dependencies": {
+    "@liwa/brand": "workspace:*",
+    "@liwa/schemastery": "workspace:~"
+  },
+  "devDependencies": {
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-instructions": "workspace:*",
+    "@liwa/app-boot": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/llm-deepseek": "workspace:*",
+    "@liwa/llm-deepseek-api-key": "workspace:*",
+    "@liwa/loader-smoke": "workspace:*",
+    "@liwa/sdk-client": "workspace:*",
+    "@liwa/sdk-protocol": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-checkpoint-policy": "workspace:*",
+    "@liwa/session-persistence-jsonl": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/skill-filesystem": "workspace:*",
+    "@liwa/subagent": "workspace:*",
+    "@liwa/subprocess": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/tool-subagent": "workspace:*"
+  }
+}

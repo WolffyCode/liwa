@@ -13,7 +13,7 @@ import type { ForkCeiling } from './fork-policy.ts'
 
 /** One tool execution as the runtime presents it to a guard. */
 export interface ForkToolExecution {
-  /** Tool being dispatched, as the harness names it. */
+  /** Tool being dispatched, as Liwa names it. */
   readonly name: string
   /** Parsed arguments the tool will receive. */
   readonly arguments: unknown

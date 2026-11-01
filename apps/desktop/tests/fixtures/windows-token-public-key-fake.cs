@@ -1,5 +1,5 @@
 
-public sealed class FakeTokenPublicKey : DshTokenPublicKey.IApi
+public sealed class FakeTokenPublicKey : LiwaTokenPublicKey.IApi
 {
     string scenario;
     int releases, destroys, exports, keys;
@@ -15,7 +15,7 @@ public sealed class FakeTokenPublicKey : DshTokenPublicKey.IApi
     public int GetKey(System.IntPtr context, uint spec, out System.IntPtr key) {
         keys++;
         key = new System.IntPtr(2);
-        if (scenario == "no-key" || spec == 1) return DshTokenPublicKey.NoKey;
+        if (scenario == "no-key" || spec == 1) return LiwaTokenPublicKey.NoKey;
         if (scenario == "get-key") return 5;
         return 0;
     }
@@ -29,10 +29,10 @@ public sealed class FakeTokenPublicKey : DshTokenPublicKey.IApi
     public bool Destroy(System.IntPtr key) { destroys++; return scenario != "destroy"; }
     public bool Release(System.IntPtr context) { releases++; return scenario != "release"; }
     public static string Test() {
-        if (DshTokenPublicKey.PublicContextFlags != 0xF0000040) throw new System.Exception("unsafe flags");
+        if (LiwaTokenPublicKey.PublicContextFlags != 0xF0000040) throw new System.Exception("unsafe flags");
         foreach (string scenario in new [] { "ok", "provider", "container", "auth", "no-key", "get-key", "export", "size", "destroy", "release" }) {
             var fake = new FakeTokenPublicKey(scenario);
-            var result = DshTokenPublicKey.Read(fake, "fake-container");
+            var result = LiwaTokenPublicKey.Read(fake, "fake-container");
             string expected = scenario == "ok" ? "public-keys" : scenario == "provider" ? "provider-unavailable"
                 : scenario == "container" ? "container-unavailable" : "unknown";
             if (result.status != expected) throw new System.Exception("wrong outcome: " + scenario);

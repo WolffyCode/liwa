@@ -1,14 +1,14 @@
 /**
  * One composer seat a viewer page states but does not choose.
  *
- * A viewer page renders the owner's Session, so the seats a DSH user picks from — the model the
+ * A viewer page renders the owner's Session, so the seats a Liwa user picks from — the model the
  * Session runs on, the permission the share carries — are facts about that Session rather than
  * choices for the reader. This component is the one place that states such a fact, and the one
  * switch that decides whether the reader may change it: `readOnly` renders a label, and the
  * interactive form is the other branch of the same component rather than a second control kept in
  * step by hand.
  *
- * @module @deepseek-ai/dsh-experimental-liveshare/src/client/viewer-seat
+ * @module @liwa/experimental-liveshare/src/client/viewer-seat
  */
 
 import type { ReactNode } from 'react'

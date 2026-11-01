@@ -4,12 +4,12 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterEach, expect, it } from 'vitest'
-import { Context, FiberState } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import Include from '@deepseek-ai/cordis-plugin-include'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import DeepSeekLlmApiExtensionRegistry from '@deepseek-ai/dsh-deepseek-llm-api-extensions'
+import { Context, FiberState } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
+import Include from '@liwa/cordis-plugin-include'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import AgentRegistry from '@liwa/agent'
+import DeepSeekLlmApiExtensionRegistry from '@liwa/deepseek-llm-api-extensions'
 import * as PluginInventory from '../src/index.ts'
 
 let root: string | undefined
@@ -26,7 +26,7 @@ afterEach(async () => {
 })
 
 it.each([true, false])('reports an unversioned package by name alongside a versioned sibling (private=%s)', async (isPrivate) => {
-  root = await mkdtemp(join(tmpdir(), 'dsh-private-package-composition-'))
+  root = await mkdtemp(join(tmpdir(), 'liwa-private-package-composition-'))
   const parent = join(root, 'inspector')
   const privateDir = join(parent, 'skill')
   const siblingDir = join(parent, 'sibling')

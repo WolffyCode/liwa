@@ -16,7 +16,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode } from 'react'
 import clsx from 'clsx'
-import { IconCloseOutlineRegular, IconPanelLeftOutlineRegular, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconCloseOutlineRegular, IconPanelLeftOutlineRegular, Tooltip } from '@liwa/client-ui-primitives'
 import type { DockIntents, DockLabels, TabRenderer } from '../contract/adapter.ts'
 import type { FloatRect, LayoutState, PaneId, TabId, TabRecord } from '../contract/types.ts'
 import { FLOAT_MIN_SIZE } from '../engine/constraints.ts'
@@ -82,7 +82,7 @@ function floatBounds(): FloatBounds {
   // Desktop publishes the caption height in pixels on the root's inline style;
   // a root without it keeps the 20px floor.
   const caption = windows && !root.hasAttribute('data-fullscreen')
-    ? Number.parseFloat(root.style.getPropertyValue('--dsh-windows-titlebar-height')) : 0
+    ? Number.parseFloat(root.style.getPropertyValue('--liwa-windows-titlebar-height')) : 0
   return { top: windows ? (Number.isFinite(caption) ? caption : 0) + 20 : 0, width: window.innerWidth, height: window.innerHeight }
 }
 
@@ -144,10 +144,10 @@ interface Settling {
 export function floatStyle(rect: FloatRect, lifted: boolean): CSSProperties {
   if (lifted) return { left: rect.x, top: rect.y, width: rect.width, height: rect.height }
   return {
-    '--dsh-dockkit-float-x': `${rect.x}px`,
-    '--dsh-dockkit-float-y': `${rect.y}px`,
-    '--dsh-dockkit-float-width': `${rect.width}px`,
-    '--dsh-dockkit-float-height': `${rect.height}px`,
+    '--liwa-dockkit-float-x': `${rect.x}px`,
+    '--liwa-dockkit-float-y': `${rect.y}px`,
+    '--liwa-dockkit-float-width': `${rect.width}px`,
+    '--liwa-dockkit-float-height': `${rect.height}px`,
   } as CSSProperties
 }
 

@@ -1,20 +1,20 @@
 /** Executor plugins follow the Loader-owned preset revision lifetime. */
-import { executeModelToolFixture } from '@deepseek-ai/dsh-tool-testkit'
+import { executeModelToolFixture } from '@liwa/tool-testkit'
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import Include from '@deepseek-ai/cordis-plugin-include'
-import AgentPreset from '@deepseek-ai/dsh-agent-preset'
-import FsLocal from '@deepseek-ai/dsh-fs-local'
-import WorkingDirectory from '@deepseek-ai/dsh-working-directory'
-import { PtcRuntime, type PtcRunRequest, type PtcRunResult } from '@deepseek-ai/dsh-ptc-runtime'
-import * as PtcPlugin from '@deepseek-ai/dsh-tool-executor-ptc'
-import { NativeToolExecutor } from '@deepseek-ai/dsh-tool-executor-native'
-import type { Context } from '@deepseek-ai/cordis'
+import Include from '@liwa/cordis-plugin-include'
+import AgentPreset from '@liwa/agent-preset'
+import FsLocal from '@liwa/fs-local'
+import WorkingDirectory from '@liwa/working-directory'
+import { PtcRuntime, type PtcRunRequest, type PtcRunResult } from '@liwa/ptc-runtime'
+import * as PtcPlugin from '@liwa/tool-executor-ptc'
+import { NativeToolExecutor } from '@liwa/tool-executor-native'
+import type { Context } from '@liwa/cordis'
 import { expect, it, onTestFinished } from 'vitest'
-import { ToolCallId } from '@deepseek-ai/dsh-llm'
-import { defineTool, type ToolExecutor } from '@deepseek-ai/dsh-tools'
+import { ToolCallId } from '@liwa/llm'
+import { defineTool, type ToolExecutor } from '@liwa/tools'
 import { agentOn, declare, harness } from './harness.ts'
 
 it('loads scoped executor objects and retains them with the preset revision', async () => {
@@ -92,7 +92,7 @@ class ProgramFixture extends PtcRuntime {
 }
 
 it.each([true, false])('loads cordis.yml executor presets with runtime availability %s', async (hasRuntime) => {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-executor-packages-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-executor-packages-'))
   const ctx = await harness()
   onTestFinished(async () => {
     try { await ctx.fiber.dispose() } finally { await rm(root, { recursive: true, force: true }) }

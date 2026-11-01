@@ -21,7 +21,7 @@ import {
   type TunnelShareSpec,
   type TunnelRegistrationToken,
   type TunnelWorkerEvent,
-} from '@deepseek-ai/dsh-experimental-liveshare-protocol'
+} from '@liwa/experimental-liveshare-protocol'
 import { PendingRpc, type PendingRequest } from './pending-rpc.ts'
 
 const HEARTBEAT_INTERVAL_MS = 25_000
@@ -58,7 +58,7 @@ const pendingRpc = new PendingRpc<GatewayConnection>()
 
 /**
  * Run one owner worker that multiplexes every share over IPC. The worker owns
- * one outbound Relay socket per share, but one process and one owner DSH.
+ * one outbound Relay socket per share, but one process and one owner Liwa.
  */
 export function runGatewayWorker(): void {
   const shares = new Map<string, GatewayState>()

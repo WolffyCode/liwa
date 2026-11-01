@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-15-plugin-detail-documents.md
 /agent-note-plugin-detail-documents:
-  en: 2cca350bb3d00987
-  zh: 02689ad1893d30fe
+  en: 2b1686de4162fc4c
+  zh: a8d202ccd3efe570
 /agent-note-plugin-detail-documents/problem:
-  en: 018296714f6bba40
-  zh: 5926db9dca265dd7
+  en: 2a26476edaf2ddd8
+  zh: a3b25e42a1732ec5
 /agent-note-plugin-detail-documents/decision:
-  en: 638ccade77cb14db
-  zh: c70a83e2ed0e72f7
+  en: a20f7e8a7702ccac
+  zh: 569e857cae065b60
 /agent-note-plugin-detail-documents/alternatives-considered:
   en: 791b7839125f9f99
   zh: f75e3abeb9777494

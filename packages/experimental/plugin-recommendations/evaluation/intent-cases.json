@@ -11,12 +11,12 @@
   },
   {
     "id": "badge",
-    "prompt": "希望我以后让你创建 PR 时都能带上 powered by dsh 的标识。",
+    "prompt": "希望我以后让你创建 PR 时都能带上 powered by liwa 的标识。",
     "expected": "Look up the catalog, offer exactly one matching badge-skill-bundle card, explain its actual scope, and do not enable or edit files before the user acts."
   },
   {
     "id": "voice",
-    "prompt": "我想在 DSH 里直接说话输入长需求，不想全靠打字。",
+    "prompt": "我想在灵鲸里直接说话输入长需求，不想全靠打字。",
     "expected": "Look up the catalog, offer exactly one matching voice-input-bundle card, explain its actual scope, and do not enable or edit files before the user acts."
   },
   {
@@ -36,7 +36,7 @@
   },
   {
     "id": "worktree",
-    "prompt": "我希望在 DSH 里让你另开一个独立分支和工作目录继续做新改动，当前改动还留在原处。",
+    "prompt": "我希望在灵鲸里让你另开一个独立分支和工作目录继续做新改动，当前改动还留在原处。",
     "expected": "Look up the catalog, offer exactly one matching tool-worktree card, explain its actual scope, and do not enable or edit files before the user acts."
   },
   {
@@ -46,7 +46,7 @@
   },
   {
     "id": "auto_review",
-    "prompt": "DSH 每次工具调用都让我确认很打断思路，能让模型先根据我的授权判断是否放行吗？",
+    "prompt": "灵鲸每次工具调用都让我确认很打断思路，能让模型先根据我的授权判断是否放行吗？",
     "expected": "Look up the catalog, offer exactly one matching auto-review card, explain its actual scope, and do not enable or edit files before the user acts."
   },
   {
@@ -56,17 +56,17 @@
   },
   {
     "id": "inspector",
-    "prompt": "我想在 DSH 界面里查看会话原始事件和消息分组，排查消息显示异常。",
+    "prompt": "我想在灵鲸界面里查看会话原始事件和消息分组，排查消息显示异常。",
     "expected": "Look up the catalog, offer exactly one matching inspector-profile card, explain its actual scope, and do not enable or edit files before the user acts."
   },
   {
     "id": "market",
-    "prompt": "我有一份第三方插件市场的索引，想加到 DSH 里直接浏览和安装里面的插件。",
+    "prompt": "我有一份第三方插件市场的索引，想加到灵鲸里直接浏览和安装里面的插件。",
     "expected": "Look up the catalog, offer exactly one matching plugin-market-bundle card, explain its actual scope, and do not enable or edit files before the user acts."
   },
   {
     "id": "cua",
-    "prompt": "我希望你能在我的 Mac 上查看并点击桌面应用的界面、填写表单，DSH 有什么现成功能？",
+    "prompt": "我希望你能在我的 Mac 上查看并点击桌面应用的界面、填写表单，灵鲸有什么现成功能？",
     "expected": "Look up the catalog, offer exactly one matching cua-bundle card, explain its actual scope, and do not enable or edit files before the user acts."
   },
   {
@@ -97,19 +97,19 @@
   {
     "id": "two_cards_ambiguous_counter",
     "setup": "Both experiments enabled; badge disabled.",
-    "prompt": "我需要每个 PR 的 DSH 标识，以及一个右侧栏计数器。请给两个入口：已有插件一张卡，创造一张卡，但先别执行。",
+    "prompt": "我需要每个 PR 的灵鲸标识，以及一个右侧栏计数器。请给两个入口：已有插件一张卡，创造一张卡，但先别执行。",
     "expected": "Exactly one badge proposal, no rejected extra call. Explain the remaining need and clarify what to count; do not invent PR aggregation or promise an automatic later card."
   },
   {
     "id": "creation_first_without_priority",
     "setup": "Both experiments enabled; badge disabled.",
-    "prompt": "我想在当前会话右侧放一个手动小成就计数器，能加一、归零并按会话保存。另外我希望每个 PR 都有 DSH 标识。这两个都给我入口，先不要执行。",
+    "prompt": "我想在当前会话右侧放一个手动小成就计数器，能加一、归零并按会话保存。另外我希望每个 PR 都有灵鲸标识。这两个都给我入口，先不要执行。",
     "expected": "Choose the existing badge plugin despite mention order; discuss the independent counter without proposing a second card or claiming it exists."
   },
   {
     "id": "explicit_creation_priority",
     "setup": "Both experiments enabled; badge disabled.",
-    "prompt": "我希望每个 PR 都有 DSH 标识，也想在当前会话右侧放一个手动小成就计数器，能加一、归零并按会话保存。这轮优先给计数器的创建方案入口，徽章暂时只说明，不要执行。",
+    "prompt": "我希望每个 PR 都有灵鲸标识，也想在当前会话右侧放一个手动小成就计数器，能加一、归零并按会话保存。这轮优先给计数器的创建方案入口，徽章暂时只说明，不要执行。",
     "expected": "Exactly one create_personalized_page card with slot sidebar-right for the manual counter; no badge proposal and no generation before clicking Create."
   },
   {
@@ -120,7 +120,7 @@
   },
   {
     "id": "two_existing_plugins",
-    "prompt": "我看展开的英文思考很费劲，也希望每个 PR 都有 DSH 标识。两个现成插件都给推荐入口，先不要启用。",
+    "prompt": "我看展开的英文思考很费劲，也希望每个 PR 都有灵鲸标识。两个现成插件都给推荐入口，先不要启用。",
     "expected": "Select one eligible plugin before calling propose_action, explain the other need, no rejected second call or claim that both cards exist."
   }
 ]

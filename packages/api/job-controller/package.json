@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-api-job-controller",
+  "name": "@liwa/api-job-controller",
   "description": "Job Remote observation stream and the reference-counted client job-output service",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/api/job-controller"
   },
   "type": "module",
@@ -38,14 +38,14 @@
     "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json"
   },
-  "dsh": {
+  "liwa": {
     "client": {
       "external": [
-        "@deepseek-ai/dsh-api-gateway/client"
+        "@liwa/api-gateway/client"
       ],
       "inject": [
-        "@deepseek-ai/dsh-api-gateway",
-        "@deepseek-ai/dsh-client-connection"
+        "@liwa/api-gateway",
+        "@liwa/client-connection"
       ],
       "platform": "web"
     }
@@ -67,22 +67,22 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-typert-protocol": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/typert-protocol": "workspace:*",
+    "@liwa/schemastery": "workspace:~",
     "zod": "4.4.3"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-api-gateway": "workspace:*",
-    "@deepseek-ai/dsh-client-connection": "workspace:*",
-    "@deepseek-ai/dsh-client-store": "workspace:*",
-    "@deepseek-ai/dsh-jobs": "workspace:*",
-    "@deepseek-ai/dsh-jobs-local": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-typert-registry": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/api-gateway": "workspace:*",
+    "@liwa/client-connection": "workspace:*",
+    "@liwa/client-store": "workspace:*",
+    "@liwa/jobs": "workspace:*",
+    "@liwa/jobs-local": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/typert-registry": "workspace:*"
   }
 }

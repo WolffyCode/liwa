@@ -1,8 +1,8 @@
 /** Model catalog and request-local dependencies for DeepSeek Messages. */
-import type { LlmModelInfo, ModelModality, SystemPromptUpdate, ToolUpdate, ResolvedRetryPolicy, ImageAttachmentAccess } from '@deepseek-ai/dsh-llm'
-import type { AttachmentStore, ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
-import type { AnonymousUserId } from '@deepseek-ai/dsh-anonymous-user-id'
-import type { DeepSeekLlmApiExtensionRequest, PreparedDeepSeekLlmApiExtensions } from '@deepseek-ai/dsh-deepseek-llm-api-extensions'
+import type { LlmModelInfo, ModelModality, SystemPromptUpdate, ToolUpdate, ResolvedRetryPolicy, ImageAttachmentAccess } from '@liwa/llm'
+import type { AttachmentStore, ImageAttachmentRef } from '@liwa/attachment'
+import type { AnonymousUserId } from '@liwa/anonymous-user-id'
+import type { DeepSeekLlmApiExtensionRequest, PreparedDeepSeekLlmApiExtensions } from '@liwa/deepseek-llm-api-extensions'
 import type { DeepSeekFileStore, DeepSeekFilePolicy } from './file-store.ts'
 
 /** One optional model entry advertised by the direct-fetch adapter. */
@@ -113,7 +113,7 @@ export interface DeepSeekAdapterOptions<Connection extends DeepSeekConnectionOpt
   admit?: (connection: Connection, model: string) => void
   /** Resolve authentication from this request's connection snapshot; never re-read the endpoint. */
   resolveAuth: (connection: Connection) => Promise<DeepSeekRequestAuth>
-  /** Resolve the harness-home anonymous id shared with telemetry and feedback. */
+  /** Resolve the Liwa-home anonymous id shared with telemetry and feedback. */
   resolveUserId: () => AnonymousUserId
   /** Resolve the current durable attachment service; absence rejects image input. */
   resolveAttachments?: () => AttachmentStore | undefined

@@ -3,10 +3,10 @@
 import { File as NodeFile } from 'node:buffer'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, it, onTestFinished, vi } from 'vitest'
-import { SlotTestRuntime } from '@deepseek-ai/dsh-client-test-runtime'
-import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
-import { DraggableImage } from '@deepseek-ai/dsh-client-ui-primitives'
-import { FILE_DRAG_TOKEN_TYPE, type DesktopFileDrag, type FileDragHandle } from '@deepseek-ai/dsh-util-file-drag'
+import { SlotTestRuntime } from '@liwa/client-test-runtime'
+import { LocaleRuntime } from '@liwa/client-locale/client'
+import { DraggableImage } from '@liwa/client-ui-primitives'
+import { FILE_DRAG_TOKEN_TYPE, type DesktopFileDrag, type FileDragHandle } from '@liwa/util-file-drag'
 import * as plugin from '../src/client/index.ts'
 import { apply as applyHost } from '../src/index.ts'
 
@@ -75,9 +75,9 @@ it.each([
   const desktop: DesktopFileDrag = {
     prepare: vi.fn(async () => handle), cancel: vi.fn(), start: vi.fn(() => pending.promise), release: vi.fn(),
   }
-  vi.stubGlobal('dshDesktop', { protocolVersion: 1, fileDrag: desktop })
+  vi.stubGlobal('liwaDesktop', { protocolVersion: 1, fileDrag: desktop })
   const { service } = await bench(language)
-  vi.stubGlobal('dshDesktop', { protocolVersion: 2 })
+  vi.stubGlobal('liwaDesktop', { protocolVersion: 2 })
   const file = new File(['image'], 'image.png', { type: 'image/png' })
   const source = render(<DraggableImage fileDrag={service.actions} src="blob:original" name={file.name} original={file} alt="original" />)
   await act(async () => { fireEvent.pointerEnter(source.getByRole('img')) })
@@ -93,7 +93,7 @@ it.each([
 })
 
 it('ignores an unsupported desktop protocol and removes feedback with the plugin', async () => {
-  vi.stubGlobal('dshDesktop', { protocolVersion: 2, fileDrag: {} })
+  vi.stubGlobal('liwaDesktop', { protocolVersion: 2, fileDrag: {} })
   const { service, owner } = await bench()
   act(() => { service.actions.reportFailure() })
   expect(screen.getByRole('alert')).toBeTruthy()

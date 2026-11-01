@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       source_ref:
-        description: '打包源码：test 支持仓库内分支或 dsh-v* tag；production 仅支持 master 或 dsh-v* tag；源码须包含 CI 适配脚本'
+        description: '打包源码：test 支持仓库内分支或 liwa-v* tag；production 仅支持 master 或 liwa-v* tag；源码须包含 CI 适配脚本'
         type: string
         default: master
         required: true
@@ -68,7 +68,7 @@ concurrency:
 
 jobs:
   package:
-    runs-on: dsh-win-package-trial
+    runs-on: liwa-win-package-trial
     timeout-minutes: 120
     defaults:
       run:
@@ -76,9 +76,9 @@ jobs:
     env:
       PACKAGE_SOURCE_REF: ${{ inputs.source_ref }}
       PACKAGE_VERSION_MODE: ${{ inputs.version_mode }}
-      DSH_DESKTOP_UPDATE_CHANNEL: ${{ inputs.update_channel }}
-      DSH_TELEMETRY_DISABLED: '1'
-      DSH_PACKAGING_PRESET: ${{ inputs.preset }}
+      LIWA_DESKTOP_UPDATE_CHANNEL: ${{ inputs.update_channel }}
+      LIWA_TELEMETRY_DISABLED: '1'
+      LIWA_PACKAGING_PRESET: ${{ inputs.preset }}
       PACKAGE_TEST_RELEASE_ID: ${{ inputs.test_release_id }}
       PACKAGE_SIGNING: ${{ inputs.signing }}
       PACKAGE_CACHE_NAMESPACE: ${{ inputs.cache_namespace }}
@@ -119,13 +119,13 @@ jobs:
       - name: Validate selected source and adapter support
         run: >-
           node -e "const fs=require('node:fs'); const ref=process.env.PACKAGE_SOURCE_REF;
-          const cp=require('node:child_process'); const preset=process.env.DSH_PACKAGING_PRESET;
+          const cp=require('node:child_process'); const preset=process.env.LIWA_PACKAGING_PRESET;
           if(!['test','production'].includes(preset)) throw Error('Unknown packaging preset');
-          const tag=/^dsh-v[0-9][0-9A-Za-z.-]*$/.test(ref);
-          if(preset==='production' && ref!=='master' && !tag) throw Error('Production source must be master or dsh-v*');
+          const tag=/^liwa-v[0-9][0-9A-Za-z.-]*$/.test(ref);
+          if(preset==='production' && ref!=='master' && !tag) throw Error('Production source must be master or liwa-v*');
           if(tag) {
           const v=JSON.parse(fs.readFileSync('package.json','utf8')).version;
-          if(ref!=='dsh-v'+v) throw Error('Source tag must match product version');
+          if(ref!=='liwa-v'+v) throw Error('Source tag must match product version');
           const tagged=cp.execFileSync('git',['rev-parse','--verify','refs/tags/'+ref+'^{commit}'],{encoding:'utf8'}).trim();
           const head=cp.execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
           if(tagged!==head) throw Error('Checkout does not match source tag');
@@ -154,7 +154,7 @@ jobs:
       - name: Configure persistent pnpm store
         # PNPM_HOME belongs to this run; keep downloaded packages outside its temporary directory.
         env:
-          DSH_DESKTOP_PACKAGE_CACHE_DIR: ${{ runner.tool_cache }}/dsh-desktop-package-cache
+          LIWA_DESKTOP_PACKAGE_CACHE_DIR: ${{ runner.tool_cache }}/liwa-desktop-package-cache
         run: |
           $storeRoot = Join-Path ([IO.Path]::GetPathRoot($env:GITHUB_WORKSPACE)) '.pnpm-store'
           $namespace = $env:PACKAGE_CACHE_NAMESPACE
@@ -162,9 +162,9 @@ jobs:
             if ($namespace -cnotmatch '^[a-z0-9][a-z0-9-]{0,63}\z') { throw 'Cache namespace must contain 1-64 lowercase letters, digits or hyphens' }
             if ($namespace -match '^(con|prn|aux|nul|com[1-9]|lpt[1-9])$') { throw 'Cache namespace cannot be a Windows device name' }
             $storeRoot = Join-Path $storeRoot $namespace
-            $env:DSH_DESKTOP_PACKAGE_CACHE_DIR = Join-Path $env:DSH_DESKTOP_PACKAGE_CACHE_DIR $namespace
+            $env:LIWA_DESKTOP_PACKAGE_CACHE_DIR = Join-Path $env:LIWA_DESKTOP_PACKAGE_CACHE_DIR $namespace
           }
-          "DSH_DESKTOP_PACKAGE_CACHE_DIR=$env:DSH_DESKTOP_PACKAGE_CACHE_DIR" >> $env:GITHUB_ENV
+          "LIWA_DESKTOP_PACKAGE_CACHE_DIR=$env:LIWA_DESKTOP_PACKAGE_CACHE_DIR" >> $env:GITHUB_ENV
           "PNPM_CONFIG_STORE_DIR=$storeRoot" >> $env:GITHUB_ENV
       - name: Install locked dependencies
         working-directory: ${{ steps.build_workspace.outputs.directory }}

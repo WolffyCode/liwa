@@ -2,11 +2,11 @@ import { existsSync } from 'node:fs'
 import { chmod, mkdir, mkdtemp, readFile, rm, stat, symlink } from 'node:fs/promises'
 import { homedir, tmpdir } from 'node:os'
 import { dirname, join, parse } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import { SandboxedFileSystem } from '@deepseek-ai/dsh-fs-sandbox'
-import { canonicalPath } from '@deepseek-ai/dsh-sandbox'
-import SandboxPolicyService from '@deepseek-ai/dsh-sandbox-policy'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import { Context } from '@liwa/cordis'
+import { SandboxedFileSystem } from '@liwa/fs-sandbox'
+import { canonicalPath } from '@liwa/sandbox'
+import SandboxPolicyService from '@liwa/sandbox-policy'
+import SessionProjectionRegistry from '@liwa/session-projection'
 import { describe, expect, it } from 'vitest'
 import { assertWorkspaceOutsideTemp, outsideTempWorkspaceParent } from './snapshot-workspace-parent.ts'
 
@@ -14,7 +14,7 @@ import { assertWorkspaceOutsideTemp, outsideTempWorkspaceParent } from './snapsh
 describe('snapshot workspace parent', () => {
   // Windows directory permissions and root bypass do not enforce POSIX write bits.
   it.skipIf(process.platform === 'win32' || process.getuid?.() === 0)('uses home when the temp parent is not writable', async () => {
-    const base = await mkdtemp(join(outsideTempWorkspaceParent(), '.dsh-snapshot-readonly-'))
+    const base = await mkdtemp(join(outsideTempWorkspaceParent(), '.liwa-snapshot-readonly-'))
     try {
       const temporary = join(base, '_temp')
       await mkdir(temporary)
@@ -33,7 +33,7 @@ describe('snapshot workspace parent', () => {
   })
 
   it('rejects automatically writable temporary workspaces, including symlink aliases', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'dsh-snapshot-parent-'))
+    const root = await mkdtemp(join(tmpdir(), 'liwa-snapshot-parent-'))
     try {
       expect(() => { assertWorkspaceOutsideTemp(root) }).toThrow('must be outside temporary writable root')
       const alias = join(root, 'alias')
@@ -45,7 +45,7 @@ describe('snapshot workspace parent', () => {
   })
 
   it('allows the allocated workspace but denies sibling writes and cleans the complete tree', async () => {
-    const base = await mkdtemp(join(outsideTempWorkspaceParent(), 'dsh-snapshot-parent-'))
+    const base = await mkdtemp(join(outsideTempWorkspaceParent(), 'liwa-snapshot-parent-'))
     const ctx = new Context()
     const fibers: Awaited<ReturnType<Context['plugin']>>[] = []
     try {

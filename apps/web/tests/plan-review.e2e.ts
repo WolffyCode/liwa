@@ -14,9 +14,9 @@ import { join } from 'node:path'
 import type { Browser, ConsoleMessage, Page } from 'playwright'
 import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed } from 'vitest'
-import { deriveReplayScript, parseSessionLog } from '@deepseek-ai/dsh-llm-replay'
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import { deriveReplayScript, parseSessionLog } from '@liwa/llm-replay'
+import type { SessionEvent } from '@liwa/session'
+import type { SessionId } from '@liwa/session/types'
 import {
   acknowledgeReloadConnectionLoss, assertFixtureInventory, captureExpandedTurnProcessAria, captureStableAria,
   compareOrRefreshGolden, fixtureUserPrompts,
@@ -190,10 +190,10 @@ describe('web e2e: plan review takeover round trip', () => {
     const outcome = asked.then((value) => { answered = true; return value }, (error: unknown) => ({ error }))
     try {
       const card = page.locator('[data-plan-review-key]')
-      const preview = page.locator('[data-plan-preview^="dsh-resource://plan-review/"]')
+      const preview = page.locator('[data-plan-preview^="liwa-resource://plan-review/"]')
       await preview.waitFor({ state: 'visible' })
       expect(await preview.getByText('Ask before implementation.').isVisible()).toBe(true)
-      await compareOrRefreshGolden(TEMPORARY_EXPECTED, await captureStableAria(page, '[data-plan-preview^="dsh-resource://plan-review/"]', scaffold.workspaceCwd), MODE)
+      await compareOrRefreshGolden(TEMPORARY_EXPECTED, await captureStableAria(page, '[data-plan-preview^="liwa-resource://plan-review/"]', scaffold.workspaceCwd), MODE)
       const tab = page.locator('[data-dockkit-tab]').filter({ hasText: 'Temporary review' })
       await card.getByRole('button', { name: 'Open plan in sidebar' }).click()
       expect(await tab.count()).toBe(1)
@@ -203,8 +203,8 @@ describe('web e2e: plan review takeover round trip', () => {
       await preview.waitFor({ state: 'visible' })
       expect(answered).toBe(false)
       const saved = await page.evaluate(() => Object.keys(localStorage)
-        .filter(key => key.startsWith('dsh.sidebar-right.v1.')).map(key => localStorage.getItem(key)).join('\n'))
-      expect(saved).toContain('dsh-resource://plan-review/')
+        .filter(key => key.startsWith('liwa.sidebar-right.v1.')).map(key => localStorage.getItem(key)).join('\n'))
+      expect(saved).toContain('liwa-resource://plan-review/')
       expect(saved).not.toContain('Ask before implementation.')
       await card.getByRole('button', { name: 'Approve', exact: true }).click()
       expect(await outcome).toEqual({ answers: [{ id: 'temporary', selected: ['Approve'] }] })
@@ -250,7 +250,7 @@ describe('web e2e: plan review takeover round trip', () => {
       await row.click()
       const card = page.locator('[data-plan-review-key]')
       await card.waitFor({ timeout: 10_000 })
-      const preview = page.locator('[data-plan-preview^="dsh-resource://plan-review/"]')
+      const preview = page.locator('[data-plan-preview^="liwa-resource://plan-review/"]')
       await preview.waitFor({ state: 'visible', timeout: 10_000 })
       expect(await preview.getByText('Submitted while the Plugins panel was open.').isVisible()).toBe(true)
       expect(await card.getByRole('button', { name: 'Open plan in sidebar' }).count()).toBe(1)
@@ -337,7 +337,7 @@ describe.skipIf(MODE === 'record')('web e2e: pending plan review across Sidebar 
   async function expectOpened(text: string): Promise<void> {
     const card = page.locator('[data-plan-review-key]')
     await card.waitFor({ timeout: 10_000 })
-    const preview = page.locator('[data-plan-preview^="dsh-resource://plan-review/"]')
+    const preview = page.locator('[data-plan-preview^="liwa-resource://plan-review/"]')
     await preview.waitFor({ state: 'visible', timeout: 10_000 })
     expect(await preview.getByText(text).isVisible()).toBe(true)
     expect(await card.getByRole('button', { name: 'Open plan in sidebar' }).count()).toBe(1)
@@ -385,7 +385,7 @@ describe.skipIf(MODE === 'record')('web e2e: pending plan review across Sidebar 
     // one, and that store commit lands in the commit where the review opens.
     await open(other)
     const warningStart = tripwire.warnings.length
-    await page.evaluate((session) => { localStorage.removeItem(`dsh.sidebar-right.v1.${session}`) }, planned)
+    await page.evaluate((session) => { localStorage.removeItem(`liwa.sidebar-right.v1.${session}`) }, planned)
     await page.reload({ waitUntil: 'load' })
     await showSessions()
     acknowledgeReloadConnectionLoss(tripwire, warningStart)
@@ -400,7 +400,7 @@ describe.skipIf(MODE === 'record')('web e2e: pending plan review across Sidebar 
 describe('web e2e: dismissed plan history', () => {
   it.skipIf(MODE === 'record')('reopens the permanent plan card after dismissing its review', async () => {
     // A dismissed review concludes the turn, so only the call presenting the plan replays.
-    const replayRoot = await mkdtemp(join(tmpdir(), 'dsh-plan-review-dismiss-replay-'))
+    const replayRoot = await mkdtemp(join(tmpdir(), 'liwa-plan-review-dismiss-replay-'))
     const replayOverride = join(replayRoot, 'replay.override.json')
     const script = deriveReplayScript(parseSessionLog(await readFile(FIXTURE, 'utf8')))
     await writeFile(replayOverride, JSON.stringify(script.slice(0, 1)))

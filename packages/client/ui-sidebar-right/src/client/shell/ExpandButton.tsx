@@ -13,12 +13,12 @@
  * The glyph is the left sidebar's collapse icon mirrored: the same affordance,
  * on the other edge.
  */
-import type { ShortcutCatalogEntry } from '@deepseek-ai/dsh-client-shortcuts/client'
-import type { InjectFace, HostObservable } from '@deepseek-ai/dsh-client-ui-slots'
+import type { ShortcutCatalogEntry } from '@liwa/client-shortcuts/client'
+import type { InjectFace, HostObservable } from '@liwa/client-ui-slots'
 import type { ReactNode } from 'react'
-import { Button, IconPanelLeftOutlineRegular, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { PropsLocale, PropsRuntime, PropsStore } from '@deepseek-ai/dsh-client-ui-slots'
-import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
+import { Button, IconPanelLeftOutlineRegular, Tooltip } from '@liwa/client-ui-primitives'
+import type { PropsLocale, PropsRuntime, PropsStore } from '@liwa/client-ui-slots'
+import type {} from '@liwa/client-ui-conversation/client'
 import type { createSidebarRightStore } from '../stores.ts'
 import css from './ExpandButton.module.css'
 

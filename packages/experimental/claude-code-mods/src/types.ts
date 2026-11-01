@@ -98,7 +98,7 @@ export interface ModOn {
 export type ModRegister = (on: ModOn, options: PluginOptions) => unknown
 
 /**
- * One mod as a DSH plugin hands it to the bridge: the plugin identity Claude
+ * One mod as a Liwa plugin hands it to the bridge: the plugin identity Claude
  * Code reads from `plugin.json`, the `register` its hooks module exports, and
  * the `options` that `register` receives (the mod's validated plugin config).
  */
@@ -319,7 +319,7 @@ export interface SessionUsage {
 /** The mods API version the bridge reports. */
 export interface SessionVersion {
   version: string
-  engine: 'deepseek-harness'
+  engine: 'liwa'
 }
 
 /** `$.ui.ask` options. */

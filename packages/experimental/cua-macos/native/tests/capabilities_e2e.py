@@ -73,7 +73,7 @@ def check_click_holds(helper, owner, window, point, state_file):
         count += len(types)
     # Production cancellation travels directly over the socket; the diagnostic stdio proxy exchanges whole requests.
     key = hashlib.sha256(Path(helper.process.args[0]).read_bytes()).hexdigest()
-    socket_path = Path(f"/tmp/dsh-cua-{os.getuid()}/{key}.sock")
+    socket_path = Path(f"/tmp/liwa-cua-{os.getuid()}/{key}.sock")
     for ending in ["cancel", "timeout", "disconnect"]:
         connection = Connection(socket_path, key, maxClickHoldMs=7000, timeoutMs=2000 if ending == "timeout" else 30000)
         try:
@@ -127,14 +127,14 @@ def main():
     transcript = []
     helper = None
     pid = None
-    with tempfile.TemporaryDirectory(prefix="dsh-cua-capabilities-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="liwa-cua-capabilities-") as temporary:
         root = Path(temporary)
         application = root / "Capabilities Fixture.app"
         executable = application / "Contents/MacOS/CapabilitiesFixture"
         executable.parent.mkdir(parents=True)
         state_file = root / "state.json"
         info = {"CFBundleName": "Capabilities Fixture", "CFBundleDisplayName": "Capabilities Fixture",
-                "CFBundleIdentifier": "test.dsh.cua." + uuid.uuid4().hex,
+                "CFBundleIdentifier": "test.liwa.cua." + uuid.uuid4().hex,
                 "CFBundleExecutable": "CapabilitiesFixture", "CFBundlePackageType": "APPL",
                 "DSHFixtureStatePath": str(state_file), "DSHFixtureBackground": args.click_only}
         (application / "Contents/Info.plist").write_bytes(plistlib.dumps(info))

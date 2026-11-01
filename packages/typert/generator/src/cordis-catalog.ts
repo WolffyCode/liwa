@@ -2,7 +2,7 @@
  * Cordis catalog-specific projection over the compiler-independent Typert
  * model. This module owns Cordis validation and text projection mechanics;
  * callers supply repository-specific type classifications and inherited data.
- * @module @deepseek-ai/dsh-typert-generator
+ * @module @liwa/typert-generator
  */
 
 import { WorkspaceAnalyzer, WorkspaceCaches } from './analyzer.ts'
@@ -116,9 +116,9 @@ export interface CordisCatalogPolicy {
   readonly foundationTypeNames: ReadonlySet<string>
   /** Repository types deliberately documented outside the linked data catalog. */
   readonly typeLinkExemptions: Readonly<Record<string, string>>
-  /** Framework Services included in the model-facing runtime catalog but not the harness documentation partition. */
+  /** Framework Services included in the model-facing runtime catalog but not Liwa documentation partition. */
   readonly runtimeServices?: readonly ServiceEntry[]
-  /** Harness Services omitted from the model-facing runtime catalog because dynamic Plugins must not call them. */
+  /** Liwa Services omitted from the model-facing runtime catalog because dynamic Plugins must not call them. */
   readonly runtimeServiceExclusions?: ReadonlySet<string>
   /** Manually curated framework events inherited by every plugin. */
   readonly inheritedEvents: readonly InheritedEntry[]
@@ -686,7 +686,7 @@ function renderRuntimeApi(
     ' * the same AST walk as docs/cordis-catalog, so this data and the rendered',
     ' * docs cannot diverge.',
     ' *',
-    ' * @module @deepseek-ai/dsh-tool-cordis/api-catalog',
+    ' * @module @liwa/tool-cordis/api-catalog',
     ' */',
     '',
     '/* jscpd:ignore-start */',

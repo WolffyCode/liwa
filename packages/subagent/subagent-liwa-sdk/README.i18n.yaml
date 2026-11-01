@@ -1,0 +1,85 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/subagent/subagent-liwa-sdk/README.md
+/:
+  en: d589b24f9276c395
+  zh: bb171620a573c73d
+/liwa-subagent-liwa-sdk:
+  en: 3d597bea563d2d41
+  zh: af6fd0588803227f
+/liwa-subagent-liwa-sdk/summary:
+  en: 6d4be0b9204ab217
+  zh: 3f11d7842cd4c673
+/liwa-subagent-liwa-sdk/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 09388d293f9be9cb
+/liwa-subagent-liwa-sdk/use-this-package:
+  en: 3f98ce42cbeea30b
+  zh: 563ed93274f93de3
+/liwa-subagent-liwa-sdk/use-this-package/when-to-choose-it:
+  en: 57b0174f6acd6685
+  zh: 1901b7de07401d31
+/liwa-subagent-liwa-sdk/use-this-package/configuration:
+  en: 7466f29b41ce1cdc
+  zh: a6ec1792a2341f3d
+/liwa-subagent-liwa-sdk/use-this-package/what-you-get:
+  en: b9ccfa85b40b07eb
+  zh: 4f84e7327b4ff188
+/liwa-subagent-liwa-sdk/use-this-package/failure-and-recovery:
+  en: 986d9aaf52518ac9
+  zh: fd25fad56772ea8a
+/liwa-subagent-liwa-sdk/understand-the-implementation:
+  en: c5d2a7d35d15aed8
+  zh: 3c2568d1d2b39020
+/liwa-subagent-liwa-sdk/understand-the-implementation/design-concept:
+  en: 61d899363153d7dc
+  zh: 505c7363c7b10224
+/liwa-subagent-liwa-sdk/understand-the-implementation/source-map:
+  en: 1bed6c1577997df6
+  zh: 8c99f132377f6ca2
+/liwa-subagent-liwa-sdk/understand-the-implementation/run-flow:
+  en: 6c50e4e8dc5e0698
+  zh: 9d0011e28341bbde
+/liwa-subagent-liwa-sdk/understand-the-implementation/stop-reason-mapping:
+  en: e040a57202916f91
+  zh: 196bf38f0f0db310
+/liwa-subagent-liwa-sdk/understand-the-implementation/process-boundary:
+  en: 82aae1253bbb1b01
+  zh: eda8f885542af88d
+/liwa-subagent-liwa-sdk/further-exploration:
+  en: 184f3b37b81dcc90
+  zh: 6392ed338182d3ca
+/liwa-subagent-liwa-sdk/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/liwa-subagent-liwa-sdk/model-experience/child-agent-request:
+  en: 05e6180f1498fdf9
+  zh: 2b05d2b97bfa67da
+/liwa-subagent-liwa-sdk/model-experience/child-agent-request/what-the-model-sees:
+  en: b8e656d956ac5bd2
+  zh: 26fa79357d1ce452
+/liwa-subagent-liwa-sdk/model-experience/child-agent-request/token-effect:
+  en: c0b78d334d5d0a9c
+  zh: 71d1a375a6ab4109
+/liwa-subagent-liwa-sdk/model-experience/child-agent-request/kv-cache-effect:
+  en: ab1a7c0bf70e48cd
+  zh: bd699112b4067e95
+/liwa-subagent-liwa-sdk/model-experience/parent-tool-result-indirectly:
+  en: 75d061c2151624a7
+  zh: 71e58e020b60ff90
+/liwa-subagent-liwa-sdk/model-experience/parent-tool-result-indirectly/what-the-model-sees:
+  en: 7ce6e60d9b533001
+  zh: 867a93464fae1e87
+/liwa-subagent-liwa-sdk/model-experience/parent-tool-result-indirectly/token-effect:
+  en: 4fae54e2ff0c4874
+  zh: 1574bfe874f66a1f
+/liwa-subagent-liwa-sdk/model-experience/parent-tool-result-indirectly/kv-cache-effect:
+  en: f5d5f97a153f7c70
+  zh: 3d6bc05b9eadfbc2
+/liwa-subagent-liwa-sdk/known-limitations-and-deferred-work:
+  en: 8f43f79098cfeb37
+  zh: 9547262d19d17662
+/liwa-subagent-liwa-sdk/known-limitations-and-deferred-work/dev-note:
+  en: 04a404ccea615ef3
+  zh: df2d9d901d75f024

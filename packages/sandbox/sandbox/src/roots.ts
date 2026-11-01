@@ -3,24 +3,24 @@
  * expresses a mode as a canonical allow-list: `workspace-write` means "the
  * workspace root, explicit extra directories, and platform temp areas", and this module is that
  * meaning's one home. The Seatbelt profile
- * (`@deepseek-ai/dsh-sandbox-local`) and the in-process filesystem fence
- * (`@deepseek-ai/dsh-fs-sandbox`) both derive their allow-list here, so "the
+ * (`@liwa/sandbox-local`) and the in-process filesystem fence
+ * (`@liwa/fs-sandbox`) both derive their allow-list here, so "the
  * write tool cannot write /tmp but bash can" asymmetries cannot arise between
  * them. The bwrap and Landlock dialects keep their own grant spellings (an
  * ephemeral `/tmp` mount, launcher-owned flags) — the honest per-runner
  * differences recorded in the sandbox RFC — with parity pinned by test.
  *
- * @module dsh-sandbox/roots
+ * @module liwa-sandbox/roots
  */
 
 import { realpathSync, statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
-import { HarnessError } from '@deepseek-ai/dsh-llm'
+import { LiwaError } from '@liwa/llm'
 import type { SandboxExecutionPolicy } from './index.ts'
 
 /** An explicit directory grant cannot be enforced without changing the caller's selected path. */
-export class SandboxInvalidRootError extends HarnessError {
+export class SandboxInvalidRootError extends LiwaError {
   constructor(path: string, detail: string) {
     super(`Invalid additional writable directory ${JSON.stringify(path)}: ${detail}`, 'SANDBOX_INVALID_ROOT')
     this.name = 'SandboxInvalidRootError'

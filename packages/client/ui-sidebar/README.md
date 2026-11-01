@@ -1,9 +1,9 @@
 ---
-description: "Sidebar shell plugin for the dsh web client: brand row, New Session action, collapse control, scroll-aware region seat, and bottom-pinned Settings seat."
+description: "Sidebar shell plugin for the liwa web client: brand row, New Session action, collapse control, scroll-aware region seat, and bottom-pinned Settings seat."
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-client-ui-sidebar
+# @liwa/client-ui-sidebar
 
 English | [中文](README.zh.md)
 
@@ -11,7 +11,7 @@ Desktop product events use the optional [product analytics service](../product-a
 
 ## Summary
 
-The dsh web client sidebar lets users recognize the active build, start a new session, collapse navigation to a 56px rail, browse Workspaces and Sessions, and open Settings. It preserves a bottom-pinned Settings entry and hides idle scrollbars without moving browser rows. New Session uses an explicitly selected Workspace, then the current Session's Workspace, then the most recently active Workspace; if none exists, it opens a blank New Session page. Deployments can replace the brand mark or name while retaining the navigation controls and rail geometry.
+The liwa web client sidebar lets users recognize the active build, start a new session, collapse navigation to a 56px rail, browse Workspaces and Sessions, and open Settings. It preserves a bottom-pinned Settings entry and hides idle scrollbars without moving browser rows. New Session uses an explicitly selected Workspace, then the current Session's Workspace, then the most recently active Workspace; if none exists, it opens a blank New Session page. Deployments can replace the brand mark or name while retaining the navigation controls and rail geometry.
 
 ## Table of Contents
 
@@ -31,7 +31,7 @@ The sidebar is the navigation shell: users see the brand, start new sessions, co
 
 ### Brand and New Session
 
-The expanded brand row renders `sidebar.brand.mark` and `sidebar.brand.name` as independent single slots; the collapsed rail renders the same mark slot. On Web and Windows desktop, clicking the expanded brand starts a new session; hovering or focusing it shows no tooltip. Without occupants, the shell uses the fish mark and a localized local-build label. A complete build stacks a code badge below the label as `version[-commit][-dirty]`, using `DSH_CLIENT_VERSION`, the optional 7-character `DSH_CLIENT_COMMIT_HASH`, and `DSH_CLIENT_GIT_DIRTY=true`; missing version metadata omits the badge. Clicking the fallback mark or label of such a build copies that badge text instead of starting a session, also on macOS desktop, and a successful write shows a Version copied toast. New Session targets the explicit Workspace used by a scoped action, otherwise the current Session's Workspace, otherwise the most recently active Workspace; when none exists it clears into the blank New Session page. The expanded New Session button displays the effective binding as trailing grey text on keyboard focus regardless of hover capability, and on hover when the device supports it. While the shortcut is visible, the centered icon and label fade before it when space is narrow; CSS reserves the shortcut’s width without measuring the button. Icon-only controls retain tooltips with platform-formatted keycaps, including the resident macOS header control when the sidebar is hidden. All controls expose `aria-keyshortcuts`. While the global access snapshot excludes `session/create`, the brand row stays inert and neither the New Session button nor the window-chrome New Session control renders; the Host still decides every create request.
+The expanded brand row renders `sidebar.brand.mark` and `sidebar.brand.name` as independent single slots; the collapsed rail renders the same mark slot. On Web and Windows desktop, clicking the expanded brand starts a new session; hovering or focusing it shows no tooltip. Without occupants, the shell uses the fish mark and a localized local-build label. A complete build stacks a code badge below the label as `version[-commit][-dirty]`, using `LIWA_CLIENT_VERSION`, the optional 7-character `LIWA_CLIENT_COMMIT_HASH`, and `LIWA_CLIENT_GIT_DIRTY=true`; missing version metadata omits the badge. Clicking the fallback mark or label of such a build copies that badge text instead of starting a session, also on macOS desktop, and a successful write shows a Version copied toast. New Session targets the explicit Workspace used by a scoped action, otherwise the current Session's Workspace, otherwise the most recently active Workspace; when none exists it clears into the blank New Session page. The expanded New Session button displays the effective binding as trailing grey text on keyboard focus regardless of hover capability, and on hover when the device supports it. While the shortcut is visible, the centered icon and label fade before it when space is narrow; CSS reserves the shortcut’s width without measuring the button. Icon-only controls retain tooltips with platform-formatted keycaps, including the resident macOS header control when the sidebar is hidden. All controls expose `aria-keyshortcuts`. While the global access snapshot excludes `session/create`, the brand row stays inert and neither the New Session button nor the window-chrome New Session control renders; the Host still decides every create request.
 
 ### Global panel entries
 
@@ -47,7 +47,7 @@ The top expand button hosts the optional, non-interactive `sidebar.toggle.badge`
 
 During a live collapse, the expanded content fades out at its current width, the upper controls share one fade and leftward translation into the 56px rail, and the layout's column slide ends the motion. A page that starts collapsed renders the rail statically, and reduced-motion mode disables both transitions. The bottom-pinned `sidebar.settings` control shares the fade timing but has no horizontal translation.
 
-On Windows Electron, `html[data-windows-titlebar]` fixes the sidebar toggle in the caption's top-left corner in both states, aligned with New Session's left edge only when expanded. The expanded brand sits below the caption and above New Session, with 8px of extra space above that button. Collapsing hides the brand and sidebar content and places New Session between the sidebar toggle and the Desktop-owned menus. The sidebar sets the root `--dsh-windows-menu-start` to 84px when collapsed; the Desktop preload uses it to position its menu after New Session and defaults to 48px when expanded. Caption icon buttons use centered 16px glyphs in 28px controls with the compact control radius and exclude themselves from the window drag region. The sidebar toggle and New Session bubbles open below the caption, where the Desktop-owned menu text cannot cover them; an occupying `sidebar.toggle.badge` chooses its own bubble side.
+On Windows Electron, `html[data-windows-titlebar]` fixes the sidebar toggle in the caption's top-left corner in both states, aligned with New Session's left edge only when expanded. The expanded brand sits below the caption and above New Session, with 8px of extra space above that button. Collapsing hides the brand and sidebar content and places New Session between the sidebar toggle and the Desktop-owned menus. The sidebar sets the root `--liwa-windows-menu-start` to 84px when collapsed; the Desktop preload uses it to position its menu after New Session and defaults to 48px when expanded. Caption icon buttons use centered 16px glyphs in 28px controls with the compact control radius and exclude themselves from the window drag region. The sidebar toggle and New Session bubbles open below the caption, where the Desktop-owned menu text cannot cover them; an occupying `sidebar.toggle.badge` chooses its own bubble side.
 
 ### macOS desktop
 
@@ -78,7 +78,7 @@ The shell is pure composition: `SidebarRootComponentProps` composes the layout o
 
 Expanded navigation uses 8px outer gutters, hover and selected fills inset 3px on each side, and a 16px leading cell with a 6px label gap. New Session centers its content with 4px side margins and a 10px bottom margin. The logo row has no bottom margin; its content starts 16px from the column's left edge, with 5px between mark and name. Only the macOS non-fullscreen top toggle shifts 4px right while expanded, retaining that offset throughout its fade-out. Collapsed geometry stays independent.
 
-The sidebar root supplies inherited CSS properties to `sidebar.workspaces` and `sidebar.settings`: `--dsh-sidebar-inline-padding: 8px`, `--dsh-sidebar-row-padding: 12px`, `--dsh-sidebar-label-gap: 6px`, and `--dsh-sidebar-paint-inset: 3px`. Occupants consume these values for expanded row alignment; standalone compositions must provide them on an ancestor. The paint inset reduces the fill without moving content: rows subtract it from their inline padding and use it as a transparent border.
+The sidebar root supplies inherited CSS properties to `sidebar.workspaces` and `sidebar.settings`: `--liwa-sidebar-inline-padding: 8px`, `--liwa-sidebar-row-padding: 12px`, `--liwa-sidebar-label-gap: 6px`, and `--liwa-sidebar-paint-inset: 3px`. Occupants consume these values for expanded row alignment; standalone compositions must provide them on an ancestor. The paint inset reduces the fill without moving content: rows subtract it from their inline padding and use it as a transparent border.
 
 ### Slot discipline
 

@@ -3,20 +3,20 @@
  *
  * This package owns the Service Definition role of the skill capability seam.
  * Concrete
- * providers such as `@deepseek-ai/dsh-skill-filesystem` decide where skills come
+ * providers such as `@liwa/skill-filesystem` decide where skills come
  * from; this service only merges provider catalogs, resolves the winning skill
  * for a name, and exposes the winning summaries and definitions to consumers.
  *
- * @module @deepseek-ai/dsh-skill
+ * @module @liwa/skill
  */
 
-import { Context, Service } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-llm'
-import { assertNever } from '@deepseek-ai/dsh-util-values'
-import { NamedEntries, ScopedLayers, scopeChainOf, scopeOf } from '@deepseek-ai/dsh-scope'
-import type { ScopeKey, ScopeLayer } from '@deepseek-ai/dsh-scope'
-import z from '@deepseek-ai/schemastery'
-import type Schema from '@deepseek-ai/schemastery'
+import { Context, Service } from '@liwa/cordis'
+import type {} from '@liwa/llm'
+import { assertNever } from '@liwa/util-values'
+import { NamedEntries, ScopedLayers, scopeChainOf, scopeOf } from '@liwa/scope'
+import type { ScopeKey, ScopeLayer } from '@liwa/scope'
+import z from '@liwa/schemastery'
+import type Schema from '@liwa/schemastery'
 
 const SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const DEFAULT_COLLECT_CACHE_ENTRIES = 128
@@ -37,7 +37,7 @@ export function isSkillName(name: string): boolean {
 }
 
 /** Origin bucket for a skill contribution. The value is prompt-visible metadata, not precedence by itself. */
-export type SkillSource = 'project-dsh' | 'project-agents' | 'runtime' | 'user-dsh' | 'user-agents' | 'custom' | 'bundled' | (string & {})
+export type SkillSource = 'project-liwa' | 'project-agents' | 'runtime' | 'user-liwa' | 'user-agents' | 'custom' | 'bundled' | (string & {})
 
 /** Optional provider-specific base used by loaded skill bodies to resolve relative resources. */
 export type SkillResourceBase =
@@ -151,7 +151,7 @@ export interface SkillInvocationSource {
   readonly form: 'instructions'
 }
 
-declare module '@deepseek-ai/dsh-llm' {
+declare module '@liwa/llm' {
   interface MessageSourceMap {
     /** A user-explicit skill invocation injected by the host. */
     'skill-invocation': SkillInvocationSource
@@ -280,7 +280,7 @@ export interface Config {
   readonly collectCacheMaxEntries?: number
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     skills: SkillRegistry
   }

@@ -3,15 +3,15 @@ import { realpath } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
-import type { Message } from '@deepseek-ai/dsh-llm'
-import { SESSION_FORMAT_VERSION, Session, SessionId } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import { mountAgentLoopTestDependencies, mountAgentLoopTestHarness, provideWorkingDirectoryFixture } from '@deepseek-ai/dsh-agent-loop-testkit'
-import CommandRuntime from '@deepseek-ai/dsh-commands'
-import LocalFileSystem from '@deepseek-ai/dsh-fs-local'
-import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
+import { Context } from '@liwa/cordis'
+import AgentRegistry, { type Agent } from '@liwa/agent'
+import type { Message } from '@liwa/llm'
+import { SESSION_FORMAT_VERSION, Session, SessionId } from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import { mountAgentLoopTestDependencies, mountAgentLoopTestHarness, provideWorkingDirectoryFixture } from '@liwa/agent-loop-testkit'
+import CommandRuntime from '@liwa/commands'
+import LocalFileSystem from '@liwa/fs-local'
+import LocalSubprocessRuntime from '@liwa/subprocess-local'
 import { ModsEngine } from '../src/engine.ts'
 import type { OpContext } from '../src/engine.ts'
 import { createHostOps, FS_MAX_BYTES, STORE_MAX_BYTES, toolCallResultOf } from '../src/host-ops.ts'
@@ -109,17 +109,17 @@ describe('services a deployment did not compose', () => {
   it('names the missing service in each call', async () => {
     const { call, ctx } = await setup()
     const agent = fakeAgent(ctx)
-    await expect(call('ui.ask', { question: 'q' }, agent)).rejects.toThrow(/dsh-user-questions/)
-    await expect(call('command.register', { name: 'x', description: 'd' }, agent)).rejects.toThrow(/dsh-commands/)
-    await expect(call('command.run', { command: 'x' }, agent)).rejects.toThrow(/dsh-commands/)
+    await expect(call('ui.ask', { question: 'q' }, agent)).rejects.toThrow(/liwa-user-questions/)
+    await expect(call('command.register', { name: 'x', description: 'd' }, agent)).rejects.toThrow(/liwa-commands/)
+    await expect(call('command.run', { command: 'x' }, agent)).rejects.toThrow(/liwa-commands/)
     await expect(call('command.list', {}, agent)).resolves.toEqual([])
-    await expect(call('tool.register', { name: 'x', description: 'd' }, agent)).rejects.toThrow(/dsh-tools/)
-    await expect(call('tool.call', { tool: 'x' }, agent)).rejects.toThrow(/dsh-tools/)
+    await expect(call('tool.register', { name: 'x', description: 'd' }, agent)).rejects.toThrow(/liwa-tools/)
+    await expect(call('tool.call', { tool: 'x' }, agent)).rejects.toThrow(/liwa-tools/)
     await expect(call('tool.list', {}, agent)).resolves.toEqual([])
     await expect(call('tool.list', {})).resolves.toEqual([])
-    await expect(call('store.get', { key: 'k' })).rejects.toThrow(/dsh-storage-domain/)
-    await expect(call('fs.read', { path: 'x' })).rejects.toThrow(/dsh-fs/)
-    await expect(call('process.run', { argv: ['ls'] })).rejects.toThrow(/dsh-subprocess/)
+    await expect(call('store.get', { key: 'k' })).rejects.toThrow(/liwa-storage-domain/)
+    await expect(call('fs.read', { path: 'x' })).rejects.toThrow(/liwa-fs/)
+    await expect(call('process.run', { argv: ['ls'] })).rejects.toThrow(/liwa-subprocess/)
     await expect(call('session.turns', {}, agent)).resolves.toBe(0)
     // Without a drawn surface the ui calls that would redraw the band are plain no-ops.
     await expect(call('ui.invalidate', {}, agent)).resolves.toBeUndefined()
@@ -160,7 +160,7 @@ describe('session facts from the agent', () => {
 
 describe('files through the filesystem seam', () => {
   it('resolves against the session cwd or the filesystem cwd, enforces the size limits, and reports links', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'dsh-cc-mods-fs-'))
+    const root = mkdtempSync(join(tmpdir(), 'liwa-cc-mods-fs-'))
     dirs.push(root)
     const ctx = new Context()
     await ctx.plugin(LocalFileSystem, { cwd: root })
@@ -190,7 +190,7 @@ describe('processes through the subprocess seam', () => {
     const ctx = new Context()
     await ctx.plugin(LocalSubprocessRuntime)
     const { call } = await setup(ctx)
-    const cwd = mkdtempSync(join(tmpdir(), 'dsh-cc-mods-proc-'))
+    const cwd = mkdtempSync(join(tmpdir(), 'liwa-cc-mods-proc-'))
     dirs.push(cwd)
     const run = await call('process.run', {
       argv: ['node', '-e', 'process.stdout.write(process.cwd() + "|" + process.env.CC_MODS_ENV)'],
@@ -286,7 +286,7 @@ describe('ui.log sinks', () => {
 
 describe('the committed directory owner', () => {
   it('moves session cwd, relative files and new processes while retaining the project root', async () => {
-    const allocated = mkdtempSync(join(tmpdir(), 'dsh-mods-directory-'))
+    const allocated = mkdtempSync(join(tmpdir(), 'liwa-mods-directory-'))
     dirs.push(allocated)
     // Native realpath expands Windows short-name temp paths before exact cwd comparisons.
     const origin = await realpath(allocated)
@@ -334,7 +334,7 @@ describe('the committed directory owner', () => {
     await ctx.plugin(LocalSubprocessRuntime)
     const agent = fakeAgent(ctx)
     for (const [op, input] of [['session.cwd', {}], ['fs.read', { path: 'x' }], ['fs.stat', { path: 'x' }], ['process.run', { argv: [process.execPath] }]] as const) {
-      await expect(call(op, input, agent)).rejects.toThrow(/dsh-working-directory/)
+      await expect(call(op, input, agent)).rejects.toThrow(/liwa-working-directory/)
     }
   })
 })

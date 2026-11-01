@@ -1,16 +1,16 @@
 /**
  * Authorization flows for the pi-ai providers that ship a login. This is the
- * whole of the translation between the harness's neutral notice/prompt
+ * whole of the translation between Liwa's neutral notice/prompt
  * vocabulary and pi-ai's `AuthInteraction`; nothing above it knows which
  * library ran the conversation.
  *
- * @module dsh-llm-pi-ai/login
+ * @module liwa-llm-pi-ai/login
  */
 
 import type { AuthEvent, AuthPrompt, AuthType, Provider } from '@earendil-works/pi-ai'
-import type { Context } from '@deepseek-ai/cordis'
-import type { AuthorizationMethod, AuthorizationPrompt, AuthorizationSession } from '@deepseek-ai/dsh-authorization'
-import { isCredentialKeySegment } from '@deepseek-ai/dsh-credentials'
+import type { Context } from '@liwa/cordis'
+import type { AuthorizationMethod, AuthorizationPrompt, AuthorizationSession } from '@liwa/authorization'
+import { isCredentialKeySegment } from '@liwa/credentials'
 import { catalogProvider, catalogProviderIds } from './catalog.ts'
 import { recordKeyFor } from './auth.ts'
 import type { PiAiAuthInjection } from './adapter.ts'
@@ -20,7 +20,7 @@ import { createModels } from './models.ts'
  * Catalog providers whose OAuth login this adapter does not offer. pi-ai's Sign
  * in with ChatGPT (`openai`) identifies the installation to OpenAI with a
  * stable UUID that the app supplies through `LoginOptions.getDeviceId`, and it
- * refuses to start without one. The harness keeps no installation ID meant for
+ * refuses to start without one. Liwa keeps no installation ID meant for
  * a third-party account sign-in, so the route signs in with an API key.
  */
 const UNSERVED_OAUTH: ReadonlySet<string> = new Set(['openai'])

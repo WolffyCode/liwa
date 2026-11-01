@@ -6,7 +6,7 @@ English | [中文](README.zh.md)
 
 Local download and mandatory-dialog evidence is separate from production backend integration, visual acceptance, and installed-application upgrades. Run the command in the [Desktop README](../README.md) to produce a fresh isolated report.
 
-Installed qualification can opt into `DSH_DESKTOP_UPDATE_JOURNAL_DIR`, an absolute directory outside the installation tree that both versions retain. Each main process flushes a separate JSONL file with its installed version, state transitions, and manual-operation milestones. Raw diagnostics and request data are excluded; storage errors propagate. The [journal decision](../../../.agents/notes/implemented/testing/2026-09-14-desktop-installed-update-journal.md) defines evidence limits. Unit and main-entry tests cover the journal; a signed installed upgrade is still unverified.
+Installed qualification can opt into `LIWA_DESKTOP_UPDATE_JOURNAL_DIR`, an absolute directory outside the installation tree that both versions retain. Each main process flushes a separate JSONL file with its installed version, state transitions, and manual-operation milestones. Raw diagnostics and request data are excluded; storage errors propagate. The [journal decision](../../../.agents/notes/implemented/testing/2026-09-14-desktop-installed-update-journal.md) defines evidence limits. Unit and main-entry tests cover the journal; a signed installed upgrade is still unverified.
 
 ## Table of Contents
 
@@ -23,7 +23,7 @@ Installed qualification can opt into `DSH_DESKTOP_UPDATE_JOURNAL_DIR`, an absolu
 
 See [recovery and diagnostics](../docs/diagnostics/README.md) for product behavior and limitations.
 
-Use a disposable profile and separate Electron `userData` with the actual packaged client. Construct a minimal local bundle with `package.json`, `dsh.bundle.patch` pointing to `cordis.patch.yml`, and an optional plugin module; archive it as a local `.tgz`. These packages deliberately break the application and must not be published or installed in a daily profile.
+Use a disposable profile and separate Electron `userData` with the actual packaged client. Construct a minimal local bundle with `package.json`, `liwa.bundle.patch` pointing to `cordis.patch.yml`, and an optional plugin module; archive it as a local `.tgz`. These packages deliberately break the application and must not be published or installed in a daily profile.
 
 Exercise import and plugin-initialization exceptions, an asynchronous exception after `appReady`, and a nonzero Host exit. A patch disabling the `agent`, `session`, `llm`, and `tools` providers exercises missing-service diagnostics. To check cross-restart history, select that bundle through `pluginManager`, then restart the same profile. Runtime scenarios require observing actual client readiness; `appReady` alone does not establish that the window is visible.
 
@@ -53,7 +53,7 @@ pnpm exec tsc -b apps/desktop/tsconfig.host.json
 apps/desktop/.desktop-build/targets/mac-arm64/electron/Electron.app/Contents/MacOS/Electron apps/desktop/tests/fixtures/update-overlay-visibility.mjs
 ```
 
-The fixture owns a unique profile and writes `result.json` under `.desktop-build/qualification/update-overlay-*`. It checks visible and hidden owners, absence of native child windows, retention of a separate control window’s focus after owner visibility notifications, and view/input cleanup including owner destruction. It uses no network, product login, or dsh Host. It qualifies the in-window carrier, not the full first-login or installation flow.
+The fixture owns a unique profile and writes `result.json` under `.desktop-build/qualification/update-overlay-*`. It checks visible and hidden owners, absence of native child windows, retention of a separate control window’s focus after owner visibility notifications, and view/input cleanup including owner destruction. It uses no network, product login, or liwa Host. It qualifies the in-window carrier, not the full first-login or installation flow.
 
 <a id="verification-interactive"></a>
 

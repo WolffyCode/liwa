@@ -5,42 +5,42 @@
 /:
   en: ef50065f5ff17aa1
   zh: ee5d2b7986739fca
-/deepseek-ai-dsh-client-ui-sidebar-documentpreview:
-  en: 5168e03d461318f5
-  zh: 7ad97d70ee331bfd
-/deepseek-ai-dsh-client-ui-sidebar-documentpreview/summary:
+/liwa-client-ui-sidebar-documentpreview:
+  en: e960d16af762e23a
+  zh: 3164700d2754820e
+/liwa-client-ui-sidebar-documentpreview/summary:
   en: a74c16667d0baada
   zh: 4fd709ff9f98b84f
-/deepseek-ai-dsh-client-ui-sidebar-documentpreview/table-of-contents:
+/liwa-client-ui-sidebar-documentpreview/table-of-contents:
   en: 0dd8c3a22e28aacf
   zh: c27c11bf4b5cceba
-/deepseek-ai-dsh-client-ui-sidebar-documentpreview/what-it-registers:
-  en: a02e6fd89e332967
-  zh: b5c61cb75458d1a2
-/deepseek-ai-dsh-client-ui-sidebar-documentpreview/addresses:
-  en: 57942270e23d3a8e
-  zh: 6617124e652b3f67
-/deepseek-ai-dsh-client-ui-sidebar-documentpreview/how-it-reads:
-  en: e197303166b5a86f
-  zh: 8d151e49321d67aa
-/deepseek-ai-dsh-client-ui-sidebar-documentpreview/excel-preview:
-  en: 595499992ceea693
-  zh: 83c6147c46a80dca
-/deepseek-ai-dsh-client-ui-sidebar-documentpreview/office-preview:
-  en: 372d8ce6492e6896
-  zh: 912f613bc9221aa3
-/deepseek-ai-dsh-client-ui-sidebar-documentpreview/navigation:
+/liwa-client-ui-sidebar-documentpreview/what-it-registers:
+  en: 52f4c03a4dfeb67f
+  zh: 30635f6577bfc541
+/liwa-client-ui-sidebar-documentpreview/addresses:
+  en: 37304341c65fda3d
+  zh: c83c2df8f7a7e753
+/liwa-client-ui-sidebar-documentpreview/how-it-reads:
+  en: 5e02de9ee38f55f5
+  zh: 4251c147d045c408
+/liwa-client-ui-sidebar-documentpreview/excel-preview:
+  en: b854a56a3279c09e
+  zh: d6461227da807c73
+/liwa-client-ui-sidebar-documentpreview/office-preview:
+  en: 2f33d6ddc142f4df
+  zh: c0352b5020a7328e
+/liwa-client-ui-sidebar-documentpreview/navigation:
   en: 59256644b39e412d
   zh: 8ab908393b018431
-/deepseek-ai-dsh-client-ui-sidebar-documentpreview/model-experience:
+/liwa-client-ui-sidebar-documentpreview/model-experience:
   en: ca1deb99d0e44755
   zh: f285fc56cee669ec
-/deepseek-ai-dsh-client-ui-sidebar-documentpreview/model-experience/kv-cache-effect:
+/liwa-client-ui-sidebar-documentpreview/model-experience/kv-cache-effect:
   en: 7edb4c0bb5f13847
   zh: ae5d0bbebe4aa563
-/deepseek-ai-dsh-client-ui-sidebar-documentpreview/known-limitations-and-deferred-work:
-  en: 7be2ad2e198131f8
-  zh: 21b35eae72a49ad2
-/deepseek-ai-dsh-client-ui-sidebar-documentpreview/known-limitations-and-deferred-work/dev-note:
+/liwa-client-ui-sidebar-documentpreview/known-limitations-and-deferred-work:
+  en: 91ae9fb605cf5ad4
+  zh: aaf73c76873080d2
+/liwa-client-ui-sidebar-documentpreview/known-limitations-and-deferred-work/dev-note:
   en: e67f633dc6fe7773
   zh: e88aeb617ffb74ea

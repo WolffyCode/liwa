@@ -6,12 +6,12 @@
 
 import { memo, useMemo, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { IconDatabaseOutlineRegular, IconGaugeOutlineRegular, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { UseProjection } from '@deepseek-ai/dsh-api-session-controller/client'
-import type { InjectFace, SnapshotSelectorHook } from '@deepseek-ai/dsh-client-ui-slots'
+import { IconDatabaseOutlineRegular, IconGaugeOutlineRegular, Tooltip } from '@liwa/client-ui-primitives'
+import type { UseProjection } from '@liwa/api-session-controller/client'
+import type { InjectFace, SnapshotSelectorHook } from '@liwa/client-ui-slots'
 // Type-only: merges the sessionStats key into SessionProjectionMap for useProjection.
-import type {} from '@deepseek-ai/dsh-session-stats/client'
-import type { TokenUsageProjection } from '@deepseek-ai/dsh-token-meter/client'
+import type {} from '@liwa/session-stats/client'
+import type { TokenUsageProjection } from '@liwa/token-meter/client'
 import type { ChatViewSlotProps, PerformanceUsageInjected } from '../contract/slots.ts'
 import type { ChatSnapshot } from '../contract/snapshot.ts'
 import { formatTokensPerSecond } from './message-chrome.ts'

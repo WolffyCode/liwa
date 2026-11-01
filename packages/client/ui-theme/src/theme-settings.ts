@@ -1,6 +1,6 @@
 /** Theme preferences stored in the Host user-settings document. */
 
-import z from '@deepseek-ai/schemastery'
+import z from '@liwa/schemastery'
 
 /** Built-in preferences accepted at the registry and settings boundaries. */
 export const THEME_PREFERENCES = ['light', 'dark', 'system'] as const
@@ -55,9 +55,9 @@ export interface FontSizeSpec {
  * terminal cell font size.
  */
 export const FONT_SIZE_SPECS = {
-  text: { field: FONT_SIZE_FIELD, variable: '--dsh-content-font-size', min: FONT_SIZE_MIN, max: FONT_SIZE_MAX, default: DEFAULT_FONT_SIZE },
-  code: { field: 'codeFontSize', variable: '--dsh-code-font-size', min: 10, max: 16, default: 11 },
-  terminal: { field: 'terminalFontSize', variable: '--dsh-terminal-font-size', min: 10, max: 20, default: 13 },
+  text: { field: FONT_SIZE_FIELD, variable: '--liwa-content-font-size', min: FONT_SIZE_MIN, max: FONT_SIZE_MAX, default: DEFAULT_FONT_SIZE },
+  code: { field: 'codeFontSize', variable: '--liwa-code-font-size', min: 10, max: 16, default: 11 },
+  terminal: { field: 'terminalFontSize', variable: '--liwa-terminal-font-size', min: 10, max: 20, default: 13 },
 } as const satisfies Record<FontRole, FontSizeSpec>
 
 /** Integer px font sizes by role. */
@@ -82,7 +82,7 @@ export const FONT_FAMILY_FIELDS = {
  * @returns the CSS custom property name.
  */
 export function fontFamilyVariable(kind: FontRole): string {
-  return `--dsh-font-family-${kind}`
+  return `--liwa-font-family-${kind}`
 }
 
 /** Normalized CSS font-family lists by role; `''` selects the built-in stack. */

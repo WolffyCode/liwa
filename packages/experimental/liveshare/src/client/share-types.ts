@@ -25,7 +25,7 @@ export interface OutgoingShare {
   readonly link: string
   readonly createdAt: string
   /**
-   * The session permission the owner set for this share. Absent when the owner's Harness does not
+   * The session permission the owner set for this share. Absent when the owner's Liwa does not
    * report a mode at all, which is stated as unsupported rather than as the narrowest one.
    */
   readonly sessionMode?: ViewerSessionMode
@@ -36,9 +36,9 @@ export interface OutgoingShare {
    */
   readonly allowsFork?: boolean
   /**
-   * Plugin endpoints this share exposes to its viewers, as the owner's Harness reports them.
+   * Plugin endpoints this share exposes to its viewers, as the owner's Liwa reports them.
    *
-   * Absent when that Harness reports none, which is also what an empty list means: no plugin endpoint
+   * Absent when that Liwa reports none, which is also what an empty list means: no plugin endpoint
    * reaches this share's viewers. A host that cannot report the field is read the same way, because
    * nothing was selected for the share.
    */

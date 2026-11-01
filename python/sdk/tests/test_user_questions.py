@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from deepseek_harness import DeepSeekHarness, HarnessClient, HarnessConfig, UserQuestionRequest
-from deepseek_harness.errors import TransportClosedError
+from liwa import Liwa, LiwaClient, LiwaConfig, UserQuestionRequest
+from liwa.errors import TransportClosedError
 
 
 class Response(BaseModel):
@@ -71,11 +71,11 @@ for line in sys.stdin:
     return path
 
 
-def config(callback=None) -> HarnessConfig:
-    return HarnessConfig(on_user_question=callback, request_timeout_seconds=5)
+def config(callback=None) -> LiwaConfig:
+    return LiwaConfig(on_user_question=callback, request_timeout_seconds=5)
 
 
-def initialize(client: HarnessClient, root: Path) -> None:
+def initialize(client: LiwaClient, root: Path) -> None:
     client.initialize(cwd=str(root), provider="mock", model="mock")
 
 
@@ -89,7 +89,7 @@ def test_callback_preserves_question_metadata_and_answers_without_blocking_reade
         assert client.request("stats", {}, response_model=Response).capabilities == {"userQuestions": True}
         return {"answers": [{"id": "format", "selected": ["CSV"]}]}
 
-    with HarnessClient(config(answer), _launch_args=(sys.executable, str(runtime))) as client:
+    with LiwaClient(config(answer), _launch_args=(sys.executable, str(runtime))) as client:
         initialize(client, tmp_path)
         result = client.request("ask", {}, response_model=Response)
         assert result.answer == {"answers": [{"id": "format", "selected": ["CSV"]}]}
@@ -97,7 +97,7 @@ def test_callback_preserves_question_metadata_and_answers_without_blocking_reade
 
 
 def test_missing_callback_does_not_advertise_question_support(runtime: Path, tmp_path: Path) -> None:
-    with HarnessClient(config(), _launch_args=(sys.executable, str(runtime))) as client:
+    with LiwaClient(config(), _launch_args=(sys.executable, str(runtime))) as client:
         initialize(client, tmp_path)
         assert client.request("stats", {}, response_model=Response).capabilities is None
 
@@ -114,7 +114,7 @@ def test_cancellation_stops_cooperative_host_work_and_suppresses_late_answer(run
         stopped.set()
         return {"answers": [{"id": "format", "selected": ["late"]}]}
 
-    with HarnessClient(config(answer), _launch_args=(sys.executable, str(runtime))) as client:
+    with LiwaClient(config(answer), _launch_args=(sys.executable, str(runtime))) as client:
         initialize(client, tmp_path)
 
         def ask():
@@ -156,7 +156,7 @@ def test_callback_failure_is_returned_to_runtime_and_reader_remains_usable(runti
     def answer(_request: UserQuestionRequest, _cancelled: threading.Event):
         raise ValueError("answer service unavailable")
 
-    with HarnessClient(config(answer), _launch_args=(sys.executable, str(runtime))) as client:
+    with LiwaClient(config(answer), _launch_args=(sys.executable, str(runtime))) as client:
         initialize(client, tmp_path)
         result = client.request("ask", {}, response_model=Response)
         assert result.error == {"code": -32603, "message": "answer service unavailable"}
@@ -164,7 +164,7 @@ def test_callback_failure_is_returned_to_runtime_and_reader_remains_usable(runti
 
 
 def test_high_level_config_installs_the_same_native_callback(runtime: Path, tmp_path: Path) -> None:
-    with DeepSeekHarness(
+    with Liwa(
         cwd=str(tmp_path), _launch_args=(sys.executable, str(runtime)),
         on_user_question=lambda _request, _cancelled: {"answers": [{"id": "format", "selected": [], "custom": "JSON"}]},
     ) as harness:
@@ -192,7 +192,7 @@ def test_late_callback_cannot_answer_or_remove_a_new_process_question(runtime: P
 
     failures = []
     settings = config(old_answer)
-    with HarnessClient(settings, _launch_args=(sys.executable, str(runtime))) as client:
+    with LiwaClient(settings, _launch_args=(sys.executable, str(runtime))) as client:
         initialize(client, tmp_path)
 
         def ask():

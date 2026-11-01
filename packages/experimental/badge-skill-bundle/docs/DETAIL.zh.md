@@ -1,1 +1,1 @@
-![DSH 徽章技能功能预览](preview.zh.svg)
+![灵鲸徽章技能功能预览](preview.zh.svg)

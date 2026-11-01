@@ -2,7 +2,7 @@
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { getStaticModules } from '@deepseek-ai/dsh-client-web/src/seed.ts'
+import { getStaticModules } from '@liwa/client-web/src/seed.ts'
 import { afterAll, describe, expect, it, onTestFinished } from 'vitest'
 import { MODULES_PACKAGE } from '../src/assembly/modules.ts'
 import { WEB_PROFILE_BUNDLES, bundleRoster, webApp } from '../src/assembly/bundle-roster.ts'
@@ -13,30 +13,30 @@ function profileScope(name: string) {
 }
 
 describe('webApp (the real web profile)', () => {
-  it('composes dsh-base then dsh-web-app: unique names, inject edges on roster rows or platform seed words', () => {
-    expect(WEB_PROFILE_BUNDLES).toEqual(['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'])
+  it('composes liwa-base then liwa-web-app: unique names, inject edges on roster rows or platform seed words', () => {
+    expect(WEB_PROFILE_BUNDLES).toEqual(['@liwa/base', '@liwa/web-app'])
     const names = webApp.rows.map(row => row.name)
     expect(new Set(names).size).toBe(names.length)
     const known = new Set([...names, ...Object.keys(getStaticModules())])
     const dangling = webApp.rows.flatMap(row => row.inject.filter(target => !known.has(target)).map(target => `${row.name} -> ${target}`))
     expect(dangling).toEqual([])
     expect(bundleRoster(WEB_PROFILE_BUNDLES, undefined, profileScope('web')).rows).toEqual(webApp.rows)
-    expect(names).not.toContain('@deepseek-ai/dsh-client-ui-sidebar-browser')
+    expect(names).not.toContain('@liwa/client-ui-sidebar-browser')
     expect(bundleRoster(WEB_PROFILE_BUNDLES, undefined, profileScope('desktop')).rows.map(row => row.name))
-      .toContain('@deepseek-ai/dsh-client-ui-sidebar-browser')
+      .toContain('@liwa/client-ui-sidebar-browser')
   })
 
   it('keeps browser rows with their declarations and drops Host-only, disabled, and subpath rows', () => {
     const immediate = new Set(webApp.rows.filter(row => row.immediately).map(row => row.name))
     expect(immediate.has(MODULES_PACKAGE)).toBe(true)
-    expect(immediate.has('@deepseek-ai/dsh-client-connection')).toBe(true)
-    expect(webApp.rows.find(row => row.name === '@deepseek-ai/dsh-api-gateway')?.inject)
-      .toEqual(['@deepseek-ai/dsh-typert-registry', '@deepseek-ai/dsh-client-connection'])
+    expect(immediate.has('@liwa/client-connection')).toBe(true)
+    expect(webApp.rows.find(row => row.name === '@liwa/api-gateway')?.inject)
+      .toEqual(['@liwa/typert-registry', '@liwa/client-connection'])
     const names = webApp.rows.map(row => row.name)
-    expect(names).toContain('@deepseek-ai/dsh-client-ui-settings-general')
-    expect(names).not.toContain('@deepseek-ai/dsh-llm') // Host only
-    expect(names).toContain('@deepseek-ai/dsh-client-ui-schedule')
-    expect(names).not.toContain('@deepseek-ai/dsh-web-app') // Host runtime glue, its `/startup` row is a subpath
+    expect(names).toContain('@liwa/client-ui-settings-general')
+    expect(names).not.toContain('@liwa/llm') // Host only
+    expect(names).toContain('@liwa/client-ui-schedule')
+    expect(names).not.toContain('@liwa/web-app') // Host runtime glue, its `/startup` row is a subpath
   })
 })
 
@@ -58,11 +58,11 @@ class Scratch {
   }
 
   bundle(name: string, patch: string): void {
-    this.pkg(name, { dsh: { bundle: { patch: './cordis.patch.yml' } } }, { 'cordis.patch.yml': patch })
+    this.pkg(name, { liwa: { bundle: { patch: './cordis.patch.yml' } } }, { 'cordis.patch.yml': patch })
   }
 
   web(name: string, client: Record<string, unknown> = {}): void {
-    this.pkg(name, { dsh: { client: { platform: 'web', ...client } } })
+    this.pkg(name, { liwa: { client: { platform: 'web', ...client } } })
   }
 
   roster(bundles: readonly string[]): readonly string[] {
@@ -80,7 +80,7 @@ describe('bundleRoster on a scratch installation', () => {
     const bundle = join(linked.root, 'workspace', 'bundle')
     mkdirSync(bundle, { recursive: true })
     writeFileSync(join(bundle, 'package.json'), JSON.stringify({
-      name: '@t/self', dsh: { bundle: { patch: './cordis.patch.yml' }, client: { platform: 'web' } },
+      name: '@t/self', liwa: { bundle: { patch: './cordis.patch.yml' }, client: { platform: 'web' } },
     }))
     writeFileSync(join(bundle, 'cordis.patch.yml'), "- insert:\n    - name: '@t/self'\n")
     mkdirSync(join(linked.root, 'app', 'node_modules', '@t'), { recursive: true })
@@ -92,7 +92,7 @@ describe('bundleRoster on a scratch installation', () => {
     const anchored = new Scratch()
     onTestFinished(() => { rmSync(anchored.root, { recursive: true, force: true }) })
     writeFileSync(anchored.anchor, JSON.stringify({
-      name: '@t/self', dsh: { bundle: { patch: './cordis.patch.yml' }, client: { platform: 'web' } },
+      name: '@t/self', liwa: { bundle: { patch: './cordis.patch.yml' }, client: { platform: 'web' } },
     }))
     writeFileSync(join(anchored.root, 'app', 'cordis.patch.yml'), "- insert:\n    - name: '@t/self'\n")
     anchored.bundle('@t/self', '- insert: []\n')
@@ -105,22 +105,22 @@ describe('bundleRoster on a scratch installation', () => {
     const bundle = join(linked.root, 'workspace', 'bundle')
     const dependency = join(bundle, 'node_modules', '@t', 'theme')
     mkdirSync(dependency, { recursive: true })
-    writeFileSync(join(bundle, 'package.json'), JSON.stringify({ name: '@t/linked', dsh: { bundle: { patch: './cordis.patch.yml' } } }))
+    writeFileSync(join(bundle, 'package.json'), JSON.stringify({ name: '@t/linked', liwa: { bundle: { patch: './cordis.patch.yml' } } }))
     writeFileSync(join(bundle, 'cordis.patch.yml'), "- insert:\n    - id: theme\n      name: '@t/theme'\n")
-    writeFileSync(join(dependency, 'package.json'), JSON.stringify({ name: '@t/theme', dsh: { client: { platform: 'web' } } }))
+    writeFileSync(join(dependency, 'package.json'), JSON.stringify({ name: '@t/theme', liwa: { client: { platform: 'web' } } }))
     linked.pkg('@t/theme', {})
     symlinkSync(bundle, join(linked.root, 'app', 'node_modules', '@t', 'linked'), 'junction')
     linked.bundle('@t/base', '- insert: []\n')
     expect(linked.roster(['@t/base', '@t/linked'])).toEqual(['@t/theme'])
   })
 
-  it('applies the layers in order and keeps enabled browser rows once, with their dsh.client declaration', () => {
+  it('applies the layers in order and keeps enabled browser rows once, with their liwa.client declaration', () => {
     scratch.web('@t/a', { inject: ['@t/b'], immediately: true })
     scratch.web('@t/b')
     scratch.web('@t/c')
     scratch.web('plain')
-    scratch.pkg('@t/host', { dsh: {} })
-    scratch.pkg('@t/node', { dsh: { client: { platform: 'node' } } })
+    scratch.pkg('@t/host', { liwa: {} })
+    scratch.pkg('@t/node', { liwa: { client: { platform: 'node' } } })
     scratch.bundle('@t/base', `
 - insert:
     - id: a
@@ -162,9 +162,9 @@ describe('bundleRoster on a scratch installation', () => {
     expect(scratch.roster(['@t/base'])).toEqual(['@t/a', '@t/c'])
   })
 
-  it('concatenates a dsh.bundle.patch list in order', () => {
+  it('concatenates a liwa.bundle.patch list in order', () => {
     scratch.web('@t/listed')
-    scratch.pkg('@t/list', { dsh: { bundle: { patch: ['./first.yml', './second.yml'] } } }, {
+    scratch.pkg('@t/list', { liwa: { bundle: { patch: ['./first.yml', './second.yml'] } } }, {
       'first.yml': '- insert:\n    - id: listed\n      name: \'@t/listed\'\n      disabled: true\n',
       'second.yml': '- id: listed\n  disabled: false\n',
     })
@@ -291,10 +291,10 @@ describe('bundleRoster on a scratch installation', () => {
 
   it('fails loud on a bundle that does not resolve, declares no patch, or whose patch is not a list', () => {
     expect(() => scratch.roster(['@t/missing'])).toThrow('cannot resolve bundle @t/missing from')
-    scratch.pkg('@t/no-patch', { dsh: {} })
-    expect(() => scratch.roster(['@t/no-patch'])).toThrow('bundle @t/no-patch declares no dsh.bundle.patch file list in')
-    scratch.pkg('@t/bad-patch-list', { dsh: { bundle: { patch: [1] } } })
-    expect(() => scratch.roster(['@t/bad-patch-list'])).toThrow('bundle @t/bad-patch-list declares no dsh.bundle.patch file list in')
+    scratch.pkg('@t/no-patch', { liwa: {} })
+    expect(() => scratch.roster(['@t/no-patch'])).toThrow('bundle @t/no-patch declares no liwa.bundle.patch file list in')
+    scratch.pkg('@t/bad-patch-list', { liwa: { bundle: { patch: [1] } } })
+    expect(() => scratch.roster(['@t/bad-patch-list'])).toThrow('bundle @t/bad-patch-list declares no liwa.bundle.patch file list in')
     scratch.bundle('@t/not-a-list', 'insert: []\n')
     expect(() => scratch.roster(['@t/not-a-list'])).toThrow('must be a top-level list of patches')
   })
@@ -337,7 +337,7 @@ it('exhausts uneven linked-bundle search paths before reporting a missing plugin
   onTestFinished(() => { rmSync(scratch.root, { recursive: true, force: true }) })
   const bundle = join(scratch.root, 'workspace', 'nested', 'deeper', 'bundle')
   mkdirSync(bundle, { recursive: true })
-  writeFileSync(join(bundle, 'package.json'), JSON.stringify({ name: '@t/deep', dsh: { bundle: { patch: './cordis.patch.yml' } } }))
+  writeFileSync(join(bundle, 'package.json'), JSON.stringify({ name: '@t/deep', liwa: { bundle: { patch: './cordis.patch.yml' } } }))
   writeFileSync(join(bundle, 'cordis.patch.yml'), "- insert:\n    - id: missing\n      name: '@t/absent'\n")
   scratch.bundle('@t/base', '- insert: []\n')
   symlinkSync(bundle, join(scratch.root, 'app', 'node_modules', '@t', 'deep'), 'junction')

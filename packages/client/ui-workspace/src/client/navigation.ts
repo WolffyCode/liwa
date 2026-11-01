@@ -1,8 +1,8 @@
 /** Workspace archive and directory UI capability. */
 
-import { Service, type Context } from '@deepseek-ai/cordis'
-import type { AccessEffect, RemoteEndpoint } from '@deepseek-ai/dsh-api-remote-access/client'
-import type { ClientRemote, DirectoryListing, RemoteFailure } from '@deepseek-ai/dsh-api-remotes/client'
+import { Service, type Context } from '@liwa/cordis'
+import type { AccessEffect, RemoteEndpoint } from '@liwa/api-remote-access/client'
+import type { ClientRemote, DirectoryListing, RemoteFailure } from '@liwa/api-remotes/client'
 import type {
   ISessions,
   SessionCreateError,
@@ -10,17 +10,17 @@ import type {
   SessionReference,
   SessionTarget,
   SessionListState,
-} from '@deepseek-ai/dsh-api-session-controller/client'
+} from '@liwa/api-session-controller/client'
 // Type-only: pulls the `agentPreset` Session projection value into this program.
-import type {} from '@deepseek-ai/dsh-agent-preset-registry/types'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import type { SubagentAddress } from '@deepseek-ai/dsh-subagent/client'
+import type {} from '@liwa/agent-preset-registry/types'
+import { createSnapshotStore } from '@liwa/client-store'
+import type { SubagentAddress } from '@liwa/subagent/client'
 import type {
   IWorkspaces, WorkspaceId, WorkspaceSnapshot, WorkspaceView,
-} from '@deepseek-ai/dsh-api-workspace-controller/client'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
-import type { DraftInitializationOptions } from '@deepseek-ai/dsh-client-ui-conversation/client'
+} from '@liwa/api-workspace-controller/client'
+import type { SessionId } from '@liwa/session/types'
+import type {} from '@liwa/client-ui-layout/client'
+import type { DraftInitializationOptions } from '@liwa/client-ui-conversation/client'
 import type { RowToast } from './contract/slots.ts'
 import { pinOrderAccounts, pinOrderSource } from './pin-order.ts'
 import type { WorkspaceViewStoreActions } from './stores.ts'
@@ -145,7 +145,7 @@ export interface UiWorkspace {
   whenAccess(workspaceId: WorkspaceId, action: RemoteEndpoint, callback: () => AccessEffect): () => void
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     /** Cross-Controller Workspace navigation and directory UI capability. */
     uiWorkspace: UiWorkspace
@@ -171,7 +171,7 @@ class UiWorkspaceService extends Service implements UiWorkspace {
   }>()
   private readonly lifetime = new AbortController()
   private readonly selection = createSnapshotStore<MainSelection>(
-    {}, { persist: { name: 'dsh.sessions.current' } },
+    {}, { persist: { name: 'liwa.sessions.current' } },
   )
   private mainReference: SessionReference | undefined
   private restorationNavigation: AbortSignal | undefined

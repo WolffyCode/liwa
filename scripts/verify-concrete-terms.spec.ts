@@ -33,7 +33,7 @@ describe('concrete terminology policy', () => {
   })
 
   it.skipIf(process.platform === 'win32')('reads the target of a dangling tracked symlink', () => {
-    const repoRoot = mkdtempSync(join(tmpdir(), 'dsh-concrete-terms-'))
+    const repoRoot = mkdtempSync(join(tmpdir(), 'liwa-concrete-terms-'))
     try {
       symlinkSync(`../${blockedTerm}-target`, join(repoRoot, 'tracked-link'))
       expect(findConcreteTermViolations(
@@ -67,13 +67,13 @@ describe('concrete terminology policy', () => {
   it('preserves historical identifiers only in alpha and RC release schema snapshots', () => {
     for (const channel of ['alpha', 'rc']) {
       expect(findConcreteTermViolations(
-        `docs/persistence-changes/releases/dsh-v0.1.2-${channel}.1.schema.json`,
+        `docs/persistence-changes/releases/liwa-v0.1.2-${channel}.1.schema.json`,
         `{"names":["Historical${blockedTerm}"]}`,
       )).toEqual([])
     }
     for (const file of [
-      'docs/persistence-changes/releases/dsh-v0.1.2-alpha.1.md',
-      'docs/persistence-changes/releases/dsh-v0.1.2-alpha.1.zh.md',
+      'docs/persistence-changes/releases/liwa-v0.1.2-alpha.1.md',
+      'docs/persistence-changes/releases/liwa-v0.1.2-alpha.1.zh.md',
       'docs/persistence-changes/releases/README.md',
       'docs/persistence-changes/releases/manifest.json',
       'docs/persistence-changes/releases/other.schema.json',

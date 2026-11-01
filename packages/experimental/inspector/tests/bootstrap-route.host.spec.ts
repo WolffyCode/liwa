@@ -1,10 +1,10 @@
 /** Host bootstrap route availability while the Inspector Worker is still starting. */
 
-import { Context, FiberState } from '@deepseek-ai/cordis'
-import type { Message } from '@deepseek-ai/cordis'
-import type { IndexInjection, WebServer } from '@deepseek-ai/dsh-host-webserver'
-import { HostConnectionService } from '@deepseek-ai/dsh-client-connection'
-import type { BrowserAuth } from '@deepseek-ai/dsh-client-connection/src/browser-auth.ts'
+import { Context, FiberState } from '@liwa/cordis'
+import type { Message } from '@liwa/cordis'
+import type { IndexInjection, WebServer } from '@liwa/host-webserver'
+import { HostConnectionService } from '@liwa/client-connection'
+import type { BrowserAuth } from '@liwa/client-connection/src/browser-auth.ts'
 import { setFlagsFromString } from 'node:v8'
 import { runInNewContext } from 'node:vm'
 import open from 'open'
@@ -80,7 +80,7 @@ describe('experimental Inspector Host bootstrap route', () => {
     const injected = () => {
       const rows: IndexInjection[] = []
       context!.emit('webserver/index-inject', rows, PAGE_PEER)
-      return rows.find(row => row.kind === 'global' && row.name === '__DSH_INSPECTOR__')
+      return rows.find(row => row.kind === 'global' && row.name === '__LIWA_INSPECTOR__')
     }
     return { fiber, bootstrap, injected, register, registerUpgrade, messages, log }
   }
@@ -102,7 +102,7 @@ describe('experimental Inspector Host bootstrap route', () => {
     expect(response.status).toBe(200)
     expect(response.headers.get('cache-control')).toBe('no-store')
     const value = injected()
-    expect(value).toMatchObject({ kind: 'global', name: '__DSH_INSPECTOR__' })
+    expect(value).toMatchObject({ kind: 'global', name: '__LIWA_INSPECTOR__' })
     expect(await response.json()).toEqual(value?.kind === 'global' ? value.value : undefined)
     expect(register).toHaveBeenCalledWith(expect.objectContaining({ path: '/inspector/devtools' }))
     expect(registerUpgrade).toHaveBeenCalledWith(expect.objectContaining({ path: '/inspector/devtools/cdp' }))
@@ -151,7 +151,7 @@ describe('experimental Inspector Host bootstrap route', () => {
     expect(registerUpgrade).not.toHaveBeenCalled()
     expect(injected()).toBeUndefined()
     expect(context!.get('inspector')).toBeUndefined()
-    expect(log).not.toHaveBeenCalledWith(expect.stringMatching(/^dsh inspector:/u))
+    expect(log).not.toHaveBeenCalledWith(expect.stringMatching(/^liwa inspector:/u))
     expect(open).not.toHaveBeenCalled()
 
     await fiber.dispose()

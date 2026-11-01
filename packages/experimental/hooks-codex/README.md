@@ -3,13 +3,13 @@ description: "Run your existing Codex hooks.json hook config during agent runs �
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-hooks-codex
+# @liwa/hooks-codex
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-hooks-codex` runs command hooks from an existing Codex `hooks.json` during agent runs, so prompt and tool gates work without being rewritten. It supports five Codex hook points: session start, prompt submission, before and after tool execution, and stop. Hooks can block prompts or tool calls with model-visible reasons, add conversation context, or force another agent step. Choose this package to reuse Codex command hooks in the harness; use a native plugin for behavior outside this supported subset.
+`liwa-hooks-codex` runs command hooks from an existing Codex `hooks.json` during agent runs, so prompt and tool gates work without being rewritten. It supports five Codex hook points: session start, prompt submission, before and after tool execution, and stop. Hooks can block prompts or tool calls with model-visible reasons, add conversation context, or force another agent step. Choose this package to reuse Codex command hooks in Liwa; use a native plugin for behavior outside this supported subset.
 
 ## Table of Contents
 
@@ -36,7 +36,7 @@ Use it when you own a Codex `hooks.json` and its command hooks should gate promp
 ### Smallest working setup
 
 ```yaml
-- name: '@deepseek-ai/dsh-hooks-codex'
+- name: '@liwa/hooks-codex'
   config:
     configPath: ./.codex/hooks.json
     model: deepseek-v4
@@ -49,7 +49,7 @@ Use it when you own a Codex `hooks.json` and its command hooks should gate promp
 | `defaultTimeoutMs` | `600,000` | Per-hook timeout when a hook sets none (the Codex default) |
 | `stderrSummaryMaxChars` | `500` | Character cap on the persisted `hook/result` stderr summary |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-hooks-codex) is the exhaustive source for every accepted field.
+The generated [configuration catalog](../../../docs/config-catalog.md#liwahooks-codex) is the exhaustive source for every accepted field.
 
 ### What your hooks can do
 
@@ -94,7 +94,7 @@ The matcher subject is the tool name (`PreToolUse` / `PostToolUse`) or the sessi
 
 ### Detached runs and disposal
 
-`SessionStart` is the one emit point and runs detached — no extension point awaits it. Each run chain is tracked, and disposing the bridge aborts a still-running hook process, then drains the continuation before the dispose resolves (`createDetachedRuns` in `dsh-hook-protocol`).
+`SessionStart` is the one emit point and runs detached — no extension point awaits it. Each run chain is tracked, and disposing the bridge aborts a still-running hook process, then drains the continuation before the dispose resolves (`createDetachedRuns` in `liwa-hook-protocol`).
 
 ### Design philosophy
 
@@ -102,7 +102,7 @@ The matcher subject is the tool name (`PreToolUse` / `PostToolUse`) or the sessi
 - **Adding context is not a veto.** A context-only hook delegates via `next()` before folding its message into a downstream enter decision, so a later `agent/pre-step` or `tools/post-execute` listener can still reject or rewrite.
 - **Containment at every failure.** Config read/parse failures and invalid matchers register nothing; a throwing detached inject is caught and logged instead of breaking session boot or the loop.
 - **Dispose reaches quiescence.** Detached runs are tracked and drained on disposal so no hook process or late callback outlives the fiber.
-- **Dialect-shaped, not maximal.** Payloads stay snake_case with `turn_id` / `model`, stdin carries no trailing newline, and the bridge implements no pre-tool approval or rewrite path — the protocol's shape is preserved even where the harness could do more.
+- **Dialect-shaped, not maximal.** Payloads stay snake_case with `turn_id` / `model`, stdin carries no trailing newline, and the bridge implements no pre-tool approval or rewrite path — the protocol's shape is preserved even where Liwa could do more.
 
 The [hook-bridges Agent Note](../../../.agents/notes/archived/feature/2026-06-30-hook-bridges.md) records the bridge design and the deferred gaps; the [hook-protocol-lib Agent Note](../../../.agents/notes/archived/feature/2026-06-30-hook-protocol-lib.md) records the shared-versus-per-dialect split.
 
@@ -126,7 +126,7 @@ Read these pages when the package-level contract is not enough. They move from t
 - [Hook protocol library](../hook-protocol/README.md) — the shared hook rules this bridge applies.
 - [Hook bridges Agent Note](../../../.agents/notes/archived/feature/2026-06-30-hook-bridges.md) — the bridge design, decision mapping, and deferred gaps.
 - [Interception extension-points reference](../../../docs/tool-execution-pipeline.md) — the typed-Decision surface the bridge maps onto.
-- [Generated configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-hooks-codex) — every accepted config field and its source declaration.
+- [Generated configuration catalog](../../../docs/config-catalog.md#liwahooks-codex) — every accepted config field and its source declaration.
 
 -----
 

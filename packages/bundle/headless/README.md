@@ -1,15 +1,15 @@
 ---
-description: "One-shot task mode for dsh: run a single task from the command line and get the final answer printed, for users scripting or automating dsh."
+description: "One-shot task mode for liwa: run a single task from the command line and get the final answer printed, for users scripting or automating liwa."
 kind: "package-bundle"
 ---
 
-# @deepseek-ai/dsh-headless
+# @liwa/headless
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-headless` runs one dsh task from the command line and prints the final answer, then exits — no GUI, no server, no browser. Type `dsh --profile headless "run the tests"` and the agent handles it with the same model, tools, and safety defaults as every other surface. It suits scripts, CI, and one-off jobs: it opens no ports and leaves nothing running behind. It also offers a JSON event stream (`--json`) and `--session-id` to resume a conversation. Exit code 0 means the task completed; 1 means it aborted or errored. The boundary: one task per invocation, no interactive follow-up.
+`liwa-headless` runs one liwa task from the command line and prints the final answer, then exits — no GUI, no server, no browser. Type `liwa --profile headless "run the tests"` and the agent handles it with the same model, tools, and safety defaults as every other surface. It suits scripts, CI, and one-off jobs: it opens no ports and leaves nothing running behind. It also offers a JSON event stream (`--json`) and `--session-id` to resume a conversation. Exit code 0 means the task completed; 1 means it aborted or errored. The boundary: one task per invocation, no interactive follow-up.
 
 ## Table of Contents
 
@@ -30,13 +30,13 @@ Run one task, get the final answer, and exit. The task is the command-line argum
 ### Running a one-shot task
 
 ```sh
-dsh --profile headless "run the tests"
+liwa --profile headless "run the tests"
 ```
 
-The agent works through the task, streams each non-empty provider reasoning delta to stderr under a `dsh: reasoning:` heading, then prints the final answer on stdout and exits. Consecutive reasoning deltas stay in one section, and the runner closes that section before later output when the provider supplied no trailing newline. A successful run without reasoning keeps stderr empty; a failure exits 1 and prints `dsh: <code>: <message>` to stderr. The task comes from the positional argument, or from stdin when the argument is omitted or is a lone `-`; a blank positional argument or an empty pipe is rejected before anything runs. A positional task is used as-is and stdin is not read, so put the whole prompt in the pipe when you want piped input; a piped task is sent verbatim, its trailing newline included.
+The agent works through the task, streams each non-empty provider reasoning delta to stderr under a `liwa: reasoning:` heading, then prints the final answer on stdout and exits. Consecutive reasoning deltas stay in one section, and the runner closes that section before later output when the provider supplied no trailing newline. A successful run without reasoning keeps stderr empty; a failure exits 1 and prints `liwa: <code>: <message>` to stderr. The task comes from the positional argument, or from stdin when the argument is omitted or is a lone `-`; a blank positional argument or an empty pipe is rejected before anything runs. A positional task is used as-is and stdin is not read, so put the whole prompt in the pipe when you want piped input; a piped task is sent verbatim, its trailing newline included.
 
 ```sh
-{ echo "Summarize these changes:"; git diff --stat; } | dsh --profile headless
+{ echo "Summarize these changes:"; git diff --stat; } | liwa --profile headless
 ```
 
 The task and run options use these settings:
@@ -48,16 +48,16 @@ The task and run options use these settings:
 | `json` | `false` | Project the run as newline-delimited events on stdout |
 | `permissionMode` | session policy | Apply a configured permission preset before submitting the task, including on resume |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-headless) is the exhaustive source for every accepted field and its JSDoc.
+The generated [configuration catalog](../../../docs/config-catalog.md#liwaheadless) is the exhaustive source for every accepted field and its JSDoc.
 
 <a id="credentials"></a>
 ### Credentials
 
-The shipped headless profile disables the managed credential store and its authorization and DeepSeek account consumers. API-key routes use the launch environment, then `<invocation cwd>/.env`, then `$DSH_HOME/.env`. Keys and sign-ins saved by the GUI are ignored without changing their file. Providers that require a saved sign-in fail unless stored authentication is restored; external provider credential chains, such as AWS profiles, remain available.
+The shipped headless profile disables the managed credential store and its authorization and DeepSeek account consumers. API-key routes use the launch environment, then `<invocation cwd>/.env`, then `$LIWA_HOME/.env`. Keys and sign-ins saved by the GUI are ignored without changing their file. Providers that require a saved sign-in fail unless stored authentication is restored; external provider credential chains, such as AWS profiles, remain available.
 
 Unset an empty launch variable to allow its `.env` fallback; an exported empty value shadows that fallback.
 
-To restore stored authentication, add these rows to `$DSH_HOME/profiles/headless/cordis.patch.yml` or a `--patch` overlay:
+To restore stored authentication, add these rows to `$LIWA_HOME/profiles/headless/cordis.patch.yml` or a `--patch` overlay:
 
 ```yaml
 - id: credentials
@@ -82,7 +82,7 @@ Use one prepared Git worktree per implementation task. Start the process with th
 
 ```sh
 git_dir=$(git rev-parse --path-format=absolute --git-common-dir)
-dsh headless --permission-mode workspace-write --add-dir "$git_dir" --json - < task.txt > run.jsonl
+liwa headless --permission-mode workspace-write --add-dir "$git_dir" --json - < task.txt > run.jsonl
 ```
 
 `--add-dir` accepts repeatable physical absolute directory paths in the execution environment. The shared Git directory permits staging, committing, and repository hooks without granting the parent checkout's source files. It grants all metadata in that directory, including shared refs, hooks, and configuration. Later host Git commands can execute modified hooks or configuration outside the sandbox; use this grant for trusted tasks and review metadata changes before host Git operations. Additional grants apply to this invocation and must be supplied again when resuming. The shipped profile passes them to `sandbox-policy`; the runner checks the original parsed CLI grants directly. An overlay that replaces the policy row must include `ctx.headlessStartup.additionalWritableRoots`, or the runner rejects the request before model work. The [local sandbox provider](../../sandbox/sandbox-local/README.md) defines platform support.
@@ -99,17 +99,17 @@ For model-reviewed full-access execution, explicitly enable [Auto review for hea
 
 ### Machine-readable output
 
-`--json` replaces the final-text stdout line with a newline-delimited JSON event stream, while stderr keeps only the `dsh:` diagnostics. The stream opens with `session` (carrying the identity the run used) and closes with `final`, and carries `status`, `text`, `thinking`, `tool_call`, and `tool_result` events in between. `text` and `thinking` are projected from committed assistant messages, so a retried or discarded attempt never reaches the stream; they arrive when the step commits, not per token, and default-mode stderr reasoning remains the only live text channel. The terminal `final` event carries the exact `sessionId`, the durable turn `reason` (or `null` when the final turn has no terminal event), and the same lossless answer as the default mode; it is not capped; every other string and object key is capped at 8 KiB and flagged with `truncated`, and one event line, its newline included, is capped at 32 KiB — an over-long event keeps its scalar fields, drops structured ones, and at the extreme reduces to `type` and `truncated`, while a payload nested 64 levels or deeper is cut at that depth. An empty tool-argument string projects as `{}`, matching what the executor runs, while arguments that JSON cannot round-trip — an overflowing number such as `1e400` — keep their raw text rather than the `null` that `JSON.stringify` would report. A failure the runner raises outside a turn writes an `error` event and ends the stream without `final`, in addition to the `dsh:` stderr line; a profile whose own plugins fail to load exits before the runner mounts, so that case keeps only the loader's stderr diagnostics. A turn that fails in-turn still ends with a `final` event (often empty) and no `error` event, so a well-formed stream can still describe a failed run: check the process exit status and `final.reason` before assessing the task report.
+`--json` replaces the final-text stdout line with a newline-delimited JSON event stream, while stderr keeps only the `liwa:` diagnostics. The stream opens with `session` (carrying the identity the run used) and closes with `final`, and carries `status`, `text`, `thinking`, `tool_call`, and `tool_result` events in between. `text` and `thinking` are projected from committed assistant messages, so a retried or discarded attempt never reaches the stream; they arrive when the step commits, not per token, and default-mode stderr reasoning remains the only live text channel. The terminal `final` event carries the exact `sessionId`, the durable turn `reason` (or `null` when the final turn has no terminal event), and the same lossless answer as the default mode; it is not capped; every other string and object key is capped at 8 KiB and flagged with `truncated`, and one event line, its newline included, is capped at 32 KiB — an over-long event keeps its scalar fields, drops structured ones, and at the extreme reduces to `type` and `truncated`, while a payload nested 64 levels or deeper is cut at that depth. An empty tool-argument string projects as `{}`, matching what the executor runs, while arguments that JSON cannot round-trip — an overflowing number such as `1e400` — keep their raw text rather than the `null` that `JSON.stringify` would report. A failure the runner raises outside a turn writes an `error` event and ends the stream without `final`, in addition to the `liwa:` stderr line; a profile whose own plugins fail to load exits before the runner mounts, so that case keeps only the loader's stderr diagnostics. A turn that fails in-turn still ends with a `final` event (often empty) and no `error` event, so a well-formed stream can still describe a failed run: check the process exit status and `final.reason` before assessing the task report.
 
 `tool_result.error`, when present, preserves the durable `{ name, code, reason? }` error fields under the same output limits. `AUTO_REVIEW_DENIED` identifies a final policy denial; `AUTO_REVIEW_FAILED` identifies a reviewer failure. Either leaves the call body unexecuted. A truncated record may omit structured detail; inspect the persisted Session when the complete reason is needed.
 
 ### When to use it
 
-Use headless for scripted or automated dsh runs — CI steps, batch jobs, quick answers from a terminal. Avoid it when you need a multi-turn interactive session or a GUI; the browser surface ([dsh-web-app](../web-app/README.md)) serves that. The process stays alive only for the run, opens no listening port, and exits on its own, so it fits pipelines that wait on the process. When a supervisor needs progress rather than just the answer, `--json` gives it the event stream and `--session-id` lets a later invocation continue the same conversation.
+Use headless for scripted or automated liwa runs — CI steps, batch jobs, quick answers from a terminal. Avoid it when you need a multi-turn interactive session or a GUI; the browser surface ([liwa-web-app](../web-app/README.md)) serves that. The process stays alive only for the run, opens no listening port, and exits on its own, so it fits pipelines that wait on the process. When a supervisor needs progress rather than just the answer, `--json` gives it the event stream and `--session-id` lets a later invocation continue the same conversation.
 
 ### Help and task errors
 
-`dsh --profile headless --help` prints the command's help text and exits without running anything. A whitespace-only positional task is a usage error on its own — nothing runs and the process exits 1, even when stdin is not a terminal, so an accidental blank argument never consumes a pipe. A task that is absent entirely is a usage error only when stdin is a terminal; otherwise the runner reads the task from stdin and rejects an empty result the same way. A lone `-` is the only stdin marker; mixing it with other task words is a usage error rather than a task that starts with a dash. In `--json` mode every usage error — including commander's own grammar rejections such as an unknown option or a missing option value — also writes an `error` event to stdout before the process exits, so a line-oriented supervisor sees a well-formed stream even when the runner never mounts; the event `message` carries the text without commander's `error: ` prefix.
+`liwa --profile headless --help` prints the command's help text and exits without running anything. A whitespace-only positional task is a usage error on its own — nothing runs and the process exits 1, even when stdin is not a terminal, so an accidental blank argument never consumes a pipe. A task that is absent entirely is a usage error only when stdin is a terminal; otherwise the runner reads the task from stdin and rejects an empty result the same way. A lone `-` is the only stdin marker; mixing it with other task words is a usage error rather than a task that starts with a dash. In `--json` mode every usage error — including commander's own grammar rejections such as an unknown option or a missing option value — also writes an `error` event to stdout before the process exits, so a line-oriented supervisor sees a well-formed stream even when the runner never mounts; the event `message` carries the text without commander's `error: ` prefix.
 
 -----
 
@@ -127,11 +127,11 @@ The runner awaits the complete application (`ctx.get('loader')?.await()`) so the
 
 ### Patch surface over base
 
-The patch rides over `dsh-base`: it inherits the projection cache and shared PTC runtime, sets the coding persona prefix and separate cwd suffix on the base `system-prompt` row, inherits native tool execution and accepts a [PTC overlay](../../../apps/cli/config/examples/ptc.yml), disables the shared HMR row, and mounts the startup provider and the runner. The cache checkpoints each persisted one-shot session for later consumers; its durability barrier flushes each covered log prefix before publishing the cache row and may split otherwise coalesced JSONL runs. The startup provider ([`src/startup.ts`](src/startup.ts)) injects `ctx.cmdlineArgs` ([`dsh-cmdline`](../../boot/cmdline/README.md)), reads the task and invocation options, prints the app's `--help`, and provides `headlessStartup`; the runner reads its task, Session identity, and output mode from lazy config. It reads the explicit CLI permission preset and approval policy directly from `headlessStartup`, with runner config as the default. The sandbox-policy row also waits for this service, retaining the base mode and workspace defaults while receiving the explicit directory grants.
+The patch rides over `liwa-base`: it inherits the projection cache and shared PTC runtime, sets the coding persona prefix and separate cwd suffix on the base `system-prompt` row, inherits native tool execution and accepts a [PTC overlay](../../../apps/cli/config/examples/ptc.yml), disables the shared HMR row, and mounts the startup provider and the runner. The cache checkpoints each persisted one-shot session for later consumers; its durability barrier flushes each covered log prefix before publishing the cache row and may split otherwise coalesced JSONL runs. The startup provider ([`src/startup.ts`](src/startup.ts)) injects `ctx.cmdlineArgs` ([`liwa-cmdline`](../../boot/cmdline/README.md)), reads the task and invocation options, prints the app's `--help`, and provides `headlessStartup`; the runner reads its task, Session identity, and output mode from lazy config. It reads the explicit CLI permission preset and approval policy directly from `headlessStartup`, with runner config as the default. The sandbox-policy row also waits for this service, retaining the base mode and workspace defaults while receiving the explicit directory grants.
 
 ### Exit mapping
 
-A completed final `turn/end` exits 0; any other outcome — aborted, error, or no turn in the owned interval — exits 1. An `error` reason also writes `dsh: <code>: <message>` to stderr. A live Agent failure without a later committed `turn/end` is a direct driver failure, including a summary whose start or end cannot be persisted; an earlier completed turn cannot make that run succeed. A direct driver failure (for example, Agent creation or an unusable `--session-id`) writes `dsh: <message>` to stderr and exits 1, and in `--json` mode also emits an `error` event without a `final` event.
+A completed final `turn/end` exits 0; any other outcome — aborted, error, or no turn in the owned interval — exits 1. An `error` reason also writes `liwa: <code>: <message>` to stderr. A live Agent failure without a later committed `turn/end` is a direct driver failure, including a summary whose start or end cannot be persisted; an earlier completed turn cannot make that run succeed. A direct driver failure (for example, Agent creation or an unusable `--session-id`) writes `liwa: <message>` to stderr and exits 1, and in `--json` mode also emits an `error` event without a `final` event.
 
 ### Source map
 
@@ -140,7 +140,7 @@ A completed final `turn/end` exits 0; any other outcome — aborted, error, or n
 | [`src/index.ts`](src/index.ts) | The `headless-runner` plugin: run flow, session resolution, output contract, exit mapping |
 | [`src/startup.ts`](src/startup.ts) | The `headless-startup` provider: task input, Session identity, permission options, and output selection |
 | [`src/json-stream.ts`](src/json-stream.ts) | The `--json` projection: event vocabulary, commit-point emission, string bounding |
-| [`cordis.patch.yml`](cordis.patch.yml) | The one-shot patch over `dsh-base` |
+| [`cordis.patch.yml`](cordis.patch.yml) | The one-shot patch over `liwa-base` |
 | [`tests/headless.spec.ts`](tests/headless.spec.ts) | Run flow, aggregation, flush, session adoption, and exit mapping |
 | [`tests/json-stream.spec.ts`](tests/json-stream.spec.ts) | Projection ordering, commit-point emission, bounding, and disposal |
 | [`tests/startup.spec.ts`](tests/startup.spec.ts) | Command-line parsing over a real Loader tree |
@@ -155,10 +155,10 @@ A completed final `turn/end` exits 0; any other outcome — aborted, error, or n
 Read these pages when you want to go deeper into the shared core, the sibling GUI, or the command-line handoff.
 
 - [Bundle package map](../README.md) — the surfaces built on the same core.
-- [dsh-base](../base/README.md) — the shared core headless runs on.
-- [dsh-web-app](../web-app/README.md) — the interactive browser sibling for multi-turn work.
-- [dsh-cmdline](../../boot/cmdline/README.md) — how the launcher hands the command line to the app.
-- [Generated configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-headless) — every accepted config field and its source declaration.
+- [liwa-base](../base/README.md) — the shared core headless runs on.
+- [liwa-web-app](../web-app/README.md) — the interactive browser sibling for multi-turn work.
+- [liwa-cmdline](../../boot/cmdline/README.md) — how the launcher hands the command line to the app.
+- [Generated configuration catalog](../../../docs/config-catalog.md#liwaheadless) — every accepted config field and its source declaration.
 
 -----
 
@@ -176,13 +176,13 @@ The runner adds nothing to the request prefix; it only drives one user message t
 <a id="known-limitations-and-deferred-work"></a>
 
 
-These limits tell you when headless does not fit and what it needs from the `dsh` launcher. They are current package constraints, not a general CLI comparison or a task backlog.
+These limits tell you when headless does not fit and what it needs from the `liwa` launcher. They are current package constraints, not a general CLI comparison or a task backlog.
 
 - **One task per run** — after the task is answered the process exits; there is no interactive follow-up, so split multi-step work into separate runs.
 - **Final background-job settlement may be absent from persisted history** — process teardown can end Session routing or close its writer before an owned job settles, including normal completion and signal shutdown; the [job lifecycle contract](../../../docs/subsystems/jobs.md#session-lifecycle-records) defines how consumers retain incomplete intervals.
 - **Custom startup** — compositions that disable `headless-startup` must [configure the policy directly](../../../docs/upgrade-guide/v0.2.1-rc.2/headless-policy-composition/guide.md).
 - **Windows extra roots** — the ACL backend rejects subprocess calls with extra roots when a tool executes; it does not stop the model request. Filesystem tools enforce the grants independently. See [platform limits](../../sandbox/sandbox-local/README.md).
-- **Runs through the `dsh` launcher** — starting the headless profile another way fails at startup, because only the launcher can request the process exit.
+- **Runs through the `liwa` launcher** — starting the headless profile another way fails at startup, because only the launcher can request the process exit.
 - **No pre-token heartbeat** — in default mode stderr stays silent until the provider emits a non-empty reasoning delta; a delayed first token exposes no earlier progress signal.
 - **Reasoning enters stderr logs** — in default mode, redirection and supervisors may retain substantially more and potentially sensitive model output; route stderr to a controlled sink when needed.
 - **Default stdout carries only the final answer** — a run without an assistant message prints an empty stdout line and exits 1; intermediate tool output is not printed unless you opt into `--json`.

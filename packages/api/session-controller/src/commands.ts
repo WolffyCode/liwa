@@ -2,27 +2,27 @@
 
 import { modelAvailable } from './catalog.ts'
 import { randomUUID } from 'node:crypto'
-import type { Context } from '@deepseek-ai/cordis'
-import { brandString } from '@deepseek-ai/dsh-brand'
-import type { Agent, ModelSelection as AgentModelSelection } from '@deepseek-ai/dsh-agent'
-import { AttachmentError } from '@deepseek-ai/dsh-attachment'
+import type { Context } from '@liwa/cordis'
+import { brandString } from '@liwa/brand'
+import type { Agent, ModelSelection as AgentModelSelection } from '@liwa/agent'
+import { AttachmentError } from '@liwa/attachment'
 import type {
   AttachmentAdmissionPart,
-} from '@deepseek-ai/dsh-attachment'
-import type { FileUploadReceiptId, StagedAttachment } from '@deepseek-ai/dsh-client-file-upload/types'
-import type {} from '@deepseek-ai/dsh-client-file-upload'
+} from '@liwa/attachment'
+import type { FileUploadReceiptId, StagedAttachment } from '@liwa/client-file-upload/types'
+import type {} from '@liwa/client-file-upload'
 import {
   ReasoningEffortId, createUserMessage, freezeMessage,
-} from '@deepseek-ai/dsh-llm'
-import type { MessageSource } from '@deepseek-ai/dsh-llm'
-import { buildForkSeed } from '@deepseek-ai/dsh-session/fork'
-import { SessionLogOffset, SessionSeq } from '@deepseek-ai/dsh-session'
-import type { SessionEvent, SessionHeader, SessionId, UserMessage } from '@deepseek-ai/dsh-session'
-import { SessionQueryError, type SessionObservation } from '@deepseek-ai/dsh-session-query'
-import { SessionTitleInvalidError } from '@deepseek-ai/dsh-session-title'
-import { assertNever } from '@deepseek-ai/dsh-util-values'
-import { RemoteError, remoteErrorOf } from '@deepseek-ai/dsh-typert-protocol'
-import type { Workspace } from '@deepseek-ai/dsh-workspace'
+} from '@liwa/llm'
+import type { MessageSource } from '@liwa/llm'
+import { buildForkSeed } from '@liwa/session/fork'
+import { SessionLogOffset, SessionSeq } from '@liwa/session'
+import type { SessionEvent, SessionHeader, SessionId, UserMessage } from '@liwa/session'
+import { SessionQueryError, type SessionObservation } from '@liwa/session-query'
+import { SessionTitleInvalidError } from '@liwa/session-title'
+import { assertNever } from '@liwa/util-values'
+import { RemoteError, remoteErrorOf } from '@liwa/typert-protocol'
+import type { Workspace } from '@liwa/workspace'
 import {
   ApiSessionAgentController,
   ApiSessionCwdConflict,

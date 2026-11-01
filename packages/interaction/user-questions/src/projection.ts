@@ -1,12 +1,12 @@
 /** Fold of `ask_user_question` tool events into the answerable question set, and its Session projection. */
 import { z } from 'zod'
-import { SessionLogOffset, TOOL_OUTCOME_UNKNOWN } from '@deepseek-ai/dsh-session'
-import type { SessionEvent, SessionLogOffset as SessionLogOffsetType } from '@deepseek-ai/dsh-session'
-import type { ProjectionDefinition } from '@deepseek-ai/dsh-session-projection'
-import type {} from '@deepseek-ai/dsh-agent/types'
-import type {} from '@deepseek-ai/dsh-tool-executor-ptc/types'
-import { ToolCallId } from '@deepseek-ai/dsh-llm'
-import type { ContentBlock, ToolSchema } from '@deepseek-ai/dsh-llm'
+import { SessionLogOffset, TOOL_OUTCOME_UNKNOWN } from '@liwa/session'
+import type { SessionEvent, SessionLogOffset as SessionLogOffsetType } from '@liwa/session'
+import type { ProjectionDefinition } from '@liwa/session-projection'
+import type {} from '@liwa/agent/types'
+import type {} from '@liwa/tool-executor-ptc/types'
+import { ToolCallId } from '@liwa/llm'
+import type { ContentBlock, ToolSchema } from '@liwa/llm'
 import type { AskUserQuestionAnswerItem, AskUserQuestionItem, AskUserQuestionOption, PendingUserQuestion, SettledUserQuestion, UserQuestionProjectionView } from './types.ts'
 
 /**

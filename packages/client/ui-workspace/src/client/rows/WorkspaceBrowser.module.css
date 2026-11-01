@@ -1,13 +1,13 @@
 .root {
-  --dsh-session-list-edge-inset: var(--dsh-sidebar-inline-padding);
-  --dsh-session-list-scrollbar-width: 5px;
-  --dsh-session-list-scrollbar-offset: 2px;
+  --liwa-session-list-edge-inset: var(--liwa-sidebar-inline-padding);
+  --liwa-session-list-scrollbar-width: 5px;
+  --liwa-session-list-scrollbar-offset: 2px;
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  padding-right: var(--dsh-session-list-edge-inset);
+  padding-right: var(--liwa-session-list-edge-inset);
 }
 
 .root.rail {
@@ -59,7 +59,7 @@
   justify-content: flex-end;
   gap: 4px;
   height: 36px;
-  padding-left: var(--dsh-sidebar-row-padding);
+  padding-left: var(--liwa-sidebar-row-padding);
   margin-bottom: 4px;
   box-sizing: border-box;
   border-radius: var(--dsw-radius-md);
@@ -182,7 +182,7 @@
 
 .root:not(.rail) .sectionHeader:has(.searchExpanded) {
   margin-right: 0;
-  padding-inline: calc(var(--dsh-sidebar-paint-inset) + 1px);
+  padding-inline: calc(var(--liwa-sidebar-paint-inset) + 1px);
   gap: 0;
 }
 
@@ -333,7 +333,7 @@
   display: flex;
   flex-direction: column;
   margin-left: -4px;
-  margin-right: calc(-1 * var(--dsh-session-list-edge-inset));
+  margin-right: calc(-1 * var(--liwa-session-list-edge-inset));
   padding-left: 4px;
   /* The list remains the scroll clip. This seat stays visible so the
      absolutely positioned first-boundary marker can occupy the header gap. */
@@ -360,7 +360,7 @@
 .fade {
   position: absolute;
   left: 0;
-  right: var(--dsh-session-list-edge-inset);
+  right: var(--liwa-session-list-edge-inset);
   bottom: 0;
   height: 24px;
   background: linear-gradient(to bottom, transparent, var(--dsw-specific-sidebar-fill));
@@ -391,12 +391,12 @@
   min-height: 0;
   overflow-y: auto;
   margin-left: -4px;
-  margin-right: var(--dsh-session-list-scrollbar-offset);
+  margin-right: var(--liwa-session-list-scrollbar-offset);
   padding-left: 4px;
   padding-right: calc(
-    var(--dsh-session-list-edge-inset)
-    - var(--dsh-session-list-scrollbar-width)
-    - var(--dsh-session-list-scrollbar-offset)
+    var(--liwa-session-list-edge-inset)
+    - var(--liwa-session-list-scrollbar-width)
+    - var(--liwa-session-list-scrollbar-offset)
   );
   /* Clears the compact bottom fade overlay: at scroll end the last row sits
      above the gradient instead of under it. */
@@ -425,10 +425,10 @@
   /* Top alignment lines the 16px dot up with the equally tall title bar;
      the paddings center the 35px content in the 48px row. */
   align-items: flex-start;
-  gap: var(--dsh-sidebar-label-gap);
+  gap: var(--liwa-sidebar-label-gap);
   box-sizing: border-box;
   min-height: 48px;
-  padding: 6px var(--dsh-sidebar-row-padding) 7px;
+  padding: 6px var(--liwa-sidebar-row-padding) 7px;
 }
 
 .skeletonDot {
@@ -512,7 +512,7 @@
 .listTopDropIndicator {
   top: -8px;
   left: 0;
-  right: var(--dsh-session-list-edge-inset);
+  right: var(--liwa-session-list-edge-inset);
 }
 
 .listTopDropActive > .workspaceDropBefore:first-child::before {
@@ -532,7 +532,7 @@
   height: 28px;
   border: none;
   border-radius: var(--dsw-radius-sm);
-  padding: 0 var(--dsh-sidebar-row-padding) 0 calc(var(--dsh-sidebar-row-padding) + 16px + var(--dsh-sidebar-label-gap) + var(--dsh-workspace-indent, 0px));
+  padding: 0 var(--liwa-sidebar-row-padding) 0 calc(var(--liwa-sidebar-row-padding) + 16px + var(--liwa-sidebar-label-gap) + var(--liwa-workspace-indent, 0px));
   background: transparent;
   cursor: pointer;
   text-align: left;

@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-experimental-tool-agent-team",
+  "name": "@liwa/experimental-tool-agent-team",
   "description": "Scoped model-facing Agent Teams tools over ctx.agentTeams",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/experimental/tool-agent-team"
   },
   "type": "module",
@@ -29,35 +29,35 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/schemastery": "workspace:~"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-experimental-agent-team": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/agent": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/experimental-agent-team": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-session-persistence-jsonl": "workspace:*",
-    "@deepseek-ai/dsh-session-query": "workspace:*",
-    "@deepseek-ai/dsh-scope": "workspace:*",
-    "@deepseek-ai/dsh-subagent": "workspace:*",
-    "@deepseek-ai/dsh-subagent-fork-in-process": "workspace:*",
-    "@deepseek-ai/dsh-subagent-spawn-in-process": "workspace:*",
-    "@deepseek-ai/dsh-tool-subagent-control": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-experimental-agent-team": "workspace:*",
-    "@deepseek-ai/dsh-tool-testkit": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-llm-deepseek": "workspace:*"
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-loop": "workspace:*",
+    "@liwa/agent-loop-testkit": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/session-persistence-jsonl": "workspace:*",
+    "@liwa/session-query": "workspace:*",
+    "@liwa/scope": "workspace:*",
+    "@liwa/subagent": "workspace:*",
+    "@liwa/subagent-fork-in-process": "workspace:*",
+    "@liwa/subagent-spawn-in-process": "workspace:*",
+    "@liwa/tool-subagent-control": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/experimental-agent-team": "workspace:*",
+    "@liwa/tool-testkit": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/llm": "workspace:*",
+    "@liwa/llm-deepseek": "workspace:*"
   }
 }

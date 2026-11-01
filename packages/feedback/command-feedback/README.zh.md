@@ -3,13 +3,13 @@ description: "会话反馈：`/feedback` 命令、Web 反馈弹窗背后的 `ses
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-command-feedback
+# @liwa/command-feedback
 
 [English](README.md) | 中文
 
 ## 概述
 
-`dsh-command-feedback` 让用户告诉 harness 他们对会话的看法。输入 `/feedback` 加一条评价，评价即被记录，并以会话 id 与匿名用户 id 确认；Web 反馈弹窗通过 `sessionFeedback` Host Remote 记录分类与可选描述。记录是即时的，绝不会启动模型工作：模型既看不到这条评价，也不会被打断。本包同时拥有所有反馈界面共用的固定分类表。它随标准 `dsh` 基础组合交付，无需任何配置；无头模式、ACP（Agent Client Protocol）与 JSON-RPC 入口不提供斜杠命令。
+`liwa-command-feedback` 让用户告诉灵鲸他们对会话的看法。输入 `/feedback` 加一条评价，评价即被记录，并以会话 id 与匿名用户 id 确认；Web 反馈弹窗通过 `sessionFeedback` Host Remote 记录分类与可选描述。记录是即时的，绝不会启动模型工作：模型既看不到这条评价，也不会被打断。本包同时拥有所有反馈界面共用的固定分类表。它随标准 `liwa` 基础组合交付，无需任何配置；无头模式、ACP（Agent Client Protocol）与 JSON-RPC 入口不提供斜杠命令。
 
 ## 目录
 
@@ -25,7 +25,7 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-用户可以直接在 Web 客户端中记录反馈：`/feedback` 命令随标准 `dsh` 基础组合交付，无需配置，可在任何对话中使用。自定义应用必须把 Session 服务、命令注册表与本插件组合在一起，才能提供同样的命令。
+用户可以直接在 Web 客户端中记录反馈：`/feedback` 命令随标准 `liwa` 基础组合交付，无需配置，可在任何对话中使用。自定义应用必须把 Session 服务、命令注册表与本插件组合在一起，才能提供同样的命令。
 
 ### `/feedback` 命令
 
@@ -61,11 +61,11 @@ kind: "package-reference"
 
 ```yaml
 - id: session
-  name: '@deepseek-ai/dsh-session'
+  name: '@liwa/session'
 - id: commands
-  name: '@deepseek-ai/dsh-commands'
+  name: '@liwa/commands'
 - id: command-feedback
-  name: '@deepseek-ai/dsh-command-feedback'
+  name: '@liwa/command-feedback'
 ```
 
 Web 客户端随附该命令。无头模式、ACP 自动化和 JSON-RPC 不提供斜杠命令，因此 `/feedback` 在那里不可用。
@@ -84,7 +84,7 @@ Web 客户端随附该命令。无头模式、ACP 自动化和 JSON-RPC 不提�
 
 ### 评价如何被记录
 
-生产方去除文本空白，把空白文本记为缺省，并向会话日志写入一个事件，即使条目既无文本也无分类；`/feedback` 处理器自行拒绝空输入，其余部分是该生产方的薄包装层；`sessionFeedback.record` Remote 则按 id 找到 live Session 后同样调用它，没有 live 持有者时回答 `session-not-found`。两条路径都不启动模型工作。写入是即时但未 flush 的：确认文本表示条目已到达日志，而不是已落盘。某个 harness home 首次接受的命令评价还会创建确认文本所报告的匿名用户 id。精确的生产方约定见 [`src/index.ts`](src/index.ts)；事件载荷、分类表与 Remote 词汇见 [`src/types.ts`](src/types.ts)。
+生产方去除文本空白，把空白文本记为缺省，并向会话日志写入一个事件，即使条目既无文本也无分类；`/feedback` 处理器自行拒绝空输入，其余部分是该生产方的薄包装层；`sessionFeedback.record` Remote 则按 id 找到 live Session 后同样调用它，没有 live 持有者时回答 `session-not-found`。两条路径都不启动模型工作。写入是即时但未 flush 的：确认文本表示条目已到达日志，而不是已落盘。某个灵鲸 home 首次接受的命令评价还会创建确认文本所报告的匿名用户 id。精确的生产方约定见 [`src/index.ts`](src/index.ts)；事件载荷、分类表与 Remote 词汇见 [`src/types.ts`](src/types.ts)。
 
 ### 源码索引
 
@@ -102,7 +102,7 @@ Web 客户端随附该命令。无头模式、ACP 自动化和 JSON-RPC 不提�
 
 当包级约定不够用时阅读以下页面。它们涵盖这条采集路径所依赖的命令注册表、持久化与身份事实。
 
-- [dsh-commands](../../interaction/commands/README.zh.md)——发现全局命令并定义 `recordInput` 语义的注册表。
+- [liwa-commands](../../interaction/commands/README.zh.md)——发现全局命令并定义 `recordInput` 语义的注册表。
 - [会话持久化子系统](../../../docs/subsystems/persistence.zh.md)——追加事件如何持久化、flush 屏障的含义。
 - [匿名用户身份](../../identity/anonymous-user-id/README.zh.md)——确认文本报告的 id。
 - [ui-message-feedback](../../client/ui-message-feedback/README.zh.md)——通过 `sessionFeedback` Remote 记录的 Web 反馈弹窗。

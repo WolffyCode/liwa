@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-18-session-history-and-event-transport.md
 /agent-note-session-history-control-state-and-remote-event-transport:
-  en: 79e15a9da0b4053b
-  zh: fb9719cd520abf7b
+  en: bd120d3160fc7c3e
+  zh: 04338b73f702aa3e
 /agent-note-session-history-control-state-and-remote-event-transport/problem:
   en: b40a730a4cd03535
   zh: 10d5a61824b53443
@@ -30,8 +30,8 @@
   en: f432480a52414d56
   zh: 15a3f175b69cdb53
 /agent-note-session-history-control-state-and-remote-event-transport/decision/session-controller/activation-policy:
-  en: 03e24cdee8519a92
-  zh: 82dc02eb26d7d7f4
+  en: 86ddc1a877933fe8
+  zh: 55d22c0f8057af8f
 /agent-note-session-history-control-state-and-remote-event-transport/decision/session-controller/session-journal:
   en: 4de2965717900b96
   zh: 1d129003824fa6bd
@@ -54,5 +54,5 @@
   en: 7328f28ba3e32f4c
   zh: 2150f20437a473af
 /agent-note-session-history-control-state-and-remote-event-transport/consequences:
-  en: 7e130587088a18c5
-  zh: 5a7a02049aa74a5b
+  en: 487799e1f75e8002
+  zh: 5fe890cd82b80aae

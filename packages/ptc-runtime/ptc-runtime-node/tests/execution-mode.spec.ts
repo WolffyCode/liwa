@@ -1,6 +1,6 @@
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
+import { Context } from '@liwa/cordis'
+import z from '@liwa/schemastery'
 import { expect, it } from 'vitest'
 import NodeRuntime from '../src/index.ts'
 import type { Config } from '../src/index.ts'

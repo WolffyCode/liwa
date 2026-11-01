@@ -95,7 +95,7 @@ inline DWORD RemoveTree(const std::wstring& path) {
 
 // Never select a shell folder, its ancestor, Windows/Program Files descendants,
 // a path overlapping the installation, or a path overlapping the protected root
-// (the configured Harness home). Linked descendants are unlinked only.
+// (the configured Liwa home). Linked descendants are unlinked only.
 inline DWORD Remove(LPCWSTR input, LPCWSTR installation, LPCWSTR protectedRoot) {
     std::wstring path, install;
     if (!Normalize(input, path) || !Normalize(installation, install)) return ERROR_INVALID_NAME;

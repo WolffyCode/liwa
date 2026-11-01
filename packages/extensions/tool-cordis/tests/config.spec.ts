@@ -2,11 +2,11 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { Context } from '@deepseek-ai/cordis'
-import Group from '@deepseek-ai/cordis-plugin-group'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import { PluginPackages } from '@deepseek-ai/dsh-app-boot'
-import z from '@deepseek-ai/schemastery'
+import { Context } from '@liwa/cordis'
+import Group from '@liwa/cordis-plugin-group'
+import Loader from '@liwa/cordis-plugin-loader'
+import { PluginPackages } from '@liwa/app-boot'
+import z from '@liwa/schemastery'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import { queryLiveConfig } from '../src/config.ts'
 
@@ -29,7 +29,7 @@ interface Ids {
 
 /** A Loader tree whose base directory holds `node_modules/with-schema/package.json`, so the package lookup resolves that plugin. */
 async function loaded(): Promise<{ ctx: Context; ids: Ids; packageDir: string }> {
-  const dir = mkdtempSync(join(tmpdir(), 'dsh-tool-cordis-config-'))
+  const dir = mkdtempSync(join(tmpdir(), 'liwa-tool-cordis-config-'))
   onTestFinished(() => { rmSync(dir, { recursive: true, force: true }) })
   const packageDir = join(dir, 'node_modules', 'with-schema')
   mkdirSync(packageDir, { recursive: true })

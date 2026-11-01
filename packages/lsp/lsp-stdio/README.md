@@ -3,13 +3,13 @@ description: "The stdio language-server provider for ctx.lsp: configured server 
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-lsp-stdio
+# @liwa/lsp-stdio
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-Use `dsh-lsp-stdio` to give agents definitions, references, implementations, and hover from explicitly configured local language servers. It maps file extensions to language identifiers, starts one server per workspace on demand, and reads each queried file afresh without retaining document state between queries. Language-server processes and source reads share the mounted filesystem and subprocess environment. The package does not install servers or provide a sandbox: deployments supply commands, mappings, and any required confinement. Queries are serialized per server and workspace, while different workspaces can run in parallel.
+Use `liwa-lsp-stdio` to give agents definitions, references, implementations, and hover from explicitly configured local language servers. It maps file extensions to language identifiers, starts one server per workspace on demand, and reads each queried file afresh without retaining document state between queries. Language-server processes and source reads share the mounted filesystem and subprocess environment. The package does not install servers or provide a sandbox: deployments supply commands, mappings, and any required confinement. Queries are serialized per server and workspace, while different workspaces can run in parallel.
 
 ## Table of Contents
 
@@ -25,17 +25,17 @@ Use `dsh-lsp-stdio` to give agents definitions, references, implementations, and
 <a id="use-this-package"></a>
 ## Use this package
 
-Mount this provider when a deployment has local language servers — for example `typescript-language-server` — and wants the harness to navigate code through them. It needs filesystem and subprocess providers for the same execution world, plus the `dsh-lsp` seam and, for model access, `dsh-tool-lsp`.
+Mount this provider when a deployment has local language servers — for example `typescript-language-server` — and wants Liwa to navigate code through them. It needs filesystem and subprocess providers for the same execution world, plus the `liwa-lsp` seam and, for model access, `liwa-tool-lsp`.
 
 ### Minimal configuration
 
 The `servers` record maps each stable provider id to one server command. The provider resolves every executable at load after credential scrubbing, so a bad entry prevents every provider from registering; processes launch lazily on the first matching query.
 
 ```yaml
-- name: '@deepseek-ai/dsh-fs-local'
-- name: '@deepseek-ai/dsh-subprocess-local'
-- name: '@deepseek-ai/dsh-lsp'
-- name: '@deepseek-ai/dsh-lsp-stdio'
+- name: '@liwa/fs-local'
+- name: '@liwa/subprocess-local'
+- name: '@liwa/lsp'
+- name: '@liwa/lsp-stdio'
   config:
     servers:
       typescript:
@@ -43,7 +43,7 @@ The `servers` record maps each stable provider id to one server command. The pro
         args: ['--stdio']
         extensionToLanguage:
           '.ts': typescript
-- name: '@deepseek-ai/dsh-tool-lsp'
+- name: '@liwa/tool-lsp'
 ```
 
 | Field | Default | Meaning |
@@ -51,7 +51,7 @@ The `servers` record maps each stable provider id to one server command. The pro
 | `command` | required | Executable to spawn — absolute, or resolved on the child PATH at load; launched without a shell |
 | `extensionToLanguage` | required | Lowercase leading-dot extension → LSP language id (e.g. `{ '.ts': 'typescript' }`) |
 | `args` | `[]` | Arguments passed to the executable |
-| `env` | `{}` | Extra env merged over the credential-scrubbed ambient env; variables matching `KEY`/`PASSWORD`/`SECRET`/`TOKEN` and all `DSH_*` names are not forwarded |
+| `env` | `{}` | Extra env merged over the credential-scrubbed ambient env; variables matching `KEY`/`PASSWORD`/`SECRET`/`TOKEN` and all `LIWA_*` names are not forwarded |
 | `initializationOptions` | `null` | Static `initialize` options forwarded to the server |
 | `configuration` | `null` | Static answer to every `workspace/configuration` item |
 | `maxMessageBytes` | `16000000` | Largest single framed message accepted from the server |
@@ -60,7 +60,7 @@ The `servers` record maps each stable provider id to one server command. The pro
 | `shutdownTimeoutMs` | `5000` | Graceful `shutdown`/`exit` budget before escalation |
 | `killGraceMs` | `2000` | Request-cancel and SIGTERM→SIGKILL escalation grace |
 
-`servers` must contain at least one entry with non-empty ids; timer budgets must be positive integers within Node's timer range, and byte caps must be positive. The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-lsp-stdio) is the exhaustive source for every accepted field.
+`servers` must contain at least one entry with non-empty ids; timer budgets must be positive integers within Node's timer range, and byte caps must be positive. The generated [configuration catalog](../../../docs/config-catalog.md#liwalsp-stdio) is the exhaustive source for every accepted field.
 
 ### What a query does
 
@@ -92,7 +92,7 @@ This section explains the design decisions behind the provider and where the cod
 - **One pooled process per canonical workspace.** Instances are single-flighted per `(server id, canonical workspace target)`; a transport failure retries the read-only query once on a fresh process after awaiting disposal.
 - **Per-workspace serialization.** One abortable queue per workspace serializes source-read/open/query/close lifecycles; distinct workspaces run in parallel, and a cancellation that fails to stop a server terminates only that instance.
 - **Bounded teardown.** Graceful `shutdown`/`exit` escalates through the subprocess provider's managed-range termination procedure; quiescence is confirmed by awaiting that whole range, not by the termination request's outcome.
-- **Execution-world pairing.** Servers launch through `ctx.subprocess` with `processId: null` (another machine or PID namespace must not monitor the harness), sources read through `ctx.fs`, and no `fs/observed` event is emitted — only the LSP result is model-visible.
+- **Execution-world pairing.** Servers launch through `ctx.subprocess` with `processId: null` (another machine or PID namespace must not monitor Liwa), sources read through `ctx.fs`, and no `fs/observed` event is emitted — only the LSP result is model-visible.
 
 ### Source map
 
@@ -121,8 +121,8 @@ Initialization advertises UTF-16 positions, workspace folders and configuration,
 Read these pages when the package-level contract is not enough. They move from the shared navigation model to the seam and the tool.
 
 - [LSP navigation subsystem](../../../docs/subsystems/lsp.md) — operations, coordinates, requests and results, and `LspError` codes.
-- [dsh-lsp](../lsp/README.md) — the seam this provider registers against.
-- [dsh-tool-lsp](../tool-lsp/README.md) — the model-facing tool over the seam.
+- [liwa-lsp](../lsp/README.md) — the seam this provider registers against.
+- [liwa-tool-lsp](../tool-lsp/README.md) — the model-facing tool over the seam.
 - [lsp group map](../README.md) — the three-package family and its related documentation.
 
 -----
@@ -130,11 +130,11 @@ Read these pages when the package-level contract is not enough. They move from t
 <a id="model-experience"></a>
 ## Model Experience
 
-Indirectly, through `dsh-tool-lsp`, which surfaces this provider's normalized results while this host contributes no prompt or schema itself.
+Indirectly, through `liwa-tool-lsp`, which surfaces this provider's normalized results while this host contributes no prompt or schema itself.
 
 #### KV Cache effect
 
-No direct invalidation; `dsh-tool-lsp` owns request-prefix changes.
+No direct invalidation; `liwa-tool-lsp` owns request-prefix changes.
 
 ## Known Limitations and Deferred Work
 

@@ -1,16 +1,16 @@
 /**
- * The web app's command-line provider: it parses the `dsh --profile web` flag
+ * The web app's command-line provider: it parses the `liwa --profile web` flag
  * family (`--host`, `--port`, `--public-url`, `--trusted-host`, `--no-open`, TLS)
  * and its `--help` text, then provides the immutable values as
  * {@link WEB_STARTUP_SERVICE}. Ordinary rows inject that service before
  * reading it from lazy config.
- * @module @deepseek-ai/dsh-web-app/startup
+ * @module @liwa/web-app/startup
  */
 
 import { Command } from 'commander'
-import type { Context } from '@deepseek-ai/cordis'
-import { parseCmdline } from '@deepseek-ai/dsh-cmdline'
-import { isWildcardHost, type TlsConfig } from '@deepseek-ai/dsh-host-webserver'
+import type { Context } from '@liwa/cordis'
+import { parseCmdline } from '@liwa/cmdline'
+import { isWildcardHost, type TlsConfig } from '@liwa/host-webserver'
 import { parsePublicUrl } from './public-url.ts'
 
 /** Stable Cordis plugin name. */
@@ -58,25 +58,25 @@ interface WebOptions {
  */
 function webCommand(): Command {
   return new Command()
-    .name('dsh --profile web')
-    .description('Serve the DeepSeek Harness browser UI.')
+    .name('liwa --profile web')
+    .description('Serve the Liwa browser UI.')
     .helpOption('-h, --help', 'show this help')
     .option('--host <host>', 'bind address: one concrete IPv4 or IPv6 literal of a local interface; wildcard addresses are rejected')
     .option('--no-open', 'do not open the Web UI in the default browser')
     .option('--port <port>', 'listen port; pass 0 to let the OS pick a free one')
-    .option('--public-url <url>', 'advertise this HTTP(S) root in the printed, opened, runtime-context, and DSH_WEB_URL forms; grants no trust')
+    .option('--public-url <url>', 'advertise this HTTP(S) root in the printed, opened, runtime-context, and LIWA_WEB_URL forms; grants no trust')
     .option('--trusted-host <authority...>', 'extra authority the /api browser-trust fence accepts (host or host:port; repeatable)')
     .option('--tls-cert <file>', 'PEM server certificate chain; requires --tls-key')
     .option('--tls-key <file>', 'unencrypted PEM private key; requires --tls-cert')
     .addHelpText('after', `
 Examples:
-  dsh --profile web                          serve on the composed host and port
-  dsh --profile web --no-open                serve without opening a browser
-  dsh --profile web --port 8080              serve on another port
-  dsh --profile web --host 10.0.0.7          bind one local interface address
-  dsh --profile web --public-url https://app.example/ui/ --trusted-host app.example
+  liwa --profile web                          serve on the composed host and port
+  liwa --profile web --no-open                serve without opening a browser
+  liwa --profile web --port 8080              serve on another port
+  liwa --profile web --host 10.0.0.7          bind one local interface address
+  liwa --profile web --public-url https://app.example/ui/ --trusted-host app.example
                                              advertise a prefix-stripping HTTPS proxy entry and admit its authority
-  dsh --profile web --tls-cert ./server-chain.pem --tls-key ./server-key.pem
+  liwa --profile web --tls-cert ./server-chain.pem --tls-key ./server-key.pem
                                              serve HTTPS with an existing certificate and key
 `)
 }

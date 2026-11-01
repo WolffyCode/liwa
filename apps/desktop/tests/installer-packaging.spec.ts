@@ -20,23 +20,23 @@ vi.mock('node:fs/promises', async importOriginal => ({
 describe('installer preparation preserves application dependencies', () => {
   it.each(['win32', 'darwin'] as const)('rejects a missing production policy before signing on %s', async (platform) => {
     const { createElectronBuilderConfig } = await import('../scripts/electron-builder-config.mjs')
-    expect(() => createElectronBuilderConfig({ DSH_DESKTOP_APP_ID: 'com.example.installer',
-      DSH_DESKTOP_AUTO_UPDATE_ENV: 'production',
-      DSH_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN: 'https://test.example.com',
-    }, platform, 'x64')).toThrow('DSH_DESKTOP_MANDATORY_UPDATE_PROD_ORIGIN')
+    expect(() => createElectronBuilderConfig({ LIWA_DESKTOP_APP_ID: 'com.example.installer',
+      LIWA_DESKTOP_AUTO_UPDATE_ENV: 'production',
+      LIWA_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN: 'https://test.example.com',
+    }, platform, 'x64')).toThrow('LIWA_DESKTOP_MANDATORY_UPDATE_PROD_ORIGIN')
   })
   it.each(['win32', 'darwin'] as const)('preserves installer metadata and dependency ownership on %s', async (platform) => {
     execute.mockClear()
     write.mockClear()
     const env = {
-      DSH_DESKTOP_APP_ID: 'com.example.installer',
-      DSH_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN: 'https://policy.example.com',
-      DSH_DESKTOP_MANDATORY_UPDATE_CONFIG: JSON.stringify({ allowedAuthOrigins: ['https://login.example.com'] }),
-      DSH_DESKTOP_TARGET_PLATFORM: platform,
-      DSH_DESKTOP_TARGET_ARCH: 'x64',
-      DSH_DESKTOP_UNSIGNED: platform === 'win32' ? '1' : '0',
-      DSH_DESKTOP_MACOS_SIGNING_IDENTITY: 'Example Company (TEAMID1234)',
-      DSH_DESKTOP_MACOS_TEAM_ID: 'TEAMID1234',
+      LIWA_DESKTOP_APP_ID: 'com.example.installer',
+      LIWA_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN: 'https://policy.example.com',
+      LIWA_DESKTOP_MANDATORY_UPDATE_CONFIG: JSON.stringify({ allowedAuthOrigins: ['https://login.example.com'] }),
+      LIWA_DESKTOP_TARGET_PLATFORM: platform,
+      LIWA_DESKTOP_TARGET_ARCH: 'x64',
+      LIWA_DESKTOP_UNSIGNED: platform === 'win32' ? '1' : '0',
+      LIWA_DESKTOP_MACOS_SIGNING_IDENTITY: 'Example Company (TEAMID1234)',
+      LIWA_DESKTOP_MACOS_TEAM_ID: 'TEAMID1234',
       APPLE_KEYCHAIN_PROFILE: 'installer-test',
       DOWNLOAD_TEST_ORIGIN: 'https://desktop-updates.example.com', DOWNLOAD_TEST_RELEASE_ID: '0123456789abcdef0123456789abcdef',
     }
@@ -52,9 +52,9 @@ describe('installer preparation preserves application dependencies', () => {
       })
       const appInfo = new AppInfo(metadataPackager, undefined)
       expect(appInfo.companyName).toBe('Hangzhou DeepSeek Artificial Intelligence Co., Ltd.')
-      expect(appInfo.copyright).toBe(`Copyright © ${new Date().getFullYear()} DeepSeek Harness`)
+      expect(appInfo.copyright).toBe(`Copyright © ${new Date().getFullYear()} Liwa`)
       if (platform === 'win32') {
-        expect(expandMacro(config.nsis.uninstallDisplayName, null, appInfo, {}, false)).toBe('DeepSeek Harness')
+        expect(expandMacro(config.nsis.uninstallDisplayName, null, appInfo, {}, false)).toBe('Liwa')
         expect(config.nsis.installerLanguages).toEqual(readInstallerLocales().map(locale => locale.id))
       }
       const aboutIcon = config.extraResources.find(resource => resource.to === 'icon.png')
@@ -92,14 +92,14 @@ describe('installer preparation preserves application dependencies', () => {
   it('names unsigned Windows artifacts so they cannot pass for release builds', async () => {
     const { createElectronBuilderConfig } = await import('../scripts/electron-builder-config.mjs')
     const config = createElectronBuilderConfig({
-      DSH_DESKTOP_APP_ID: 'com.example.installer',
-      DSH_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN: 'https://policy.example.com',
-      DSH_DESKTOP_MANDATORY_UPDATE_CONFIG: JSON.stringify({ allowedAuthOrigins: ['https://login.example.com'] }),
-      DSH_DESKTOP_TARGET_PLATFORM: 'win32',
-      DSH_DESKTOP_TARGET_ARCH: 'x64',
-      DSH_DESKTOP_UNSIGNED: '1',
+      LIWA_DESKTOP_APP_ID: 'com.example.installer',
+      LIWA_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN: 'https://policy.example.com',
+      LIWA_DESKTOP_MANDATORY_UPDATE_CONFIG: JSON.stringify({ allowedAuthOrigins: ['https://login.example.com'] }),
+      LIWA_DESKTOP_TARGET_PLATFORM: 'win32',
+      LIWA_DESKTOP_TARGET_ARCH: 'x64',
+      LIWA_DESKTOP_UNSIGNED: '1',
     }, 'win32', 'x64')
-    expect(config.artifactName).toBe('deepseek-harness-${version}-${os}-${arch}-unsigned.${ext}')
+    expect(config.artifactName).toBe('liwa-${version}-${os}-${arch}-unsigned.${ext}')
   })
 
   it('packages every preload entry point the shell loads', async () => {
@@ -113,12 +113,12 @@ describe('installer preparation preserves application dependencies', () => {
     expect(referenced.size).toBeGreaterThan(0)
     const { createElectronBuilderConfig } = await import('../scripts/electron-builder-config.mjs')
     const config = createElectronBuilderConfig({
-      DSH_DESKTOP_APP_ID: 'com.example.installer',
-      DSH_DESKTOP_AUTO_UPDATE_ENV: 'production',
-      DSH_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN: 'https://harness-test.deepseek.com',
-      DSH_DESKTOP_MANDATORY_UPDATE_PROD_ORIGIN: 'https://policy.example.com',
-      DSH_DESKTOP_MACOS_SIGNING_IDENTITY: 'Example Company (TEAMID1234)',
-      DSH_DESKTOP_MACOS_TEAM_ID: 'TEAMID1234',
+      LIWA_DESKTOP_APP_ID: 'com.example.installer',
+      LIWA_DESKTOP_AUTO_UPDATE_ENV: 'production',
+      LIWA_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN: 'https://harness-test.deepseek.com',
+      LIWA_DESKTOP_MANDATORY_UPDATE_PROD_ORIGIN: 'https://policy.example.com',
+      LIWA_DESKTOP_MACOS_SIGNING_IDENTITY: 'Example Company (TEAMID1234)',
+      LIWA_DESKTOP_MACOS_TEAM_ID: 'TEAMID1234',
       APPLE_KEYCHAIN_PROFILE: 'installer-test',
     }, 'darwin', 'arm64')
     const packaged = new Set(config.files.filter((entry): entry is string => typeof entry === 'string'))

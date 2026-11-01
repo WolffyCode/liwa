@@ -1,7 +1,7 @@
 /**
- * Harness error base with a stable machine-routable code and chained cause.
+ * Liwa error base with a stable machine-routable code and chained cause.
  * Package errors extend it so tool results and replay can retain failure class.
- * @module @deepseek-ai/dsh-llm/error
+ * @module @liwa/llm/error
  */
 
 /**
@@ -10,7 +10,7 @@
  * human-readable `message`, and supports `cause` chaining via the standard
  * `ErrorOptions`. `name` defaults to the subclass constructor name.
  */
-export class HarnessError extends Error {
+export class LiwaError extends Error {
   /** Stable machine-routable failure class (e.g. `RATE_LIMIT`); route on this, never by parsing `message`. */
   readonly code: string
 
@@ -108,7 +108,7 @@ export function isQuotaExceededError(detail: string): boolean {
  * surface the underlying failure instead of masking it. Plain structured
  * failures render their own data-backed `message`. Diagnostic-surface
  * rendering only (messages, notices, logs) — never parse the result; route on
- * {@link HarnessError.code}.
+ * {@link LiwaError.code}.
  * @param value - the caught value (`unknown` in catch clauses).
  * @returns the outermost message first, each cause appended with `: ` (skipped
  * when it repeats the wrapper message verbatim), and AggregateError members
@@ -138,7 +138,7 @@ export function errorChain(value: unknown): string {
       const causeText = current.cause === undefined || current.cause === null
         ? ''
         : render(current.cause)
-      // Wrappers like `new HarnessError(String(value), code, { cause: value })`
+      // Wrappers like `new LiwaError(String(value), code, { cause: value })`
       // repeat their cause verbatim; rendering it again would only add noise.
       const cause = causeText === '' || causeText === message ? '' : `: ${causeText}`
       return `${message}${members}${cause}`
@@ -157,19 +157,19 @@ export function errorChain(value: unknown): string {
 }
 
 /**
- * Narrow an arbitrary thrown value to a HarnessError (for `instanceof` at runtime boundaries).
+ * Narrow an arbitrary thrown value to a LiwaError (for `instanceof` at runtime boundaries).
  * @param value - the caught value (`unknown` in catch clauses).
  * @returns true only for real instances; duck-typed or cross-realm errors do not narrow.
  */
-export function isHarnessError(value: unknown): value is HarnessError {
-  return value instanceof HarnessError
+export function isLiwaError(value: unknown): value is LiwaError {
+  return value instanceof LiwaError
 }
 
 /**
  * Canonical code for a request an image-capable route cannot send until more
  * of its images are offloaded. The failure's `offloadImages` names how many
  * more of the oldest retained occurrences must be offloaded;
- * `dsh-compaction-image-offload` records an `image/offload` selection before
+ * `liwa-compaction-image-offload` records an `image/offload` selection before
  * the agent or summarizer retries with freshly derived input.
  */
 export const IMAGE_OFFLOAD_REQUIRED_CODE = 'IMAGE_OFFLOAD_REQUIRED'

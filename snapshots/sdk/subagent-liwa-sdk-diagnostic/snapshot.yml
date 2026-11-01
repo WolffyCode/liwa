@@ -1,0 +1,8 @@
+version: 1
+scenario: subagent-liwa-sdk-diagnostic
+profile: sdk
+composition: sdk-liwa-sdk-diagnostic
+recording: live
+header:
+  class: sdk-liwa-sdk-diagnostic
+  pin: true

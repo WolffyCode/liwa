@@ -1,19 +1,19 @@
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
+import { createUserMessage } from '@liwa/llm'
 import { describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import LlmRuntime from '@deepseek-ai/dsh-llm'
-import type { MessageSource } from '@deepseek-ai/dsh-llm'
-import type { ContextFormed } from '@deepseek-ai/dsh-llm'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
+import { Context } from '@liwa/cordis'
+import AgentRegistry, { type Agent } from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import LlmRuntime from '@liwa/llm'
+import type { MessageSource } from '@liwa/llm'
+import type { ContextFormed } from '@liwa/llm'
+import SessionStore, { SessionId } from '@liwa/session'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime from '@liwa/tools'
 import { MockAdapter, textResponse } from './mock-adapter.ts'
 
-declare module '@deepseek-ai/dsh-llm' {
+declare module '@liwa/llm' {
   interface MessageSourceMap {
     'p': { kind: 'p' } & ContextFormed
     'test': { kind: 'test' } & ContextFormed

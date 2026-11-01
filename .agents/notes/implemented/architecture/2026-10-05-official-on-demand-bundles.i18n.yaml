@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-10-05-official-on-demand-bundles.md
 /agent-note-discover-official-bundles-without-installing-their-runtimes:
-  en: 1f2387f10628638b
-  zh: c835a8ee615e9da6
+  en: 02d90d4464f97f7f
+  zh: f4ad26284d23e701
 /agent-note-discover-official-bundles-without-installing-their-runtimes/problem:
   en: a590bcef6c9760c0
   zh: 19e6f61c2c7d8d3b
 /agent-note-discover-official-bundles-without-installing-their-runtimes/decision:
-  en: f0fabc0d4fbd1178
-  zh: cf19938a7a7dea93
+  en: 2b92a7ca7cd816b2
+  zh: acb7b5f7d9635e6b
 /agent-note-discover-official-bundles-without-installing-their-runtimes/alternatives-considered:
   en: 42cb0f808a145871
   zh: 225012615d1ecdf5

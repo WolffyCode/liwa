@@ -41,7 +41,7 @@ function Start-Setup([string]$Theme, [string]$Path = $installPath) {
     } while ($timer.Elapsed.TotalSeconds -lt 30)
     if ($window -eq [IntPtr]::Zero) { throw 'Installer welcome window did not appear' }
     $timer.Restart()
-    while ([InstallerCapture]::GetProp($window, 'HarnessInstaller.Presented') -eq [IntPtr]::Zero) {
+    while ([InstallerCapture]::GetProp($window, 'LiwaInstaller.Presented') -eq [IntPtr]::Zero) {
         if ($process.HasExited -or $timer.Elapsed.TotalSeconds -gt 10) { throw 'Installer welcome window was not presented' }
         Start-Sleep -Milliseconds 10
     }
@@ -75,15 +75,15 @@ function Finish-Setup([Diagnostics.Process]$Process, [bool]$Launch, [string]$The
         if ($Process.HasExited -or $timer.Elapsed.TotalSeconds -gt 30) { throw 'Installer did not complete' }
         $visible = [InstallerCapture]::VisibleText($Process.Id)
         if ($visible.Contains('msctls_progress32') -ne $expected.nativeProgressVisible) { throw 'Stock green progress bar is visible' }
-        if ($visible -match 'HarnessInstallerProgress[^\r\n]*?(\d+)%') {
+        if ($visible -match 'LiwaInstallerProgress[^\r\n]*?(\d+)%') {
             $percent = [int]$Matches[1]
             if ($percent -lt $previous) { throw 'Installation progress went backwards' }
-            if ($percent -eq 100 -and [InstallerCapture]::GetProp($window, 'HarnessInstaller.Succeeded') -eq [IntPtr]::Zero) { throw 'Installation showed 100% before success' }
+            if ($percent -eq 100 -and [InstallerCapture]::GetProp($window, 'LiwaInstaller.Succeeded') -eq [IntPtr]::Zero) { throw 'Installation showed 100% before success' }
             $previous = $percent
         }
         Start-Sleep -Milliseconds 25
     }
-    if ([InstallerCapture]::GetProp($window, 'HarnessInstaller.CompletedPercent').ToInt32() -ne 100) { throw 'Finish page replaced an incomplete progress bar' }
+    if ([InstallerCapture]::GetProp($window, 'LiwaInstaller.CompletedPercent').ToInt32() -ne 100) { throw 'Finish page replaced an incomplete progress bar' }
     $checkbox = Wait-Control $Process $copy.INSTALLER_LAUNCH
     $state = [InstallerCapture]::SendMessage($checkbox, 0xF0, [IntPtr]::Zero, [IntPtr]::Zero).ToInt32()
     if ($state -ne $expected.launchCheckboxState) { throw 'Unexpected launch checkbox default' }
@@ -96,7 +96,7 @@ function Finish-Setup([Diagnostics.Process]$Process, [bool]$Launch, [string]$The
         }
     }
     $window = [InstallerCapture]::Find($Process.Id)
-    if ([InstallerCapture]::GetProp($window, 'HarnessInstaller.Stage').ToInt32() -ne 4) { throw 'Installation did not reach cleanup' }
+    if ([InstallerCapture]::GetProp($window, 'LiwaInstaller.Stage').ToInt32() -ne 4) { throw 'Installation did not reach cleanup' }
     if ([InstallerCapture]::Bounds($window) -ne $Bounds) { throw 'Completion page moved or resized the installer' }
     [void][InstallerCapture]::Save($window, (Join-Path $OutputDirectory ($Theme + '-finish.png')))
     if ($Launch) {
@@ -204,7 +204,7 @@ try {
     function Assert-RunningRejected([Diagnostics.Process]$Setup) {
         [void](Wait-Control $Setup $copy.INSTALLER_RUNNING -Dialog)
         $visible = [InstallerCapture]::VisibleText($Setup.Id)
-        if ($visible.Contains('HarnessInstallerProgress')) { throw 'Running-app rejection started progress UI' }
+        if ($visible.Contains('LiwaInstallerProgress')) { throw 'Running-app rejection started progress UI' }
         if (Get-ChildItem -LiteralPath $OutputDirectory -Directory -Filter 'Installed App.new-*') { throw 'Running-app rejection staged payload files' }
         Dismiss $Setup $copy.INSTALLER_RUNNING
         if (-not $Setup.WaitForExit(10000) -or $Setup.ExitCode -ne 2 -or $app.HasExited) { throw 'Running application was not preserved' }

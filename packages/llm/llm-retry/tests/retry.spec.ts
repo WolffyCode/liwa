@@ -1,8 +1,8 @@
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import type { Fiber } from '@deepseek-ai/cordis'
-import LlmRuntime, { createUserMessage, ToolCallId, EMPTY_RESPONSE_CODE, LlmAdapter, LlmError, expandAssistantStream, resolveRetryPolicy  } from '@deepseek-ai/dsh-llm'
+import { Context } from '@liwa/cordis'
+import type { Fiber } from '@liwa/cordis'
+import LlmRuntime, { createUserMessage, ToolCallId, EMPTY_RESPONSE_CODE, LlmAdapter, LlmError, expandAssistantStream, resolveRetryPolicy  } from '@liwa/llm'
 import type {
   AlwaysRetryPolicyConfig,
   BackoffConfig,
@@ -11,17 +11,17 @@ import type {
   ResolvedRetryPolicy,
   RetryPolicyConfig,
   StreamChunk,
-} from '@deepseek-ai/dsh-llm'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import type { SessionEvent, SessionEventMap } from '@deepseek-ai/dsh-session'
-import type { LlmRetryEventData } from '@deepseek-ai/dsh-llm-retry/types'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
-import { defineContentToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import type { Agent, RequestErrorAction } from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
+} from '@liwa/llm'
+import SessionStore, { SessionId } from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import type { SessionEvent, SessionEventMap } from '@liwa/session'
+import type { LlmRetryEventData } from '@liwa/llm-retry/types'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime from '@liwa/tools'
+import { defineContentToolFixture } from '@liwa/tool-testkit'
+import AgentRegistry from '@liwa/agent'
+import type { Agent, RequestErrorAction } from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
 import type { Config as retryConfig, RetryInternals as retryRetryInternals } from '../src/index.ts'
 import * as retry from '../src/index.ts'
 

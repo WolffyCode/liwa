@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-llm-deepseek-account",
+  "name": "@liwa/llm-deepseek-account",
   "description": "DeepSeek account provider authentication and discovery",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/llm/llm-deepseek-account"
   },
   "type": "module",
@@ -29,32 +29,32 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/cosmokit": "workspace:~",
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/cosmokit": "workspace:~",
+    "@liwa/schemastery": "workspace:~"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-llm-deepseek": "workspace:*",
-    "@deepseek-ai/dsh-launch-environment": "workspace:*",
-    "@deepseek-ai/dsh-deepseek-account": "workspace:*",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/llm": "workspace:*",
+    "@liwa/llm-deepseek": "workspace:*",
+    "@liwa/launch-environment": "workspace:*",
+    "@liwa/deepseek-account": "workspace:*",
+    "@liwa/cordis-plugin-loader": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-llm-deepseek": "workspace:*",
-    "@deepseek-ai/dsh-launch-environment": "workspace:*",
-    "@deepseek-ai/dsh-deepseek-account": "workspace:*",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-llm-deepseek-api-key": "workspace:*",
-    "@deepseek-ai/dsh-timeout": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/llm": "workspace:*",
+    "@liwa/llm-deepseek": "workspace:*",
+    "@liwa/launch-environment": "workspace:*",
+    "@liwa/deepseek-account": "workspace:*",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/llm-deepseek-api-key": "workspace:*",
+    "@liwa/timeout": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-deepseek-account": {
+    "@liwa/deepseek-account": {
       "optional": true
     },
-    "@deepseek-ai/cordis-plugin-loader": {
+    "@liwa/cordis-plugin-loader": {
       "optional": true
     }
   }

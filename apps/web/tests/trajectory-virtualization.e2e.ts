@@ -8,10 +8,10 @@ import { join } from 'node:path'
 import type { Browser, Page } from 'playwright'
 import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed } from 'vitest'
-import type { StreamChunk } from '@deepseek-ai/dsh-llm'
-import type { ReplayEntry } from '@deepseek-ai/dsh-llm-replay'
-import { sessionFixtureName } from '@deepseek-ai/dsh-session-snapshot'
-import { SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
+import type { StreamChunk } from '@liwa/llm'
+import type { ReplayEntry } from '@liwa/llm-replay'
+import { sessionFixtureName } from '@liwa/session-snapshot'
+import { SESSION_FORMAT_VERSION } from '@liwa/session'
 import { createChatScrollFixture } from './chat-scroll-fixture.ts'
 import {
   captureStableAria,
@@ -186,7 +186,7 @@ describe('web e2e: Trajectory virtualization over tail-paged history', () => {
   let replayDir: string
 
   beforeAll(async () => {
-    replayDir = await mkdtemp(join(tmpdir(), 'dsh-trajectory-virtualization-'))
+    replayDir = await mkdtemp(join(tmpdir(), 'liwa-trajectory-virtualization-'))
     const replayFixture = join(replayDir, sessionFixtureName(0, SESSION_FORMAT_VERSION))
     const replayOverride = join(replayDir, 'replay.override.json')
     await writeFile(replayFixture, FIXTURE.log)

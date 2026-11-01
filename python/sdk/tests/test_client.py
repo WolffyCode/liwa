@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from deepseek_harness import DeepSeekHarness, HarnessClient, HarnessConfig, Notification, RunResult, SdkProtocolError
-from deepseek_harness.errors import JsonRpcError
+from liwa import Liwa, LiwaClient, LiwaConfig, Notification, RunResult, SdkProtocolError
+from liwa.errors import JsonRpcError
 
 
 def test_high_level_sdk_runs_turn_and_preserves_auto_review_errors(tmp_path: Path) -> None:
@@ -27,9 +27,9 @@ env_dump = os.environ["ENV_DUMP"]
 json.dump({
     "DEEPSEEK_API_KEY": os.environ.get("DEEPSEEK_API_KEY"),
     "DEEPSEEK_BASE_URL": os.environ.get("DEEPSEEK_BASE_URL"),
-    "DSH_CWD": os.environ.get("DSH_CWD"),
-    "DSH_SESSION_ROOT": os.environ.get("DSH_SESSION_ROOT"),
-    "DSH_CORDIS_CONFIG": os.environ.get("DSH_CORDIS_CONFIG"),
+    "LIWA_CWD": os.environ.get("LIWA_CWD"),
+    "LIWA_SESSION_ROOT": os.environ.get("LIWA_SESSION_ROOT"),
+    "LIWA_CORDIS_CONFIG": os.environ.get("LIWA_CORDIS_CONFIG"),
 }, open(env_dump, "w"))
 
 for line in sys.stdin:
@@ -164,7 +164,7 @@ for line in sys.stdin:
 """.strip()
     )
 
-    with DeepSeekHarness(
+    with Liwa(
         approval_requests=True,
         model="deepseek-v4-flash",
         reasoning_effort="max",
@@ -208,9 +208,9 @@ for line in sys.stdin:
     dumped_env = json.loads(env_dump.read_text())
     assert dumped_env["DEEPSEEK_API_KEY"] == "env-key"
     assert dumped_env["DEEPSEEK_BASE_URL"] == "http://127.0.0.1:4321"
-    assert dumped_env["DSH_CWD"] is None
-    assert dumped_env["DSH_SESSION_ROOT"] is None
-    assert dumped_env["DSH_CORDIS_CONFIG"] is None
+    assert dumped_env["LIWA_CWD"] is None
+    assert dumped_env["LIWA_SESSION_ROOT"] is None
+    assert dumped_env["LIWA_CORDIS_CONFIG"] is None
     assert json.loads(init_dump.read_text()) == {
         "approvalRequests": True,
         "cwd": str(tmp_path),
@@ -246,7 +246,7 @@ for line in sys.stdin:
     )
 
     seen: list[str] = []
-    with DeepSeekHarness(
+    with Liwa(
         _launch_args=(sys.executable, str(script)),
         cwd=str(tmp_path),
     ) as harness:
@@ -284,7 +284,7 @@ for line in sys.stdin:
 """.strip()
     )
 
-    with DeepSeekHarness(
+    with Liwa(
         _launch_args=(sys.executable, str(script)),
         cwd=str(tmp_path),
     ) as harness:
@@ -309,7 +309,7 @@ import sys
 for line in sys.stdin:
     msg = json.loads(line)
     if msg.get("method") == "initialize":
-        json.dump({"process": os.getcwd(), "environment": os.environ.get("DSH_CWD"), "wire": msg["params"]["cwd"]}, open(os.environ["CAPTURE"], "w"))
+        json.dump({"process": os.getcwd(), "environment": os.environ.get("LIWA_CWD"), "wire": msg["params"]["cwd"]}, open(os.environ["CAPTURE"], "w"))
         print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-runtime"}}}), flush=True)
     elif msg.get("method") == "shutdown":
         print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {}}), flush=True)
@@ -318,7 +318,7 @@ for line in sys.stdin:
     )
     monkeypatch.chdir(tmp_path)
 
-    with DeepSeekHarness(
+    with Liwa(
         cwd=".",
         runtime_cwd=".",
         _launch_args=(sys.executable, str(script)),
@@ -359,7 +359,7 @@ for line in sys.stdin:
 """.strip()
     )
 
-    with DeepSeekHarness(
+    with Liwa(
         _launch_args=(sys.executable, str(script)),
         cwd=str(tmp_path),
     ) as harness:
@@ -408,7 +408,7 @@ for line in sys.stdin:
     )
 
     seen: list[str] = []
-    with DeepSeekHarness(
+    with Liwa(
         _launch_args=(sys.executable, str(script)),
         cwd=str(tmp_path),
     ) as harness:
@@ -463,7 +463,7 @@ for line in sys.stdin:
 """.strip()
     )
 
-    with DeepSeekHarness(
+    with Liwa(
         _launch_args=(sys.executable, str(script)),
         cwd=str(tmp_path),
     ) as harness:
@@ -498,7 +498,7 @@ for line in sys.stdin:
 """.strip()
     )
 
-    with DeepSeekHarness(_launch_args=(sys.executable, str(script)), cwd=str(tmp_path)) as harness:
+    with Liwa(_launch_args=(sys.executable, str(script)), cwd=str(tmp_path)) as harness:
         result = harness.run("one turn", session_id="main")
         assert harness.client._notifications.qsize() == 0
 
@@ -538,7 +538,7 @@ for line in sys.stdin:
 """.strip()
     )
 
-    with DeepSeekHarness(_launch_args=(sys.executable, str(script)), cwd=str(tmp_path)) as harness:
+    with Liwa(_launch_args=(sys.executable, str(script)), cwd=str(tmp_path)) as harness:
         first = harness.run("first turn", session_id="main")
         second = harness.run("second turn", session_id="main")
 
@@ -558,7 +558,7 @@ for line in sys.stdin:
     msg = json.loads(line)
     method = msg.get("method")
     if method == "initialize":
-        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-dsh"}}}), flush=True)
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-liwa"}}}), flush=True)
     elif method == "session/prompt":
         params = msg.get("params") or {}
         print(json.dumps({"jsonrpc": "2.0", "method": "llm/request", "params": {"requestId": "req-1", "sessionId": params["sessionId"], "model": "dsagent", "messages": []}}), flush=True)
@@ -569,9 +569,9 @@ for line in sys.stdin:
 """.strip()
     )
 
-    with HarnessClient(_launch_args=(sys.executable, str(script))) as client:
+    with LiwaClient(_launch_args=(sys.executable, str(script))) as client:
         init = client.initialize(provider="deepseek-official", cwd="/workspace", model="dsagent")
-        assert init.serverInfo.name == "fake-dsh"
+        assert init.serverInfo.name == "fake-liwa"
 
         client.session_prompt("main", [{"type": "text", "text": "fix it"}])
         notification = client.next_notification()
@@ -581,7 +581,7 @@ for line in sys.stdin:
 
 
 def test_client_keeps_unmatched_notifications_available_globally_while_subscribed() -> None:
-    client = HarnessClient()
+    client = LiwaClient()
     with client.subscribe_session_notifications("main"):
         client._handle_message({
             "jsonrpc": "2.0",
@@ -597,7 +597,7 @@ def test_client_keeps_unmatched_notifications_available_globally_while_subscribe
 
 
 def test_session_subscription_keeps_descendant_relationships_across_subscriptions() -> None:
-    client = HarnessClient()
+    client = LiwaClient()
     with client.subscribe_session_notifications("main") as first:
         unknown_child = {
             "type": "subagent/catalog", "seq": 0, "time": 1,
@@ -633,7 +633,7 @@ def test_session_subscription_keeps_descendant_relationships_across_subscription
 
 
 def test_session_subscription_preserves_reused_child_ancestry_after_late_finish() -> None:
-    client = HarnessClient()
+    client = LiwaClient()
     old_seen: list[Notification] = []
     new_seen: list[Notification] = []
     with (
@@ -702,7 +702,7 @@ for line in sys.stdin:
     msg = json.loads(line)
     method = msg.get("method")
     if method == "initialize":
-        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-dsh"}}}), flush=True)
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-liwa"}}}), flush=True)
     elif method in {"emit-first", "emit-second"}:
         print(json.dumps({"jsonrpc": "2.0", "method": "tick", "params": {"source": method}}), flush=True)
     elif method == "session/prompt":
@@ -716,7 +716,7 @@ for line in sys.stdin:
     def broken_filter(_notification: object) -> bool:
         raise RuntimeError("bad notification filter")
 
-    with HarnessClient(_launch_args=(sys.executable, str(script))) as client:
+    with LiwaClient(_launch_args=(sys.executable, str(script))) as client:
         client.initialize(provider="deepseek-official", cwd="/workspace", model="dsagent")
         with (
             client.subscribe_notifications(broken_filter) as broken,
@@ -744,7 +744,7 @@ for line in sys.stdin:
     msg = json.loads(line)
     method = msg.get("method")
     if method == "initialize":
-        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-dsh"}}}), flush=True)
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-liwa"}}}), flush=True)
     elif method == "session/prompt":
         print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"accepted": False}}), flush=True)
     elif method == "shutdown":
@@ -753,7 +753,7 @@ for line in sys.stdin:
 """.strip()
     )
 
-    with HarnessClient(_launch_args=(sys.executable, str(script))) as client:
+    with LiwaClient(_launch_args=(sys.executable, str(script))) as client:
         client.initialize(provider="deepseek-official", cwd="/workspace", model="dsagent")
         with pytest.raises(ValueError):
             client.session_prompt("main", [{"type": "text", "text": "fix it"}])
@@ -770,7 +770,7 @@ for line in sys.stdin:
     msg = json.loads(line)
     method = msg.get("method")
     if method == "initialize":
-        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-dsh"}}}), flush=True)
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-liwa"}}}), flush=True)
         print(json.dumps({"jsonrpc": "2.0", "id": "bridge-req-1", "method": "llm.request", "params": {"requestId": "req-1", "sessionId": "main", "model": "dsagent", "messages": []}}), flush=True)
     elif "id" in msg and "method" not in msg:
         print(json.dumps({"jsonrpc": "2.0", "method": "response/seen", "params": {"result": msg.get("result")}}), flush=True)
@@ -780,7 +780,7 @@ for line in sys.stdin:
 """.strip()
     )
 
-    with HarnessClient(_launch_args=(sys.executable, str(script))) as client:
+    with LiwaClient(_launch_args=(sys.executable, str(script))) as client:
         client.initialize(provider="deepseek-official", cwd="/workspace", model="dsagent")
 
         request = client.next_request()
@@ -805,16 +805,16 @@ print("node warning: experimental loader", flush=True)
 for line in sys.stdin:
     msg = json.loads(line)
     if msg.get("method") == "initialize":
-        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-dsh"}}}), flush=True)
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-liwa"}}}), flush=True)
     elif msg.get("method") == "shutdown":
         print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {}}), flush=True)
         break
 """.strip()
     )
 
-    with HarnessClient(_launch_args=(sys.executable, str(script))) as client:
+    with LiwaClient(_launch_args=(sys.executable, str(script))) as client:
         init = client.initialize(provider="deepseek-official", cwd="/workspace", model="dsagent")
-        assert init.serverInfo.name == "fake-dsh"
+        assert init.serverInfo.name == "fake-liwa"
 
 
 def test_client_request_times_out_when_bridge_does_not_respond(tmp_path: Path) -> None:
@@ -829,8 +829,8 @@ time.sleep(60)
 """.strip()
     )
 
-    with HarnessClient(
-        HarnessConfig(
+    with LiwaClient(
+        LiwaConfig(
             profile="web",
             initialize_timeout_seconds=0.1,
         ),
@@ -861,14 +861,14 @@ signal.signal(signal.SIGTERM, signal.SIG_IGN)
 for line in sys.stdin:
     msg = json.loads(line)
     if msg.get("method") == "initialize":
-        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-dsh"}}}), flush=True)
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-liwa"}}}), flush=True)
     elif msg.get("method") == "shutdown":
         time.sleep(60)
 """.strip()
     )
 
-    client = HarnessClient(
-        HarnessConfig(
+    client = LiwaClient(
+        LiwaConfig(
             shutdown_timeout_seconds=0.1,
         ),
         _launch_args=(sys.executable, str(script)),
@@ -898,7 +898,7 @@ import time
 for line in sys.stdin:
     msg = json.loads(line)
     if msg.get("method") == "initialize":
-        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-dsh"}}}), flush=True)
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-liwa"}}}), flush=True)
     elif msg.get("method") == "shutdown":
         print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {}}), flush=True)
 
@@ -907,8 +907,8 @@ Path(os.environ["QUIESCED_MARKER"]).write_text("quiesced")
 """.strip()
     )
 
-    client = HarnessClient(
-        HarnessConfig(
+    client = LiwaClient(
+        LiwaConfig(
             env={"QUIESCED_MARKER": str(marker)},
             shutdown_timeout_seconds=1,
         ),
@@ -939,7 +939,7 @@ for line in sys.stdin:
 """.strip()
     )
 
-    client = HarnessClient(_launch_args=(sys.executable, str(script)))
+    client = LiwaClient(_launch_args=(sys.executable, str(script)))
     client.start()
     proc = client._proc
     assert proc is not None
@@ -954,39 +954,39 @@ for line in sys.stdin:
 
 
 def test_public_signatures_omit_unsupported_wire_parameters() -> None:
-    from deepseek_harness import DeepSeekHarnessConfig, Session
+    from liwa import LiwaConfig, Session
 
-    assert "session_root" not in inspect.signature(HarnessClient.initialize).parameters
-    assert "system_prompt" not in inspect.signature(HarnessClient.initialize).parameters
-    assert "profile" not in inspect.signature(HarnessClient.session_prompt).parameters
-    assert "profile" not in inspect.signature(DeepSeekHarness.run).parameters
+    assert "session_root" not in inspect.signature(LiwaClient.initialize).parameters
+    assert "system_prompt" not in inspect.signature(LiwaClient.initialize).parameters
+    assert "profile" not in inspect.signature(LiwaClient.session_prompt).parameters
+    assert "profile" not in inspect.signature(Liwa.run).parameters
     assert "profile" not in inspect.signature(Session.run).parameters
-    assert "system_prompt" not in DeepSeekHarnessConfig.__dataclass_fields__
-    assert "max_tokens" in DeepSeekHarnessConfig.__dataclass_fields__
-    assert "reasoning_effort" in DeepSeekHarnessConfig.__dataclass_fields__
-    assert "max_tokens" in inspect.signature(HarnessClient.initialize).parameters
-    assert "reasoning_effort" in inspect.signature(HarnessClient.initialize).parameters
-    assert "client_name" not in HarnessConfig.__dataclass_fields__
-    assert "client_version" not in HarnessConfig.__dataclass_fields__
-    assert {"dsh_bin", "profile", "patches", "dsh_home"} <= set(
-        DeepSeekHarnessConfig.__dataclass_fields__
+    assert "system_prompt" not in LiwaConfig.__dataclass_fields__
+    assert "max_tokens" in LiwaConfig.__dataclass_fields__
+    assert "reasoning_effort" in LiwaConfig.__dataclass_fields__
+    assert "max_tokens" in inspect.signature(LiwaClient.initialize).parameters
+    assert "reasoning_effort" in inspect.signature(LiwaClient.initialize).parameters
+    assert "client_name" not in LiwaConfig.__dataclass_fields__
+    assert "client_version" not in LiwaConfig.__dataclass_fields__
+    assert {"liwa_bin", "profile", "patches", "liwa_home"} <= set(
+        LiwaConfig.__dataclass_fields__
     )
-    assert {"dsh_bin", "profile", "patches", "dsh_home"} <= set(
-        HarnessConfig.__dataclass_fields__
+    assert {"liwa_bin", "profile", "patches", "liwa_home"} <= set(
+        LiwaConfig.__dataclass_fields__
     )
-    assert "initialize_timeout_seconds" in DeepSeekHarnessConfig.__dataclass_fields__
-    assert "initialize_timeout_seconds" in HarnessConfig.__dataclass_fields__
-    assert DeepSeekHarnessConfig().initialize_timeout_seconds == 30.0
-    assert HarnessConfig().initialize_timeout_seconds == 30.0
+    assert "initialize_timeout_seconds" in LiwaConfig.__dataclass_fields__
+    assert "initialize_timeout_seconds" in LiwaConfig.__dataclass_fields__
+    assert LiwaConfig().initialize_timeout_seconds == 30.0
+    assert LiwaConfig().initialize_timeout_seconds == 30.0
     for removed in ("cordis", "session_root", "runtime_bin", "bridge_bin", "launch_args_override"):
-        assert removed not in DeepSeekHarnessConfig.__dataclass_fields__
-        assert removed not in HarnessConfig.__dataclass_fields__
-    assert "_launch_args" not in HarnessConfig.__dataclass_fields__
+        assert removed not in LiwaConfig.__dataclass_fields__
+        assert removed not in LiwaConfig.__dataclass_fields__
+    assert "_launch_args" not in LiwaConfig.__dataclass_fields__
     assert "session_root" not in RunResult.__dataclass_fields__
 
 
 def test_client_close_is_idempotent_before_and_after_start(tmp_path: Path) -> None:
-    HarnessClient().close()
+    LiwaClient().close()
 
     script = tmp_path / "fake_bridge.py"
     script.write_text(
@@ -997,14 +997,14 @@ import sys
 for line in sys.stdin:
     msg = json.loads(line)
     if msg.get("method") == "initialize":
-        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-dsh"}}}), flush=True)
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-liwa"}}}), flush=True)
     elif msg.get("method") == "shutdown":
         print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {}}), flush=True)
         break
 """.strip()
     )
 
-    client = HarnessClient(_launch_args=(sys.executable, str(script)))
+    client = LiwaClient(_launch_args=(sys.executable, str(script)))
     client.start()
     client.initialize(provider="deepseek-official", cwd="/workspace", model="dsagent")
     client.close()
@@ -1022,8 +1022,8 @@ sys.exit(42)
 """.strip()
     )
 
-    with HarnessClient(
-        HarnessConfig(
+    with LiwaClient(
+        LiwaConfig(
             request_timeout_seconds=2,
         ),
         _launch_args=(sys.executable, str(script)),
@@ -1047,15 +1047,15 @@ with open(os.environ["SEEN"], "w") as seen:
         seen.flush()
         msg = json.loads(line)
         if "id" in msg and msg.get("method") == "initialize":
-            print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-dsh"}}}), flush=True)
+            print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-liwa"}}}), flush=True)
         elif "id" in msg and msg.get("method") == "shutdown":
             print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {}}), flush=True)
             break
 """.strip()
     )
 
-    with HarnessClient(
-        HarnessConfig(
+    with LiwaClient(
+        LiwaConfig(
             env={"SEEN": str(output)},
         ),
         _launch_args=(sys.executable, str(script)),
@@ -1074,11 +1074,11 @@ with open(os.environ["SEEN"], "w") as seen:
         json.loads(line)
 
 
-def _install_fake_bundled_dsh(
+def _install_fake_bundled_liwa(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Install a fake runtime package that records dsh argv and serves lifecycle calls."""
-    runtime = tmp_path / "dsh.py"
+    """Install a fake runtime package that records liwa argv and serves lifecycle calls."""
+    runtime = tmp_path / "liwa.py"
     runtime.write_text(
         """
 import json
@@ -1087,8 +1087,8 @@ import sys
 
 json.dump({
     "argv": sys.argv[1:],
-    "DSH_HOME": os.environ.get("DSH_HOME"),
-    "DSH_CORDIS_CONFIG": os.environ.get("DSH_CORDIS_CONFIG"),
+    "LIWA_HOME": os.environ.get("LIWA_HOME"),
+    "LIWA_CORDIS_CONFIG": os.environ.get("LIWA_CORDIS_CONFIG"),
 }, open(os.environ["ENV_DUMP"], "w"))
 for line in sys.stdin:
     msg = json.loads(line)
@@ -1100,7 +1100,7 @@ for line in sys.stdin:
 """.strip()
     )
 
-    module_dir = tmp_path / "deepseek_harness_runtime"
+    module_dir = tmp_path / "liwa_runtime"
     module_dir.mkdir()
     (module_dir / "__init__.py").write_text(
         f"""
@@ -1110,69 +1110,69 @@ def resolve_bundled_launch_args(mode=None):
     )
 
     monkeypatch.syspath_prepend(str(tmp_path))
-    monkeypatch.delitem(sys.modules, "deepseek_harness_runtime", raising=False)
+    monkeypatch.delitem(sys.modules, "liwa_runtime", raising=False)
 
 
-def test_client_default_launch_uses_bundled_dsh_sdk_profile_and_explicit_home(
+def test_client_default_launch_uses_bundled_liwa_sdk_profile_and_explicit_home(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     env_dump = tmp_path / "env.json"
     home = tmp_path / "home"
     patch = tmp_path / "sdk.patch.yml"
     patch.write_text("[]\n")
-    _install_fake_bundled_dsh(tmp_path, monkeypatch)
+    _install_fake_bundled_liwa(tmp_path, monkeypatch)
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setenv("DSH_HOME", str(tmp_path / "ambient-home"))
-    monkeypatch.delenv("DSH_CORDIS_CONFIG", raising=False)
+    monkeypatch.setenv("LIWA_HOME", str(tmp_path / "ambient-home"))
+    monkeypatch.delenv("LIWA_CORDIS_CONFIG", raising=False)
 
-    with HarnessClient(HarnessConfig(
+    with LiwaClient(LiwaConfig(
         profile="sdk",
         patches=("sdk.patch.yml",),
-        dsh_home=str(home),
-        env={"ENV_DUMP": str(env_dump), "DSH_HOME": str(tmp_path / "env-home")},
+        liwa_home=str(home),
+        env={"ENV_DUMP": str(env_dump), "LIWA_HOME": str(tmp_path / "env-home")},
     )) as client:
         init = client.initialize(provider="deepseek-official", cwd="/workspace", model="deepseek-v4-pro")
 
     assert init.serverInfo.name == "bundled-runtime"
     assert json.loads(env_dump.read_text()) == {
         "argv": ["--profile", "sdk", "--patch", str(patch)],
-        "DSH_HOME": str(home),
-        "DSH_CORDIS_CONFIG": None,
+        "LIWA_HOME": str(home),
+        "LIWA_CORDIS_CONFIG": None,
     }
 
 
-def test_client_accepts_explicit_environment_dsh_home(
+def test_client_accepts_explicit_environment_liwa_home(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     env_dump = tmp_path / "env.json"
     home = tmp_path / "environment-home"
-    _install_fake_bundled_dsh(tmp_path, monkeypatch)
+    _install_fake_bundled_liwa(tmp_path, monkeypatch)
 
-    with HarnessClient(
-        HarnessConfig(profile="custom", env={"ENV_DUMP": str(env_dump), "DSH_HOME": str(home)})
+    with LiwaClient(
+        LiwaConfig(profile="custom", env={"ENV_DUMP": str(env_dump), "LIWA_HOME": str(home)})
     ) as client:
         client.initialize(provider="deepseek-official", cwd="/workspace", model="deepseek-v4-pro")
 
     assert json.loads(env_dump.read_text()) == {
         "argv": ["--profile", "custom"],
-        "DSH_HOME": str(home),
-        "DSH_CORDIS_CONFIG": None,
+        "LIWA_HOME": str(home),
+        "LIWA_CORDIS_CONFIG": None,
     }
 
 
-def test_client_rejects_an_implicit_default_dsh_home(
+def test_client_rejects_an_implicit_default_liwa_home(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    _install_fake_bundled_dsh(tmp_path, monkeypatch)
-    monkeypatch.delenv("DSH_HOME", raising=False)
+    _install_fake_bundled_liwa(tmp_path, monkeypatch)
+    monkeypatch.delenv("LIWA_HOME", raising=False)
 
-    with pytest.raises(ValueError, match="explicit dsh_home or non-empty DSH_HOME"):
-        HarnessClient(HarnessConfig(env={})).start()
+    with pytest.raises(ValueError, match="explicit liwa_home or non-empty LIWA_HOME"):
+        LiwaClient(LiwaConfig(env={})).start()
 
 
 def test_client_reports_missing_bundled_runtime_dependency(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delitem(sys.modules, "deepseek_harness_runtime", raising=False)
+    monkeypatch.delitem(sys.modules, "liwa_runtime", raising=False)
     monkeypatch.setattr(sys, "path", [])
 
-    with pytest.raises(FileNotFoundError, match="Install deepseek-harness-runtime-bin"):
-        HarnessClient(HarnessConfig(dsh_home="/explicit/home")).start()
+    with pytest.raises(FileNotFoundError, match="Install liwa-runtime-bin"):
+        LiwaClient(LiwaConfig(liwa_home="/explicit/home")).start()

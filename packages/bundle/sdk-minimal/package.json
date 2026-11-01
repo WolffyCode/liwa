@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-sdk-minimal",
+  "name": "@liwa/sdk-minimal",
   "description": "The standalone minimal SDK profile bundle: JSON-RPC, one DeepSeek adapter, persistent shell, and JSONL sessions",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/bundle/sdk-minimal"
   },
   "type": "module",
@@ -28,53 +28,53 @@
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
-  "dsh": {
+  "liwa": {
     "bundle": {
       "patch": "./cordis.patch.yml"
     }
   },
   "dependencies": {
-    "@deepseek-ai/cordis-plugin-timer": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop": "workspace:*",
-    "@deepseek-ai/dsh-attachment-local": "workspace:*",
-    "@deepseek-ai/dsh-compaction-basic": "workspace:*",
-    "@deepseek-ai/dsh-compaction-image-offload": "workspace:*",
-    "@deepseek-ai/dsh-deepseek-llm-api-extensions": "workspace:*",
-    "@deepseek-ai/dsh-jobs-local": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-llm-deepseek-api-key": "workspace:*",
-    "@deepseek-ai/dsh-llm-retry": "workspace:*",
-    "@deepseek-ai/dsh-mcp-resources": "workspace:*",
-    "@deepseek-ai/dsh-plugin-package-inventory-deepseek": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-local": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/dsh-sdk-app": "workspace:*",
-    "@deepseek-ai/dsh-sdk-jsonrpc-server": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-checkpoint-policy": "workspace:*",
-    "@deepseek-ai/dsh-session-log-deepseek": "workspace:*",
-    "@deepseek-ai/dsh-session-persistence-jsonl": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-session-title": "workspace:*",
-    "@deepseek-ai/dsh-subprocess-local": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-terminal": "workspace:*",
-    "@deepseek-ai/dsh-terminal-bash": "workspace:*",
-    "@deepseek-ai/dsh-token-meter": "workspace:*",
-    "@deepseek-ai/dsh-tool-bash-persistent": "workspace:*",
-    "@deepseek-ai/dsh-tool-executor-native": "workspace:*",
-    "@deepseek-ai/dsh-tool-fs": "workspace:*",
-    "@deepseek-ai/dsh-tool-pwsh-persistent": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-working-directory": "workspace:*",
-    "@deepseek-ai/dsh-tool-working-directory": "workspace:*",
-    "@deepseek-ai/dsh-fs-local": "workspace:*"
+    "@liwa/cordis-plugin-timer": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-loop": "workspace:*",
+    "@liwa/attachment-local": "workspace:*",
+    "@liwa/compaction-basic": "workspace:*",
+    "@liwa/compaction-image-offload": "workspace:*",
+    "@liwa/deepseek-llm-api-extensions": "workspace:*",
+    "@liwa/jobs-local": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/llm-deepseek-api-key": "workspace:*",
+    "@liwa/llm-retry": "workspace:*",
+    "@liwa/mcp-resources": "workspace:*",
+    "@liwa/plugin-package-inventory-deepseek": "workspace:*",
+    "@liwa/sandbox-local": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/sdk-app": "workspace:*",
+    "@liwa/sdk-jsonrpc-server": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-checkpoint-policy": "workspace:*",
+    "@liwa/session-log-deepseek": "workspace:*",
+    "@liwa/session-persistence-jsonl": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/session-title": "workspace:*",
+    "@liwa/subprocess-local": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/terminal": "workspace:*",
+    "@liwa/terminal-bash": "workspace:*",
+    "@liwa/token-meter": "workspace:*",
+    "@liwa/tool-bash-persistent": "workspace:*",
+    "@liwa/tool-executor-native": "workspace:*",
+    "@liwa/tool-fs": "workspace:*",
+    "@liwa/tool-pwsh-persistent": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/working-directory": "workspace:*",
+    "@liwa/tool-working-directory": "workspace:*",
+    "@liwa/fs-local": "workspace:*"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   }
 }

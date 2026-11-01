@@ -29,16 +29,16 @@ let require: WorkerRequire
 
 beforeEach(() => {
   const vfs = new MemoryVfs()
-  vfs.seedDirectory('/dsh/node_modules/pkg/locale')
-  vfs.writeFileSync('/dsh/node_modules/pkg/package.json', JSON.stringify({
+  vfs.seedDirectory('/liwa/node_modules/pkg/locale')
+  vfs.writeFileSync('/liwa/node_modules/pkg/package.json', JSON.stringify({
     name: 'pkg', exports: { '.': './index.js', './locale/*.json': './locale/*.json' },
   }))
-  vfs.writeFileSync('/dsh/node_modules/pkg/index.js', 'module.exports = { marker: "pkg" }')
-  vfs.writeFileSync('/dsh/node_modules/pkg/locale/en.json', '{}')
-  const loader = new WorkerModuleLoader({ vfs, root: '/dsh', staticModules: createNodeBuiltins() })
+  vfs.writeFileSync('/liwa/node_modules/pkg/index.js', 'module.exports = { marker: "pkg" }')
+  vfs.writeFileSync('/liwa/node_modules/pkg/locale/en.json', '{}')
+  const loader = new WorkerModuleLoader({ vfs, root: '/liwa', staticModules: createNodeBuiltins() })
   setActiveModuleLoader(loader)
-  installProcessGlobal({ cwd: '/dsh', env: {} })
-  require = loader.createRequire('/dsh/')
+  installProcessGlobal({ cwd: '/liwa', env: {} })
+  require = loader.createRequire('/liwa/')
 })
 
 afterEach(() => {
@@ -82,31 +82,31 @@ describe('the cascaded ESM loader', () => {
   })
 
   it('resolves with the Node 24 argument order', () => {
-    expect(cascaded().resolveSync('file:///dsh/', { specifier: 'pkg/locale/en.json', attributes: {} }))
-      .toEqual({ url: 'file:///dsh/node_modules/pkg/locale/en.json', format: 'json' })
-    expect(cascaded().resolveSync('file:///dsh/', { specifier: 'node:path' }))
+    expect(cascaded().resolveSync('file:///liwa/', { specifier: 'pkg/locale/en.json', attributes: {} }))
+      .toEqual({ url: 'file:///liwa/node_modules/pkg/locale/en.json', format: 'json' })
+    expect(cascaded().resolveSync('file:///liwa/', { specifier: 'node:path' }))
       .toEqual({ url: 'node:path', format: 'builtin' })
   })
 
   it('reports a missing resource with the codes Node ESM resolution uses', () => {
-    expect(codeOf(() => cascaded().resolveSync('file:///dsh/', { specifier: 'pkg/icon' }))).toBe('ERR_PACKAGE_PATH_NOT_EXPORTED')
-    expect(codeOf(() => cascaded().resolveSync('file:///dsh/', { specifier: 'absent' }))).toBe('ERR_MODULE_NOT_FOUND')
-    expect(codeOf(() => cascaded().resolveSync('file:///dsh/', { specifier: './absent.js' }))).toBe('ERR_MODULE_NOT_FOUND')
+    expect(codeOf(() => cascaded().resolveSync('file:///liwa/', { specifier: 'pkg/icon' }))).toBe('ERR_PACKAGE_PATH_NOT_EXPORTED')
+    expect(codeOf(() => cascaded().resolveSync('file:///liwa/', { specifier: 'absent' }))).toBe('ERR_MODULE_NOT_FOUND')
+    expect(codeOf(() => cascaded().resolveSync('file:///liwa/', { specifier: './absent.js' }))).toBe('ERR_MODULE_NOT_FOUND')
   })
 
   it('imports through the Worker loader', async () => {
-    await expect(cascaded().import('pkg', 'file:///dsh/', {})).resolves.toEqual({ marker: 'pkg' })
+    await expect(cascaded().import('pkg', 'file:///liwa/', {})).resolves.toEqual({ marker: 'pkg' })
   })
 
   it('keeps an empty load cache with Node LoadCache lookups', () => {
     const cache = cascaded().loadCache
     expect(cache).toBeInstanceOf(Map)
     expect(cache.size).toBe(0)
-    expect(cache.get('file:///dsh/x.js')).toBeUndefined()
-    expect(cache.has('file:///dsh/x.js')).toBe(false)
-    expect(cache.has('file:///dsh/x.json', 'json')).toBe(false)
+    expect(cache.get('file:///liwa/x.js')).toBeUndefined()
+    expect(cache.has('file:///liwa/x.js')).toBe(false)
+    expect(cache.has('file:///liwa/x.json', 'json')).toBe(false)
     expect(codeOf(() => cache.get(1 as never))).toBe('ERR_INVALID_ARG_TYPE')
-    expect(codeOf(() => cache.set('file:///dsh/x.js', 'javascript', {}))).toBe('ERR_FEATURE_UNAVAILABLE_ON_PLATFORM')
+    expect(codeOf(() => cache.set('file:///liwa/x.js', 'javascript', {}))).toBe('ERR_FEATURE_UNAVAILABLE_ON_PLATFORM')
   })
 })
 
@@ -143,9 +143,9 @@ describe('surfaces HMR reads while expiring package configuration', () => {
     const key = cache.serializeKey('./a.json', { type: 'json' })
     expect(key).toBe('./a.json::"type""json"')
     expect(cache.serializeKey('./a.js', {})).toBe('./a.js::')
-    expect(cache.has(key, 'file:///dsh/')).toBe(false)
-    cache.set(key, 'file:///dsh/', { url: 'file:///dsh/a.json', format: 'json' })
-    expect(cache.get(key, 'file:///dsh/')).toEqual({ url: 'file:///dsh/a.json', format: 'json' })
+    expect(cache.has(key, 'file:///liwa/')).toBe(false)
+    cache.set(key, 'file:///liwa/', { url: 'file:///liwa/a.json', format: 'json' })
+    expect(cache.get(key, 'file:///liwa/')).toEqual({ url: 'file:///liwa/a.json', format: 'json' })
   })
 })
 

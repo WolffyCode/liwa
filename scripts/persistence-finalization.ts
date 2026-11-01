@@ -50,6 +50,7 @@ function recordDigest(entry: PersistenceHistoryEntry): string {
     roots: [...entry.snapshot.roots].sort((a, b) => compare(a.key, b.key)).map(root => ({
       key: root.key, ...identity(root), schema: root.schema,
     })) } }
+  // The digest domain is baked into every recorded finalization digest, so it keeps the upstream spelling.
   return createHash('sha256').update('dsh-persistence-finalization-record-v1\n').update(JSON.stringify(semantic)).digest('hex')
 }
 

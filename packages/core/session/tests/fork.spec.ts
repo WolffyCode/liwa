@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { createUserMessage, ToolCallId, createMessage } from '@deepseek-ai/dsh-llm'
-import type { MessageSource } from '@deepseek-ai/dsh-llm'
-import SessionStore, { Session, SessionForkError, SessionId, SessionLogOffset, SessionSeq, TOOL_NOT_STARTED, TOOL_OUTCOME_UNKNOWN } from '@deepseek-ai/dsh-session'
-import type { SessionEvent, SurfaceEvent, TurnEndReason } from '@deepseek-ai/dsh-session'
+import { Context } from '@liwa/cordis'
+import { createUserMessage, ToolCallId, createMessage } from '@liwa/llm'
+import type { MessageSource } from '@liwa/llm'
+import SessionStore, { Session, SessionForkError, SessionId, SessionLogOffset, SessionSeq, TOOL_NOT_STARTED, TOOL_OUTCOME_UNKNOWN } from '@liwa/session'
+import type { SessionEvent, SurfaceEvent, TurnEndReason } from '@liwa/session'
 
-declare module '@deepseek-ai/dsh-session/types' {
+declare module '@liwa/session/types' {
   interface SessionEventMap {
     'test/log-only': { value: string }
     /** Stands in for a plugin's open/close bracket (`compaction/start`). */

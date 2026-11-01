@@ -3,7 +3,7 @@ description: "面向用户与维护者的具备回放感知的 token 与上下�
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-token-meter
+# @liwa/token-meter
 
 [English](README.md) | 中文
 
@@ -57,15 +57,15 @@ token-meter 通过必需的 `ctx.sessionProjections` 服务注册三个客户端
 ### 组合
 
 ```yaml
-- name: '@deepseek-ai/dsh-token-meter'
-- name: '@deepseek-ai/dsh-compaction-basic'
+- name: '@liwa/token-meter'
+- name: '@liwa/compaction-basic'
 ```
 
-两个插件都有可用默认值。meter 只消费可选的 `llm` 服务，且仅用于解析路由声明的请求图片定价；压缩保持可选。部署会在 LLM（大语言模型）适配器上配置容量与图片定价，并在 `dsh-compaction-basic` 上配置压缩策略。
+两个插件都有可用默认值。meter 只消费可选的 `llm` 服务，且仅用于解析路由声明的请求图片定价；压缩保持可选。部署会在 LLM（大语言模型）适配器上配置容量与图片定价，并在 `liwa-compaction-basic` 上配置压缩策略。
 
 ### 解读数字
 
-占用是参考数字，不是计费记录：harness 中没有任何机制依据它做决定，压缩读取的是 `measure()`。UI 用测量压力除以所选模型独立解析的容量来计算占用。`contextBreakdown` 数字是估算值，其总和不会等于 `projectedTokens`；后者的提供方锚点恰好携带启发式误差——CJK 文本与 JSON schema 在每 token 四字符下严重低估。
+占用是参考数字，不是计费记录：灵鲸中没有任何机制依据它做决定，压缩读取的是 `measure()`。UI 用测量压力除以所选模型独立解析的容量来计算占用。`contextBreakdown` 数字是估算值，其总和不会等于 `projectedTokens`；后者的提供方锚点恰好携带启发式误差——CJK 文本与 JSON schema 在每 token 四字符下严重低估。
 
 -----
 
@@ -117,7 +117,7 @@ token-meter 通过必需的 `ctx.sessionProjections` 服务注册三个客户端
 当包级约定不够用时阅读以下页面。它们从计量服务逐步进入压缩消费方与共享类型。
 
 - [Token 计量子系统](../../../docs/subsystems/token-meter.zh.md)——`ctx.tokenMeter` 背后的测量语义。
-- [dsh-llm 服务](../llm/README.zh.md)——其容量元数据由 `resolveModelInfo()` 提供的模型调用服务。
+- [liwa-llm 服务](../llm/README.zh.md)——其容量元数据由 `resolveModelInfo()` 提供的模型调用服务。
 - [压缩能力](../../../docs/subsystems/compaction.zh.md)——读取 `measure()` 的压力敏感消费方。
 - [投影 token 用量](../../../.agents/notes/implemented/architecture/2026-07-29-projected-token-usage-and-request-context.zh.md)——`projectedTokens` 背后的设计与被否决的原子配对比较。
 - [LLM 流式子系统](../../../docs/subsystems/llm-streaming.zh.md)——本服务计价的消息与块类型。
@@ -127,7 +127,7 @@ token-meter 通过必需的 `ctx.sessionProjections` 服务注册三个客户端
 <a id="model-experience"></a>
 ## 模型体验
 
-间接地，通过 `dsh-compaction-basic` 等消费方；服务本身不添加任何提示词、消息、schema、工具或模型调用。
+间接地，通过 `liwa-compaction-basic` 等消费方；服务本身不添加任何提示词、消息、schema、工具或模型调用。
 
 #### KV Cache 影响
 

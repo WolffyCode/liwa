@@ -3,17 +3,17 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-23-client-derived-tool-presentation.md
 /agent-note-client-derived-presentation-from-raw-session-tool-events:
-  en: de8d02e979715600
-  zh: 1db4d0364c30a7e3
+  en: 9d51af4be96b9af1
+  zh: 589509237646703c
 /agent-note-client-derived-presentation-from-raw-session-tool-events/problem:
   en: 9f34c53e647c69ca
   zh: 551776c7cc9618b5
 /agent-note-client-derived-presentation-from-raw-session-tool-events/decision:
-  en: 5fcc5a3de9f757cd
-  zh: a693cefdb82784ee
+  en: 9198fbb0a87937b3
+  zh: ec27ebbef8b6fef9
 /agent-note-client-derived-presentation-from-raw-session-tool-events/decision/goals-and-non-goals:
-  en: 40aceb58d71303b5
-  zh: 6954e41ae2fd1efd
+  en: 406ff4f477fb4f6a
+  zh: 330c62ef0face930
 /agent-note-client-derived-presentation-from-raw-session-tool-events/terminology:
   en: 021106dd41176715
   zh: 131caff7bd37251b
@@ -60,8 +60,8 @@
   en: 46a772ac51da43a2
   zh: 8709a7e3e6a872f1
 /agent-note-client-derived-presentation-from-raw-session-tool-events/client-session-and-conversation/root-and-ptc-dispatch-subcalls:
-  en: 2c8ff511a5527a72
-  zh: 3eeddc9686ff1709
+  en: 4a7f446ecddb172a
+  zh: fe13f21756bd08ab
 /agent-note-client-derived-presentation-from-raw-session-tool-events/client-session-and-conversation/missing-call-head:
   en: b9efc339173e546e
   zh: c7639861b3b96e83
@@ -75,8 +75,8 @@
   en: d336c77d1b09f349
   zh: 6e613f9c9108058f
 /agent-note-client-derived-presentation-from-raw-session-tool-events/client-card-model-design/terminal-card:
-  en: 492669c2134169b2
-  zh: 0247a38df2dd8a83
+  en: c5e71608aab4c9ea
+  zh: 6c600361bdf5ff65
 /agent-note-client-derived-presentation-from-raw-session-tool-events/client-card-model-design/diff-card:
   en: ea384415c94f82da
   zh: 5f146c6cb534e1db
@@ -183,8 +183,8 @@
   en: bc8905288acaa820
   zh: ff551936bd5ea93f
 /agent-note-client-derived-presentation-from-raw-session-tool-events/alternatives-considered/allow-presentation-enhancements:
-  en: 5ed1954f7399ed95
-  zh: 82ea5a8fd5a66967
+  en: 2eebe5323c797ce5
+  zh: 8326aa89fb1fe6fa
 /agent-note-client-derived-presentation-from-raw-session-tool-events/alternatives-considered/accept-temporary-generic-degradation:
   en: 1a8fd108d32bd199
   zh: 5cd1c7adf3fe824d
@@ -222,8 +222,8 @@
   en: d7e581086940fafa
   zh: d452320fee6ef875
 /agent-note-client-derived-presentation-from-raw-session-tool-events/relationship-to-existing-decisions:
-  en: ecd63b5a47a1ec5e
-  zh: c98c8a27a261419a
+  en: 42824b4c909a5aac
+  zh: 5dbfc20003edbdd2
 /agent-note-client-derived-presentation-from-raw-session-tool-events/deferred:
   en: a60c9007c9d26dfd
   zh: 225b1f7544bca324

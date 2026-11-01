@@ -250,7 +250,7 @@
   box-sizing: border-box;
   padding: 24px;
   color: var(--dsw-alias-label-secondary);
-  font-size: var(--dsh-content-font-size-secondary, 13px);
+  font-size: var(--liwa-content-font-size-secondary, 13px);
   text-align: center;
 }
 

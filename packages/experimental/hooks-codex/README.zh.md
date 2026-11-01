@@ -3,13 +3,13 @@ description: "在 agent 运行期间使用你现有的 Codex hooks.json 钩子�
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-hooks-codex
+# @liwa/hooks-codex
 
 [English](README.md) | 中文
 
 ## 概述
 
-`dsh-hooks-codex` 在 agent（智能体）运行期间执行现有 Codex `hooks.json` 中的 command 钩子，让提示词与工具把关逻辑无需重写即可生效。它支持 5 个 Codex hook 点：会话开始、提示词提交、工具执行前后以及停止。钩子可以用模型可见的原因阻塞提示词或工具调用、添加对话上下文，或强制 agent 再执行一步。需要在 harness 中复用 Codex command 钩子时选择本包；超出这一受支持子集的行为应使用原生插件。
+`liwa-hooks-codex` 在 agent（智能体）运行期间执行现有 Codex `hooks.json` 中的 command 钩子，让提示词与工具把关逻辑无需重写即可生效。它支持 5 个 Codex hook 点：会话开始、提示词提交、工具执行前后以及停止。钩子可以用模型可见的原因阻塞提示词或工具调用、添加对话上下文，或强制 agent 再执行一步。需要在灵鲸中复用 Codex command 钩子时选择本包；超出这一受支持子集的行为应使用原生插件。
 
 ## 目录
 
@@ -31,12 +31,12 @@ kind: "package-reference"
 
 ### 何时选择
 
-当你持有 Codex `hooks.json`、且其中的 command 钩子需要把关提示词、工具与轮次时，使用它。没有 Codex 对应物的行为请跳过它：原生插件拥有完整的 harness API，而本桥接只运行参考工具的 command hook 子集。
+当你持有 Codex `hooks.json`、且其中的 command 钩子需要把关提示词、工具与轮次时，使用它。没有 Codex 对应物的行为请跳过它：原生插件拥有完整的灵鲸 API，而本桥接只运行参考工具的 command hook 子集。
 
 ### 最小配置
 
 ```yaml
-- name: '@deepseek-ai/dsh-hooks-codex'
+- name: '@liwa/hooks-codex'
   config:
     configPath: ./.codex/hooks.json
     model: deepseek-v4
@@ -49,7 +49,7 @@ kind: "package-reference"
 | `defaultTimeoutMs` | `600,000` | hook 未设置时的每 hook 超时（即 Codex 默认值） |
 | `stderrSummaryMaxChars` | `500` | 持久化 `hook/result` stderr 摘要的字符上限 |
 
-生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-hooks-codex)是每个受支持字段的穷尽式真源。
+生成的[配置目录](../../../docs/config-catalog.zh.md#liwahooks-codex)是每个受支持字段的穷尽式真源。
 
 ### 你的钩子能做什么
 
@@ -82,7 +82,7 @@ kind: "package-reference"
 
 ### Hook 点映射
 
-每个受支持事件都面向一个 harness 扩展点：`SessionStart` 在首个轮次前通过需等待的 `agent/created` 初始化加入上下文，`UserPromptSubmit` 与 `PreToolUse` 是能拒绝传入动作的 waterfall（瀑布式事件）（`agent/pre-step`、`tools/pre-execute`），`PostToolUse` 是能带反馈阻塞或向下游决策添加上下文的 waterfall（`tools/post-execute`），`Stop` 是串行监听器，其阻塞结果通过 `steer()` 强制再执行一步（`agent/turn-stopping`）。仅提供上下文的 hook 总是先通过 `next()` 委托，再把带来源的消息折叠进下游决策，因此后续监听器仍可拒绝或改写；阻塞决策映射为 `deny`（`PreToolUse` 没有 `allow` 或 `ask`）。逐事件接线位于 [`src/index.ts`](src/index.ts)。
+每个受支持事件都面向一个灵鲸扩展点：`SessionStart` 在首个轮次前通过需等待的 `agent/created` 初始化加入上下文，`UserPromptSubmit` 与 `PreToolUse` 是能拒绝传入动作的 waterfall（瀑布式事件）（`agent/pre-step`、`tools/pre-execute`），`PostToolUse` 是能带反馈阻塞或向下游决策添加上下文的 waterfall（`tools/post-execute`），`Stop` 是串行监听器，其阻塞结果通过 `steer()` 强制再执行一步（`agent/turn-stopping`）。仅提供上下文的 hook 总是先通过 `next()` 委托，再把带来源的消息折叠进下游决策，因此后续监听器仍可拒绝或改写；阻塞决策映射为 `deny`（`PreToolUse` 没有 `allow` 或 `ask`）。逐事件接线位于 [`src/index.ts`](src/index.ts)。
 
 ### 载荷与环境
 
@@ -94,7 +94,7 @@ matcher subject 是工具名称（`PreToolUse`／`PostToolUse`）或会话源（
 
 ### 脱离运行与释放
 
-`SessionStart` 是唯一的 emit 点，它脱离运行——没有扩展点等待它。每条运行链都会被跟踪，对桥接执行 dispose（资源释放）时会中止仍在运行的 hook 进程，并在 dispose 完成前排空 continuation（`createDetachedRuns`，位于 `dsh-hook-protocol`）。
+`SessionStart` 是唯一的 emit 点，它脱离运行——没有扩展点等待它。每条运行链都会被跟踪，对桥接执行 dispose（资源释放）时会中止仍在运行的 hook 进程，并在 dispose 完成前排空 continuation（`createDetachedRuns`，位于 `liwa-hook-protocol`）。
 
 ### 设计理念
 
@@ -102,7 +102,7 @@ matcher subject 是工具名称（`PreToolUse`／`PostToolUse`）或会话源（
 - **添加上下文不是否决。** 仅提供上下文的 hook 会先通过 `next()` 委托，再把其消息折叠进下游 enter 决策，因此后续 `agent/pre-step` 或 `tools/post-execute` 监听器仍可拒绝或改写。
 - **每个失败点都受控。** 配置读取／解析失败与无效 matcher 不注册任何内容；抛异常的脱离注入会被捕获并记录，而不是破坏会话启动或循环。
 - **dispose 必须达到完全停稳。** 脱离运行会被跟踪并在释放时排空，因此不会有 hook 进程或迟到回调超出 fiber 存活。
-- **保持方言形状，而非最大化。** payload 保持 snake_case 并带 `turn_id`／`model`，stdin 不带尾随换行符，桥接也不实现工具前审批或改写路径——即使 harness 本可以做得更多，也保留协议的形状。
+- **保持方言形状，而非最大化。** payload 保持 snake_case 并带 `turn_id`／`model`，stdin 不带尾随换行符，桥接也不实现工具前审批或改写路径——即使灵鲸本可以做得更多，也保留协议的形状。
 
 [hook-bridges Agent Note](../../../.agents/notes/archived/feature/2026-06-30-hook-bridges.md) 记录了桥接设计与延期缺口；[hook-protocol-lib Agent Note](../../../.agents/notes/archived/feature/2026-06-30-hook-protocol-lib.md) 记录了共享与逐方言的划分。
 
@@ -126,7 +126,7 @@ matcher subject 是工具名称（`PreToolUse`／`PostToolUse`）或会话源（
 - [hook 协议库](../hook-protocol/README.zh.md)——本桥接应用的共享钩子规则。
 - [钩子桥接 Agent Note](../../../.agents/notes/archived/feature/2026-06-30-hook-bridges.md)——桥接设计、决策映射与延期缺口。
 - [拦截扩展点 参考](../../../docs/tool-execution-pipeline.zh.md)——桥接所映射的类型化 Decision 接口面。
-- [生成的配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-hooks-codex)——每个受支持配置字段及其源声明。
+- [生成的配置目录](../../../docs/config-catalog.zh.md#liwahooks-codex)——每个受支持配置字段及其源声明。
 
 -----
 

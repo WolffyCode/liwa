@@ -9,11 +9,11 @@
  * shadowing and the viewer's own answers rather than a hand-built component.
  */
 
-import { Context } from '@deepseek-ai/cordis'
-import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
-import { SlotRegistry } from '@deepseek-ai/dsh-client-ui-renderer/client'
-import { menuOpenStateFactory } from '@deepseek-ai/dsh-client-ui-workspace/src/client/contract/slots.ts'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import { Context } from '@liwa/cordis'
+import { LocaleRuntime } from '@liwa/client-locale/client'
+import { SlotRegistry } from '@liwa/client-ui-renderer/client'
+import { menuOpenStateFactory } from '@liwa/client-ui-workspace/src/client/contract/slots.ts'
+import type { SessionId } from '@liwa/session/types'
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'

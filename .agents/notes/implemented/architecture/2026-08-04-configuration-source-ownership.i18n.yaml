@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-04-configuration-source-ownership.md
 /agent-note-one-ordering-for-configuration-sources-and-what-a-discovered-file-may-not-decide:
-  en: 35dea8a3a8bdc842
-  zh: 7a1cdf184ffd889f
+  en: 56c6afb706227921
+  zh: 21c59faed7f0d76a
 /agent-note-one-ordering-for-configuration-sources-and-what-a-discovered-file-may-not-decide/problem:
   en: d94bb81479bfa4a1
   zh: af44ceaecf84ee51
 /agent-note-one-ordering-for-configuration-sources-and-what-a-discovered-file-may-not-decide/decision:
-  en: aea80ece13f2905b
-  zh: a880bc1a7839cf12
+  en: 94b25cd4acbdff5a
+  zh: 2a4d1f14833c4e52
 /agent-note-one-ordering-for-configuration-sources-and-what-a-discovered-file-may-not-decide/consequences:
   en: 640b7ee4e8c57ed0
   zh: 1c17b3fba16861a8

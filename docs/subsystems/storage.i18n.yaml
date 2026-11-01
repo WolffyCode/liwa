@@ -3,20 +3,20 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/subsystems/storage.md
 /storage:
-  en: ca316310c10348c3
-  zh: 066885a031d283cc
+  en: 48c5a2bebbbd3367
+  zh: eba3e7e76f8bbe63
 /storage/the-hub-ctx-storage:
   en: b11e06e7c0e0fd13
   zh: 4585f26ff416cb41
 /storage/the-backend-contract:
-  en: 50afeec4e9fd3e08
-  zh: e8d2892c83ad3441
+  en: d37b2303d5724d5d
+  zh: bf91241607165f89
 /storage/declaring-a-domain:
-  en: fa4613279da360c5
-  zh: 09e7a7d63bd1774a
+  en: 34168c54254088be
+  zh: 957fb1cc99c4ff13
 /storage/domain-versioning:
-  en: 37e40cc29f3bb898
-  zh: bbd55e732bd4b83b
+  en: dee5eb3567360e02
+  zh: f0b7369c77745601
 /storage/the-open-domain:
   en: c0787f6a496b4c46
   zh: f219b16ec96d6cb6
@@ -24,5 +24,5 @@
   en: deed74fcd4506ef4
   zh: 8e3e6e5d2dc2e989
 /storage/the-change-event-domain-changed:
-  en: 2488ccd675624561
-  zh: 6db32b6c7715e428
+  en: 5821e22cc0f50068
+  zh: 816d9ebd2b8ab41a

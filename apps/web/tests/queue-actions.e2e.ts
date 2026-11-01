@@ -10,8 +10,8 @@ import { join } from 'node:path'
 import type { Browser, Page } from 'playwright'
 import { chromium } from 'playwright'
 import { afterEach, describe, expect, it, onTestFailed, vi } from 'vitest'
-import { deriveReplayScript, parseSessionLog, type ReplayEntry } from '@deepseek-ai/dsh-llm-replay'
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
+import { deriveReplayScript, parseSessionLog, type ReplayEntry } from '@liwa/llm-replay'
+import type { SessionEvent } from '@liwa/session'
 import {
   assertFixtureInventory, captureExpandedTurnProcessAria, captureStableAria, compareOrRefreshGolden,
   launchWebScaffold, watchConsole, webSnapshotMode, type WebScaffold,
@@ -82,7 +82,7 @@ describe('web e2e: queue row actions', () => {
   }
 
   it.skipIf(MODE === 'record').each(['button', 'keyboard'] as const)('edits and removes exact occurrences and preserves Queue across %s stop', async (method) => {
-    overrideDir = await mkdtemp(join(tmpdir(), 'dsh-web-queue-actions-'))
+    overrideDir = await mkdtemp(join(tmpdir(), 'liwa-web-queue-actions-'))
     const readyFile = join(overrideDir, '.hang-ready')
     const overridePath = join(overrideDir, 'replay.override.json')
     const recorded = deriveReplayScript(parseSessionLog(await readFile(FIXTURE, 'utf8')))
@@ -174,7 +174,7 @@ describe('web e2e: queue row actions', () => {
         return {
           leftInset: queueBox.left - composerBox.left,
           rightInset: composerBox.right - queueBox.right,
-          dockInset: Number.parseFloat(getComputedStyle(composer).getPropertyValue('--dsh-composer-dock-inset')),
+          dockInset: Number.parseFloat(getComputedStyle(composer).getPropertyValue('--liwa-composer-dock-inset')),
         }
       })
       expect(metrics).toBeDefined()
@@ -326,7 +326,7 @@ describe('web e2e: queue row actions', () => {
   }, 120_000)
 
   it.skipIf(MODE === 'record')('orders Todo before Goal and Queue on one responsive card column', async () => {
-    overrideDir = await mkdtemp(join(tmpdir(), 'dsh-web-context-layout-'))
+    overrideDir = await mkdtemp(join(tmpdir(), 'liwa-web-context-layout-'))
     const readyFile = join(overrideDir, '.hang-ready')
     const overridePath = join(overrideDir, 'replay.override.json')
     await writeFile(overridePath, JSON.stringify([{ kind: 'hang', readyFile } satisfies ReplayEntry]))
@@ -420,7 +420,7 @@ describe('web e2e: queue row actions', () => {
   }, 120_000)
 
   it.skipIf(MODE === 'record')('runs a prompt sent after Stop when a Goal round was queued behind stopped work', async () => {
-    overrideDir = await mkdtemp(join(tmpdir(), 'dsh-web-goal-stop-'))
+    overrideDir = await mkdtemp(join(tmpdir(), 'liwa-web-goal-stop-'))
     const roundReady = join(overrideDir, '.round-ready')
     const humanReady = join(overrideDir, '.human-ready')
     const overridePath = join(overrideDir, 'replay.override.json')

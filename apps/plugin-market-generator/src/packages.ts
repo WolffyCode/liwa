@@ -2,6 +2,7 @@
 import { posix } from 'node:path'
 import semver from 'semver'
 import { parse as parseYaml } from 'yaml'
+import { isLiwaRuntimePackage } from '@liwa/app-boot'
 import type { PackageFiles } from './files.ts'
 
 /** A package manifest as read from a file; only the fields the generator reads are typed. */
@@ -20,15 +21,14 @@ export interface Manifest {
   readonly exports?: unknown
   readonly engines?: unknown
   readonly peerDependencies?: unknown
-  readonly dsh?: { readonly bundle?: unknown }
+  readonly liwa?: { readonly bundle?: unknown }
 }
 
 /** Depth limit of the fallback scan, counted in directories below the repository root. */
 const SCAN_DEPTH = 3
 const SKIPPED_DIRECTORIES = new Set(['node_modules', 'test', 'tests', 'fixtures', 'examples', 'example'])
-const DSH_PEER = /^@deepseek-ai\/dsh(?:-|$)/u
-/** Ranges that installation reads as the running DSH version. */
-const CURRENT_DSH = new Set(['workspace:*', 'workspace:^', 'workspace:~'])
+/** Ranges that installation reads as the running Liwa version. */
+const CURRENT_LIWA = new Set(['workspace:*', 'workspace:^', 'workspace:~'])
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -54,12 +54,12 @@ export async function readManifest(files: PackageFiles, dir: string): Promise<Ma
 }
 
 /**
- * Whether a manifest declares a DSH bundle.
+ * Whether a manifest declares a Liwa bundle.
  * @param manifest - parsed manifest, or undefined for a directory without one.
- * @returns true when `dsh.bundle` is an object whose `patch` is a string or an array of strings.
+ * @returns true when `liwa.bundle` is an object whose `patch` is a string or an array of strings.
  */
 export function isBundle(manifest: Manifest | undefined): boolean {
-  const bundle = manifest?.dsh?.bundle
+  const bundle = manifest?.liwa?.bundle
   if (!isObject(bundle)) return false
   return typeof bundle.patch === 'string' || (Array.isArray(bundle.patch) && bundle.patch.every(file => typeof file === 'string'))
 }
@@ -75,26 +75,26 @@ export function isPrivate(manifest: Manifest | undefined): boolean {
 
 /** Whether installation reads `range` as a SemVer range; an empty range and other `workspace:` ranges never match. */
 const valid = (range: string): boolean => range !== '' && !range.startsWith('workspace:') && semver.validRange(range) !== null
-const invalidRange = (range: string): Error => new Error(`DSH range ${JSON.stringify(range)} is not a valid SemVer range`)
+const invalidRange = (range: string): Error => new Error(`Liwa range ${JSON.stringify(range)} is not a valid SemVer range`)
 
-/** Most `||` alternatives the conjunction of DSH peer ranges may produce; a version needing more is not listed. */
+/** Most `||` alternatives the conjunction of Liwa peer ranges may produce; a version needing more is not listed. */
 const MAX_RANGE_ALTERNATIVES = 256
 
 /**
- * The `engines.dsh` range an index lists for a manifest: its own `engines.dsh` string, otherwise the conjunction of
- * its `@deepseek-ai/dsh` and `@deepseek-ai/dsh-*` peer ranges. A peer of exactly `workspace:*`, `workspace:^`, or
- * `workspace:~` means the running DSH version, and a `*` range admits every version; both impose nothing. A single
+ * The `engines.liwa` range an index lists for a manifest: its own `engines.liwa` string, otherwise the conjunction of
+ * its Liwa runtime-family peer ranges ({@link isLiwaRuntimePackage}). A peer of exactly `workspace:*`, `workspace:^`, or
+ * `workspace:~` means the running Liwa version, and a `*` range admits every version; both impose nothing. A single
  * remaining range is listed as written. Several ranges are combined: the conjunction combines one `||` alternative of
  * each range, keeps each comparator once, and drops combinations that no version satisfies, prereleases included.
  * @param manifest - the version's manifest.
- * @returns the range, undefined for any DSH version, or an error when installation finds the version incompatible
- *   with every DSH version: an empty, `workspace:`, or invalid range, or ranges that no version satisfies together.
+ * @returns the range, undefined for any Liwa version, or an error when installation finds the version incompatible
+ *   with every Liwa version: an empty, `workspace:`, or invalid range, or ranges that no version satisfies together.
  */
-export function dshRange(manifest: Manifest): string | undefined | Error {
-  const declared = isObject(manifest.engines) ? manifest.engines.dsh : undefined
+export function liwaRange(manifest: Manifest): string | undefined | Error {
+  const declared = isObject(manifest.engines) ? manifest.engines.liwa : undefined
   const ranges = typeof declared === 'string' ? [declared]
     : Object.entries(isObject(manifest.peerDependencies) ? manifest.peerDependencies : {})
-      .flatMap(([name, range]) => DSH_PEER.test(name) && typeof range === 'string' && !CURRENT_DSH.has(range) ? [range] : [])
+      .flatMap(([name, range]) => isLiwaRuntimePackage(name) && typeof range === 'string' && !CURRENT_LIWA.has(range) ? [range] : [])
   const used = [...new Set(ranges.map(range => range.trim()))].filter(range => range !== '*')
   if (used.length === 0) return undefined
   let combinations: string[][] = [[]]
@@ -103,12 +103,12 @@ export function dshRange(manifest: Manifest): string | undefined | Error {
     const alternatives = new semver.Range(range, { includePrerelease: true }).set
       .map(set => set.map(comparator => comparator.value).filter(Boolean))
     if (combinations.length * alternatives.length > MAX_RANGE_ALTERNATIVES) {
-      return new Error(`DSH peer ranges combine into more than ${MAX_RANGE_ALTERNATIVES} alternatives`)
+      return new Error(`Liwa peer ranges combine into more than ${MAX_RANGE_ALTERNATIVES} alternatives`)
     }
     combinations = combinations.flatMap(prefix => alternatives.map(alternative => [...new Set([...prefix, ...alternative])]))
       .filter(combination => semver.minVersion(new semver.Range(combination.join(' ') || '*', { includePrerelease: true })) !== null)
   }
-  if (combinations.length === 0) return new Error(`no DSH version satisfies ${used.length === 1 ? 'the DSH range' : 'every DSH peer range'}: ${used.join(', ')}`)
+  if (combinations.length === 0) return new Error(`no Liwa version satisfies ${used.length === 1 ? 'the Liwa range' : 'every Liwa peer range'}: ${used.join(', ')}`)
   const written = [...new Set(combinations.map(combination => combination.join(' ') || '*'))]
   if (written.includes('*')) return undefined
   return used.length === 1 ? used[0] : written.join(' || ')

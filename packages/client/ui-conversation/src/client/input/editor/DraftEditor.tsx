@@ -2,7 +2,7 @@
 import type { CSSProperties, KeyboardEventHandler, ReactNode, RefObject } from 'react'
 import type { LexicalEditor } from 'lexical'
 import clsx from 'clsx'
-import { HoverCardGroup } from '@deepseek-ai/dsh-client-ui-primitives'
+import { HoverCardGroup } from '@liwa/client-ui-primitives'
 import type { InputState } from '../../contract/input.ts'
 import { ComposerContentEditable } from './ComposerContentEditable.tsx'
 import { DecoratorPortals } from './DecoratorPortals.tsx'
@@ -50,7 +50,7 @@ export function DraftEditor({
           aria-expanded={workspaceTrigger ? workspacePickerOpen : undefined}
           tabIndex={workspaceTrigger ? 0 : undefined}
           onKeyDown={workspaceTrigger ? onWorkspaceKeyDown : undefined}
-          style={hint === null ? undefined : { '--dsh-composer-hint': JSON.stringify(hint) } as CSSProperties}
+          style={hint === null ? undefined : { '--liwa-composer-hint': JSON.stringify(hint) } as CSSProperties}
         />
         {showPlaceholder && (
           <div aria-hidden className={css.placeholder} data-composer-placeholder>

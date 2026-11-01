@@ -5,8 +5,8 @@
  */
 import { act, cleanup, fireEvent, render, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import { bindSnapshotSelector, makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
+import { createSnapshotStore } from '@liwa/client-store'
+import { bindSnapshotSelector, makeTranslate } from '@liwa/client-test-runtime'
 import { en } from '../src/client/locales.ts'
 import type { PanelSnapshot } from '../src/client/source.ts'
 import { WorktreeProgress } from '../src/client/WorktreeProgress.tsx'
@@ -79,7 +79,7 @@ describe('WorktreeProgress visibility', () => {
   it.each([
     ['before the first state', null],
     ['while a request waits for the first message', requested()],
-    ['while the Session works in the worktree it created', ready({ directory: '/work/repo-dsh', worktree: worktree({ created: created() }) })],
+    ['while the Session works in the worktree it created', ready({ directory: '/work/repo-liwa', worktree: worktree({ created: created() }) })],
     ['for a removal the panel reports without the worktree record', ready({ worktree: worktree({ missing: { branchExists: true } }) })],
     ['for a failed attempt no message waits after', requested('main', { failure: failure() })],
   ])('renders nothing %s', (_label, state) => {
@@ -94,7 +94,7 @@ describe('WorktreeProgress running creation', () => {
     const region = b.view.getByRole('region', { name: en['creation.title'] })
     expect(region.getAttribute('aria-busy')).toBe('true')
     expect(within(region).getByText(en['creation.title'])).toBeTruthy()
-    expect(within(region).getByText('dsh/0a1b2c3d')).toBeTruthy()
+    expect(within(region).getByText('liwa/0a1b2c3d')).toBeTruthy()
     expect(steps(b.view)).toEqual([
       [en['creation.prepare'], 'running', 'spinner'],
       [en['creation.checkout'], 'waiting', 'ring'],
@@ -129,7 +129,7 @@ describe('WorktreeProgress running creation', () => {
     fireEvent.click(disclosure)
     expect(disclosure.getAttribute('aria-expanded')).toBe('true')
     expect(details(b.view)).toEqual([
-      [en['creation.branch'], 'dsh/0a1b2c3d'],
+      [en['creation.branch'], 'liwa/0a1b2c3d'],
       [en['creation.base'], 'main'],
     ])
     fireEvent.click(disclosure)
@@ -141,14 +141,14 @@ describe('WorktreeProgress running creation', () => {
     const b = card(requested(null, { creation: creation({ from: null }) }))
     fireEvent.click(b.view.getByRole('button', { name: en['creation.details'] }))
     expect(details(b.view)).toEqual([
-      [en['creation.branch'], 'dsh/0a1b2c3d'],
+      [en['creation.branch'], 'liwa/0a1b2c3d'],
       [en['creation.base'], en['creation.head']],
     ])
   })
 
   it('disappears once the creation ends', () => {
     const b = card(requested('main', { creation: creation() }))
-    b.publish(ready({ directory: '/work/repo-dsh', worktree: worktree({ created: created() }) }))
+    b.publish(ready({ directory: '/work/repo-liwa', worktree: worktree({ created: created() }) }))
     expect(b.view.container.innerHTML).toBe('')
   })
 })
@@ -171,7 +171,7 @@ describe('WorktreeProgress waiting after a failed attempt', () => {
     expect(within(region).getByText(en['creation.failed'])).toBeTruthy()
     expect(steps(b.view)).toEqual(expected)
     expect(details(b.view)).toEqual([
-      [en['creation.branch'], 'dsh/0a1b2c3d'],
+      [en['creation.branch'], 'liwa/0a1b2c3d'],
       [en['creation.base'], 'main'],
       [en['creation.error'], 'fatal: invalid reference: main'],
     ])
@@ -183,7 +183,7 @@ describe('WorktreeProgress waiting after a failed attempt', () => {
   it('names no branch for a failure that came before one, and the current HEAD as its base', () => {
     const b = card(requested(null, { failure: failure({ branch: null, from: null, message: 'connection lost' }), waiting: 'creation' }))
     const region = b.view.getByRole('region', { name: en['creation.failed'] })
-    expect(within(region).queryByText('dsh/0a1b2c3d')).toBeNull()
+    expect(within(region).queryByText('liwa/0a1b2c3d')).toBeNull()
     expect(details(b.view)).toEqual([
       [en['creation.base'], en['creation.head']],
       [en['creation.error'], 'connection lost'],
@@ -223,16 +223,16 @@ describe('WorktreeProgress waiting after a failed attempt', () => {
 
 describe('WorktreeProgress removed worktree', () => {
   it.each([
-    ['cannot be inspected', null, t('missing.unknown', { branch: 'dsh/0a1b2c3d' })],
-    ['still exists', true, t('missing.kept', { branch: 'dsh/0a1b2c3d' })],
-    ['was removed too', false, t('missing.recreated', { branch: 'dsh/0a1b2c3d' })],
+    ['cannot be inspected', null, t('missing.unknown', { branch: 'liwa/0a1b2c3d' })],
+    ['still exists', true, t('missing.kept', { branch: 'liwa/0a1b2c3d' })],
+    ['was removed too', false, t('missing.recreated', { branch: 'liwa/0a1b2c3d' })],
   ])('names the worktree and explains restoring it when its branch %s', (_label, branchExists, note) => {
     const b = card(removed(branchExists))
     expect(b.view.container.querySelector('[data-forge-missing]')).not.toBeNull()
     expect(b.root()).toBeNull()
     const region = b.view.getByRole('region', { name: en['missing.title'] })
     expect(within(region).getByText(en['missing.title'])).toBeTruthy()
-    expect(within(region).getByText('dsh/0a1b2c3d')).toBeTruthy()
+    expect(within(region).getByText('liwa/0a1b2c3d')).toBeTruthy()
     expect(within(region).getByText(note)).toBeTruthy()
     expect(region.getAttribute('aria-busy')).toBeNull()
   })
@@ -246,7 +246,7 @@ describe('WorktreeProgress removed worktree', () => {
     expect(b.restore).toHaveBeenCalledOnce()
     const region = b.view.getByRole('region', { name: en['restoration.title'] })
     expect(region.getAttribute('aria-busy')).toBe('true')
-    expect(within(region).getByText('dsh/0a1b2c3d')).toBeTruthy()
+    expect(within(region).getByText('liwa/0a1b2c3d')).toBeTruthy()
     expect(steps(b.view)).toEqual([
       [en['restoration.prepare'], 'running', 'spinner'],
       [en['creation.checkout'], 'waiting', 'ring'],
@@ -270,7 +270,7 @@ describe('WorktreeProgress removed worktree', () => {
 
   it('shows why a restore failed until the next attempt starts', async () => {
     const b = card(removed())
-    const reason = 'fatal: \'/work/repo-dsh\' already exists'
+    const reason = 'fatal: \'/work/repo-liwa\' already exists'
     b.restore.mockResolvedValueOnce(reason)
     const restore = b.view.getByRole('button', { name: en['missing.restore'] })
     await act(async () => { fireEvent.click(restore) })
@@ -318,7 +318,7 @@ describe('WorktreeProgress removed worktree', () => {
 
   it('disappears once the worktree is back', () => {
     const b = card(removed())
-    b.publish(ready({ directory: '/work/repo-dsh', worktree: worktree({ created: created() }) }, { root: '/work/repo-dsh', branch: 'dsh/0a1b2c3d' }))
+    b.publish(ready({ directory: '/work/repo-liwa', worktree: worktree({ created: created() }) }, { root: '/work/repo-liwa', branch: 'liwa/0a1b2c3d' }))
     expect(b.view.container.innerHTML).toBe('')
   })
 })

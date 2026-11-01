@@ -14,7 +14,7 @@ import { expectSelectableTerminalCommand } from './terminal-command-browser.ts'
 const MIRROR = 'https://registry.npmmirror.com/'
 
 it.each(['https://registry.npmjs.org/', MIRROR])('selects the fastest responding registry %s, remembers it, and falls back after a registry failure', async (winner) => {
-  const scratch = await mkdtemp(join(tmpdir(), 'dsh-install-registry-'))
+  const scratch = await mkdtemp(join(tmpdir(), 'liwa-install-registry-'))
   onTestFinished(() => rm(scratch, { recursive: true, force: true }))
   const requestLog = join(scratch, 'registry-pings.jsonl')
   await writeFile(requestLog, '')
@@ -28,7 +28,7 @@ it.each(['https://registry.npmjs.org/', MIRROR])('selects the fastest responding
     scaffold = await launchWebScaffold({ profile: { packages: [] }, extraOverlayPath: overlay })
     const browser = await chromium.launch()
     try {
-      const profile = join(scaffold.harnessHome, 'profiles', 'scaffold')
+      const profile = join(scaffold.liwaHome, 'profiles', 'scaffold')
       const manifestPath = join(profile, 'package.json')
       // Node stands in for pnpm. `config` names npm's own registry as pnpm's own, so the mirror is a fallback for it.
       // `view` answers only when asked at the mirror: pnpm's own registry times out, the way an unreachable
@@ -41,7 +41,7 @@ it.each(['https://registry.npmjs.org/', MIRROR])('selects the fastest responding
           console.log(JSON.stringify({ error: { code: 'ERR_PNPM_META_FETCH_FAIL', message: 'GET https://registry.npmjs.org/mirrored-package: request timed out (ETIMEDOUT)' } }));
           process.exitCode = 1;
         } else {
-          console.log(JSON.stringify({ name: 'mirrored-package', version: '2.0.0', dsh: { bundle: { patch: './cordis.patch.yml' } } }));
+          console.log(JSON.stringify({ name: 'mirrored-package', version: '2.0.0', liwa: { bundle: { patch: './cordis.patch.yml' } } }));
         }
       `)
       await writeFile(join(profile, 'add'), `
@@ -54,7 +54,7 @@ it.each(['https://registry.npmjs.org/', MIRROR])('selects the fastest responding
           return;
         }
         fs.mkdirSync('node_modules/mirrored-package', { recursive: true });
-        fs.writeFileSync('node_modules/mirrored-package/package.json', JSON.stringify({ name: 'mirrored-package', version: '2.0.0', dsh: { bundle: { patch: './cordis.patch.yml' } } }));
+        fs.writeFileSync('node_modules/mirrored-package/package.json', JSON.stringify({ name: 'mirrored-package', version: '2.0.0', liwa: { bundle: { patch: './cordis.patch.yml' } } }));
         fs.writeFileSync('node_modules/mirrored-package/cordis.patch.yml', '[]\\n');
         fs.writeFileSync('package.json', JSON.stringify({ ...JSON.parse(fs.readFileSync('package.json', 'utf8')), dependencies: { 'mirrored-package': '2.0.0' } }));
         console.log('Installed from ' + (process.argv.find(arg => arg.startsWith('--registry=')) ?? 'the registry pnpm names'));
@@ -95,7 +95,7 @@ it.each(['https://registry.npmjs.org/', MIRROR])('selects the fastest responding
       await dialog.getByRole('textbox', { name: '包名或地址' }).fill('mirrored-package')
       const picker = (await captureStableAria(page, '[data-install-registry]', scaffold.workspaceCwd))
         .split(process.execPath).join('{{node}}')
-        .split(scaffold.harnessHome).join('{{harnessHome}}')
+        .split(scaffold.liwaHome).join('{{liwaHome}}')
       await compareOrRefreshGolden(fileURLToPath(new URL('./expected/plugin-install-registry/picker.expected.md', import.meta.url)), picker, webSnapshotMode())
       // The options float over the dialog rather than inside it: the card keeps its height with them open, and Escape folds them.
       expect(await dialog.locator('[data-install-registry]').count()).toBe(0)
@@ -110,7 +110,7 @@ it.each(['https://registry.npmjs.org/', MIRROR])('selects the fastest responding
       const lookups = (await readFile(join(profile, '.registry-lookups'), 'utf8')).trim().split('\n')
         .map(line => JSON.parse(line) as string[])
       // The inspection asked the mirror first, and each install attempt checked the named package's
-      // DSH peers at the registry that attempt would use: the mirror, then pnpm's own.
+      // Liwa peers at the registry that attempt would use: the mirror, then pnpm's own.
       expect(lookups.map(call => call.filter(argument => argument.startsWith('--registry=')))).toEqual([
         ['--registry=' + MIRROR], ['--registry=' + MIRROR], [],
       ])
@@ -123,7 +123,7 @@ it.each(['https://registry.npmjs.org/', MIRROR])('selects the fastest responding
       expect(JSON.parse(await readFile(manifestPath, 'utf8'))).toMatchObject({ dependencies: { 'mirrored-package': '2.0.0' } })
       const installed = (await captureStableAria(page, '[role="dialog"]', scaffold.workspaceCwd))
         .split(process.execPath).join('{{node}}')
-        .split(scaffold.harnessHome).join('{{harnessHome}}')
+        .split(scaffold.liwaHome).join('{{liwaHome}}')
       await compareOrRefreshGolden(fileURLToPath(new URL('./expected/plugin-install-registry/installed.expected.md', import.meta.url)), installed, webSnapshotMode())
       // The dialog opened again starts from the registry picked for the last install.
       await dialog.getByRole('button', { name: '立即启用', exact: true }).click()

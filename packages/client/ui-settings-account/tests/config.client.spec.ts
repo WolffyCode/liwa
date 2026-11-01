@@ -1,7 +1,7 @@
 /** Public questionnaire options are emitted in the page bootstrap. */
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { expect, it, onTestFinished, vi } from 'vitest'
-import type { IndexInjection, WebServer } from '@deepseek-ai/dsh-host-webserver'
+import type { IndexInjection, WebServer } from '@liwa/host-webserver'
 import { apply, Config } from '../src/index.ts'
 import { CONTACT_CONFIG_GLOBAL } from '../src/contact-config.ts'
 

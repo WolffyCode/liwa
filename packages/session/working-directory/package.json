@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-working-directory",
+  "name": "@liwa/working-directory",
   "description": "Session working directories with durable changes and model context",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/session/working-directory"
   },
   "type": "module",
@@ -29,32 +29,32 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-fs": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/fs": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/system-prompt": "workspace:*"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/dsh-user-approval": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-fs": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:*",
-    "@deepseek-ai/dsh-fs-local": "workspace:*",
-    "@deepseek-ai/dsh-tool-testkit": "workspace:*",
-    "@deepseek-ai/dsh-tool-working-directory": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*"
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/user-approval": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/fs": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/agent-loop-testkit": "workspace:*",
+    "@liwa/fs-local": "workspace:*",
+    "@liwa/tool-testkit": "workspace:*",
+    "@liwa/tool-working-directory": "workspace:*",
+    "@liwa/tools": "workspace:*"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/schemastery": "workspace:~",
     "zod": "^4.4.3"
   }
 }

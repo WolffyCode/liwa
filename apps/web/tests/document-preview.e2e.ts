@@ -1,13 +1,13 @@
 /** Keyless document-preview smoke through a real Session, Files tab, shipped renderers, and the default-application controls. */
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { nativeFileManager } from '@deepseek-ai/dsh-native-command'
+import { nativeFileManager } from '@liwa/native-command'
 import { delimiter, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Browser, Locator, Page } from 'playwright'
 import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed, vi } from 'vitest'
-import { createLaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
+import { createLaunchEnvironmentSnapshot } from '@liwa/launch-environment'
 import { realOfficeBytes } from './office-fixture.ts'
 import { excelFixture, excelFreezeFixture, excelHtmlFixture, excelHtmlText, meetingMinutesFixture } from '../../../packages/client/ui-sidebar-documentpreview/tests/excel-fixture.ts'
 import { excelDrawingFixture } from '../../../packages/client/ui-sidebar-documentpreview/tests/excel-drawing-fixture.ts'
@@ -524,10 +524,10 @@ describe.skipIf(MODE === 'record')('web e2e: document preview through Files', ()
     (await readFile(launchLog, 'utf8')).split('\n').filter(Boolean).map(line => JSON.parse(line) as { app: string; path: string })
 
   beforeAll(async () => {
-    outsideRoot = await mkdtemp(join(tmpdir(), 'dsh-preview-outside-'))
+    outsideRoot = await mkdtemp(join(tmpdir(), 'liwa-preview-outside-'))
     if (STUB_OPENER) {
       // Exercise the built Host through its actual OS command, replacing only the desktop application.
-      nativeRoot = await mkdtemp(join(tmpdir(), 'dsh-preview-native-'))
+      nativeRoot = await mkdtemp(join(tmpdir(), 'liwa-preview-native-'))
       openLog = join(nativeRoot, 'opened.jsonl')
       launchLog = join(nativeRoot, 'launched.jsonl')
       appsCatalog = join(nativeRoot, 'applications.json')
@@ -942,7 +942,7 @@ else process.exit(1);
     const firstColor = await canvasColor(canvas)
     expect(firstColor).toBe('red')
     const workerNames = await Promise.all(page.workers().map(worker => worker.evaluate(() => self.name)))
-    expect(workerNames).toContain('dsh-pdf')
+    expect(workerNames).toContain('liwa-pdf')
     await scrollIntoView(preview.locator('[data-pdf-page="2"]'))
     const secondPage = preview.getByRole('img', { name: 'PDF page 2', exact: true })
     await secondPage.waitFor({ state: 'visible', timeout: 30_000 })
@@ -974,7 +974,7 @@ else process.exit(1);
     sections.push([
       '## PDF', '',
       `- Viewer menu hidden: ${String(await viewer.count() === 0)}`,
-      `- Worker: ${workerNames.find(name => name === 'dsh-pdf')}`,
+      `- Worker: ${workerNames.find(name => name === 'liwa-pdf')}`,
       `- Continuous pages: ${await preview.locator('[data-pdf-page]').count()}`,
       '- Zoom reveal: hidden -> bottom hover -> delayed hidden',
       '- Zoom modes: fit width -> 100% -> 150% -> fit width',
@@ -1116,7 +1116,7 @@ else process.exit(1);
     const endedDrag = await tinyImage.evaluateHandle((node) => {
       const proof = { token: '', started: false, ended: false }
       window.addEventListener('dragstart', (event) => {
-        proof.token = event.dataTransfer!.getData('application/x-dsh-file')
+        proof.token = event.dataTransfer!.getData('application/x-liwa-file')
         proof.started = event.isTrusted && proof.token !== ''
       }, { once: true })
       node.addEventListener('dragend', (event) => { proof.ended = event.isTrusted && !node.isConnected }, { once: true })
@@ -1141,7 +1141,7 @@ else process.exit(1);
     const retiredToken = await endedDrag.evaluate(proof => proof.token)
     await input.evaluate((node, token) => {
       const dataTransfer = new DataTransfer()
-      dataTransfer.setData('application/x-dsh-file', token)
+      dataTransfer.setData('application/x-liwa-file', token)
       node.dispatchEvent(new DragEvent('drop', { bubbles: true, dataTransfer }))
     }, retiredToken)
     expect(await draggedPreview.count()).toBe(0)
@@ -1311,7 +1311,7 @@ else process.exit(1);
     ].join('\n'))
 
     const officeMenus: number[] = []
-    const configurationGuide = 'Read failed: Office previews are unavailable. Enable the document preview service on the computer running DeepSeek Harness.'
+    const configurationGuide = 'Read failed: Office previews are unavailable. Enable the document preview service on the computer running Liwa.'
     for (const extension of ['doc', 'docx', 'ppt', 'pptx']) {
       await openFile(`unavailable.${extension}`)
       expect(await preview.locator('[data-document-viewer-menu]').count()).toBe(0)
@@ -1599,7 +1599,7 @@ describe.skipIf(MODE === 'record')('web e2e: Host Office preview', () => {
     if (cwd === undefined) throw new Error('settled Session has no workspace cwd')
     await Promise.all([
       writeFile(join(cwd, 'renamed.docx'), 'This is plain text renamed to docx.'),
-      writeFile(join(cwd, 'chinese.docx'), realOfficeBytes('docx', 'DSH Missing Preview Font')),
+      writeFile(join(cwd, 'chinese.docx'), realOfficeBytes('docx', 'Liwa Missing Preview Font')),
       writeFile(join(cwd, 'chinese.pptx'), realOfficeBytes('pptx')),
       ...(['doc', 'ppt'] as const).map(extension => writeFile(join(cwd, `chinese.${extension}`), realOfficeBytes(extension))),
       ...['doc', 'ppt'].map(extension => writeFile(join(cwd, `renamed.${extension}`), 'Plain text is not a binary Office document.')),
@@ -1673,7 +1673,7 @@ describe.skipIf(MODE === 'record')('web e2e: Host Office preview', () => {
         return false
       }), { timeout: 30_000 }).toBe(true)
       const workerNames = await Promise.all(page.workers().map(worker => worker.evaluate(() => self.name)))
-      expect(workerNames).toContain('dsh-pdf')
+      expect(workerNames).toContain('liwa-pdf')
       expect(workerNames.some(name => /libreoffice|soffice/i.test(name))).toBe(false)
       await copyPdfText(page, preview, 'Office preview')
       await copyPdfText(page, preview, '中文文档')
@@ -1747,7 +1747,7 @@ describe.skipIf(MODE === 'record')('web e2e: Host Office preview', () => {
       await successShot(page, 'office-font-warning')
       await warning.click()
       const details = page.getByRole('dialog', { name: 'Missing fonts', exact: true })
-      await details.getByText('DSH Missing Preview Font', { exact: true }).waitFor({ state: 'visible' })
+      await details.getByText('Liwa Missing Preview Font', { exact: true }).waitFor({ state: 'visible' })
       expect(await page.getByRole('tooltip', { name: /Missing fonts:/ }).count()).toBe(0)
       await successShot(page, 'office-font-details')
       await page.keyboard.press('Escape')

@@ -11,14 +11,14 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useState, type ReactNode } from 'react'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { SessionId } from '@liwa/session/types'
 import type {} from '../src/client/index.ts'
 import { LiveshareShareDialog, type LiveshareShareDialogProps } from '../src/client/ShareDialog.tsx'
 import { en } from '../src/client/locales.ts'
 import type {
   OwnerIdentityStatus, OwnerRelayState, RelayConnectivityView,
 } from '../src/share-api-types.ts'
-import type { RemoteResult } from '@deepseek-ai/dsh-typert-protocol'
+import type { RemoteResult } from '@liwa/typert-protocol'
 import {
   accepted, DOUBLE_RELAY, ownerSharesDouble, requestOf, type OwnerSharesDouble,
 } from './owner-shares-double.client.ts'
@@ -38,7 +38,7 @@ const translate: LiveshareShareDialogProps['t'] = (key, params) => {
 const RELAY = DOUBLE_RELAY
 const OTHER = 'https://other.example.test'
 const UNSAVED = 'This address is not saved yet; save it to put it in force.'
-const UNREACHABLE = 'Cannot reach the DSH Liveshare share service.'
+const UNREACHABLE = 'Cannot reach the Liwa Liveshare share service.'
 
 type MaybeAsync<T> = T | Promise<T>
 

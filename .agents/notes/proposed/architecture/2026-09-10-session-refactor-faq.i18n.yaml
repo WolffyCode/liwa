@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/proposed/architecture/2026-09-10-session-refactor-faq.md
 /agent-note-session-refactor-faq:
-  en: e51be5edaac914bc
-  zh: 2e3ef4006e0ab07d
+  en: 376b74df530b283a
+  zh: ca117504f2255f9f
 /agent-note-session-refactor-faq/problem:
   en: dd6312b4ffd1f4b4
   zh: 16d132992aaf81fc
@@ -33,11 +33,11 @@
   en: 7693e479cc3d69f2
   zh: ed827338c03c0c01
 /agent-note-session-refactor-faq/proposal/how-can-i-contribute:
-  en: 4fb0e060d2a6648b
-  zh: 03f0039e1bc32437
+  en: dd70589362522b15
+  zh: 10b29c56beb5bde0
 /agent-note-session-refactor-faq/alternatives-considered:
-  en: bd143e9bcef3df2c
-  zh: c20c997563d10d6a
+  en: 68636440a56f7843
+  zh: 8fd29efe7f701c4a
 /agent-note-session-refactor-faq/acceptance-criteria:
   en: a78f08bcf0c0af46
   zh: 5aa2b6952969705d

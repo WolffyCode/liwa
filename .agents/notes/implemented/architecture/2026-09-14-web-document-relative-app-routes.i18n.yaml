@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-14-web-document-relative-app-routes.md
 /agent-note-web-app-owned-routes-are-document-relative:
-  en: c31a8b2eeced1d7a
-  zh: 718b29b0f1e3f995
+  en: 79e16fe1c0d594ff
+  zh: b939e0fede19a9b0
 /agent-note-web-app-owned-routes-are-document-relative/problem:
   en: ce92162dd5ef0b2a
   zh: a487cfd441b9fe1a

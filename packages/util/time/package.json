@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-util-time",
+  "name": "@liwa/util-time",
   "description": "Time vocabulary shared by the boundaries that accept a caller's zone, a wall-clock selector, or an elapsed time: canonicalClientTimeZone (IANA zone validation and canonicalization), strict RFC 3339 instant, local-calendar, and zone resolution, and a millisecond Duration span",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/util/time"
   },
   "type": "module",
@@ -30,9 +30,9 @@
     "@js-temporal/polyfill": "0.5.1"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   }
 }

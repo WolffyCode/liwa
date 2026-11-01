@@ -8,11 +8,11 @@
  * Unsupported or misplaced keywords reject rather than being accepted without
  * enforcement. Consumers that require an object root apply
  * {@link assertObjectJsonSchema} before accepting input.
- * @module dsh-tools/json-schema
+ * @module liwa-tools/json-schema
  */
 
-import { HarnessError } from '@deepseek-ai/dsh-llm'
-import { assertNever, isJsonValue, type JsonValue } from '@deepseek-ai/dsh-util-values'
+import { LiwaError } from '@liwa/llm'
+import { assertNever, isJsonValue, type JsonValue } from '@liwa/util-values'
 
 /** Scalar JSON values supported by `enum` and `const`. */
 export type JsonSchemaScalar = string | number | boolean | null
@@ -62,7 +62,7 @@ export type ObjectJsonSchema = JsonSchemaNode & { type: 'object' }
  * Thrown when a raw schema falls outside the enforced subset. `violations`
  * lists every offending path instead of stopping at the first author error.
  */
-export class JsonSchemaError extends HarnessError {
+export class JsonSchemaError extends LiwaError {
   /** Individual schema violations in walk order. */
   readonly violations: string[]
 

@@ -9,8 +9,8 @@ application files. Changes to framework-level dependencies fall back to
 
 `ctx.hmr.watch(path, callback)` watches one file, even outside `root`, and
 runs every registered callback on each change before module reloading; an
-Include registers its config file this way. DSH profiles use
-`@deepseek-ai/dsh-hmr`, which provides the same `watch()` contract through its
+Include registers its config file this way. Liwa profiles use
+`@liwa/hmr`, which provides the same `watch()` contract through its
 reload queue.
 
 ## Requirements

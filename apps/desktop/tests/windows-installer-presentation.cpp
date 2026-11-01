@@ -25,7 +25,7 @@ int wmain() {
     if (!InstallerPresentWelcome(installer)) return 3;
     if (!Above(installer, other)) return 4;
     if (GetWindowLongPtrW(installer, GWL_EXSTYLE) & WS_EX_TOPMOST) return 5;
-    if (GetPropW(installer, L"HarnessInstaller.Presented") != reinterpret_cast<HANDLE>(1)) return 6;
+    if (GetPropW(installer, L"LiwaInstaller.Presented") != reinterpret_cast<HANDLE>(1)) return 6;
     DestroyWindow(other);
     DestroyWindow(installer);
     return 0;

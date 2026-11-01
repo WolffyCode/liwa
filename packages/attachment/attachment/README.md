@@ -3,13 +3,13 @@ description: "Durable image and file attachments for users and maintainers attac
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-attachment
+# @liwa/attachment
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-Attach images and generic files to prompts and commands, then reuse them after restarting the same session, without extra setup in the shipped `dsh` composition. Images are validated and normalized before the message is accepted; PNG, JPEG, WebP, and GIF are supported within deployment limits. Other files are stored byte-for-byte without format or size limits, and models read them on demand through saved read-only paths instead of receiving their bytes. Durable session events exclude browser paths, provider URLs, local storage paths, and base64. Stored attachments are never deleted automatically; audio and video have no dedicated handling.
+Attach images and generic files to prompts and commands, then reuse them after restarting the same session, without extra setup in the shipped `liwa` composition. Images are validated and normalized before the message is accepted; PNG, JPEG, WebP, and GIF are supported within deployment limits. Other files are stored byte-for-byte without format or size limits, and models read them on demand through saved read-only paths instead of receiving their bytes. Durable session events exclude browser paths, provider URLs, local storage paths, and base64. Stored attachments are never deleted automatically; audio and video have no dedicated handling.
 
 ## Table of Contents
 
@@ -25,19 +25,19 @@ Attach images and generic files to prompts and commands, then reuse them after r
 <a id="use-this-package"></a>
 ## Use this package
 
-Image attachments work end to end: attach an image to a prompt or a command, and it is saved, shown in history, and sent to the model without any further action from you. In the default `dsh` composition everything is already wired; when you compose your own setup, one plugin enables the capability.
+Image attachments work end to end: attach an image to a prompt or a command, and it is saved, shown in history, and sent to the model without any further action from you. In the default `liwa` composition everything is already wired; when you compose your own setup, one plugin enables the capability.
 
 ### Attach images to a prompt
 
 Attach one or more images to a user prompt in the client UI. Each source is checked, normalized to a provider-independent 8-bit sRGB/sRGBA raster, and saved before your message is processed; if any image is refused, the whole message fails and nothing is published. Supported source formats are PNG, JPEG, WebP, and GIF; a deployment controls source limits separately from normalized-storage and route-specific request limits. The one plugin below enables durable image attachments (the shipped base composition already mounts it):
 
 ```yaml
-- name: '@deepseek-ai/dsh-attachment-local'
+- name: '@liwa/attachment-local'
 ```
 
 ### Attach any other file to a prompt
 
-Any non-image file attaches to a prompt as a generic file: the exact bytes are saved read-only under the harness home, the message records the file name, byte size, and content digest, and the model receives one line naming the saved path so it can read the content with its file tools only when needed. There is no file-type whitelist and no size limit; what you attach is stored verbatim.
+Any non-image file attaches to a prompt as a generic file: the exact bytes are saved read-only under the Liwa home, the message records the file name, byte size, and content digest, and the model receives one line naming the saved path so it can read the content with its file tools only when needed. There is no file-type whitelist and no size limit; what you attach is stored verbatim.
 
 ### Pass attachments to commands
 
@@ -66,9 +66,9 @@ This section explains the design decisions behind the seam and the service opera
 - **Normalize and persist before event.** Every source is prepared and verified before the batch publishes in order, so the session log never references a partial or failed normalization.
 - **Immutable and retention-neutral.** Objects are immutable once published; resumed and forked sessions may share them, so reference-aware garbage collection is deferred rather than tied to any one session's deletion.
 - **Verify on read.** Reads verify the immutable object against the supplied reference without consulting a Session. Optional display names and pre-normalization dimensions pass through as caller-supplied display information; the stored bytes do not verify these fields.
-- **Role-neutral image blocks.** The `ImageBlock` content block in `dsh-llm` carries an `ImageAttachmentRef`; provider adapters resolve it into deterministic request versions at an explicit route-chosen target size and byte target, while execution filesystems may map the immutable host object to a model-readable process path.
-- **Error routing by code.** `AttachmentError` re-implements the `HarnessError` shape instead of extending it because the base lives in `dsh-llm`, which depends on this package; consumers use `isAttachmentError` and route on `code`, never on the prototype chain.
-- **Files are verbatim, images are normalized.** `saveFile` commits an existing byte array, `saveFileStream` commits bounded chunks with backpressure and cancellation, `readFileStream` verifies and returns bounded chunks, and `fileHostPath` locates the stored object for read-on-demand projection; neither file write path applies admission limits. The image path keeps its separate normalization, limits, and request-version pipeline. The `FileBlock` content block in `dsh-llm` carries a `FileAttachmentRef`, and request assembly projects it to deterministic handle text for every route.
+- **Role-neutral image blocks.** The `ImageBlock` content block in `liwa-llm` carries an `ImageAttachmentRef`; provider adapters resolve it into deterministic request versions at an explicit route-chosen target size and byte target, while execution filesystems may map the immutable host object to a model-readable process path.
+- **Error routing by code.** `AttachmentError` re-implements the `LiwaError` shape instead of extending it because the base lives in `liwa-llm`, which depends on this package; consumers use `isAttachmentError` and route on `code`, never on the prototype chain.
+- **Files are verbatim, images are normalized.** `saveFile` commits an existing byte array, `saveFileStream` commits bounded chunks with backpressure and cancellation, `readFileStream` verifies and returns bounded chunks, and `fileHostPath` locates the stored object for read-on-demand projection; neither file write path applies admission limits. The image path keeps its separate normalization, limits, and request-version pipeline. The `FileBlock` content block in `liwa-llm` carries a `FileAttachmentRef`, and request assembly projects it to deterministic handle text for every route.
 
 ### Service operations
 

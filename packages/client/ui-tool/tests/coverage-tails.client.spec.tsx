@@ -1,19 +1,19 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { useDisclosure } from '@deepseek-ai/dsh-client-ui-chat/src/client/chat/use-disclosure.ts'
+import { useDisclosure } from '@liwa/client-ui-chat/src/client/chat/use-disclosure.ts'
 import { cleanup, render } from '@testing-library/react'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import { bindSnapshotSelector, makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import type { SessionListState } from '@deepseek-ai/dsh-api-session-controller/client'
-import type { StartedToolCall, ToolResultNode } from '@deepseek-ai/dsh-client-ui-chat/client'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { createSnapshotStore } from '@liwa/client-store'
+import { bindSnapshotSelector, makeTranslate } from '@liwa/client-test-runtime'
+import type { SessionListState } from '@liwa/api-session-controller/client'
+import type { StartedToolCall, ToolResultNode } from '@liwa/client-ui-chat/client'
+import type { SessionId } from '@liwa/session/types'
+import { zh as commonZh } from '@liwa/client-locale/src/locales/zh.ts'
 import { GenericToolCard, type GenericToolCardProps } from '../src/client/tool/toolviews/GenericToolCard.tsx'
 import { ToolRow } from '../src/client/tool/components/ToolRow.tsx'
 import { BashRow } from '../src/client/tool/toolviews/bash-sample.tsx'
-import { zh } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
-import { PartialArguments } from '@deepseek-ai/dsh-util-values'
+import { zh } from '@liwa/client-ui-conversation/src/client/locales.ts'
+import { PartialArguments } from '@liwa/util-values'
 
 type BashRowProps = Parameters<typeof BashRow>[0]
 

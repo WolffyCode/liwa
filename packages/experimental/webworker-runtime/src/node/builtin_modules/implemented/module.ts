@@ -6,7 +6,7 @@
  */
 import { requireActiveModuleLoader, type WorkerRequire } from '../../../module-system/module-loader.ts'
 
-/** Node `require` face the harness consumes. */
+/** Node `require` face Liwa consumes. */
 export type NodeRequire = WorkerRequire
 
 /**
@@ -63,7 +63,7 @@ export const __esModule = true
 /**
  * The `node:module` declarations this module stands in for. `createRequire`
  * keeps this module's own face: the loader's require carries the call and
- * `resolve` the harness uses, not Node's `cache`, `extensions`, and `main`,
+ * `resolve` Liwa uses, not Node's `cache`, `extensions`, and `main`,
  * which describe a CommonJS module registry the worker has no counterpart for.
  */
 type NodeFace = Partial<Omit<typeof import('node:module'), 'createRequire'>> & Record<'createRequire', unknown>

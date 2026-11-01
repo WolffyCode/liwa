@@ -6,9 +6,9 @@ import type { Socket } from 'node:net'
 import { createServer, type Server } from 'node:tls'
 import type { Duplex, Readable, Writable } from 'node:stream'
 import { finished, pipeline } from 'node:stream/promises'
-import type { Context } from '@deepseek-ai/cordis'
-import type { SubprocessHandle, SubprocessSpawnSpec, SubprocessTerminalHandle } from '@deepseek-ai/dsh-subprocess'
-import { logSpillFailure, OutputCollector, prepareManagedProcessBinding, type SpillFailureReporter } from '@deepseek-ai/dsh-subprocess-local/output'
+import type { Context } from '@liwa/cordis'
+import type { SubprocessHandle, SubprocessSpawnSpec, SubprocessTerminalHandle } from '@liwa/subprocess'
+import { logSpillFailure, OutputCollector, prepareManagedProcessBinding, type SpillFailureReporter } from '@liwa/subprocess-local/output'
 import { doneSchema, outputSnapshotFrameLimit, spawnSchema, type SshProcessId, type SshStreamEndpoint } from './schemas.ts'
 import { z } from 'zod'
 import { SSH_STREAM_TLS_OPTIONS } from './stream-security.ts'
@@ -423,7 +423,7 @@ export class RemoteProcesses {
     const capability = randomBytes(32)
     const server = createServer({
       ...SSH_STREAM_TLS_OPTIONS, allowHalfOpen: true, handshakeTimeout: this.preparationMs,
-      pskCallback: (_socket, identity) => identity === 'dsh-stream' ? capability : null,
+      pskCallback: (_socket, identity) => identity === 'liwa-stream' ? capability : null,
     })
     const endpoint: Endpoint = { path, capability: capability.toString('hex'), server, connected: connected.promise, pending: new Set() }
     server.maxConnections = 8

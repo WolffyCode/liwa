@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-terminal-bash",
-  "description": "Persistent shell PTY backend over the DeepSeek Harness subprocess terminal primitive",
+  "name": "@liwa/terminal-bash",
+  "description": "Persistent shell PTY backend over the Liwa subprocess terminal primitive",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/terminal/terminal-bash"
   },
   "type": "module",
@@ -29,32 +29,32 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-terminal": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-subprocess": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-working-directory": "workspace:*"
+    "@liwa/agent": "workspace:*",
+    "@liwa/terminal": "workspace:*",
+    "@liwa/sandbox": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/subprocess": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/working-directory": "workspace:*"
   },
   "dependencies": {
-    "@deepseek-ai/dsh-lazy-require": "workspace:*",
-    "@deepseek-ai/dsh-pwsh-local": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/lazy-require": "workspace:*",
+    "@liwa/pwsh-local": "workspace:*",
+    "@liwa/schemastery": "workspace:~",
     "@xterm/headless": "^6.0.0"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:*",
-    "@deepseek-ai/dsh-terminal": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-subprocess": "workspace:*",
-    "@deepseek-ai/dsh-subprocess-local": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-working-directory": "workspace:*"
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-loop-testkit": "workspace:*",
+    "@liwa/terminal": "workspace:*",
+    "@liwa/sandbox": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/subprocess": "workspace:*",
+    "@liwa/subprocess-local": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/working-directory": "workspace:*"
   }
 }

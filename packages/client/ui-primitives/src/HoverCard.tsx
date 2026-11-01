@@ -275,7 +275,7 @@ export function HoverCard({
       style={{
         left: pos.left, top: pos.top, width: pos.width, maxWidth: pos.maxWidth, maxHeight: pos.maxHeight,
         minHeight: copied && copyHeightRef.current !== null ? copyHeightRef.current : undefined,
-        '--dsh-hover-preview-fade': `${PREVIEW_FADE_MS}ms`,
+        '--liwa-hover-preview-fade': `${PREVIEW_FADE_MS}ms`,
       } as CSSProperties}
       role={copyable ? 'button' : undefined}
       tabIndex={copyable ? 0 : undefined}

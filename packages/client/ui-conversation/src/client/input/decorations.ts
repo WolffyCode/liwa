@@ -60,7 +60,7 @@ function pathEnd(draft: string, start: number, token: string): number | undefine
 }
 /**
  * What may follow a `/name` token: whitespace or the draft end, the boundary
- * the host skill gesture (`dsh-tool-skill`) requires, so `/nfs-hg/xxx`,
+ * the host skill gesture (`liwa-tool-skill`) requires, so `/nfs-hg/xxx`,
  * `/plan.md`, and `/plan。` are prose, never a reference.
  */
 const SLASH_TOKEN_END_RE = /^(?:\s|$)/

@@ -21,7 +21,7 @@ Model Context Protocol (MCP) connects the model to tools supplied by external se
 <a id="configuration"></a>
 ## Configuration
 
-MCP servers are opt-in. Configure one `@deepseek-ai/dsh-mcp-client` entry per server in the intended Cordis scope. Every shipped profile supplies the [tool registry](tools.md) and mounts the shared resource service once; users configure only client entries. Callers with no visible configured server receive no MCP prompt text or tools in native or PTC mode.
+MCP servers are opt-in. Configure one `@liwa/mcp-client` entry per server in the intended Cordis scope. Every shipped profile supplies the [tool registry](tools.md) and mounts the shared resource service once; users configure only client entries. Callers with no visible configured server receive no MCP prompt text or tools in native or PTC mode.
 
 | Choice | Configuration owner |
 |---|---|
@@ -31,14 +31,14 @@ MCP servers are opt-in. Configure one `@deepseek-ai/dsh-mcp-client` entry per se
 | Server instruction size limit | Client `maxInstructionBytes`; the composition supplies [system-prompt assembly](system-prompt.md) |
 | Permission decisions and supported image output | [Tool execution](tools.md) and [attachments](attachment.md) |
 
-Protocol negotiation follows the SDK's supported revisions; there is no product setting that forces a protocol revision. The [configuration catalog](../config-catalog.md#deepseek-aidsh-mcp-client) lists accepted client fields and defaults.
+Protocol negotiation follows the SDK's supported revisions; there is no product setting that forces a protocol revision. The [configuration catalog](../config-catalog.md#liwamcp-client) lists accepted client fields and defaults.
 
 -----
 
 <a id="responsibilities-and-scope"></a>
 ## Responsibilities and scope
 
-The client is a per-server connection plugin and a consumer of the harness tool registry. It does not publish a shared `ctx.mcp` service. The external server implements MCP operations; the SDK owns protocol exchange; the client adapts discovered tools to harness execution.
+The client is a per-server connection plugin and a consumer of the Liwa tool registry. It does not publish a shared `ctx.mcp` service. The external server implements MCP operations; the SDK owns protocol exchange; the client adapts discovered tools to harness execution.
 
 `mcp-resources` owns the shared resource tools and selects providers in the caller's scope. Each MCP client supplies resource operations through its own connection. The first provider in a scope enables the local shared tools, and removing the last removes them; inherited providers remain visible. The service owns these tool registrations independently of any one client. Connection failures do not remove shared resource tools while a visible client entry remains active.
 
@@ -60,7 +60,7 @@ The result adapter retains canonical MCP JSON for programmatic callers and prepa
 <a id="resources-and-instructions"></a>
 ## Resources and instructions
 
-Resource calls require an explicit configured server name. When system-prompt assembly is available, the resource service lists caller-visible names from the same registry used for dispatch, including servers with no tools or instructions. The shared registry resolves that name in the calling Agent's scope before dispatch; unavailable servers fail without a network request. Discovery and reads are on demand, including for servers that expose resources without tools. The [resource package](../../packages/mcp/mcp-resources/README.md) owns pagination and content rendering; its generated tool schemas live in the [tool catalog](../tool-catalog.md#deepseek-aidsh-mcp-resources).
+Resource calls require an explicit configured server name. When system-prompt assembly is available, the resource service lists caller-visible names from the same registry used for dispatch, including servers with no tools or instructions. The shared registry resolves that name in the calling Agent's scope before dispatch; unavailable servers fail without a network request. Discovery and reads are on demand, including for servers that expose resources without tools. The [resource package](../../packages/mcp/mcp-resources/README.md) owns pagination and content rendering; its generated tool schemas live in the [tool catalog](../tool-catalog.md#liwamcp-resources).
 
 Resource providers remain connection-owned. Scope disposal removes registrations; the MCP client controls cancellation and recovery. Canonical results retain complete JSON for programmatic callers, while the text projection replaces binary blobs with descriptions. Returned text enters ordinary tool history; content is not fetched merely because a server connects.
 

@@ -1,22 +1,22 @@
-import AgentRegistry from '@deepseek-ai/dsh-agent'
+import AgentRegistry from '@liwa/agent'
 /**
  * Consumer API tests over a fake provider and the real policy collaborator: schemas,
  * validation, formatting, typed errors, intent dispatch, and observation-driven authorization.
  */
-import { ToolExecutionPipeline } from '@deepseek-ai/dsh-tools/pipeline'
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
+import { ToolExecutionPipeline } from '@liwa/tools/pipeline'
+import { executeToolFixture } from '@liwa/tool-testkit'
 
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
-import * as PtcToolExecutor from '@deepseek-ai/dsh-tool-executor-ptc'
-import { provideWorkingDirectoryFixture } from '@deepseek-ai/dsh-agent-loop-testkit'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
+import * as PtcToolExecutor from '@liwa/tool-executor-ptc'
+import { provideWorkingDirectoryFixture } from '@liwa/agent-loop-testkit'
 import { describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { PtcRuntime } from '@deepseek-ai/dsh-ptc-runtime'
-import { createScope, type Scope } from '@deepseek-ai/dsh-scope'
-import { ToolCallId } from '@deepseek-ai/dsh-llm'
-import SystemPrompt, { renderPrompt } from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime, { type ToolResult } from '@deepseek-ai/dsh-tools'
-import { FileSystem, FsError, FsTargetKey, FsVersion } from '@deepseek-ai/dsh-fs'
+import { Context } from '@liwa/cordis'
+import { PtcRuntime } from '@liwa/ptc-runtime'
+import { createScope, type Scope } from '@liwa/scope'
+import { ToolCallId } from '@liwa/llm'
+import SystemPrompt, { renderPrompt } from '@liwa/system-prompt'
+import ToolRuntime, { type ToolResult } from '@liwa/tools'
+import { FileSystem, FsError, FsTargetKey, FsVersion } from '@liwa/fs'
 import type {
   FsDirEntry,
   FsEditOutcome,
@@ -26,18 +26,18 @@ import type {
   FsTarget,
   FsWriteIntent,
   FsWriteOutcome,
-} from '@deepseek-ai/dsh-fs'
-import * as FsPolicy from '@deepseek-ai/dsh-fs-observation-policy'
-import * as ToolFs from '@deepseek-ai/dsh-tool-fs'
+} from '@liwa/fs'
+import * as FsPolicy from '@liwa/fs-observation-policy'
+import * as ToolFs from '@liwa/tool-fs'
 import { STREAM_MIN_SIZE } from '../src/read.ts'
 import { formatReadOutput } from '../src/read-render.ts'
 import type { FileReadOutcome } from '../src/read-render.ts'
 import { sessionResolveOptions } from '../src/session-cwd.ts'
-import ApprovalService from '@deepseek-ai/dsh-user-approval'
-import type { SandboxExecutionPolicy, SandboxMode } from '@deepseek-ai/dsh-sandbox'
-import SandboxPolicyService from '@deepseek-ai/dsh-sandbox-policy'
-import { SessionId, SessionLogOffset, SessionSeq } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import ApprovalService from '@liwa/user-approval'
+import type { SandboxExecutionPolicy, SandboxMode } from '@liwa/sandbox'
+import SandboxPolicyService from '@liwa/sandbox-policy'
+import { SessionId, SessionLogOffset, SessionSeq } from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
 
 const testToolSignal = new AbortController().signal
 
@@ -237,11 +237,11 @@ describe('registration', () => {
     // withdraw both, not just the schemas.
     expect(ctx.tools.schemas()).toHaveLength(3)
     const sectionNames = (a: { sections: { name: string }[] }) => a.sections.map(s => s.name).sort()
-    expect(sectionNames(await ctx.systemPrompt.assemble())).toEqual(['deployment:persona-prefix', 'deployment:persona-suffix', 'harness:identity', 'tool:edit', 'tool:read', 'tool:write'])
+    expect(sectionNames(await ctx.systemPrompt.assemble())).toEqual(['deployment:persona-prefix', 'deployment:persona-suffix', 'liwa:identity', 'tool:edit', 'tool:read', 'tool:write'])
     await fiber.dispose()
     expect(ctx.tools.schemas()).toHaveLength(0)
     // Only the system-prompt plugin's own built-in sections remain.
-    expect(sectionNames(await ctx.systemPrompt.assemble())).toEqual(['deployment:persona-prefix', 'deployment:persona-suffix', 'harness:identity'])
+    expect(sectionNames(await ctx.systemPrompt.assemble())).toEqual(['deployment:persona-prefix', 'deployment:persona-suffix', 'liwa:identity'])
   })
 })
 
@@ -1201,12 +1201,12 @@ describe('scope-aware filesystem guidance', () => {
 
 /** Preserve the default persona and exact section separators in the oracle. */
 function withPersona(...sections: string[]): string {
-  return ['You are an AI agent powered by DeepSeek Harness.', ...sections].join('\n\n')
+  return ['You are an AI agent powered by Liwa.', ...sections].join('\n\n')
 }
 
 /** Schema assembly only: these cases never execute user code. */
 class GuidancePtcRuntime extends PtcRuntime {
-  resolve(request: import('@deepseek-ai/dsh-ptc-runtime').PtcRunRequest): import('@deepseek-ai/dsh-ptc-runtime').PtcRunSpec { return { ...request, cwd: request.cwd ?? process.cwd(), timeoutMs: request.timeoutMs ?? 120_000 } }
+  resolve(request: import('@liwa/ptc-runtime').PtcRunRequest): import('@liwa/ptc-runtime').PtcRunSpec { return { ...request, cwd: request.cwd ?? process.cwd(), timeoutMs: request.timeoutMs ?? 120_000 } }
 
   readonly language = 'typescript'
   readonly isolation = 'fake'

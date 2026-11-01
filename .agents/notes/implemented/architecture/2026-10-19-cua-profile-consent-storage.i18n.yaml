@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-10-19-cua-profile-consent-storage.md
 /agent-note-durable-computer-use-consent-within-one-profile:
-  en: b2aa270d586efd93
-  zh: 99606fa28dc4a752
+  en: b38dc3995aeee26b
+  zh: dfd9fdfc29b10a19
 /agent-note-durable-computer-use-consent-within-one-profile/problem:
   en: f2c70036a57ddb41
   zh: 9bbbf3dd09d486f5
 /agent-note-durable-computer-use-consent-within-one-profile/decision:
-  en: 11622523090f5d88
-  zh: 1d0f8ad94645f069
+  en: ef10765b339a0ee9
+  zh: 7eeb6111df824e86
 /agent-note-durable-computer-use-consent-within-one-profile/alternatives-considered:
   en: 2af74afa3ecaf3b9
   zh: 96f7f43c5d1150df

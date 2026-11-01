@@ -5,15 +5,15 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { DeepSeekHarness } from '@deepseek-ai/dsh-sdk-client'
+import { Liwa } from '@liwa/sdk-client'
 import { describe, expect, it, onTestFinished } from 'vitest'
 
-const dshBin = fileURLToPath(new URL('../../../lib/bin.js', import.meta.url))
+const liwaBin = fileURLToPath(new URL('../../../lib/bin.js', import.meta.url))
 const fixture = fileURLToPath(new URL('./fixtures/checkpoint-failure.mjs', import.meta.url))
 
-describe.skipIf(!existsSync(dshBin))('sdk-minimal durability checkpoints', () => {
+describe.skipIf(!existsSync(liwaBin))('sdk-minimal durability checkpoints', () => {
   it.each([false, true])('checkpoint storage failure with policy disabled=%s', async (disabled) => {
-    const root = await mkdtemp(join(tmpdir(), 'dsh-sdk-checkpoint-'))
+    const root = await mkdtemp(join(tmpdir(), 'liwa-sdk-checkpoint-'))
     onTestFinished(async () => { await rm(root, { recursive: true, force: true }) })
     let modelRequests = 0
     const server = createServer((request, response) => {
@@ -51,8 +51,8 @@ describe.skipIf(!existsSync(dshBin))('sdk-minimal durability checkpoints', () =>
       { insert: [{ id: 'checkpoint-failure', name: fixture }] },
       ...disabled ? [{ id: 'session-checkpoint-policy', disabled: true }] : [],
     ]))
-    const harness = new DeepSeekHarness({
-      dshBin, profile: 'sdk-minimal', dshHome: join(root, 'home'),
+    const harness = new Liwa({
+      liwaBin, profile: 'sdk-minimal', liwaHome: join(root, 'home'),
       cwd: root, processCwd: root, patches: [patch],
       env: { ...process.env, DEEPSEEK_API_KEY: 'keyless-checkpoint-test', DEEPSEEK_BASE_URL: `http://127.0.0.1:${address.port}` },
     })

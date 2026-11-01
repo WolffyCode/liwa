@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-skill-filesystem",
-  "description": "Local filesystem skill provider for the DeepSeek Harness",
+  "name": "@liwa/skill-filesystem",
+  "description": "Local filesystem skill provider for Liwa",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/skill/skill-filesystem"
   },
   "type": "module",
@@ -29,20 +29,20 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-fs": "workspace:*",
-    "@deepseek-ai/dsh-home-paths": "workspace:*",
-    "@deepseek-ai/dsh-skill": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/fs": "workspace:*",
+    "@liwa/home-paths": "workspace:*",
+    "@liwa/skill": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "dependencies": {
     "chokidar": "5.0.0",
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/schemastery": "workspace:~",
     "yaml": "^2.4.2"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-fs": "workspace:*",
-    "@deepseek-ai/dsh-home-paths": "workspace:*",
-    "@deepseek-ai/dsh-skill": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/fs": "workspace:*",
+    "@liwa/home-paths": "workspace:*",
+    "@liwa/skill": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   }
 }

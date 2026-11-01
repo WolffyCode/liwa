@@ -3,8 +3,8 @@ import { existsSync } from 'node:fs'
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import type { SubprocessTerminalActivity } from '@deepseek-ai/dsh-subprocess'
+import { Context } from '@liwa/cordis'
+import type { SubprocessTerminalActivity } from '@liwa/subprocess'
 import { afterEach, describe, expect, it } from 'vitest'
 import LocalSubprocessRuntime from '../src/index.ts'
 
@@ -15,7 +15,7 @@ afterEach(async () => { for (const cleanup of cleanups.splice(0).reverse()) awai
 const PROMPT_MARKER = 'READY>'
 
 async function shell(path: string, rc = '', envFile = '') {
-  const home = await mkdtemp(join(tmpdir(), 'dsh-shell-activity-test-'))
+  const home = await mkdtemp(join(tmpdir(), 'liwa-shell-activity-test-'))
   cleanups.push(() => rm(home, { recursive: true, force: true }))
   await writeFile(join(home, '.zshenv'), envFile)
   await writeFile(join(home, '.zshrc'), `PROMPT='${PROMPT_MARKER} '\n${rc}\n`)

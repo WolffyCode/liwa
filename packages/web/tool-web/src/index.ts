@@ -5,12 +5,12 @@
  * and fails with a structured error at execution time. A model step does not admit
  * `web_search` or `web_fetch` while `ctx.web.searchReady()` or `ctx.web.fetchReady()`
  * reports that the selected provider cannot authenticate for that step's chat route.
- * @module @deepseek-ai/dsh-tool-web
+ * @module @liwa/tool-web
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import type {} from '@deepseek-ai/dsh-web'
+import type { Context } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import type {} from '@liwa/web'
 import { applyWebSearchTool, WEB_SEARCH_MAX_QUERIES, WEB_SEARCH_MAX_RESULTS, WEB_SEARCH_SUMMARY_MAX_CHARS } from './search.ts'
 import { applyWebFetchTool } from './fetch.ts'
 
@@ -81,7 +81,7 @@ function assertPositiveInteger(name: string, value: number): void {
  * that wants only one disables the other in config. Each tool's cooperative
  * timeout budget (`fetchTimeoutMs`/`searchTimeoutMs`, default 30000) is resolved
  * here and attached to the tool as `ToolDefinition.timeoutMs` for
- * `@deepseek-ai/dsh-tool-call-timeout-policy` to enforce. The tools' disposers are
+ * `@liwa/tool-call-timeout-policy` to enforce. The tools' disposers are
  * fiber-scoped (the effect-based registries clean up on dispose), so no manual
  * teardown is needed.
  */

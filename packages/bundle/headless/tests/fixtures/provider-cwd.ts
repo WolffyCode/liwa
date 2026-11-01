@@ -1,8 +1,8 @@
-/** Empty POSIX filesystem fixture whose execution coordinates differ from the Harness host. */
+/** Empty POSIX filesystem fixture whose execution coordinates differ from the Liwa host. */
 import { posix } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import { FileSystem, FsError, FsTargetKey, FsVersion, type FsTarget, type FsInfo } from '@deepseek-ai/dsh-fs'
-import schema from '@deepseek-ai/schemastery'
+import { Context } from '@liwa/cordis'
+import { FileSystem, FsError, FsTargetKey, FsVersion, type FsTarget, type FsInfo } from '@liwa/fs'
+import schema from '@liwa/schemastery'
 
 /** Deployment coordinates for the deterministic provider. */
 interface Config { root: string }

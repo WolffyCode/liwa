@@ -3,13 +3,13 @@ description: "面向用户与维护者的本地工作区 @file 补全提供方�
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-file-reference-local
+# @liwa/file-reference-local
 
 [English](README.md) | 中文
 
 ## 概述
 
-agent（智能体）及宿主 UI 可以用各 agent 本地工作区中经过排序的路径补全 `@file` mention；有界发现让大型仓库也能保持响应迅速。结果会在工具活动后刷新且不会阻塞补全，并且始终不会跟随目录符号链接。当 `read` 可用时，模型还会收到关于如何理解引用路径的稳定指引。当 `read` 使用 Harness 宿主文件系统时选择本包；远程或虚拟命名空间需要与之匹配的发现能力。
+agent（智能体）及宿主 UI 可以用各 agent 本地工作区中经过排序的路径补全 `@file` mention；有界发现让大型仓库也能保持响应迅速。结果会在工具活动后刷新且不会阻塞补全，并且始终不会跟随目录符号链接。当 `read` 可用时，模型还会收到关于如何理解引用路径的稳定指引。当 `read` 使用灵鲸宿主文件系统时选择本包；远程或虚拟命名空间需要与之匹配的发现能力。
 
 ## 目录
 
@@ -27,14 +27,14 @@ agent（智能体）及宿主 UI 可以用各 agent 本地工作区中经过排�
 
 切换 Session 工作目录后，旧目录的搜索索引会被丢弃；下一次补全会搜索新目录。
 
-当 `@file` 补全应发现 Harness 宿主自身的文件系统——即随附 `read` 工具所操作的命名空间——时，挂载此提供方。每个 agent 的工作区从其 Session 当前工作目录开始建立索引。
+当 `@file` 补全应发现灵鲸宿主自身的文件系统——即随附 `read` 工具所操作的命名空间——时，挂载此提供方。每个 agent 的工作区从其 Session 当前工作目录开始建立索引。
 
 ### 启用提供方
 
 默认设置适合典型工作区，因此最小挂载无需任何配置：
 
 ```yaml
-- name: '@deepseek-ai/dsh-file-reference-local'
+- name: '@liwa/file-reference-local'
   config:
     maxResults: 20
 ```
@@ -89,7 +89,7 @@ agent（智能体）及宿主 UI 可以用各 agent 本地工作区中经过排�
 
 - [文件引用 seam](../file-reference/README.zh.md)——本提供方所实现的服务约定与 `@file` 语法。
 - [会话引用子系统](../../../docs/subsystems/session-reference.zh.md)——宿主 UI 背后的共享文件引用约定。
-- [文件系统工具目录](../../../docs/tool-catalog.zh.md#deepseek-aidsh-tool-fs)——发现能力必须匹配其命名空间的 `read` 工具。
+- [文件系统工具目录](../../../docs/tool-catalog.zh.md#liwatool-fs)——发现能力必须匹配其命名空间的 `read` 工具。
 - [上下文组地图](../README.zh.md)——相邻的请求上下文包。
 
 -----
@@ -124,7 +124,7 @@ Tokens prefixed with @ are paths the user explicitly referenced. Relative paths 
 
 这些限制说明该提供方何时不合适。它们是当前包约束。
 
-- **宿主本地命名空间**：提供方扫描 Harness 宿主的文件系统，因此远程或虚拟 `read` 实现需要使用命名空间与该工具一致的提供方。
+- **宿主本地命名空间**：提供方扫描灵鲸宿主的文件系统，因此远程或虚拟 `read` 实现需要使用命名空间与该工具一致的提供方。
 - **有界的提示性索引**：超大型工作区可能省略 `maxEntries` 之后的路径；被排除或无法读取的目录不会出现。默认排除项只列没有任何生态用作源码目录的构建产物；`lib` 被刻意排除在外，因此构建进 `lib` 的工作区需通过 `excludedDirectories` 自行加上。
 - **一次失效的陈旧窗口**：紧接工具结果之后的裸查询反映的是上一次遍历时的目录树；下一次查询才看到重建结果。
 - **没有忽略文件语义**：`.gitignore` 和其他项目忽略文件不会影响发现；系统只排除已配置的目录基名。

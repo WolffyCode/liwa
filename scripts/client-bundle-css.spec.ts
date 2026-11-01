@@ -35,16 +35,16 @@ interface BundlePlugin {
   renderChunk?: (code: string, chunk: unknown, outputOptions: { format: string }) => { toString(): string } | null
 }
 
-type PluginName = 'dsh-css-modules-inline' | 'dsh-css-global-inline' | 'dsh-css-text-inline' | 'dsh-package-asset'
+type PluginName = 'liwa-css-modules-inline' | 'liwa-css-global-inline' | 'liwa-css-text-inline' | 'liwa-package-asset'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-client-asset-fixture'
+const PACKAGE_NAME = '@liwa/client-asset-fixture'
 const ASSET_EXPORTS = { './client': './lib/client.js', './assets/*': './lib/assets/*' }
 const WHALE = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3])
 const WHALE_REV = packageAssetRevision(WHALE)
-const WHALE_URL = `plugins/@deepseek-ai/dsh-client-asset-fixture/assets/whale-${WHALE_REV}.png`
+const WHALE_URL = `plugins/@liwa/client-asset-fixture/assets/whale-${WHALE_REV}.png`
 
 /** The resolver call identifier a compiled module emits before rendering. */
-const RESOLVER_CALL = /__dshPackageAsset_[0-9a-f]{12}(?=\()/u
+const RESOLVER_CALL = /__liwaPackageAsset_[0-9a-f]{12}(?=\()/u
 
 /** Read the resolver call identifier from one compiled module. */
 function resolverCall(output: string | null): string {
@@ -93,14 +93,14 @@ async function assetPackage(
   files: Readonly<Record<string, string | Uint8Array>>,
   exports: Readonly<Record<string, string>> = ASSET_EXPORTS,
 ): Promise<string> {
-  const root = await temporaryDirectory('dsh-client-asset-')
+  const root = await temporaryDirectory('liwa-client-asset-')
   await writeFiles(root, { 'package.json': JSON.stringify({ name: PACKAGE_NAME, type: 'module', exports }), ...files })
   return root
 }
 
 /** Client-face configs of one package, as its tsdown.config.ts would return them. */
 function clientFaceConfigs(packageDir: string, dualClient = false): UserConfig[] {
-  return clientBundle(packageDir, ['lib/types/index.js'], { dualClient })({ env: { DSH_BUILD_FACE: 'client' } })
+  return clientBundle(packageDir, ['lib/types/index.js'], { dualClient })({ env: { LIWA_BUILD_FACE: 'client' } })
 }
 
 function configPlugin(config: UserConfig | undefined, name: string): BundlePlugin {
@@ -159,12 +159,12 @@ async function loadImport(plugin: BundlePlugin, context: PluginContext, source: 
 
 describe('client bundle CSS Modules', () => {
   it('registers the source stylesheet as a watch dependency', async () => {
-    const root = await temporaryDirectory('dsh-client-css-watch-')
+    const root = await temporaryDirectory('liwa-client-css-watch-')
     const stylesheet = join(root, 'Fixture.module.css')
     await writeFile(stylesheet, '.root { color: red; }\n')
     const context = recordingContext()
 
-    const output = await loadImport(bundlePlugin('dsh-css-modules-inline'), context, './Fixture.module.css', join(root, 'index.ts'))
+    const output = await loadImport(bundlePlugin('liwa-css-modules-inline'), context, './Fixture.module.css', join(root, 'index.ts'))
 
     expect(context.watched).toEqual([stylesheet])
     expect(output).toContain('data-plugin-css')
@@ -173,12 +173,12 @@ describe('client bundle CSS Modules', () => {
 
 describe('client bundle global CSS', () => {
   it('compiles a side-effect stylesheet into a watched style injector', async () => {
-    const root = await temporaryDirectory('dsh-client-global-css-watch-')
+    const root = await temporaryDirectory('liwa-client-global-css-watch-')
     const stylesheet = join(root, 'base.css')
     await writeFile(stylesheet, 'body { color: red; }\n')
     const context = recordingContext()
 
-    const output = await loadImport(bundlePlugin('dsh-css-global-inline'), context, './base.css', join(root, 'index.ts'))
+    const output = await loadImport(bundlePlugin('liwa-css-global-inline'), context, './base.css', join(root, 'index.ts'))
 
     expect(context.watched).toEqual([stylesheet])
     expect(output).toContain('data-plugin-css')
@@ -186,12 +186,12 @@ describe('client bundle global CSS', () => {
   })
 
   it('compiles inline stylesheets as watched text without a module side effect', async () => {
-    const root = await temporaryDirectory('dsh-client-inline-css-watch-')
+    const root = await temporaryDirectory('liwa-client-inline-css-watch-')
     const stylesheet = join(root, 'base.css')
     await writeFile(stylesheet, 'body { color: red; }\n')
     const context = recordingContext()
 
-    const output = await loadImport(bundlePlugin('dsh-css-text-inline'), context, './base.css?inline', join(root, 'index.ts'))
+    const output = await loadImport(bundlePlugin('liwa-css-text-inline'), context, './base.css?inline', join(root, 'index.ts'))
 
     expect(context.watched).toEqual([stylesheet])
     expect(output).toContain('export default "body{color:red}"')
@@ -202,7 +202,7 @@ describe('client bundle global CSS', () => {
 describe('client bundle package asset imports', () => {
   it('emits an imported asset once per build and exports its revisioned URL', async () => {
     const root = await assetPackage({ 'src/client/assets/icons/whale@2x.png': WHALE })
-    const plugin = browserPlugins(root)('dsh-package-asset')
+    const plugin = browserPlugins(root)('liwa-package-asset')
     const { resolveId, load } = hooks(plugin)
     const asset = join(root, 'src/client/assets/icons/whale@2x.png')
     const context = recordingContext()
@@ -212,7 +212,7 @@ describe('client bundle package asset imports', () => {
     const first = await load.call(context, id)
     const second = await load.call(context, id)
 
-    const expected = `export default ${resolverCall(first)}("plugins/@deepseek-ai/dsh-client-asset-fixture/assets/icons/whale%402x-${WHALE_REV}.png");`
+    const expected = `export default ${resolverCall(first)}("plugins/@liwa/client-asset-fixture/assets/icons/whale%402x-${WHALE_REV}.png");`
     expect(id).toBe(asset)
     expect([first, second]).toEqual([expected, expected])
     expect(emittedFiles(context)).toEqual([{
@@ -230,12 +230,12 @@ describe('client bundle package asset imports', () => {
 
   it('renders each resolver call as the module loader require.asset in the CommonJS bundle only', async () => {
     const root = await assetPackage({ 'src/client/assets/whale.png': WHALE })
-    const plugin = browserPlugins(root)('dsh-package-asset')
+    const plugin = browserPlugins(root)('liwa-package-asset')
     const { renderChunk } = plugin
     if (renderChunk === undefined) throw new Error('asset plugin has no renderChunk hook')
     const call = resolverCall(await hooks(plugin).load.call(recordingContext(), join(root, 'src/client/assets/whale.png')))
     // Plugin data that only shares the fixed prefix stays as written.
-    const literal = 'const text = "__dshPackageAsset(";\n'
+    const literal = 'const text = "__liwaPackageAsset(";\n'
     const code = `const a = ${call}("${WHALE_URL}");\nconst css = "x" + ${call}("${WHALE_URL}") + "y";\n${literal}`
 
     expect(renderChunk(code, {}, { format: 'cjs' })?.toString())
@@ -247,7 +247,7 @@ describe('client bundle package asset imports', () => {
   it('builds an asset import into require.asset and keeps plugin strings that share the prefix', async () => {
     const root = await assetPackage({
       'src/client/assets/whale.png': WHALE,
-      'lib/types/client/index.js': 'import whale from "./assets/whale.png"\nexport const url = whale\nexport const text = "__dshPackageAsset("\n',
+      'lib/types/client/index.js': 'import whale from "./assets/whale.png"\nexport const url = whale\nexport const text = "__liwaPackageAsset("\n',
     })
     const config = clientFaceConfigs(root).find(candidate => candidate.platform === 'browser')
     if (config === undefined) throw new Error('browser config missing')
@@ -261,8 +261,8 @@ describe('client bundle package asset imports', () => {
       const output = builds.flatMap(bundle => bundle.chunks).find(chunk => chunk.type === 'chunk' && chunk.fileName === 'client.js')
       const code = output?.type === 'chunk' ? output.code : ''
       expect(code).toContain(`require.asset(${JSON.stringify(WHALE_URL)})`)
-      expect(code).not.toContain('__dshPackageAsset_')
-      expect(code).toContain('"__dshPackageAsset("')
+      expect(code).not.toContain('__liwaPackageAsset_')
+      expect(code).toContain('"__liwaPackageAsset("')
     } finally {
       for (const bundle of builds) await bundle[Symbol.asyncDispose]()
     }
@@ -270,7 +270,7 @@ describe('client bundle package asset imports', () => {
 
   it('ignores imports and modules that are not supported assets', async () => {
     const root = await assetPackage({ 'src/client/index.ts': '', 'src/client/assets/font.woff2': 'font' })
-    const { resolveId, load } = hooks(browserPlugins(root)('dsh-package-asset'))
+    const { resolveId, load } = hooks(browserPlugins(root)('liwa-package-asset'))
     const importer = join(root, 'src/client/index.ts')
     const context = recordingContext()
 
@@ -289,7 +289,7 @@ describe('client bundle package asset imports', () => {
       'node_modules/dependency/package.json': JSON.stringify({ name: 'dependency' }),
       'node_modules/dependency/whale.png': WHALE,
     })
-    const plugin = browserPlugins(root)('dsh-package-asset')
+    const plugin = browserPlugins(root)('liwa-package-asset')
     const { load } = hooks(plugin)
     const importer = join(root, 'src/client/index.ts')
     const context = recordingContext()
@@ -306,7 +306,7 @@ describe('client bundle package asset imports', () => {
     ['targets another directory', { './assets/*': './src/client/assets/*' }],
   ])('rejects an asset while the asset export %s', async (_case, exports) => {
     const root = await assetPackage({ 'src/client/assets/whale.png': WHALE }, exports)
-    const { load } = hooks(browserPlugins(root)('dsh-package-asset'))
+    const { load } = hooks(browserPlugins(root)('liwa-package-asset'))
 
     expect(() => load.call(recordingContext(), join(root, 'src/client/assets/whale.png')))
       .toThrow('needs package.json exports {"./assets/*":"./lib/assets/*"} and "lib/assets" in files')
@@ -315,7 +315,7 @@ describe('client bundle package asset imports', () => {
   it('rejects a missing asset file by name', async () => {
     const root = await assetPackage({})
     const asset = join(root, 'src/client/assets/missing.png')
-    const { load } = hooks(browserPlugins(root)('dsh-package-asset'))
+    const { load } = hooks(browserPlugins(root)('liwa-package-asset'))
 
     expect(() => load.call(recordingContext(), asset)).toThrow(`${PACKAGE_NAME}: cannot resolve asset ${asset}`)
   })
@@ -324,7 +324,7 @@ describe('client bundle package asset imports', () => {
     'src/client/assets/100%.png', 'src/client/assets/icons#1/whale.png', 'src/client/assets/Node_Modules/whale.png',
   ])('rejects %s, which the asset route cannot serve', async (path) => {
     const root = await assetPackage({ [path]: WHALE })
-    const { load } = hooks(browserPlugins(root)('dsh-package-asset'))
+    const { load } = hooks(browserPlugins(root)('liwa-package-asset'))
 
     expect(() => load.call(recordingContext(), join(root, path)))
       .toThrow(`${join(root, path)} has a node_modules path segment or one containing %, #, ?, \\ or NUL, which the asset route cannot serve; rename it`)
@@ -337,13 +337,13 @@ describe('client bundle package asset imports', () => {
       'src/client/theme.css': '.a { background: url(./assets/old.png); background: url(./assets/whale.png); } .b { mask: url(./assets/whale.png); }',
     })
 
-    const output = await loadImport(browserPlugins(root)('dsh-css-global-inline'), recordingContext(), './theme.css', join(root, 'src/client/index.ts'))
+    const output = await loadImport(browserPlugins(root)('liwa-css-global-inline'), recordingContext(), './theme.css', join(root, 'src/client/index.ts'))
 
     const css = stylesheetText(output, reference => `resolved:${reference}`)
     expect(css.split(`url(resolved:${WHALE_URL})`)).toHaveLength(3)
     // lightningcss keeps only the last background, so the placeholder of old.png is missing from the text.
     expect(css).not.toContain('old-')
-    expect(css).not.toContain('__dshPackageAsset')
+    expect(css).not.toContain('__liwaPackageAsset')
   })
 
   it('rewrites the urls inside image-set()', async () => {
@@ -353,7 +353,7 @@ describe('client bundle package asset imports', () => {
     })
     const context = recordingContext()
 
-    const output = await loadImport(browserPlugins(root)('dsh-css-global-inline'), context, './theme.css', join(root, 'src/client/index.ts'))
+    const output = await loadImport(browserPlugins(root)('liwa-css-global-inline'), context, './theme.css', join(root, 'src/client/index.ts'))
 
     const css = stylesheetText(output, reference => `resolved:${reference}`)
     expect(css).toContain(`resolved:${WHALE_URL}`)
@@ -364,25 +364,25 @@ describe('client bundle package asset imports', () => {
   it('keeps literal placeholder-like text and resolves only the references the rewrite inserted', async () => {
     const root = await assetPackage({
       'src/client/assets/whale.png': WHALE,
-      'src/client/assets/__dshPackageAsset_logo.png': WHALE,
+      'src/client/assets/__liwaPackageAsset_logo.png': WHALE,
       'src/client/theme.css': [
-        '.a::after { content: "__dshPackageAsset0__"; } .b { background: url(./assets/whale.png); }',
-        '.c { background: url(./assets/__dshPackageAsset_logo.png); }',
+        '.a::after { content: "__liwaPackageAsset0__"; } .b { background: url(./assets/whale.png); }',
+        '.c { background: url(./assets/__liwaPackageAsset_logo.png); }',
       ].join('\n'),
     })
 
-    const output = await loadImport(browserPlugins(root)('dsh-css-global-inline'), recordingContext(), './theme.css', join(root, 'src/client/index.ts'))
+    const output = await loadImport(browserPlugins(root)('liwa-css-global-inline'), recordingContext(), './theme.css', join(root, 'src/client/index.ts'))
 
     const css = stylesheetText(output, reference => `resolved:${reference}`)
-    expect(css).toContain('content:"__dshPackageAsset0__"')
+    expect(css).toContain('content:"__liwaPackageAsset0__"')
     expect(css).toContain(`url(resolved:${WHALE_URL})`)
     // A real file whose name shares the placeholder prefix is still a package asset.
-    expect(css).toContain(`url(resolved:plugins/@deepseek-ai/dsh-client-asset-fixture/assets/__dshPackageAsset_logo-${WHALE_REV}.png)`)
+    expect(css).toContain(`url(resolved:plugins/@liwa/client-asset-fixture/assets/__liwaPackageAsset_logo-${WHALE_REV}.png)`)
   })
 
   it('rejects an uppercase extension, which the asset import types do not declare', async () => {
     const root = await assetPackage({ 'src/client/assets/whale.PNG': WHALE })
-    const { load } = hooks(browserPlugins(root)('dsh-package-asset'))
+    const { load } = hooks(browserPlugins(root)('liwa-package-asset'))
     const asset = join(root, 'src/client/assets/whale.PNG')
 
     expect(() => load.call(recordingContext(), asset)).toThrow(`${asset} has an uppercase extension`)
@@ -394,11 +394,11 @@ describe('client bundle package asset imports', () => {
       'src/client/View.module.css': '.a { mask: url(\'./assets/whale(2x).png\'); }',
       'src/client/Bad.module.css': '.b { mask: url(\'./assets/whale(2x).png#part\'); }',
     })
-    const plugin = browserPlugins(root)('dsh-css-modules-inline')
+    const plugin = browserPlugins(root)('liwa-css-modules-inline')
     const importer = join(root, 'src/client/index.ts')
 
     const output = await loadImport(plugin, recordingContext(), './View.module.css', importer)
-    const reference = `plugins/@deepseek-ai/dsh-client-asset-fixture/assets/whale%282x%29-${WHALE_REV}.png`
+    const reference = `plugins/@liwa/client-asset-fixture/assets/whale%282x%29-${WHALE_REV}.png`
     // The served Web app returns the reference unchanged; the text must still parse as one url() declaration.
     const css = stylesheetText(output, asset => asset)
     expect(css).toContain(`url(${reference})`)
@@ -410,7 +410,7 @@ describe('client bundle package asset imports', () => {
   it('rejects asset imports in the Node Client face', async () => {
     const root = await assetPackage({})
     const node = clientFaceConfigs(root, true).find(config => config.name === `${PACKAGE_NAME}/client-node`)
-    const { resolveId } = configPlugin(node, 'dsh-package-asset-browser-only')
+    const { resolveId } = configPlugin(node, 'liwa-package-asset-browser-only')
     if (resolveId === undefined) throw new Error('browser-only guard has no resolveId hook')
     const importer = join(root, 'lib/types/client/index.js')
 
@@ -434,7 +434,7 @@ describe('client bundle stylesheet url()', () => {
     })
     const context = recordingContext()
 
-    const output = await loadImport(browserPlugins(root)('dsh-css-modules-inline'), context, './View.module.css', join(root, 'src/client/index.ts'))
+    const output = await loadImport(browserPlugins(root)('liwa-css-modules-inline'), context, './View.module.css', join(root, 'src/client/index.ts'))
 
     expect(output).toContain(`url(" + ${resolverCall(output)}(${JSON.stringify(WHALE_URL)}) + ")`)
     const css = stylesheetText(output, reference => `resolved:${reference}`)
@@ -451,8 +451,8 @@ describe('client bundle stylesheet url()', () => {
   })
 
   it.each([
-    ['dsh-css-global-inline', './theme.css'],
-    ['dsh-css-text-inline', './theme.css?inline'],
+    ['liwa-css-global-inline', './theme.css'],
+    ['liwa-css-text-inline', './theme.css?inline'],
   ] as const)('rewrites relative urls through %s', async (name, source) => {
     const root = await assetPackage({
       'src/client/assets/whale.png': WHALE,
@@ -473,7 +473,7 @@ describe('client bundle stylesheet url()', () => {
     const context = recordingContext()
 
     const output = await loadImport(
-      browserPlugins(root)('dsh-css-global-inline'),
+      browserPlugins(root)('liwa-css-global-inline'),
       context,
       '../../node_modules/@fortune-sheet/react/dist/index.css',
       join(root, 'src/client/index.ts'),
@@ -494,7 +494,7 @@ describe('client bundle stylesheet url()', () => {
       'src/client/View.module.css': `.x { background: url(${url}); }`,
     })
 
-    await expect(loadImport(browserPlugins(root)('dsh-css-modules-inline'), recordingContext(), './View.module.css', join(root, 'src/client/index.ts')))
+    await expect(loadImport(browserPlugins(root)('liwa-css-modules-inline'), recordingContext(), './View.module.css', join(root, 'src/client/index.ts')))
       .rejects.toThrow(message)
   })
 })
@@ -508,7 +508,7 @@ describe('client bundle asset output', () => {
       'lib/assets/icons/stale.svg': '<svg/>',
       'lib/assets/old/deep/stale.webp': 'webp',
     })
-    const { writeBundle } = browserPlugins(root)('dsh-package-asset')
+    const { writeBundle } = browserPlugins(root)('liwa-package-asset')
     if (writeBundle === undefined) throw new Error('asset plugin has no writeBundle hook')
     const out = join(root, 'lib')
     const build = { meta: { watchMode: false } }
@@ -535,7 +535,7 @@ describe('client bundle asset output', () => {
       'lib/client.js': '',
       'lib/assets/whale-000000000000.png': WHALE,
     })
-    const { writeBundle } = browserPlugins(root)('dsh-package-asset')
+    const { writeBundle } = browserPlugins(root)('liwa-package-asset')
     if (writeBundle === undefined) throw new Error('asset plugin has no writeBundle hook')
     const out = join(root, 'lib')
 

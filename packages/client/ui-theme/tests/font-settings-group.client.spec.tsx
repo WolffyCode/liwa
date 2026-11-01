@@ -2,13 +2,13 @@
 /** FontSettingsGroup behavior: the text font-size row shows collapsed, its
  * disclosure button toggles the font and size rows, and each row routes its
  * write to its own role. */
-import type { GlobalStandardProps } from '@deepseek-ai/dsh-client-ui-slots'
+import type { GlobalStandardProps } from '@liwa/client-ui-slots'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import type { SessionListState } from '@deepseek-ai/dsh-api-session-controller/client'
-import type { WorkspaceSnapshot } from '@deepseek-ai/dsh-api-workspace-controller/client'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import { allowAllAccess, bindSnapshotSelector } from '@deepseek-ai/dsh-client-test-runtime'
+import type { SessionListState } from '@liwa/api-session-controller/client'
+import type { WorkspaceSnapshot } from '@liwa/api-workspace-controller/client'
+import { createSnapshotStore } from '@liwa/client-store'
+import { allowAllAccess, bindSnapshotSelector } from '@liwa/client-test-runtime'
 import { FontSettingsGroup } from '../src/client/FontSettingsGroup.tsx'
 import type { FontSettingsGroupProps } from '../src/client/FontSettingsGroup.tsx'
 import { createFontRowStore } from '../src/client/settings-store.ts'

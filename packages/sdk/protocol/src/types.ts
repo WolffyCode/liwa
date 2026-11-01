@@ -1,17 +1,17 @@
 /**
- * Named wire types for the DeepSeek Harness SDK runtime protocol: its
+ * Named wire types for the Liwa SDK runtime protocol: its
  * request/result pairs and server-to-client notification payloads
  * exchanged over the newline-delimited JSON-RPC stdio transport. The server
- * plugin (`@deepseek-ai/dsh-sdk-jsonrpc-server`) and SDK clients share these shapes;
- * `serverInfo.name` stays the wire-stable `deepseek-harness-sdk-runtime`.
+ * plugin (`@liwa/sdk-jsonrpc-server`) and SDK clients share these shapes;
+ * `serverInfo.name` stays the wire-stable `liwa-sdk-runtime`.
  *
- * @module @deepseek-ai/dsh-sdk-protocol/types
+ * @module @liwa/sdk-protocol/types
  */
 
-import type { ContentBlock, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
-import type { SubagentStopReason } from '@deepseek-ai/dsh-subagent'
-import type { AskUserQuestionAnswer, AskUserQuestionItem } from '@deepseek-ai/dsh-user-questions/types'
+import type { ContentBlock, ReasoningEffortId } from '@liwa/llm'
+import type { SessionEvent } from '@liwa/session'
+import type { SubagentStopReason } from '@liwa/subagent'
+import type { AskUserQuestionAnswer, AskUserQuestionItem } from '@liwa/user-questions/types'
 
 /** Parameters for the process-wide SDK handshake. */
 export interface InitializeParams {
@@ -21,7 +21,7 @@ export interface InitializeParams {
   approvalRequests?: boolean
   /** Provider route every SDK-created agent runs on. */
   provider: string
-  /** Model name every SDK-created agent runs on (the server may mount a fallback adapter; see `HarnessSdkJsonRpcServer.initialize`). */
+  /** Model name every SDK-created agent runs on (the server may mount a fallback adapter; see `LiwaSdkJsonRpcServer.initialize`). */
   model: string
   /** Optional adapter-owned reasoning effort for the selected provider/model route. */
   reasoningEffort?: ReasoningEffortId
@@ -53,13 +53,13 @@ export interface SdkUserQuestionCancelled {
 }
 
 /** Runtime-to-host requests, handled independently of outbound Session requests. */
-export interface HarnessSdkHostRequestMap {
+export interface LiwaSdkHostRequestMap {
   'user-question/ask': { params: SdkUserQuestionRequest; result: SdkUserQuestionAnswer }
 }
 
 /** Wire-stable server identity returned by initialization. */
 export interface InitializeResult {
-  /** Wire-stable server identity (`deepseek-harness-sdk-runtime`) and version. */
+  /** Wire-stable server identity (`liwa-sdk-runtime`) and version. */
   serverInfo: { name: string; version: string }
 }
 
@@ -165,7 +165,7 @@ export interface SubagentFinishedNotification {
 }
 
 /** Server-to-client notifications by JSON-RPC method name. */
-export interface HarnessSdkNotificationMap {
+export interface LiwaSdkNotificationMap {
   'user-question.cancelled': SdkUserQuestionCancelled
   'session.event': SessionEventNotification
   'session.status': SessionStatusNotification
@@ -174,7 +174,7 @@ export interface HarnessSdkNotificationMap {
 }
 
 /** Client-to-server request methods with their param and result shapes. */
-export interface HarnessSdkRequestMap {
+export interface LiwaSdkRequestMap {
   'initialize': { params: InitializeParams; result: InitializeResult }
   'session/prompt': { params: SessionPromptParams; result: SessionPromptResult }
   'session/resume': { params: SessionResumeParams; result: Record<string, never> }
@@ -203,6 +203,6 @@ export interface ApprovalRequestResult {
 }
 
 /** Requests sent by the server after the client explicitly enables them. */
-export interface HarnessSdkClientRequestMap {
+export interface LiwaSdkClientRequestMap {
   'approval/request': { params: ApprovalRequestParams; result: ApprovalRequestResult }
 }

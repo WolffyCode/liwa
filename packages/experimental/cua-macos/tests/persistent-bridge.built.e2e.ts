@@ -1,29 +1,29 @@
-/** Built bridge imports and retained objects from a project outside the Harness installation. */
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
+/** Built bridge imports and retained objects from a project outside the Liwa installation. */
+import { executeToolFixture } from '@liwa/tool-testkit'
 import { existsSync } from 'node:fs'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import { mountAgentLoopTestDependencies, mountAgentLoopTestHarness } from '@deepseek-ai/dsh-agent-loop-testkit'
-import LocalAttachmentStore from '@deepseek-ai/dsh-attachment-local'
-import ComputerUseRegistry from '@deepseek-ai/dsh-computer-use'
-import FileSystem from '@deepseek-ai/dsh-fs-local'
-import { LlmAdapter, ToolCallId, type LlmResolvedModelInfo, type StreamChunk } from '@deepseek-ai/dsh-llm'
-import NodeRuntime from '@deepseek-ai/dsh-ptc-runtime-node'
-import Sandbox from '@deepseek-ai/dsh-sandbox-local'
-import SandboxPolicy from '@deepseek-ai/dsh-sandbox-policy'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import Subprocess from '@deepseek-ai/dsh-subprocess-local'
+import { Context } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
+import { mountAgentLoopTestDependencies, mountAgentLoopTestHarness } from '@liwa/agent-loop-testkit'
+import LocalAttachmentStore from '@liwa/attachment-local'
+import ComputerUseRegistry from '@liwa/computer-use'
+import FileSystem from '@liwa/fs-local'
+import { LlmAdapter, ToolCallId, type LlmResolvedModelInfo, type StreamChunk } from '@liwa/llm'
+import NodeRuntime from '@liwa/ptc-runtime-node'
+import Sandbox from '@liwa/sandbox-local'
+import SandboxPolicy from '@liwa/sandbox-policy'
+import { SessionId } from '@liwa/session'
+import Subprocess from '@liwa/subprocess-local'
 import { expect, it } from 'vitest'
 import * as Cua from '../src/index.ts'
 import { installNativeFixture, startFixtureHost } from './native-fixture.ts'
-import { Request } from '@deepseek-ai/dsh-cua/protocol'
+import { Request } from '@liwa/cua/protocol'
 
 const bridge = fileURLToPath(new URL('../../cua/lib/bridge.js', import.meta.url))
-const bootstrap = join(dirname(fileURLToPath(import.meta.resolve('@deepseek-ai/dsh-ptc-runtime-node/package.json'))), 'lib/persistent-process.js')
+const bootstrap = join(dirname(fileURLToPath(import.meta.resolve('@liwa/ptc-runtime-node/package.json'))), 'lib/persistent-process.js')
 
 class VisualAdapter extends LlmAdapter {
   override resolveModel(provider: string, model: string): Promise<LlmResolvedModelInfo> {
@@ -35,7 +35,7 @@ class VisualAdapter extends LlmAdapter {
 // This lane runs after build; the fixture helper uses a POSIX shebang and never accesses the desktop.
 it.skipIf(process.platform === 'win32' || !existsSync(bridge) || !existsSync(bootstrap))(
   'imports the installation-owned bridge outside the repository and retains objects with current bindings', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'dsh-cua-external-project-'))
+    const cwd = await mkdtemp(join(tmpdir(), 'liwa-cua-external-project-'))
     const ctx = new Context()
     let closeFixture: (() => Promise<void>) | undefined
     try {
@@ -44,7 +44,7 @@ it.skipIf(process.platform === 'win32' || !existsSync(bridge) || !existsSync(boo
       await mountAgentLoopTestDependencies(ctx)
       await ctx.plugin(FileSystem)
       await ctx.plugin(Subprocess)
-      await ctx.plugin(LocalAttachmentStore, { dshHome: join(cwd, 'home') })
+      await ctx.plugin(LocalAttachmentStore, { liwaHome: join(cwd, 'home') })
       await ctx.plugin(ComputerUseRegistry)
       await ctx.plugin(Sandbox)
       await ctx.plugin(SandboxPolicy)
@@ -70,8 +70,8 @@ it.skipIf(process.platform === 'win32' || !existsSync(bridge) || !existsSync(boo
           return result.value ?? null
         } } }],
       }))
-      expect((await run('await import("@deepseek-ai/dsh-cua/bridge")', 'unresolved')).error?.message).toContain('Cannot find package')
-      const section = (await ctx.systemPrompt.assemble()).sections.find(value => value.name === 'computer-use:dsh-cua')
+      expect((await run('await import("@liwa/cua/bridge")', 'unresolved')).error?.message).toContain('Cannot find package')
+      const section = (await ctx.systemPrompt.assemble()).sections.find(value => value.name === 'computer-use:liwa-cua')
       const initialization = section?.text.match(/Persistent PTC initialization:\n\n```ts\n([\s\S]*?)\n```/u)?.[1]
       expect(initialization).toContain('/lib/bridge.js')
       const first = await run(`${initialization}\nvar app = await cua.getApp("test.fixture"); var win = await app.getWindow(7); await win.click(0); var shot = await win.getScreenshot(); ({ mimeType: shot.mimeType, pixelWidth: shot.pixelWidth, pixelHeight: shot.pixelHeight, windowId: shot.windowId, byteLength: shot.bytes.length });`, 'first')

@@ -3,13 +3,13 @@ description: "An immutable snapshot of this run's environment that remembers whi
 kind: "package-library"
 ---
 
-# @deepseek-ai/dsh-launch-environment
+# @liwa/launch-environment
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-Use `@deepseek-ai/dsh-launch-environment` to resolve launch-time environment values without trusting the flattened `process.env`. It freezes inherited process values, the invocation directory's `.env`, and the Harness home's `.env`, then returns the winning value and its source in a fixed trust order. Callers can exclude layers for sensitive lookups; an omitted layer stays unreachable regardless of later ordering changes. The snapshot is immutable, but every layer is still copied into `process.env`, so it does not isolate subprocesses. Import it as a library; it cannot be mounted from `cordis.yml`.
+Use `@liwa/launch-environment` to resolve launch-time environment values without trusting the flattened `process.env`. It freezes inherited process values, the invocation directory's `.env`, and the Liwa home's `.env`, then returns the winning value and its source in a fixed trust order. Callers can exclude layers for sensitive lookups; an omitted layer stays unreachable regardless of later ordering changes. The snapshot is immutable, but every layer is still copied into `process.env`, so it does not isolate subprocesses. Import it as a library; it cannot be mounted from `cordis.yml`.
 
 ## Table of Contents
 
@@ -29,9 +29,9 @@ Resolve user-facing values through the snapshot instead of `process.env` wheneve
 ### Resolving a value
 
 ```ts
-import { launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment'
+import { launchEnvironmentOf } from '@liwa/launch-environment'
 
-declare const ctx: import('@deepseek-ai/cordis').Context
+declare const ctx: import('@liwa/cordis').Context
 const endpoint = launchEnvironmentOf(ctx).get('DEEPSEEK_BASE_URL')?.value
 ```
 
@@ -44,8 +44,8 @@ const endpoint = launchEnvironmentOf(ctx).get('DEEPSEEK_BASE_URL')?.value
 | Layer | What it is |
 |---|---|
 | Inherited process environment | What the launching shell, CI job, or container passed in — this run's explicit intent |
-| `<invocation cwd>/.env` | The project the harness was launched in, which the product trusts to configure its own agent |
-| `$DSH_HOME/.env` | The user's own machine-level defaults |
+| `<invocation cwd>/.env` | The project Liwa was launched in, which the product trusts to configure its own agent |
+| `$LIWA_HOME/.env` | The user's own machine-level defaults |
 
 Names match the way the platform matches them: exactly on POSIX, case-insensitively on Windows. A case-sensitive lookup on Windows would rank the wrong layer — a shell's `deepseek_api_key` and a project `.env`'s `DEEPSEEK_API_KEY` are one variable to the OS.
 
@@ -99,8 +99,8 @@ Read these pages when you need the launcher that builds the snapshot or the cons
 
 These limits define when the snapshot is not a security boundary. They are current package constraints, not a task backlog.
 
-- **The snapshot is not a subprocess boundary** — every layer is also materialized into `process.env`, so ordinary project variables reach child processes under [`dsh-subprocess`](../../subprocess/subprocess/README.md)'s scrub; the product launcher's [`.env` contract](../../boot/app-boot/README.md) rejects bootstrap variables before materialization.
-- **No per-workspace layer** — the project layer is the invoking directory, fixed at launch; a workspace selected later in the Web UI contributes nothing, deliberately, because following it would let a model's own workspace change the harness environment mid-session.
+- **The snapshot is not a subprocess boundary** — every layer is also materialized into `process.env`, so ordinary project variables reach child processes under [`liwa-subprocess`](../../subprocess/subprocess/README.md)'s scrub; the product launcher's [`.env` contract](../../boot/app-boot/README.md) rejects bootstrap variables before materialization.
+- **No per-workspace layer** — the project layer is the invoking directory, fixed at launch; a workspace selected later in the Web UI contributes nothing, deliberately, because following it would let a model's own workspace change the Liwa environment mid-session.
 
 <a id="dev-note"></a>
 ### Dev Note

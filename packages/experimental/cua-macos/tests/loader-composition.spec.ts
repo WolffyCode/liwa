@@ -1,28 +1,28 @@
 /** Real Loader, AgentLoop and helper-process transport; only desktop and model responses are fixtures. */
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import { executeToolFixture } from '@liwa/tool-testkit'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { expect, it, onTestFinished } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import Include from '@deepseek-ai/cordis-plugin-include'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import ComputerUseRegistry from '@deepseek-ai/dsh-computer-use'
-import LocalAttachmentStore from '@deepseek-ai/dsh-attachment-local'
-import LlmRuntime, { LlmAdapter, ToolCallId, createUserMessage } from '@deepseek-ai/dsh-llm'
-import type { GenerateOptions, LlmResolvedModelInfo, StreamChunk } from '@deepseek-ai/dsh-llm'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
-import SubprocessLocal from '@deepseek-ai/dsh-subprocess-local'
+import { Context } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
+import Include from '@liwa/cordis-plugin-include'
+import AgentRegistry from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import ComputerUseRegistry from '@liwa/computer-use'
+import LocalAttachmentStore from '@liwa/attachment-local'
+import LlmRuntime, { LlmAdapter, ToolCallId, createUserMessage } from '@liwa/llm'
+import type { GenerateOptions, LlmResolvedModelInfo, StreamChunk } from '@liwa/llm'
+import SessionStore, { SessionId } from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime from '@liwa/tools'
+import SubprocessLocal from '@liwa/subprocess-local'
 import { z } from 'zod'
 import * as NativeProvider from '../src/index.ts'
-import { createCuaApi } from '@deepseek-ai/dsh-cua/api'
+import { createCuaApi } from '@liwa/cua/api'
 import { installNativeFixture, startFixtureHost } from './native-fixture.ts'
 
 const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAADElEQVQImWNgZGIGAAAOAAeCcsnOAAAAAElFTkSuQmCC'
@@ -65,7 +65,7 @@ const AuditEvent = z.object({
 
 // The fixture uses a POSIX executable shebang; stream/protocol unit tests run on every host.
 it.skipIf(process.platform === 'win32')('shares one application between retained Agent objects while isolating native handles and releasing each connection', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-native-composition-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-native-composition-'))
   const context = new Context()
   const fixture: { close?: () => Promise<void> } = {}
   onTestFinished(async () => {
@@ -86,7 +86,7 @@ it.skipIf(process.platform === 'win32')('shares one application between retained
   const configPath = join(root, 'cordis.yml')
   await writeFile(configPath, Object.keys(modules).flatMap(name => [
     `- name: 'cordis:${name}'`,
-    ...name === 'attachments' ? ['  config:', `    dshHome: ${JSON.stringify(root)}`] : [],
+    ...name === 'attachments' ? ['  config:', `    liwaHome: ${JSON.stringify(root)}`] : [],
     ...name === 'cua' ? ['  config:', '    agentPreset: false', `    helperPath: ${JSON.stringify(helperPath)}`, '    allowedApps: [{"id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "name": "Fixture", "executablePath": "/fixture/app"}]'] : [],
   ]).join('\n') + '\n')
   context.baseUrl = pathToFileURL(root).href + '/'
@@ -139,7 +139,7 @@ it.skipIf(process.platform === 'win32')('shares one application between retained
   })
   expect(direct.isError).toBe(false)
   expect(direct.value).toMatchObject({ mimeType: 'image/png', data: png })
-  expect(context.computerUse.providerName).toBe('dsh-cua')
+  expect(context.computerUse.providerName).toBe('liwa-cua')
   for (const [callId, activationRequested, beforePid, beforeWindowId] of [
     ['activate-first', true, 42, 99], ['activate-repeat', false, 9, 7],
   ] as const) {

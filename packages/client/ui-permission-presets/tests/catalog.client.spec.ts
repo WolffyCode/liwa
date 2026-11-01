@@ -1,10 +1,10 @@
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { describe, expect, it, vi } from 'vitest'
 import type {
   ConnectionGeneration, ConnectionHandle,
-} from '@deepseek-ai/dsh-client-connection/client'
-import { TestRemote } from '@deepseek-ai/dsh-client-test-runtime'
-import type { PermissionCatalog } from '@deepseek-ai/dsh-permission-presets/client'
+} from '@liwa/client-connection/client'
+import { TestRemote } from '@liwa/client-test-runtime'
+import type { PermissionCatalog } from '@liwa/permission-presets/client'
 import { PermissionCatalogDirectory } from '../src/client/catalog.ts'
 
 const FIRST: PermissionCatalog = {

@@ -5,93 +5,93 @@
 /:
   en: 6440e0efb151c0fa
   zh: d767308eb95b9d3f
-/deepseek-ai-dsh-mcp-client:
-  en: c3e635d210dd707e
-  zh: bd749579307d6a2d
-/deepseek-ai-dsh-mcp-client/summary:
-  en: 428cc4078a9d5b53
-  zh: 49b867131f518c0f
-/deepseek-ai-dsh-mcp-client/table-of-contents:
+/liwa-mcp-client:
+  en: c361e2ef8babb49a
+  zh: 7651c070f6b5d9f8
+/liwa-mcp-client/summary:
+  en: 6d68931f3ff00543
+  zh: d157c0e4c89eecbe
+/liwa-mcp-client/table-of-contents:
   en: d152484eb41ac6b4
   zh: 09388d293f9be9cb
-/deepseek-ai-dsh-mcp-client/use-this-package:
-  en: e77871d58566601a
-  zh: c5ef229d22eb3ebf
-/deepseek-ai-dsh-mcp-client/use-this-package/minimal-configuration:
-  en: 4d8b58f6a5e0c3f1
-  zh: 28e1c06aeef33131
-/deepseek-ai-dsh-mcp-client/use-this-package/tool-naming-and-coexistence:
+/liwa-mcp-client/use-this-package:
+  en: b46f33ce08ee3db9
+  zh: ec682383d8c42459
+/liwa-mcp-client/use-this-package/minimal-configuration:
+  en: 7ccdb86b2f962500
+  zh: 19c3361420e62b44
+/liwa-mcp-client/use-this-package/tool-naming-and-coexistence:
   en: 75ae9745d5b04796
   zh: 8ae5b8ca6e73296e
-/deepseek-ai-dsh-mcp-client/use-this-package/calling-tools-and-reading-results:
-  en: cad16c6102b0e316
-  zh: 03841eea6ead54cd
-/deepseek-ai-dsh-mcp-client/use-this-package/startup-updates-and-reconnection:
-  en: d7b393106cf6b8fc
-  zh: a95bdc34e914b0da
-/deepseek-ai-dsh-mcp-client/understand-the-implementation:
+/liwa-mcp-client/use-this-package/calling-tools-and-reading-results:
+  en: 9e5ea56b0d016618
+  zh: 85ae49ea5e1e7a18
+/liwa-mcp-client/use-this-package/startup-updates-and-reconnection:
+  en: 4e4c908f2b347ae3
+  zh: 89841b68cfdbeb69
+/liwa-mcp-client/understand-the-implementation:
   en: d33ddd080880b3f5
   zh: 64328f5239c26752
-/deepseek-ai-dsh-mcp-client/understand-the-implementation/design-philosophy:
+/liwa-mcp-client/understand-the-implementation/design-philosophy:
   en: 4e213d68082b07f0
   zh: 7617949ba46a3b63
-/deepseek-ai-dsh-mcp-client/understand-the-implementation/source-map:
+/liwa-mcp-client/understand-the-implementation/source-map:
   en: f134d7502d573290
   zh: 5dd8ad502f8db776
-/deepseek-ai-dsh-mcp-client/understand-the-implementation/lifecycle-and-sync:
+/liwa-mcp-client/understand-the-implementation/lifecycle-and-sync:
   en: ae9029b48b2a2e4e
   zh: 048f08361b799667
-/deepseek-ai-dsh-mcp-client/understand-the-implementation/tool-execution-internals:
+/liwa-mcp-client/understand-the-implementation/tool-execution-internals:
   en: bb161208cc002746
   zh: 3ab0588ca71effe5
-/deepseek-ai-dsh-mcp-client/understand-the-implementation/environment-scrubbing-stdio:
-  en: fef482a6f8cc789f
-  zh: 08f4c594ec83b4a1
-/deepseek-ai-dsh-mcp-client/further-exploration:
-  en: 1374f838098f1fc4
-  zh: a8393b3130fd7a72
-/deepseek-ai-dsh-mcp-client/model-experience:
+/liwa-mcp-client/understand-the-implementation/environment-scrubbing-stdio:
+  en: 21912a0280b5d366
+  zh: d7fbf17871e46ad8
+/liwa-mcp-client/further-exploration:
+  en: 5d8a213b579cd40e
+  zh: 03036e96331e28a2
+/liwa-mcp-client/model-experience:
   en: 215e7ba838619b7b
   zh: a311da3843709f90
-/deepseek-ai-dsh-mcp-client/model-experience/discovered-mcp-tools:
+/liwa-mcp-client/model-experience/discovered-mcp-tools:
   en: 9f6397197d9a607d
   zh: 79cf93aaf2e25a39
-/deepseek-ai-dsh-mcp-client/model-experience/discovered-mcp-tools/what-the-model-sees:
+/liwa-mcp-client/model-experience/discovered-mcp-tools/what-the-model-sees:
   en: 866a129e71634e0e
   zh: b27e4b22a07c2f26
-/deepseek-ai-dsh-mcp-client/model-experience/discovered-mcp-tools/token-effect:
-  en: ac85a6a5130c6440
-  zh: 9a31229f5355432b
-/deepseek-ai-dsh-mcp-client/model-experience/discovered-mcp-tools/kv-cache-effect:
+/liwa-mcp-client/model-experience/discovered-mcp-tools/token-effect:
+  en: 79bd81bd7f1f98a1
+  zh: bfb3eefce6bea963
+/liwa-mcp-client/model-experience/discovered-mcp-tools/kv-cache-effect:
   en: dae97512f6d61027
   zh: 5e6103fab15ab42d
-/deepseek-ai-dsh-mcp-client/model-experience/tool-call-history-and-results:
+/liwa-mcp-client/model-experience/tool-call-history-and-results:
   en: a8503137ad03720c
   zh: 611a2dadf7c0c706
-/deepseek-ai-dsh-mcp-client/model-experience/tool-call-history-and-results/what-the-model-sees:
+/liwa-mcp-client/model-experience/tool-call-history-and-results/what-the-model-sees:
   en: 5b3a7fe5bf11e73b
   zh: e015c2468962fcf3
-/deepseek-ai-dsh-mcp-client/model-experience/tool-call-history-and-results/token-effect:
+/liwa-mcp-client/model-experience/tool-call-history-and-results/token-effect:
   en: cc030374eca00e1c
   zh: d4b19b9db621b367
-/deepseek-ai-dsh-mcp-client/model-experience/tool-call-history-and-results/kv-cache-effect:
+/liwa-mcp-client/model-experience/tool-call-history-and-results/kv-cache-effect:
   en: f5d5f97a153f7c70
   zh: 31911b4f3506d6c8
-/deepseek-ai-dsh-mcp-client/model-experience/server-instructions:
+/liwa-mcp-client/model-experience/server-instructions:
   en: a3cb7c5760a8c141
   zh: ec9fc8d4f00a5eb6
-/deepseek-ai-dsh-mcp-client/model-experience/server-instructions/what-the-model-sees:
+/liwa-mcp-client/model-experience/server-instructions/what-the-model-sees:
   en: d3e9d53702f9c494
   zh: 62bd2b185abbd38c
-/deepseek-ai-dsh-mcp-client/model-experience/server-instructions/token-effect:
+/liwa-mcp-client/model-experience/server-instructions/token-effect:
   en: 082214331ebf38d7
   zh: 2251c4f8e4d2e05c
-/deepseek-ai-dsh-mcp-client/model-experience/server-instructions/kv-cache-effect:
+/liwa-mcp-client/model-experience/server-instructions/kv-cache-effect:
   en: 189198f7ace2a991
   zh: 00948145a803d614
-/deepseek-ai-dsh-mcp-client/known-limitations-and-deferred-work:
-  en: 56be94497d0658a1
-  zh: df9bfeee7300a101
-/deepseek-ai-dsh-mcp-client/known-limitations-and-deferred-work/dev-note:
-  en: 0ef388d17ea82af1
-  zh: e7104aeb4b23c660
+/liwa-mcp-client/known-limitations-and-deferred-work:
+  en: a08b691154ebf6ba
+  zh: e683e2bbf3aa15f0
+/liwa-mcp-client/known-limitations-and-deferred-work/dev-note:
+  en: 3da3ff6012e537cc
+  zh: 3bf1902c4754c872

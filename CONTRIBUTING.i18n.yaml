@@ -3,5 +3,5 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write CONTRIBUTING.md
 /contributing:
-  en: 08d2f421ff3617f4
-  zh: 9d060d70ad186dc5
+  en: efcd379adf55c92a
+  zh: c1d2d0d89cf9611a

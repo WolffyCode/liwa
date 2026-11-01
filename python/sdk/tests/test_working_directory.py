@@ -7,7 +7,7 @@ import pytest
 
 from pydantic import ValidationError
 
-from deepseek_harness import DeepSeekHarness
+from liwa import Liwa
 
 
 def test_session_directories_are_independent_and_relative_paths_stay_on_the_wire(tmp_path: Path) -> None:
@@ -43,7 +43,7 @@ for line in sys.stdin:
     print(json.dumps({'jsonrpc': '2.0', 'id': frame['id'], 'result': result}), flush=True)
 """.strip()
     )
-    with DeepSeekHarness(cwd=str(tmp_path), _launch_args=(sys.executable, str(runtime))) as harness:
+    with Liwa(cwd=str(tmp_path), _launch_args=(sys.executable, str(runtime))) as harness:
         first = harness.start_session("first")
         second = harness.start_session("second")
         assert first.get_working_directory() == str(tmp_path)

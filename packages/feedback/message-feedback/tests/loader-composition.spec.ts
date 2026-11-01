@@ -3,12 +3,12 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import Include from '@deepseek-ai/cordis-plugin-include'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import { remoteMethods } from '@deepseek-ai/dsh-typert-protocol'
+import { Context } from '@liwa/cordis'
+import Include from '@liwa/cordis-plugin-include'
+import Loader from '@liwa/cordis-plugin-loader'
+import SessionStore, { SessionId } from '@liwa/session'
+import * as JsonlSessionPersistence from '@liwa/session-persistence-jsonl'
+import { remoteMethods } from '@liwa/typert-protocol'
 import MessageFeedbackService from '../src/index.ts'
 import { appendMessageFixture } from './helpers.ts'
 
@@ -27,9 +27,9 @@ async function loadComposition(configPath: string): Promise<Context> {
   await ctx.plugin(Loader)
   ctx.loader.builtins.include = Include
   const modules = new Map<string, unknown>([
-    ['@deepseek-ai/dsh-session', SessionStore],
-    ['@deepseek-ai/dsh-session-persistence-jsonl', JsonlSessionPersistence],
-    ['@deepseek-ai/dsh-message-feedback', MessageFeedbackService],
+    ['@liwa/session', SessionStore],
+    ['@liwa/session-persistence-jsonl', JsonlSessionPersistence],
+    ['@liwa/message-feedback', MessageFeedbackService],
   ])
   ctx.loader.internal = {
     version: 'v2',
@@ -52,15 +52,15 @@ async function loadComposition(configPath: string): Promise<Context> {
 
 describe('message feedback through a real Loader composition', () => {
   it('persists canonical feedback across live and cold operations', async () => {
-    root = await mkdtemp(join(tmpdir(), 'dsh-message-feedback-loader-'))
+    root = await mkdtemp(join(tmpdir(), 'liwa-message-feedback-loader-'))
     const configPath = join(root, 'cordis.yml')
     await writeFile(configPath, [
-      "- name: '@deepseek-ai/dsh-session'",
-      "- name: '@deepseek-ai/dsh-session-persistence-jsonl'",
+      "- name: '@liwa/session'",
+      "- name: '@liwa/session-persistence-jsonl'",
       '  config:',
       `    root: ${JSON.stringify(join(root, 'sessions'))}`,
       '    compression: none',
-      "- name: '@deepseek-ai/dsh-message-feedback'",
+      "- name: '@liwa/message-feedback'",
       '  config:',
       '    maxNoteBytes: 32',
       '',

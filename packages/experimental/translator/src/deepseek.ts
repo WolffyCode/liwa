@@ -1,21 +1,21 @@
 /** Native-route admission and independent audited Flash translation without Agent history. */
-import { FiberState, type Context, type Fiber } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/cordis-plugin-loader'
-import { credentialRef } from '@deepseek-ai/dsh-credentials'
-import { launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment'
-import { BlockAssembler, ReasoningEffortId, type LlmRuntime, type GenerateOptions, type RequestUserInput, type FinishReason, type TextBlock } from '@deepseek-ai/dsh-llm'
-import type { Config as AccountNativeConfig } from '@deepseek-ai/dsh-llm-deepseek-account'
-import type { Config as OfficialNativeConfig } from '@deepseek-ai/dsh-llm-deepseek-api-key'
-import { deadline, timeoutOf } from '@deepseek-ai/dsh-timeout'
-import { deepFreeze } from '@deepseek-ai/dsh-util-values'
+import { FiberState, type Context, type Fiber } from '@liwa/cordis'
+import type {} from '@liwa/cordis-plugin-loader'
+import { credentialRef } from '@liwa/credentials'
+import { launchEnvironmentOf } from '@liwa/launch-environment'
+import { BlockAssembler, ReasoningEffortId, type LlmRuntime, type GenerateOptions, type RequestUserInput, type FinishReason, type TextBlock } from '@liwa/llm'
+import type { Config as AccountNativeConfig } from '@liwa/llm-deepseek-account'
+import type { Config as OfficialNativeConfig } from '@liwa/llm-deepseek-api-key'
+import { deadline, timeoutOf } from '@liwa/timeout'
+import { deepFreeze } from '@liwa/util-values'
 import type { Config } from './index.ts'
 import type { PaidTranslationProvider, PaidTranslationSpec, TranslationIdentity, TranslationProvider } from './types.ts'
 import { TranslationError } from './error.ts'
 import type { TranslationLog } from './storage.ts'
 
 const MODEL = 'deepseek-flash'
-const OWNER_PACKAGES = { 'deepseek-account': '@deepseek-ai/dsh-llm-deepseek-account',
-  'deepseek-official': '@deepseek-ai/dsh-llm-deepseek-api-key' } as const
+const OWNER_PACKAGES = { 'deepseek-account': '@liwa/llm-deepseek-account',
+  'deepseek-official': '@liwa/llm-deepseek-api-key' } as const
 
 interface NativeOwnerFields { llm: LlmRuntime; fiber: Fiber }
 type NativeOwner = NativeOwnerFields & (

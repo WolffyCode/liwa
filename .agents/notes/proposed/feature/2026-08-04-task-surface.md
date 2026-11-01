@@ -86,7 +86,7 @@ The tool definition omits `isConcurrencySafe`. Under the existing tool-registry 
 The browser-safe domain package imports the type-only `Branded` primitive from `@deepseek-ai/dsh-brand` and owns all three Task Surface IDs. The canonical value is execution-local under the [canonical tool output contract](../../../../packages/core/tools/README.md). Replay therefore uses `output.presentationMeta(args, value)` to persist this tagged payload with `tool/result.meta`:
 
 ```ts
-import type { Branded } from '@deepseek-ai/dsh-brand'
+import type { Branded } from '@liwa/brand'
 
 type TaskSurfaceId = Branded<'TaskSurfaceId'>
 type TaskSurfaceSubmissionId = Branded<'TaskSurfaceSubmissionId'>

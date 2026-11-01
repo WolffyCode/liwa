@@ -9,19 +9,19 @@
  */
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import type { SessionListState, SessionSummary } from '@deepseek-ai/dsh-api-session-controller/client'
-import type { WorkspaceId, WorkspaceSnapshot } from '@deepseek-ai/dsh-api-workspace-controller/client'
-import type { SessionStatusSnapshot } from '@deepseek-ai/dsh-client-ui-session/client'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import type { GlobalStandardProps, PropsLocale, PropsRenderSlots, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
-import { allowAllAccess, bindSnapshotSelector, makeTranslate, SlotTestRuntime } from '@deepseek-ai/dsh-client-test-runtime'
-import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
+import type { SessionListState, SessionSummary } from '@liwa/api-session-controller/client'
+import type { WorkspaceId, WorkspaceSnapshot } from '@liwa/api-workspace-controller/client'
+import type { SessionStatusSnapshot } from '@liwa/client-ui-session/client'
+import type { SessionId } from '@liwa/session/types'
+import { createSnapshotStore } from '@liwa/client-store'
+import type { GlobalStandardProps, PropsLocale, PropsRenderSlots, PropsRuntime } from '@liwa/client-ui-slots'
+import { allowAllAccess, bindSnapshotSelector, makeTranslate, SlotTestRuntime } from '@liwa/client-test-runtime'
+import { LocaleRuntime } from '@liwa/client-locale/client'
 import { registerToasts } from '../src/client/toast/register.ts'
 import { ArchiveToastEntry } from '../src/client/toast/Toast.tsx'
 import type { ArchiveToastEntryProps } from '../src/client/contract/toast.ts'
-import { en as commonEn } from '@deepseek-ai/dsh-client-locale/src/locales/en.ts'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
+import { en as commonEn } from '@liwa/client-locale/src/locales/en.ts'
+import { zh as commonZh } from '@liwa/client-locale/src/locales/zh.ts'
 import type {
   MenuOpenState, RowToast, RowToastState, SessionArchiveConfirmInjected, SessionArchiveConfirmRequest,
   SessionRenameDialogInjected, SessionRenameTarget,
@@ -37,7 +37,7 @@ import { SessionIdMenuItem } from '../src/client/session-actions/SessionId.tsx'
 import { createWorkspaceViewStore } from '../src/client/stores.ts'
 import { en, zh } from '../src/client/locales.ts'
 import { ShortcutRegistry } from '../../shortcuts/src/client/registry.ts'
-import type { ShortcutCommandId } from '@deepseek-ai/dsh-client-shortcuts/client'
+import type { ShortcutCommandId } from '@liwa/client-shortcuts/client'
 
 afterEach(cleanup)
 
@@ -552,7 +552,7 @@ describe('SessionArchiveConfirmDialog', () => {
 
 // A provider outside this package may merge its own family into the kind map;
 // the dialog must describe it without knowing its copy.
-declare module '@deepseek-ai/dsh-workspace/types' {
+declare module '@liwa/workspace/types' {
   interface SessionActivityKindMap {
     probe: true
   }

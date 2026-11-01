@@ -3,15 +3,15 @@ import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { mkdir, mkdtemp, realpath, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, join, relative } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import Storage from '@deepseek-ai/dsh-storage'
-import type { StorageBackend } from '@deepseek-ai/dsh-storage'
-import { DomainFacility } from '@deepseek-ai/dsh-storage-domain'
-import type { DomainChanged } from '@deepseek-ai/dsh-storage-domain'
-import SessionStore, { SESSION_FORMAT_VERSION, SessionId } from '@deepseek-ai/dsh-session'
-import type { SessionHeader } from '@deepseek-ai/dsh-session'
-import { SessionPersistenceRevision } from '@deepseek-ai/dsh-session-persistence'
-import type { SessionPersistenceSnapshot } from '@deepseek-ai/dsh-session-persistence'
+import { Context } from '@liwa/cordis'
+import Storage from '@liwa/storage'
+import type { StorageBackend } from '@liwa/storage'
+import { DomainFacility } from '@liwa/storage-domain'
+import type { DomainChanged } from '@liwa/storage-domain'
+import SessionStore, { SESSION_FORMAT_VERSION, SessionId } from '@liwa/session'
+import type { SessionHeader } from '@liwa/session'
+import { SessionPersistenceRevision } from '@liwa/session-persistence'
+import type { SessionPersistenceSnapshot } from '@liwa/session-persistence'
 import { MemoryMediaPool, MemoryStorageBackend } from '../../../storage/storage-domain/tests/helpers/memory-backend.ts'
 import WorkspaceRegistry, {
   WorkspaceId,
@@ -180,7 +180,7 @@ let base: string
 const tempDirs: string[] = []
 
 async function makeDir(name: string): Promise<string> {
-  base ??= await realpath(await mkdtemp(join(tmpdir(), 'dsh-workspace-')))
+  base ??= await realpath(await mkdtemp(join(tmpdir(), 'liwa-workspace-')))
   if (tempDirs.length === 0) tempDirs.push(base)
   const dir = join(base, name)
   await mkdir(dir, { recursive: true })
@@ -1539,7 +1539,7 @@ describe('first-use Workspace preparation', () => {
 })
 
 // The registry knows no family: the providers merge theirs, and this suite merges its own.
-declare module '@deepseek-ai/dsh-workspace/types' {
+declare module '@liwa/workspace/types' {
   interface SessionActivityKindMap {
     probe: true
     'probe-items': true

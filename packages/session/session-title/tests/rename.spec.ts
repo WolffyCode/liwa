@@ -1,17 +1,17 @@
 // SessionTitleService.rename: user-source acceptance, normalization/rejection
 // boundaries, and the pin (a user-sourced latest title schedules no automatic
 // revision; explicit refresh stays the unpin).
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { describe, expect, it, vi } from 'vitest'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import SessionStore, { Session, SessionId } from '@deepseek-ai/dsh-session'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import { createUserMessage } from '@liwa/llm'
+import SessionStore, { Session, SessionId } from '@liwa/session'
+import AgentRegistry from '@liwa/agent'
+import SessionProjectionRegistry from '@liwa/session-projection'
 import SessionTitleService, {
   SessionTitleProviderId,
   foldSessionTitle,
   type SessionTitleProviderRequest,
-} from '@deepseek-ai/dsh-session-title'
+} from '@liwa/session-title'
 
 const CONFIG = {
   fallbackMaxWords: 5,

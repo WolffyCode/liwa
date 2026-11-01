@@ -4,11 +4,11 @@
  * (zod, the projection definition). Host consumers import `./types`; client
  * aggregates import `./client`, which re-exports this module.
  *
- * @module @deepseek-ai/dsh-session-turn-outline/types
+ * @module @liwa/session-turn-outline/types
  */
 
-import type { SessionSeq } from '@deepseek-ai/dsh-session/types'
-import type { SessionProjectionSummaryExcluded } from '@deepseek-ai/dsh-session-projection/types'
+import type { SessionSeq } from '@liwa/session/types'
+import type { SessionProjectionSummaryExcluded } from '@liwa/session-projection/types'
 
 export {}
 
@@ -38,7 +38,7 @@ export interface TurnOutlineState {
   readonly draft: string
 }
 
-declare module '@deepseek-ai/dsh-session-projection/types' {
+declare module '@liwa/session-projection/types' {
   interface SessionProjectionMap {
     /**
      * Every started turn with its `turn/start` seq and bounded previews,

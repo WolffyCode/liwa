@@ -3,13 +3,13 @@ description: "OpenSSH connection configuration and remote helper lifecycle for d
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-ssh
+# @liwa/ssh
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-ssh` connects a POSIX Harness host to an installed helper on a POSIX SSH host. One deployment-owned OpenSSH alias supplies authentication and host identity; the paired filesystem, subprocess and sandbox providers use that connection. The connection verifies installed artifact digests before readiness; the helper owns remote cleanup when the connection closes or its lease expires.
+`liwa-ssh` connects a POSIX Liwa host to an installed helper on a POSIX SSH host. One deployment-owned OpenSSH alias supplies authentication and host identity; the paired filesystem, subprocess and sandbox providers use that connection. The connection verifies installed artifact digests before readiness; the helper owns remote cleanup when the connection closes or its lease expires.
 
 ## Table of Contents
 
@@ -25,7 +25,7 @@ English | [中文](README.zh.md)
 <a id="use-this-package"></a>
 ## Use this package
 
-Compose this service with [`fs-ssh`](../fs-ssh/README.md), [`subprocess-ssh`](../subprocess-ssh/README.md) and [`sandbox-ssh`](../sandbox-ssh/README.md) in a custom `dsh` profile. The host runs the Harness, model transport and Session storage; the remote machine supplies the files and processes. Headless profiles support this arrangement.
+Compose this service with [`fs-ssh`](../fs-ssh/README.md), [`subprocess-ssh`](../subprocess-ssh/README.md) and [`sandbox-ssh`](../sandbox-ssh/README.md) in a custom `liwa` profile. The host runs Liwa, model transport and Session storage; the remote machine supplies the files and processes. Headless profiles support this arrangement.
 
 The helper validates additional writable roots on the wire; its enforcing provider requires physical directory paths on the remote filesystem. Read-only grants no write access to them.
 

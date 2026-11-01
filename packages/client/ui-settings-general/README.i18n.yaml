@@ -3,59 +3,59 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/client/ui-settings-general/README.md
 /:
-  en: b12def981d836df5
-  zh: 9d813c1937f22c61
-/deepseek-ai-dsh-client-ui-settings-general:
-  en: 1017c980d55e1945
-  zh: d3febd2062fce20f
-/deepseek-ai-dsh-client-ui-settings-general/summary:
-  en: cd94b4a8dae32670
-  zh: 333b8603e77f92d7
-/deepseek-ai-dsh-client-ui-settings-general/table-of-contents:
+  en: 89e55ddf9f54235f
+  zh: a563a1e9e33b40e4
+/liwa-client-ui-settings-general:
+  en: 489167af832a5b3c
+  zh: 4b68d9c2204dd86e
+/liwa-client-ui-settings-general/summary:
+  en: 5fe19de103566387
+  zh: 484d31989bde502e
+/liwa-client-ui-settings-general/table-of-contents:
   en: 83760d53b3ee5fb8
   zh: 30dd8802d4ffdcb7
-/deepseek-ai-dsh-client-ui-settings-general/use-this-package:
-  en: d427d20b4dab6653
-  zh: 84e80592f0a30a9f
-/deepseek-ai-dsh-client-ui-settings-general/use-this-package/the-general-section:
-  en: de35e867b2a56d73
-  zh: 6d4e5c912636f889
-/deepseek-ai-dsh-client-ui-settings-general/use-this-package/opening-the-configuration-file:
+/liwa-client-ui-settings-general/use-this-package:
+  en: 703df6c586ee4179
+  zh: 59e54fb67e215cd9
+/liwa-client-ui-settings-general/use-this-package/the-general-section:
+  en: 3854b65fa4470cba
+  zh: e57d7ec785918ac8
+/liwa-client-ui-settings-general/use-this-package/opening-the-configuration-file:
   en: 597df68b5913e8d7
   zh: bc9114f3e877679a
-/deepseek-ai-dsh-client-ui-settings-general/use-this-package/onboarding-steps:
+/liwa-client-ui-settings-general/use-this-package/onboarding-steps:
   en: ba55fe92bf49dc5a
   zh: 9a0e1345496a0ae6
-/deepseek-ai-dsh-client-ui-settings-general/understand-the-implementation:
+/liwa-client-ui-settings-general/understand-the-implementation:
   en: 9c8c35ae0e672b14
   zh: 503c8e9d24a93d88
-/deepseek-ai-dsh-client-ui-settings-general/understand-the-implementation/ledger-projections:
+/liwa-client-ui-settings-general/understand-the-implementation/ledger-projections:
   en: 3e3c2c72f87e8b23
   zh: 12b10ba2d37c9077
-/deepseek-ai-dsh-client-ui-settings-general/understand-the-implementation/connection-recovery:
+/liwa-client-ui-settings-general/understand-the-implementation/connection-recovery:
   en: e37fb7df883ea356
   zh: c972524e56c6d6c2
-/deepseek-ai-dsh-client-ui-settings-general/understand-the-implementation/host-release-changes:
-  en: d464f726b026c39a
-  zh: c949e5f4d65a639f
-/deepseek-ai-dsh-client-ui-settings-general/understand-the-implementation/document-availability:
+/liwa-client-ui-settings-general/understand-the-implementation/host-release-changes:
+  en: 3ff06885844b696f
+  zh: 2dc9a018970cb5f8
+/liwa-client-ui-settings-general/understand-the-implementation/document-availability:
   en: ff1aec9eb1a87a79
   zh: eb91ab8bef59742d
-/deepseek-ai-dsh-client-ui-settings-general/understand-the-implementation/host-half:
+/liwa-client-ui-settings-general/understand-the-implementation/host-half:
   en: 5d722d055516f905
   zh: e7a236f0ff84f7ff
-/deepseek-ai-dsh-client-ui-settings-general/further-exploration:
-  en: 21348b768f60f587
-  zh: 0c3c5b6a682ae267
-/deepseek-ai-dsh-client-ui-settings-general/model-experience:
+/liwa-client-ui-settings-general/further-exploration:
+  en: eb4b6e1eb1568d90
+  zh: 238457642e191163
+/liwa-client-ui-settings-general/model-experience:
   en: 3120df665299c634
   zh: 1d9f365d091d0d2a
-/deepseek-ai-dsh-client-ui-settings-general/model-experience/kv-cache-effect:
+/liwa-client-ui-settings-general/model-experience/kv-cache-effect:
   en: ca75c51c89c2c9b0
   zh: de54f3467ef3b9be
-/deepseek-ai-dsh-client-ui-settings-general/known-limitations-and-deferred-work:
+/liwa-client-ui-settings-general/known-limitations-and-deferred-work:
   en: b04b2de0ec3624b9
   zh: d9b295d415937274
-/deepseek-ai-dsh-client-ui-settings-general/known-limitations-and-deferred-work/dev-note:
+/liwa-client-ui-settings-general/known-limitations-and-deferred-work/dev-note:
   en: e67f633dc6fe7773
   zh: 3bb0c20c93f16f98

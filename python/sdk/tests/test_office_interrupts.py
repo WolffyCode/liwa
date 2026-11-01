@@ -11,7 +11,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-from deepseek_harness_runtime import _resources
+from liwa_runtime import _resources
 
 
 def wait_for_file(path: Path, process: subprocess.Popen, timeout: float = 30) -> None:
@@ -38,7 +38,7 @@ child=subprocess.Popen([sys.executable,'-c',
 (root/'ready').touch()
 child.wait()
 """, encoding="utf-8")
-    code = ("import sys; from deepseek_harness_runtime._resources import run_office_process; "
+    code = ("import sys; from liwa_runtime._resources import run_office_process; "
             f"args=[sys.executable,{str(fixture)!r},{str(tmp_path)!r}]\n"
             "try: run_office_process(args)\n"
             "except KeyboardInterrupt: print('tree terminated',flush=True); sys.exit(73)\n")

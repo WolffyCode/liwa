@@ -4,17 +4,17 @@ import { cp, mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
-import type { Context } from '@deepseek-ai/cordis'
-import { HarnessError, type ToolCallId } from '@deepseek-ai/dsh-llm'
-import type {} from '@deepseek-ai/dsh-tools'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import { isPluginStopping } from '@deepseek-ai/dsh-action-cards'
-import type { ActionCardFields, ActionCardProposalOf, ActionCardResult } from '@deepseek-ai/dsh-action-cards'
-import type {} from '@deepseek-ai/dsh-plugin-manager'
-import type {} from '@deepseek-ai/dsh-subagent'
-import type {} from '@deepseek-ai/dsh-app-boot'
-import type {} from '@deepseek-ai/dsh-skill'
+import type { Context } from '@liwa/cordis'
+import { LiwaError, type ToolCallId } from '@liwa/llm'
+import type {} from '@liwa/tools'
+import { SessionId } from '@liwa/session'
+import type { Agent } from '@liwa/agent'
+import { isPluginStopping } from '@liwa/action-cards'
+import type { ActionCardFields, ActionCardProposalOf, ActionCardResult } from '@liwa/action-cards'
+import type {} from '@liwa/plugin-manager'
+import type {} from '@liwa/subagent'
+import type {} from '@liwa/app-boot'
+import type {} from '@liwa/skill'
 import { registerCreationSkill } from './skill.ts'
 import { validateGeneratedBundle } from './generated-bundle.ts'
 import type { PageData, PageDetails } from './types.ts'
@@ -29,7 +29,7 @@ export const inject = ['tools', 'pluginManager', 'agents', 'subagents', 'profile
 const ACTION = 'create_personalized_page'
 
 /** Generated page packages take this name prefix; the remainder names their copy in the profile's `created-plugins` directory. */
-const RESERVED_PREFIX = '@dsh-local/view-'
+const RESERVED_PREFIX = '@liwa-local/view-'
 
 const slotSchema = z.enum(['sidebar-right', 'page', 'sidebar-left'])
 /** Human-authored placement is a short instruction, not a package or path. */
@@ -58,7 +58,7 @@ interface CreationJob {
 }
 
 /** Invalid generated output never changes the profile. */
-export class CreationRecommendationError extends HarnessError {}
+export class CreationRecommendationError extends LiwaError {}
 
 function fieldsOf({ slot, customLocation, bundleName, application }: PageData): ActionCardFields {
   return {
@@ -238,7 +238,7 @@ class PersonalizedPages {
     const id = randomUUID()
     const directory = join(this.ctx.profileContext.dir, 'created-plugins', id)
     // Spawn preserves the parent's workspace-write boundary even with a different cwd.
-    const sourceDirectory = join(agent.session.header.cwd ?? this.ctx.profileContext.cwd, '.dsh-created-plugins', id)
+    const sourceDirectory = join(agent.session.header.cwd ?? this.ctx.profileContext.cwd, '.liwa-created-plugins', id)
     const bundleName = RESERVED_PREFIX + id
     const card: PageCard = { callId: proposal.callId, phase: 'creating', bundleName, ...location.data }
     this.record(agent, card)
@@ -264,7 +264,7 @@ class PersonalizedPages {
         request: {
           parent: agent, agentPreset: 'cordis', cwd: sourceDirectory,
           prompt: [{ type: 'text', text: JSON.stringify({
-            task: 'Create one new independently removable DSH interface plugin. Implement the accepted behavior and data scope in brief; research APIs and choose the technical details needed to make it work. Do not add independent operations, data sources, automation or wider access beyond that scope. If unresolved business meaning prevents faithful implementation, report ready:false rather than inventing it. Read and use the cordis-plugin-development skill. Generate and build the package only; the caller validates and installs it. Do not install, enable, remove, or edit any existing plugin or profile configuration.',
+            task: 'Create one new independently removable Liwa interface plugin. Implement the accepted behavior and data scope in brief; research APIs and choose the technical details needed to make it work. Do not add independent operations, data sources, automation or wider access beyond that scope. If unresolved business meaning prevents faithful implementation, report ready:false rather than inventing it. Read and use the cordis-plugin-development skill. Generate and build the package only; the caller validates and installs it. Do not install, enable, remove, or edit any existing plugin or profile configuration.',
             title: proposal.title, brief: proposal.brief,
             ...(initialContent === undefined ? {} : {
               initialContent,
@@ -272,14 +272,14 @@ class PersonalizedPages {
             }),
             location: card.customLocation === undefined ? card.slot : { request: card.customLocation },
             directory: sourceDirectory, packageName: bundleName,
-            packaging: 'Write a package.json with the exact reserved name, version, and dsh.bundle.patch="./cordis.patch.yml". Write cordis.patch.yml as a plain YAML or JSON array containing only {insert:[...]} operations. Do not use groups, aliases, custom tags or includes. Every inserted id must start with the package name plus a hyphen, and each module name must be this package or one of its exports. Use existing DSH slots and theme tokens. Build and export all runtime entry points before reporting ready. Symlinks must be relative and remain inside this package; the installed copy must work without the source directory.',
+            packaging: 'Write a package.json with the exact reserved name, version, and liwa.bundle.patch="./cordis.patch.yml". Write cordis.patch.yml as a plain YAML or JSON array containing only {insert:[...]} operations. Do not use groups, aliases, custom tags or includes. Every inserted id must start with the package name plus a hyphen, and each module name must be this package or one of its exports. Use existing Liwa slots and theme tokens. Build and export all runtime entry points before reporting ready. Symlinks must be relative and remain inside this package; the installed copy must work without the source directory.',
             ...(card.customLocation === undefined ? {
-              uiReference: fileURLToPath(import.meta.resolve('@deepseek-ai/dsh-creation-recommendations/references/'
+              uiReference: fileURLToPath(import.meta.resolve('@liwa/creation-recommendations/references/'
                 + { 'sidebar-right': 'sidebar-right.md', page: 'session-tab.md', 'sidebar-left': 'sidebar-entry.md' }[card.slot])),
               locationPolicy: 'location and uiReference are the user’s final choice in the card. They override any earlier location described in brief; preserve the requested behavior and data scope while adapting the interface to this chosen location.',
             } : {
-              uiReferences: ['sidebar-right.md', 'session-tab.md', 'sidebar-entry.md'].map(file => fileURLToPath(import.meta.resolve('@deepseek-ai/dsh-creation-recommendations/references/' + file))),
-              locationPolicy: 'location.request is the user’s final placement instruction, overriding earlier placement in brief. Resolve it using existing documented DSH extension points; the references describe common placements, not a new custom slot. Preserve the requested behavior and data scope. Do not change the application shell or install anything outside this removable plugin. If the placement cannot be implemented, report ready:false instead of silently substituting another location.',
+              uiReferences: ['sidebar-right.md', 'session-tab.md', 'sidebar-entry.md'].map(file => fileURLToPath(import.meta.resolve('@liwa/creation-recommendations/references/' + file))),
+              locationPolicy: 'location.request is the user’s final placement instruction, overriding earlier placement in brief. Resolve it using existing documented Liwa extension points; the references describe common placements, not a new custom slot. Preserve the requested behavior and data scope. Do not change the application shell or install anything outside this removable plugin. If the placement cannot be implemented, report ready:false instead of silently substituting another location.',
             }),
             lifecycle: 'Read the relevant absolute uiReference or uiReferences bundled with this plugin before implementation; they supplement the cordis-plugin-development skill. Follow their registration, persistence and teardown guidance. Unloading must remove only this plugin’s UI and tabs, preserving unrelated content. Generate and build only; the caller installs and validates the live result.',
             completion: 'After the package and required checks are complete, finish by calling structured_output with {"ready":true}. Do not send a final prose report: only that tool call hands the package back for installation. If the package cannot be completed, call structured_output with {"ready":false}.',

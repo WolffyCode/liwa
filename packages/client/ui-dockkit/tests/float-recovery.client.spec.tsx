@@ -64,7 +64,7 @@ function runOut(): number {
 /** One floating panel over a live controller whose recorded moves redraw the layer. */
 function mounted(rect: FloatRect = { x: 100, y: 80, width: 300, height: 200 }) {
   const controller = seededController()
-  const tabId = controller.openContent({ contentId: 'dsh-resource://file/session/s/a.txt', title: 'a.txt', kind: 'file' })
+  const tabId = controller.openContent({ contentId: 'liwa-resource://file/session/s/a.txt', title: 'a.txt', kind: 'file' })
   const paneId = controller.floatTab(tabId, rect)
   const renderTab = vi.fn(() => null)
   const redraw = (): void => {
@@ -83,7 +83,7 @@ function mounted(rect: FloatRect = { x: 100, y: 80, width: 300, height: 200 }) {
   const grip = (): HTMLElement => panel().querySelector<HTMLElement>('[data-dockkit-float-grip]') as HTMLElement
   // A lifted panel writes left and top inline; a resting one publishes them to the `.float` rule.
   const drawn = (side: 'left' | 'top', axis: 'x' | 'y'): number =>
-    Number.parseFloat(panel().style.getPropertyValue(side) || panel().style.getPropertyValue(`--dsh-dockkit-float-${axis}`))
+    Number.parseFloat(panel().style.getPropertyValue(side) || panel().style.getPropertyValue(`--liwa-dockkit-float-${axis}`))
   const left = (): number => drawn('left', 'x')
   const top = (): number => drawn('top', 'y')
   const stored = (): FloatRect => floatRect(getPane(controller.getSnapshot().state, paneId))
@@ -315,7 +315,7 @@ describe('interrupting a return', () => {
   it('ends at its target when another panel is pressed', () => {
     const h = mounted()
     const other = h.controller.floatTab(
-      h.controller.openContent({ contentId: 'dsh-resource://file/session/s/b.txt', title: 'b.txt', kind: 'file' }),
+      h.controller.openContent({ contentId: 'liwa-resource://file/session/s/b.txt', title: 'b.txt', kind: 'file' }),
       { x: 100, y: 400, width: 300, height: 200 },
     )
     act(() => { h.redraw() })

@@ -11,7 +11,7 @@ import {
   LIVESHARE_CAPABILITIES,
   LIVESHARE_PROTOCOL_VERSION,
   type TunnelShareSpec,
-} from '@deepseek-ai/dsh-experimental-liveshare-protocol'
+} from '@liwa/experimental-liveshare-protocol'
 import { relayEndpoint } from '../host/relay-url.ts'
 
 /**
@@ -32,8 +32,8 @@ export function registrationUrl(spec: TunnelShareSpec): URL {
   url.searchParams.set('sessionTitle', spec.sessionTitle)
   url.searchParams.set('accessMode', spec.accessMode)
   url.searchParams.set('ownerDisplayName', spec.ownerDisplayName)
-  if (spec.dshVersion !== undefined && spec.dshVersion !== '') {
-    url.searchParams.set('dshVersion', spec.dshVersion)
+  if (spec.liwaVersion !== undefined && spec.liwaVersion !== '') {
+    url.searchParams.set('liwaVersion', spec.liwaVersion)
   }
   if (spec.ownerInstanceId !== undefined && spec.ownerInstanceId !== '') {
     url.searchParams.set('ownerInstanceId', spec.ownerInstanceId)

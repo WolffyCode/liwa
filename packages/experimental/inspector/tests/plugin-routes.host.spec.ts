@@ -3,11 +3,11 @@
 import { randomBytes } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { createConnection, createServer, type AddressInfo, type Socket } from 'node:net'
-import { Context } from '@deepseek-ai/cordis'
-import type { Message } from '@deepseek-ai/cordis'
-import type { WebRoute, WebServer, WebUpgradeRoute } from '@deepseek-ai/dsh-host-webserver'
-import { HostConnectionService } from '@deepseek-ai/dsh-client-connection'
-import type { BrowserAuth } from '@deepseek-ai/dsh-client-connection/src/browser-auth.ts'
+import { Context } from '@liwa/cordis'
+import type { Message } from '@liwa/cordis'
+import type { WebRoute, WebServer, WebUpgradeRoute } from '@liwa/host-webserver'
+import { HostConnectionService } from '@liwa/client-connection'
+import type { BrowserAuth } from '@liwa/client-connection/src/browser-auth.ts'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { apply, Config, inject, name } from '../src/index.ts'
 import { startInspector, type InspectorHandle } from '../src/host/bridge/controller.ts'
@@ -144,13 +144,13 @@ describe('experimental Inspector Host DevTools routes', () => {
     const selected = await socketPair()
     const reply = readUpgrade(selected.client)
     await upgrade.handler(upgradeRequest('/inspector/devtools/cdp?clientSourceId=client-fixture', {
-      'sec-websocket-protocol': ['dsh-fixture', 'dsh-other'],
+      'sec-websocket-protocol': ['liwa-fixture', 'liwa-other'],
       'sec-websocket-extensions': undefined,
       'user-agent': 'fixture',
     }), selected.server, clientTextFrame(JSON.stringify({ id: 1, method: 'DSHInspector.getSources' })))
     const answered = await reply
     expect(answered.status).toMatch(/^HTTP\/1\.1 101 /u)
-    expect(answered.headers.toLowerCase()).toContain('sec-websocket-protocol: dsh-fixture')
+    expect(answered.headers.toLowerCase()).toContain('sec-websocket-protocol: liwa-fixture')
     expect(answered.message.id).toBe(1)
     expect(answered.message.result).toHaveProperty('sources')
 

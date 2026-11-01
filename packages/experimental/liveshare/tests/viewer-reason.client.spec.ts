@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 /** The copy a viewer page states for the reason code its share's abilities carry. */
 
-import { Context } from '@deepseek-ai/cordis'
-import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
+import { Context } from '@liwa/cordis'
+import { LocaleRuntime } from '@liwa/client-locale/client'
 import { describe, expect, it } from 'vitest'
 import {
   en, NS, viewerReasonText, viewerRefusalText, zh, type LiveshareKey,

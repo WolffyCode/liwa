@@ -1,10 +1,10 @@
 /** Browser availability/choice state and the launch carrier for the split button. */
 
-import { createSnapshotStore, type SnapshotStore } from '@deepseek-ai/dsh-client-store'
+import { createSnapshotStore, type SnapshotStore } from '@liwa/client-store'
 import {
   OPEN_IN_APP_APPS_ROUTE, OPEN_IN_APP_OPEN_ROUTE,
   type OpenInAppAppsPayload, type OpenInAppOpenPayload,
-} from '@deepseek-ai/dsh-host-open-in-app/shared'
+} from '@liwa/host-open-in-app/shared'
 
 import { APP_LABEL_KEY } from './applications.ts'
 import type { OpenInAppOutcome } from './outcome.ts'
@@ -27,7 +27,7 @@ export class OpenInAppController {
   readonly apps: SnapshotStore<readonly string[] | null> = createSnapshotStore<readonly string[] | null>(null)
   /** Last chosen app id, or empty before the first choice, shared across sessions and browser restarts. */
   readonly choice: SnapshotStore<string> = createSnapshotStore<string>('', {
-    persist: { name: 'dsh.open-in-app.choice' },
+    persist: { name: 'liwa.open-in-app.choice' },
   })
 
   /** Current launch, shared by pointer and keyboard gestures. */

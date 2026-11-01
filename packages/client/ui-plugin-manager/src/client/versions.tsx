@@ -7,11 +7,11 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import type {
   IncompatiblePlugin, PluginUpdateResult, PluginUpdateStep, PluginVersion, PluginVersionList, Registry, RegistryAttempt,
-} from '@deepseek-ai/dsh-api-remotes/client'
+} from '@liwa/api-remotes/client'
 import {
   Button, Checkbox, IconCheckOutlineRegular, IconChevronDownOutlineRegular, IconChevronRightOutlineRegular, IconCloseOutlineRegular,
   IconDownloadOutlineRegular, IconRefreshOutlineRegular, IconWarningOutlineRegular, Modal, StateDot, Tag, Tooltip,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+} from '@liwa/client-ui-primitives'
 import { installable, updateCandidate, type PackageView, type UpdateState, type VersionCheck } from './manager-store.ts'
 import { managementText, registryText, restartText, type Translate } from './presentation.ts'
 import css from './PluginManagerPage.module.css'
@@ -42,7 +42,7 @@ function registryName(registry: Registry, t: Translate): string {
   return registryText(registry, t, null).name
 }
 
-/** The DSH requirements an incompatible version states, as one phrase: `engines.dsh` or DSH peer ranges. */
+/** The Liwa requirements an incompatible version states, as one phrase: `engines.liwa` or Liwa peer ranges. */
 function peersText(incompatible: IncompatiblePlugin): string {
   return Object.entries(incompatible.requirements).map(([name, range]) => `${name} ${range}`).join(', ')
 }
@@ -122,7 +122,7 @@ function VersionRow({ version, installed, t, busy, onUpdate }: {
     )
   }
   const usable = installable(version)
-  const note = version.incompatible !== undefined ? t('versionsNeedsDsh', { peers: peersText(version.incompatible) })
+  const note = version.incompatible !== undefined ? t('versionsNeedsLiwa', { peers: peersText(version.incompatible) })
     : !version.bundle ? t('versionsNotBundle') : version.deprecated
   const date = publishedDate(version)
   return (

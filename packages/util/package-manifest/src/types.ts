@@ -1,11 +1,11 @@
 /**
  * Shared declarations for package.json fields and plugin display metadata.
  * Each reader owns JSON validation and resolved defaults.
- * @module @deepseek-ai/dsh-package-manifest/types
+ * @module @liwa/package-manifest/types
  */
 
 /** Package identity and metadata; local profile readers may accept a partial declaration. */
-export interface DshPackageManifest {
+export interface LiwaPackageManifest {
   /** Published npm package name. */
   name: string
   /** Published npm package version. */
@@ -22,22 +22,22 @@ export interface DshPackageManifest {
   optionalDependencies?: Record<string, string>
   /** Compatible versions of packages supplied by the consuming project. */
   peerDependencies?: Record<string, string>
-  /** Runtime requirements; DSH compatibility is declarative until a reader enforces it. */
-  engines?: DshEnginesManifest
-  /** DSH-specific author declarations. */
-  dsh?: DshManifest
+  /** Runtime requirements; Liwa compatibility is declarative until a reader enforces it. */
+  engines?: LiwaEnginesManifest
+  /** Liwa-specific author declarations. */
+  liwa?: LiwaManifest
 }
 
-/** Public author fields under `package.json.dsh`; a package may declare several roles. */
-export interface DshManifest {
+/** Public author fields under `package.json.liwa`; a package may declare several roles. */
+export interface LiwaManifest {
   /** Manifest format version, independent of the npm package and Session format versions. */
   manifestVersion?: 1
   /** Bundle metadata consumed by the profile launcher. */
-  bundle?: DshBundleManifest
+  bundle?: LiwaBundleManifest
   /** Profile metadata consumed by the profile launcher. */
-  profile?: DshProfileManifest
+  profile?: LiwaProfileManifest
   /** Client module loading and build metadata. */
-  client?: DshClientManifest
+  client?: LiwaClientManifest
 }
 
 /** Literal text or translations indexed by lowercase language id, with a required English fallback. */
@@ -56,9 +56,9 @@ export interface PluginLocalizedMeta {
 }
 
 /** Runtime version requirements under `package.json.engines`. */
-export interface DshEnginesManifest {
-  /** Compatible DSH versions as a SemVer range, including an exact version. */
-  dsh?: string
+export interface LiwaEnginesManifest {
+  /** Compatible Liwa versions as a SemVer range, including an exact version. */
+  liwa?: string
   /** Compatible Node.js versions. */
   node?: string
   /** Compatible npm versions. */
@@ -68,7 +68,7 @@ export interface DshEnginesManifest {
 }
 
 /** The configuration layer exported by a bundle package. */
-export interface DshBundleManifest {
+export interface LiwaBundleManifest {
   /** Supported Node Host platform names; omission allows every operating system. */
   platforms?: string[]
   /** One patch file path, or an ordered list applied in sequence, each relative to the declaring package root. */
@@ -78,13 +78,13 @@ export interface DshBundleManifest {
 }
 
 /** The bundle composition declared by a profile directory. */
-export interface DshProfileManifest {
+export interface LiwaProfileManifest {
   /** Ordered bundle layer list, using installed package names. */
   bundles?: string[]
 }
 
 /** Client module declaration read by client-modules and the client build. */
-export interface DshClientManifest {
+export interface LiwaClientManifest {
   /** Client platform identifier; the Web consumer selects `web`. */
   platform: string
   /** Informational package-name dependencies, not Cordis service injection. */

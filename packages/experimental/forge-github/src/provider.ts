@@ -1,10 +1,10 @@
 /** GitHub implementation of the forge provider contract. */
 
-import { changeRequestKey } from '@deepseek-ai/dsh-experimental-forge'
+import { changeRequestKey } from '@liwa/experimental-forge'
 import type {
   ChangeRequestKey, ChangeRequestRef, ChangeRequestSnapshot, ForgeActionFailure, ForgeFailure, ForgeProvider, ForgeReadiness,
   ForgeRepository, MergeRequest,
-} from '@deepseek-ai/dsh-experimental-forge'
+} from '@liwa/experimental-forge'
 import { GhOutputLimitError, GhTimeoutError, GhUnavailableError } from './gh.ts'
 import type { GhOutput, GhRunner } from './gh.ts'
 import { hasGraphqlFields, HEAD_QUERY, mapHeadResponse, mapSnapshotResponse, snapshotQuery } from './graphql.ts'

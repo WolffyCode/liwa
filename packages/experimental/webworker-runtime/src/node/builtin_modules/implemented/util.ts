@@ -168,7 +168,7 @@ export const __esModule = true
 /**
  * The `node:util` declarations this module stands in for. Five members keep this
  * module's own types: `promisify`, `callbackify`, and `inspect` are the plain
- * conversions the harness calls, without Node's overload ladders and the
+ * conversions Liwa calls, without Node's overload ladders and the
  * `custom`/`styles`/`defaultOptions` members hung off them; `types` publishes the
  * four predicates in use rather than Node's forty; and `TextDecoder` is the DOM
  * class, whose `decode` input union the Node declaration does not accept.

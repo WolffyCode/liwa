@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-experimental-terminal-bundle",
+  "name": "@liwa/experimental-terminal-bundle",
   "description": "Keep shell processes alive across tool calls.",
   "version": "0.2.2-alpha.2",
   "icon": "./icon.svg",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/experimental/terminal-bundle"
   },
   "type": "module",
@@ -33,20 +33,20 @@
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
-  "dsh": {
+  "liwa": {
     "bundle": {
       "patch": "./cordis.patch.yml"
     }
   },
   "dependencies": {
-    "@deepseek-ai/dsh-tool-terminal": "workspace:*",
-    "@deepseek-ai/dsh-terminal": "workspace:*",
-    "@deepseek-ai/dsh-terminal-bash": "workspace:*"
+    "@liwa/tool-terminal": "workspace:*",
+    "@liwa/terminal": "workspace:*",
+    "@liwa/terminal-bash": "workspace:*"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   }
 }

@@ -2,17 +2,17 @@
 /** Tab information refuses readers whose committed record and navigation binding disagree. */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, renderHook } from '@testing-library/react'
-import { bindSnapshotSelector } from '@deepseek-ai/dsh-client-test-runtime'
-import { keyedObservableHook } from '@deepseek-ai/dsh-client-ui-renderer/src/client/bindings.tsx'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import type { TabId } from '@deepseek-ai/dsh-client-ui-dockkit'
+import { bindSnapshotSelector } from '@liwa/client-test-runtime'
+import { keyedObservableHook } from '@liwa/client-ui-renderer/src/client/bindings.tsx'
+import type { SessionId } from '@liwa/session/types'
+import type { TabId } from '@liwa/client-ui-dockkit'
 import type { UseSidebarRightTabInfo } from '../src/client/contract/slots.ts'
 import { createSidebarRightStore } from '../src/client/stores.ts'
 import { TabDomain, type TabOccurrence } from '../src/client/tab-domain.ts'
 import { tabInfoFactory, type TabHookContext } from '../src/client/tab-info.ts'
 
 const SESSION = 's-info' as SessionId
-const ADDRESS = 'dsh-resource://file/session/s-info/a.txt'
+const ADDRESS = 'liwa-resource://file/session/s-info/a.txt'
 const domains: TabDomain[] = []
 
 afterEach(() => {

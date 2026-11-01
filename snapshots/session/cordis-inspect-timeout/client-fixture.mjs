@@ -8,7 +8,7 @@ export const inject = ['cordisInspect', 'agents', 'llm', 'typertGateway']
 
 /**
  * Register a silent event source and open real Gateway Client streams on demand.
- * @param {import('@deepseek-ai/cordis').Context} ctx - owner of the source and streams.
+ * @param {import('@liwa/cordis').Context} ctx - owner of the source and streams.
  * @returns opener resolving after readiness, with abort and quiescent close operations.
  */
 export function registerSilentClientTransport(ctx) {
@@ -47,12 +47,12 @@ export function registerSilentClientTransport(ctx) {
 
 /**
  * Mirror a Client manifest and deliver only the first query's failure.
- * @param {import('@deepseek-ai/cordis').Context} ctx - isolated snapshot Host.
+ * @param {import('@liwa/cordis').Context} ctx - isolated snapshot Host.
  * @returns after the Gateway Client stream is ready.
  */
 export async function apply(ctx) {
   await registerSilentClientTransport(ctx)()
-  const expected = readFileSync(process.env.DSH_SNAPSHOT_FILE, 'utf8').trim().split('\n')
+  const expected = readFileSync(process.env.LIWA_SNAPSHOT_FILE, 'utf8').trim().split('\n')
     .map(line => JSON.parse(line))
     .filter(event => event.type === 'tool/result')
     .map(event => event.data.message)

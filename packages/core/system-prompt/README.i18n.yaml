@@ -5,84 +5,84 @@
 /:
   en: 51d99b2500db958f
   zh: 91f2b113ba7989fd
-/deepseek-ai-dsh-system-prompt:
-  en: e1cfb1611662e8ab
-  zh: 5476f22f8ffe923a
-/deepseek-ai-dsh-system-prompt/summary:
-  en: f5cce6867daddbab
-  zh: 4a1a47623c198207
-/deepseek-ai-dsh-system-prompt/table-of-contents:
+/liwa-system-prompt:
+  en: 46c1816497cbcda3
+  zh: 70f0bfb21690db51
+/liwa-system-prompt/summary:
+  en: e06cae1398267f35
+  zh: 9be64cf64592074b
+/liwa-system-prompt/table-of-contents:
   en: d152484eb41ac6b4
   zh: 09388d293f9be9cb
-/deepseek-ai-dsh-system-prompt/use-this-package:
-  en: 7bea567207cd7e00
-  zh: ffc050b05f07ba7f
-/deepseek-ai-dsh-system-prompt/use-this-package/configure-the-prompt:
-  en: 87e28893e6cf58d7
-  zh: 06f476b38c4d2038
-/deepseek-ai-dsh-system-prompt/use-this-package/contribute-a-prompt-section:
+/liwa-system-prompt/use-this-package:
+  en: e6c05c1ab5c96bc9
+  zh: b0435f4442d0f778
+/liwa-system-prompt/use-this-package/configure-the-prompt:
+  en: 5fa58c1a8974834b
+  zh: 748a82f223ecffcb
+/liwa-system-prompt/use-this-package/contribute-a-prompt-section:
   en: ef415fcd9e1cf8bb
   zh: 6ad4df288f91bdb1
-/deepseek-ai-dsh-system-prompt/use-this-package/contribute-a-prompt-variable:
-  en: b3e4c9b4ced59488
-  zh: d80c791e72bd5821
-/deepseek-ai-dsh-system-prompt/use-this-package/contribute-tool-schemas:
+/liwa-system-prompt/use-this-package/contribute-a-prompt-variable:
+  en: 1937e78d33b562e0
+  zh: d41c151880460da2
+/liwa-system-prompt/use-this-package/contribute-tool-schemas:
   en: 009ef267dac2f270
   zh: e79c24bff5cd836f
-/deepseek-ai-dsh-system-prompt/use-this-package/suppress-runtime-context:
+/liwa-system-prompt/use-this-package/suppress-runtime-context:
   en: a664608a3b37f8d7
   zh: d6dd60772f4d72b8
-/deepseek-ai-dsh-system-prompt/understand-the-implementation:
+/liwa-system-prompt/understand-the-implementation:
   en: ce7e776e9d516bdb
   zh: 59d2751743db7795
-/deepseek-ai-dsh-system-prompt/understand-the-implementation/design-concept:
+/liwa-system-prompt/understand-the-implementation/design-concept:
   en: c91963b89a866fed
   zh: ef9ef4940145778f
-/deepseek-ai-dsh-system-prompt/understand-the-implementation/source-map:
+/liwa-system-prompt/understand-the-implementation/source-map:
   en: d9575bcb07a1145b
   zh: 0f1a388780d055b1
-/deepseek-ai-dsh-system-prompt/understand-the-implementation/assembly-and-rendering:
+/liwa-system-prompt/understand-the-implementation/assembly-and-rendering:
   en: d51940213af9b87f
   zh: f3a2540010624a79
-/deepseek-ai-dsh-system-prompt/understand-the-implementation/scoping:
+/liwa-system-prompt/understand-the-implementation/scoping:
   en: 1100ab1dfe961631
   zh: c510275c893951b4
-/deepseek-ai-dsh-system-prompt/further-exploration:
-  en: 108d1b4cca466bc7
-  zh: e1275966f83c14f9
-/deepseek-ai-dsh-system-prompt/model-experience:
+/liwa-system-prompt/further-exploration:
+  en: 04c02ddb4e1fab1c
+  zh: 24539ee4d3b3556c
+/liwa-system-prompt/model-experience:
   en: 215e7ba838619b7b
   zh: a311da3843709f90
-/deepseek-ai-dsh-system-prompt/model-experience/system-prompt:
+/liwa-system-prompt/model-experience/system-prompt:
   en: cf78b9dd5596495f
   zh: bd44560f8c2435e8
-/deepseek-ai-dsh-system-prompt/model-experience/system-prompt/what-the-model-sees:
-  en: 622e83de7772dc1f
-  zh: 7b3c54f08a317e93
-/deepseek-ai-dsh-system-prompt/model-experience/system-prompt/what-the-model-sees/harness-identity:
-  en: 40effd71cb503319
-  zh: 9969356237a4f398
-/deepseek-ai-dsh-system-prompt/model-experience/system-prompt/token-effect:
+/liwa-system-prompt/model-experience/system-prompt/what-the-model-sees:
+  en: 70bdbe6ff927fb09
+  zh: c8ffb9eed83eedaa
+/liwa-system-prompt/model-experience/system-prompt/what-the-model-sees/liwa-identity:
+  en: 86fe383f9a892fd8
+  zh: 605bf73198141b52
+/liwa-system-prompt/model-experience/system-prompt/token-effect:
   en: 29722e212137deaa
   zh: 92cd0f1a16b10315
-/deepseek-ai-dsh-system-prompt/model-experience/system-prompt/kv-cache-effect:
-  en: 52fa5a522891ec6b
-  zh: 5c5c18359aaaf3db
-/deepseek-ai-dsh-system-prompt/model-experience/tool-schemas:
+/liwa-system-prompt/model-experience/system-prompt/kv-cache-effect:
+  en: caa0fdf9ae5b1f64
+  zh: b43a593385615846
+/liwa-system-prompt/model-experience/tool-schemas:
   en: 3039bc5e7a796b21
   zh: 6b7a9eaf69c9ea53
-/deepseek-ai-dsh-system-prompt/model-experience/tool-schemas/what-the-model-sees:
-  en: b3bf090cda036432
-  zh: 9c4cf3742c8cd88f
-/deepseek-ai-dsh-system-prompt/model-experience/tool-schemas/token-effect:
+/liwa-system-prompt/model-experience/tool-schemas/what-the-model-sees:
+  en: 6d0217042dcc9e0f
+  zh: fb0b5b686b9d9f8d
+/liwa-system-prompt/model-experience/tool-schemas/token-effect:
   en: f3a7d374c55e1720
   zh: 0ee48af678cb875f
-/deepseek-ai-dsh-system-prompt/model-experience/tool-schemas/kv-cache-effect:
+/liwa-system-prompt/model-experience/tool-schemas/kv-cache-effect:
   en: ebd329e360f0d143
   zh: 9d67fe503a6a095a
-/deepseek-ai-dsh-system-prompt/known-limitations-and-deferred-work:
+/liwa-system-prompt/known-limitations-and-deferred-work:
   en: 23bb9f59ceb1620c
   zh: be34f1770fa2e027
-/deepseek-ai-dsh-system-prompt/known-limitations-and-deferred-work/dev-note:
+/liwa-system-prompt/known-limitations-and-deferred-work/dev-note:
   en: e67f633dc6fe7773
   zh: 3bb0c20c93f16f98

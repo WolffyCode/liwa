@@ -1,10 +1,10 @@
 import { fileURLToPath } from 'node:url'
 import { expect, it, onTestFinished } from 'vitest'
-import type { HarnessClientOptions } from '../src/types.ts'
-import { createProcessHarnessClient } from '../src/client.ts'
+import type { LiwaClientOptions } from '../src/types.ts'
+import { createProcessLiwaClient } from '../src/client.ts'
 
-async function client(onUserQuestion?: HarnessClientOptions['onUserQuestion'], explicitStart = true) {
-  const result = createProcessHarnessClient({
+async function client(onUserQuestion?: LiwaClientOptions['onUserQuestion'], explicitStart = true) {
+  const result = createProcessLiwaClient({
     command: process.execPath,
     args: [fileURLToPath(new URL('./fixtures/user-questions.ts', import.meta.url))],
     environment: () => ({ ...process.env }),

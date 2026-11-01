@@ -1,15 +1,15 @@
 /** Account route configuration: Messages settings, the model-listing endpoint, and per-model overrides. */
-import type { Volatile } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { isVolatile } from '@deepseek-ai/cosmokit'
-import type { LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
+import type { Volatile } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import { isVolatile } from '@liwa/cosmokit'
+import type { LaunchEnvironmentSnapshot } from '@liwa/launch-environment'
 import {
   catalogModelFields, deepSeekConfigFields, modelListingConfigFields, modelListingURL, resolveAdapterOptions, resolveListingTiming,
-} from '@deepseek-ai/dsh-llm-deepseek'
+} from '@liwa/llm-deepseek'
 import type {
   Config as ProtocolConfig, ListingSettings, ModelListingConfig, ModelListingOptions, ModelOverride, Options as ProtocolOptions,
   ResolvedDeepSeekOptions,
-} from '@deepseek-ai/dsh-llm-deepseek'
+} from '@liwa/llm-deepseek'
 
 /** Account route configuration; authentication comes exclusively from the account service. */
 export interface Config extends Omit<ProtocolConfig, 'models'>, ModelListingConfig {

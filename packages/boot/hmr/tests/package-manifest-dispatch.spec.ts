@@ -4,9 +4,9 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSyn
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { Context, type Plugin } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import Timer from '@deepseek-ai/cordis-plugin-timer'
+import { Context, type Plugin } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
+import Timer from '@liwa/cordis-plugin-timer'
 import { FSWatcher, type ChokidarOptions } from 'chokidar'
 import { expect, it, onTestFinished, vi } from 'vitest'
 import Hmr from '../src/index.ts'
@@ -42,7 +42,7 @@ function manifest(entry: string, dep: string): string {
 }
 
 async function fixture(source = plugin('a'), options: { lateHmr?: boolean; packageJson?: string } = {}) {
-  const root = realpathSync.native(mkdtempSync(join(tmpdir(), 'dsh-hmr-manifest-dispatch-')))
+  const root = realpathSync.native(mkdtempSync(join(tmpdir(), 'liwa-hmr-manifest-dispatch-')))
   const ctx = new Context()
   onTestFinished(async () => {
     try { await ctx.fiber.dispose() } finally { rmSync(root, { recursive: true, force: true }) }
@@ -372,7 +372,7 @@ it('handles an entry still evaluating while another entry reloads', async () => 
   const f = await fixture()
   const entered = Promise.withResolvers<undefined>()
   const release = Promise.withResolvers<undefined>()
-  const key = 'dsh-hmr-pending-entry-' + randomUUID()
+  const key = 'liwa-hmr-pending-entry-' + randomUUID()
   Reflect.set(globalThis, key, { entered: () => { entered.resolve(undefined) }, wait: release.promise })
   f.ctx.provide('releasePendingEntry', () => { release.resolve(undefined) })
   const filename = join(f.pkg, 'pending.mjs')

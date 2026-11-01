@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-headless",
-  "description": "The dsh one-shot bundle: a direct core Agent/Session runner over dsh-base with no Host, HTTP, or browser layer",
+  "name": "@liwa/headless",
+  "description": "The liwa one-shot bundle: a direct core Agent/Session runner over liwa-base with no Host, HTTP, or browser layer",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/bundle/headless"
   },
   "type": "module",
@@ -36,56 +36,56 @@
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
-  "dsh": {
+  "liwa": {
     "bundle": {
       "patch": "./cordis.patch.yml"
     }
   },
   "dependencies": {
-    "@deepseek-ai/dsh-brand": "workspace:*",
-    "@deepseek-ai/dsh-cmdline": "workspace:*",
-    "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/brand": "workspace:*",
+    "@liwa/cmdline": "workspace:*",
+    "@liwa/util-values": "workspace:*",
+    "@liwa/schemastery": "workspace:~",
     "commander": "^15.0.0"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-agent-default-model": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-query": "workspace:*",
-    "@deepseek-ai/dsh-fs": "workspace:*",
-    "@deepseek-ai/dsh-permission-presets": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/dsh-subagent": "workspace:*",
-    "@deepseek-ai/dsh-user-approval": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-default-model": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-query": "workspace:*",
+    "@liwa/fs": "workspace:*",
+    "@liwa/permission-presets": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/subagent": "workspace:*",
+    "@liwa/user-approval": "workspace:*"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-agent-default-model": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-query": "workspace:*",
-    "@deepseek-ai/dsh-fs": "workspace:*",
-    "@deepseek-ai/dsh-permission-presets": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/dsh-subagent": "workspace:*",
-    "@deepseek-ai/dsh-user-approval": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-default-model": "workspace:*",
+    "@liwa/agent-loop": "workspace:*",
+    "@liwa/agent-loop-testkit": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-query": "workspace:*",
+    "@liwa/fs": "workspace:*",
+    "@liwa/permission-presets": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/subagent": "workspace:*",
+    "@liwa/user-approval": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-permission-presets": {
+    "@liwa/permission-presets": {
       "optional": true
     },
-    "@deepseek-ai/dsh-sandbox-policy": {
+    "@liwa/sandbox-policy": {
       "optional": true
     },
-    "@deepseek-ai/dsh-subagent": {
+    "@liwa/subagent": {
       "optional": true
     }
   }

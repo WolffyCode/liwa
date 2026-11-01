@@ -1,8 +1,8 @@
 /** Display labels and toast sentences for global plugin management. */
 
-import { EXPERIMENTAL_BUNDLES } from '@deepseek-ai/dsh-official-bundles'
-import type { IncompatiblePlugin, ManagementError, Registry, RestartReason } from '@deepseek-ai/dsh-api-remotes/client'
-import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
+import { EXPERIMENTAL_BUNDLES } from '@liwa/official-bundles'
+import type { IncompatiblePlugin, ManagementError, Registry, RestartReason } from '@liwa/api-remotes/client'
+import type { PropsLocale } from '@liwa/client-ui-slots'
 import type { PluginManagerLocaleKey } from './locales.ts'
 import type { FailedAction, ManagerNotice, PackageRow, PackageView, PluginManagerFace } from './manager-store.ts'
 
@@ -103,11 +103,13 @@ export function managementText(error: {
 /**
  * Compact a package name to what a person calls it.
  * @param name - the package name.
- * @returns the unscoped name without the harness prefixes.
+ * @returns the unscoped name without Liwa prefixes.
  */
 export function shortName(name: string): string {
+  // Own packages are scoped (`@liwa/client-ui-chat`); community plugins use the unscoped `liwa-` prefix.
+  if (name.startsWith('@liwa/')) return name.slice('@liwa/'.length).replace(/^(?:host-|client-)/, '')
   const unscoped = name.startsWith('@') ? name.slice(name.indexOf('/') + 1) : name
-  return unscoped.replace(/^dsh-(?:host-|client-)?/, '')
+  return unscoped.replace(/^liwa-(?:host-|client-)?/, '')
 }
 
 /**

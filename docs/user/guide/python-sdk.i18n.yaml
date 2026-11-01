@@ -3,26 +3,26 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/user/guide/python-sdk.md
 /get-started-with-the-python-sdk:
-  en: 97975036927be6e3
-  zh: fe37c7bf8844277a
+  en: 7506e18c9fbc857e
+  zh: bc147f3ed46dcc83
 /get-started-with-the-python-sdk/prerequisites:
-  en: b5a921f7d6c4a420
-  zh: ef51283857d18c64
+  en: 284aad8af0782629
+  zh: cf5df20d65e513ff
 /get-started-with-the-python-sdk/install-the-sdk:
-  en: c2b15716ea155625
-  zh: 0879be26f0afc452
+  en: d1ddc19979aeacc0
+  zh: 7f298c1d0b86e461
 /get-started-with-the-python-sdk/run-the-checked-in-example:
-  en: 74e1866caf573e6a
-  zh: 7f034b6f81decf9d
+  en: d91fc6e5326f8dc2
+  zh: 53213ca6f2171039
 /get-started-with-the-python-sdk/use-the-sdk-in-your-program:
-  en: d1e350be0ba38196
-  zh: 893220ee7b12b12f
+  en: 816ff3a3abcacfd2
+  zh: ff04120eb227230c
 /get-started-with-the-python-sdk/install-or-define-plugins:
-  en: 592dd306b920cd83
-  zh: 8c22110621c12ba5
+  en: 954f83d6dbf8a6cc
+  zh: fd35f5455bab5618
 /get-started-with-the-python-sdk/install-or-define-plugins/opt-in-to-str-replace-editor:
-  en: 450d54b6e9e38469
-  zh: f0dc06a08c073571
+  en: 2fde533b3c9e4d69
+  zh: c3b79a26099c9068
 /get-started-with-the-python-sdk/understand-the-minimal-profile:
-  en: 8ed0bfd3cc9cc967
-  zh: a52dab4cb3dd09ea
+  en: ad71efab0d21add9
+  zh: d81e7aa35f077189

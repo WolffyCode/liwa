@@ -6,9 +6,9 @@ import { readFileSync } from 'node:fs'
 import type { Browser, Page } from 'playwright'
 import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed, onTestFinished, vi } from 'vitest'
-import { parseEntryYaml } from '@deepseek-ai/cordis-plugin-include'
-import type {} from '@deepseek-ai/dsh-experimental-agent-team'
-import { createMessage, createUserMessage } from '@deepseek-ai/dsh-llm'
+import { parseEntryYaml } from '@liwa/cordis-plugin-include'
+import type {} from '@liwa/experimental-agent-team'
+import { createMessage, createUserMessage } from '@liwa/llm'
 import {
   assertFixtureInventory, captureStableAria, compareOrRefreshGolden,
   launchWebScaffold, watchConsole, webSnapshotMode, type WebScaffold,

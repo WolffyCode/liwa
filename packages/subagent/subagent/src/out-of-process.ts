@@ -5,14 +5,14 @@
  * working-directory validation, the never-reject result settlement, and the standard
  * run-handle publication. Backends compose these with their own wire drivers;
  * the process machinery itself (spawn, env scrub, managed-range teardown)
- * belongs to the `dsh-subprocess` seam.
+ * belongs to the `liwa-subprocess` seam.
  *
- * @module @deepseek-ai/dsh-subagent/out-of-process
+ * @module @liwa/subagent/out-of-process
  */
 
 import { accessSync, constants, statSync } from 'node:fs'
 import { isAbsolute } from 'node:path'
-import type { ContentBlock } from '@deepseek-ai/dsh-llm'
+import type { ContentBlock } from '@liwa/llm'
 import type { SubagentCapabilities, SubagentResult, SubagentRun, SubagentStopReason } from './types.ts'
 
 /** Maximum UTF-8 size of {@link SubagentResult.diagnostic}. */
@@ -74,7 +74,7 @@ export function assertPositiveFinite(prefix: string, name: string, value: number
 }
 
 /**
- * Whether `path` names an existing directory the harness can ENTER. The
+ * Whether `path` names an existing directory Liwa can ENTER. The
  * search-permission probe matters: `statSync().isDirectory()` is true for a
  * mode-600 directory, but a subprocess cwd needs `X_OK` or spawn fails EACCES.
  */

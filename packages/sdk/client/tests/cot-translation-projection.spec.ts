@@ -2,11 +2,11 @@
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import SessionStore, { appendPluginRecord, SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
-import { ReasoningEffortId, createUserMessage } from '@deepseek-ai/dsh-llm'
-import type {} from '@deepseek-ai/dsh-experimental-translator/types'
-import { createProcessDeepSeekHarness } from '../src/api.ts'
+import { Context } from '@liwa/cordis'
+import SessionStore, { appendPluginRecord, SessionId, type SessionEvent } from '@liwa/session'
+import { ReasoningEffortId, createUserMessage } from '@liwa/llm'
+import type {} from '@liwa/experimental-translator/types'
+import { createProcessLiwa } from '../src/api.ts'
 
 const expectedPath = fileURLToPath(new URL('./expected/cot-translation-projection.json', import.meta.url))
 const fakeRuntime = fileURLToPath(new URL('./fake-runtime.ts', import.meta.url))
@@ -49,7 +49,7 @@ it('preserves common translation requests and results in SDK events without repl
     await ctx.fiber.dispose()
   }
   expect(records).toEqual(expected.auditEvents)
-  const harness = createProcessDeepSeekHarness({
+  const harness = createProcessLiwa({
     command: process.execPath, args: [fakeRuntime],
     environment: () => ({ ...process.env, FAKE_TEXT: expected.finalResponse, FAKE_SESSION_EVENTS: JSON.stringify(records) }),
     description: 'scripted SDK audit projection', initializeTimeoutMs: 5000,

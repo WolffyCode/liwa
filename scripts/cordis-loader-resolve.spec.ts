@@ -1,6 +1,6 @@
 /** Loader resolves configuration imports in their project when Node internals are unavailable. */
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
+import { Context } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
 import { existsSync } from 'node:fs'
 import * as fs from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -16,7 +16,7 @@ vi.mock('node:fs/promises', async (importOriginal) => {
 })
 
 async function fixture() {
-  const root = await fs.mkdtemp(join(tmpdir(), 'dsh-cordis-resolve-'))
+  const root = await fs.mkdtemp(join(tmpdir(), 'liwa-cordis-resolve-'))
   onTestFinished(() => fs.rm(root, { recursive: true, force: true }))
   await fs.writeFile(join(root, 'package.json'), JSON.stringify({
     name: 'fixture-app', type: 'module',

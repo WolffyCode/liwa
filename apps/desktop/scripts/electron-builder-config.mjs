@@ -40,7 +40,7 @@ import {
  * @param {NodeJS.ProcessEnv} env - Packaging environment.
  * @param {NodeJS.Platform} hostPlatform - Build-host platform used when no explicit target is present.
  * @param {string} hostArch - Build-host architecture used when no explicit target is present.
- * @param {string | undefined} preparedRuntime - Verified private dsh tree for installed-update qualification; ordinary releases use the target tree.
+ * @param {string | undefined} preparedRuntime - Verified private liwa tree for installed-update qualification; ordinary releases use the target tree.
  * @param {string | undefined} preparedRuntimeVersion - Version that private tree declares, which qualification rewrites away from the product version.
  * @returns {object} electron-builder configuration.
  */
@@ -52,16 +52,16 @@ export function createElectronBuilderConfig(
   preparedRuntimeVersion = undefined,
 ) {
   const appId = resolveDesktopAppId(env)
-  const targetPlatform = env.DSH_DESKTOP_TARGET_PLATFORM
+  const targetPlatform = env.LIWA_DESKTOP_TARGET_PLATFORM
   const resolvedPlatform = targetPlatform ?? hostPlatform
-  const resolvedArch = env.DSH_DESKTOP_TARGET_ARCH ?? hostArch
-  if (env.DSH_DESKTOP_UNSIGNED !== undefined && !['0', '1'].includes(env.DSH_DESKTOP_UNSIGNED)) {
-    throw new Error('desktop package: DSH_DESKTOP_UNSIGNED must be 0 or 1')
+  const resolvedArch = env.LIWA_DESKTOP_TARGET_ARCH ?? hostArch
+  if (env.LIWA_DESKTOP_UNSIGNED !== undefined && !['0', '1'].includes(env.LIWA_DESKTOP_UNSIGNED)) {
+    throw new Error('desktop package: LIWA_DESKTOP_UNSIGNED must be 0 or 1')
   }
-  const unsigned = env.DSH_DESKTOP_UNSIGNED === '1'
-  const skipNotarization = env.DSH_DESKTOP_MACOS_SKIP_NOTARIZATION === '1'
-  if (env.DSH_DESKTOP_MACOS_SKIP_NOTARIZATION !== undefined && !['0', '1'].includes(env.DSH_DESKTOP_MACOS_SKIP_NOTARIZATION)) {
-    throw new Error('desktop package: DSH_DESKTOP_MACOS_SKIP_NOTARIZATION must be 0 or 1')
+  const unsigned = env.LIWA_DESKTOP_UNSIGNED === '1'
+  const skipNotarization = env.LIWA_DESKTOP_MACOS_SKIP_NOTARIZATION === '1'
+  if (env.LIWA_DESKTOP_MACOS_SKIP_NOTARIZATION !== undefined && !['0', '1'].includes(env.LIWA_DESKTOP_MACOS_SKIP_NOTARIZATION)) {
+    throw new Error('desktop package: LIWA_DESKTOP_MACOS_SKIP_NOTARIZATION must be 0 or 1')
   }
   if (skipNotarization && (unsigned || resolvedPlatform !== 'darwin')) throw new Error('Skipping notarization requires a signed macOS build')
   const packagesMacOS = targetPlatform === 'darwin' || (targetPlatform === undefined && hostPlatform === 'darwin')
@@ -73,20 +73,20 @@ export function createElectronBuilderConfig(
   const buildPaths = desktopTargetBuildPaths(resolveDesktopBuildTarget(env, hostPlatform, hostArch), env)
   const output = desktopArtifactOutput(buildPaths, { unsigned, skipNotarization })
   let primaryRuntimeDestination
-  let dshDestination
+  let liwaDestination
   let windowsCode = []
   const unpack = ['**/*.{node,dylib,dll,so,exe}', '**/*.so.*', '**/spawn-helper', '**/@vscode/ripgrep-*/bin/rg',
     `**/node_modules/@deepseek-ai/libreoffice-kit-${resolvedPlatform}-${resolvedArch}/**/*`]
   const windowsSigner = packagesWindows && !unsigned
     ? createWindowsTokenSigner({
-        certificateFile: env.DSH_DESKTOP_WINDOWS_CER_FILE,
-        signTool: env.DSH_DESKTOP_WINDOWS_SIGNTOOL,
-        tokenPin: env.DSH_DESKTOP_WINDOWS_TOKEN_PIN,
-        keyContainer: env.DSH_DESKTOP_WINDOWS_KEY_CONTAINER,
+        certificateFile: env.LIWA_DESKTOP_WINDOWS_CER_FILE,
+        signTool: env.LIWA_DESKTOP_WINDOWS_SIGNTOOL,
+        tokenPin: env.LIWA_DESKTOP_WINDOWS_TOKEN_PIN,
+        keyContainer: env.LIWA_DESKTOP_WINDOWS_KEY_CONTAINER,
         preserveSignature: async path => {
-          for (const [sourceRoot, destinationRoot] of [[join(buildPaths.runtime, 'primary-runtime'), primaryRuntimeDestination], [buildPaths.dsh, dshDestination]]) {
+          for (const [sourceRoot, destinationRoot] of [[join(buildPaths.runtime, 'primary-runtime'), primaryRuntimeDestination], [buildPaths.liwa, liwaDestination]]) {
             if (destinationRoot !== undefined && await preserveWindowsRuntimeSignature(path, {
-              sourceRoot, destinationRoot, runDirectory: env.DSH_DESKTOP_PACKAGING_RUN_DIR,
+              sourceRoot, destinationRoot, runDirectory: env.LIWA_DESKTOP_PACKAGING_RUN_DIR,
             })) return true
           }
           return false
@@ -97,7 +97,7 @@ export function createElectronBuilderConfig(
     installWindowsNsisBootstrapSigner({ sign: windowsSigner })
   }
   const update = unsigned ? undefined : resolveDesktopAutoUpdateConfig(env, resolvedPlatform, resolvedArch)
-  if (preparedRuntime !== undefined) buildPaths.dsh = preparedRuntime
+  if (preparedRuntime !== undefined) buildPaths.liwa = preparedRuntime
   // electron-builder merges extraMetadata into the packaged manifest, so a build version here reaches
   // the artifact names, the update feed, and the installed app.getVersion() the updater compares against.
   const productVersion = JSON.parse(readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf8')).version
@@ -106,19 +106,19 @@ export function createElectronBuilderConfig(
   const packaged = resolveDesktopBuildCommit(env)
   return {
     appId,
-    protocols: [{ name: 'DeepSeek Harness', schemes: ['dsh'] }],
+    protocols: [{ name: 'Liwa', schemes: ['dsh'] }],
     extraMetadata: {
-      dshDesktopAppId: appId,
-      dshDesktopUpdateChannel: update?.channel ?? 'nightly',
-      ...(policy === undefined ? {} : { dshMandatoryUpdatePolicy: policy }),
+      liwaDesktopAppId: appId,
+      liwaDesktopUpdateChannel: update?.channel ?? 'nightly',
+      ...(policy === undefined ? {} : { liwaMandatoryUpdatePolicy: policy }),
       ...buildVersion === productVersion ? {} : { version: buildVersion },
-      ...packaged === undefined ? {} : { dshBuildCommit: packaged.commit, dshBuildDirty: packaged.dirty },
+      ...packaged === undefined ? {} : { liwaBuildCommit: packaged.commit, liwaBuildDirty: packaged.dirty },
     },
-    productName: 'DeepSeek Harness',
+    productName: 'Liwa',
     // The default copyright uses author.name; this line names the product instead.
     copyright: `Copyright © ${new Date().getFullYear()} \${productName}`,
     // Unsigned builds carry their own suffix so a shared file can never pass for a release artifact.
-    artifactName: `deepseek-harness-\${version}-\${os}-\${arch}${output.suffix}.\${ext}`,
+    artifactName: `liwa-\${version}-\${os}-\${arch}${output.suffix}.\${ext}`,
     directories: { output: output.directory },
     asar: true,
     electronDist: buildPaths.electron,
@@ -150,9 +150,9 @@ export function createElectronBuilderConfig(
       'package.json',
       '!node_modules/**/*.{js,cjs,mjs,ts,cts,mts,css}.map',
       '!node_modules/**/*.tsbuildinfo',
-      { from: buildPaths.dsh, to: 'dsh', filter: ['**/*'] },
+      { from: buildPaths.liwa, to: 'liwa', filter: ['**/*'] },
       // electron-builder excludes a source directory's root node_modules.
-      { from: join(buildPaths.dsh, 'node_modules'), to: 'dsh/node_modules', filter: ['**/*'] },
+      { from: join(buildPaths.liwa, 'node_modules'), to: 'liwa/node_modules', filter: ['**/*'] },
     ],
     asarUnpack: unpack,
     extraResources: [
@@ -167,7 +167,7 @@ export function createElectronBuilderConfig(
       // macOS matches the application locale against this bundle, not Electron Framework resources.
       extendInfo: {
         CFBundleLocalizations: ['en', 'zh_CN', 'ja', 'es', 'fr', 'de', 'ru', 'pt'],
-        NSMicrophoneUsageDescription: 'DeepSeek Harness uses your microphone to transcribe speech into message drafts.',
+        NSMicrophoneUsageDescription: 'Liwa uses your microphone to transcribe speech into message drafts.',
       },
       // Ad-hoc signing keeps the modified Electron executable runnable without a Developer ID.
       identity: unsigned ? '-' : macOSSigning?.signingIdentity,
@@ -176,7 +176,7 @@ export function createElectronBuilderConfig(
       entitlements: fileURLToPath(new URL('./macos-entitlements.plist', import.meta.url)),
       entitlementsInherit: fileURLToPath(new URL('./macos-entitlements.plist', import.meta.url)),
       // Prepared runtime files retain their signatures; PAK resources are sealed by their enclosing bundle.
-      signIgnore: ['/Contents/Resources/app\\.asar\\.unpacked/dsh(?:/|$)', '/Contents/Resources/runtime/primary-runtime(?:/|$)', '\\.pak$'],
+      signIgnore: ['/Contents/Resources/app\\.asar\\.unpacked/liwa(?:/|$)', '/Contents/Resources/runtime/primary-runtime(?:/|$)', '\\.pak$'],
       notarize: !unsigned && !skipNotarization,
       target: unsigned ? ['dmg'] : ['dmg', 'zip'],
     },
@@ -186,14 +186,14 @@ export function createElectronBuilderConfig(
       writeUpdateInfo: false,
     },
     beforePack: async context => {
-      const office = await officePackageDirectories(buildPaths.dsh, { platform: resolvedPlatform, arch: resolvedArch })
-      const patterns = office.map(directory => `**/${relative(buildPaths.dsh, directory).split(sep).join('/')}/**/*`)
+      const office = await officePackageDirectories(buildPaths.liwa, { platform: resolvedPlatform, arch: resolvedArch })
+      const patterns = office.map(directory => `**/${relative(buildPaths.liwa, directory).split(sep).join('/')}/**/*`)
       const existing = context.packager.config.asarUnpack ?? []
       context.packager.config.asarUnpack = [...(typeof existing === 'string' ? [existing] : existing), ...patterns]
-      if (packagesWindows) windowsCode = await prepareWindowsAsarUnpack(context, buildPaths.dsh)
+      if (packagesWindows) windowsCode = await prepareWindowsAsarUnpack(context, buildPaths.liwa)
       if (windowsSigner !== undefined) {
         primaryRuntimeDestination = join(context.appOutDir, 'resources', 'runtime', 'primary-runtime')
-        dshDestination = join(context.appOutDir, 'resources', 'app.asar.unpacked', 'dsh')
+        liwaDestination = join(context.appOutDir, 'resources', 'app.asar.unpacked', 'liwa')
       }
       if (policy === undefined) return
       const { resolveDesktopPolicyConfig } = await import('../lib/types/mandatory-update-policy.js')
@@ -208,19 +208,19 @@ export function createElectronBuilderConfig(
       }
       // The bundled runtime declares whichever version prepared it: the product version for an ordinary
       // release, and a rewritten one for installed-update qualification.
-      await verifyDesktopRuntime(buildPaths.dsh,
+      await verifyDesktopRuntime(buildPaths.liwa,
         preparedRuntimeVersion ?? productVersion, { platform: resolvedPlatform, arch: resolvedArch })
       // Unsigned Windows builds skip electron-builder's afterSign hook.
-      if (packagesWindows && unsigned) await verifyWindowsAsarUnpack(buildPaths.dsh, resourcesDir, windowsCode)
+      if (packagesWindows && unsigned) await verifyWindowsAsarUnpack(buildPaths.liwa, resourcesDir, windowsCode)
     },
     afterSign: async context => {
       if (windowsSigner !== undefined) {
         await signWindowsCode(context.appOutDir, {
-          thumbprint: new X509Certificate(await readFile(env.DSH_DESKTOP_WINDOWS_CER_FILE)).fingerprint.replaceAll(':', ''),
+          thumbprint: new X509Certificate(await readFile(env.LIWA_DESKTOP_WINDOWS_CER_FILE)).fingerprint.replaceAll(':', ''),
           sign: windowsSigner,
-          record: event => recordPackagingEvent(env.DSH_DESKTOP_PACKAGING_RUN_DIR, event),
+          record: event => recordPackagingEvent(env.LIWA_DESKTOP_PACKAGING_RUN_DIR, event),
         })
-        await verifyWindowsAsarUnpack(buildPaths.dsh, context.packager.getResourcesDir(context.appOutDir), windowsCode)
+        await verifyWindowsAsarUnpack(buildPaths.liwa, context.packager.getResourcesDir(context.appOutDir), windowsCode)
       }
       if (context.electronPlatformName !== 'darwin' || unsigned) return
       const appPath = join(context.appOutDir, `${context.packager.appInfo.productFilename}.app`)
@@ -247,7 +247,7 @@ export function createElectronBuilderConfig(
       forceCodeSigning: !unsigned,
       signtoolOptions: {
         sign: windowsSigner,
-        publisherName: windowsSigner === undefined ? undefined : resolveWindowsUpdatePublisher(env.DSH_DESKTOP_WINDOWS_CER_FILE),
+        publisherName: windowsSigner === undefined ? undefined : resolveWindowsUpdatePublisher(env.LIWA_DESKTOP_WINDOWS_CER_FILE),
         signingHashAlgorithms: ['sha256'],
       },
       target: ['nsis'],

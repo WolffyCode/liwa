@@ -37,7 +37,7 @@ int wmain(int argc, wchar_t** argv) {
     WNDCLASSW type = {};
     type.lpfnWndProc = WindowProc;
     type.hInstance = GetModuleHandleW(nullptr);
-    type.lpszClassName = L"HarnessInstallerRenderTest";
+    type.lpszClassName = L"LiwaInstallerRenderTest";
     type.hCursor = LoadCursorW(nullptr, IDC_ARROW);
     if (!RegisterClassW(&type)) return 3;
     HWND window = CreateWindowW(type.lpszClassName, interactive ? argv[6] : L"Installer rendering test",
@@ -46,8 +46,8 @@ int wmain(int argc, wchar_t** argv) {
     if (!window || FAILED(InstallerApplyFrame(window))) return 4;
     HWND stock = CreateWindowW(L"STATIC", L"", WS_CHILD | WS_VISIBLE, 0, 0, 1, 1, window, nullptr, type.hInstance, nullptr);
     HWND source = CreateWindowW(L"STATIC", L"", WS_CHILD, 0, 0, 1, 1, stock, nullptr, type.hInstance, nullptr);
-    SetPropW(window, L"HarnessInstaller.Stage", reinterpret_cast<HANDLE>(1));
-    SetPropW(window, L"HarnessInstaller.ExtractProgress", reinterpret_cast<HANDLE>(50));
+    SetPropW(window, L"LiwaInstaller.Stage", reinterpret_cast<HANDLE>(1));
+    SetPropW(window, L"LiwaInstaller.ExtractProgress", reinterpret_cast<HANDLE>(50));
     const auto createProgress = [&]() {
         return InstallerShowProgress(window, source, dark, static_cast<UINT>(dpi), hoverArgb, pressedArgb, argv[1],
             L"Preparing %d%%", L"Extracting %d%%", L"Copying %d%%", L"Registering %d%%", L"Cleaning %d%%");
@@ -197,7 +197,7 @@ int wmain(int argc, wchar_t** argv) {
         dpi, dark, frameCount, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), GetForegroundWindow() == window,
         total / samples.size(), samples[samples.size() / 2], samples[samples.size() * 95 / 100], samples.back());
     const bool completed = InstallerFinishProgress(progress) &&
-        GetPropW(window, L"HarnessInstaller.CompletedPercent") == reinterpret_cast<HANDLE>(100);
+        GetPropW(window, L"LiwaInstaller.CompletedPercent") == reinterpret_cast<HANDLE>(100);
     WCHAR caption[160] = {};
     GetWindowTextW(progress, caption, ARRAYSIZE(caption));
     const bool finalCaption = wcscmp(caption, L"Extracting 100%") == 0;

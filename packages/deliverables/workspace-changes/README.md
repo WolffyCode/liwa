@@ -3,7 +3,7 @@ description: "Summarize each top-level turn's changed files from git working-tre
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-workspace-changes
+# @liwa/workspace-changes
 
 English | [中文](README.zh.md)
 
@@ -28,7 +28,7 @@ This plugin summarizes which files each top-level turn changed, with per-file li
 The shipped Web bundle mounts this plugin. Mount it in any composition with the `subprocess` capability and a git executable on the Host:
 
 ```yaml
-- name: '@deepseek-ai/dsh-workspace-changes'
+- name: '@liwa/workspace-changes'
   config:
     maxFiles: 500
 ```
@@ -88,7 +88,7 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 - git 2.13 or later is required for `rev-parse --absolute-git-dir`; an unsupported repository format or another git failure abandons the turn with a warning rather than being treated as a plain directory.
 - The first snapshot of a Session writes every untracked, non-ignored file of the work tree into the Session's temporary directory; a repository without a `.gitignore` that carries large build outputs costs that much temporary space until the Session is disposed.
 - Edits the user makes during a turn are attributed to that turn.
-- A working directory outside any git repository lists file-tool edits only, so shell edits are missing from its card; a shadow repository under the Harness home is deferred until its exclude rules can replace a missing `.gitignore` reliably.
+- A working directory outside any git repository lists file-tool edits only, so shell edits are missing from its card; a shadow repository under the Liwa home is deferred until its exclude rules can replace a missing `.gitignore` reliably.
 - Outside snapshot coverage only paths a file tool names are captured: a file only a shell command changes there is absent, and a file both changed before its first file-tool call is compared from that call onward.
 - Every file-tool edit copies its whole file once per turn, up to `maxFileBytes`, even for paths the snapshots also cover; the copies go with the Session's temporary directory.
 - A comparison serves the listed file's complete text to the client, including ignored files, repository files above the working directory, and files outside the workspace; the summary route serves only paths and counts. A deployment that must keep such content on the Host composes this plugin out.

@@ -1,9 +1,9 @@
 /** Approval composer and optional correlated-detail contracts. */
-import type { ToolCallId } from '@deepseek-ai/dsh-llm'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { ToolCallId } from '@liwa/llm'
+import type { SessionId } from '@liwa/session/types'
 import type {
   PropsLocale, PropsRenderFactories, PropsRuntime,
-} from '@deepseek-ai/dsh-client-ui-slots'
+} from '@liwa/client-ui-slots'
 import type { ApprovalKey } from '../locales.ts'
 
 /* jscpd:ignore-start -- Approval and Question intentionally own independent pending-settlement lifecycles. */
@@ -19,14 +19,14 @@ function settlePendingComposer(settle: () => void, failureMessage: string): Prom
 }
 /* jscpd:ignore-end */
 
-declare module '@deepseek-ai/dsh-client-ui-session/client' {
+declare module '@liwa/client-ui-session/client' {
   interface SessionPendingInteractionMap {
     /** Pending approval request. */
     approval: PendingApproval
   }
 }
 
-declare module '@deepseek-ai/dsh-client-ui-slots' {
+declare module '@liwa/client-ui-slots' {
   interface LocaleNamespaceMap {
     /** Approval prompt copy. */
     approval: ApprovalKey

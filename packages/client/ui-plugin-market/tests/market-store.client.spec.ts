@@ -1,10 +1,10 @@
-import { Context } from '@deepseek-ai/cordis'
-import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
-import { RemoteError, TestRemote } from '@deepseek-ai/dsh-client-test-runtime'
+import { Context } from '@liwa/cordis'
+import { LocaleRuntime } from '@liwa/client-locale/client'
+import { RemoteError, TestRemote } from '@liwa/client-test-runtime'
 import type {
   MarketIndexSummary, MarketListingEntry, MarketQuery, MarketSearchResult, PluginDetail, PluginDetailDocumentId,
-} from '@deepseek-ai/dsh-api-remotes/client'
-import { brandString } from '@deepseek-ai/dsh-brand'
+} from '@liwa/api-remotes/client'
+import { brandString } from '@liwa/brand'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import { detailKey, DiscoverController, PAGE_SIZE } from '../src/client/market-store.ts'
 import { INITIAL_QUERY } from '../src/client/presentation.ts'
@@ -54,7 +54,7 @@ function setup(indexes: MarketIndexSummary[] = [{ url: A }, { url: B }]) {
   }
   const probe = { fastest: vi.fn((): Promise<Answer<string | null>> => ok('https://registry.npmmirror.com/')) }
   new TestRemote(ctx, { pluginMarket: market, pluginRegistryProbe: probe })
-  const controller = new DiscoverController(ctx, () => 'https://dsh.example/prefix/')
+  const controller = new DiscoverController(ctx, () => 'https://liwa.example/prefix/')
   const face = controller.face(text => typeof text === 'string' ? text : text.en)
   return { controller, face, market, probe, state, snapshot: () => controller.store.getSnapshot() }
 }
@@ -468,7 +468,7 @@ describe('detail reads', () => {
   it('addresses relative images through the Host route and leaves other destinations alone', () => {
     const { face } = setup()
     const doc = brandString<PluginDetailDocumentId>('d 1')
-    expect(face.detailImage(doc, 'img/a.png')).toBe('https://dsh.example/prefix/api/plugin-market/detail-file?document=d%201&path=img%2Fa.png')
+    expect(face.detailImage(doc, 'img/a.png')).toBe('https://liwa.example/prefix/api/plugin-market/detail-file?document=d%201&path=img%2Fa.png')
     for (const destination of ['https://example.com/a.png', 'data:image/png;base64,AA', '//cdn.example/a.png', '#top', 'mailto:a@b']) {
       expect(face.detailImage(doc, destination)).toBeUndefined()
     }

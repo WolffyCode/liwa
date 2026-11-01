@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /** Snapshot-only Loader driver: stream one fixture turn as canonical JSONL. */
 
-import type { Context, FiberState } from '@deepseek-ai/cordis'
-import { installFailLoud, loadEnv, resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
-import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
+import type { Context, FiberState } from '@liwa/cordis'
+import { installFailLoud, loadEnv, resolveConfigPath } from '@liwa/app-boot'
+import { runFixtureTurn } from '@liwa/loader-smoke'
+import type { SessionEvent } from '@liwa/session'
 import { bootProductionProfile } from './production-profile.ts'
 
 const NAME = 'headless-test-driver'
-const REQUIRED_ENTRY_ENV = 'DSH_LOADER_SMOKE_REQUIRED_ENTRY_ID'
+const REQUIRED_ENTRY_ENV = 'LIWA_LOADER_SMOKE_REQUIRED_ENTRY_ID'
 const FIBER_ACTIVE = 2 as FiberState.ACTIVE
 const [configPath, ...taskParts] = process.argv.slice(2)
 if (configPath === undefined || taskParts.length === 0 || taskParts.every(part => part.trim() === '')) {

@@ -4,9 +4,9 @@ import { realpathSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { runtimeArchivePath } from './office-engine.ts'
-import type { Context } from '@deepseek-ai/cordis'
-import * as officeSkills from '@deepseek-ai/dsh-skill-office'
-import * as workspaceDependencies from '@deepseek-ai/dsh-tool-workspace-dependencies'
+import type { Context } from '@liwa/cordis'
+import * as officeSkills from '@liwa/skill-office'
+import * as workspaceDependencies from '@liwa/tool-workspace-dependencies'
 
 /** Loader identity for the application-owned Office composition. */
 export const name = 'desktop-office'
@@ -14,7 +14,7 @@ export const name = 'desktop-office'
 export interface Config {
   /** Bundled payload directory. Missing sibling `office-skills` resources fail Host startup. */
   readonly source: string
-  /** Harness-home directory where workspace dependencies are installed. */
+  /** Liwa-home directory where workspace dependencies are installed. */
   readonly root: string
   /** Prepared or ASAR-contained application dependency directory. */
   readonly runtimeDir: string
@@ -23,7 +23,7 @@ export interface Config {
 /**
  * Enable offline Office authoring and LibreOffice Kit operations in the Desktop profile.
  * @param ctx - Profile scope; child plugins declare their own service requirements.
- * @param config - Bundled payload source and Harness-home installation root.
+ * @param config - Bundled payload source and Liwa-home installation root.
  */
 export async function apply(ctx: Context, config: Config): Promise<void> {
   await ctx.plugin(workspaceDependencies, config)

@@ -9,8 +9,8 @@
 创建 `config-demo.ts`，并将其放在 `tmp/cordis-tutorial` 中：
 
 ```ts
-import type { Context } from '@deepseek-ai/cordis'
-import Schema from '@deepseek-ai/schemastery'
+import type { Context } from '@liwa/cordis'
+import Schema from '@liwa/schemastery'
 
 export const name = 'config-demo'
 
@@ -73,9 +73,9 @@ ValidationError: invalid config:
 对于插件在每次操作中读取的字段，可以使用 `.volatile()`。字段变化会更新稳定引用，无需重新挂载插件。通过 `.get()` 读取：
 
 ```ts
-import type { Context } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/cordis-plugin-loader'
-import Schema from '@deepseek-ai/schemastery'
+import type { Context } from '@liwa/cordis'
+import type {} from '@liwa/cordis-plugin-loader'
+import Schema from '@liwa/schemastery'
 
 export const Config = Schema.object({
   greeting: Schema.string().default('Hello').volatile(),
@@ -108,4 +108,4 @@ Loader 比较原始配置时忽略 schema 声明的 volatile 字段。仅 volati
 
 下一章：[组合与 HMR（热模块替换）](06-composition-and-hmr.zh.md)：将 `cordis.yml` 视为应用。
 
-[![](https://img.shields.io/badge/powered_by-dsh-4D6BFE?style=flat-square&logo=deepseek&logoColor=white)](https://github.com/deepseek-ai/deepseek-harness)
+[![](https://img.shields.io/badge/powered_by-liwa-4D6BFE?style=flat-square)](https://github.com/WolffyCode/liwa)

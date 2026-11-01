@@ -3,7 +3,7 @@ description: "Plugin detail document selection without state: the meta.detail or
 kind: "package-library"
 ---
 
-# dsh-plugin-detail
+# liwa-plugin-detail
 
 English | [中文](README.zh.md)
 
@@ -66,10 +66,10 @@ Every read is bounded by the caller's `maxBytes` and fails with `DetailFailure` 
 import {
   DetailFailure, detailImage, detailImageResponse, languageChain, localFiles, NPM_FILE_SOURCES, npmFiles, npmFileSourceOrder,
   readPackageDocument,
-} from '@deepseek-ai/dsh-plugin-detail'
+} from '@liwa/plugin-detail'
 ```
 
-`DetailFailureReason` and `NpmFileSource`, which Remote methods of other packages use, are also exported type-only from `@deepseek-ai/dsh-plugin-detail/types`.
+`DetailFailureReason` and `NpmFileSource`, which Remote methods of other packages use, are also exported type-only from `@liwa/plugin-detail/types`.
 
 `DetailFiles` is the source interface: `read(path, maxBytes, signal)` returns a file's bytes or `undefined`, and `readme(dir, maxBytes, signal)` returns a directory's README. Repository sources implement it in `plugin-market`.
 

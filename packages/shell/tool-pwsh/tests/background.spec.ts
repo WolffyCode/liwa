@@ -1,23 +1,23 @@
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import { executeToolFixture } from '@liwa/tool-testkit'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
+import SessionProjectionRegistry from '@liwa/session-projection'
 import { describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { ToolCallId } from '@deepseek-ai/dsh-llm'
-import { Session, SessionId } from '@deepseek-ai/dsh-session'
-import { SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session/types'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime, { TOOL_ABORTED } from '@deepseek-ai/dsh-tools'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import { unsupportedModel, provideWorkingDirectoryFixture, unsupportedInbox } from '@deepseek-ai/dsh-agent-loop-testkit'
-import LocalJobRegistry from '@deepseek-ai/dsh-jobs-local'
-import * as ToolTasks from '@deepseek-ai/dsh-tool-jobs'
-import { ShellExecutor } from '@deepseek-ai/dsh-shell'
-import type { ShellExecRequest, ShellExecSpec, ShellExecution, ShellProcess } from '@deepseek-ai/dsh-shell'
+import { Context } from '@liwa/cordis'
+import { ToolCallId } from '@liwa/llm'
+import { Session, SessionId } from '@liwa/session'
+import { SESSION_FORMAT_VERSION } from '@liwa/session/types'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime, { TOOL_ABORTED } from '@liwa/tools'
+import AgentRegistry from '@liwa/agent'
+import type { Agent } from '@liwa/agent'
+import { unsupportedModel, provideWorkingDirectoryFixture, unsupportedInbox } from '@liwa/agent-loop-testkit'
+import LocalJobRegistry from '@liwa/jobs-local'
+import * as ToolTasks from '@liwa/tool-jobs'
+import { ShellExecutor } from '@liwa/shell'
+import type { ShellExecRequest, ShellExecSpec, ShellExecution, ShellProcess } from '@liwa/shell'
 import { renderPwshPromoted } from '../src/render.ts'
-import * as ToolPwsh from '@deepseek-ai/dsh-tool-pwsh'
-import * as BashEnvPlugin from '@deepseek-ai/dsh-shell-env'
+import * as ToolPwsh from '@liwa/tool-pwsh'
+import * as BashEnvPlugin from '@liwa/shell-env'
 import { processSources, ringDelta } from '../src/background.ts'
 
 const testToolSignal = new AbortController().signal
@@ -68,7 +68,7 @@ class FakePwsh extends ShellExecutor {
       onExpiry: request.onExpiry ?? 'kill',
       stdoutMaxBytes: request.stdoutMaxBytes ?? 64_000,
       ...request.signal ? { signal: request.signal } : {},
-      ...request.dshEnv !== undefined ? { dshEnv: request.dshEnv } : {},
+      ...request.liwaEnv !== undefined ? { liwaEnv: request.liwaEnv } : {},
       sandboxPolicy: request.sandboxPolicy,
     }
   }
@@ -456,7 +456,7 @@ describe('foreground commands as jobs (pwsh)', () => {
   })
 
   it('runs under the deadline kill when no job controller serves the owner', async () => {
-    // The same composition minus dsh-tool-jobs: the registry exists, so the
+    // The same composition minus liwa-tool-jobs: the registry exists, so the
     // job-backed variant is registered, but admission refuses at the start
     // and the call runs under the executor's deadline instead.
     const ctx = new Context()

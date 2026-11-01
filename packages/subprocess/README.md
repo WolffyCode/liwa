@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Every child process and terminal session the harness runs — bash commands, language servers, persistent shells, and out-of-process subagent backends — is started, observed, and terminated through one shared service (`ctx.subprocess`), with a local provider running them on the host machine. It is not a standalone product feature: the consuming capability seams decide what each process means, and command semantics, deadlines, and model-facing presentation stay with them. The group provides executable lookup, bounded output capture with spill recovery, provider-managed process ranges with disclosed weaker fallbacks, and a scrubbed starting environment for every child.
+Every child process and terminal session Liwa runs — bash commands, language servers, persistent shells, and out-of-process subagent backends — is started, observed, and terminated through one shared service (`ctx.subprocess`), with a local provider running them on the host machine. It is not a standalone product feature: the consuming capability seams decide what each process means, and command semantics, deadlines, and model-facing presentation stay with them. The group provides executable lookup, bounded output capture with spill recovery, provider-managed process ranges with disclosed weaker fallbacks, and a scrubbed starting environment for every child.
 
 ## Table of Contents
 
@@ -35,7 +35,7 @@ The service keeps process lifetime across consumer reloads; consumers own what a
 <a id="related-documentation"></a>
 ## Related documentation
 
-- [Subprocess subsystem](../../docs/subsystems/subprocess.md) — spawn specs, output readers, outcomes, and the managed `DSH_*` environment.
+- [Subprocess subsystem](../../docs/subsystems/subprocess.md) — spawn specs, output readers, outcomes, and the managed `LIWA_*` environment.
 - [Subprocess seam Agent Note](../../.agents/notes/archived/architecture/2026-07-26-subprocess-seam.md) — why the process half of the bash executors became its own seam.
 
 -----

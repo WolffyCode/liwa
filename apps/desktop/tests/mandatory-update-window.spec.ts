@@ -24,7 +24,7 @@ type WindowFixture = EventEmitter & Pick<BrowserWindow, 'setMenu' | 'setTitle' |
 let window: ReturnType<typeof fakeWindow>
 let ui: DesktopMandatoryUpdateWindow | undefined
 function fakeWindow() {
-  const contents = Object.assign(new EventEmitter(), { mainFrame: { url: 'dsh-app://shell/mandatory-update.html' },
+  const contents = Object.assign(new EventEmitter(), { mainFrame: { url: 'liwa-app://shell/mandatory-update.html' },
     send: vi.fn(), setWindowOpenHandler: vi.fn() })
   return Object.assign(new EventEmitter(), { webContents: contents, setMenu: vi.fn(), setTitle: vi.fn(),
     loadURL: vi.fn(async () => {}), destroy: vi.fn(), isDestroyed: (): boolean => false,
@@ -37,7 +37,7 @@ function setup(platform: NodeJS.Platform = 'darwin', beforeSync?: (surface: Retu
   native.messageBox.mockImplementation(() => new Promise(() => {}))
   window = fakeWindow()
   const owner = platform === 'win32' ? window : fakeWindow()
-  owner.webContents.mainFrame.url = 'dsh-app://app/'
+  owner.webContents.mainFrame.url = 'liwa-app://app/'
   let policy: DesktopPolicyState = { blocking: true, checking: false, page: 'https://downloads.example.com/desktop' }
   let update: DesktopUpdateState = { phase: 'ready', version: '1.0.1-nightly.1' }
   const install = vi.fn(async () => update)
@@ -190,7 +190,7 @@ it('rebinds policy updates and reloads to a replacement Windows main window', ()
   setup('win32')
   const previous = window
   window = fakeWindow()
-  window.webContents.mainFrame.url = 'dsh-app://app/?recovery=1#home'
+  window.webContents.mainFrame.url = 'liwa-app://app/?recovery=1#home'
   ui!.sync()
   expect(previous.webContents.listenerCount('did-finish-load')).toBe(0)
   expect(window.webContents.send.mock.calls.at(-1)).toMatchObject([MANDATORY_IPC.state, { policy: { blocking: true } }])

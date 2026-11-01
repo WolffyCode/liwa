@@ -2,7 +2,7 @@
  * Surface retention selection and the shared log-recorded compaction
  * transaction for automatic open-turn and manual idle-session compaction.
  *
- * @module @deepseek-ai/dsh-compaction-basic/region
+ * @module @liwa/compaction-basic/region
  */
 
 import { randomUUID } from 'node:crypto'
@@ -13,14 +13,14 @@ import {
   compactCheckpointSource,
   toolPairingBalancedAfter,
   toolPairingBalancedBefore,
-} from '@deepseek-ai/dsh-compaction'
-import type { CompactionResult } from '@deepseek-ai/dsh-compaction'
-import type { CommandId } from '@deepseek-ai/dsh-commands/brand'
-import { createUserMessage, errorChain } from '@deepseek-ai/dsh-llm'
-import type { Message, UserMessage } from '@deepseek-ai/dsh-llm'
-import type { TokenMeasurement, TokenMeter } from '@deepseek-ai/dsh-token-meter'
-import { SessionSeq, type Session, type SessionEvent } from '@deepseek-ai/dsh-session'
-import type { Agent } from '@deepseek-ai/dsh-agent'
+} from '@liwa/compaction'
+import type { CompactionResult } from '@liwa/compaction'
+import type { CommandId } from '@liwa/commands/brand'
+import { createUserMessage, errorChain } from '@liwa/llm'
+import type { Message, UserMessage } from '@liwa/llm'
+import type { TokenMeasurement, TokenMeter } from '@liwa/token-meter'
+import { SessionSeq, type Session, type SessionEvent } from '@liwa/session'
+import type { Agent } from '@liwa/agent'
 import { frameSummary } from './summarizer.ts'
 import type { SummarizationInput, SummaryResult } from './summarizer.ts'
 interface RegionDependencies {

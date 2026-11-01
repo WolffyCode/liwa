@@ -3,7 +3,7 @@ description: "Application-scoped file transfers and localized drag failure feedb
 kind: package-reference
 ---
 
-# @deepseek-ai/dsh-client-ui-file-drag
+# @liwa/client-ui-file-drag
 
 English | [中文](README.zh.md)
 
@@ -24,9 +24,9 @@ Users can drag original images from conversations or the sidebar into the compos
 
 The Web profile includes this plugin alongside locale, the slot renderer, and a shell declaring `shell.overlay`. Consumers inject `fileDrag` and pass `ctx.fileDrag.actions` through their entry’s inject face. `prepare(source, signal)` accepts Blob or URL content with an export name and optional Session resource address, returning synchronous start and release operations. `reportFailure()` uses the plugin dictionary; failure feedback and plugin metadata are available in Chinese, English, and Japanese. Composer drop targets receive `ctx.fileDrag.read`; components do not read a service or React context.
 
-The service retains one original `File` for a browser drag. The random `application/x-dsh-file` token resolves only in its application instance. A native listener stays on the source node after React unmount, and drag end, drop completion, or plugin disposal clears the transfer. Internal tokens are accepted only over the composer. External files keep the existing full-page drop overlay. Desktop native drags return as ordinary files and use that overlay, including within the source window.
+The service retains one original `File` for a browser drag. The random `application/x-liwa-file` token resolves only in its application instance. A native listener stays on the source node after React unmount, and drag end, drop completion, or plugin disposal clears the transfer. Internal tokens are accepted only over the composer. External files keep the existing full-page drop overlay. Desktop native drags return as ordinary files and use that overlay, including within the source window.
 
-The desktop bridge is resolved once at activation for protocol version 1. File naming is shared with Desktop through [dsh-util-file-drag](../../util/file-drag/README.md): explicit output suffix wins, compatible suffixes survive, known conflicts use the declared MIME suffix, and unknown types retain the caller name. The plugin owns failure copy and its overlay, which survives source-panel closure.
+The desktop bridge is resolved once at activation for protocol version 1. File naming is shared with Desktop through [liwa-util-file-drag](../../util/file-drag/README.md): explicit output suffix wins, compatible suffixes survive, known conflicts use the declared MIME suffix, and unknown types retain the caller name. The plugin owns failure copy and its overlay, which survives source-panel closure.
 
 Managed browser transfers carry an application-local token and `DownloadURL` pointing to a plugin-owned Blob URL containing the prepared bytes. They do not expose the source workspace URL, filename, or alt text through `text/plain`. A drag started before preparation completes is cancelled quietly; a settled failure reports the localized retry message on the next attempt. Resource-backed images prepare on primary pointer down; other sources may prepare on hover. Releasing inside the source preserves preparation for a subsequent drag. Pointer leave without a pressed drag, release outside the source, blur, or unmount retires unused preparation. Cancellation reaches pending native requests, including Host reads and icon waits. Optional resource borrowing failures fall back to the supplied Blob or the authorized URL read; cancellation never starts that fallback.
 

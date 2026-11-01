@@ -46,10 +46,10 @@ export function packageReadmeSummaryErrors(file: string, source: string): string
 
   const kind = readKind(source)
   const template = kind === undefined
-    ? '.agents/skills/dsh-doc/templates/'
-    : `.agents/skills/dsh-doc/templates/${kind}.md`
+    ? '.agents/skills/liwa-doc/templates/'
+    : `.agents/skills/liwa-doc/templates/${kind}.md`
   return [
-    `${file}: Summary has ${String(words)} words; the limit is ${String(MAX_PACKAGE_README_SUMMARY_WORDS)}. Read .agents/skills/dsh-doc/SKILL.md and ${template} before rewriting it.`,
+    `${file}: Summary has ${String(words)} words; the limit is ${String(MAX_PACKAGE_README_SUMMARY_WORDS)}. Read .agents/skills/liwa-doc/SKILL.md and ${template} before rewriting it.`,
   ]
 }
 

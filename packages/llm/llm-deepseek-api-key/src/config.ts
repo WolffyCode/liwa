@@ -1,15 +1,15 @@
 /** API-key configuration resolved together with one Messages endpoint generation and its model listing. */
-import type { Volatile } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { credentialRef, type CredentialRef } from '@deepseek-ai/dsh-credentials'
-import type { LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
+import type { Volatile } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import { credentialRef, type CredentialRef } from '@liwa/credentials'
+import type { LaunchEnvironmentSnapshot } from '@liwa/launch-environment'
 import {
   deepSeekConfigFields, isBuiltInCatalog, modelListingConfigFields, modelListingURL, plainOptions as protocolOptions, PUBLIC_BASE_URL,
   resolveAdapterOptions as resolveProtocolOptions, resolveListingTiming,
-} from '@deepseek-ai/dsh-llm-deepseek'
+} from '@liwa/llm-deepseek'
 import type {
   Config as ProtocolConfig, DeepSeekConnectionOptions, ListingSettings, ModelListingConfig, ModelListingOptions, Options as ProtocolOptions,
-} from '@deepseek-ai/dsh-llm-deepseek'
+} from '@liwa/llm-deepseek'
 
 /** Origin of the official API, the only endpoint whose `/models` listing this route follows. */
 const OFFICIAL_ORIGIN = new URL(PUBLIC_BASE_URL).origin

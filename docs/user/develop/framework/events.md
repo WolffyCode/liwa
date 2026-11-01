@@ -2,7 +2,7 @@
 
 English | [中文](events.zh.md)
 
-Events are the core communication mechanism between Cordis plugins. Harness uses them extensively for loosely coupled extension points.
+Events are the core communication mechanism between Cordis plugins. Liwa uses them extensively for loosely coupled extension points.
 
 ## Basic use
 
@@ -82,12 +82,12 @@ A waterfall listener **must call `next()`**. Omitting it short-circuits the pipe
 
 ## Typed events
 
-Harness uses TypeScript declaration merging for type-safe events:
+Liwa uses TypeScript declaration merging for type-safe events:
 
 ```ts
-import '@deepseek-ai/cordis'
+import '@liwa/cordis'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Events {
     'my-plugin/ready': (payload: { id: string }) => void
     'my-plugin/check': (input: string) => boolean | undefined
@@ -101,7 +101,7 @@ declare module '@deepseek-ai/cordis' {
 
 ## Cordis events and session records
 
-Harness Cordis events use `namespace/action` names, including `agent/pre-step`, `agent/request-error`, `tools/result`, and `session/event`. The generated `cordis-surface` regions on the [subsystem pages](../../../subsystems/core.md) record complete signatures and modes.
+Liwa Cordis events use `namespace/action` names, including `agent/pre-step`, `agent/request-error`, `tools/result`, and `session/event`. The generated `cordis-surface` regions on the [subsystem pages](../../../subsystems/core.md) record complete signatures and modes.
 
 `turn/*`, `step/*`, `tool/call`, `tool/result`, and `compaction/*` are durable session-event types, not same-named Cordis events. To observe them, listen to `session/event` and inspect `event.type`.
 
@@ -121,8 +121,8 @@ export function apply(ctx: Context) {
 This plugin logs tool calls and results:
 
 ```ts
-import type { Context } from '@deepseek-ai/cordis'
-import '@deepseek-ai/dsh-tools'
+import type { Context } from '@liwa/cordis'
+import '@liwa/tools'
 
 export const name = 'tool-logger'
 

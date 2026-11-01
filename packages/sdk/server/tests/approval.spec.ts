@@ -1,16 +1,16 @@
 /** SDK approvals use the real bidirectional wire and the internal audit service. */
 import { PassThrough } from 'node:stream'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import { ToolCallId } from '@deepseek-ai/dsh-llm'
-import ApprovalService from '@deepseek-ai/dsh-user-approval'
-import { JsonRpcLineTransport } from '@deepseek-ai/dsh-sdk-protocol'
+import AgentLoop from '@liwa/agent-loop'
+import { mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
+import { SessionId } from '@liwa/session'
+import { ToolCallId } from '@liwa/llm'
+import ApprovalService from '@liwa/user-approval'
+import { JsonRpcLineTransport } from '@liwa/sdk-protocol'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import { mountWorkingDirectoryFixture } from '../../../subagent/subagent/tests/working-directory-fixture.ts'
-import { HarnessSdkJsonRpcServer } from '../src/server.ts'
+import { LiwaSdkJsonRpcServer } from '../src/server.ts'
 
 async function setup(enabled?: boolean) {
   const ctx = new Context()
@@ -24,7 +24,7 @@ async function setup(enabled?: boolean) {
   const output = new PassThrough()
   const serverWire = new JsonRpcLineTransport(input, output)
   const client = new JsonRpcLineTransport(output, input)
-  const server = new HarnessSdkJsonRpcServer(ctx, serverWire)
+  const server = new LiwaSdkJsonRpcServer(ctx, serverWire)
   onTestFinished(async () => {
     await server.shutdown()
     serverWire.close()

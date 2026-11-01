@@ -2,16 +2,16 @@
 
 import { randomUUID } from 'node:crypto'
 import { mkdir } from 'node:fs/promises'
-import type { Context } from '@deepseek-ai/cordis'
-import type { Agent, AgentOptions, AgentSetup } from '@deepseek-ai/dsh-agent'
-import type {} from '@deepseek-ai/dsh-agent-default-model'
-import { installModelSelection } from '@deepseek-ai/dsh-agent'
-import type {} from '@deepseek-ai/dsh-agent-preset-registry'
-import { brandString } from '@deepseek-ai/dsh-brand'
-import type { Session, SessionId } from '@deepseek-ai/dsh-session'
-import { SessionQueryError, type SessionObservation } from '@deepseek-ai/dsh-session-query'
-import { RemoteError, remoteErrorOf } from '@deepseek-ai/dsh-typert-protocol'
-import type {} from '@deepseek-ai/dsh-typert-registry'
+import type { Context } from '@liwa/cordis'
+import type { Agent, AgentOptions, AgentSetup } from '@liwa/agent'
+import type {} from '@liwa/agent-default-model'
+import { installModelSelection } from '@liwa/agent'
+import type {} from '@liwa/agent-preset-registry'
+import { brandString } from '@liwa/brand'
+import type { Session, SessionId } from '@liwa/session'
+import { SessionQueryError, type SessionObservation } from '@liwa/session-query'
+import { RemoteError, remoteErrorOf } from '@liwa/typert-protocol'
+import type {} from '@liwa/typert-registry'
 
 /** Cold Session identity absent from persistence. */
 export class ApiSessionNotFound extends Error {}

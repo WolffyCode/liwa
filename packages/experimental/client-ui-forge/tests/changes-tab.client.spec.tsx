@@ -3,12 +3,12 @@
 import { useSyncExternalStore } from 'react'
 import { act, cleanup, fireEvent, render, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { PaneId, SidebarRightTabActions, SidebarRightTabInfo, TabId } from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import { bindSnapshotSelector, makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { SessionId } from '@deepseek-ai/dsh-session/types'
-import { RemoteError, type RemoteResult } from '@deepseek-ai/dsh-typert-protocol'
-import { fileAddressFor } from '@deepseek-ai/dsh-util-workspace-path'
+import type { PaneId, SidebarRightTabActions, SidebarRightTabInfo, TabId } from '@liwa/client-ui-sidebar-right/client'
+import { createSnapshotStore } from '@liwa/client-store'
+import { bindSnapshotSelector, makeTranslate } from '@liwa/client-test-runtime'
+import { SessionId } from '@liwa/session/types'
+import { RemoteError, type RemoteResult } from '@liwa/typert-protocol'
+import { fileAddressFor } from '@liwa/util-workspace-path'
 import { CHANGES_KIND, changesAddress, type ChangesParams, type ChangesSource } from '../src/client/changes-address.ts'
 import { createChangesStore } from '../src/client/changes-store.ts'
 import { ChangesTab, type ChangesTabInjected, type ChangesTabProps } from '../src/client/ChangesTab.tsx'
@@ -474,7 +474,7 @@ describe('ChangesTab local reads', () => {
     m.view.unmount()
 
     vi.spyOn(console, 'error').mockImplementation(() => {})
-    expect(() => mount({ contentId: 'dsh-resource://forge-changes/s1/remote' })).toThrow('not a changes address')
+    expect(() => mount({ contentId: 'liwa-resource://forge-changes/s1/remote' })).toThrow('not a changes address')
   })
 })
 

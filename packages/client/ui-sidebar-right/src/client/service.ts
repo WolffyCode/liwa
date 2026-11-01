@@ -34,12 +34,12 @@
  * forwards the seats' reports; callers use the service's navigation methods.
  */
 import { sidebarTargetFromElement, type SidebarRightTarget } from './focus.ts'
-import { randomUUID } from '@deepseek-ai/dsh-util-crypto'
-import { createSnapshotStore, type ObservableSnapshot } from '@deepseek-ai/dsh-client-store'
-import type { FloatRect, PaneId, TabId, TabRecord } from '@deepseek-ai/dsh-client-ui-dockkit'
-import { activeDockPaneId, canSplit, findContentTab, findPaneContentTab, dockPaneIds, findTabPane, getPane } from '@deepseek-ai/dsh-client-ui-dockkit'
-import type { BoundActions } from '@deepseek-ai/dsh-client-ui-slots'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import { randomUUID } from '@liwa/util-crypto'
+import { createSnapshotStore, type ObservableSnapshot } from '@liwa/client-store'
+import type { FloatRect, PaneId, TabId, TabRecord } from '@liwa/client-ui-dockkit'
+import { activeDockPaneId, canSplit, findContentTab, findPaneContentTab, dockPaneIds, findTabPane, getPane } from '@liwa/client-ui-dockkit'
+import type { BoundActions } from '@liwa/client-ui-slots'
+import type { SessionId } from '@liwa/session/types'
 import type { SidebarRightNavigationParams, SidebarRightResourceParams, SidebarRightTabParamsFor } from './contract/params.ts'
 import { pageAddress } from './contract/seed.ts'
 import type { SidebarRightTabClaim, SidebarRightTabRegistry } from './tab-registry.ts'
@@ -177,7 +177,7 @@ export interface SidebarRightOpenTabOptions<K extends string = string> extends S
 }
 
 /** The scheme every resource address carries; anything else is not a resource this face opens. */
-const RESOURCE_SCHEME = 'dsh-resource://'
+const RESOURCE_SCHEME = 'liwa-resource://'
 
 /** Synchronous close/replacement hook; resource owners retain any background cleanup. */
 export type SidebarRightCloseHandler = (sessionId: SessionId, tab: TabRecord) => void
@@ -200,10 +200,10 @@ export interface ISidebarRight {
    * Without `options.kind` the registry ranks the types whose globs and
    * `canOpen` accept the address and the best band wins; with it, that kind's
    * type in force opens the address (its `canOpen` still applies). An address
-   * outside `dsh-resource://`, or one no type will open, is a wiring mistake,
+   * outside `liwa-resource://`, or one no type will open, is a wiring mistake,
    * not a user error, so it throws. The column expands in the same step,
    * because content the user cannot see is not opened.
-   * @param address - a `dsh-resource://<type>/…` address.
+   * @param address - a `liwa-resource://<type>/…` address.
    * @param options - placement, the opening type, and navigation parameters.
    */
   openResource(address: string, options?: SidebarRightOpenResourceOptions): void
@@ -321,7 +321,7 @@ export class SidebarRightController implements ISidebarRight {
 
   /**
    * Open a resource: claim it, place it, reveal the column, record the navigation.
-   * @param address - a `dsh-resource://<type>/…` address.
+   * @param address - a `liwa-resource://<type>/…` address.
    * @param options - placement, the opening type, and navigation parameters.
    */
   openResource(address: string, options: SidebarRightOpenResourceOptions = {}): void {
@@ -344,7 +344,7 @@ export class SidebarRightController implements ISidebarRight {
    * for a session whose store was never adopted or whose adoption was released.
    * Not part of `ISidebarRight`: the Tab domain's path.
    * @param sessionId - the session the acting tab is in.
-   * @param address - a `dsh-resource://<type>/…` address.
+   * @param address - a `liwa-resource://<type>/…` address.
    * @param options - placement, the opening type, and navigation parameters.
    */
   openResourceIn(sessionId: SessionId, address: string, options: SidebarRightOpenResourceOptions = {}): void {

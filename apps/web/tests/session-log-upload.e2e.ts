@@ -5,17 +5,17 @@ import { join } from 'node:path'
 import { chromium } from 'playwright'
 import yaml from 'js-yaml'
 import { expect, it, onTestFinished } from 'vitest'
-import { credentialRef } from '@deepseek-ai/dsh-credentials'
-import { startMockLlmServer } from '@deepseek-ai/dsh-llm-mock-server'
+import { credentialRef } from '@liwa/credentials'
+import { startMockLlmServer } from '@liwa/llm-mock-server'
 import { launchWebScaffold, webSnapshotMode } from './scaffold.ts'
 import { connectFreshWorkspace, newEnglishPage, openSettings } from './support.ts'
 
 it.skipIf(webSnapshotMode() === 'record')('persists the upload switch and omits or resumes session logs on subsequent API requests', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-upload-browser-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-upload-browser-'))
   onTestFinished(() => rm(root, { recursive: true, force: true }))
   const server = await startMockLlmServer({ sequence: ['success', 'success', 'success'], successText: 'UPLOAD_SETTING_DONE' })
   onTestFinished(() => server.close())
-  const key = credentialRef('DSH_UPLOAD_BROWSER_KEY')
+  const key = credentialRef('LIWA_UPLOAD_BROWSER_KEY')
   const overlay = join(root, 'upload.yml')
   await writeFile(overlay, JSON.stringify([
     { id: 'llm-deepseek', config: { baseURL: server.baseURL, apiKeyEnv: key } },
@@ -44,7 +44,7 @@ it.skipIf(webSnapshotMode() === 'record')('persists the upload switch and omits 
     await toggle.click()
     await expect.poll(() => toggle.getAttribute('aria-checked')).toBe(String(enabled))
     await expect.poll(async () => {
-      const patches = yaml.load(await readFile(join(scaffold.harnessHome, 'profiles/scaffold/cordis.patch.yml'), 'utf8')) as { id: string; config?: { enabled?: boolean } }[]
+      const patches = yaml.load(await readFile(join(scaffold.liwaHome, 'profiles/scaffold/cordis.patch.yml'), 'utf8')) as { id: string; config?: { enabled?: boolean } }[]
       return patches.find(patch => patch.id === 'session-log-deepseek')?.config?.enabled ?? true
     }).toBe(enabled)
     await page.keyboard.press('Escape')

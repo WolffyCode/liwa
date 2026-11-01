@@ -3,13 +3,13 @@ description: "面向 Host 与浏览器 Client Cordis 运行时的实验性 Chrom
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-experimental-inspector
+# @liwa/experimental-inspector
 
 [English](README.md) | 中文
 
 ## 概述
 
-在 Chrome DevTools 中检查一个运行中的 dsh Host 及其浏览器 Client：Host 与 Client Console context、Host Sources 与调试、Host fetch 采集和共享 Cordis 树，全部 CDP 状态都在 Worker 中。
+在 Chrome DevTools 中检查一个运行中的 liwa Host 及其浏览器 Client：Host 与 Client Console context、Host Sources 与调试、Host fetch 采集和共享 Cordis 树，全部 CDP 状态都在 Worker 中。
 
 可选的[开发者工具组合包](../inspector-profile/README.zh.md) 同时启用 NodeJS 诊断和会话数据诊断，并开启 Host fetch 采集。Web startup 不需要也不接受 `--inspect`。
 
@@ -94,7 +94,7 @@ Host 插件注入 `webServer` 和 `connection`，接受以下字段：
 | `maxCordisNodes` | `2048` | 一个 realm 快照截断前允许的 Context 与 Fiber 节点数 |
 | `maxDisconnectedCordisTrees` | `8` | 作为非实时快照保留的最近断联 realm 树数量 |
 
-生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-experimental-inspector)是全部已接受字段及其声明的详尽来源。
+生成的[配置目录](../../../docs/config-catalog.zh.md#liwaexperimental-inspector)是全部已接受字段及其声明的详尽来源。
 
 Worker 监听后，Host 会记录一个 `devtools://` URL。同一个 Worker 提供 `/json`、`/json/list`、`/json/version`、`/devtools/page/<id>` target WebSocket 和 `/ingest` Client source。
 
@@ -104,8 +104,8 @@ Worker 监听后，Host 会记录一个 `devtools://` URL。同一个 Worker 提
 两个插件端都提供同一个服务：
 
 ```ts
-import type { Context } from '@deepseek-ai/cordis'
-import type { InspectorJsonValue } from '@deepseek-ai/dsh-experimental-inspector'
+import type { Context } from '@liwa/cordis'
+import type { InspectorJsonValue } from '@liwa/experimental-inspector'
 
 declare const ctx: Context
 declare const topic: string

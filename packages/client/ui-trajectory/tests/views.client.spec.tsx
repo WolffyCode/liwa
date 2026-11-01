@@ -7,41 +7,41 @@
  * event ledger with its timing overview, and fiber disposal removes the tab.
  * Timeline projection and inclusive focus edge cases ride along.
  */
-import type { GlobalStandardProps, PropsRenderSlots } from '@deepseek-ai/dsh-client-ui-slots'
+import type { GlobalStandardProps, PropsRenderSlots } from '@liwa/client-ui-slots'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { createElement, type ComponentProps, type FC, type ReactNode } from 'react'
-import { allowAllAccess, bindSnapshotSelector, SlotTestRuntime, stubConfigForm } from '@deepseek-ai/dsh-client-test-runtime'
-import { resolveSlotLabel } from '@deepseek-ai/dsh-client-ui-slots'
+import { allowAllAccess, bindSnapshotSelector, SlotTestRuntime, stubConfigForm } from '@liwa/client-test-runtime'
+import { resolveSlotLabel } from '@liwa/client-ui-slots'
 import {
   EMPTY_CONVERSATION_SNAPSHOT, UiConversation,
-} from '@deepseek-ai/dsh-client-ui-conversation/client'
+} from '@liwa/client-ui-conversation/client'
 import type {
   ConversationBinding, ConversationSnapshot, ConversationViewSnapshotMap, ConvViewProps,
   InputActions, InputState, RequestView, ViewTab,
-} from '@deepseek-ai/dsh-client-ui-conversation/client'
-import { EMPTY_CHAT_SNAPSHOT } from '@deepseek-ai/dsh-client-ui-chat/client'
+} from '@liwa/client-ui-conversation/client'
+import { EMPTY_CHAT_SNAPSHOT } from '@liwa/client-ui-chat/client'
 import type {
   ChatSnapshot, LegacyConversationSlice,
-} from '@deepseek-ai/dsh-client-ui-chat/client'
-import { SlotRegistry } from '@deepseek-ai/dsh-client-ui-renderer/client'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import type { ObservableSnapshot } from '@deepseek-ai/dsh-client-store'
+} from '@liwa/client-ui-chat/client'
+import { SlotRegistry } from '@liwa/client-ui-renderer/client'
+import { createSnapshotStore } from '@liwa/client-store'
+import type { ObservableSnapshot } from '@liwa/client-store'
 import type {
   SessionBinding, SessionListState, SessionProjectionMap, SessionSnapshot, UseProjection,
-} from '@deepseek-ai/dsh-api-session-controller/client'
-import type { WorkspaceSnapshot } from '@deepseek-ai/dsh-api-workspace-controller/client'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import type { SessionStatusSnapshot } from '@deepseek-ai/dsh-client-ui-session/client'
+} from '@liwa/api-session-controller/client'
+import type { WorkspaceSnapshot } from '@liwa/api-workspace-controller/client'
+import type { SessionId } from '@liwa/session/types'
+import type { SessionStatusSnapshot } from '@liwa/client-ui-session/client'
 import {
   ConversationSession, ConversationSessionHeader,
   type ConversationSessionHeaderProps, type ConversationSessionProps,
-} from '@deepseek-ai/dsh-client-ui-conversation/src/client/skeleton/ConversationSession.tsx'
-import { createConversationStore } from '@deepseek-ai/dsh-client-ui-conversation/src/client/stores.ts'
-import { zh as conversationZh } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
-import * as localePlugin from '@deepseek-ai/dsh-client-locale/client'
-import { apply, inject } from '@deepseek-ai/dsh-client-ui-trajectory/client'
-import { PartialArguments } from '@deepseek-ai/dsh-util-values'
+} from '@liwa/client-ui-conversation/src/client/skeleton/ConversationSession.tsx'
+import { createConversationStore } from '@liwa/client-ui-conversation/src/client/stores.ts'
+import { zh as conversationZh } from '@liwa/client-ui-conversation/src/client/locales.ts'
+import * as localePlugin from '@liwa/client-locale/client'
+import { apply, inject } from '@liwa/client-ui-trajectory/client'
+import { PartialArguments } from '@liwa/util-values'
 import type { TrajectoryTurnModel } from '../src/client/layout.ts'
 import { TrajectoryTimeline as LocalizedTrajectoryTimeline } from '../src/client/TrajectoryTimeline.tsx'
 import {
@@ -505,8 +505,8 @@ describe('plugin registration', () => {
     expect(second.hooks.duration).toBe(first.hooks.duration)
     first.setActualDuration(true)
     expect(second.hooks.duration.getSnapshot()).toBe(true)
-    expect(localStorage.getItem('dsh.trajectory.duration')).toBe('true')
-    expect(localStorage.getItem(`dsh.trajectory.duration.${SID}`)).toBeNull()
+    expect(localStorage.getItem('liwa.trajectory.duration')).toBe('true')
+    expect(localStorage.getItem(`liwa.trajectory.duration.${SID}`)).toBeNull()
   })
 
   it('reports whether loading older history changed the Trajectory snapshot', async () => {
@@ -1556,7 +1556,7 @@ describe('TrajectoryView state', () => {
 
     expect(duration.getAttribute('aria-pressed')).toBe('false')
     fireEvent.click(duration)
-    expect(localStorage.getItem('dsh.trajectory.duration')).toBe('true')
+    expect(localStorage.getItem('liwa.trajectory.duration')).toBe('true')
     first.unmount()
 
     const restoredDuration = createTrajectoryDurationStore()

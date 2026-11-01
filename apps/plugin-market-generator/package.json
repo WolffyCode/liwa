@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-plugin-market-generator",
+  "name": "@liwa/plugin-market-generator",
   "description": "Reference generator of plugin market index files from a list of npm packages and Git repositories",
   "version": "0.2.2-alpha.2",
   "private": true,
@@ -9,7 +9,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-plugin-market-index": "workspace:*",
+    "@liwa/app-boot": "workspace:*",
+    "@liwa/plugin-market-index": "workspace:*",
     "commander": "^15.0.0",
     "hosted-git-info": "^9.0.3",
     "resolve.exports": "^2.0.3",
@@ -18,7 +19,7 @@
     "yaml": "^2.9.0"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-package-manifest": "workspace:*",
+    "@liwa/package-manifest": "workspace:*",
     "@types/hosted-git-info": "^3.0.5",
     "@types/semver": "^7.8.0",
     "tsx": "^4.22.4"

@@ -4,11 +4,11 @@ import { createHash } from 'node:crypto'
 import { access, mkdtemp, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import LocalSubprocess from '@deepseek-ai/dsh-subprocess-local'
-import SpeechToText from '@deepseek-ai/dsh-experimental-speech-to-text'
+import { Context } from '@liwa/cordis'
+import LocalSubprocess from '@liwa/subprocess-local'
+import SpeechToText from '@liwa/experimental-speech-to-text'
 import { afterEach, expect, it, vi } from 'vitest'
-import type { SpeechPreparationState } from '@deepseek-ai/dsh-experimental-speech-to-text/types'
+import type { SpeechPreparationState } from '@liwa/experimental-speech-to-text/types'
 import { inspectRuntime, prepareRuntime, type Asset } from '../src/runtime.ts'
 import { Config } from '../src/config.ts'
 import * as Provider from '../src/index.ts'
@@ -90,7 +90,7 @@ it('reports filesystem access errors instead of treating unreadable caches as ab
   expect(fetcher).not.toHaveBeenCalled()
 })
 async function fixture() {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-speech-onnx-')); roots.push(root)
+  const root = await mkdtemp(join(tmpdir(), 'liwa-speech-onnx-')); roots.push(root)
   fake.lock = { models: { int8: asset('model.int8.onnx'), fp32: asset('model.onnx') }, tokens: asset('tokens.txt'), vad: asset('silero_vad.onnx') }
   const fetcher = vi.fn(async (_url: string, _init?: RequestInit) => new Response(bytes)); vi.stubGlobal('fetch', fetcher)
   return { root, fetcher }

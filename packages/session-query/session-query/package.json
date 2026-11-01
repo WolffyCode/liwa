@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-session-query",
+  "name": "@liwa/session-query",
   "description": "Combined session query service contract with concrete reads, traces, and filters",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/session-query/session-query"
   },
   "type": "module",
@@ -27,39 +27,39 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-brand": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-title": "workspace:*",
-    "@deepseek-ai/dsh-tool-todo": "workspace:*",
-    "@deepseek-ai/dsh-session-persistence": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-session-projection-cache": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/brand": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-title": "workspace:*",
+    "@liwa/tool-todo": "workspace:*",
+    "@liwa/session-persistence": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/session-projection-cache": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-session-persistence": {
+    "@liwa/session-persistence": {
       "optional": true
     },
-    "@deepseek-ai/dsh-session-projection": {
+    "@liwa/session-projection": {
       "optional": true
     },
-    "@deepseek-ai/dsh-session-projection-cache": {
+    "@liwa/session-projection-cache": {
       "optional": true
     }
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-brand": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-title": "workspace:*",
-    "@deepseek-ai/dsh-tool-todo": "workspace:*",
-    "@deepseek-ai/dsh-session-persistence": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-session-projection-cache": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/brand": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-title": "workspace:*",
+    "@liwa/tool-todo": "workspace:*",
+    "@liwa/session-persistence": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/session-projection-cache": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "dependencies": {
-    "@deepseek-ai/dsh-session-format-catalog": "workspace:*"
+    "@liwa/session-format-catalog": "workspace:*"
   }
 }

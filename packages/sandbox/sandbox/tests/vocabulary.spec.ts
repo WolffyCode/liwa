@@ -2,12 +2,12 @@
  * Vocabulary-contract tests for the sandbox seam: the fail-closed error's
  * structured identity is what tool results and consumers key on, so its
  * shape is pinned here, next to the vocabulary that owns it. Provider
- * behavior is each implementation's suite (`dsh-sandbox-local`); consumer
- * behavior is each consumer's (`dsh-bash-sandbox`).
+ * behavior is each implementation's suite (`liwa-sandbox-local`); consumer
+ * behavior is each consumer's (`liwa-bash-sandbox`).
  */
 
 import { describe, expect, it } from 'vitest'
-import { SANDBOX_UNAVAILABLE, SandboxUnavailableError, SandboxUnsupportedPolicyError } from '@deepseek-ai/dsh-sandbox'
+import { SANDBOX_UNAVAILABLE, SandboxUnavailableError, SandboxUnsupportedPolicyError } from '@liwa/sandbox'
 
 describe('SandboxUnsupportedPolicyError', () => {
   it('distinguishes an unsupported policy from an unavailable backend', () => {

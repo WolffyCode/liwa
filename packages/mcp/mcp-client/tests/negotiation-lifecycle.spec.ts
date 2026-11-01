@@ -1,5 +1,5 @@
 /** Real SDK probe ownership, failed negotiation recovery, and subprocess quiescence. */
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 import { once } from 'node:events'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { createServer } from 'node:http'
@@ -7,11 +7,11 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { StreamableHTTPClientTransport, type Transport } from '@modelcontextprotocol/client'
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime from '@liwa/tools'
 import { startConnection, resolveReconnectPolicy } from '../src/connection.ts'
 import type { Config } from '../src/index.ts'
 
@@ -51,7 +51,7 @@ async function connection(factory: () => Transport, retry: boolean) {
 }
 
 async function stdioFixture() {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-mcp-negotiation-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-mcp-negotiation-'))
   onTestFinished(() => rm(root, { recursive: true, force: true }))
   const eventsPath = join(root, 'events.jsonl')
   const releasePath = join(root, 'release')

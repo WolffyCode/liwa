@@ -4,7 +4,7 @@
  * `docs/subsystems/llm-streaming.md#appidentity--app-attribution`.
  *
  * App-attribution vocabulary for provider requests.
- * @module @deepseek-ai/dsh-llm/attribution
+ * @module @liwa/llm/attribution
  */
 
 import { createRequire } from 'node:module'
@@ -32,7 +32,7 @@ export interface AppIdentity {
 }
 
 /**
- * The harness's own identity: the default every adapter sends. Deployments
+ * Liwa's own identity: the default every adapter sends. Deployments
  * that need a white-label identity pass their own {@link AppIdentity} to
  * {@link attributionHeaders} — omission falls back to this default; nothing
  * can suppress attribution entirely.

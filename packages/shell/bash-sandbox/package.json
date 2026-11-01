@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-bash-sandbox",
-  "description": "Sandbox-consuming implementation of the DeepSeek Harness bash executor seam (confines every command via ctx.sandbox, reports denial/enforcement result facts)",
+  "name": "@liwa/bash-sandbox",
+  "description": "Sandbox-consuming implementation of the Liwa bash executor seam (confines every command via ctx.sandbox, reports denial/enforcement result facts)",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/shell/bash-sandbox"
   },
   "type": "module",
@@ -29,21 +29,21 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-shell": "workspace:*",
-    "@deepseek-ai/dsh-bash-local": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/shell": "workspace:*",
+    "@liwa/bash-local": "workspace:*",
+    "@liwa/sandbox": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-shell": "workspace:*",
-    "@deepseek-ai/dsh-bash-local": "workspace:*",
-    "@deepseek-ai/dsh-subprocess-local": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-local": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/node-addon-system": "workspace:~",
-    "@deepseek-ai/dsh-session-projection": "workspace:*"
+    "@liwa/shell": "workspace:*",
+    "@liwa/bash-local": "workspace:*",
+    "@liwa/subprocess-local": "workspace:*",
+    "@liwa/sandbox": "workspace:*",
+    "@liwa/sandbox-local": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/node-addon-system": "workspace:~",
+    "@liwa/session-projection": "workspace:*"
   }
 }

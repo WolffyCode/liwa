@@ -84,8 +84,8 @@ async function mockPlatform() {
 
 describe.skipIf(!existsSync(builtHost))('built Desktop welcome flow', () => {
   it('persists explicit API keys and browser account login independently across Host restarts', async () => {
-    vi.stubEnv('DSH_CLIENT_VERSION', '1.2.3')
-    const root = mkdtempSync(join(tmpdir(), 'dsh-desktop-welcome-'))
+    vi.stubEnv('LIWA_CLIENT_VERSION', '1.2.3')
+    const root = mkdtempSync(join(tmpdir(), 'liwa-desktop-welcome-'))
     let host: DesktopHostProcess | undefined
     const platform = await mockPlatform()
     try {
@@ -94,8 +94,8 @@ describe.skipIf(!existsSync(builtHost))('built Desktop welcome flow', () => {
       }
       const home = join(root, 'home')
       mkdirSync(home)
-      vi.stubEnv('DSH_HOME', home)
-      vi.stubEnv('DSH_TELEMETRY_MODE', 'DISABLED')
+      vi.stubEnv('LIWA_HOME', home)
+      vi.stubEnv('LIWA_TELEMETRY_MODE', 'DISABLED')
       const project = prepareDevelopmentProject({
         projectDir: join(root, 'project'),
         cliDir: join(repository, 'apps/cli'),
@@ -118,7 +118,7 @@ describe.skipIf(!existsSync(builtHost))('built Desktop welcome flow', () => {
       cpSync(process.execPath, join(nodeBin, process.platform === 'win32' ? 'node.exe' : 'node'))
       const paths = resolveDesktopPaths(home)
       const manager = new DesktopProjectManager(paths, {
-        dsh: project,
+        liwa: project,
       })
       await manager.applyRelease()
       writeFileSync(join(paths.profile, 'cordis.patch.yml'), `- id: webserver\n  config:\n    host: 127.0.0.1\n    port: 0\n- id: deepseek-account\n  config:\n${process.platform === 'linux' ? '    desktopPlatform: darwin\n' : ''}    platformOrigin: ${platform.origin}\n    allowLoopbackHttp: true\n    requestHeaders:\n      Cookie: test_gate=synthetic\n`)

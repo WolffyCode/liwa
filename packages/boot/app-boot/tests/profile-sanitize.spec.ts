@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, expect, it, vi } from 'vitest'
 import { initProfile, PROFILE_PATCH_FILENAME, readProfileManifest, sanitizeProfile } from '../src/index.ts'
-import { PROFILE_TEMPLATES } from '@deepseek-ai/dsh-official-bundles'
+import { PROFILE_TEMPLATES } from '@liwa/official-bundles'
 
 vi.mock('node:fs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:fs')>()
@@ -20,7 +20,7 @@ afterEach(() => {
 })
 
 function fixture() {
-  const root = mkdtempSync(join(tmpdir(), 'dsh-profile-sanitize-'))
+  const root = mkdtempSync(join(tmpdir(), 'liwa-profile-sanitize-'))
   roots.push(root)
   const dir = join(root, 'profiles', 'web')
   const bundles = PROFILE_TEMPLATES.web!.bundles
@@ -44,7 +44,7 @@ it('recovers a profile without loading its broken plugins or patch', () => {
   expect(existsSync(patch)).toBe(false)
   expect(readFileSync(backup!, 'utf8')).toBe(': broken YAML')
   expect(readFileSync(pluginManifest, 'utf8')).toBe('{broken')
-  expect(readProfileManifest('test', dir)).toEqual({ ...manifest, dsh: { profile: { bundles } } })
+  expect(readProfileManifest('test', dir)).toEqual({ ...manifest, liwa: { profile: { bundles } } })
   initProfile(dir, bundles)
   expect(readFileSync(patch, 'utf8')).toContain('[]')
 })

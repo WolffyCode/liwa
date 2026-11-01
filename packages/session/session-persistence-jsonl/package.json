@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-session-persistence-jsonl",
-  "description": "JSONL durable session persistence backend for the DeepSeek Harness",
+  "name": "@liwa/session-persistence-jsonl",
+  "description": "JSONL durable session persistence backend for Liwa",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/session/session-persistence-jsonl"
   },
   "type": "module",
@@ -30,24 +30,24 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-persistence": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/session": "workspace:*",
+    "@liwa/session-persistence": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "dependencies": {
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session-format": "workspace:*",
-    "@deepseek-ai/dsh-session-format-catalog": "workspace:*",
-    "@deepseek-ai/dsh-session-format-v3-to-v4": "workspace:*",
-    "@deepseek-ai/node-addon-system": "workspace:~",
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session-format": "workspace:*",
+    "@liwa/session-format-catalog": "workspace:*",
+    "@liwa/session-format-v3-to-v4": "workspace:*",
+    "@liwa/node-addon-system": "workspace:~",
+    "@liwa/schemastery": "workspace:~",
     "koffi": "3.1.1",
     "p-limit": "7.3.3"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-format-v0-to-v1": "workspace:*",
-    "@deepseek-ai/dsh-session-persistence": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/session": "workspace:*",
+    "@liwa/session-format-v0-to-v1": "workspace:*",
+    "@liwa/session-persistence": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   }
 }

@@ -1,13 +1,13 @@
 /**
  * Tests for the filesystem Service Definition: registration, duplicate-service
  * behavior, disposal, and the branded id factories. The provider primitives and
- * policy live in `dsh-fs-local` and `dsh-fs-observation-policy`; this seam owns only the
+ * policy live in `liwa-fs-local` and `liwa-fs-observation-policy`; this seam owns only the
  * abstract service contract, so a minimal fake backend exercises it.
  */
 
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { FileSystem, FsError, FsTargetKey, FsVersion } from '@deepseek-ai/dsh-fs'
+import { Context } from '@liwa/cordis'
+import { FileSystem, FsError, FsTargetKey, FsVersion } from '@liwa/fs'
 import type {
   FsDirEntry,
   FsEditOutcome,
@@ -17,7 +17,7 @@ import type {
   FsTarget,
   FsWriteIntent,
   FsWriteOutcome,
-} from '@deepseek-ai/dsh-fs'
+} from '@liwa/fs'
 
 /** A minimal in-memory fake implementing the provider primitives. */
 class FakeFileSystem extends FileSystem {
@@ -191,7 +191,7 @@ describe('branded id factories', () => {
 })
 
 describe('FsError', () => {
-  it('carries a stable code and HarnessError name', () => {
+  it('carries a stable code and LiwaError name', () => {
     const error = new FsError('nope', 'FS_NOT_FOUND')
     expect(error.code).toBe('FS_NOT_FOUND')
     expect(error.name).toBe('FsError')

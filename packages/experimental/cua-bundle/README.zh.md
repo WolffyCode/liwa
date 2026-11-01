@@ -3,7 +3,7 @@ description: "开启可选 macOS Computer Use 及权限页面。"
 kind: "package-bundle"
 ---
 
-# @deepseek-ai/dsh-cua-bundle
+# @liwa/cua-bundle
 
 [English](README.md) | 中文
 
@@ -24,11 +24,11 @@ kind: "package-bundle"
 <a id="use-this-package"></a>
 ## 使用本包
 
-本流程面向从源码运行 macOS Web 或未打包 Desktop 的开发者。在「插件 → 添加插件」中输入 `@deepseek-ai/dsh-cua-bundle`，点击「安装」，再点击「立即启用」。DSH 会启用随应用提供的副本，无需重新下载。已启用的组合包保留在插件页，可打开 Computer Use 管理权限或将其关闭。关闭后卡片再次隐藏，除非该 profile 单独安装了它。权限页通过可选系统查询显示 macOS 报告的责任应用，指引用户申请权限并在系统设置中开启对应开关。若 macOS 显示其他应用名称，以系统提示为准。Web 版在仓库根目录运行以下命令：
+本流程面向从源码运行 macOS Web 或未打包 Desktop 的开发者。在「插件 → 添加插件」中输入 `@liwa/cua-bundle`，点击「安装」，再点击「立即启用」。灵鲸会启用随应用提供的副本，无需重新下载。已启用的组合包保留在插件页，可打开 Computer Use 管理权限或将其关闭。关闭后卡片再次隐藏，除非该 profile 单独安装了它。权限页通过可选系统查询显示 macOS 报告的责任应用，指引用户申请权限并在系统设置中开启对应开关。若 macOS 显示其他应用名称，以系统提示为准。Web 版在仓库根目录运行以下命令：
 
 ```sh
 pnpm run build
-pnpm dsh web
+pnpm liwa web
 ```
 
 源码 Desktop 的启动方式和独立开发配置档见[桌面开发说明](../../../apps/desktop/README.zh.md)。需要使用 Computer Use 的配置档分别开启该功能。
@@ -37,11 +37,11 @@ pnpm dsh web
 
 关闭会卸载提供方，并从其 Agent 作用域中撤回 CUA 工具。执行器配置、新会话默认值和已保存的授权保留。
 
-Computer Use 仅支持 macOS DSH Host。原生提供方是仅在 macOS 安装的可选依赖，共享 CUA 和 Client 包仍随安装提供。其他 Host 默认不在插件列表和模型推荐中展示此组合包，并在保存设置前拒绝启用。profile 显式安装的依赖和已保存的选择仍保留管理入口。已选中的组合包会在启动时跳过并报告原因，仍可取消选择；已保存的用户设置保留。其他操作系统上的浏览器可以连接受支持的 Mac Host。
+Computer Use 仅支持 macOS 灵鲸 Host。原生提供方是仅在 macOS 安装的可选依赖，共享 CUA 和 Client 包仍随安装提供。其他 Host 默认不在插件列表和模型推荐中展示此组合包，并在保存设置前拒绝启用。profile 显式安装的依赖和已保存的选择仍保留管理入口。已选中的组合包会在启动时跳过并报告原因，仍可取消选择；已保存的用户设置保留。其他操作系统上的浏览器可以连接受支持的 Mac Host。
 
-准备失败时，已保存的选择保留，CUA 操作不可用。刷新或重新打开插件页查看组件诊断，修复后重启 DSH。
+准备失败时，已保存的选择保留，CUA 操作不可用。刷新或重新打开插件页查看组件诊断，修复后重启灵鲸。
 
-显式启用会进行只读权限检查，可能启动 helper，但不会打开系统授权弹窗。[权限页面](../cua/README.zh.md) 提供系统申请入口、设置跳转和自动检测。任务访问应用前会单独询问用户。应用授权保存在按 profile 隔离的存储域中。会话授权跨 turn、连接、DSH 重启和 Computer Use 启停保留，只在原对话中生效。可以在同一页面撤销授权。
+显式启用会进行只读权限检查，可能启动 helper，但不会打开系统授权弹窗。[权限页面](../cua/README.zh.md) 提供系统申请入口、设置跳转和自动检测。任务访问应用前会单独询问用户。应用授权保存在按 profile 隔离的存储域中。会话授权跨 turn、连接、灵鲸重启和 Computer Use 启停保留，只在原对话中生效。可以在同一页面撤销授权。
 
 -----
 

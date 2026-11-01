@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
-import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
+import * as primitives from '@liwa/client-ui-primitives'
 import {
   IconAlarmClockOutlineRegular, IconApiOutlineRegular, IconArchiveOutlineRegular, IconFolderCloseRegular,
   IconAppsAddOutlineMedium, IconGoalOutlineRegular, IconSendOutlineRegular,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+} from '@liwa/client-ui-primitives'
 import { ICON_ARTWORK, type IconGlyph, type IconWeight } from '../src/icons/artwork.ts'
 import {
   BrowseOutlineArtwork, ChatLinesOutlineArtwork, CodeBracketsArtwork, FolderCloseArtwork, GlobeOutlineArtwork,
@@ -191,15 +191,14 @@ describe('product icon set', () => {
 })
 
 describe('FishLogo', () => {
-  it('renders the fish path in currentColor at the native ratio', () => {
+  it('renders the placeholder mark in currentColor as a square', () => {
     const { container } = render(<primitives.FishLogo />)
     const svg = container.querySelector('svg')!
     expect(svg.getAttribute('width')).toBe('24')
-    expect(Number(svg.getAttribute('height'))).toBeCloseTo(17.66, 1)
-    expect(svg.getAttribute('viewBox')).toBe('0 0 23.16 17.04')
+    expect(svg.getAttribute('height')).toBe('24')
+    expect(svg.getAttribute('viewBox')).toBe('0 0 24 24')
     expect(container.querySelectorAll('path')).toHaveLength(1)
     expect(container.innerHTML).toContain('currentColor')
-    expect(container.innerHTML).not.toContain('M0 0L23.16')
   })
 })
 

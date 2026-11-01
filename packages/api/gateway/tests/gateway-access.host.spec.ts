@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, afterEach } from 'vitest'
-import { Context, symbols } from '@deepseek-ai/cordis'
-import { apply as applyConnection, inject as connectionInject } from '@deepseek-ai/dsh-client-connection'
+import { Context, symbols } from '@liwa/cordis'
+import { apply as applyConnection, inject as connectionInject } from '@liwa/client-connection'
 import RemoteAccessService, {
   type RemoteAccessAction,
   type RemoteAccessBinding,
@@ -8,7 +8,7 @@ import RemoteAccessService, {
   type RemoteAccessResource,
   type RemoteAccessResourceKind,
   type RemoteAccessRole,
-} from '@deepseek-ai/dsh-api-remote-access'
+} from '@liwa/api-remote-access'
 import {
   Remote,
   RemoteScope,
@@ -22,10 +22,10 @@ import {
   type TypertLookup,
   type TypertResource,
   type TypertResourceResolveInput,
-} from '@deepseek-ai/dsh-typert-protocol'
-import TypertRegistry from '@deepseek-ai/dsh-typert-registry'
+} from '@liwa/typert-protocol'
+import TypertRegistry from '@liwa/typert-registry'
 import { z } from 'zod'
-import TypertGatewayService, { type TypertRemoteEventDispatch } from '@deepseek-ai/dsh-api-gateway'
+import TypertGatewayService, { type TypertRemoteEventDispatch } from '@liwa/api-gateway'
 import { callResources, eventResources } from '../src/access.ts'
 import { provideBrowserCredentials } from './browser-credentials.ts'
 import { ownerPeer, peerFor } from './peer.ts'
@@ -34,7 +34,7 @@ interface AccessAgent {
   readonly id: string
 }
 
-declare module '@deepseek-ai/dsh-typert-protocol' {
+declare module '@liwa/typert-protocol' {
   interface PrincipalMap {
     /** Test-only non-owner caller shared by the access specs. */
     'test-guest': { readonly kind: 'test-guest'; readonly guest: string }

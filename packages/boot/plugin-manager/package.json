@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-plugin-manager",
-  "description": "Current-profile plugin and bundle management shared by dsh CLI, Web and agent tools",
+  "name": "@liwa/plugin-manager",
+  "description": "Current-profile plugin and bundle management shared by liwa CLI, Web and agent tools",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/boot/plugin-manager"
   },
   "type": "module",
@@ -64,63 +64,63 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-app-boot": "workspace:*",
-    "@deepseek-ai/dsh-atomic-write": "workspace:*",
-    "@deepseek-ai/dsh-official-bundles": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/app-boot": "workspace:*",
+    "@liwa/atomic-write": "workspace:*",
+    "@liwa/official-bundles": "workspace:*",
+    "@liwa/schemastery": "workspace:~",
     "execa": "^10.0.1",
     "semver": "^7.8.5",
     "yaml": "^2.9.0",
     "zod": "4.4.3",
-    "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/dsh-plugin-detail": "workspace:*",
-    "@deepseek-ai/dsh-timeout": "workspace:*",
+    "@liwa/util-values": "workspace:*",
+    "@liwa/plugin-detail": "workspace:*",
+    "@liwa/timeout": "workspace:*",
     "hosted-git-info": "^9.0.3"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-host-plugin-inventory": "workspace:*",
-    "@deepseek-ai/dsh-subprocess": "workspace:*",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-hmr": "workspace:*",
-    "@deepseek-ai/dsh-brand": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*",
-    "@deepseek-ai/dsh-user-approval": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/host-plugin-inventory": "workspace:*",
+    "@liwa/subprocess": "workspace:*",
+    "@liwa/typert-protocol": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/hmr": "workspace:*",
+    "@liwa/brand": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/sandbox": "workspace:*",
+    "@liwa/user-approval": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-hmr": {
+    "@liwa/hmr": {
       "optional": true
     },
-    "@deepseek-ai/dsh-user-approval": {
+    "@liwa/user-approval": {
       "optional": true
     }
   },
   "devDependencies": {
     "chokidar": "^4.0.3",
     "@types/semver": "^7.8.0",
-    "@deepseek-ai/dsh-package-manifest": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-host-plugin-inventory": "workspace:*",
-    "@deepseek-ai/dsh-subprocess": "workspace:*",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:*",
-    "@deepseek-ai/dsh-tool-executor-native": "workspace:*",
-    "@deepseek-ai/dsh-tool-testkit": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-hmr": "workspace:*",
-    "@deepseek-ai/cordis-plugin-timer": "workspace:~",
-    "@deepseek-ai/dsh-brand": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*",
-    "@deepseek-ai/dsh-user-approval": "workspace:*",
-    "@deepseek-ai/dsh-client-connection": "workspace:*",
+    "@liwa/package-manifest": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/host-plugin-inventory": "workspace:*",
+    "@liwa/subprocess": "workspace:*",
+    "@liwa/typert-protocol": "workspace:*",
+    "@liwa/tool-executor-native": "workspace:*",
+    "@liwa/tool-testkit": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/hmr": "workspace:*",
+    "@liwa/cordis-plugin-timer": "workspace:~",
+    "@liwa/brand": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/agent": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/sandbox": "workspace:*",
+    "@liwa/user-approval": "workspace:*",
+    "@liwa/client-connection": "workspace:*",
     "@types/hosted-git-info": "^3.0.5"
   }
 }

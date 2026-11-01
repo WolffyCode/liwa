@@ -5,45 +5,45 @@
 /:
   en: ed2539c6d12f814a
   zh: 55a6c9d7f0d21fb7
-/deepseek-ai-dsh-cua:
-  en: 0ef7ee882840cf1b
-  zh: 01b9e768eff2d302
-/deepseek-ai-dsh-cua/summary:
+/liwa-cua:
+  en: c2f67d0626e9451d
+  zh: 3b0d2d3e7e28e179
+/liwa-cua/summary:
   en: f4d9cc48587d62a2
   zh: d1bac6c1fe7eb29e
-/deepseek-ai-dsh-cua/table-of-contents:
+/liwa-cua/table-of-contents:
   en: 5db4d4fea25493b9
   zh: 65ab64fc24eb0d09
-/deepseek-ai-dsh-cua/use-this-package:
-  en: ed736a45140a6d56
-  zh: 8dc89373a0a88fcc
-/deepseek-ai-dsh-cua/use-this-package/permission-controls:
-  en: deb4ec91b186399e
-  zh: 7febe3b08dbb185e
-/deepseek-ai-dsh-cua/understand-the-implementation:
-  en: 951d9a3b925de34a
-  zh: f3444e127953a63f
-/deepseek-ai-dsh-cua/further-exploration:
-  en: 166e3c1f9a67f753
-  zh: 698c5136c5350052
-/deepseek-ai-dsh-cua/model-experience:
+/liwa-cua/use-this-package:
+  en: 5d5a3998a8e16909
+  zh: 76bfc139f1f6f36a
+/liwa-cua/use-this-package/permission-controls:
+  en: a01eab9742ed9ffd
+  zh: 50fc4eb6363da3e0
+/liwa-cua/understand-the-implementation:
+  en: 8b137b9a3081bd5d
+  zh: 7daf3647c8ac828e
+/liwa-cua/further-exploration:
+  en: e80c808b5027a0e1
+  zh: e4d86fd0f9e3c8ac
+/liwa-cua/model-experience:
   en: 215e7ba838619b7b
   zh: a311da3843709f90
-/deepseek-ai-dsh-cua/model-experience/authorized-application-operations:
+/liwa-cua/model-experience/authorized-application-operations:
   en: 0faf1e4d409d61aa
   zh: 1866dd0b702f2a26
-/deepseek-ai-dsh-cua/model-experience/authorized-application-operations/what-the-model-sees:
-  en: 4f90c4a6b121bce0
-  zh: c36ab4b80985c76e
-/deepseek-ai-dsh-cua/model-experience/authorized-application-operations/token-effect:
+/liwa-cua/model-experience/authorized-application-operations/what-the-model-sees:
+  en: bc691a1565d72771
+  zh: 5c4812f52c053bc1
+/liwa-cua/model-experience/authorized-application-operations/token-effect:
   en: 88463f0304c207bd
   zh: 6d3ae2f1b8e45747
-/deepseek-ai-dsh-cua/model-experience/authorized-application-operations/kv-cache-effect:
+/liwa-cua/model-experience/authorized-application-operations/kv-cache-effect:
   en: 2d5df52dafa1d940
   zh: 06e815759b9150c3
-/deepseek-ai-dsh-cua/known-limitations-and-deferred-work:
-  en: a4b9d44dec85b0d1
-  zh: 3a393e508397ecc2
-/deepseek-ai-dsh-cua/known-limitations-and-deferred-work/dev-note:
+/liwa-cua/known-limitations-and-deferred-work:
+  en: 0d955e453dcd06b0
+  zh: 25cb768e2f90b528
+/liwa-cua/known-limitations-and-deferred-work/dev-note:
   en: 0a1253c6f7b5e8b9
   zh: 9f56528562c7c914

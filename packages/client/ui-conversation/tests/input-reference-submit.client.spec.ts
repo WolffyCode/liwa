@@ -4,13 +4,13 @@
  * accepted prompt.
  */
 import { describe, expect, it, vi } from 'vitest'
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@liwa/cordis'
 import type { InputTriggerController, SubmitOutcome, PickOutcome } from '../src/client/contract/input.ts'
 import { SessionInputShell } from '../src/client/input/facade.ts'
 import type { DraftAttachmentId } from '../src/client/contract/input.ts'
 
-const mention = '@[Research](dsh-session:InNvdXJjZSI)'
-const spacedMention = '@[Research notes](dsh-session:InNvdXJjZSI)'
+const mention = '@[Research](liwa-session:InNvdXJjZSI)'
+const spacedMention = '@[Research notes](liwa-session:InNvdXJjZSI)'
 const commandAttachments = {
   serialize: () => Promise.resolve([]),
   release: () => {},

@@ -1,19 +1,19 @@
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
+import { executeToolFixture } from '@liwa/tool-testkit'
 import { describe, expect, it, onTestFinished } from 'vitest'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
-import { createUserMessage, ToolCallId  } from '@deepseek-ai/dsh-llm'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import SubagentRuntime from '@deepseek-ai/dsh-subagent'
-import { STRUCTURED_OUTPUT_TOOL } from '@deepseek-ai/dsh-subagent'
-import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import * as spawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
-import PtcWorkflowEngine from '@deepseek-ai/dsh-workflow-ptc'
+import { Context } from '@liwa/cordis'
+import type { Agent } from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import { mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
+import { createUserMessage, ToolCallId  } from '@liwa/llm'
+import { SessionId } from '@liwa/session'
+import SubagentRuntime from '@liwa/subagent'
+import { STRUCTURED_OUTPUT_TOOL } from '@liwa/subagent'
+import * as JsonlSessionPersistence from '@liwa/session-persistence-jsonl'
+import * as spawn from '@liwa/subagent-spawn-in-process'
+import PtcWorkflowEngine from '@liwa/workflow-ptc'
 import { MockAdapter, maxTokensResponse, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import * as toolRalph from '../src/index.ts'
 import { mountWorkflowRuntime } from '../../../workflow/workflow-ptc/tests/setup.ts'
@@ -22,7 +22,7 @@ type MockScript = ConstructorParameters<typeof MockAdapter>[0]
 const testToolSignal = new AbortController().signal
 
 async function mountExecution(ctx: Context): Promise<string> {
-  const cwd = await mkdtemp(join(tmpdir(), 'dsh-ralph-'))
+  const cwd = await mkdtemp(join(tmpdir(), 'liwa-ralph-'))
   onTestFinished(async () => {
     await ctx.fiber.dispose()
     await rm(cwd, { recursive: true, force: true })
@@ -52,7 +52,7 @@ async function mountRalph(script: MockScript, config: toolRalph.Config) {
   return { ctx, adapter, parentHandle, parent: parentHandle.agent }
 }
 
-describe('dsh-tool-ralph over the real spawn and sandboxed PTC stack', () => {
+describe('liwa-tool-ralph over the real spawn and sandboxed PTC stack', () => {
   it('uses distinct empty-seed children, shared cwd, and only the prior bounded handoff', { timeout: 90_000 }, async () => {
     const firstReport = {
       status: 'continue',

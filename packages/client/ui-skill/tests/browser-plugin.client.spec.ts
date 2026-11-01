@@ -15,16 +15,16 @@ import { es, fr, de, ru, pt } from '../src/client/locales.ts'
  * projections. Direct driving is deliberate: this spec owns only the
  * source's own contract.
  */
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import { SlotRegistry } from '@deepseek-ai/dsh-client-ui-renderer/client'
-import { InputTriggerService } from '@deepseek-ai/dsh-client-ui-input-trigger/client'
-import { RemoteError, TestRemote, TestSessions } from '@deepseek-ai/dsh-client-test-runtime'
-import type { SessionFixture } from '@deepseek-ai/dsh-client-test-runtime'
-import type { InjectParams } from '@deepseek-ai/dsh-client-ui-slots'
-import type { RemoteFailure } from '@deepseek-ai/dsh-api-remotes/client'
-import type { ClientSessionContext, InputTriggerSource } from '@deepseek-ai/dsh-client-ui-input-trigger/client'
+import type { SessionId } from '@liwa/session/types'
+import { SlotRegistry } from '@liwa/client-ui-renderer/client'
+import { InputTriggerService } from '@liwa/client-ui-input-trigger/client'
+import { RemoteError, TestRemote, TestSessions } from '@liwa/client-test-runtime'
+import type { SessionFixture } from '@liwa/client-test-runtime'
+import type { InjectParams } from '@liwa/client-ui-slots'
+import type { RemoteFailure } from '@liwa/api-remotes/client'
+import type { ClientSessionContext, InputTriggerSource } from '@liwa/client-ui-input-trigger/client'
 import { apply, inject } from '../src/client/index.ts'
 import { SkillRow as SkillToolRow } from '../src/client/SkillRow.tsx'
 import { SkillReference, type SkillReferenceInjected } from '../src/client/SkillReference.tsx'
@@ -510,11 +510,11 @@ describe('reference preview', () => {
     first.openSkill('review')
     await b.source.candidates(proj('first'), req(''))
     expect(openReference).toHaveBeenLastCalledWith(proj('first'), { ref: '/review' })
-    expect(b.openResource).toHaveBeenLastCalledWith('dsh-resource://file/session/first//skills/review/SKILL.md')
+    expect(b.openResource).toHaveBeenLastCalledWith('liwa-resource://file/session/first//skills/review/SKILL.md')
     second.openSkill('review')
     await b.source.candidates(proj('second'), req(''))
     expect(openReference).toHaveBeenLastCalledWith(proj('second'), { ref: '/review' })
-    expect(b.openResource).toHaveBeenLastCalledWith('dsh-resource://file/session/second//skills/review/SKILL.md')
+    expect(b.openResource).toHaveBeenLastCalledWith('liwa-resource://file/session/second//skills/review/SKILL.md')
     vi.spyOn(b.sessions, 'scope').mockReturnValueOnce(undefined)
     first.openSkill('review')
     expect(openReference).toHaveBeenCalledTimes(2)
@@ -533,7 +533,7 @@ describe('reference preview', () => {
     await vi.waitFor(() => { expect(list).toHaveBeenCalledTimes(1) })
     gate.resolve({ ok: true, value: { skills: rows } })
     await candidates
-    expect(openResource).toHaveBeenCalledExactlyOnceWith('dsh-resource://file/session/preview//skills/review/SKILL.md')
+    expect(openResource).toHaveBeenCalledExactlyOnceWith('liwa-resource://file/session/preview//skills/review/SKILL.md')
     expect(source.openReference!(session, { ref: '/virtual' })).toBe(false)
     expect(source.openReference!(session, { ref: '/missing' })).toBe(false)
     expect(source.openReference!(session, { ref: '/review' })).toBe(true)
@@ -555,10 +555,10 @@ describe('reference preview', () => {
     const secondDone = source.candidates(proj('second'), req(''))
     second.resolve({ ok: true, value: { skills: [{ ...rows[0]!, path: '/second/SKILL.md' }] } })
     await secondDone
-    expect(openResource).toHaveBeenLastCalledWith('dsh-resource://file/session/second//second/SKILL.md')
+    expect(openResource).toHaveBeenLastCalledWith('liwa-resource://file/session/second//second/SKILL.md')
     first.resolve({ ok: true, value: { skills: rows } })
     await firstDone
-    expect(openResource).toHaveBeenLastCalledWith('dsh-resource://file/session/first//skills/review/SKILL.md')
+    expect(openResource).toHaveBeenLastCalledWith('liwa-resource://file/session/first//skills/review/SKILL.md')
     expect(list.mock.calls.map(([payload]) => payload)).toEqual([{ sessionId: 'first' }, { sessionId: 'second' }])
   })
 

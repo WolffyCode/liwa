@@ -15,12 +15,12 @@ afterEach(() => { vi.resetAllMocks() })
 
 type Handler = (event: IpcMainInvokeEvent, ...args: unknown[]) => unknown
 async function fixture() {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-native-file-drag-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-native-file-drag-'))
   onTestFinished(async () => { await rm(root, { recursive: true, force: true }) })
   electron.getPath.mockReturnValue(root)
   const icon = {} as NativeImage
   electron.getFileIcon.mockResolvedValue(icon)
-  const frame = Object.assign({} as WebFrameMain, { url: 'dsh-app://app/' })
+  const frame = Object.assign({} as WebFrameMain, { url: 'liwa-app://app/' })
   const window = Object.assign({} as BrowserWindow, { isDestroyed: () => false,
     webContents: Object.assign({} as WebContents, { mainFrame: frame, startDrag: vi.fn() }) })
   let current: BrowserWindow | undefined = window
@@ -68,8 +68,8 @@ it('uses shared sender authorization and releases failed native starts', async (
   await vi.waitFor(async () => { expect(await readdir(f.root)).toEqual([]) })
   f.frame.url = 'https://other.test/'
   await expect(f.call(DESKTOP_IPC.fileDragStart, handle)).rejects.toThrow('unowned renderer')
-  f.frame.url = 'dsh-app://app/'
-  Object.assign(f.event, { senderFrame: { url: 'dsh-app://app/' } })
+  f.frame.url = 'liwa-app://app/'
+  Object.assign(f.event, { senderFrame: { url: 'liwa-app://app/' } })
   await expect(f.call(DESKTOP_IPC.fileDragStart, handle)).rejects.toThrow('Unowned file drag request')
   Object.assign(f.event, { senderFrame: f.frame, sender: {} })
   await expect(f.call(DESKTOP_IPC.fileDragStart, handle)).rejects.toThrow('Unowned file drag request')
@@ -112,7 +112,7 @@ it('aborts pending Host authorization when the bridge closes', async () => {
   const resource = Promise.withResolvers<null>()
   f.resolve.mockReturnValue(resource.promise)
   const preparing = f.call(DESKTOP_IPC.fileDragPrepare,
-    { kind: 'resource', address: 'dsh-resource://file/session/s/file.pdf', name: 'file.pdf', mediaType: 'application/pdf' })
+    { kind: 'resource', address: 'liwa-resource://file/session/s/file.pdf', name: 'file.pdf', mediaType: 'application/pdf' })
   const rejected = expect(preparing).rejects.toThrow('File transfer closed')
   await vi.waitFor(() => { expect(f.resolve).toHaveBeenCalledOnce() })
   const signal = f.resolve.mock.calls[0]![1]
@@ -131,7 +131,7 @@ it('borrows only authorized unchanged files with the requested export name, neve
   await writeFile(path, bytes)
   const sha256 = createHash('sha256').update(bytes).digest('hex')
   f.resolve.mockResolvedValue({ path, size: bytes.length, sha256 })
-  const request = { kind: 'resource', address: 'dsh-resource://file/session/s/report.pdf', name: 'report.pdf', mediaType: 'application/pdf', sha256, size: bytes.length }
+  const request = { kind: 'resource', address: 'liwa-resource://file/session/s/report.pdf', name: 'report.pdf', mediaType: 'application/pdf', sha256, size: bytes.length }
   const handle = await f.call(DESKTOP_IPC.fileDragPrepare, request)
   expect(f.resolve).toHaveBeenCalledWith(request.address, expect.any(AbortSignal))
   expect(await readdir(f.root)).toEqual(['report.pdf'])
@@ -148,7 +148,7 @@ it('requests a copy for renamed, changed, and nonlocal resources', async () => {
   await writeFile(path, bytes)
   const sha256 = createHash('sha256').update(bytes).digest('hex')
   f.resolve.mockResolvedValue({ path, size: bytes.length, sha256 })
-  const request = { kind: 'resource', address: 'dsh-resource://file/session/s/report.pdf', name: 'renamed.pdf', mediaType: 'application/pdf' }
+  const request = { kind: 'resource', address: 'liwa-resource://file/session/s/report.pdf', name: 'renamed.pdf', mediaType: 'application/pdf' }
   expect(await f.call(DESKTOP_IPC.fileDragPrepare, request)).toBeUndefined()
   expect(await f.call(DESKTOP_IPC.fileDragPrepare, { ...request, name: 'report.pdf', sha256: '0'.repeat(64) })).toBeUndefined()
   expect(await f.call(DESKTOP_IPC.fileDragPrepare, { ...request, name: 'report.pdf', size: 100 })).toBeUndefined()

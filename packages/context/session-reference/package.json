@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-session-reference",
+  "name": "@liwa/session-reference",
   "description": "Cross-session snapshot references and durable untrusted model context (ctx.sessionReferenceResolver)",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/context/session-reference"
   },
   "type": "module",
@@ -46,59 +46,59 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-brand": "workspace:*",
-    "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/brand": "workspace:*",
+    "@liwa/util-values": "workspace:*",
+    "@liwa/schemastery": "workspace:~",
     "zod": "4.4.3"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-compaction": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-output-retention": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-session-projection-cache": "workspace:*",
-    "@deepseek-ai/dsh-session-query": "workspace:*",
-    "@deepseek-ai/dsh-session-title": "workspace:*",
-    "@deepseek-ai/dsh-spill": "workspace:*",
-    "@deepseek-ai/dsh-subagent": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/compaction": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/output-retention": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/session-projection-cache": "workspace:*",
+    "@liwa/session-query": "workspace:*",
+    "@liwa/session-title": "workspace:*",
+    "@liwa/spill": "workspace:*",
+    "@liwa/subagent": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/typert-protocol": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-spill": {
+    "@liwa/spill": {
       "optional": true
     },
-    "@deepseek-ai/dsh-session-projection-cache": {
+    "@liwa/session-projection-cache": {
       "optional": true
     }
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-compaction": "workspace:*",
-    "@deepseek-ai/dsh-fs-local": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-output-retention": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-session-projection-cache": "workspace:*",
-    "@deepseek-ai/dsh-session-query": "workspace:*",
-    "@deepseek-ai/dsh-session-query-sqlite": "workspace:*",
-    "@deepseek-ai/dsh-session-title": "workspace:*",
-    "@deepseek-ai/dsh-spill": "workspace:*",
-    "@deepseek-ai/dsh-subagent": "workspace:*",
-    "@deepseek-ai/dsh-spill-local": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-tool-executor-native": "workspace:*",
-    "@deepseek-ai/dsh-tool-fs": "workspace:*",
-    "@deepseek-ai/dsh-tool-testkit": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:*",
-    "@deepseek-ai/dsh-working-directory": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/compaction": "workspace:*",
+    "@liwa/fs-local": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/output-retention": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/session-projection-cache": "workspace:*",
+    "@liwa/session-query": "workspace:*",
+    "@liwa/session-query-sqlite": "workspace:*",
+    "@liwa/session-title": "workspace:*",
+    "@liwa/spill": "workspace:*",
+    "@liwa/subagent": "workspace:*",
+    "@liwa/spill-local": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/tool-executor-native": "workspace:*",
+    "@liwa/tool-fs": "workspace:*",
+    "@liwa/tool-testkit": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/typert-protocol": "workspace:*",
+    "@liwa/working-directory": "workspace:*"
   }
 }

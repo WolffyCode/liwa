@@ -3,11 +3,11 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/user/develop/framework/service.md
 /services-and-dependencies:
-  en: 03fe9a674163a484
-  zh: 45374665fa3bb8e3
+  en: 43815956221b6f38
+  zh: b825c1d9bdaf1b57
 /services-and-dependencies/what-is-a-service:
-  en: fb06be7799d75fc0
-  zh: a59fdde61e557b24
+  en: 8153b0ee9467f373
+  zh: 80e5af755c4b6236
 /services-and-dependencies/consume-a-service:
   en: 6655ebf5abce2a59
   zh: 0c91cac86768d63e
@@ -32,9 +32,9 @@
 /services-and-dependencies/service-isolation:
   en: cc4be89f19cb7615
   zh: e00e86a615f59003
-/services-and-dependencies/built-in-harness-services:
-  en: 07eb5bcc03955284
-  zh: 5eec0f3c6e01c0f9
+/services-and-dependencies/built-in-liwa-services:
+  en: 52d614ba9a8a5e27
+  zh: 3b244489880b5190
 /services-and-dependencies/next-steps:
-  en: 1537e6955eb02c62
-  zh: 6430f34e63cfa533
+  en: 943946365a71c3e3
+  zh: da13fb658b178485

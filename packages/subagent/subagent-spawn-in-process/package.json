@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-subagent-spawn-in-process",
+  "name": "@liwa/subagent-spawn-in-process",
   "description": "In-process spawn subagent backend: runs a fresh child agent on ctx.agents",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/subagent/subagent-spawn-in-process"
   },
   "type": "module",
@@ -29,28 +29,28 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-subagent": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/subagent": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:*",
-    "@deepseek-ai/dsh-bash-local": "workspace:*",
-    "@deepseek-ai/dsh-subprocess-local": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-llm-deepseek": "workspace:*",
-    "@deepseek-ai/dsh-llm-deepseek-api-key": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-subagent": "workspace:*",
-    "@deepseek-ai/dsh-tool-bash": "workspace:*",
-    "@deepseek-ai/dsh-tool-subagent": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-session-persistence-jsonl": "workspace:*"
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-loop": "workspace:*",
+    "@liwa/agent-loop-testkit": "workspace:*",
+    "@liwa/bash-local": "workspace:*",
+    "@liwa/subprocess-local": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/llm-deepseek": "workspace:*",
+    "@liwa/llm-deepseek-api-key": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/subagent": "workspace:*",
+    "@liwa/tool-bash": "workspace:*",
+    "@liwa/tool-subagent": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/session-persistence-jsonl": "workspace:*"
   }
 }

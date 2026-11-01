@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-10-12-peer-principal-and-remote-access.md
 /agent-note-peer-principals-and-method-level-remote-access-control:
-  en: 0c0fd0f567bd5c89
-  zh: 464e34d05737a7bc
+  en: 0a92de155fce0e6a
+  zh: 092370bc1e6c1e0b
 /agent-note-peer-principals-and-method-level-remote-access-control/problem:
   en: f5b70ee2c0a3e32a
   zh: 68776a916cb41f11
@@ -27,8 +27,8 @@
   en: a01ac57fc71a84f0
   zh: 3e488ef3da5e4b8c
 /agent-note-peer-principals-and-method-level-remote-access-control/decision/method-level-access-control:
-  en: 725a2d4145c0a75e
-  zh: b98a64532cadeaba
+  en: 5a607f387c8ee97d
+  zh: 085a454286f6e9fa
 /agent-note-peer-principals-and-method-level-remote-access-control/decision/method-level-access-control/correspondence-with-rbac:
   en: a78a2410eb52f777
   zh: a868bf1b0e690c9f
@@ -36,8 +36,8 @@
   en: d50ae22978165c57
   zh: 8c1fcfb7dc2d3367
 /agent-note-peer-principals-and-method-level-remote-access-control/decision/method-level-access-control/endpoint-resources:
-  en: 582f5f527ecc58c8
-  zh: 4a4b68361de2dcf0
+  en: 2eedb747848c2395
+  zh: a0039aa969c1cf9c
 /agent-note-peer-principals-and-method-level-remote-access-control/decision/method-level-access-control/roles-bindings-and-policies-deepseek-ai-dsh-api-remote-access:
   en: e57f396239ea9f56
   zh: ddb26278b1521ceb
@@ -60,20 +60,20 @@
   en: 7be28cd7e19e5377
   zh: 30b5aee957271d6c
 /agent-note-peer-principals-and-method-level-remote-access-control/decision/security-invariants:
-  en: 2094587c320b6ccc
-  zh: 3a1d2a6b343500f4
+  en: 113721f8dfb07c62
+  zh: a5f4ed38461bbeb2
 /agent-note-peer-principals-and-method-level-remote-access-control/decision/recording-the-message-source:
-  en: 2ee3abed24d418f4
-  zh: 25653dd24b95c220
+  en: acd63a785f558401
+  zh: df117d0b47e26c8c
 /agent-note-peer-principals-and-method-level-remote-access-control/decision/code-review-rule-and-documentation:
-  en: e9a2e0d1534b8fe7
-  zh: 085813c0b2b3c0d8
+  en: 291c399aa741213c
+  zh: a31c46cb6857fd5c
 /agent-note-peer-principals-and-method-level-remote-access-control/decision/out-of-scope-and-future-work:
-  en: a84e07716719e3b5
-  zh: 9649ccb4a035a1df
+  en: 4b2d48c32a70a8f3
+  zh: 73b5a3bce460fef6
 /agent-note-peer-principals-and-method-level-remote-access-control/decision/relation-to-existing-notes:
-  en: 305ec45a7cd85ed7
-  zh: d2cd4209a56b1d0c
+  en: 5f82729765979fc9
+  zh: 7e5653b129381524
 /agent-note-peer-principals-and-method-level-remote-access-control/alternatives-considered:
   en: 60da38bca6e9c3d6
   zh: 61ea578fe8185b61

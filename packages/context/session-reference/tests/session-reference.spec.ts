@@ -1,14 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import AgentRegistry, { agentEvents, type Agent } from '@deepseek-ai/dsh-agent'
-import { CompactionId, compactCheckpointSource } from '@deepseek-ai/dsh-compaction'
-import LlmRuntime, { createDeveloperMessage, createMessage, createSystemMessage, createToolResultMessage, createUserMessage, LlmError, ToolCallId } from '@deepseek-ai/dsh-llm'
-import type { ContextFormed } from '@deepseek-ai/dsh-llm'
-import SessionStore, { Session, SessionId, SessionSeq } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import SessionQueryEngine from '@deepseek-ai/dsh-session-query'
-import SessionTitleService from '@deepseek-ai/dsh-session-title'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import { Context } from '@liwa/cordis'
+import AgentRegistry, { agentEvents, type Agent } from '@liwa/agent'
+import { CompactionId, compactCheckpointSource } from '@liwa/compaction'
+import LlmRuntime, { createDeveloperMessage, createMessage, createSystemMessage, createToolResultMessage, createUserMessage, LlmError, ToolCallId } from '@liwa/llm'
+import type { ContextFormed } from '@liwa/llm'
+import SessionStore, { Session, SessionId, SessionSeq } from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import SessionQueryEngine from '@liwa/session-query'
+import SessionTitleService from '@liwa/session-title'
+import SystemPrompt from '@liwa/system-prompt'
 import SessionReferenceResolver, {
   decodeSessionReferenceUri,
   encodeSessionReferenceUri,
@@ -16,11 +16,11 @@ import SessionReferenceResolver, {
   parseSessionReferenceText,
   type Config,
   type SessionReferenceErrorCode,
-} from '@deepseek-ai/dsh-session-reference'
+} from '@liwa/session-reference'
 import { stringifyTagSafeJson } from '../src/serialization.ts'
-import { SpillLocator, SpillStore, type SaveTextSpill, type SpillRef } from '@deepseek-ai/dsh-spill'
+import { SpillLocator, SpillStore, type SaveTextSpill, type SpillRef } from '@liwa/spill'
 
-declare module '@deepseek-ai/dsh-llm' {
+declare module '@liwa/llm' {
   interface MessageSourceMap {
     'test': { kind: 'test' } & ContextFormed
     'workspace': { kind: 'workspace' } & ContextFormed
@@ -278,23 +278,23 @@ describe('session reference URI and inline mentions', () => {
       { sessionId, label: sessionId },
     ])
 
-    expect(parseSessionReferenceText('what is a dsh-session: URI?')).toEqual({
-      text: 'what is a dsh-session: URI?',
+    expect(parseSessionReferenceText('what is a liwa-session: URI?')).toEqual({
+      text: 'what is a liwa-session: URI?',
       references: [],
     })
-    expect(parseSessionReferenceText('see dsh-session:%%%')).toEqual({
-      text: 'see dsh-session:%%%',
+    expect(parseSessionReferenceText('see liwa-session:%%%')).toEqual({
+      text: 'see liwa-session:%%%',
       references: [],
     })
   })
 
   it('rejects malformed explicit references and base64url-shaped bare candidates', () => {
     expect(() => decodeSessionReferenceUri('https://example.test')).toThrow(expectCode('SESSION_REFERENCE_INVALID_REFERENCE'))
-    expect(() => parseSessionReferenceText('see dsh-session:IiJ')).toThrow(expectCode('SESSION_REFERENCE_INVALID_REFERENCE'))
-    expect(() => parseSessionReferenceText('@[bad](dsh-session:%%%)')).toThrow(expectCode('SESSION_REFERENCE_INVALID_REFERENCE'))
-    const nonString = `dsh-session:${Buffer.from(JSON.stringify({ id: 'x' })).toString('base64url')}`
+    expect(() => parseSessionReferenceText('see liwa-session:IiJ')).toThrow(expectCode('SESSION_REFERENCE_INVALID_REFERENCE'))
+    expect(() => parseSessionReferenceText('@[bad](liwa-session:%%%)')).toThrow(expectCode('SESSION_REFERENCE_INVALID_REFERENCE'))
+    const nonString = `liwa-session:${Buffer.from(JSON.stringify({ id: 'x' })).toString('base64url')}`
     expect(() => decodeSessionReferenceUri(nonString)).toThrow(expectCode('SESSION_REFERENCE_INVALID_REFERENCE'))
-    expect(() => decodeSessionReferenceUri('dsh-session:IiJ')).toThrow(expectCode('SESSION_REFERENCE_INVALID_REFERENCE'))
+    expect(() => decodeSessionReferenceUri('liwa-session:IiJ')).toThrow(expectCode('SESSION_REFERENCE_INVALID_REFERENCE'))
   })
 })
 
@@ -909,7 +909,7 @@ describe('session reference discovery and preparation', () => {
     const target = ctx.sessions.create(SessionId('target'))
     const agent = fakeAgent(target)
     const malformed = createUserMessage({
-      content: [{ type: 'text', text: '@[bad](dsh-session:not-canonical)' }],
+      content: [{ type: 'text', text: '@[bad](liwa-session:not-canonical)' }],
       source: { kind: 'user' },
     })
     const readSurface = vi.spyOn(ctx.sessionQuery, 'readSurface')

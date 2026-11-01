@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/upgrade-guide/v0.2.1-rc.3/generated-worktree-names/guide.md
 /:
-  en: c799b94bab92d848
-  zh: 1e1f9cd572fc8665
+  en: 84a93006f5d2c295
+  zh: 6e3e39b900f0ef78
 /update-consumers-of-generated-worktree-names:
-  en: 210bc140e21cc68e
-  zh: dccc592eec81f483
+  en: d2601b49dd60a630
+  zh: a2d00039ea45f1c9
 /update-consumers-of-generated-worktree-names/change:
-  en: 7a7d682dde36dd7e
-  zh: b15e84c570d11ee2
+  en: 9a1e83e61c845c4f
+  zh: 4f8aa031da93cb95
 /update-consumers-of-generated-worktree-names/migration:
-  en: f87101bee9c48150
-  zh: 3a79159711475af3
+  en: cbb582ad951ae9d5
+  zh: bf5e1724a166b772

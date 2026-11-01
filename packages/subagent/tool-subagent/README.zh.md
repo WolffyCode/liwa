@@ -3,7 +3,7 @@ description: "面向模型的 subagent 委派工具，供用户与维护者配�
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-tool-subagent
+# @liwa/tool-subagent
 
 [English](README.md) | 中文
 
@@ -34,9 +34,9 @@ kind: "package-reference"
 先加载 subagent 服务、一个进程内或远程后端与本工具，然后指定提供方名称。此组合暴露一个委派给 `spawn` 后端的 `subagent` 工具：
 
 ```yaml
-- name: '@deepseek-ai/dsh-subagent'
-- name: '@deepseek-ai/dsh-subagent-spawn-in-process'
-- name: '@deepseek-ai/dsh-tool-subagent'
+- name: '@liwa/subagent'
+- name: '@liwa/subagent-spawn-in-process'
+- name: '@liwa/tool-subagent'
   config:
     provider: spawn
     toolName: subagent
@@ -53,13 +53,13 @@ kind: "package-reference"
 | `allowedAgentPresets` | — | 非空 preset-id 白名单，作为模型可选的 `agent_preset` 枚举；与 `agentPreset` 同时配置时必须包含后者 |
 | `maxDepth` | Host 设置（`1`） | 绝对委派深度上限（`0` 禁止委派）；`'provider-managed'` 不向进程外提供方发送上限 |
 
-生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-tool-subagent)是每个受支持字段及其 JSDoc 的穷尽式真源。
+生成的[配置目录](../../../docs/config-catalog.zh.md#liwatool-subagent)是每个受支持字段及其 JSDoc 的穷尽式真源。
 
 ### 受管理的委派
 
 运行时接受子任务后，每次调用都会返回 `started subagent <childId>`，不等待子任务结果。activation 独立于已完成的工具调用拥有这项工作；运行时发送完成通知并释放执行资源。
 
-所有后端的完成通知都会附带最终回答。本地 Spawn 和 Fork 子任务还可以发送消息，在活跃期间通过 `send_message` 接受更多工作，或在结束后恢复。Codex、Claude Code、ACP 与 DSH SDK 后端不接受后续消息。
+所有后端的完成通知都会附带最终回答。本地 Spawn 和 Fork 子任务还可以发送消息，在活跃期间通过 `send_message` 接受更多工作，或在结束后恢复。Codex、Claude Code、ACP 与灵鲸 SDK 后端不接受后续消息。
 
 `maxDepth` 限制递归深度（`0` 禁止委派）；省略时，每次委派读取 Host 当前的 `subagent.maxDepth` 设置，初始值为 `1`。数值深度要求提供方具备 `depthLimit` 能力；`'provider-managed'` 把预算留给进程外提供方。工具在达到上限时仍然可见；每次尝试启动都会检查调用 agent 的当前深度，被拒绝时返回出错的工具结果。
 
@@ -74,7 +74,7 @@ kind: "package-reference"
 
 ### 选择子级 LLM
 
-设置 `modelSelection: true` 后，该实例公开可选的 `provider`、`model` 和 `reasoning_effort` 字段；未设置的实例拒绝选择字段。在每个工具作用域的一个实例上设置 `modelDiscovery: true`，以注册 `list_subagent_models`；该选项独立于 `modelSelection`，默认关闭。同一作用域的第二个发现工具所有者会注册失败。发现工具随其所属插件实例存续，在委派提供方缺席时仍然可用，并在该实例卸载时移除。Web 与 Desktop preset 为 spawn 启用发现和路由字段，为 fork 保持两者关闭。Host 的 `/model-selection-settings` 服务在 Agent 创建时读取用户偏好，与工具安装无关。创建监听器在投影注册完成前订阅并等待句柄；注册失败或所属插件卸载会使 Agent 发布失败。启用时，精确路由列表记录在每个新顶层 Session 中，由子 Session 继承，并在恢复时保留；之后的设置编辑只影响新 Session。没有已记录 Session 策略时，发现和显式选择只允许父 Agent 当前生效的 provider/model 及其支持的强度。路由字段要求后端公布 `agentOptions`；进程内 Spawn、Fork 和 DSH SDK 满足条件，ACP、Codex 和 Claude Code 会使挂载失败。
+设置 `modelSelection: true` 后，该实例公开可选的 `provider`、`model` 和 `reasoning_effort` 字段；未设置的实例拒绝选择字段。在每个工具作用域的一个实例上设置 `modelDiscovery: true`，以注册 `list_subagent_models`；该选项独立于 `modelSelection`，默认关闭。同一作用域的第二个发现工具所有者会注册失败。发现工具随其所属插件实例存续，在委派提供方缺席时仍然可用，并在该实例卸载时移除。Web 与 Desktop preset 为 spawn 启用发现和路由字段，为 fork 保持两者关闭。Host 的 `/model-selection-settings` 服务在 Agent 创建时读取用户偏好，与工具安装无关。创建监听器在投影注册完成前订阅并等待句柄；注册失败或所属插件卸载会使 Agent 发布失败。启用时，精确路由列表记录在每个新顶层 Session 中，由子 Session 继承，并在恢复时保留；之后的设置编辑只影响新 Session。没有已记录 Session 策略时，发现和显式选择只允许父 Agent 当前生效的 provider/model 及其支持的强度。路由字段要求后端公布 `agentOptions`；进程内 Spawn、Fork 和灵鲸 SDK 满足条件，ACP、Codex 和 Claude Code 会使挂载失败。
 
 一次调用需同时提供 `provider` 与 `model`；当配置值、父 agent 值或提供方持有的默认值能提供路由时，也可只提供推理等级。静态的 `provider.agentRouteDefaults` 在存在时构成提供方／模型基线；工具配置与模型字段会在路由相关强度合并和确切路由预检前覆盖它。没有这些默认值的提供方会使用父 agent 最新已记录请求中的兼容值，再使用父级首次请求前的创建选项，并保留配置的 `maxTokens`。更改路由但未显式提供推理等级时，会清除继承的路由自有等级，使所选模型解析自己的默认值。实时 LLM 适配器在创建子 agent 前校验有效路由。目录成员资格只提供建议，因此适配器接受时，模型可以使用未列出的 id。
 
@@ -125,9 +125,9 @@ kind: "package-reference"
 当包级约定不够用时阅读以下页面；它们从工具运行时行为进入它所委派其上的 seam，以及相邻的子 agent 工具。
 
 - [Subagent 子系统](../../../docs/subsystems/subagent.zh.md)——提供方、activation、结果与继续执行。
-- [dsh-tool-subagent-control](../tool-subagent-control/README.zh.md)——可继续子 agent 的消息、中断与列表工具。
-- [生成工具目录](../../../docs/tool-catalog.zh.md#deepseek-aidsh-tool-subagent)——默认 schema 与后端相关的措辞。
-- [生成配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-tool-subagent)——每个受支持配置字段。
+- [liwa-tool-subagent-control](../tool-subagent-control/README.zh.md)——可继续子 agent 的消息、中断与列表工具。
+- [生成工具目录](../../../docs/tool-catalog.zh.md#liwatool-subagent)——默认 schema 与后端相关的措辞。
+- [生成配置目录](../../../docs/config-catalog.zh.md#liwatool-subagent)——每个受支持配置字段。
 - [历史模型选择 subagent 路由](../../../.agents/notes/archived/feature/2026-08-18-model-selected-subagent-routes.md)——选择策略、继承、发现与 fork 限制。
 
 -----
@@ -139,7 +139,7 @@ kind: "package-reference"
 
 #### 模型看到什么
 
-生成的默认 [`subagent` schema](../../../docs/tool-catalog.zh.md#deepseek-aidsh-tool-subagent) 在提供方存在时以配置的工具名公开。设置了 `modelSelection` 的实例在每个 Session 中都会增加 `provider`、`model`、`reasoning_effort` 及路由指导。`allowedAgentPresets` 增加 `agent_preset` 枚举及默认或继承选择的引导。上下文继承和继续执行能力决定任务与后续工作描述。Agent 限制同时作用于继承自 preset 的委派工具的 schema、执行入口和指导文本，恢复历史 `toolFilter` 覆盖时也相同；同级 Agent 不受影响。preset 选择提示仅依赖工具配置，因此不依赖其他 preset 的声明顺序。
+生成的默认 [`subagent` schema](../../../docs/tool-catalog.zh.md#liwatool-subagent) 在提供方存在时以配置的工具名公开。设置了 `modelSelection` 的实例在每个 Session 中都会增加 `provider`、`model`、`reasoning_effort` 及路由指导。`allowedAgentPresets` 增加 `agent_preset` 枚举及默认或继承选择的引导。上下文继承和继续执行能力决定任务与后续工作描述。Agent 限制同时作用于继承自 preset 的委派工具的 schema、执行入口和指导文本，恢复历史 `toolFilter` 覆盖时也相同；同级 Agent 不受影响。preset 选择提示仅依赖工具配置，因此不依赖其他 preset 的声明顺序。
 
 #### Token 影响
 
@@ -167,7 +167,7 @@ kind: "package-reference"
 
 #### 模型看到什么
 
-可见的委派工具共享一段指导，列出按名称排序的工具，指示模型一起启动相互独立的委派，并在它们运行时继续工作；当只剩等待它们的结果时，结束本轮，而不是休眠或轮询。结束本轮之所以可行，是因为子代理结束后会通知父级，而通知到达空闲父级会起一次独立的模型请求；在子代理继续推进期间，宿主交替等待 `agent.whenIdle()` 与 `waitForChildren(agent)`（[`dsh-subagent`](../subagent/README.zh.md)、[`session.ts`](../../acp/acp/src/session.ts)）。隐藏或不可用的工具不列入其中；没有可见工具时，不输出指导。`subagent` 和 `subagent_fork` 都可见时，文本为：
+可见的委派工具共享一段指导，列出按名称排序的工具，指示模型一起启动相互独立的委派，并在它们运行时继续工作；当只剩等待它们的结果时，结束本轮，而不是休眠或轮询。结束本轮之所以可行，是因为子代理结束后会通知父级，而通知到达空闲父级会起一次独立的模型请求；在子代理继续推进期间，宿主交替等待 `agent.whenIdle()` 与 `waitForChildren(agent)`（[`liwa-subagent`](../subagent/README.zh.md)、[`session.ts`](../../acp/acp/src/session.ts)）。隐藏或不可用的工具不列入其中；没有可见工具时，不输出指导。`subagent` 和 `subagent_fork` 都可见时，文本为：
 
 ##### 工具指导 section
 

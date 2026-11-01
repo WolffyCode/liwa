@@ -2,25 +2,25 @@
  * JSON-RPC methods and notifications for out-of-process harness SDKs.
  * The surrounding context owns plugins, persistence, and configured adapters.
  *
- * @module @deepseek-ai/dsh-sdk-jsonrpc-server/server
+ * @module @liwa/sdk-jsonrpc-server/server
  */
 
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@liwa/cordis'
 import { resolve } from 'node:path'
 import { SdkUserQuestionBridge } from './user-questions.ts'
-import { brandString } from '@deepseek-ai/dsh-brand'
-import type { Agent, AgentHandle } from '@deepseek-ai/dsh-agent'
-import { admitEncodedImages, type EncodedImageAttachment, type ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
-import { createUserMessage, ReasoningEffortId, type ContentBlock, type LlmRuntime } from '@deepseek-ai/dsh-llm'
-import { carrierKeyOf, type Scoped } from '@deepseek-ai/dsh-scope'
-import type { SessionId, SessionLogOffset } from '@deepseek-ai/dsh-session'
-import type {} from '@deepseek-ai/dsh-working-directory'
-import type {} from '@deepseek-ai/dsh-user-approval'
+import { brandString } from '@liwa/brand'
+import type { Agent, AgentHandle } from '@liwa/agent'
+import { admitEncodedImages, type EncodedImageAttachment, type ImageAttachmentRef } from '@liwa/attachment'
+import { createUserMessage, ReasoningEffortId, type ContentBlock, type LlmRuntime } from '@liwa/llm'
+import { carrierKeyOf, type Scoped } from '@liwa/scope'
+import type { SessionId, SessionLogOffset } from '@liwa/session'
+import type {} from '@liwa/working-directory'
+import type {} from '@liwa/user-approval'
 
-import type {} from '@deepseek-ai/dsh-schedule'
-import type SubagentRuntime from '@deepseek-ai/dsh-subagent'
-import type { SubagentRunEndInfo } from '@deepseek-ai/dsh-subagent'
-import * as LlmDeepSeek from '@deepseek-ai/dsh-llm-deepseek-api-key'
+import type {} from '@liwa/schedule'
+import type SubagentRuntime from '@liwa/subagent'
+import type { SubagentRunEndInfo } from '@liwa/subagent'
+import * as LlmDeepSeek from '@liwa/llm-deepseek-api-key'
 import type {
   ApprovalRequestParams,
   InitializeParams,
@@ -37,7 +37,7 @@ import type {
   SdkEncodedImageBlock,
   SubagentFinishedNotification,
   SubagentStartedNotification,
-} from '@deepseek-ai/dsh-sdk-protocol'
+} from '@liwa/sdk-protocol'
 
 interface SessionRecord {
   handle: AgentHandle
@@ -70,12 +70,12 @@ function subagentParentOf(carrier: Scoped<SubagentRuntime>): Agent {
 }
 
 /** Deployment-specific status mapping for SDK turn and subagent outcomes. */
-export interface HarnessSdkJsonRpcServerOptions {
+export interface LiwaSdkJsonRpcServerOptions {
   /** Report max-token termination as an accepted result instead of an infrastructure error. */
   maxTokensAsSuccess?: boolean
 }
 
-function successStatus(reason: string, options: HarnessSdkJsonRpcServerOptions): 'ok' | 'error' {
+function successStatus(reason: string, options: LiwaSdkJsonRpcServerOptions): 'ok' | 'error' {
   if (reason === 'completed') return 'ok'
   return reason === 'max-tokens' && options.maxTokensAsSuccess === true ? 'ok' : 'error'
 }
@@ -85,7 +85,7 @@ function successStatus(reason: string, options: HarnessSdkJsonRpcServerOptions):
  * subscribes to session, agent, and subagent lifecycle events until shutdown;
  * reinitialization is unsupported.
  */
-export class HarnessSdkJsonRpcServer {
+export class LiwaSdkJsonRpcServer {
   private cwd = process.cwd()
   private provider = 'deepseek-official'
   private model = 'deepseek-official'
@@ -108,7 +108,7 @@ export class HarnessSdkJsonRpcServer {
   constructor(
     private readonly ctx: Context,
     private readonly transport: JsonRpcTransportPeer,
-    private readonly options: HarnessSdkJsonRpcServerOptions = {},
+    private readonly options: LiwaSdkJsonRpcServerOptions = {},
   ) {
     this.disposers.push(ctx.on('approval/request', async (request, next) => {
       if (!this.approvalRequests || !this.ownsAgent(request.agent)) return next()
@@ -242,7 +242,7 @@ export class HarnessSdkJsonRpcServer {
     this.userQuestions.enabled = params.capabilities?.userQuestions === true
     this.initialized = true
     this.initialization.resolve()
-    return { serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' } }
+    return { serverInfo: { name: 'liwa-sdk-runtime', version: '0.0.1' } }
   }
 
   /**
@@ -454,7 +454,7 @@ export class HarnessSdkJsonRpcServer {
       case 'shutdown':
         return this.shutdown()
       default:
-        throw new Error(`unknown DeepSeek Harness SDK runtime method: ${method}`)
+        throw new Error(`unknown Liwa SDK runtime method: ${method}`)
     }
   }
 
@@ -482,7 +482,7 @@ export class HarnessSdkJsonRpcServer {
     // No preset composition: this server's compositions keep the model-facing
     // rows in the host plane, so this agent reads them from the global layer. A
     // deployment that configures a roster has to join one here first
-    // (@deepseek-ai/dsh-agent-preset-registry README, "Composing a child agent").
+    // (@liwa/agent-preset-registry README, "Composing a child agent").
     const agentOptions = {
       provider: this.provider,
       model: this.model,

@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-package-manifest",
-  "description": "Shared type declarations for package.json.dsh configuration fields",
+  "name": "@liwa/package-manifest",
+  "description": "Shared type declarations for package.json.liwa configuration fields",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/util/package-manifest"
   },
   "type": "module",
@@ -27,9 +27,9 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   }
 }

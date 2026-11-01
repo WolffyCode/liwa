@@ -1,34 +1,34 @@
 /** HTTP lifecycle, routing and optional Cordis services under real composition. */
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
-import { installAccountTaskCancellation, type DeepSeekAccount } from '@deepseek-ai/dsh-deepseek-account'
-import type { AnonymousUserId } from '@deepseek-ai/dsh-anonymous-user-id'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
+import { installAccountTaskCancellation, type DeepSeekAccount } from '@liwa/deepseek-account'
+import type { AnonymousUserId } from '@liwa/anonymous-user-id'
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Context, LoggerLevel, Service } from '@deepseek-ai/cordis'
-import LocalAttachments from '@deepseek-ai/dsh-attachment-local'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import { AttachmentId } from '@deepseek-ai/dsh-attachment'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import Include from '@deepseek-ai/cordis-plugin-include'
-import LlmRuntime, { createAssistantMessage, createDeveloperMessage, createSystemMessage, createToolResultMessage, createUserMessage, ToolCallId } from '@deepseek-ai/dsh-llm'
-import type { Message } from '@deepseek-ai/dsh-llm'
-import { credentialRef } from '@deepseek-ai/dsh-credentials'
-import LocalCredentials from '@deepseek-ai/dsh-credentials-local'
+import { Context, LoggerLevel, Service } from '@liwa/cordis'
+import LocalAttachments from '@liwa/attachment-local'
+import AgentRegistry from '@liwa/agent'
+import type { Agent } from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime from '@liwa/tools'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import { AttachmentId } from '@liwa/attachment'
+import Loader from '@liwa/cordis-plugin-loader'
+import Include from '@liwa/cordis-plugin-include'
+import LlmRuntime, { createAssistantMessage, createDeveloperMessage, createSystemMessage, createToolResultMessage, createUserMessage, ToolCallId } from '@liwa/llm'
+import type { Message } from '@liwa/llm'
+import { credentialRef } from '@liwa/credentials'
+import LocalCredentials from '@liwa/credentials-local'
 import { profileComposition } from '../../../settings/settings/tests/profile-composition.ts'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
+import SessionStore, { SessionId } from '@liwa/session'
 import { DeepSeekAdapter } from '../src/adapter.ts'
 import { object } from '../src/replay.ts'
 import { DeepSeekFileStore } from '../src/file-store.ts'
-import * as Messages from '@deepseek-ai/dsh-llm-deepseek-api-key'
-import * as AccountProvider from '@deepseek-ai/dsh-llm-deepseek-account'
+import * as Messages from '@liwa/llm-deepseek-api-key'
+import * as AccountProvider from '@liwa/llm-deepseek-account'
 import { adapter, assemble, chunks, MODEL, options, prepareExtensions, server, sse, textEvents, user, sourceModuleLoader } from './helpers.ts'
 
 const cleanup: (() => Promise<unknown>)[] = []
@@ -44,9 +44,9 @@ async function endpoint(...args: Parameters<typeof server>) {
   return instance
 }
 async function context() {
-  const home = await mkdtemp(join(tmpdir(), 'dsh-messages-test-'))
+  const home = await mkdtemp(join(tmpdir(), 'liwa-messages-test-'))
   cleanup.push(() => rm(home, { recursive: true, force: true }))
-  vi.stubEnv('DSH_HOME', home)
+  vi.stubEnv('LIWA_HOME', home)
   const ctx = new Context()
   cleanup.push(() => ctx.fiber.dispose())
   return { ctx, home }
@@ -58,7 +58,7 @@ async function send(agent: Agent, text: string) {
   expect(agent.session.snapshotEvents().at(-1)).toMatchObject({ type: 'turn/end', data: { reason: { kind: 'completed' } } })
 }
 
-declare module '@deepseek-ai/dsh-llm' {
+declare module '@liwa/llm' {
   interface MessageSourceMap {
     'saved-notice': { kind: 'saved-notice' }
   }
@@ -263,7 +263,7 @@ describe('direct Messages HTTP', () => {
       resolveAuth: () => Promise.resolve({ headers: { 'x-api-key': 'fixture-key' },
         onRequestError: async () => { throw new Error('credential storage unavailable') },
       }),
-      resolveUserId: () => 'fixture-user' as import('@deepseek-ai/dsh-anonymous-user-id').AnonymousUserId,
+      resolveUserId: () => 'fixture-user' as import('@liwa/anonymous-user-id').AnonymousUserId,
       prepareExtensions,
     })
     await expect(chunks(llm.stream(options()))).rejects.toMatchObject({ code: 'AUTH', failure: { status: 401 } })
@@ -286,7 +286,7 @@ describe('Cordis provider composition', () => {
     const price = () => ctx.llm.imageRequestPricing('deepseek-official', model)!
     const dummy = { attachmentId: AttachmentId(`sha256:${'a'.repeat(64)}`), width: 1, height: 1, bytes: 3, mediaType: 'image/png' as const }
     expect(price().priceImages([{ type: 'image', attachment: dummy }])[0]?.text).toBeDefined()
-    await ctx.plugin(LocalAttachments, { dshHome: home })
+    await ctx.plugin(LocalAttachments, { liwaHome: home })
     const attachment = await ctx.attachments.saveImage({ data: await readFile(new URL('fixtures/red.png', import.meta.url)), mediaType: 'image/png' })
     expect(price().priceImages([{ type: 'image', attachment }])[0]?.text).not.toContain('/mounted/image.png')
     class MappedFiles extends Service {
@@ -311,12 +311,12 @@ describe('Cordis provider composition', () => {
     await ctx.plugin(Loader)
     ctx.loader.builtins.include = Include
     const modules = new Map<string, unknown>([
-      ['@deepseek-ai/dsh-llm', LlmRuntime], ['@deepseek-ai/dsh-llm-deepseek-api-key', Messages], ['@deepseek-ai/dsh-llm-deepseek-account', AccountProvider],
-      ['@deepseek-ai/dsh-credentials-local', LocalCredentials],
-      ['@deepseek-ai/dsh-agent', AgentRegistry], ['@deepseek-ai/dsh-agent-loop', AgentLoop],
-      ['@deepseek-ai/dsh-session', SessionStore], ['@deepseek-ai/dsh-session-projection', SessionProjectionRegistry],
-      ['@deepseek-ai/dsh-system-prompt', SystemPrompt], ['@deepseek-ai/dsh-tools', ToolRuntime],
-      ['@deepseek-ai/dsh-tool-executor-native', NativeToolExecutor],
+      ['@liwa/llm', LlmRuntime], ['@liwa/llm-deepseek-api-key', Messages], ['@liwa/llm-deepseek-account', AccountProvider],
+      ['@liwa/credentials-local', LocalCredentials],
+      ['@liwa/agent', AgentRegistry], ['@liwa/agent-loop', AgentLoop],
+      ['@liwa/session', SessionStore], ['@liwa/session-projection', SessionProjectionRegistry],
+      ['@liwa/system-prompt', SystemPrompt], ['@liwa/tools', ToolRuntime],
+      ['@liwa/tool-executor-native', NativeToolExecutor],
     ])
     // The importer supplies source modules while Loader still owns configuration and effects.
     for (const name of modules.keys()) {
@@ -334,7 +334,7 @@ describe('Cordis provider composition', () => {
 
   it.each(['deepseek-account', 'deepseek-official'].flatMap(provider => [
     { provider, body: JSON.stringify({ error: { type: 'authentication_error', message: 'API key is invalid' } }) },
-    { provider, body: JSON.stringify({ error: { message: 'Authentication Fails (invalid dsh token)' } }) },
+    { provider, body: JSON.stringify({ error: { message: 'Authentication Fails (invalid liwa token)' } }) },
     { provider, body: 'Unauthorized' },
     { provider, body: '' },
   ]))('handles $provider HTTP 401 independently of the response body ($body)', async ({ provider, body }) => {
@@ -369,7 +369,7 @@ describe('Cordis provider composition', () => {
   it('finishes the active account turn when rejected credentials publish sign-out', async () => {
     const { ctx } = await boot((response) => {
       response.writeHead(401)
-      response.end(JSON.stringify({ error: { message: 'Authentication Fails (invalid dsh token)' } }))
+      response.end(JSON.stringify({ error: { message: 'Authentication Fails (invalid liwa token)' } }))
     })
     ctx.provide('deepseekAccount', { resolveToken: async (_url: string): Promise<string | undefined> => 'fixture-token',
       rejectToken: async (_token: string): Promise<void> => { ctx.emit('deepseek-account/signed-out') } } as DeepSeekAccount)
@@ -385,7 +385,7 @@ describe('Cordis provider composition', () => {
   it('preserves the inference error when rejected credential removal fails', async () => {
     const { ctx } = await boot((response) => {
       response.writeHead(401)
-      response.end(JSON.stringify({ error: { message: 'Authentication Fails (invalid dsh token)' } }))
+      response.end(JSON.stringify({ error: { message: 'Authentication Fails (invalid liwa token)' } }))
     })
     ctx.provide('deepseekAccount', { resolveToken: async (_url: string): Promise<string | undefined> => 'fixture-token',
       rejectToken: async (_token: string): Promise<void> => { throw new Error('credential storage unavailable') } } as DeepSeekAccount)

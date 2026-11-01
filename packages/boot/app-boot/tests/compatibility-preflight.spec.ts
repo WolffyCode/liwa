@@ -3,19 +3,19 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync,
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { Context } from '@deepseek-ai/cordis'
-import { parseEntryYaml, type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
-import type { EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
+import { Context } from '@liwa/cordis'
+import { parseEntryYaml, type PatchOptions } from '@liwa/cordis-plugin-include'
+import type { EntryOptions } from '@liwa/cordis-plugin-loader'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import {
-  PROFILE_COMPATIBILITY_FILENAME, PluginPackages, boot, getDshRuntimeVersion,
+  PROFILE_COMPATIBILITY_FILENAME, PluginPackages, boot, getLiwaRuntimeVersion,
   prepareProfileEntries, prepareProfilePatches, type ProfileContext,
 } from '../src/index.ts'
 
-const runtime = getDshRuntimeVersion()
+const runtime = getLiwaRuntimeVersion()
 
 function fixture() {
-  const temporary = mkdtempSync(join(tmpdir(), 'dsh-preflight-'))
+  const temporary = mkdtempSync(join(tmpdir(), 'liwa-preflight-'))
   let ctx: Context | undefined
   onTestFinished(async () => {
     try { await ctx?.fiber.dispose() } finally { rmSync(temporary, { recursive: true, force: true }) }
@@ -35,7 +35,7 @@ function fixture() {
     mkdirSync(packageDir, { recursive: true })
     writeFileSync(join(packageDir, 'package.json'), JSON.stringify({
       name, version: options.version ?? '1.0.0', type: 'module', exports: './index.mjs',
-      ...options.peer === undefined ? {} : { peerDependencies: { '@deepseek-ai/dsh-test': options.peer } },
+      ...options.peer === undefined ? {} : { peerDependencies: { '@liwa/test': options.peer } },
     }))
     writeFileSync(join(packageDir, 'index.mjs'), `import { appendFileSync } from 'node:fs'
 const record = (value) => appendFileSync(new URL('${pathToFileURL(effects).href}'), value + '\\n')
@@ -120,7 +120,7 @@ it('blocks a denied plugin reached through a package-imports alias', async () =>
   mkdirSync(aliased)
   writeFileSync(join(aliased, 'package.json'), JSON.stringify({
     name: 'denied-plugin', version: '1.0.0', type: 'module', exports: './index.mjs',
-    peerDependencies: { '@deepseek-ai/dsh-test': '^9.0.0' },
+    peerDependencies: { '@liwa/test': '^9.0.0' },
   }))
   writeFileSync(join(aliased, 'index.mjs'), `import { appendFileSync } from 'node:fs'
 appendFileSync(new URL('${pathToFileURL(join(f.dir, 'effects')).href}'), 'import:denied-plugin\\n')
@@ -172,7 +172,7 @@ it('denies a row whose peer metadata cannot be validated', async () => {
   const f = fixture()
   f.plugin('malformed-plugin')
   writeFileSync(join(f.dir, 'node_modules', 'malformed-plugin', 'package.json'),
-    JSON.stringify({ name: 'malformed-plugin', version: '1.0.0', peerDependencies: ['@deepseek-ai/dsh'] }))
+    JSON.stringify({ name: 'malformed-plugin', version: '1.0.0', peerDependencies: ['@liwa/cli'] }))
   expect(await f.run(insert('malformed-plugin'))).toEqual([])
   expect(f.warnings.join('\n')).toContain('cannot be validated')
 })
@@ -206,7 +206,7 @@ it('starts with no exemptions and a warning when the permission file is unparsab
   writeFileSync(join(f.dir, PROFILE_COMPATIBILITY_FILENAME), '{ not json')
   expect(await f.run(insert('denied-plugin'))).toEqual([])
   expect(f.warnings.join('\n')).toContain('is not valid JSON')
-  expect(f.warnings.join('\n')).toContain('is incompatible with dsh')
+  expect(f.warnings.join('\n')).toContain('is incompatible with liwa')
 })
 
 describe('manifest resolution', () => {
@@ -297,8 +297,8 @@ describe('manifest resolution', () => {
     // A preset declaration may omit the id that the Loader type requires.
     prepareProfileEntries(context(f), [{ name: 'denied-plugin' } as EntryOptions], base)
     expect(f.warnings).toEqual([
-      expect.stringMatching(/^dsh: disabling profile plugin row "row": Plugin denied-plugin@1\.0\.0 /),
-      expect.stringMatching(/^dsh: disabling profile plugin denied-plugin: Plugin denied-plugin@1\.0\.0 /),
+      expect.stringMatching(/^liwa: disabling profile plugin row "row": Plugin denied-plugin@1\.0\.0 /),
+      expect.stringMatching(/^liwa: disabling profile plugin denied-plugin: Plugin denied-plugin@1\.0\.0 /),
     ])
   })
 

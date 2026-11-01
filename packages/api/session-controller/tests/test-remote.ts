@@ -1,15 +1,15 @@
 /** Test-only direct Remote face over the Session Controller's internal controllers. */
 import type { SessionControllerInternals } from '../src/index.ts'
 
-import { SessionLogOffset } from '@deepseek-ai/dsh-session'
-import { Service, type Context } from '@deepseek-ai/cordis'
-import type { ModelSelection as AgentModelSelection } from '@deepseek-ai/dsh-agent'
+import { SessionLogOffset } from '@liwa/session'
+import { Service, type Context } from '@liwa/cordis'
+import type { ModelSelection as AgentModelSelection } from '@liwa/agent'
 import type {
   AdmittedPromptContentPart,
   AttachmentAdmissionPart,
   ImageAttachmentLimits,
-} from '@deepseek-ai/dsh-attachment'
-import type { SessionEvent, SessionHeader, SessionId } from '@deepseek-ai/dsh-session'
+} from '@liwa/attachment'
+import type { SessionEvent, SessionHeader, SessionId } from '@liwa/session'
 import type { SessionProjectionsValue } from '../src/types.ts'
 import {
   SessionPersistenceNotFoundError,
@@ -22,16 +22,16 @@ import {
   type SessionPersistenceOpenOptions,
   type SessionPersistenceSnapshot,
   type SessionPersistenceStatOptions,
-} from '@deepseek-ai/dsh-session-persistence'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import SessionQueryEngine from '@deepseek-ai/dsh-session-query'
+} from '@liwa/session-persistence'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import SessionQueryEngine from '@liwa/session-query'
 import { vi } from 'vitest'
 import {
   RemoteError,
   remoteErrorOf,
   type RemoteResult,
-} from '@deepseek-ai/dsh-typert-protocol'
-import RemoteAccessService from '@deepseek-ai/dsh-api-remote-access'
+} from '@liwa/typert-protocol'
+import RemoteAccessService from '@liwa/api-remote-access'
 import SessionController from '../src/index.ts'
 import type {
   ModelCatalog,

@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { RELEASED_V3_EVENT_TYPES } from '@deepseek-ai/dsh-session-format-v3-to-v4'
+import { RELEASED_V3_EVENT_TYPES } from '@liwa/session-format-v3-to-v4'
 import { verifyV3EventVocabulary } from './verify-v3-event-vocabulary.ts'
 
 const roots: string[] = []
@@ -27,7 +27,7 @@ function git(root: string, args: readonly string[], environment: NodeJS.ProcessE
 }
 
 function fixture(options: { writer?: string; events?: string } = {}): { root: string; sourceRef: string } {
-  const root = mkdtempSync(join(tmpdir(), 'dsh-v3-vocabulary-'))
+  const root = mkdtempSync(join(tmpdir(), 'liwa-v3-vocabulary-'))
   roots.push(root)
   write(root, writerPath, options.writer ?? 'export const SESSION_FORMAT_VERSION = 3 as const\n')
   write(root, eventsPath, options.events ?? `export const KNOWN_SESSION_EVENT_TYPES: ReadonlySet<string> = new Set(${JSON.stringify(names)})\n`)
@@ -94,7 +94,7 @@ describe('explicit V3 source vocabulary verification', () => {
       .toThrow('Extra migration names: developer/message')
   })
 
-  it.each(['HEAD', 'origin/master', 'dsh-v0.1.5-alpha.1', 'a'.repeat(10), '', '--help'])('rejects a mutable or incomplete source pin %j', (ref) => {
+  it.each(['HEAD', 'origin/master', 'liwa-v0.1.5-alpha.1', 'a'.repeat(10), '', '--help'])('rejects a mutable or incomplete source pin %j', (ref) => {
     expect(() => verifyV3EventVocabulary(tmpdir(), ref)).toThrow('full immutable commit id')
   })
 

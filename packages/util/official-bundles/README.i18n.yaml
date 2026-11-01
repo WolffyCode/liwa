@@ -3,44 +3,44 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/util/official-bundles/README.md
 /:
-  en: 6ef5705aaf6fee34
-  zh: e587b9572fc644bf
-/deepseek-ai-dsh-official-bundles:
-  en: 9095133679593012
-  zh: ac6b05dc3eff68b6
-/deepseek-ai-dsh-official-bundles/summary:
-  en: fa3e54ab1672f7ea
-  zh: 6ab2abb75f1365b4
-/deepseek-ai-dsh-official-bundles/table-of-contents:
+  en: 790ac7f072f48d85
+  zh: b52743d9727e20eb
+/liwa-official-bundles:
+  en: e253b05f62438cae
+  zh: f49a1d24a349e8d2
+/liwa-official-bundles/summary:
+  en: b3227c44d8c2b65b
+  zh: 42927d99bed02f49
+/liwa-official-bundles/table-of-contents:
   en: 80b31a934611cb4a
   zh: 05f3f7f9cb2fd881
-/deepseek-ai-dsh-official-bundles/use-this-package:
+/liwa-official-bundles/use-this-package:
   en: 1cb89d16a6de115c
   zh: 75925ae7a16278ad
-/deepseek-ai-dsh-official-bundles/use-this-package/profile-templates:
-  en: 60ef21314c76c3ec
-  zh: f769091957235e12
-/deepseek-ai-dsh-official-bundles/use-this-package/optional-and-retired-bundles:
-  en: 8d94e2b44efb9c1d
-  zh: c049a19e471d188b
-/deepseek-ai-dsh-official-bundles/use-this-package/plugin-manager-lists:
-  en: 27c22abdfff69a41
-  zh: e60d828cdb75c263
-/deepseek-ai-dsh-official-bundles/use-this-package/on-demand-bundles:
-  en: 6ba39ba5bfefec79
-  zh: 788a71b5b6f75404
-/deepseek-ai-dsh-official-bundles/understand-the-implementation:
+/liwa-official-bundles/use-this-package/profile-templates:
+  en: 7f4e9fe681edf327
+  zh: 28f623631bb1b2b0
+/liwa-official-bundles/use-this-package/optional-and-retired-bundles:
+  en: 48b8df7a81f195a8
+  zh: a03b2354d1a14ebd
+/liwa-official-bundles/use-this-package/plugin-manager-lists:
+  en: 4b2dfd16ab16af7d
+  zh: 441f357f1636bce9
+/liwa-official-bundles/use-this-package/on-demand-bundles:
+  en: 386e14cdfe69a613
+  zh: b9ee220bb02b0611
+/liwa-official-bundles/understand-the-implementation:
   en: 3fb2b58db529d8be
   zh: 46064459a23d458d
-/deepseek-ai-dsh-official-bundles/understand-the-implementation/source-map:
+/liwa-official-bundles/understand-the-implementation/source-map:
   en: bbd3b4f82e6349d9
   zh: f1e056d14620519d
-/deepseek-ai-dsh-official-bundles/further-exploration:
-  en: 16a331e64c81b2a5
-  zh: abfe9b1a1294b6b3
-/deepseek-ai-dsh-official-bundles/known-limitations-and-deferred-work:
-  en: 6631976cc7404166
-  zh: edb2094b17bc4009
-/deepseek-ai-dsh-official-bundles/known-limitations-and-deferred-work/dev-note:
+/liwa-official-bundles/further-exploration:
+  en: 3a81cdb7f3ac30da
+  zh: 67eacf05580c5339
+/liwa-official-bundles/known-limitations-and-deferred-work:
+  en: fcc7f5618cadc241
+  zh: b973434df21db34a
+/liwa-official-bundles/known-limitations-and-deferred-work/dev-note:
   en: e67f633dc6fe7773
   zh: 3bb0c20c93f16f98

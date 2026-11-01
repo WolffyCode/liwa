@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-plugin-market",
+  "name": "@liwa/plugin-market",
   "description": "Configured plugin market indexes for the Web Discover page and the plugin_market agent tool",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/boot/plugin-market"
   },
   "type": "module",
@@ -51,15 +51,15 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-app-boot": "workspace:*",
-    "@deepseek-ai/dsh-atomic-write": "workspace:*",
-    "@deepseek-ai/dsh-brand": "workspace:*",
-    "@deepseek-ai/dsh-package-manifest": "workspace:*",
-    "@deepseek-ai/dsh-plugin-detail": "workspace:*",
-    "@deepseek-ai/dsh-plugin-market-index": "workspace:*",
-    "@deepseek-ai/dsh-timeout": "workspace:*",
-    "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/app-boot": "workspace:*",
+    "@liwa/atomic-write": "workspace:*",
+    "@liwa/brand": "workspace:*",
+    "@liwa/package-manifest": "workspace:*",
+    "@liwa/plugin-detail": "workspace:*",
+    "@liwa/plugin-market-index": "workspace:*",
+    "@liwa/timeout": "workspace:*",
+    "@liwa/util-values": "workspace:*",
+    "@liwa/schemastery": "workspace:~",
     "execa": "^10.0.1",
     "hosted-git-info": "^9.0.3",
     "minisearch": "^7.2.0",
@@ -67,35 +67,35 @@
     "zod": "^4.4.3"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-plugin-manager": "workspace:*",
-    "@deepseek-ai/dsh-settings": "workspace:*",
-    "@deepseek-ai/dsh-subprocess": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/plugin-manager": "workspace:*",
+    "@liwa/settings": "workspace:*",
+    "@liwa/subprocess": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/typert-protocol": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-settings": {
+    "@liwa/settings": {
       "optional": true
     }
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/cosmokit": "workspace:~",
-    "@deepseek-ai/dsh-app-boot": "workspace:*",
-    "@deepseek-ai/dsh-client-connection": "workspace:*",
-    "@deepseek-ai/dsh-config-editor": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-plugin-manager": "workspace:*",
-    "@deepseek-ai/dsh-settings": "workspace:*",
-    "@deepseek-ai/dsh-subprocess": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-tool-executor-native": "workspace:*",
-    "@deepseek-ai/dsh-tool-testkit": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/cosmokit": "workspace:~",
+    "@liwa/app-boot": "workspace:*",
+    "@liwa/client-connection": "workspace:*",
+    "@liwa/config-editor": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/plugin-manager": "workspace:*",
+    "@liwa/settings": "workspace:*",
+    "@liwa/subprocess": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/tool-executor-native": "workspace:*",
+    "@liwa/tool-testkit": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/typert-protocol": "workspace:*",
     "@types/hosted-git-info": "^3.0.5",
     "@types/semver": "^7.8.0"
   }

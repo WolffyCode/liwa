@@ -89,7 +89,7 @@ Status: implemented
 
 ## 测试
 
-- `packages/context/harness-dev-context/tests/harness-dev-context.spec.ts`：真实 AgentLoop 上，旧格式会话在另一端口恢复时不产生 `system/message`、请求中的 system prompt 与日志逐字相同、运行时上下文携带当前 URL；再换一次端口仍成立；不支持与支持 in-history 的路由各跑一遍。series 合并只清空后续版本时，下一轮仍沿用旧段落。缺少固定结尾或跨行的相似文本得到新说明。新会话换端口后 system prompt 不变、只追加运行时上下文快照。section 不含值、context 携带公告 URL，销毁插件 fiber 后全部注册消失。
+- `packages/context/liwa-dev-context/tests/liwa-dev-context.spec.ts`：真实 AgentLoop 上，旧格式会话在另一端口恢复时不产生 `system/message`、请求中的 system prompt 与日志逐字相同、运行时上下文携带当前 URL；再换一次端口仍成立；不支持与支持 in-history 的路由各跑一遍。series 合并只清空后续版本时，下一轮仍沿用旧段落。缺少固定结尾或跨行的相似文本得到新说明。新会话换端口后 system prompt 不变、只追加运行时上下文快照。section 不含值、context 携带公告 URL，销毁插件 fiber 后全部注册消失。
 - `packages/host/webserver/tests/webserver.spec.ts`：`bindUrlHost` 各地址形式；`getOrigin()` 在 HTTP 与 HTTPS 监听上的值，绑定前与带 zone 的非回环地址抛错。
 - `packages/bundle/web-app/tests/web-app.spec.ts`：`webApp.getAdvertisedUrl()` 返回监听器 origin，或该行配置的 `publicUrl`。
 - `packages/core/system-prompt/tests/system-prompt.spec.ts`：新增的 context 位置唯一且为整数。

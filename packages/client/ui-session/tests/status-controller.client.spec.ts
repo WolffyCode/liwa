@@ -1,11 +1,11 @@
 /** Running-state ownership across the real Controller catalog and UI status source. */
 import { expect, vi } from 'vitest'
-import { ok } from '@deepseek-ai/dsh-remote-mock'
-import { createClientTest, webApp } from '@deepseek-ai/dsh-client-test-runtime/src/assembly/index.ts'
-import { SESSION_FORMAT_VERSION, type SessionId } from '@deepseek-ai/dsh-session/types'
-import type { SessionFollowFrame } from '@deepseek-ai/dsh-api-session-controller/types'
+import { ok } from '@liwa/remote-mock'
+import { createClientTest, webApp } from '@liwa/client-test-runtime/src/assembly/index.ts'
+import { SESSION_FORMAT_VERSION, type SessionId } from '@liwa/session/types'
+import type { SessionFollowFrame } from '@liwa/api-session-controller/types'
 
-const it = createClientTest({ roster: webApp.closure(['@deepseek-ai/dsh-client-ui-session']) })
+const it = createClientTest({ roster: webApp.closure(['@liwa/client-ui-session']) })
 const parentId = 'status-parent' as SessionId
 const childId = 'status-child' as SessionId
 

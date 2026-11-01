@@ -3,7 +3,7 @@ description: "具有作用域工具和有界批次执行的原生函数调用。
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-tool-executor-native
+# @liwa/tool-executor-native
 
 [English](README.md) | 中文
 
@@ -25,10 +25,10 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-将此行加入已经挂载 `dsh-tools` 的组合。最近作用域的执行器决定工具行为；同一作用域只允许一个执行器。
+将此行加入已经挂载 `liwa-tools` 的组合。最近作用域的执行器决定工具行为；同一作用域只允许一个执行器。
 
 ```yaml
-- name: '@deepseek-ai/dsh-tool-executor-native'
+- name: '@liwa/tool-executor-native'
 ```
 
 Agent 步骤使用 [agent-loop 并发配置](../agent-loop/README.zh.md)，循环在每个批次开始时读取一次上限。本插件没有配置字段。直接构造 `NativeToolExecutor` 的调用方可以传入回调，默认返回 `10`；批次未指定 `maxParallelToolCalls` 时，每个工具组读取该回调。上限必须是正整数；`1` 表示串行执行。

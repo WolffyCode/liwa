@@ -3,9 +3,9 @@
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { bindSnapshotSelector } from '@deepseek-ai/dsh-client-test-runtime'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import type { SettingsFieldState, SettingsFormShell } from '@deepseek-ai/dsh-client-ui-primitives'
+import { bindSnapshotSelector } from '@liwa/client-test-runtime'
+import { createSnapshotStore } from '@liwa/client-store'
+import type { SettingsFieldState, SettingsFormShell } from '@liwa/client-ui-primitives'
 import { WebSearchCard, type WebSearchCardProps } from '../src/client/WebSearchCard.tsx'
 import type { WebSearchCardState } from '../src/client/web-search-card-controller.ts'
 import { en, zh } from '../src/client/locales.ts'

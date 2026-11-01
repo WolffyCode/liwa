@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-experimental-agent-team-profile",
+  "name": "@liwa/experimental-agent-team-profile",
   "description": "Agent Teams collaboration, tools, and Web UI in one experimental bundle",
   "version": "0.2.2-alpha.2",
   "icon": "./icon.svg",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/experimental/agent-team-profile"
   },
   "type": "module",
@@ -33,21 +33,21 @@
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
-  "dsh": {
+  "liwa": {
     "bundle": {
       "patch": "./cordis.patch.yml"
     }
   },
   "dependencies": {
-    "@deepseek-ai/dsh-experimental-agent-team": "workspace:*",
-    "@deepseek-ai/dsh-experimental-client-ui-agent-team": "workspace:*",
-    "@deepseek-ai/dsh-experimental-tool-agent-team": "workspace:*"
+    "@liwa/experimental-agent-team": "workspace:*",
+    "@liwa/experimental-client-ui-agent-team": "workspace:*",
+    "@liwa/experimental-tool-agent-team": "workspace:*"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/cordis": "workspace:~"
   }
 }

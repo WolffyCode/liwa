@@ -1,14 +1,14 @@
 /**
  * Pure types of the todo domain: the ONE home of the `todos` projection-key
  * declaration plus its payload types, free of this package's host-side value
- * imports (dsh-tools, zod). Two namespace projections serve it — `./types`
+ * imports (liwa-tools, zod). Two namespace projections serve it — `./types`
  * for host consumers, `./client/types` (the browser half-entry's re-export)
  * for client aggregates — with zero content duplication.
  *
- * @module @deepseek-ai/dsh-tool-todo/types
+ * @module @liwa/tool-todo/types
  */
 
-import type { SessionProjectionSummaryExcluded } from '@deepseek-ai/dsh-session-projection/types'
+import type { SessionProjectionSummaryExcluded } from '@liwa/session-projection/types'
 
 /**
  * One entry in an agent's todo list — the unit of the `todo/write`
@@ -27,14 +27,14 @@ export interface TodoItem {
   status: 'pending' | 'in_progress' | 'completed'
 }
 
-declare module '@deepseek-ai/dsh-session/types' {
+declare module '@liwa/session/types' {
   interface SessionEventMap {
     /** Whole-list snapshot; latest write wins on replay. Log-only UI state; never derived history. */
     'todo/write': { todos: TodoItem[] }
   }
 }
 
-declare module '@deepseek-ai/dsh-session-projection/types' {
+declare module '@liwa/session-projection/types' {
   interface SessionProjectionMap {
     /**
      * The agent's current whole todo list (the latest `todo/write` snapshot),

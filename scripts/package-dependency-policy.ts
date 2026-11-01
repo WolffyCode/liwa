@@ -1,47 +1,47 @@
 /** Explicit exceptions and Host packages for the published dependency policy. */
 
-/** Packages treated as Client/Host packages without declaring `dsh.client`. */
+/** Packages treated as Client/Host packages without declaring `liwa.client`. */
 const CLIENT_FACE_INCLUDE: readonly string[] = []
 
-/** Packages exempted from automatic Client/Host treatment despite declaring `dsh.client`. */
+/** Packages exempted from automatic Client/Host treatment despite declaring `liwa.client`. */
 const CLIENT_FACE_EXCLUDE: readonly string[] = [
-  '@deepseek-ai/dsh-api-session-controller',
-  '@deepseek-ai/dsh-api-workspace-controller',
+  '@liwa/api-session-controller',
+  '@liwa/api-workspace-controller',
 ]
 
 /** Host-only packages whose peer relays are deliberately flattened. */
 const HOST_DEPENDENCY_PACKAGES: readonly string[] = [
-  '@deepseek-ai/dsh-llm',
-  '@deepseek-ai/dsh-session',
+  '@liwa/llm',
+  '@liwa/session',
 ]
 
 /** Required Cordis services whose Host imports are type-only. */
 const REQUIRED_SERVICE_PEERS = {
-  '@deepseek-ai/dsh-api-terminal-controller': ['@deepseek-ai/dsh-subprocess'],
+  '@liwa/api-terminal-controller': ['@liwa/subprocess'],
 } as const satisfies Readonly<Record<string, readonly string[]>>
 
 /** Development-only package relationships not represented by source imports. */
 const CONFIGURATION_ONLY_DEV_DEPENDENCIES = {
-  '@deepseek-ai/dsh-client-locale': ['@deepseek-ai/dsh-api-remotes'],
-  '@deepseek-ai/dsh-client-ui-conversation': [
-    '@deepseek-ai/dsh-api-remotes',
-    '@deepseek-ai/dsh-client-ui-workspace',
+  '@liwa/client-locale': ['@liwa/api-remotes'],
+  '@liwa/client-ui-conversation': [
+    '@liwa/api-remotes',
+    '@liwa/client-ui-workspace',
   ],
-  '@deepseek-ai/dsh-client-ui-model-selection': ['@deepseek-ai/dsh-client-ui-input-trigger'],
-  '@deepseek-ai/dsh-client-ui-sidebar': ['@deepseek-ai/dsh-client-ui-workspace'],
-  '@deepseek-ai/dsh-client-ui-subagent': ['@deepseek-ai/dsh-client-ui-input-trigger'],
-  '@deepseek-ai/dsh-client-ui-theme': ['@deepseek-ai/dsh-api-remotes'],
-  '@deepseek-ai/dsh-client-ui-tool': ['@deepseek-ai/dsh-api-remotes'],
+  '@liwa/client-ui-model-selection': ['@liwa/client-ui-input-trigger'],
+  '@liwa/client-ui-sidebar': ['@liwa/client-ui-workspace'],
+  '@liwa/client-ui-subagent': ['@liwa/client-ui-input-trigger'],
+  '@liwa/client-ui-theme': ['@liwa/api-remotes'],
+  '@liwa/client-ui-tool': ['@liwa/api-remotes'],
 } as const satisfies Readonly<Record<string, readonly string[]>>
 
 /** Workspace packages whose complete runtime surface is safe across duplicate installations. */
 const DUPLICATE_SAFE_PACKAGES: readonly string[] = [
-  '@deepseek-ai/dsh-brand',
-  '@deepseek-ai/dsh-lazy-require',
-  '@deepseek-ai/dsh-typert-protocol',
-  '@deepseek-ai/dsh-util-code-language',
-  '@deepseek-ai/dsh-util-crypto',
-  '@deepseek-ai/dsh-util-values',
+  '@liwa/brand',
+  '@liwa/lazy-require',
+  '@liwa/typert-protocol',
+  '@liwa/util-code-language',
+  '@liwa/util-crypto',
+  '@liwa/util-values',
 ]
 
 /**
@@ -51,44 +51,44 @@ const DUPLICATE_SAFE_PACKAGES: readonly string[] = [
  * prominent heading in the pull request description.
  */
 const SAFE_HOST_DEPENDENCY_EXPORTS = {
-  '@deepseek-ai/dsh-atomic-write': ['withFileLock', 'writeFileAtomic'],
-  '@deepseek-ai/dsh-computer-use/brand': ['ComputerUseProviderName'],
-  '@deepseek-ai/dsh-credentials': ['credentialKey'],
-  '@deepseek-ai/dsh-deque': ['Deque'],
+  '@liwa/atomic-write': ['withFileLock', 'writeFileAtomic'],
+  '@liwa/computer-use/brand': ['ComputerUseProviderName'],
+  '@liwa/credentials': ['credentialKey'],
+  '@liwa/deque': ['Deque'],
   // The Liveshare wire codec and identity helpers are stateless functions over caller-owned values.
-  '@deepseek-ai/dsh-experimental-liveshare-protocol': [
+  '@liwa/experimental-liveshare-protocol': [
     'LIVESHARE_CAPABILITIES', 'LIVESHARE_PROTOCOL_VERSION', 'parseRelayFrame', 'parseShareAccessState',
     'parseTunnelWorkerCommand', 'parseTunnelWorkerEvent', 'rawText', 'sendFrame', 'unsupportedFrameRefusal',
     'viewerRequestFields', 'identityFromKey', 'identityKeyOf',
   ],
-  '@deepseek-ai/dsh-llm': ['callConfigEquals'],
-  '@deepseek-ai/dsh-session': ['SessionId'],
-  '@deepseek-ai/dsh-session-format': ['sessionFormatLogFilename'],
-  '@deepseek-ai/dsh-storage-domain': ['defineDomain'],
-  '@deepseek-ai/dsh-timeout': ['MAX_TIMER_DELAY_MS'],
-  '@deepseek-ai/schemastery': ['default'],
+  '@liwa/llm': ['callConfigEquals'],
+  '@liwa/session': ['SessionId'],
+  '@liwa/session-format': ['sessionFormatLogFilename'],
+  '@liwa/storage-domain': ['defineDomain'],
+  '@liwa/timeout': ['MAX_TIMER_DELAY_MS'],
+  '@liwa/schemastery': ['default'],
 } as const satisfies HostDependencyExports
 
 /** Runtime exports that require every consumer to resolve the provider's shared peer instance. */
 const PEER_REQUIRED_HOST_EXPORTS = {
   // Profile settings must match the installed Node provider's configuration schema.
-  '@deepseek-ai/dsh-ptc-runtime-node/configuration': ['resolvePersistentExecution'],
+  '@liwa/ptc-runtime-node/configuration': ['resolvePersistentExecution'],
   // CUA checks UserQuestionError and preserves AttachmentError from image admission.
-  '@deepseek-ai/dsh-attachment': ['admitEncodedImages'],
-  '@deepseek-ai/dsh-user-questions': ['UserQuestionError'],
+  '@liwa/attachment': ['admitEncodedImages'],
+  '@liwa/user-questions': ['UserQuestionError'],
   // `instanceof` checks need the translator's own class instance.
-  '@deepseek-ai/dsh-experimental-translator': ['TranslationError'],
+  '@liwa/experimental-translator': ['TranslationError'],
   // Stateless; a safe classification would turn the forge panel's forge and worktree peers into dependencies.
-  '@deepseek-ai/dsh-experimental-forge': ['changeRequestKey'],
-  '@deepseek-ai/dsh-experimental-worktree': ['generatedWorktreeName'],
+  '@liwa/experimental-forge': ['changeRequestKey'],
+  '@liwa/experimental-worktree': ['generatedWorktreeName'],
   // The forge panel matches ctx.fs failures with `instanceof FsError`.
-  '@deepseek-ai/dsh-fs': ['FsError'],
-  '@deepseek-ai/dsh-scope': ['carrierKeyOf', 'createScope', 'scopeOf', 'scopeTarget'],
+  '@liwa/fs': ['FsError'],
+  '@liwa/scope': ['carrierKeyOf', 'createScope', 'scopeOf', 'scopeTarget'],
   // appendPluginRecord writes through the Session class's private log; pluginRecordOf is stateless.
-  '@deepseek-ai/dsh-session': ['SESSION_FORMAT_VERSION', 'appendPluginRecord', 'pluginRecordOf'],
-  '@deepseek-ai/dsh-session-persistence': ['SessionPersistenceNotFoundError'],
+  '@liwa/session': ['SESSION_FORMAT_VERSION', 'appendPluginRecord', 'pluginRecordOf'],
+  '@liwa/session-persistence': ['SessionPersistenceNotFoundError'],
   // Readers recognize a deadline's TimeoutReason only by `instanceof` against their own copy.
-  '@deepseek-ai/dsh-timeout': ['deadline'],
+  '@liwa/timeout': ['deadline'],
 } as const satisfies HostDependencyExports
 
 /** Exact import specifier to reviewed runtime exports. */
@@ -123,6 +123,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /** Whether a package manifest declares a dynamically loaded Client entry. */
-export function hasClientDeclaration(dshField: unknown): boolean {
-  return isRecord(dshField) && Object.hasOwn(dshField, 'client')
+export function hasClientDeclaration(liwaField: unknown): boolean {
+  return isRecord(liwaField) && Object.hasOwn(liwaField, 'client')
 }

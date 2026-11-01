@@ -8,7 +8,7 @@ import { expect, it, onTestFinished } from 'vitest'
 import { readInstallerLocales, renderInstallerStrings } from '../scripts/installer-locales.mjs'
 
 function fixture(): string {
-  const directory = mkdtempSync(join(tmpdir(), 'dsh-installer-locales-'))
+  const directory = mkdtempSync(join(tmpdir(), 'liwa-installer-locales-'))
   onTestFinished(() => { rmSync(directory, { recursive: true, force: true }) })
   for (const id of ['en_US', 'zh_CN', 'ja_JP', 'es_ES', 'fr_FR', 'de_DE', 'ru_RU', 'pt_BR']) {
     writeFileSync(join(directory, `${id}.json`), readFileSync(new URL(`../installer/locales/${id}.json`, import.meta.url)))

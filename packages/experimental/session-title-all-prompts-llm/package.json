@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-session-title-all-prompts-llm",
-  "description": "All-user-messages LLM provider plugin for DeepSeek Harness session titles",
+  "name": "@liwa/session-title-all-prompts-llm",
+  "description": "All-user-messages LLM provider plugin for Liwa session titles",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/experimental/session-title-all-prompts-llm"
   },
   "type": "module",
@@ -24,23 +24,23 @@
   "files": ["locale/*.json", "lib/index.js", "lib/types/**/*.d.ts"],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-title": "workspace:*",
-    "@deepseek-ai/dsh-session-title-llm": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-title": "workspace:*",
+    "@liwa/session-title-llm": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "dependencies": {
-    "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/util-values": "workspace:*",
+    "@liwa/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-title": "workspace:*",
-    "@deepseek-ai/dsh-session-title-llm": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop": "workspace:*"
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-title": "workspace:*",
+    "@liwa/session-title-llm": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/agent-loop": "workspace:*"
   }
 }

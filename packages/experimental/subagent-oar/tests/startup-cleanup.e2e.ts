@@ -1,11 +1,11 @@
-/** Native startup rejection releases the Codex process before DSH releases its activation slot. */
+/** Native startup rejection releases the Codex process before Liwa releases its activation slot. */
 
 import { existsSync } from 'node:fs'
 import { chmod, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { codexRuntime } from '@botiverse/oar/runtimes/codex'
 import type { Runtime } from '@botiverse/oar'
 import { expect, it, vi, type TestContext } from 'vitest'
@@ -28,7 +28,7 @@ function running(pid: number): boolean {
 }
 
 async function fixture(test: TestContext) {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-oar-startup-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-oar-startup-'))
   const ctx = new Context()
   const pidPath = join(root, 'pid')
   const stopping = join(root, 'stopping')

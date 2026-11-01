@@ -1,7 +1,7 @@
 /**
- * Built-artifact guard for the scope carrier shared by `dsh-subagent` and
- * `dsh-sdk-jsonrpc-server`. The carrier registry is module-local, so both bundles must
- * externalize `dsh-scope`; source-mode tests cannot expose an accidentally
+ * Built-artifact guard for the scope carrier shared by `liwa-subagent` and
+ * `liwa-sdk-jsonrpc-server`. The carrier registry is module-local, so both bundles must
+ * externalize `liwa-scope`; source-mode tests cannot expose an accidentally
  * inlined second registry. This test runs the real `lib/index.js` bundles in a
  * plain Node subprocess, settles a child with an unavailable model, and requires the
  * SDK completion notification to retain the delegating parent.
@@ -30,7 +30,7 @@ const [
   { mountAgentLoopTestDependencies },
   { default: SubagentRuntime },
   JsonlSessionPersistence,
-  { HarnessSdkJsonRpcServer },
+  { LiwaSdkJsonRpcServer },
   { SessionId },
 ] = await Promise.all([
   load("vendor/cordis/lib/index.js"),
@@ -52,7 +52,7 @@ try {
   await new Promise((ready) => setTimeout(ready, 50));
 
   const notifications = [];
-  const server = new HarnessSdkJsonRpcServer(ctx, {
+  const server = new LiwaSdkJsonRpcServer(ctx, {
     request() { return Promise.reject(new Error("unexpected host request")); },
     notify(method, params) { notifications.push({ method, params }); },
   });
@@ -89,7 +89,7 @@ try {
 }
 `
 
-describe.skipIf(!existsSync(jsonrpcBundle))('dsh-sdk-jsonrpc-server BUILT scope carrier', () => {
+describe.skipIf(!existsSync(jsonrpcBundle))('liwa-sdk-jsonrpc-server BUILT scope carrier', () => {
   it('preserves parent-scoped completion after child disposal', async () => {
     const { stdout, stderr } = await execFileAsync(process.execPath, ['--input-type=module', '-e', builtRuntimeProbe], {
       cwd: repoRoot,

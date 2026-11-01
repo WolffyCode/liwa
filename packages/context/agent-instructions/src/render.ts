@@ -1,16 +1,16 @@
 /**
  * Model-facing workspace instruction rendering within an explicit byte budget.
  *
- * @module @deepseek-ai/dsh-agent-instructions/render
+ * @module @liwa/agent-instructions/render
  */
 
 import { basename, dirname, sep } from 'node:path'
 import {
   AGENTS_HOME_ENV,
   DEFAULT_AGENTS_HOME_DISPLAY,
-  DEFAULT_DSH_HOME_DISPLAY,
-  DSH_HOME_ENV,
-} from '@deepseek-ai/dsh-home-paths'
+  DEFAULT_LIWA_HOME_DISPLAY,
+  LIWA_HOME_ENV,
+} from '@liwa/home-paths'
 import type { InstructionFile, LoadedInstructionFile } from './files.ts'
 
 const SYSTEM_REMINDER_OPEN = '<system-reminder>'
@@ -101,13 +101,13 @@ function sectionText(file: LoadedInstructionFile): string {
   return `Instructions from: ${file.displayPath}\n\n${file.content}`
 }
 
-/** Directory component that identifies the harness-home user-global instruction scope. */
+/** Directory component that identifies the Liwa-home user-global instruction scope. */
 export const USER_GLOBAL_DIRECTORY = 'user-global'
 
 /**
  * Directory component that identifies the shared agents-root user-global scope.
  *
- * It is a distinct scope so the harness-home file keeps the scope key that
+ * It is a distinct scope so the Liwa-home file keeps the scope key that
  * earlier sessions recorded, while {@link instructionCandidateGroup} still
  * deduplicates the two roots as one candidate group.
  */
@@ -117,7 +117,7 @@ export const AGENTS_GLOBAL_DIRECTORY = 'agents-global'
  * Ordered user-global scope directories.
  *
  * Discovery, baseline reconciliation, and deduplication all iterate this order,
- * so the harness home stays the candidate that decides content duplicates
+ * so the Liwa home stays the candidate that decides content duplicates
  * against the shared agents root.
  */
 export const USER_GLOBAL_DIRECTORIES = [USER_GLOBAL_DIRECTORY, AGENTS_GLOBAL_DIRECTORY] as const
@@ -136,8 +136,8 @@ export const USER_GLOBAL_FILE = 'AGENTS.md'
  * @returns `user-global`, `agents-global`, `.`, or the containing project-relative directory.
  */
 export function scopeForDisplayPath(displayPath: string): string {
-  if (displayPath === `${DEFAULT_DSH_HOME_DISPLAY}/${USER_GLOBAL_FILE}`
-    || displayPath === `$${DSH_HOME_ENV}/${USER_GLOBAL_FILE}`) return USER_GLOBAL_DIRECTORY
+  if (displayPath === `${DEFAULT_LIWA_HOME_DISPLAY}/${USER_GLOBAL_FILE}`
+    || displayPath === `$${LIWA_HOME_ENV}/${USER_GLOBAL_FILE}`) return USER_GLOBAL_DIRECTORY
   if (displayPath === `${DEFAULT_AGENTS_HOME_DISPLAY}/${USER_GLOBAL_FILE}`
     || displayPath === `$${AGENTS_HOME_ENV}/${USER_GLOBAL_FILE}`) return AGENTS_GLOBAL_DIRECTORY
   return dirname(displayPath)
@@ -146,7 +146,7 @@ export function scopeForDisplayPath(displayPath: string): string {
 /**
  * Whether a decoded scope directory is one of the two user-global roots.
  * @param directory - `user-global`, `agents-global`, `.`, or a project-relative directory.
- * @returns true for the harness-home and shared agents-root scopes.
+ * @returns true for the Liwa-home and shared agents-root scopes.
  */
 export function isUserGlobalDirectory(directory: string): boolean {
   return directory === USER_GLOBAL_DIRECTORY || directory === AGENTS_GLOBAL_DIRECTORY
@@ -155,7 +155,7 @@ export function isUserGlobalDirectory(directory: string): boolean {
 /**
  * Candidate group of one decoded scope directory.
  *
- * The harness home and the shared agents root are the ordered candidates of one
+ * The Liwa home and the shared agents root are the ordered candidates of one
  * user-global candidate group: identical trimmed content renders once, and an
  * unobservable candidate preserves the last-good state of its group. Every
  * project directory forms its own group.

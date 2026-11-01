@@ -3,13 +3,13 @@ description: "The model-facing background-job controls for users and maintainers
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-tool-jobs
+# @liwa/tool-jobs
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-Use `dsh-tool-jobs` to inspect and control background commands and PTY work through `job_output`, `job_list`, and `job_kill`. Reads can wait within a configured timeout, and a wait yields early to a user steer; list results identify each job's kind and status, and cancellation settles after the work stops. When owned work finishes, the agent receives an in-session notice carrying short output: busy agents get it next step, and idle agents are woken by a follow-up turn. Configuration controls wait limits, completion delivery, and an optional consecutive-wakeup cap. Stream output has one reader, and pending notices do not survive owner disposal.
+Use `liwa-tool-jobs` to inspect and control background commands and PTY work through `job_output`, `job_list`, and `job_kill`. Reads can wait within a configured timeout, and a wait yields early to a user steer; list results identify each job's kind and status, and cancellation settles after the work stops. When owned work finishes, the agent receives an in-session notice carrying short output: busy agents get it next step, and idle agents are woken by a follow-up turn. Configuration controls wait limits, completion delivery, and an optional consecutive-wakeup cap. Stream output has one reader, and pending notices do not survive owner disposal.
 
 ## Table of Contents
 
@@ -46,7 +46,7 @@ Waking is unbounded by default: an unattended agent that chains background comma
 Loading the plugin with no config is the common path; a `waitTimeoutMs` above `maxWaitTimeoutMs` fails at load.
 
 ```yaml
-- name: '@deepseek-ai/dsh-tool-jobs'
+- name: '@liwa/tool-jobs'
 ```
 
 | Field | Default | Meaning |
@@ -57,7 +57,7 @@ Loading the plugin with no config is the common path; a `waitTimeoutMs` above `m
 | `maxConsecutiveWakes` | unset | Turns one owner may open by wake before notices degrade to injection; unset means no cap |
 | `inlineOutputBytes` | `2048` | Largest complete notice that carries the job's output and final result inline; `0` never inlines |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-tool-jobs) is the exhaustive source for every accepted field and its JSDoc.
+The generated [configuration catalog](../../../docs/config-catalog.md#liwatool-jobs) is the exhaustive source for every accepted field and its JSDoc.
 
 ### What can go wrong
 
@@ -109,8 +109,8 @@ Read these pages when the package-level contract is not enough. They move from t
 - [jobs group map](../README.md) — the sibling group page and its package table.
 - [Registry contract](../jobs/README.md) — the abstract `ctx.jobs` service behind the tools.
 - [Process-local registry](../jobs-local/README.md) — where jobs run in this process.
-- [Generated tool catalog](../../../docs/tool-catalog.md#deepseek-aidsh-tool-jobs) — the exact `job_output`, `job_list`, and `job_kill` schemas.
-- [Generated configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-tool-jobs) — every accepted config field and its source declaration.
+- [Generated tool catalog](../../../docs/tool-catalog.md#liwatool-jobs) — the exact `job_output`, `job_list`, and `job_kill` schemas.
+- [Generated configuration catalog](../../../docs/config-catalog.md#liwatool-jobs) — every accepted config field and its source declaration.
 - [job-registry seam Agent Note](../../../.agents/notes/archived/architecture/2026-07-26-job-registry-seam.md) — the owner-fenced registry contract and its rationale.
 
 -----
@@ -142,7 +142,7 @@ Prefix-stable while the plugin scope and guidance text are unchanged. Activation
 
 #### What the model sees
 
-The generated [`job_output`, `job_list`, and `job_kill` schemas](../../../docs/tool-catalog.md#deepseek-aidsh-tool-jobs) while this tool set is visible.
+The generated [`job_output`, `job_list`, and `job_kill` schemas](../../../docs/tool-catalog.md#liwatool-jobs) while this tool set is visible.
 
 #### Token effect
 

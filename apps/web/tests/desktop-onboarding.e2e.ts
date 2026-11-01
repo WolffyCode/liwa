@@ -7,8 +7,8 @@ import { fileURLToPath } from 'node:url'
 import { connectDesktopWelcome } from '../../desktop/src/welcome-backend.ts'
 import { chromium, type Browser, type Page } from 'playwright'
 import { afterEach, beforeEach, describe, expect, it, onTestFailed } from 'vitest'
-import { credentialKey, credentialRef } from '@deepseek-ai/dsh-credentials'
-import type {} from '@deepseek-ai/dsh-settings'
+import { credentialKey, credentialRef } from '@liwa/credentials'
+import type {} from '@liwa/settings'
 import {
   acknowledgeReloadConnectionLoss, captureStableAria, compareOrRefreshGolden,
   launchWebScaffold, watchConsole, webSnapshotMode, type WebScaffold,
@@ -19,7 +19,7 @@ const MODE = webSnapshotMode()
 const EXPECTED = fileURLToPath(new URL('./expected/desktop-onboarding', import.meta.url))
 const NS = 'ui-settings-account'
 const INITIAL = { version: 1, step: 'welcome', purpose: null, process: null, completion: null, usage: 'compact', developerTools: false }
-const ACCOUNT_ASSET = /\/plugins\/@deepseek-ai\/dsh-client-ui-settings-account\/assets\/onboarding-[a-z-]+-[0-9a-f]{12}\.(?:svg|webp)$/
+const ACCOUNT_ASSET = /\/plugins\/@liwa\/client-ui-settings-account\/assets\/onboarding-[a-z-]+-[0-9a-f]{12}\.(?:svg|webp)$/
 
 describe.skipIf(MODE === 'record')('web e2e: App-only desktop onboarding', () => {
   let root: string
@@ -47,7 +47,7 @@ describe.skipIf(MODE === 'record')('web e2e: App-only desktop onboarding', () =>
     walletBalance = '0E-16'
     bonusBalance = '0'
     screenshots = undefined
-    root = await mkdtemp(join(tmpdir(), 'dsh-desktop-onboarding-'))
+    root = await mkdtemp(join(tmpdir(), 'liwa-desktop-onboarding-'))
     server = createServer((request, response) => {
       if (request.url === '/api/v0/users/get_unnotified_bonuses') {
         bonusReads++
@@ -55,7 +55,7 @@ describe.skipIf(MODE === 'record')('web e2e: App-only desktop onboarding', () =>
         response.end(JSON.stringify({ code: 0, data: { biz_code: 0, biz_data: bonusOffered ? [{
           order_id: '88888888-8888-4888-8888-888888888888', campaign: 'dsh_login_bonus',
           amount: '5.00', currency: 'CNY', granted_at: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 86_400_000).toISOString(), msg: '已赠送您 5.00 元 DSH 体验赠金。',
+          expires_at: new Date(Date.now() + 86_400_000).toISOString(), msg: '已赠送您 5.00 元灵鲸体验赠金。',
         }] : [] } }))
         return
       }
@@ -110,12 +110,12 @@ describe.skipIf(MODE === 'record')('web e2e: App-only desktop onboarding', () =>
     const welcome = await connectDesktopWelcome(scaffold.authenticatedUrl, (input, init) => scaffold.hostFetch(input, init))
     await opened.exposeFunction('__onboardingHasApiKey', async () => (await welcome.read()).hasApiKey)
     await opened.addInitScript(() => {
-      Object.defineProperty(globalThis, 'dshOnboarding', { value: {
+      Object.defineProperty(globalThis, 'liwaOnboarding', { value: {
         hasApiKey: () => (globalThis as typeof globalThis & { __onboardingHasApiKey(): Promise<boolean> }).__onboardingHasApiKey(),
         setActive: () => {},
       } })
-      Object.defineProperty(globalThis, 'dshDesktop', { value: { protocolVersion: 1 } })
-      Object.defineProperty(globalThis, 'dshPlatform', { value: {
+      Object.defineProperty(globalThis, 'liwaDesktop', { value: { protocolVersion: 1 } })
+      Object.defineProperty(globalThis, 'liwaPlatform', { value: {
         open: async () => {}, setBounds: async () => {}, close: async () => {},
       } })
     })
@@ -280,11 +280,11 @@ describe.skipIf(MODE === 'record')('web e2e: App-only desktop onboarding', () =>
     expect(await page.locator('[data-desktop-onboarding]').evaluate(element => getComputedStyle(element).filter)).toBe('none')
     expect(await page.getByRole('dialog').evaluate(element => getComputedStyle(element.previousElementSibling!).backdropFilter)).toBe('none')
     await page.getByRole('button', { name: '前往充值', exact: true }).click()
-    await page.getByRole('button', { name: '返回 DeepSeek Harness', exact: true }).waitFor()
+    await page.getByRole('button', { name: '返回灵鲸', exact: true }).waitFor()
     expect((scaffold.ctx.settings.describe().find(row => row.ns === NS)?.value as { step: string }).step).toBe('credit')
     balanceFailure = true
     const readsBefore = balanceReads
-    await page.getByRole('button', { name: '返回 DeepSeek Harness', exact: true }).click()
+    await page.getByRole('button', { name: '返回灵鲸', exact: true }).click()
     await page.getByRole('heading', { name: '准备可用额度', exact: true }).waitFor()
     await expect.poll(() => balanceReads).toBeGreaterThan(readsBefore)
     await expect.poll(() => page.getByRole('button', { name: '下一步', exact: true }).isEnabled()).toBe(true)
@@ -388,7 +388,7 @@ describe.skipIf(MODE === 'record')('web e2e: App-only desktop onboarding', () =>
     expect(scaffold.ctx.settings.describe().find(row => row.ns === NS)?.value).toMatchObject({ step: 'done', process: 'detailed', usage: 'detailed', developerTools: true })
     expect(scaffold.ctx.settings.describe().find(row => row.ns === 'ui-chat')?.value).toMatchObject({ transcriptView: 'detailed', performanceUsage: 'detailed' })
     expect(scaffold.ctx.settings.describe().find(row => row.ns === 'ui-settings')?.value).toMatchObject({ enabled: true })
-    const persisted = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
+    const persisted = await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(persisted).toContain('id: ui-settings-account')
     expect(persisted).toContain('process: detailed')
     expect(persisted).toContain('transcriptView: detailed')
@@ -429,7 +429,7 @@ describe.skipIf(MODE === 'record')('web e2e: App-only desktop onboarding', () =>
       .evaluate(element => getComputedStyle(element).backgroundColor)).toBe('rgb(72, 73, 76)')
     await snapshot('credit-en-dark')
     expect(await page.locator('[class*="backIcon"]').evaluate(element => getComputedStyle(element).maskImage))
-      .toMatch(/^url\("[^"]*\/plugins\/@deepseek-ai\/dsh-client-ui-settings-account\/assets\/onboarding-back-[0-9a-f]{12}\.svg"\)$/)
+      .toMatch(/^url\("[^"]*\/plugins\/@liwa\/client-ui-settings-account\/assets\/onboarding-back-[0-9a-f]{12}\.svg"\)$/)
     await page.getByRole('button', { name: 'Next', exact: true }).click()
     await page.getByRole('button', { name: 'Got it', exact: true }).click()
     await page.getByRole('checkbox', { name: 'Coding & development', exact: true }).locator('..').click()
@@ -451,7 +451,7 @@ describe.skipIf(MODE === 'record')('web e2e: App-only desktop onboarding', () =>
       if (!reopen) await page.getByRole('button', { name: '开始设置', exact: true }).click()
       await expect.poll(() => bonusReads).toBeGreaterThan(readsBefore)
       await page.getByRole('heading', { name: '准备可用额度', exact: true }).waitFor()
-      expect(await page.getByText('已赠送您 5.00 元 DSH 体验赠金。', { exact: true }).count()).toBe(0)
+      expect(await page.getByText('已赠送您 5.00 元灵鲸体验赠金。', { exact: true }).count()).toBe(0)
       expect(bonusAcks).toBe(0)
       observations.push(`${reopen ? 'reopened' : 'initial'}.onboarding notice=false acks=${bonusAcks}`)
       if (!reopen) {
@@ -464,7 +464,7 @@ describe.skipIf(MODE === 'record')('web e2e: App-only desktop onboarding', () =>
     await page.getByRole('button', { name: '跳过', exact: true }).click()
     await page.getByRole('dialog').getByRole('button', { name: '进入应用', exact: true }).click()
     await page.locator('[data-desktop-onboarding]').waitFor({ state: 'detached' })
-    const notice = page.getByText('已赠送您 5.00 元 DSH 体验赠金。', { exact: true })
+    const notice = page.getByText('已赠送您 5.00 元灵鲸体验赠金。', { exact: true })
     await notice.waitFor({ state: 'visible' })
     await expect.poll(() => bonusAcks).toBe(1)
     observations.push(`workspace.notice=${await notice.innerText()} acks=${bonusAcks}`)

@@ -1,24 +1,24 @@
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import SessionProjectionRegistry from '@liwa/session-projection'
 import { mountWorkingDirectoryFixture } from './working-directory-fixture.ts'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { liveConfig } from '../../../settings/settings/tests/live-config.ts'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import { agentEvents } from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import type { SessionEvent, SessionEventMap } from '@deepseek-ai/dsh-session'
-import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import * as SubagentSpawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
-import * as SubagentFork from '@deepseek-ai/dsh-subagent-fork-in-process'
-import * as SubagentControl from '@deepseek-ai/dsh-tool-subagent-control'
-import type { ContentBlock, GenerateOptions, MessageId, StreamChunk } from '@deepseek-ai/dsh-llm'
-import { ToolCallId, createUserMessage, LlmAdapter, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
-import { defineTool } from '@deepseek-ai/dsh-tools'
+import type { Agent } from '@liwa/agent'
+import { agentEvents } from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import { mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
+import { SessionId } from '@liwa/session'
+import type { SessionEvent, SessionEventMap } from '@liwa/session'
+import * as JsonlSessionPersistence from '@liwa/session-persistence-jsonl'
+import * as SubagentSpawn from '@liwa/subagent-spawn-in-process'
+import * as SubagentFork from '@liwa/subagent-fork-in-process'
+import * as SubagentControl from '@liwa/tool-subagent-control'
+import type { ContentBlock, GenerateOptions, MessageId, StreamChunk } from '@liwa/llm'
+import { ToolCallId, createUserMessage, LlmAdapter, ReasoningEffortId } from '@liwa/llm'
+import { defineTool } from '@liwa/tools'
 import { MockAdapter, maxTokensResponse, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import SubagentRuntime, {
   SubagentError,
@@ -89,7 +89,7 @@ async function setupWith(
   let disposePersistence: (() => Promise<void>) | undefined
   let root: string | undefined
   if (options.persistence !== false) {
-    root = mkdtempSync(join(tmpdir(), 'dsh-subagent-continuation-'))
+    root = mkdtempSync(join(tmpdir(), 'liwa-subagent-continuation-'))
     const persistedRoot = root
     const persistenceFiber = await ctx.plugin(JsonlSessionPersistence, { root })
     disposePersistence = () => persistenceFiber.dispose()
@@ -3086,7 +3086,7 @@ describe('continuable settlement delivery', () => {
       { chunks: textResponse('parent ack') },
     ])
     const { ctx, parent } = await setupWith(adapter)
-    // The shipped durability checkpoint (`dsh-session-checkpoint-policy`) is
+    // The shipped durability checkpoint (`liwa-session-checkpoint-policy`) is
     // fail-closed at the step boundary, so a rejected write ends the turn after
     // it claimed its messages and before it entered a step.
     ctx.on('agent/pre-step', async ({ agent: subject, turn }, next) => {
@@ -3915,7 +3915,7 @@ describe('continuable errors', () => {
     const adapter = new GatedAdapter([{ chunks: textResponse('child'), gate: hold.promise }])
     const ctx = new Context()
     await mountAgentLoopTestDependencies(ctx)
-    const root = mkdtempSync(join(tmpdir(), 'dsh-subagent-continuation-'))
+    const root = mkdtempSync(join(tmpdir(), 'liwa-subagent-continuation-'))
     const persistenceFiber = await ctx.plugin(JsonlSessionPersistence, { root })
     cleanups.push(async () => {
       await persistenceFiber.dispose()

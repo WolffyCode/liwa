@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 import { createServer } from 'node:http'
 import { once } from 'node:events'
 import { expect, it, onTestFinished } from 'vitest'
-import { runLoaderSmoke, LOADER_SMOKE_TEST_TIMEOUT_MS } from '@deepseek-ai/dsh-loader-smoke'
+import { runLoaderSmoke, LOADER_SMOKE_TEST_TIMEOUT_MS } from '@liwa/loader-smoke'
 
 it('exports the explicitly submitted event through the headless Loader composition', async () => {
   let captures: unknown
@@ -54,8 +54,8 @@ it.each(['headers', 'body', 'retry'] as const)('exits naturally while the collec
     tsconfigPath: resolve(import.meta.dirname, '../../../../tsconfig.base.json'),
     processTimeoutMs: 10_000,
     env: {
-      DSH_APP_VERSION: 'synthetic-release',
-      DSH_PRODUCT_TELEMETRY_TEST_ENDPOINT: `http://127.0.0.1:${address.port}/v1/logs`,
+      LIWA_APP_VERSION: 'synthetic-release',
+      LIWA_PRODUCT_TELEMETRY_TEST_ENDPOINT: `http://127.0.0.1:${address.port}/v1/logs`,
     },
   })
   expect(requests).toBe(1)

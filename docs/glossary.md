@@ -2,16 +2,16 @@
 
 English | [中文](glossary.zh.md)
 
-Domain vocabulary for DeepSeek Harness uses one canonical term per concept. Terms link to their entries with standard Markdown anchors; implementation detail stays in package READMEs and Agent Notes.
+Domain vocabulary for Liwa uses one canonical term per concept. Terms link to their entries with standard Markdown anchors; implementation detail stays in package READMEs and Agent Notes.
 
 ## capability-seam
 
-- **seam** — a *swappable capability* with three roles: a **Service Definition** (the Cordis `Service` that owns its `ctx.<key>` and vocabulary types — an abstract class such as `ShellExecutor`, or a concrete registry such as `WebRuntime`, never a TypeScript `interface`), one or more **Service Providers**, and one or more **Consumers** that inject the service. `packages/shell` is the canonical example: `dsh-shell` (Service Definition), `dsh-bash-local` / `dsh-bash-sandbox` (providers), and `dsh-tool-bash` (Consumer). Roles normally occupy separate packages when they evolve independently, but a package may own multiple roles when they are one concern (`dsh-user-approval` owns the approval seam's Service Definition and its concrete implementation in one package). The seam is the complete capability, never one role; reserve the term for that meaning and name a constituent by its role, class, service, contract, or extension point.
+- **seam** — a *swappable capability* with three roles: a **Service Definition** (the Cordis `Service` that owns its `ctx.<key>` and vocabulary types — an abstract class such as `ShellExecutor`, or a concrete registry such as `WebRuntime`, never a TypeScript `interface`), one or more **Service Providers**, and one or more **Consumers** that inject the service. `packages/shell` is the canonical example: `liwa-shell` (Service Definition), `liwa-bash-local` / `liwa-bash-sandbox` (providers), and `liwa-tool-bash` (Consumer). Roles normally occupy separate packages when they evolve independently, but a package may own multiple roles when they are one concern (`liwa-user-approval` owns the approval seam's Service Definition and its concrete implementation in one package). The seam is the complete capability, never one role; reserve the term for that meaning and name a constituent by its role, class, service, contract, or extension point.
 
 ## agent-scope
 
 - **scope** — the unit of per-agent registration: a contribution (tool, prompt section, variable, restriction, listener) is either *global* (visible to every agent) or *scoped* (owned by exactly one [scope key](#scope-key)). Two levels, flat: scoped registrations do not inherit down to subagents; subtree behavior is expressed with [lineage](#lineage) data, never scope structure.
-- **scope key** — the opaque identity a scope is keyed by, compared by object identity. The harness convention: a live agent is the key of its own scope. <a id="scope-key"></a>
+- **scope key** — the opaque identity a scope is keyed by, compared by object identity. Liwa convention: a live agent is the key of its own scope. <a id="scope-key"></a>
 - **agent context (`agent.ctx`)** — the agent's scoped context; registrations through it are scope-visible AND scope-lifetime (one fact drives both), and listeners on it participate in that agent's scope-filtered dispatches. Registry-subject events may remain deliberately unfiltered under their own event contracts.
 - **scope carrier** — the `thisArg` a scope-filtered dispatch carries (built by `scopeTarget`); its filter admits untagged listeners plus the subject's own. A *subject-less* carrier (no key) admits untagged listeners only.
 - **scoped dispatch** — the rule: an event about one agent's activity dispatches with that agent's carrier. Events about a registry itself (a tool was added) are *registry-subject* and stay unfiltered.
@@ -30,7 +30,7 @@ Domain vocabulary for DeepSeek Harness uses one canonical term per concept. Term
 
 - **human command** — a slash-prefixed instruction interpreted and executed by a human-facing adapter through `ctx.commands`, without becoming a model message. It is distinct from a model-facing tool and from shell command execution through `ctx.shell`.
 - **command plane** — discovery, parsing, dispatch, cancellation, and result rendering owned by UI adapters and command plugins. Command output is UI state unless the handler separately mutates a durable domain.
-- **goal command** — the `/goal` human command contributed by `dsh-command-goal`; it observes or mutates the current goal directly while the goal domain owns every durable, model-visible record.
+- **goal command** — the `/goal` human command contributed by `liwa-command-goal`; it observes or mutates the current goal directly while the goal domain owns every durable, model-visible record.
 
 ## loop hierarchy
 

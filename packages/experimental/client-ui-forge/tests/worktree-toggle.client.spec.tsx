@@ -2,9 +2,9 @@
 /** New Session worktree option: when it shows, why it is disabled, the optimistic checkbox, the base menu, and a running creation. */
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import { bindSnapshotSelector, makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import menuCss from '@deepseek-ai/dsh-client-ui-primitives/src/Menu.module.css'
+import { createSnapshotStore } from '@liwa/client-store'
+import { bindSnapshotSelector, makeTranslate } from '@liwa/client-test-runtime'
+import menuCss from '@liwa/client-ui-primitives/src/Menu.module.css'
 import { en } from '../src/client/locales.ts'
 import type { PanelSnapshot } from '../src/client/source.ts'
 import { WorktreeToggle } from '../src/client/WorktreeToggle.tsx'

@@ -3,7 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createGuidePins, guideEntryId } from '../src/client/tabs/guide/guide-pins.ts'
 
-const KEY = 'dsh.slot.manual-order.sidebar.right.tab.guide.list.v1'
+const KEY = 'liwa.slot.manual-order.sidebar.right.tab.guide.list.v1'
 afterEach(() => { localStorage.clear() })
 
 describe('guide card pins', () => {

@@ -4,10 +4,10 @@
  * Share management is the `liveshareShares` Remote, so these routes only begin and redeem the
  * owner's Relay authorization and store the credential it returns; every share-management side
  * effect reaches the Gateway through the Remote instead.
- * @module @deepseek-ai/dsh-experimental-liveshare/src/host/owner-http-routes
+ * @module @liwa/experimental-liveshare/src/host/owner-http-routes
  */
 
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@liwa/cordis'
 import { type OwnerIdentityStatus } from '../owner-identity.ts'
 import {
   OwnerAuthorizations,

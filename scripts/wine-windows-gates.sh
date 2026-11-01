@@ -12,18 +12,18 @@
 # pnpm store. The Wine prefix and the checksum-verified Windows Node zip
 # persist in .cache/wine-windows/ so reruns skip provisioning.
 #
-# Environment: DSH_WINE_NODE_MAJOR (default $PRIMARY_NODE_VERSION, then 24)
-# picks the Windows Node line; DSH_WINE_GATE_CACHE_DIR relocates the cache;
-# DSH_WINE_GATE_KEEP=1 preserves the scratch tree for inspection.
+# Environment: LIWA_WINE_NODE_MAJOR (default $PRIMARY_NODE_VERSION, then 24)
+# picks the Windows Node line; LIWA_WINE_GATE_CACHE_DIR relocates the cache;
+# LIWA_WINE_GATE_KEEP=1 preserves the scratch tree for inspection.
 
 set -euo pipefail
 
 repo_root="$(git rev-parse --show-toplevel)"
 # The scratch tree has no Git metadata or Windows Git executable.
-DSH_CLIENT_COMMIT_HASH="$(git -C "$repo_root" rev-parse HEAD)"
-export DSH_CLIENT_COMMIT_HASH
-node_major="${DSH_WINE_NODE_MAJOR:-${PRIMARY_NODE_VERSION:-24}}"
-cache_dir="${DSH_WINE_GATE_CACHE_DIR:-$repo_root/.cache/wine-windows}"
+LIWA_CLIENT_COMMIT_HASH="$(git -C "$repo_root" rev-parse HEAD)"
+export LIWA_CLIENT_COMMIT_HASH
+node_major="${LIWA_WINE_NODE_MAJOR:-${PRIMARY_NODE_VERSION:-24}}"
+cache_dir="${LIWA_WINE_GATE_CACHE_DIR:-$repo_root/.cache/wine-windows}"
 
 export WINEDEBUG='-all'
 export WINEARCH=win64
@@ -64,10 +64,10 @@ verify_sha256() {
   esac
 }
 
-scratch="$(mktemp -d "${TMPDIR:-/tmp}/dsh-wine-gates.XXXXXX")"
+scratch="$(mktemp -d "${TMPDIR:-/tmp}/liwa-wine-gates.XXXXXX")"
 cleanup() {
   wineserver -k > /dev/null 2>&1 || true
-  if [ "${DSH_WINE_GATE_KEEP:-0}" = '1' ]; then
+  if [ "${LIWA_WINE_GATE_KEEP:-0}" = '1' ]; then
     echo "wine-windows-gates: scratch tree kept at $scratch"
   else
     rm -rf "$scratch"
@@ -254,10 +254,10 @@ build_gate() {
   wine_node "$scratch/logs/host-typert.log" --import tsx/esm scripts/generate-typert.ts || return $?
   wine_node "$scratch/logs/host-references.log" --import tsx/esm scripts/compile-referenced-projects.ts host || return $?
   wine_node "$scratch/logs/host-tsc.log" --max-old-space-size=8192 "$tsc_js" -p tsconfig.host.json --pretty false || return $?
-  wine_node "$scratch/logs/host-tsdown.log" "$tsdown_js" --env.DSH_BUILD_FACE host || return $?
+  wine_node "$scratch/logs/host-tsdown.log" "$tsdown_js" --env.LIWA_BUILD_FACE host || return $?
   (cd apps/desktop && wine_node "$scratch/logs/desktop-tsdown.log" "../../$tsdown_js") || return $?
   wine_node "$scratch/logs/client-tsc.log" "$tsc_js" -b tsconfig.client.json --pretty false || return $?
-  wine_node "$scratch/logs/client-tsdown.log" "$tsdown_js" --env.DSH_BUILD_FACE client
+  wine_node "$scratch/logs/client-tsdown.log" "$tsdown_js" --env.LIWA_BUILD_FACE client
 }
 site_gate() {
   cd website

@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-experimental-inspector",
+  "name": "@liwa/experimental-inspector",
   "description": "Experimental cross-realm CDP hub for Host debugging and Client Runtime inspection",
   "version": "0.2.2-alpha.2",
   "icon": "./icon.svg",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/experimental/inspector"
   },
   "type": "module",
@@ -27,7 +27,7 @@
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
-  "dsh": {
+  "liwa": {
     "client": {
       "inject": [],
       "platform": "web",
@@ -46,39 +46,39 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-app-boot": "workspace:*",
-    "@deepseek-ai/dsh-util-crypto": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/app-boot": "workspace:*",
+    "@liwa/util-crypto": "workspace:*",
+    "@liwa/schemastery": "workspace:~",
     "open": "^11.0.2",
     "serve-static": "^2.2.1",
     "ws": "^8.21.3"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
     "chrome-devtools-frontend": "1.0.1638082",
     "@types/serve-static": "^2.2.0",
-    "@deepseek-ai/dsh-client-test-runtime": "workspace:*",
+    "@liwa/client-test-runtime": "workspace:*",
     "@testing-library/react": "^16.3.3",
-    "@deepseek-ai/dsh-client-ui-renderer": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-layout": "workspace:*",
-    "@deepseek-ai/dsh-client-shortcuts": "workspace:*",
-    "@deepseek-ai/dsh-client-store": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-slots": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-primitives": "workspace:*",
-    "@deepseek-ai/dsh-client-locale": "workspace:*",
+    "@liwa/client-ui-renderer": "workspace:*",
+    "@liwa/client-ui-layout": "workspace:*",
+    "@liwa/client-shortcuts": "workspace:*",
+    "@liwa/client-store": "workspace:*",
+    "@liwa/client-ui-slots": "workspace:*",
+    "@liwa/client-ui-primitives": "workspace:*",
+    "@liwa/client-locale": "workspace:*",
     "react": "^18.2.0",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-host-webserver": "workspace:*",
-    "@deepseek-ai/dsh-cmdline": "workspace:*",
-    "@deepseek-ai/dsh-client-connection": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/host-webserver": "workspace:*",
+    "@liwa/cmdline": "workspace:*",
+    "@liwa/client-connection": "workspace:*",
     "@types/ws": "^8.18.1",
     "playwright": "^1.49.0",
     "tsx": "^4.23.13",
-    "@deepseek-ai/dsh-brand": "workspace:*",
-    "@deepseek-ai/dsh-client-modules": "workspace:*"
+    "@liwa/brand": "workspace:*",
+    "@liwa/client-modules": "workspace:*"
   }
 }

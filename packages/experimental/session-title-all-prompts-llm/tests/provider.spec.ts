@@ -1,15 +1,15 @@
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import { Context } from '@deepseek-ai/cordis'
+import AgentRegistry from '@liwa/agent'
+import { Context } from '@liwa/cordis'
 import { describe, expect, it, onTestFinished } from 'vitest'
-import LlmRuntime, { createUserMessage, LlmAdapter, ReasoningEffortId, ToolCallId } from '@deepseek-ai/dsh-llm'
-import type { GenerateOptions, LlmResolvedModelInfo, StreamChunk } from '@deepseek-ai/dsh-llm'
-import SessionStore, { Session, SessionId } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import LlmRuntime, { createUserMessage, LlmAdapter, ReasoningEffortId, ToolCallId } from '@liwa/llm'
+import type { GenerateOptions, LlmResolvedModelInfo, StreamChunk } from '@liwa/llm'
+import SessionStore, { Session, SessionId } from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
 import SessionTitleService, {
   SessionTitleProviderId,
   type SessionTitleUserMessage,
-} from '@deepseek-ai/dsh-session-title'
-import * as providerPlugin from '@deepseek-ai/dsh-session-title-all-prompts-llm'
+} from '@liwa/session-title'
+import * as providerPlugin from '@liwa/session-title-all-prompts-llm'
 
 class RecordingAdapter extends LlmAdapter {
   readonly requests: GenerateOptions[] = []

@@ -2,21 +2,21 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent } from '@testing-library/react'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
+import { createSnapshotStore } from '@liwa/client-store'
 import type {
   ChatSnapshot, StartedToolCall, ToolCallBlock, ToolResultNode,
-} from '@deepseek-ai/dsh-client-ui-chat/client'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import { SlotTestRuntime, stubConfigForm } from '@deepseek-ai/dsh-client-test-runtime'
-import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
-import type { PropsRenderSlots } from '@deepseek-ai/dsh-client-ui-slots'
+} from '@liwa/client-ui-chat/client'
+import type { SessionId } from '@liwa/session/types'
+import { SlotTestRuntime, stubConfigForm } from '@liwa/client-test-runtime'
+import { LocaleRuntime } from '@liwa/client-locale/client'
+import type { PropsRenderSlots } from '@liwa/client-ui-slots'
 import {
   ConversationEventRegistry, ConversationViewRegistry, EMPTY_CONVERSATION_SNAPSHOT, type ConvViewOwnerProps,
-} from '@deepseek-ai/dsh-client-ui-conversation/client'
-import { ConversationInteractionRegistry } from '@deepseek-ai/dsh-client-ui-conversation/src/client/conversation/interaction-registry.ts'
-import { en as conversationEn, NS as CONVERSATION_NS, zh as conversationZh } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
-import { apply as applyChat, inject as injectChat } from '@deepseek-ai/dsh-client-ui-chat/client'
-import { PartialArguments } from '@deepseek-ai/dsh-util-values'
+} from '@liwa/client-ui-conversation/client'
+import { ConversationInteractionRegistry } from '@liwa/client-ui-conversation/src/client/conversation/interaction-registry.ts'
+import { en as conversationEn, NS as CONVERSATION_NS, zh as conversationZh } from '@liwa/client-ui-conversation/src/client/locales.ts'
+import { apply as applyChat, inject as injectChat } from '@liwa/client-ui-chat/client'
+import { PartialArguments } from '@liwa/util-values'
 import { apply as applyTool, inject as injectTool } from '../src/client/apply.ts'
 import { toolChatSnapshot } from './tool-fixtures.client.ts'
 
@@ -103,7 +103,7 @@ const ROOT_CHILDREN = {
  */
 async function bench(snapshot: ChatSnapshot) {
   const runtime = await SlotTestRuntime.create()
-  runtime.ctx.provide('fileDrag', { actions: { prepare: async () => ({ start: () => true, release: () => {} }), reportFailure: () => {} }, read: () => undefined } satisfies import('@deepseek-ai/cordis').Context['fileDrag'])
+  runtime.ctx.provide('fileDrag', { actions: { prepare: async () => ({ start: () => true, release: () => {} }), reportFailure: () => {} }, read: () => undefined } satisfies import('@liwa/cordis').Context['fileDrag'])
   runtimes.push(runtime)
   const ctx = runtime.ctx
   const chat = createSnapshotStore(snapshot)
@@ -241,7 +241,7 @@ describe('run_code sub-calls through the real chat machinery', () => {
     const view = mountApp(b.runtime)
     view.getByText('notes/demo.txt').click()
     await vi.waitFor(() => {
-      expect(b.sidebarRight.openResource).toHaveBeenCalledWith('dsh-resource://file/session/s1/notes/demo.txt')
+      expect(b.sidebarRight.openResource).toHaveBeenCalledWith('liwa-resource://file/session/s1/notes/demo.txt')
     })
     expect(b.openWorkspacePath).not.toHaveBeenCalled()
     view.getByText('List notes').click()

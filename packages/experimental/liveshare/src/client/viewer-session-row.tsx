@@ -8,14 +8,14 @@
  *
  * The Liveshare client face mounts this module only on a viewer page.
  *
- * @module @deepseek-ai/dsh-experimental-liveshare/src/client/viewer-session-row
+ * @module @liwa/experimental-liveshare/src/client/viewer-session-row
  */
 
-import type { Context as ClientContext } from '@deepseek-ai/cordis'
-import { IconBranchOutlineRegular, MenuItemButton, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
-import type { SessionProjectionValues } from '@deepseek-ai/dsh-api-session-controller/types'
-import { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { Context as ClientContext } from '@liwa/cordis'
+import { IconBranchOutlineRegular, MenuItemButton, Tooltip } from '@liwa/client-ui-primitives'
+import type { InjectFace, PropsLocale, PropsRuntime } from '@liwa/client-ui-slots'
+import type { SessionProjectionValues } from '@liwa/api-session-controller/types'
+import { SessionId } from '@liwa/session/types'
 import { NS } from './locales.ts'
 
 export const name = 'liveshare-viewer-session-row'

@@ -2,35 +2,35 @@
 
 English | [中文](github-review.zh.md)
 
-This opt-in overlay adds a signed GitHub endpoint to `dsh web`. When a pull request in the configured repository changes from draft to ready for review, the rule creates a titled root Session under the repository's Web Workspace and starts a read-only review prompt.
+This opt-in overlay adds a signed GitHub endpoint to `liwa web`. When a pull request in the configured repository changes from draft to ready for review, the rule creates a titled root Session under the repository's Web Workspace and starts a read-only review prompt.
 
 ## Prerequisites
 
-- A local checkout that DSH may register as a Web Workspace.
-- A high-entropy GitHub webhook secret available through the `DSH_GITHUB_WEBHOOK_SECRET` credential reference.
+- A local checkout that Liwa may register as a Web Workspace.
+- A high-entropy GitHub webhook secret available through the `LIWA_GITHUB_WEBHOOK_SECRET` credential reference.
 - A TLS reverse proxy or tunnel that can forward one public URL to the loopback listener.
 - GitHub webhook subscription to the Pull requests event with content type `application/json`.
 
-The overlay defaults the Workspace to the launch directory and the listener to `127.0.0.1:3081`. Override them with `DSH_GITHUB_REVIEW_WORKSPACE` and `DSH_GITHUB_WEBHOOK_PORT`.
+The overlay defaults the Workspace to the launch directory and the listener to `127.0.0.1:3081`. Override them with `LIWA_GITHUB_REVIEW_WORKSPACE` and `LIWA_GITHUB_WEBHOOK_PORT`.
 
-## Start DSH
+## Start Liwa
 
 Generate a secret and retain the same value across restarts:
 
 ```sh
-export DSH_GITHUB_WEBHOOK_SECRET="$(openssl rand -hex 32)"
-printf '%s\n' "$DSH_GITHUB_WEBHOOK_SECRET"
+export LIWA_GITHUB_WEBHOOK_SECRET="$(openssl rand -hex 32)"
+printf '%s\n' "$LIWA_GITHUB_WEBHOOK_SECRET"
 ```
 
 Install both experimental packages into the Web profile first. Profiles do not install peers automatically; the GitHub adapter needs the webhook runtime explicitly:
 
 ```sh
-dsh plugin --profile web add @deepseek-ai/dsh-webhook @deepseek-ai/dsh-webhook-github
-export DSH_GITHUB_REVIEW_WORKSPACE=/path/to/deepseek-harness
-dsh web --patch "${DSH_HOME:-$HOME/.dsh}/profiles/web/node_modules/@deepseek-ai/dsh-webhook-github/examples/github-review/cordis.yml"
+liwa plugin --profile web add @liwa/webhook @liwa/webhook-github
+export LIWA_GITHUB_REVIEW_WORKSPACE=/path/to/liwa
+liwa web --patch "${LIWA_HOME:-$HOME/.liwa}/profiles/web/node_modules/@liwa/webhook-github/examples/github-review/cordis.yml"
 ```
 
-The adapter distributes the example, which loads from the profile's installation directory so its rule module can resolve profile-installed peers. Do not run the rule from an arbitrary directory outside the profile. To customize it, copy both example files to `$DSH_HOME/profiles/web/github-review/`, edit the configuration, and point `--patch` at that copy of `cordis.yml`; use `~/.dsh` when `DSH_HOME` is unset.
+The adapter distributes the example, which loads from the profile's installation directory so its rule module can resolve profile-installed peers. Do not run the rule from an arbitrary directory outside the profile. To customize it, copy both example files to `$LIWA_HOME/profiles/web/github-review/`, edit the configuration, and point `--patch` at that copy of `cordis.yml`; use `~/.liwa` when `LIWA_HOME` is unset.
 
 The repository example lives under `packages/experimental/webhook-github/examples/github-review/`. The CLI does not install webhook packages or list them as Official plugins; installing the packages and supplying the overlay are separate steps.
 
@@ -55,14 +55,14 @@ Configure GitHub with:
 ```text
 Payload URL:  https://hooks.example.com/github
 Content type: application/json
-Secret:       DSH_GITHUB_WEBHOOK_SECRET value
+Secret:       LIWA_GITHUB_WEBHOOK_SECRET value
 Events:       Pull requests
 Active:       yes
 ```
 
 ## Rule behavior
 
-The rule accepts only source `primary-github`, repository `deepseek-ai/deepseek-harness`, event `pull_request`, and action `ready_for_review`. It passes the exact head SHA plus selected PR fields to the review prompt, labeling the JSON as untrusted metadata and forbidding file, branch, PR, or GitHub mutation.
+The rule accepts only source `primary-github`, repository `WolffyCode/liwa`, event `pull_request`, and action `ready_for_review`. It passes the exact head SHA plus selected PR fields to the review prompt, labeling the JSON as untrusted metadata and forbidding file, branch, PR, or GitHub mutation.
 
 The Session request selects the `standard` agent preset and `read-only` permission preset. `workspacePath` is canonicalized through `WorkspaceRegistry.create()`, so the first matching delivery creates the Web Workspace when absent and later deliveries reuse it.
 
@@ -86,8 +86,8 @@ It can also map repositories to different local paths:
 
 ```js
 const workspacePath = {
-  'deepseek-ai/deepseek-harness': '/path/to/deepseek-harness',
-  'deepseek-harness/dsh-sdk': '/path/to/dsh-sdk',
+  'WolffyCode/liwa': '/path/to/liwa',
+  'liwa/liwa-sdk': '/path/to/liwa-sdk',
 }[payload.repository.full_name]
 if (workspacePath === undefined) return null
 ```

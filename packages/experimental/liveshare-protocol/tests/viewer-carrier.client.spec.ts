@@ -9,15 +9,15 @@ import { installViewerCarrier, viewerCarrierScript, type ViewerCarrierOptions } 
 
 /** Page globals the carrier installs. */
 interface CarrierGlobals {
-  __DSH_LIVESHARE_VIEWER__?: { readonly basePath: string; readonly shareId: string; readonly sessionId: string }
-  __DSH_TRANSPORT__?: {
+  __LIWA_LIVESHARE_VIEWER__?: { readonly basePath: string; readonly shareId: string; readonly sessionId: string }
+  __LIWA_TRANSPORT__?: {
     fetch(input: RequestInfo | URL, init: RequestInit): Promise<Response>
     openStream(endpoint: string, payload: unknown, signal: AbortSignal): AsyncIterable<unknown>
   }
 }
 
 interface MarkedFailure {
-  readonly dshRemoteStreamFailure?: { readonly kind: 'carrier' | 'remote'; readonly code?: string; readonly details?: object }
+  readonly liwaRemoteStreamFailure?: { readonly kind: 'carrier' | 'remote'; readonly code?: string; readonly details?: object }
 }
 
 /** One request the carrier posted. */
@@ -40,8 +40,8 @@ afterEach(() => {
   // The carrier replaces `globalThis.fetch` directly, so a test that installed it without a stub
   // would otherwise leave its wrapper on every later test.
   globalThis.fetch = pristineFetch
-  delete page.__DSH_LIVESHARE_VIEWER__
-  delete page.__DSH_TRANSPORT__
+  delete page.__LIWA_LIVESHARE_VIEWER__
+  delete page.__LIWA_TRANSPORT__
 })
 
 /**
@@ -62,7 +62,7 @@ function carrier(
     return await answer(request, posted.length - 1, init)
   }))
   installViewerCarrier(options)
-  const transport = page.__DSH_TRANSPORT__
+  const transport = page.__LIWA_TRANSPORT__
   if (transport === undefined) throw new Error('carrier installed no transport')
   return { transport, posted }
 }
@@ -95,8 +95,8 @@ async function readStream(answers: readonly { readonly status: number; readonly 
   }
 }
 
-function markerOf(error: unknown): MarkedFailure['dshRemoteStreamFailure'] {
-  return (error as MarkedFailure | undefined)?.dshRemoteStreamFailure
+function markerOf(error: unknown): MarkedFailure['liwaRemoteStreamFailure'] {
+  return (error as MarkedFailure | undefined)?.liwaRemoteStreamFailure
 }
 
 const OPENED = { status: 200, body: { opened: true } }
@@ -104,8 +104,8 @@ const OPENED = { status: 200, body: { opened: true } }
 describe('viewer carrier installation', () => {
   it('names the share the page presents and posts every read to that share', async () => {
     const { posted } = carrier(() => json({ end: true }), { ...OPTIONS, basePath: '/relay', shareId: 'share 1/x' })
-    expect(page.__DSH_LIVESHARE_VIEWER__).toEqual({ basePath: '/relay', shareId: 'share 1/x', sessionId: 'fx-alpha' })
-    for await (const value of page.__DSH_TRANSPORT__!.openStream('session/follow', {}, new AbortController().signal)) void value
+    expect(page.__LIWA_LIVESHARE_VIEWER__).toEqual({ basePath: '/relay', shareId: 'share 1/x', sessionId: 'fx-alpha' })
+    for await (const value of page.__LIWA_TRANSPORT__!.openStream('session/follow', {}, new AbortController().signal)) void value
     expect(posted[0]?.url).toBe('/relay/__share/rpc?shareId=share%201%2Fx')
   })
 
@@ -120,9 +120,9 @@ describe('viewer carrier installation', () => {
     expect(script).not.toContain('</script>')
     expect(script).toContain('\\u003c/script>')
     ;(0, eval)(script)
-    expect(page.__DSH_LIVESHARE_VIEWER__).toEqual({ basePath: '', shareId: '</script><b>', sessionId: 'fx-alpha' })
-    expect(typeof page.__DSH_TRANSPORT__?.fetch).toBe('function')
-    expect(typeof page.__DSH_TRANSPORT__?.openStream).toBe('function')
+    expect(page.__LIWA_LIVESHARE_VIEWER__).toEqual({ basePath: '', shareId: '</script><b>', sessionId: 'fx-alpha' })
+    expect(typeof page.__LIWA_TRANSPORT__?.fetch).toBe('function')
+    expect(typeof page.__LIWA_TRANSPORT__?.openStream).toBe('function')
   })
 })
 

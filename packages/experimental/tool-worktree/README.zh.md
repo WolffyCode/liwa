@@ -3,13 +3,13 @@ description: "创建新的本地 Git 工作树并改变当前 Session 目录的�
 kind: "package-bundle"
 ---
 
-# @deepseek-ai/dsh-experimental-tool-worktree
+# @liwa/experimental-tool-worktree
 
 [English](README.md) | 中文
 
 ## 概述
 
-从 GUI 插件管理器添加 Git 工作树，让模型通过一次调用创建并进入新的 Git 工作树。此可选 bundle 随 Harness 安装，在选中之前保持关闭。原生工具调用与 PTC 程序获得相同的带类型结果，创建操作沿用现有文件策略。
+从 GUI 插件管理器添加 Git 工作树，让模型通过一次调用创建并进入新的 Git 工作树。此可选 bundle 随灵鲸安装，在选中之前保持关闭。原生工具调用与 PTC 程序获得相同的带类型结果，创建操作沿用现有文件策略。
 
 ## 目录
 
@@ -30,11 +30,11 @@ kind: "package-bundle"
 在显式组合中，将此函数插件挂载到工作树运行时和工具注册表之后。
 
 ```yaml
-- name: '@deepseek-ai/dsh-experimental-worktree'
-- name: '@deepseek-ai/dsh-experimental-tool-worktree'
+- name: '@liwa/experimental-worktree'
+- name: '@liwa/experimental-tool-worktree'
 ```
 
-调用 `create_worktree({ name?: string, from?: string })`。成功会返回规范化检出路径 `path`、新分支 `branch`、固定提交 `baseCommit` 和源仓库根目录 `repositoryRoot`，并改变调用 Session 的当前工作目录。离开时调用 `working_directory({ cd: path })`；检出目录与分支会保留。[生成的工具目录](../../../docs/tool-catalog.zh.md#deepseek-aidsh-experimental-tool-worktree)拥有准确的 schema 与面向模型的描述。
+调用 `create_worktree({ name?: string, from?: string })`。成功会返回规范化检出路径 `path`、新分支 `branch`、固定提交 `baseCommit` 和源仓库根目录 `repositoryRoot`，并改变调用 Session 的当前工作目录。离开时调用 `working_directory({ cd: path })`；检出目录与分支会保留。[生成的工具目录](../../../docs/tool-catalog.zh.md#liwaexperimental-tool-worktree)拥有准确的 schema 与面向模型的描述。
 
 -----
 
@@ -68,7 +68,7 @@ kind: "package-bundle"
 
 #### 模型看到什么
 
-[工具目录](../../../docs/tool-catalog.zh.md#deepseek-aidsh-experimental-tool-worktree)定义 `create_worktree`。每个成功结果包含已创建检出目录的规范路径、分支、基准提交与源检出目录的顶层目录。失败调用报告操作错误。
+[工具目录](../../../docs/tool-catalog.zh.md#liwaexperimental-tool-worktree)定义 `create_worktree`。每个成功结果包含已创建检出目录的规范路径、分支、基准提交与源检出目录的顶层目录。失败调用报告操作错误。
 
 #### Token 影响
 

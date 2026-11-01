@@ -1,15 +1,15 @@
 ---
-description: "Docking layout kit for the dsh web client: a split tree of tabbed panes with invertible operations, planners, a linear history, and the components that render and drive it."
+description: "Docking layout kit for the liwa web client: a split tree of tabbed panes with invertible operations, planners, a linear history, and the components that render and drive it."
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-client-ui-dockkit
+# @liwa/client-ui-dockkit
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-A docking layout kit: a split tree of tabbed panes with invertible operations, and the components that render and drive it. The Harness Web client is its first embedder; nothing in here knows that.
+A docking layout kit: a split tree of tabbed panes with invertible operations, and the components that render and drive it. The Liwa Web client is its first embedder; nothing in here knows that.
 
 > **Internal engine.** This package is published because the Sidebar links it statically, not as a stable API: its exports — `LayoutState`, `LayoutOp`, the planners, `DockIntents`, `DockLabels`, `DockMode` — may change in any release, and none of them appears in a service interface (`ctx.sidebarRight` exposes operations, never layout snapshots or operation logs).
 

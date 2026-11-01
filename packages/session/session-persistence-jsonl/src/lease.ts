@@ -15,7 +15,7 @@
  * verifies the locked inode is still the file at the lock path and retries
  * otherwise: an unlinked-and-recreated lock file carries a fresh inode, and
  * a lock on the orphaned one proves nothing. Removing a live session's lock
- * file therefore forfeits exclusion on POSIX (nothing in the harness does
+ * file therefore forfeits exclusion on POSIX (nothing in Liwa does
  * so); Windows has no lock file at all. Readers never touch the lock.
  * The lock is acquired at write-open of an existing artifact and, for a
  * created session, only right before its first materializing write — an
@@ -25,15 +25,15 @@
  * lockers verify against. The browser worker stubs the native flock entry to
  * immediate success: it is single-process, so the in-process write claim
  * already excludes every writer.
- * @module @deepseek-ai/dsh-session-persistence-jsonl/lease
+ * @module @liwa/session-persistence-jsonl/lease
  */
 
 import { mkdir, open, stat } from 'node:fs/promises'
 import type { FileHandle } from 'node:fs/promises'
 import { join } from 'node:path'
-import { tryLockExclusive } from '@deepseek-ai/node-addon-system/flock'
-import { SessionAlreadyOwnedError } from '@deepseek-ai/dsh-session-persistence'
-import type { SessionId } from '@deepseek-ai/dsh-session'
+import { tryLockExclusive } from '@liwa/node-addon-system/flock'
+import { SessionAlreadyOwnedError } from '@liwa/session-persistence'
+import type { SessionId } from '@liwa/session'
 import { acquireLockHandleWin32, releaseLockHandleWin32 } from './win32.ts'
 
 /** Base name of the kernel lock file inside a session's directory. */

@@ -16,7 +16,7 @@ export interface ForkToolRequest {
   readonly childSessionId: string
   /** Session the requesting page holds, which must be that child. */
   readonly sessionId: string
-  /** Tool name as the harness knows it. */
+  /** Tool name as Liwa knows it. */
   readonly tool: string
 }
 

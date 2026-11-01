@@ -1888,12 +1888,12 @@
     },
     {
       "doc": "docs/subsystems/subprocess.md",
-      "symbol": "DshEnvironmentKey",
+      "symbol": "LiwaEnvironmentKey",
       "source": "packages/subprocess/subprocess/src/types.ts"
     },
     {
       "doc": "docs/subsystems/subprocess.md",
-      "symbol": "DshEnvironment",
+      "symbol": "LiwaEnvironment",
       "source": "packages/subprocess/subprocess/src/types.ts"
     },
     {

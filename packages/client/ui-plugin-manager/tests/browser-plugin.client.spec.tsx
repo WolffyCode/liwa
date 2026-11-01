@@ -1,15 +1,15 @@
 // @vitest-environment jsdom
 import assert from 'node:assert/strict'
-import { Context, Service } from '@deepseek-ai/cordis'
+import { Context, Service } from '@liwa/cordis'
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
-import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import type { ILayout, PanelInfo } from '@deepseek-ai/dsh-client-ui-layout/client'
-import { SlotRegistry } from '@deepseek-ai/dsh-client-ui-renderer/client'
-import { resolveSlotLabel } from '@deepseek-ai/dsh-client-ui-slots'
-import { allowAllAccess, StaticRemoteAccess, TestRemote, usePinnedBrowserLanguages } from '@deepseek-ai/dsh-client-test-runtime'
-import * as settings from '@deepseek-ai/dsh-client-ui-settings/client'
+import { LocaleRuntime } from '@liwa/client-locale/client'
+import { createSnapshotStore } from '@liwa/client-store'
+import type { ILayout, PanelInfo } from '@liwa/client-ui-layout/client'
+import { SlotRegistry } from '@liwa/client-ui-renderer/client'
+import { resolveSlotLabel } from '@liwa/client-ui-slots'
+import { allowAllAccess, StaticRemoteAccess, TestRemote, usePinnedBrowserLanguages } from '@liwa/client-test-runtime'
+import * as settings from '@liwa/client-ui-settings/client'
 import { apply, inject, NS, PANEL_ID } from '../src/client/index.ts'
 import { PluginManagerPage } from '../src/client/PluginManagerPage.tsx'
 import { PluginRefreshToast, type PluginRefreshToastFace } from '../src/client/PluginRefreshToast.tsx'
@@ -116,9 +116,9 @@ describe('ui-plugin-manager browser plugin', () => {
     assert(entry.store && 'create' in entry.store)
     const navigation = entry.store.create()
     expect(navigation.getSnapshot()).toEqual({ tab: 'installed', view: { kind: 'list' } })
-    b.ctx.pluginNavigation.openBundle('dsh-navigation-test')
+    b.ctx.pluginNavigation.openBundle('liwa-navigation-test')
     expect(b.panelInfo.getSnapshot().activePanelId).toBe(PANEL_ID)
-    expect(navigation.getSnapshot()).toEqual({ tab: 'installed', view: { kind: 'package', name: 'dsh-navigation-test' } })
+    expect(navigation.getSnapshot()).toEqual({ tab: 'installed', view: { kind: 'package', name: 'liwa-navigation-test' } })
     b.selectPanel(null)
     expect(navigation.getSnapshot()).toEqual({ tab: 'installed', view: { kind: 'list' } })
     b.selectPanel(PANEL_ID)
@@ -127,10 +127,10 @@ describe('ui-plugin-manager browser plugin', () => {
     navigation.actions.setView({ kind: 'more' })
     b.selectPanel(null)
     expect(navigation.getSnapshot()).toEqual({ tab: 'installed', view: { kind: 'list' } })
-    b.ctx.pluginNavigation.openBundle('dsh-navigation-test')
+    b.ctx.pluginNavigation.openBundle('liwa-navigation-test')
     removeRoot()
     b.selectPanel(null)
-    expect(navigation.getSnapshot()).toEqual({ tab: 'installed', view: { kind: 'package', name: 'dsh-navigation-test' } })
+    expect(navigation.getSnapshot()).toEqual({ tab: 'installed', view: { kind: 'package', name: 'liwa-navigation-test' } })
   })
 
   it('opens the Plugins list from another panel and resets bundle details without opening installation', async () => {
@@ -149,8 +149,8 @@ describe('ui-plugin-manager browser plugin', () => {
     expect(navigation.getSnapshot()).toEqual({ tab: 'installed', view: { kind: 'list' } })
     expect(face.hooks.pluginManager.getSnapshot().install.open).toBe(false)
 
-    b.ctx.pluginNavigation.openBundle('dsh-navigation-test')
-    expect(navigation.getSnapshot()).toEqual({ tab: 'installed', view: { kind: 'package', name: 'dsh-navigation-test' } })
+    b.ctx.pluginNavigation.openBundle('liwa-navigation-test')
+    expect(navigation.getSnapshot()).toEqual({ tab: 'installed', view: { kind: 'package', name: 'liwa-navigation-test' } })
     navigation.actions.setTab('fixture-discover')
     b.ctx.pluginNavigation.openList()
     expect(b.panelInfo.getSnapshot().activePanelId).toBe(PANEL_ID)
@@ -229,7 +229,7 @@ describe('ui-plugin-manager browser plugin', () => {
     expect(allows).toHaveBeenCalledWith('pluginManager/listBundles')
     for (const name of ['main', 'shell.overlay', 'sidebar.panellist'] as const) expect(b.slots.entries(name)).toEqual([])
     expect(b.ctx.get('pluginNavigation')).toBeUndefined()
-    expect(b.ctx.get('pluginChanges')?.bundle('dsh-any').getSnapshot()).toBe(false)
+    expect(b.ctx.get('pluginChanges')?.bundle('liwa-any').getSnapshot()).toBe(false)
     await fiber.dispose()
   })
 
@@ -239,11 +239,11 @@ describe('ui-plugin-manager browser plugin', () => {
     const fiber = b.ctx.plugin({ inject: [...inject], apply })
     await fiber.await()
 
-    b.ctx.pluginNavigation.openBundle('dsh-navigation-test')
+    b.ctx.pluginNavigation.openBundle('liwa-navigation-test')
     expect(b.selectPanel).toHaveBeenCalledWith(PANEL_ID)
     const entry = b.slots.entries('main')[0]!
     assert(entry.store && 'create' in entry.store)
-    expect(entry.store.create().getSnapshot()).toEqual({ tab: 'installed', view: { kind: 'package', name: 'dsh-navigation-test' } })
+    expect(entry.store.create().getSnapshot()).toEqual({ tab: 'installed', view: { kind: 'package', name: 'liwa-navigation-test' } })
     expect(entry.component).toBe(PluginManagerPage)
     expect(entry.options).toMatchObject({ key: PANEL_ID })
     expect(entry.locale).toBe(NS)
@@ -293,11 +293,11 @@ describe('ui-plugin-manager browser plugin', () => {
     await vi.waitFor(() => { expect(face.hooks.pluginManager.getSnapshot().status).toBe('ready') })
     expect(b.list).toHaveBeenCalledTimes(1)
     // A profile change invalidates reads without withdrawing the displayed document.
-    face.loadDetail('dsh-a', '1.0.0', 'en', false)
+    face.loadDetail('liwa-a', '1.0.0', 'en', false)
     await vi.waitFor(() => { expect(Object.values(face.hooks.bundleDetails.getSnapshot())[0]?.status).toBe('ready') })
     const loadedDetails = face.hooks.bundleDetails.getSnapshot()
-    face.retryDetail('dsh-a', '1.0.0', 'en', false)
-    expect(face.detailImage('dsh-a', 'README.md', 'a.png', false)).toContain('api/plugin-manager/detail-file?bundle=dsh-a')
+    face.retryDetail('liwa-a', '1.0.0', 'en', false)
+    expect(face.detailImage('liwa-a', 'README.md', 'a.png', false)).toContain('api/plugin-manager/detail-file?bundle=liwa-a')
     expect(face.hooks.locale.getSnapshot().active).toBe('zh')
     b.remote.emit('plugin-manager/changed', [{ reason: 'bundle' }])
     await vi.waitFor(() => { expect(b.list).toHaveBeenCalledTimes(2) })

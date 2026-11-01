@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-10-12-local-gate-speedups.md
 /agent-note-local-gate-hook-and-test-speed-ups:
-  en: d8edb2c26730e9af
-  zh: fb69bf2e7b602d4c
+  en: 8328ba799e089fb4
+  zh: bed53a9771675614
 /agent-note-local-gate-hook-and-test-speed-ups/problem:
   en: 1e2163ec378c44ff
   zh: d93cb5970896fccb
@@ -15,14 +15,14 @@
   en: 7430353afba96352
   zh: 6d2a09619a67ecba
 /agent-note-local-gate-hook-and-test-speed-ups/decision/1-type-checks-generate-typert-declarations-without-bundling:
-  en: e9c08ebd00049b44
-  zh: 36e90dc485b4acb7
+  en: b187fd1b2328ae87
+  zh: 43dc51919039df70
 /agent-note-local-gate-hook-and-test-speed-ups/decision/2-the-pre-commit-hook-does-not-regenerate-third-party-notices:
-  en: e2e344f184621172
-  zh: 97d8785aaf9105bf
+  en: 5e31dcc792d00bac
+  zh: 5b6e2599a3936103
 /agent-note-local-gate-hook-and-test-speed-ups/decision/3-local-default-worker-budget:
-  en: e9649c40d67e26e0
-  zh: c99f22a41c4fc4af
+  en: 5e9bb7ff63814a5b
+  zh: 9372cb2fc097f3a4
 /agent-note-local-gate-hook-and-test-speed-ups/decision/4-repository-reference-candidates-resolve-against-one-object-listing:
   en: 2c945250337c88cf
   zh: d4bfa34cc858782b
@@ -42,8 +42,8 @@
   en: 7c9388dc859e0f93
   zh: 5df1fc58eb7a46e8
 /agent-note-local-gate-hook-and-test-speed-ups/alternatives-considered:
-  en: 763d94734b8967cf
-  zh: abe980d486e1d7da
+  en: 1ae6abe38ed4fefc
+  zh: 1845e3347b364565
 /agent-note-local-gate-hook-and-test-speed-ups/consequences:
   en: ca00b04567d09408
   zh: 97011043c60f4bc9

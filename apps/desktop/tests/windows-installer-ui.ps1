@@ -59,7 +59,7 @@ public static class InstallerCapture {
             var title = new StringBuilder(256);
             GetWindowText(window, title, title.Capacity);
             if (owner == process && title.ToString().Contains(ProductName) && IsWindowVisible(window)
-                && GetProp(window, "HarnessInstaller.Ready") == IntPtr.Zero) incomplete = true;
+                && GetProp(window, "LiwaInstaller.Ready") == IntPtr.Zero) incomplete = true;
             return !incomplete;
         }, IntPtr.Zero);
         return incomplete;
@@ -77,7 +77,7 @@ public static class InstallerCapture {
     }
 
     public static int Progress(IntPtr parent) {
-        IntPtr window = FindClass(parent, "HarnessInstallerProgress");
+        IntPtr window = FindClass(parent, "LiwaInstallerProgress");
         if (window == IntPtr.Zero) throw new InvalidOperationException("Progress page is missing");
         RedrawWindow(window, IntPtr.Zero, IntPtr.Zero, 0x101);
         var text = new StringBuilder(128);
@@ -178,7 +178,7 @@ public static class InstallerCapture {
             GetWindowThreadProcessId(window, out owner);
             var title = new StringBuilder(256);
             GetWindowText(window, title, title.Capacity);
-            if (owner == process && title.ToString().Contains(ProductName) && GetProp(window, "HarnessInstaller.Ready") != IntPtr.Zero) {
+            if (owner == process && title.ToString().Contains(ProductName) && GetProp(window, "LiwaInstaller.Ready") != IntPtr.Zero) {
                 if (result != IntPtr.Zero) throw new InvalidOperationException("Multiple preview windows in test process");
                 result = window;
             }
@@ -189,7 +189,7 @@ public static class InstallerCapture {
 
     public static void Reveal(IntPtr window) {
         var timer = System.Diagnostics.Stopwatch.StartNew();
-        while (GetProp(window, "HarnessInstaller.Ready") == IntPtr.Zero) {
+        while (GetProp(window, "LiwaInstaller.Ready") == IntPtr.Zero) {
             if (timer.ElapsedMilliseconds > 10000) throw new TimeoutException("Native page did not finish creating controls");
             System.Threading.Thread.Sleep(10);
         }

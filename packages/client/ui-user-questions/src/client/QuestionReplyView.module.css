@@ -6,7 +6,7 @@
 }
 
 .bubbleWidth {
-  max-width: min(calc(var(--dsh-chat-content-width, 748px) * 0.702), 82%);
+  max-width: min(calc(var(--liwa-chat-content-width, 748px) * 0.702), 82%);
   min-width: 0;
 }
 
@@ -31,7 +31,7 @@
 }
 
 .header {
-  font-size: var(--dsh-content-font-size-secondary, 13px);
+  font-size: var(--liwa-content-font-size-secondary, 13px);
 }
 
 .answer {

@@ -6,8 +6,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { PROTOCOL_VERSION } from '@agentclientprotocol/sdk'
-import { startMockLlmServer } from '@deepseek-ai/dsh-llm-mock-server'
-import { launchAcpTestAgent, type AgentUnderTest, type LaunchedAcpTestAgent } from '@deepseek-ai/dsh-session-snapshot'
+import { startMockLlmServer } from '@liwa/llm-mock-server'
+import { launchAcpTestAgent, type AgentUnderTest, type LaunchedAcpTestAgent } from '@liwa/session-snapshot'
 import { expect, it } from 'vitest'
 import { cleanupAcpExampleTest } from './cleanup.ts'
 
@@ -23,7 +23,7 @@ function jsonRpcFrames(launched: LaunchedAcpTestAgent): Record<string, unknown>[
 }
 
 it('keeps account model-listing diagnostics on stderr during API-key session creation', async () => {
-  const cwd = await mkdtemp(join(tmpdir(), 'dsh-acp-stdout-'))
+  const cwd = await mkdtemp(join(tmpdir(), 'liwa-acp-stdout-'))
   const token = 'acp-catalog-fixture-token'
   const requests: Array<{ method: string | undefined; path: string | undefined; token: string | string[] | undefined }> = []
   const server = createServer((request, response) => {
@@ -50,8 +50,8 @@ it('keeps account model-listing diagnostics on stderr during API-key session cre
     const address = server.address()
     if (address === null || typeof address === 'string') throw new Error('account catalog server has no port')
     const origin = `http://127.0.0.1:${address.port}`
-    await mkdir(join(cwd, '.dsh'))
-    await writeFile(join(cwd, '.dsh', '.credentials.yaml'), JSON.stringify({
+    await mkdir(join(cwd, '.liwa'))
+    await writeFile(join(cwd, '.liwa', '.credentials.yaml'), JSON.stringify({
       version: 1,
       records: {
         'deepseek-account-platform/default': { kind: 'grant', payload: { version: 1, token, issuer: origin } },
@@ -78,7 +78,7 @@ it('keeps account model-listing diagnostics on stderr during API-key session cre
     launched = launchAcpTestAgent({
       agent,
       cwd,
-      env: { DEEPSEEK_API_KEY: 'acp-fixture-api-key', DEEPSEEK_BASE_URL: `${origin}/anthropic`, DSH_TELEMETRY_DISABLED: '1' },
+      env: { DEEPSEEK_API_KEY: 'acp-fixture-api-key', DEEPSEEK_BASE_URL: `${origin}/anthropic`, LIWA_TELEMETRY_DISABLED: '1' },
     })
     await launched.client.initialize({ protocolVersion: PROTOCOL_VERSION, clientCapabilities: {} })
     const created = await launched.client.newSession({ cwd, mcpServers: [] })
@@ -114,7 +114,7 @@ it('keeps account model-listing diagnostics on stderr during API-key session cre
 })
 
 it('keeps MCP resource-listing diagnostics off stdout for a tools-only client server', async () => {
-  const cwd = await mkdtemp(join(tmpdir(), 'dsh-acp-stdout-'))
+  const cwd = await mkdtemp(join(tmpdir(), 'liwa-acp-stdout-'))
   const llm = await startMockLlmServer({
     sequence: ['tool_call_success', 'success'],
     toolName: 'list_mcp_resources',
@@ -131,7 +131,7 @@ it('keeps MCP resource-listing diagnostics off stdout for a tools-only client se
     launched = launchAcpTestAgent({
       agent: { binScript, configPath, profile: 'acp', tsconfigPath },
       cwd,
-      env: { DEEPSEEK_API_KEY: 'acp-fixture-api-key', DEEPSEEK_BASE_URL: llm.baseURL, DSH_TELEMETRY_DISABLED: '1' },
+      env: { DEEPSEEK_API_KEY: 'acp-fixture-api-key', DEEPSEEK_BASE_URL: llm.baseURL, LIWA_TELEMETRY_DISABLED: '1' },
     })
     await launched.client.initialize({ protocolVersion: PROTOCOL_VERSION, clientCapabilities: {} })
     // The fixture server advertises only the tools capability.

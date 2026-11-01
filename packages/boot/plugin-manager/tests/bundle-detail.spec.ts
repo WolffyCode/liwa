@@ -3,10 +3,10 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { realpath } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { Service, type Context } from '@deepseek-ai/cordis'
-import { boot, getDshRuntimeVersion, initProfile, loadProfileDirectory, readProfileManifest, readProfilePatches, type ProfileContext } from '@deepseek-ai/dsh-app-boot'
-import { OFFICIAL_ON_DEMAND_CATALOG } from '@deepseek-ai/dsh-official-bundles'
-import { remoteErrorOf } from '@deepseek-ai/dsh-typert-protocol'
+import { Service, type Context } from '@liwa/cordis'
+import { boot, getLiwaRuntimeVersion, initProfile, loadProfileDirectory, readProfileManifest, readProfilePatches, type ProfileContext } from '@liwa/app-boot'
+import { OFFICIAL_ON_DEMAND_CATALOG } from '@liwa/official-bundles'
+import { remoteErrorOf } from '@liwa/typert-protocol'
 import { afterEach, expect, it, onTestFinished, vi } from 'vitest'
 import PluginManager, { type Config } from '../src/index.ts'
 import * as operations from '../src/operations.ts'
@@ -44,7 +44,7 @@ async function fixture(config: Config = {}) {
       mkdirSync(join(path, file, '..'), { recursive: true })
       writeFileSync(join(path, file), contents)
     }
-    writeFileSync(join(path, 'package.json'), JSON.stringify({ name, version: '1.0.0', dsh: { bundle: { patch: './cordis.patch.yml' } } }))
+    writeFileSync(join(path, 'package.json'), JSON.stringify({ name, version: '1.0.0', liwa: { bundle: { patch: './cordis.patch.yml' } } }))
   }
   bundle('core', { 'cordis.patch.yml': JSON.stringify([{ insert: [{ id: 'manager', name: 'cordis:manager', config }, { id: 'connection', name: 'cordis:connection' }] }]) })
   bundle('documented', {
@@ -74,7 +74,7 @@ async function fixture(config: Config = {}) {
   onTestFinished(() => { registry.mockRestore() })
   const connection = RecordingConnection.current as RecordingConnection
   const image = (query: string) => (connection.routes.get('/api/plugin-manager/detail-file') as (request: Request) => Promise<Response>)(
-    new Request(`http://dsh.local/api/plugin-manager/detail-file?${query}`))
+    new Request(`http://liwa.local/api/plugin-manager/detail-file?${query}`))
   return { manager: ctx.pluginManager, image, connection }
 }
 
@@ -118,7 +118,7 @@ it('serves images beside a bundle document without caching and refuses other pat
 
 it('reads an offered official bundle from the npm CDNs at its offered version, npmmirror first when asked', async () => {
   const name = OFFICIAL_ON_DEMAND_CATALOG[0]!.packageName
-  const version = getDshRuntimeVersion()
+  const version = getLiwaRuntimeVersion()
   const fetch = vi.fn((url: string) => Promise.resolve(url === `https://registry.npmmirror.com/${name}/${version}/files/README.md`
     ? new Response('# Official')
     : url.includes('/files/') ? new Response('missing', { status: 404 }) : Promise.reject(new Error(`unexpected ${url}`))))
@@ -136,7 +136,7 @@ it('reads an offered official bundle from the npm CDNs at its offered version, n
 
 it.each([undefined, { npmFileSources: [] }])('asks the CDNs in configured order unless npmmirror is asked first (%o)', async (options) => {
   const name = OFFICIAL_ON_DEMAND_CATALOG[0]!.packageName
-  const version = getDshRuntimeVersion()
+  const version = getLiwaRuntimeVersion()
   const fetch = vi.fn(() => Promise.resolve(new Response('missing', { status: 404 })))
   vi.stubGlobal('fetch', fetch)
   const { manager } = await fixture({ detailNpmFileSources: ['unpkg', 'npmmirror'] })

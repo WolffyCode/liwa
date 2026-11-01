@@ -1,0 +1,9 @@
+# Loader overlay for tests that boot `liwa web` as a subprocess (`--patch`):
+# a fresh page with no Workspace creates the first-use default Workspace under
+# the Documents directory, which the shipped row asks the operating system for,
+# so the run would write `<Documents>/liwa/default-workspace` into the real
+# account. Pin it inside the subprocess cwd, the test's temporary world, as
+# apps/web/tests/scaffold.ts does for in-process hosts.
+- id: workspace-controller
+  config:
+    documentsDirectory: !!js process.cwd() + '/Documents'

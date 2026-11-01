@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from deepseek_harness import ApprovalRequestParams, ApprovalRequestResult, DeepSeekHarnessConfig, HarnessClient
+from liwa import ApprovalRequestParams, ApprovalRequestResult, LiwaConfig, LiwaClient
 
 
 @pytest.mark.parametrize("enabled", [False, True])
@@ -28,7 +28,7 @@ for line in sys.stdin:
         print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {}}), flush=True)
         break
 ''')
-    with HarnessClient(_launch_args=(sys.executable, str(peer))) as client:
+    with LiwaClient(_launch_args=(sys.executable, str(peer))) as client:
         client.initialize(cwd=str(tmp_path), provider="mock", model="mock", approval_requests=enabled)
         payload = client.next_notification().payload
         assert payload.get("approvalRequests", False) is enabled
@@ -50,6 +50,6 @@ def test_approval_result_rejects_unrecognized_grants() -> None:
 
 
 def test_approval_opt_in_preserves_existing_config_positional_arguments() -> None:
-    config = DeepSeekHarnessConfig("mock", "model", None, None, "/workspace")
+    config = LiwaConfig("mock", "model", None, None, "/workspace")
     assert config.cwd == "/workspace"
     assert config.approval_requests is False

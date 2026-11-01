@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-experimental-browser-use-runtime",
+  "name": "@liwa/experimental-browser-use-runtime",
   "description": "Session-owned browser resource lifecycles and MCP integration for experimental providers",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/experimental/browser-use-runtime"
   },
   "type": "module",
@@ -32,41 +32,41 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-browser-use": "workspace:*",
-    "@deepseek-ai/dsh-mcp-client": "workspace:*",
-    "@deepseek-ai/dsh-scope": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-working-directory": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/browser-use": "workspace:*",
+    "@liwa/mcp-client": "workspace:*",
+    "@liwa/scope": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/working-directory": "workspace:*"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-browser-use": "workspace:*",
-    "@deepseek-ai/dsh-mcp-client": "workspace:*",
-    "@deepseek-ai/dsh-scope": "workspace:*",
-    "@deepseek-ai/dsh-tool-executor-native": "workspace:*",
-    "@deepseek-ai/dsh-tool-executor-ptc": "workspace:*",
-    "@deepseek-ai/dsh-tool-testkit": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-mcp-resources": "workspace:*",
-    "@deepseek-ai/dsh-ptc-runtime": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/dsh-attachment-local": "workspace:*",
-    "@deepseek-ai/dsh-session-persistence-jsonl": "workspace:*",
-    "@deepseek-ai/dsh-working-directory": "workspace:*",
-    "@deepseek-ai/dsh-fs-local": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/browser-use": "workspace:*",
+    "@liwa/mcp-client": "workspace:*",
+    "@liwa/scope": "workspace:*",
+    "@liwa/tool-executor-native": "workspace:*",
+    "@liwa/tool-executor-ptc": "workspace:*",
+    "@liwa/tool-testkit": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/agent-loop-testkit": "workspace:*",
+    "@liwa/agent-loop": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/mcp-resources": "workspace:*",
+    "@liwa/ptc-runtime": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/attachment-local": "workspace:*",
+    "@liwa/session-persistence-jsonl": "workspace:*",
+    "@liwa/working-directory": "workspace:*",
+    "@liwa/fs-local": "workspace:*"
   }
 }

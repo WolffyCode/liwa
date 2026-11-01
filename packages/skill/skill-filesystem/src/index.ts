@@ -6,19 +6,19 @@
  * user roots, parses YAML frontmatter, and loads bodies through `ctx.fs` when a
  * filesystem service is present.
  *
- * @module @deepseek-ai/dsh-skill-filesystem
+ * @module @liwa/skill-filesystem
  */
 
 import { access, lstat, readdir, readFile, realpath, stat } from 'node:fs/promises'
 import { unwatchFile, watchFile, type Stats } from 'node:fs'
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@liwa/cordis'
 import chokidar from 'chokidar'
-import z from '@deepseek-ai/schemastery'
-import type Schema from '@deepseek-ai/schemastery'
+import z from '@liwa/schemastery'
+import type Schema from '@liwa/schemastery'
 import { parse as parseYaml } from 'yaml'
-import type { FileSystem, FsDirEntry, FsTarget } from '@deepseek-ai/dsh-fs'
-import { canonicalizeWatchPath, resolveAgentsHome, resolveDshHome } from '@deepseek-ai/dsh-home-paths'
+import type { FileSystem, FsDirEntry, FsTarget } from '@liwa/fs'
+import { canonicalizeWatchPath, resolveAgentsHome, resolveLiwaHome } from '@liwa/home-paths'
 import {
   BUNDLED_SKILL_RANK,
   isSkillName,
@@ -30,12 +30,12 @@ import {
   type SkillProviderControl,
   type SkillProviderObservation,
   type SkillSource,
-} from '@deepseek-ai/dsh-skill'
+} from '@liwa/skill'
 
-const PROJECT_DSH_RANK = 100
+const PROJECT_LIWA_RANK = 100
 const PROJECT_AGENTS_RANK = 200
 const CUSTOM_RANK = 300
-const USER_DSH_RANK = 400
+const USER_LIWA_RANK = 400
 const USER_AGENTS_RANK = 500
 const DEFAULT_WATCH_STABILITY_THRESHOLD_MS = 200
 const DEFAULT_WATCH_POLL_INTERVAL_MS = 100
@@ -50,9 +50,9 @@ export interface Config {
   providerName?: string
   /** Whether project and user roots are included around custom roots. */
   includeDefaultRoots?: boolean
-  /** DeepSeek Harness config root. Defaults to `$DSH_HOME` or `~/.dsh`. */
-  dshHome?: string
-  /** Shared agent config root. Defaults to `$DSH_AGENTS_HOME` or `~/.agents`. */
+  /** Liwa config root. Defaults to `$LIWA_HOME` or `~/.liwa`. */
+  liwaHome?: string
+  /** Shared agent config root. Defaults to `$LIWA_AGENTS_HOME` or `~/.agents`. */
   agentsHome?: string
   /** Additional skill roots scanned after project roots and before user roots. */
   customSkillDirs?: string[]
@@ -68,14 +68,14 @@ export interface Config {
   watchMaxProjects?: number
   /** Whether watched symbolic links follow their target files. */
   watchFollowSymlinks?: boolean
-  /** Bundled skill root; defaults to `$DSH_BUNDLED_SKILL_DIR` when default roots are included, otherwise mounts none. */
+  /** Bundled skill root; defaults to `$LIWA_BUNDLED_SKILL_DIR` when default roots are included, otherwise mounts none. */
   bundledSkillDir?: string
 }
 
 export const Config: Schema<Config> = z.object({
   providerName: z.string().min(1).default('filesystem'),
   includeDefaultRoots: z.boolean().default(true),
-  dshHome: z.string(),
+  liwaHome: z.string(),
   agentsHome: z.string(),
   customSkillDirs: z.array(z.string()).default([]),
   watch: z.boolean().default(true),
@@ -149,7 +149,7 @@ export function apply(ctx: Context, config: Config = {}): void {
 export class FileSystemSkillProvider implements SkillProvider {
   readonly name: string
   private readonly includeDefaultRoots: boolean
-  private readonly dshHome: string
+  private readonly liwaHome: string
   private readonly agentsHome: string
   private readonly customSkillDirs: string[]
   private readonly watchManager: SkillWatchManager
@@ -163,7 +163,7 @@ export class FileSystemSkillProvider implements SkillProvider {
   ) {
     this.name = config.providerName ?? 'filesystem'
     this.includeDefaultRoots = config.includeDefaultRoots ?? true
-    this.dshHome = resolveDshHome(config.dshHome)
+    this.liwaHome = resolveLiwaHome(config.liwaHome)
     this.agentsHome = resolveAgentsHome(config.agentsHome)
     this.customSkillDirs = (config.customSkillDirs ?? []).map(root => resolve(root))
     this.watchManager = new SkillWatchManager(ctx, control.invalidate, resolveWatchConfig(config))
@@ -172,7 +172,7 @@ export class FileSystemSkillProvider implements SkillProvider {
     // must see only its explicit roots, or every such provider would
     // re-discover the app's bundled skills under its own provider name.
     const bundledSkillDir = config.bundledSkillDir
-      ?? (this.includeDefaultRoots ? process.env.DSH_BUNDLED_SKILL_DIR : undefined)
+      ?? (this.includeDefaultRoots ? process.env.LIWA_BUNDLED_SKILL_DIR : undefined)
     this.bundledSkillDir = bundledSkillDir === undefined ? undefined : resolve(bundledSkillDir)
   }
 
@@ -253,14 +253,14 @@ export class FileSystemSkillProvider implements SkillProvider {
     if (this.includeDefaultRoots && cwd !== undefined) {
       const projectRoot = await findProjectRoot(resolve(cwd), optionalFileSystem(this.ctx))
       roots.push(
-        { path: join(projectRoot, '.dsh/skills'), source: 'project-dsh', rank: PROJECT_DSH_RANK, projectRoot },
+        { path: join(projectRoot, '.liwa/skills'), source: 'project-liwa', rank: PROJECT_LIWA_RANK, projectRoot },
         { path: join(projectRoot, '.agents/skills'), source: 'project-agents', rank: PROJECT_AGENTS_RANK, projectRoot },
       )
     }
     roots.push(...this.customSkillDirs.map(path => ({ path, source: 'custom' as const, rank: CUSTOM_RANK })))
     if (this.includeDefaultRoots) {
       roots.push(
-        { path: join(this.dshHome, 'skills'), source: 'user-dsh', rank: USER_DSH_RANK, skipSystem: true },
+        { path: join(this.liwaHome, 'skills'), source: 'user-liwa', rank: USER_LIWA_RANK, skipSystem: true },
         { path: join(this.agentsHome, 'skills'), source: 'user-agents', rank: USER_AGENTS_RANK },
       )
     }

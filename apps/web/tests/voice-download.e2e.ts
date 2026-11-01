@@ -17,7 +17,7 @@ const DOWNLOAD_ALERT = '[role="alert"]:has-text("Download source")'
 
 it('shows the failed asset, actual download source and recovery advice, then retries on request', async () => {
   const resources: { scaffold?: WebScaffold; browser?: Browser } = {}
-  const root = await mkdtemp(join(tmpdir(), 'dsh-voice-download-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-voice-download-'))
   onTestFinished(async () => { await rm(root, { recursive: true, force: true }) })
   let status = 503
   const requests: string[] = []
@@ -45,7 +45,7 @@ it('shows the failed asset, actual download source and recovery advice, then ret
   const page = await newEnglishPage(browser), tripwire = watchConsole(page)
   await page.goto(scaffold.authenticatedUrl)
   await page.getByRole('button', { name: 'Plugins', exact: true }).click()
-  await page.locator('[data-plugin-package="@deepseek-ai/dsh-experimental-voice-input-bundle"]').getByRole('button').click()
+  await page.locator('[data-plugin-package="@liwa/experimental-voice-input-bundle"]').getByRole('button').click()
   await page.getByRole('button', { name: 'Download and prepare', exact: true }).click()
   const alert = page.getByRole('alert').filter({ hasText: 'Download source' })
   await alert.waitFor()
@@ -64,7 +64,7 @@ it('shows the failed asset, actual download source and recovery advice, then ret
 
 it.each([{ winner: 0, manual: false }, { winner: 1, manual: false }, { winner: 0, manual: true }, { winner: 1, manual: true }])(
   'uses source $winner with manual selection $manual through the real preparation UI', async ({ winner, manual }) => {
-    const root = await mkdtemp(join(tmpdir(), 'dsh-voice-mirrors-'))
+    const root = await mkdtemp(join(tmpdir(), 'liwa-voice-mirrors-'))
     onTestFinished(async () => { await rm(root, { recursive: true, force: true }) })
     const resources: { scaffold?: WebScaffold; browser?: Browser } = {}
     const probes = new Map<number, ServerResponse>(), downloads: number[] = [], requestedPaths: string[] = []
@@ -105,7 +105,7 @@ it.each([{ winner: 0, manual: false }, { winner: 1, manual: false }, { winner: 0
     const page = await newEnglishPage(browser), tripwire = watchConsole(page)
     await page.goto(scaffold.authenticatedUrl)
     await page.getByRole('button', { name: 'Plugins', exact: true }).click()
-    await page.locator('[data-plugin-package="@deepseek-ai/dsh-experimental-voice-input-bundle"]').getByRole('button').click()
+    await page.locator('[data-plugin-package="@liwa/experimental-voice-input-bundle"]').getByRole('button').click()
     const picker = page.getByLabel('Model download source', { exact: true })
     await picker.waitFor()
     if (manual) await picker.selectOption(origins[winner]!)

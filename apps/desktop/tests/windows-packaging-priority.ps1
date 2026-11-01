@@ -5,7 +5,7 @@ $ErrorActionPreference = 'Stop'
 if (-not $IsWindows) { throw 'Requires PowerShell 7 on Windows.' }
 $helper = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../scripts/windows-packaging-priority.ps1'))
 if ($Failure) {
-  Add-Type 'public static class DshPackagingPriority { public static int Read(int kind) { throw new System.InvalidOperationException("fixture priority access denied"); } }'
+  Add-Type 'public static class LiwaPackagingPriority { public static int Read(int kind) { throw new System.InvalidOperationException("fixture priority access denied"); } }'
   $warnings = @()
   $report = & $helper -BestEffort -WarningVariable warnings 3>$null | ConvertFrom-Json
   if ($report.comparable -ne $false -or $warnings.Count -ne 1) { throw 'Missing degraded scheduling report.' }
@@ -19,8 +19,8 @@ if ($Child) {
   $self = [Diagnostics.Process]::GetCurrentProcess()
   try {
     $self.PriorityClass = [Diagnostics.ProcessPriorityClass]::BelowNormal
-    [DshPackagingPriority]::Set(33, 1)
-    [DshPackagingPriority]::Set(39, 2)
+    [LiwaPackagingPriority]::Set(33, 1)
+    [LiwaPackagingPriority]::Set(39, 2)
     $report = (& $helper | ConvertFrom-Json)
     if ($report.before.cpu -ne 'BelowNormal' -or $report.before.io -ne 1 -or $report.before.memory -ne 2) {
       throw 'Fixture did not establish background priority.'

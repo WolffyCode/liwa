@@ -1,17 +1,31 @@
-import { createUserMessage, expandAssistantStream } from '@deepseek-ai/dsh-llm'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { createUserMessage, expandAssistantStream } from '@liwa/llm'
 import { createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
-import * as LlmDeepSeek from '@deepseek-ai/dsh-llm-deepseek-api-key'
-import type { MockLlmBehavior, MockLlmServer } from '@deepseek-ai/dsh-llm-mock-server'
-import { startMockLlmServer } from '@deepseek-ai/dsh-llm-mock-server'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { Context } from '@liwa/cordis'
+import type { Agent } from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import { mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
+import * as LlmDeepSeek from '@liwa/llm-deepseek-api-key'
+import type { MockLlmBehavior, MockLlmServer } from '@liwa/llm-mock-server'
+import { startMockLlmServer } from '@liwa/llm-mock-server'
+import { SessionId } from '@liwa/session'
+import type { SessionEvent } from '@liwa/session'
 import * as Retry from '../src/index.ts'
+
+// Model requests resolve the anonymous user id inside $LIWA_HOME; a temp home keeps the suite off the person's ~/.liwa.
+let testHome: string
+beforeEach(() => {
+  testHome = mkdtempSync(join(tmpdir(), 'liwa-transport-recovery-'))
+  vi.stubEnv('LIWA_HOME', testHome)
+})
+afterEach(() => {
+  vi.unstubAllEnvs()
+  rmSync(testHome, { recursive: true, force: true })
+})
 
 let context: Context | undefined
 const servers: Promise<MockLlmServer>[] = []

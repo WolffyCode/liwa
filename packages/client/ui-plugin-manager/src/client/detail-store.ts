@@ -1,8 +1,8 @@
 /** Bundle detail reads: the long description of each bundle the page opens, read from the Host by name and language. */
-import type { Context as ClientContext } from '@deepseek-ai/cordis'
-import { createSnapshotStore, type SnapshotStore } from '@deepseek-ai/dsh-client-store'
-import type { BundleDetail, RemoteFailure } from '@deepseek-ai/dsh-api-remotes/client'
-import { NPMMIRROR_REGISTRY } from '@deepseek-ai/dsh-plugin-manager/registry'
+import type { Context as ClientContext } from '@liwa/cordis'
+import { createSnapshotStore, type SnapshotStore } from '@liwa/client-store'
+import type { BundleDetail, RemoteFailure } from '@liwa/api-remotes/client'
+import { NPMMIRROR_REGISTRY } from '@liwa/plugin-manager/registry'
 
 /** Why a bundle detail read failed: the Host's `plugin-manager/detail-unavailable` reason, or `other`. */
 export type BundleDetailFailure = 'too-large' | 'network' | 'denied' | 'git-unavailable' | 'invalid' | 'other'

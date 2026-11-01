@@ -1,0 +1,31 @@
+# Bilingual-pair consistency record for liwa-v0.1.0-rc.7.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/releases/liwa-v0.1.0-rc.7.md
+/:
+  en: 8c17dbb2c5b4bc83
+  zh: 7e37d4ad90113a84
+/persistence-release-liwa-v0-1-0-rc-7:
+  en: 4883379192d066b1
+  zh: d60c098f8afb7191
+/persistence-release-liwa-v0-1-0-rc-7/summary:
+  en: b9a148bb0637a5e8
+  zh: 41e3d6d3f22535ac
+/persistence-release-liwa-v0-1-0-rc-7/table-of-contents:
+  en: 0ff4a6f3c6af323f
+  zh: f5c7bd70cc1585c7
+/persistence-release-liwa-v0-1-0-rc-7/release-evidence:
+  en: 1bbc89356db86d2e
+  zh: 2f3246e91fef1ba5
+/persistence-release-liwa-v0-1-0-rc-7/declaration:
+  en: af9cea43334ee692
+  zh: c6c8bd0d6a17718a
+/persistence-release-liwa-v0-1-0-rc-7/structural-changes:
+  en: 1a08248deb5e841c
+  zh: b5dd3c2ac161a100
+/persistence-release-liwa-v0-1-0-rc-7/verification:
+  en: 8ccca317964523b1
+  zh: 2c8b3e70a3320778
+/persistence-release-liwa-v0-1-0-rc-7/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

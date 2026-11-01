@@ -11,13 +11,13 @@ import { join } from 'node:path'
 import { performance } from 'node:perf_hooks'
 import { fileURLToPath } from 'node:url'
 import { crc32, deflateSync } from 'node:zlib'
-import { Context } from '@deepseek-ai/cordis'
-import { LocalAttachmentStore } from '@deepseek-ai/dsh-attachment-local'
-import type { ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
-import { MessageId, ToolCallId } from '@deepseek-ai/dsh-llm'
-import { AssistantStreamAccumulator } from '@deepseek-ai/dsh-llm/assistant-stream'
-import SessionStore, { SessionId, type Session } from '@deepseek-ai/dsh-session'
-import SessionQueryEngine from '@deepseek-ai/dsh-session-query'
+import { Context } from '@liwa/cordis'
+import { LocalAttachmentStore } from '@liwa/attachment-local'
+import type { ImageAttachmentRef } from '@liwa/attachment'
+import { MessageId, ToolCallId } from '@liwa/llm'
+import { AssistantStreamAccumulator } from '@liwa/llm/assistant-stream'
+import SessionStore, { SessionId, type Session } from '@liwa/session'
+import SessionQueryEngine from '@liwa/session-query'
 import { ApiSessionAgentController } from '../src/agent.ts'
 import { SessionCommandController } from '../src/commands.ts'
 import type { SessionAttachmentValue } from '../src/types.ts'
@@ -158,12 +158,12 @@ async function transfer(payloads: readonly string[]): Promise<readonly number[]>
 }
 
 async function measure(workload: keyof typeof WORKLOADS) {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-image-read-perf-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-image-read-perf-'))
   const ctx = new Context()
   try {
     await ctx.plugin(SessionStore)
     await ctx.plugin(ImageReadSessionQuery)
-    await ctx.plugin(LocalAttachmentStore, { dshHome: root })
+    await ctx.plugin(LocalAttachmentStore, { liwaHome: root })
     const refs: ImageAttachmentRef[] = []
     for (let ordinal = 0; ordinal < WORKLOADS[workload].images; ordinal++) {
       refs.push(await ctx.attachments.saveImage({ data: image(ordinal), mediaType: 'image/png' }))
@@ -299,7 +299,7 @@ async function measure(workload: keyof typeof WORKLOADS) {
 }
 
 for (const specifier of [
-  '@deepseek-ai/cordis', '@deepseek-ai/dsh-attachment-local', '@deepseek-ai/dsh-session', '@deepseek-ai/dsh-session-query',
+  '@liwa/cordis', '@liwa/attachment-local', '@liwa/session', '@liwa/session-query',
 ]) {
   assert.match(import.meta.resolve(specifier), /\/lib\/.*\.js$/, `${specifier} must resolve to built JavaScript`)
 }

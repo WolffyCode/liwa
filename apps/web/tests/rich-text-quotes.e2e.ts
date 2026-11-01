@@ -6,10 +6,10 @@ import { join } from 'node:path'
 import type { Browser, Locator, Page } from 'playwright'
 import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed } from 'vitest'
-import type { ReplayOverrideDoc } from '@deepseek-ai/dsh-llm-replay'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import { formatSessionReferenceMention } from '@deepseek-ai/dsh-session-reference'
-import { formatQuoteText } from '@deepseek-ai/dsh-client-ui-primitives'
+import type { ReplayOverrideDoc } from '@liwa/llm-replay'
+import { SessionId } from '@liwa/session'
+import { formatSessionReferenceMention } from '@liwa/session-reference'
+import { formatQuoteText } from '@liwa/client-ui-primitives'
 import {
   assertFixtureInventory, captureStableAria, compareOrRefreshGolden, launchWebScaffold,
   parseSeedFixture, renderSeedFixture, seedSession, selectedSessionFixture, watchConsole, webSnapshotMode,
@@ -23,8 +23,8 @@ const UI_EXPECTED = fileURLToPath(new URL('../../../snapshots/web/rich-text-quot
 const MODE = webSnapshotMode()
 const SESSION_ID = 'rich-text-quotes-web-e2e'
 const OTHER_ID = 'rich-text-quotes-other'
-const LEGACY_DRAFT_KEY = `dsh.conversation.${SESSION_ID}`
-const CURRENT_DRAFT_KEY = `dsh.conversation.${SESSION_ID}`
+const LEGACY_DRAFT_KEY = `liwa.conversation.${SESSION_ID}`
+const CURRENT_DRAFT_KEY = `liwa.conversation.${SESSION_ID}`
 const LEGACY_DRAFT = JSON.stringify({ draft: 'Imported plain draft', view: 'chat', viewRequest: null })
 const SOURCE_TEXT = 'Durable source phrase selected from an earlier message and preserved as structured quote metadata.'
 const THINKING_TEXT = 'Settled reasoning source'
@@ -293,7 +293,7 @@ describe.skipIf(MODE === 'record')('web e2e: rich-text quotes', () => {
 
   beforeAll(async () => {
     hostClock = pinHostClock()
-    replayDir = await mkdtemp(join(tmpdir(), 'dsh-rich-text-quotes-replay-'))
+    replayDir = await mkdtemp(join(tmpdir(), 'liwa-rich-text-quotes-replay-'))
     const replayOverride = join(replayDir, 'replay.override.json')
     await writeFile(replayOverride, JSON.stringify(REPLAY))
     scaffold = await launchWebScaffold({

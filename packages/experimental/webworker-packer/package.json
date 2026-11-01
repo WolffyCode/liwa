@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-experimental-webworker-packer",
+  "name": "@liwa/experimental-webworker-packer",
   "description": "Build-time packer for the browser runtime's base VFS image and ordered data-overlay archives",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,14 +7,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/experimental/webworker-packer"
   },
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",
   "bin": {
-    "dsh-pack-vfs-image": "./bin.js"
+    "liwa-pack-vfs-image": "./bin.js"
   },
   "exports": {
     ".": {
@@ -33,20 +33,20 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/dsh-app-boot": "workspace:*",
-    "@deepseek-ai/dsh-experimental-webworker-runtime": "workspace:*",
-    "@deepseek-ai/dsh-official-bundles": "workspace:*",
-    "@deepseek-ai/dsh-session-format": "workspace:*",
-    "@deepseek-ai/dsh-session-format-catalog": "workspace:*",
-    "@deepseek-ai/dsh-session-format-v3-to-v4": "workspace:*",
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/app-boot": "workspace:*",
+    "@liwa/experimental-webworker-runtime": "workspace:*",
+    "@liwa/official-bundles": "workspace:*",
+    "@liwa/session-format": "workspace:*",
+    "@liwa/session-format-catalog": "workspace:*",
+    "@liwa/session-format-v3-to-v4": "workspace:*",
     "picomatch": "^4.0.7"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
+    "@liwa/cordis": "workspace:~",
     "@types/picomatch": "^4.0.3"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   }
 }

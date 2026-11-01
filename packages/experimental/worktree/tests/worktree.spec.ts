@@ -3,7 +3,7 @@ import { access, mkdir, readdir, rm, symlink, writeFile } from 'node:fs/promises
 import { join, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@liwa/cordis'
 import WorktreeService from '../src/index.ts'
 import type { RestoreWorktreeRequest } from '../src/index.ts'
 import { contents, git, harness, repository, testAgent } from './harness.ts'
@@ -100,7 +100,7 @@ describe('creating and entering retained worktrees', () => {
     ctx = await harness(root)
     const agent = testAgent(ctx, root, 'session-6B1F02C4-61de-44ee-813f-1191894bc2c5')
     const created = await ctx.worktrees.create(agent)
-    expect(created.branch).toMatch(/^dsh-6b1f02c4-[0-9a-f]{4}$/)
+    expect(created.branch).toMatch(/^liwa-6b1f02c4-[0-9a-f]{4}$/)
     expect(created.path).toBe(join(root, '.agents/worktrees', created.branch))
   })
 

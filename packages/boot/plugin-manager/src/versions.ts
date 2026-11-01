@@ -5,7 +5,7 @@ import semver from 'semver'
 export const VERSION_LIST_FIELDS = ['versions', 'time', 'dist-tags'] as const
 
 /** The fields read for one version: what decides whether it can replace an installed bundle. */
-export const VERSION_FIELDS = ['name', 'version', 'engines', 'peerDependencies', 'deprecated', 'dsh'] as const
+export const VERSION_FIELDS = ['name', 'version', 'engines', 'peerDependencies', 'deprecated', 'liwa'] as const
 
 /** One published version newer than the installed one, before its own manifest is read. */
 export interface PublishedVersion {
@@ -57,7 +57,7 @@ export function newerVersions(answer: unknown, installed: string): PublishedVers
 }
 
 /**
- * What one exact version's manifest says, from `pnpm view <name>@<version> name version engines peerDependencies deprecated dsh --json`.
+ * What one exact version's manifest says, from `pnpm view <name>@<version> name version engines peerDependencies deprecated liwa --json`.
  * @param answer - the parsed output.
  * @param name - the package name, used when the answer omits it.
  * @param version - the version asked for, used when the answer omits it.
@@ -65,7 +65,7 @@ export function newerVersions(answer: unknown, installed: string): PublishedVers
  */
 export function versionFacts(answer: unknown, name: string, version: string): VersionFacts {
   const fields = recordOf(answer) ?? {}
-  const dsh = recordOf(fields.dsh)
+  const liwa = recordOf(fields.liwa)
   const deprecated = fields.deprecated
   return {
     manifest: {
@@ -74,7 +74,7 @@ export function versionFacts(answer: unknown, name: string, version: string): Ve
       ...Object.hasOwn(fields, 'engines') ? { engines: fields.engines } : {},
       ...Object.hasOwn(fields, 'peerDependencies') ? { peerDependencies: fields.peerDependencies } : {},
     },
-    bundle: recordOf(dsh?.bundle) !== undefined,
+    bundle: recordOf(liwa?.bundle) !== undefined,
     ...typeof deprecated === 'string' && deprecated !== '' ? { deprecated } : {},
   }
 }

@@ -17,7 +17,7 @@
 | `agent-loop/` | 实现公开 `Agent` 约定的具体 driver（`ctx.agentLoop`） | 本页 |
 | `scope/` | 注册表与循环用于构建按 agent 作用域的注册原语 | [scope.md](scope.zh.md) |
 
-`scope/` 是这里唯一的非服务包：一个零依赖库（`createScope`/`scopeOf`/`scopeTarget`），在模块图中位于 `session/` 与 `system-prompt/` 之下，正是为了让它们消费它而不形成环。`agent-loop` 是公开 `Agent` 约定的唯一具体实现，放在这里因为它是 harness 的默认产品循环；它在 `ctx.agents.withInitiator()` 内运行每个 driver。扩展插件依赖 `agent`——包括需要发起 Agent 时——而绝不直接依赖 `agent-loop`，因此循环保持可替换。[`dsh-base`](../../packages/bundle/base/README.zh.md) 是默认产品组合，[`dsh-sdk-minimal`](../../packages/bundle/sdk-minimal/README.zh.md) 则声明一棵更小的独立配置树。
+`scope/` 是这里唯一的非服务包：一个零依赖库（`createScope`/`scopeOf`/`scopeTarget`），在模块图中位于 `session/` 与 `system-prompt/` 之下，正是为了让它们消费它而不形成环。`agent-loop` 是公开 `Agent` 约定的唯一具体实现，放在这里因为它是灵鲸的默认产品循环；它在 `ctx.agents.withInitiator()` 内运行每个 driver。扩展插件依赖 `agent`——包括需要发起 Agent 时——而绝不直接依赖 `agent-loop`，因此循环保持可替换。[`liwa-base`](../../packages/bundle/base/README.zh.md) 是默认产品组合，[`liwa-sdk-minimal`](../../packages/bundle/sdk-minimal/README.zh.md) 则声明一棵更小的独立配置树。
 
 <a id="creation-and-ownership"></a>
 
@@ -56,7 +56,7 @@ interface AgentHandle {
 
 ## Agent 句柄
 
-`Agent` 是每个插件（UI、钩子、orchestrator）面向编程的 surface；`ctx.agents.get(id)` 返回它，[发起者作用域](#initiating-agent)携带它。具体实现为 dsh-agent-loop 包内部细节；循环外没有任何组件依赖它。统一的 `send` 方法直接暴露 target 与 wakeup 路由；`followup`、`steer` 与 `inject` 是固定预设的别名方法。
+`Agent` 是每个插件（UI、钩子、orchestrator）面向编程的 surface；`ctx.agents.get(id)` 返回它，[发起者作用域](#initiating-agent)携带它。具体实现为 liwa-agent-loop 包内部细节；循环外没有任何组件依赖它。统一的 `send` 方法直接暴露 target 与 wakeup 路由；`followup`、`steer` 与 `inject` 是固定预设的别名方法。
 
 源码：[`packages/core/agent/src/types.ts`](../../packages/core/agent/src/types.ts)
 
@@ -344,7 +344,7 @@ interface Inbox {
 type InboxTarget = 'next-turn' | 'next-step'
 ```
 
-每个待处理入队项就是其 `UserMessage`；`MessageId` 是唯一标识。结构化 `Inbox` 方法会记录规范化的持久 `agent/inbox/spliced` 变更，并拒绝重复的待处理 id。`replace(messageId, newMessage)` 与 `remove(messageId)` 通过 `MessageId` 跨两份列表定位待处理消息；替换可以改变标识，并先将旧消息作为 discarded 发布，再将新消息作为 inserted 发布。普通删除和 `clear()` 都表示取消。在步骤边界，dsh-agent-loop 包内部的 `ReactLoopInbox` 会通过纯删除 splice 移除拟进入步骤的批次——全部 `next-step` 输入，外加轮次边界上的一条 `next-turn` 消息——且不发出 discarded 通知，随后逐条发出 claimed 通知。仅供循环使用的待处理检测与领取操作不属于 `Agent.inbox`。`AgentLoop` 服务在发布工厂之前注册标准 `inbox` 投影；其 cell 是唯一 live 状态，同一份折叠在没有 Agent 时也服务于冷消费方。该 fold 会拒绝不安全或越界的 splice 坐标，以及跨两份列表重复的标识，并通过事件 seq 指出格式错误的持久历史。跟踪单条消息的消费方使用精确的 `agent/inbox/inserted`、`claimed` 与 `discarded` 通知。
+每个待处理入队项就是其 `UserMessage`；`MessageId` 是唯一标识。结构化 `Inbox` 方法会记录规范化的持久 `agent/inbox/spliced` 变更，并拒绝重复的待处理 id。`replace(messageId, newMessage)` 与 `remove(messageId)` 通过 `MessageId` 跨两份列表定位待处理消息；替换可以改变标识，并先将旧消息作为 discarded 发布，再将新消息作为 inserted 发布。普通删除和 `clear()` 都表示取消。在步骤边界，liwa-agent-loop 包内部的 `ReactLoopInbox` 会通过纯删除 splice 移除拟进入步骤的批次——全部 `next-step` 输入，外加轮次边界上的一条 `next-turn` 消息——且不发出 discarded 通知，随后逐条发出 claimed 通知。仅供循环使用的待处理检测与领取操作不属于 `Agent.inbox`。`AgentLoop` 服务在发布工厂之前注册标准 `inbox` 投影；其 cell 是唯一 live 状态，同一份折叠在没有 Agent 时也服务于冷消费方。该 fold 会拒绝不安全或越界的 splice 坐标，以及跨两份列表重复的标识，并通过事件 seq 指出格式错误的持久历史。跟踪单条消息的消费方使用精确的 `agent/inbox/inserted`、`claimed` 与 `discarded` 通知。
 
 取消：
 
@@ -441,7 +441,7 @@ type SessionStartSource = 'startup' | 'resume' | 'clear' | 'compact'
 
 ### `…Map → derived-union` 模式
 
-harness 中几乎所有可扩展的和类型都遵循同一模式：一个以判别标签为键的接口（`…Map`），联合类型由 `keyof` 派生。插件通过**声明合并**添加变体——无需修改拥有该类型的包。
+灵鲸中几乎所有可扩展的和类型都遵循同一模式：一个以判别标签为键的接口（`…Map`），联合类型由 `keyof` 派生。插件通过**声明合并**添加变体——无需修改拥有该类型的包。
 
 ```ts ignore-check
 // The pattern, schematically:
@@ -453,7 +453,7 @@ type ThingKind = keyof ThingMap          // 'a' | 'b'
 type Thing = ThingMap[keyof ThingMap]    // the discriminated union
 
 // A plugin extends it without touching the source package:
-declare module '@deepseek-ai/dsh-llm' {
+declare module '@liwa/llm' {
   interface ThingMap {
     'c': { kind: 'c'; /* … */ }
   }
@@ -464,11 +464,11 @@ declare module '@deepseek-ai/dsh-llm' {
 
 | Map | 包 | 派生 | 目录 |
 |---|---|---|---|
-| `ContentBlockMap` | dsh-llm | `ContentBlock` | [llm-streaming.md](llm-streaming.zh.md#content-blocks-and-messages) |
-| `MessageSourceMap` | dsh-llm | `MessageSource` | [llm-streaming.md](llm-streaming.zh.md#content-blocks-and-messages) |
-| `FinishReasonMap` | dsh-llm | `FinishReason` | [llm-streaming.md](llm-streaming.zh.md#the-model-request-and-result) |
-| `TurnEndReasonMap` | dsh-session | `TurnEndReason` | [session.md](session.zh.md) |
-| `SessionEventMap` | dsh-session | `SessionEvent` | [session.md](session.zh.md) |
+| `ContentBlockMap` | liwa-llm | `ContentBlock` | [llm-streaming.md](llm-streaming.zh.md#content-blocks-and-messages) |
+| `MessageSourceMap` | liwa-llm | `MessageSource` | [llm-streaming.md](llm-streaming.zh.md#content-blocks-and-messages) |
+| `FinishReasonMap` | liwa-llm | `FinishReason` | [llm-streaming.md](llm-streaming.zh.md#the-model-request-and-result) |
+| `TurnEndReasonMap` | liwa-session | `TurnEndReason` | [session.md](session.zh.md) |
+| `SessionEventMap` | liwa-session | `SessionEvent` | [session.md](session.zh.md) |
 
 消费方最常 `switch` 的两个大型判别联合类型是：**`StreamChunk`**（流式协议）和 **`SessionEvent`**（日志条目）。按仓库约定，对标签做 `switch`——不要链式 `if`——这样每个分支都能窄化类型，拼错的标签会编译失败。
 
@@ -478,7 +478,7 @@ declare module '@deepseek-ai/dsh-llm' {
 
 在包之间传递的 ID 都经过**品牌化**——结构上是字符串，但在类型层面不可互换（不能把 `SessionId` 传给需要 `ToolCallId` 的位置）。构造使用共享 `brandString<T>()` helper 或所属方自定义的校验工厂；比较、日志记录和 JSON 行为与普通字符串相同。
 
-`Branded<B>` 原语与无状态构造函数位于 [dsh-brand](../../packages/util/brand)，该包不依赖 harness 能力。`brandString<T>()` 应用仅编译期存在的字符串品牌。
+`Branded<B>` 原语与无状态构造函数位于 [liwa-brand](../../packages/util/brand)，该包不依赖灵鲸能力。`brandString<T>()` 应用仅编译期存在的字符串品牌。
 
 源码：[`packages/util/brand/src/index.ts`](../../packages/util/brand/src/index.ts)
 
@@ -487,7 +487,7 @@ declare module '@deepseek-ai/dsh-llm' {
 type Branded<B extends string> = string & { readonly [BRAND]: B }
 ```
 
-两个核心 ID 是 `ToolCallId`（关联工具调用及其结果；dsh-llm）和 `SessionId`（活跃 agent 与持久会话共享的标识；dsh-session）。能力包也会品牌化各自的 id，例如 [jobs.md](jobs.zh.md) 中的 `JobId`。
+两个核心 ID 是 `ToolCallId`（关联工具调用及其结果；liwa-llm）和 `SessionId`（活跃 agent 与持久会话共享的标识；liwa-session）。能力包也会品牌化各自的 id，例如 [jobs.md](jobs.zh.md) 中的 `JobId`。
 
 ## `TurnBoundaryProjection`
 
@@ -693,7 +693,7 @@ Source: [`packages/preset/agent-preset-registry/src/index.ts`](../../packages/pr
 
 ### `ctx.agents` — `AgentRegistry`
 
-Agent service (`ctx.agents`): tracks live agents and carries the initiating Agent through one process-local asynchronous driver chain. Agent *creation* is provided by whichever plugin implements the AgentFactory (`@deepseek-ai/dsh-agent-loop`), registered via setFactory.
+Agent service (`ctx.agents`): tracks live agents and carries the initiating Agent through one process-local asynchronous driver chain. Agent *creation* is provided by whichever plugin implements the AgentFactory (`@liwa/agent-loop`), registered via setFactory.
 
 Initiator methods provide same-process causal attribution only. Ambient presence is neither liveness proof nor authorization; subjects and owners remain explicit, as does identity at worker, process, persistence, and wire boundaries. Returned Promise boundaries drain during teardown, except a nested lineage that starts an owning-fiber unload is excluded from its own drain.
 
@@ -892,7 +892,7 @@ Process-local assistant-stream publication. Chunk frames are transient; the loop
  * with the same stream before a committed end frame.
  * @param payload.agent - the agent whose attempt produced the frame.
  * @param payload.frame - one ordered start, chunk, or end publication.
- * Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.
+ * Scope-filtered dispatch (`@liwa/scope`): agent-scoped listeners receive only that agent.
  * @mode emit
  */
 'agent/assistant-stream'(this: Scoped<Agent>, payload: { agent: Agent; frame: AssistantStreamFrame }): void
@@ -919,7 +919,7 @@ An entered agent is ready for per-agent initialization after factory setup. List
  * @param payload.agent - the newly registered agent with its live session and completed setup.
  * @param payload.source - fresh creation, resume, clear, or compaction source.
  * @param payload.signal - factory initialization cancellation signal, when provided.
- * Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.
+ * Scope-filtered dispatch (`@liwa/scope`): agent-scoped listeners receive only that agent.
  * @mode serial
  */
 'agent/created'(this: Scoped<Agent>, payload: { agent: Agent; source: SessionStartSource; signal?: AbortSignal }): undefined | Promise<undefined>
@@ -941,7 +941,7 @@ An agent left the registry; AgentLoop emits this after driver quiescence and sco
  * and scoped-registration unwind, but before session detachment. Custom
  * registry users own their driver-ordering contract.
  * @param payload.agent - the exact agent removed from the registry.
- * Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.
+ * Scope-filtered dispatch (`@liwa/scope`): agent-scoped listeners receive only that agent.
  * @mode emit
  */
 'agent/disposed'(this: Scoped<Agent>, payload: { agent: Agent }): void
@@ -965,7 +965,7 @@ A step or turn errored. The machine reports a failure here even when the error h
  * @param payload.turn - the turn in which the failure surfaced.
  * @param payload.step - the step at which the failure surfaced.
  * @param payload.error - the failure, verbatim.
- * Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.
+ * Scope-filtered dispatch (`@liwa/scope`): agent-scoped listeners receive only that agent.
  * @mode emit
  */
 'agent/error'(this: Scoped<Agent>, payload: { agent: Agent; turn: number; step: number; error: unknown }): void
@@ -989,7 +989,7 @@ One message left the inbox inside its open turn. If the proposed step is rejecte
  * @param payload.agent - the agent whose inbox changed.
  * @param payload.message - the claimed message.
  * @param payload.turn - the owning turn.
- * Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.
+ * Scope-filtered dispatch (`@liwa/scope`): agent-scoped listeners receive only that agent.
  * @mode emit
  */
 'agent/inbox/claimed'(this: Scoped<Agent>, payload: { agent: Agent; message: UserMessage; turn: number }): void
@@ -1010,7 +1010,7 @@ One message was discarded from the live inbox.
  * One message was discarded from the live inbox.
  * @param payload.agent - the agent whose inbox changed.
  * @param payload.message - the discarded message.
- * Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.
+ * Scope-filtered dispatch (`@liwa/scope`): agent-scoped listeners receive only that agent.
  * @mode emit
  */
 'agent/inbox/discarded'(this: Scoped<Agent>, payload: { agent: Agent; message: UserMessage }): void
@@ -1031,7 +1031,7 @@ One message entered the live inbox.
  * One message entered the live inbox.
  * @param payload.agent - the agent whose inbox changed.
  * @param payload.message - the inserted message.
- * Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.
+ * Scope-filtered dispatch (`@liwa/scope`): agent-scoped listeners receive only that agent.
  * @mode emit
  */
 'agent/inbox/inserted'(this: Scoped<Agent>, payload: { agent: Agent; message: UserMessage }): void
@@ -1057,7 +1057,7 @@ Reject a proposed step or replace the messages that enter it. Calling `next()` p
  * @param payload.step - the step proposed by the loop.
  * @param payload.signal - the current turn's cancellation signal.
  * @param payload.modelSelection - captured step selection, retained across retries; omitted effort uses adapter defaults.
- * Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.
+ * Scope-filtered dispatch (`@liwa/scope`): agent-scoped listeners receive only that agent.
  * @mode waterfall
  */
 'agent/pre-step'(this: Scoped<Agent>, payload: { agent: Agent; messages: UserMessage[]; turn: number; step: number; signal: AbortSignal; modelSelection: Readonly<ModelSelection> }, next: () => Promise<PreStepDecision>): Promise<PreStepDecision>
@@ -1086,7 +1086,7 @@ Handle one failed model-request attempt before the loop retries or closes its st
  * @param payload.failure - serializable facts normalized at the final adapter boundary.
  * @param payload.retryPolicy - the policy of the adapter registration that served the failed request.
  * @param payload.signal - the turn abort signal.
- * Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.
+ * Scope-filtered dispatch (`@liwa/scope`): agent-scoped listeners receive only that agent.
  * @mode waterfall
  */
 'agent/request-error'(this: Scoped<Agent>, payload: { agent: Agent; turn: number; step: number; provider: string; failure: LlmFailure; retryPolicy: ResolvedRetryPolicy | undefined; signal: AbortSignal }, next: () => Promise<RequestErrorAction>): Promise<RequestErrorAction>
@@ -1109,7 +1109,7 @@ Agent status changed (`idle` ⇄ `running`). A waking delivery enters `running` 
  * driver remains scheduled or active.
  * @param payload.agent - the agent whose status flipped.
  * @param payload.status - the status just entered (the transition's destination).
- * Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.
+ * Scope-filtered dispatch (`@liwa/scope`): agent-scoped listeners receive only that agent.
  * @mode emit
  */
 'agent/status'(this: Scoped<Agent>, payload: { agent: Agent; status: AgentStatus }): void
@@ -1140,7 +1140,7 @@ The turn is about to close: the model owes no response (no live tool calls, no f
  * @param payload.agent - the agent whose turn is at its stop boundary.
  * @param payload.turn - the turn about to close.
  * @param payload.signal - the current turn's explicit abort signal.
- * Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.
+ * Scope-filtered dispatch (`@liwa/scope`): agent-scoped listeners receive only that agent.
  * @mode serial
  */
 'agent/turn-stopping'(this: Scoped<Agent>, payload: { agent: Agent; turn: number; signal: AbortSignal }): Promise<void> | void

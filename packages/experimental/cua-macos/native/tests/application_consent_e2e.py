@@ -23,12 +23,12 @@ def main():
     parser.add_argument("--desktop", action="store_true", help="Read, click and capture owned fixture windows; requires existing system grants")
     args = parser.parse_args()
     transcript = []
-    with tempfile.TemporaryDirectory(prefix="dsh-cua-consent-") as temporary, ExitStack() as cleanup:
+    with tempfile.TemporaryDirectory(prefix="liwa-cua-consent-") as temporary, ExitStack() as cleanup:
         root = Path(temporary)
         binary = root / "fixture"
         subprocess.run(["xcrun", "swiftc", str(ROOT / "tests/CapabilitiesFixture.swift"), "-o", str(binary)],
                        check=True, timeout=60)
-        identifier = "test.dsh.consent." + uuid.uuid4().hex
+        identifier = "test.liwa.consent." + uuid.uuid4().hex
         expected = hashlib.sha256(("macos:bundle-id:" + identifier).encode()).hexdigest()
         helper = NativeHelper(transcript, args.helper)
         cleanup.callback(helper.stop)
@@ -96,7 +96,7 @@ def main():
                 "The replaced application is running after refusal"
 
         identities = []
-        mixed_case_identifier = "Test.DSH.MixedCase." + uuid.uuid4().hex
+        mixed_case_identifier = "Test.Liwa.MixedCase." + uuid.uuid4().hex
         for name, bundle_id in [("Version One", identifier), ("Version Two", identifier), ("Other", identifier + ".other"), ("No identifier", None), ("Mixed case", mixed_case_identifier)]:
             app, executable, state, info = fixture(name, bundle_id)
             pending = helper.call("getApp", {"selector": str(app)})

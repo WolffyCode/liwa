@@ -1,15 +1,15 @@
 /**
- * Low-level JSON-RPC client for a DeepSeek Harness SDK runtime subprocess.
- * {@link HarnessClient} owns the child process: it spawns the runtime, speaks
- * the `@deepseek-ai/dsh-sdk-protocol` wire over the child's stdio, fans
+ * Low-level JSON-RPC client for a Liwa SDK runtime subprocess.
+ * {@link LiwaClient} owns the child process: it spawns the runtime, speaks
+ * the `@liwa/sdk-protocol` wire over the child's stdio, fans
  * server notifications out to subscriptions, and tears the child down to
  * quiescence through a private EOF → SIGTERM → SIGKILL ladder. The design
- * twin is the Python SDK's `HarnessClient` (`python/sdk`); both drive the
+ * twin is the Python SDK's `LiwaClient` (`python/sdk`); both drive the
  * same runtime protocol. This client runs OUTSIDE any harness context, so it
- * spawns directly rather than through the `dsh-subprocess` service — the
+ * spawns directly rather than through the `liwa-subprocess` service — the
  * seam's documented exception for SDK-managed transports.
  *
- * @module @deepseek-ai/dsh-sdk-client/client
+ * @module @liwa/sdk-client/client
  */
 
 import { spawn, type ChildProcess } from 'node:child_process'
@@ -21,10 +21,10 @@ import {
   type SessionPromptParams,
   type SdkPromptContentBlock,
   type SdkUserQuestionRequest,
-} from '@deepseek-ai/dsh-sdk-protocol'
+} from '@liwa/sdk-protocol'
 import { disposeRuntimeProcess } from './dispose.ts'
-import { resolveDshLaunch, type RuntimeProcessOptions } from './launch.ts'
-import type { HarnessClientOptions, HarnessNotification, NotificationFilter } from './types.ts'
+import { resolveLiwaLaunch, type RuntimeProcessOptions } from './launch.ts'
+import type { LiwaClientOptions, LiwaNotification, NotificationFilter } from './types.ts'
 
 /** Retained stderr lines used to diagnose an unexpected runtime death. */
 const STDERR_TAIL_LIMIT = 400
@@ -45,7 +45,7 @@ export class TransportClosedError extends Error {
   }
 }
 
-/** A request exceeded {@link HarnessClientOptions.requestTimeoutMs}. */
+/** A request exceeded {@link LiwaClientOptions.requestTimeoutMs}. */
 export class RequestTimeoutError extends Error {
   /** @param message - which method timed out. */
   constructor(message: string) {
@@ -67,27 +67,27 @@ export class SdkProtocolError extends Error {
 }
 
 interface SubscriptionState {
-  readonly queue: HarnessNotification[]
-  readonly waiters: { resolve: (item: HarnessNotification) => void; reject: (error: Error) => void }[]
+  readonly queue: LiwaNotification[]
+  readonly waiters: { resolve: (item: LiwaNotification) => void; reject: (error: Error) => void }[]
   readonly filter: NotificationFilter | undefined
   failure: Error | undefined
 }
 
-/** One client-side notification stream returned by {@link HarnessClient.subscribe}. */
-export interface NotificationSubscription extends AsyncIterable<HarnessNotification> {
+/** One client-side notification stream returned by {@link LiwaClient.subscribe}. */
+export interface NotificationSubscription extends AsyncIterable<LiwaNotification> {
   /**
    * Await the next matching notification.
    * @returns the notification; after the runtime died, drains what was
    * already delivered and then rejects; after {@link close}, rejects
    * immediately (the queue is dropped).
    */
-  next(): Promise<HarnessNotification>
+  next(): Promise<LiwaNotification>
 
   /**
    * Drain one already-delivered notification without waiting.
    * @returns the next queued notification, or `undefined` when none is queued.
    */
-  tryNext(): HarnessNotification | undefined
+  tryNext(): LiwaNotification | undefined
 
   /** Detach from the client; queued items drop and pending waiters reject. */
   close(): void
@@ -106,7 +106,7 @@ class NotificationSubscriptionImpl implements NotificationSubscription {
    * already delivered and then rejects; after {@link close}, rejects
    * immediately (the queue is dropped).
    */
-  next(): Promise<HarnessNotification> {
+  next(): Promise<LiwaNotification> {
     const queued = this.state.queue.shift()
     if (queued !== undefined) return Promise.resolve(queued)
     if (this.state.failure !== undefined) return Promise.reject(this.state.failure)
@@ -119,7 +119,7 @@ class NotificationSubscriptionImpl implements NotificationSubscription {
    * Drain one already-delivered notification without waiting.
    * @returns the next queued notification, or `undefined` when none is queued.
    */
-  tryNext(): HarnessNotification | undefined {
+  tryNext(): LiwaNotification | undefined {
     return this.state.queue.shift()
   }
 
@@ -149,7 +149,7 @@ class NotificationSubscriptionImpl implements NotificationSubscription {
    * subscriptions or the transport's read loop.
    * @param notification - the wire notification to deliver.
    */
-  push(notification: HarnessNotification): void {
+  push(notification: LiwaNotification): void {
     let matches: boolean
     try {
       matches = this.state.filter === undefined || this.state.filter(notification)
@@ -169,13 +169,13 @@ class NotificationSubscriptionImpl implements NotificationSubscription {
    * terminating rejection propagates).
    * @returns an async iterator over {@link next} results.
    */
-  async * [Symbol.asyncIterator](): AsyncIterator<HarnessNotification> {
+  async * [Symbol.asyncIterator](): AsyncIterator<LiwaNotification> {
     for (;;) yield await this.next()
   }
 }
 
 /**
- * JSON-RPC client for the DeepSeek Harness SDK runtime over subprocess stdio.
+ * JSON-RPC client for the Liwa SDK runtime over subprocess stdio.
  *
  * The subprocess starts lazily on {@link start} and is owned by this instance
  * until {@link close}, which requests protocol `shutdown` and then walks the
@@ -183,9 +183,9 @@ class NotificationSubscriptionImpl implements NotificationSubscription {
  * wire-level cancel: a timed-out request stays running server-side until the
  * runtime is closed.
  */
-export class HarnessClient {
-  /** Original public dsh launch and timeout options for this client. */
-  readonly options: HarnessClientOptions
+export class LiwaClient {
+  /** Original public liwa launch and timeout options for this client. */
+  readonly options: LiwaClientOptions
   private readonly runtime: RuntimeProcessOptions
   private child: ChildProcess | undefined
   private transport: JsonRpcLineTransport | undefined
@@ -198,14 +198,14 @@ export class HarnessClient {
   private streamsSettled: Promise<void> = Promise.resolve()
   private closeTask: Promise<void> | undefined
   private readonly userQuestions = new Map<string, AbortController>()
-  private userQuestionHandler: HarnessClientOptions['onUserQuestion']
+  private userQuestionHandler: LiwaClientOptions['onUserQuestion']
   private requestHandler: ((method: string, params: Record<string, unknown>) => Promise<unknown>) | undefined
 
-  /** @param options - dsh profile, patch, home, process, environment, and timeout options. */
-  constructor(options?: HarnessClientOptions)
-  constructor(options: HarnessClientOptions = {}, runtime?: RuntimeProcessOptions) {
+  /** @param options - liwa profile, patch, home, process, environment, and timeout options. */
+  constructor(options?: LiwaClientOptions)
+  constructor(options: LiwaClientOptions = {}, runtime?: RuntimeProcessOptions) {
     this.options = options
-    this.runtime = runtime ?? resolveDshLaunch(options)
+    this.runtime = runtime ?? resolveLiwaLaunch(options)
   }
 
   /**
@@ -213,7 +213,7 @@ export class HarnessClient {
    * the process is live; rejects reuse after {@link close}.
    */
   start(): void {
-    if (this.closeTask !== undefined) throw new TransportClosedError('DeepSeek Harness runtime client is closed')
+    if (this.closeTask !== undefined) throw new TransportClosedError('Liwa runtime client is closed')
     if (this.child !== undefined) return
     this.userQuestionHandler = this.options.onUserQuestion
     const child = spawn(this.runtime.command, this.runtime.args, {
@@ -227,7 +227,7 @@ export class HarnessClient {
       // A spawn failure destroys the pipes without an input 'end' edge, so the
       // transport's pending requests must be failed here.
       this.transport?.close()
-      this.failSubscriptions(this.closedError('DeepSeek Harness runtime failed to start'))
+      this.failSubscriptions(this.closedError('Liwa runtime failed to start'))
     })
     // Writes racing the runtime's death EPIPE on stdin; the exit edge below is
     // the real signal, so the stream-level error only needs to be non-fatal.
@@ -259,7 +259,7 @@ export class HarnessClient {
       this.exitCode = code
       settled.exited = true
       maybeSettle()
-      this.failSubscriptions(this.closedError('DeepSeek Harness runtime exited'))
+      this.failSubscriptions(this.closedError('Liwa runtime exited'))
     })
     child.once('close', () => {
       // All stdio has settled: stdout 'end' already drained every tail frame,
@@ -315,7 +315,7 @@ export class HarnessClient {
    */
   onRequest(handler: (method: string, params: Record<string, unknown>) => Promise<unknown>): void {
     if (this.closeTask !== undefined) {
-      throw new TransportClosedError('DeepSeek Harness runtime client is closed; create a new client to install a request handler')
+      throw new TransportClosedError('Liwa runtime client is closed; create a new client to install a request handler')
     }
     if (this.transport === undefined) {
       throw new TransportClosedError('start the SDK client before installing a request handler')
@@ -396,7 +396,7 @@ export class HarnessClient {
    * Send one JSON-RPC request and await its result.
    * @param method - the wire method name.
    * @param params - the params object; omitted params send `{}`.
-   * @param timeoutMs - per-call override of {@link HarnessClientOptions.requestTimeoutMs}.
+   * @param timeoutMs - per-call override of {@link LiwaClientOptions.requestTimeoutMs}.
    * @returns the raw result; rejects with {@link JsonRpcResponseError} on a
    * protocol error response, {@link RequestTimeoutError} on timeout, and
    * {@link TransportClosedError} when the runtime is gone.
@@ -407,11 +407,11 @@ export class HarnessClient {
     // writing into a destroyed pipe and hanging until the timeout.
     if (this.exitCode !== undefined || this.spawnError !== undefined) {
       await this.settleStreams()
-      throw this.closedError('DeepSeek Harness runtime is not running')
+      throw this.closedError('Liwa runtime is not running')
     }
     const transport = this.transport
     /* v8 ignore next -- start() either sets the transport or throws */
-    if (transport === undefined) throw new TransportClosedError('DeepSeek Harness runtime is not running')
+    if (transport === undefined) throw new TransportClosedError('Liwa runtime is not running')
     const timeout = timeoutMs ?? this.runtime.requestTimeoutMs
     try {
       if (timeout === undefined) return await transport.request(method, params ?? {})
@@ -448,7 +448,7 @@ export class HarnessClient {
     const state: SubscriptionState = { queue: [], waiters: [], filter, failure: undefined }
     const subscription = new NotificationSubscriptionImpl(state, () => { this.subscriptions.delete(id) })
     if (this.closeTask !== undefined || this.exitCode !== undefined || this.spawnError !== undefined) {
-      subscription.fail(this.closedError('DeepSeek Harness runtime closed'))
+      subscription.fail(this.closedError('Liwa runtime closed'))
       return subscription
     }
     this.subscriptions.set(id, subscription)
@@ -502,15 +502,15 @@ export class HarnessClient {
       disposeGraceMs: this.runtime.disposeGraceMs ?? 3_000,
     })
     this.transport?.close()
-    this.failSubscriptions(this.closedError('DeepSeek Harness runtime closed'))
+    this.failSubscriptions(this.closedError('Liwa runtime closed'))
   }
 
-  private dispatchNotification(notification: HarnessNotification): void {
+  private dispatchNotification(notification: LiwaNotification): void {
     this.recordSessionRelationship(notification)
     for (const subscription of this.subscriptions.values()) subscription.push(notification)
   }
 
-  private recordSessionRelationship(notification: HarnessNotification): void {
+  private recordSessionRelationship(notification: LiwaNotification): void {
     if (notification.method !== 'subagent.started') return
     const parentId = notification.params.parentSessionId
     const childId = notification.params.childSessionId
@@ -568,11 +568,11 @@ export class HarnessClient {
 }
 
 /** Construct the transport against a generic process for package-local fake-runtime tests. */
-export function createProcessHarnessClient(options: RuntimeProcessOptions): HarnessClient {
-  const Constructor = HarnessClient as new (
-    publicOptions: HarnessClientOptions,
+export function createProcessLiwaClient(options: RuntimeProcessOptions): LiwaClient {
+  const Constructor = LiwaClient as new (
+    publicOptions: LiwaClientOptions,
     runtime: RuntimeProcessOptions,
-  ) => HarnessClient
+  ) => LiwaClient
   return new Constructor({}, options)
 }
 

@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-client-ui-settings-web-search",
-  "description": "Settings page of the DeepSeek web-search provider on the dsh web client's Plugins page: its API key, endpoint, and per-request search budget",
+  "name": "@liwa/client-ui-settings-web-search",
+  "description": "Settings page of the DeepSeek web-search provider on the liwa web client's Plugins page: its API key, endpoint, and per-request search budget",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/client/ui-settings-web-search"
   },
   "type": "module",
@@ -26,13 +26,13 @@
     "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json"
   },
-  "dsh": {
+  "liwa": {
     "client": {
       "inject": [
-        "@deepseek-ai/dsh-client-locale",
-        "@deepseek-ai/dsh-client-ui-settings",
-        "@deepseek-ai/dsh-client-ui-plugin-manager",
-        "@deepseek-ai/dsh-api-remotes"
+        "@liwa/client-locale",
+        "@liwa/client-ui-settings",
+        "@liwa/client-ui-plugin-manager",
+        "@liwa/api-remotes"
       ],
       "platform": "web"
     }
@@ -43,19 +43,19 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-api-remotes": "workspace:*",
-    "@deepseek-ai/dsh-client-locale": "workspace:*",
-    "@deepseek-ai/dsh-client-store": "workspace:*",
-    "@deepseek-ai/dsh-client-test-runtime": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-plugin-manager": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-primitives": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-renderer": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-settings": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-slots": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/api-remotes": "workspace:*",
+    "@liwa/client-locale": "workspace:*",
+    "@liwa/client-store": "workspace:*",
+    "@liwa/client-test-runtime": "workspace:*",
+    "@liwa/client-ui-plugin-manager": "workspace:*",
+    "@liwa/client-ui-primitives": "workspace:*",
+    "@liwa/client-ui-renderer": "workspace:*",
+    "@liwa/client-ui-settings": "workspace:*",
+    "@liwa/client-ui-slots": "workspace:*",
     "react": "^18.2.0"
   },
   "files": [

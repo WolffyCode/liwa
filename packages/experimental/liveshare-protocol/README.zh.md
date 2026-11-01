@@ -3,13 +3,13 @@ description: "owner bundle 与 Relay 共用的 Liveshare gateway 帧编解码，
 kind: "package-library"
 ---
 
-# @deepseek-ai/dsh-experimental-liveshare-protocol
+# @liwa/experimental-liveshare-protocol
 
 [English](README.md) | 中文
 
 ## 概述
 
-`dsh-experimental-liveshare-protocol` 让 Liveshare owner bundle 与 Relay 共用同一份必须一致的定义：owner/worker 的 IPC 帧、Relay 不解析只转发的 gateway 帧、Relay 放进被服务页面的查看页载体脚本，以及与 provider 无关的身份契约及其回环 mock 实现。它让 owner bundle 与 Relay 共享这些定义而不必互相依赖，Relay 也不会加载 owner 侧代码。它依赖无状态的 `dsh-brand` 类型库，并把 `cordis` 声明为 peer。
+`liwa-experimental-liveshare-protocol` 让 Liveshare owner bundle 与 Relay 共用同一份必须一致的定义：owner/worker 的 IPC 帧、Relay 不解析只转发的 gateway 帧、Relay 放进被服务页面的查看页载体脚本，以及与 provider 无关的身份契约及其回环 mock 实现。它让 owner bundle 与 Relay 共享这些定义而不必互相依赖，Relay 也不会加载 owner 侧代码。它依赖无状态的 `liwa-brand` 类型库，并把 `cordis` 声明为 peer。
 
 ## 目录
 
@@ -31,8 +31,8 @@ kind: "package-library"
 ### 入口
 
 ```ts
-import { parseGatewayFrame, rawText, sendFrame } from '@deepseek-ai/dsh-experimental-liveshare-protocol'
-import { identityKeyOf, normalizeIdentity } from '@deepseek-ai/dsh-experimental-liveshare-protocol'
+import { parseGatewayFrame, rawText, sendFrame } from '@liwa/experimental-liveshare-protocol'
+import { identityKeyOf, normalizeIdentity } from '@liwa/experimental-liveshare-protocol'
 ```
 
 查看页载体（`installViewerCarrier`）与查看页状态词汇通过根入口发布，而不是各自的子路径，因为 owner 页面的两个面会一起消费它们。

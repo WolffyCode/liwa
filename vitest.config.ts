@@ -159,7 +159,7 @@ if (coveragePartitionRaw !== undefined && coveragePartitionRaw !== '' && coverag
 const coveragePartitionMode = coveragePartitionRaw === '1'
 
 // Lanes on shared hosts raise the per-test, hook, and expect.poll defaults
-// together through DSH_COVERAGE_TEST_TIMEOUT_MS; it lands in each inline
+// together through LIWA_COVERAGE_TEST_TIMEOUT_MS; it lands in each inline
 // project below because CLI flags do not reach them (coverageTestTimeoutOptions
 // owns the rule and its reach).
 const laneTestBudget = coverageTestTimeoutOptions(process.env[COVERAGE_TEST_TIMEOUT_ENV])
@@ -191,7 +191,7 @@ const claudeCodeTestingAliases = {
 // entry, before `vi.mock` can answer it, so the jsdom assembly suites need a resolvable stand-in.
 const liveshareRemoteBuild = fileURLToPath(new URL('./packages/experimental/liveshare/lib/typert.remote-client.js', import.meta.url))
 const generatedRemoteAliases = existsSync(liveshareRemoteBuild) ? {} : {
-  '@deepseek-ai/dsh-experimental-liveshare/remote': fileURLToPath(new URL('./packages/experimental/liveshare/tests/generated-remote-stub.ts', import.meta.url)),
+  '@liwa/experimental-liveshare/remote': fileURLToPath(new URL('./packages/experimental/liveshare/tests/generated-remote-stub.ts', import.meta.url)),
 }
 const testingAliases = { ...claudeCodeTestingAliases, ...generatedRemoteAliases }
 

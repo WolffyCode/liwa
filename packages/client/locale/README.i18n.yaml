@@ -5,60 +5,60 @@
 /:
   en: 5dea50fae7364d1e
   zh: dc788b9ce6ffd101
-/deepseek-ai-dsh-client-locale:
-  en: 9365090d78467dea
-  zh: 74b6fbb9769d795f
-/deepseek-ai-dsh-client-locale/summary:
-  en: cbbe8f61f5e19f39
-  zh: 2cec7ec41f1a7e84
-/deepseek-ai-dsh-client-locale/table-of-contents:
+/liwa-client-locale:
+  en: 7fdf7b127427c440
+  zh: 1ba1b44724e25345
+/liwa-client-locale/summary:
+  en: d2175dd50bfbe7e1
+  zh: aff108dd721ac2f4
+/liwa-client-locale/table-of-contents:
   en: d152484eb41ac6b4
   zh: bda879a892f240f0
-/deepseek-ai-dsh-client-locale/use-this-package:
+/liwa-client-locale/use-this-package:
   en: 7fedfbcbc3ad8cea
   zh: e29ba5230e0b9ecb
-/deepseek-ai-dsh-client-locale/use-this-package/choosing-a-language:
-  en: 2b82458e185ba321
-  zh: e55a7e709a3f0158
-/deepseek-ai-dsh-client-locale/use-this-package/registering-a-dictionary:
+/liwa-client-locale/use-this-package/choosing-a-language:
+  en: 5f88b33e0ca57ca6
+  zh: aaeef5b80431be5b
+/liwa-client-locale/use-this-package/registering-a-dictionary:
   en: f19407c3ce8a94cc
   zh: 3e5300ce7fa02987
-/deepseek-ai-dsh-client-locale/use-this-package/resolving-package-text:
-  en: 3b63e84fe0fdf8f4
-  zh: e97b5d1b92dff7ec
-/deepseek-ai-dsh-client-locale/use-this-package/registering-a-language-pack:
+/liwa-client-locale/use-this-package/resolving-package-text:
+  en: 1175b5063c179b40
+  zh: 39641aed3d28f334
+/liwa-client-locale/use-this-package/registering-a-language-pack:
   en: aa4e9c70523339cc
   zh: 3359eddc4e9ef15e
-/deepseek-ai-dsh-client-locale/use-this-package/what-the-host-half-does:
-  en: 784035ca4b4838b8
-  zh: 4a258795f408528f
-/deepseek-ai-dsh-client-locale/understand-the-implementation:
+/liwa-client-locale/use-this-package/what-the-host-half-does:
+  en: 816fe8cfef5e79dc
+  zh: 92399687307d9c3e
+/liwa-client-locale/understand-the-implementation:
   en: 288d8db39f9acfc5
   zh: d65cf2ffae8ad35c
-/deepseek-ai-dsh-client-locale/understand-the-implementation/design-concept:
-  en: c2e0ab8bb6bcb26a
-  zh: 508dec4db2c0fde6
-/deepseek-ai-dsh-client-locale/understand-the-implementation/preference-resolution:
+/liwa-client-locale/understand-the-implementation/design-concept:
+  en: 33c74e55adbbd2ab
+  zh: 864c005cb2a6e41f
+/liwa-client-locale/understand-the-implementation/preference-resolution:
   en: d602d957654641c6
   zh: 2db822b746a6471d
-/deepseek-ai-dsh-client-locale/understand-the-implementation/dictionary-lookup:
+/liwa-client-locale/understand-the-implementation/dictionary-lookup:
   en: 68373e745761494c
   zh: 43a5b8c19d03268a
-/deepseek-ai-dsh-client-locale/understand-the-implementation/source-map:
+/liwa-client-locale/understand-the-implementation/source-map:
   en: 6f329e4872398634
   zh: 9d8364dc4c03d055
-/deepseek-ai-dsh-client-locale/further-exploration:
-  en: f73d411c9e90dead
-  zh: 8dd05f13e081af88
-/deepseek-ai-dsh-client-locale/model-experience:
+/liwa-client-locale/further-exploration:
+  en: 271321c2b1fdc879
+  zh: d3566387e7b845f5
+/liwa-client-locale/model-experience:
   en: 209321ba2d2e6710
   zh: 21deb6c973f69b66
-/deepseek-ai-dsh-client-locale/model-experience/kv-cache-effect:
+/liwa-client-locale/model-experience/kv-cache-effect:
   en: ca75c51c89c2c9b0
   zh: de54f3467ef3b9be
-/deepseek-ai-dsh-client-locale/known-limitations-and-deferred-work:
+/liwa-client-locale/known-limitations-and-deferred-work:
   en: 500ede048ef44c6a
   zh: f741fae55b29a627
-/deepseek-ai-dsh-client-locale/known-limitations-and-deferred-work/dev-note:
+/liwa-client-locale/known-limitations-and-deferred-work/dev-note:
   en: e67f633dc6fe7773
   zh: 3bb0c20c93f16f98

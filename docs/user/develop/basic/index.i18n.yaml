@@ -3,20 +3,20 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/user/develop/basic/index.md
 /your-first-plugin:
-  en: 66684c875e13acbb
-  zh: 48b5444386cf714c
+  en: c00876f267a1a110
+  zh: 65138b76f4c97e73
 /your-first-plugin/create-a-local-project:
   en: 2a9ff85da3a6ea8b
   zh: 9ac5daf1dd3e3b95
 /your-first-plugin/what-is-a-plugin:
-  en: 0bca3ea987fecb61
-  zh: b4d398b887da6648
+  en: a3fe192be0655da7
+  zh: 8a846ce3cfed30bb
 /your-first-plugin/create-the-plugin-file:
   en: 80e4e9f139d4773e
   zh: c045d63ec04a2f3d
 /your-first-plugin/register-it-in-cordis-yml:
-  en: 216e79287d237f2a
-  zh: 16e5e8ad2b1b9263
+  en: 4a75c863eaaa81a9
+  zh: 2303989039e3543c
 /your-first-plugin/automatic-cleanup:
   en: 0a1486714b9d67d7
   zh: 544df97baa7a8c59
@@ -30,8 +30,8 @@
   en: d674c416f5b0fd14
   zh: a2224f5fe6ceae73
 /your-first-plugin/three-plugin-forms/class-form:
-  en: 130f504f9ebacebd
-  zh: 4e91d3fa2555390d
+  en: 4a102efed05e68b5
+  zh: 96b4b444c925b71d
 /your-first-plugin/next-steps:
-  en: 9836e246d8279c8b
-  zh: 681475e2251ba006
+  en: c6fc27c786b0712f
+  zh: f4b6ba18a26fed84

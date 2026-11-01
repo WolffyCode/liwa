@@ -2,14 +2,14 @@
 import { mkdtemp, realpath, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import { createUserMessage, LlmAdapter, ToolCallId } from '@deepseek-ai/dsh-llm'
-import type { GenerateOptions, LlmResolvedModelInfo, StreamChunk } from '@deepseek-ai/dsh-llm'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import { mountAgentLoopTestDependencies, mountAgentLoopTestHarness } from '@deepseek-ai/dsh-agent-loop-testkit'
-import TokenMeter from '@deepseek-ai/dsh-token-meter'
-import { defineContentToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import BasicCompaction from '@deepseek-ai/dsh-compaction-basic'
+import { Context } from '@liwa/cordis'
+import { createUserMessage, LlmAdapter, ToolCallId } from '@liwa/llm'
+import type { GenerateOptions, LlmResolvedModelInfo, StreamChunk } from '@liwa/llm'
+import { SessionId } from '@liwa/session'
+import { mountAgentLoopTestDependencies, mountAgentLoopTestHarness } from '@liwa/agent-loop-testkit'
+import TokenMeter from '@liwa/token-meter'
+import { defineContentToolFixture } from '@liwa/tool-testkit'
+import BasicCompaction from '@liwa/compaction-basic'
 import { expect, it } from 'vitest'
 
 class CompactionAdapter extends LlmAdapter {
@@ -39,11 +39,11 @@ class CompactionAdapter extends LlmAdapter {
 }
 
 it('retains required cwd in the first request after proactive compaction with optional context disabled', async () => {
-  const root = await realpath(await mkdtemp(join(tmpdir(), 'dsh-compaction-admission-')))
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'liwa-compaction-admission-')))
   const ctx = new Context()
   try {
     await mountAgentLoopTestDependencies(ctx, {
-      workingDirectory: true, systemPrompt: { includeHarnessIdentity: false, includeRuntimeContext: false },
+      workingDirectory: true, systemPrompt: { includeLiwaIdentity: false, includeRuntimeContext: false },
     })
     await ctx.plugin(TokenMeter)
     const adapter = new CompactionAdapter()

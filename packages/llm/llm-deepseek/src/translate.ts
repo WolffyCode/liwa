@@ -1,7 +1,7 @@
 /** Translate Messages events while preserving block order and cumulative usage. */
 
-import { LlmError, ToolCallId } from '@deepseek-ai/dsh-llm'
-import type { ContentBlock, FinishReason, StreamChunk, TokenUsage } from '@deepseek-ai/dsh-llm'
+import { LlmError, ToolCallId } from '@liwa/llm'
+import type { ContentBlock, FinishReason, StreamChunk, TokenUsage } from '@liwa/llm'
 import { object, replayState } from './replay.ts'
 import type { ReplayBlock } from './replay.ts'
 
@@ -96,7 +96,7 @@ function stopReason(raw: unknown): FinishReason {
   }
 }
 
-/** Translate decoded SSE data into the Harness stream protocol.
+/** Translate decoded SSE data into the Liwa stream protocol.
  * @param events - framed, decoded provider events in arrival order.
  * @param model - requested model id stored in durable replay state.
  * @returns blocks, one final usage value, and exactly one terminal finish.

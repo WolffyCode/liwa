@@ -5,10 +5,10 @@ import { dirname, extname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { JSDOM } from 'jsdom'
 import ts from 'typescript'
-import { applyPatches, parseEntryYaml, type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
-import type { EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
-import { bundlePatchPaths, composeEntries, loadOverlayPatches } from '../packages/boot/app-boot/src/index.ts'
-import type { DshBundleManifest } from '../packages/util/package-manifest/src/types.ts'
+import { applyPatches, parseEntryYaml, type PatchOptions } from '@liwa/cordis-plugin-include'
+import type { EntryOptions } from '@liwa/cordis-plugin-loader'
+import { bundlePatchPaths, composeEntries, isLiwaRuntimePackage, loadOverlayPatches } from '../packages/boot/app-boot/src/index.ts'
+import type { LiwaBundleManifest } from '../packages/util/package-manifest/src/types.ts'
 import { assertNever } from '../packages/util/values/src/index.ts'
 import { isAgentPresetEntry, isCordisGroupEntry } from './cordis-yaml.ts'
 import { PRODUCT_PACKAGE_POLICY, type ProductPackagePolicy } from './product-package-policy.ts'
@@ -24,7 +24,7 @@ const DYNAMIC_MOUNTS: Readonly<Record<string, readonly string[]>> = {
 interface Package {
   directory: string
   name: string
-  bundle?: DshBundleManifest
+  bundle?: LiwaBundleManifest
   client: boolean
   generatedRemote: boolean
 }
@@ -78,15 +78,15 @@ export function verifyProductUse(
     const manifest = JSON.parse(readFileSync(resolve(root, path), 'utf8')) as {
       name: string
       exports?: Record<string, unknown>
-      dsh?: { bundle?: DshBundleManifest; client?: unknown }
+      liwa?: { bundle?: LiwaBundleManifest; client?: unknown }
     }
     if (typeof manifest.name !== 'string' || manifest.name === '') throw new Error(`${path}: missing package name`)
     if (packages.has(manifest.name)) throw new Error(`${path}: duplicate package name ${manifest.name}`)
     const remote = manifest.exports?.['./remote']
-    const pkg: Package = { directory: dirname(path), name: manifest.name, client: manifest.dsh?.client !== undefined,
+    const pkg: Package = { directory: dirname(path), name: manifest.name, client: manifest.liwa?.client !== undefined,
       generatedRemote: isRecord(remote) && remote.default === './lib/typert.remote-client.js'
         && remote.types === './lib/typert.remote-client.d.ts',
-      ...(manifest.dsh?.bundle === undefined ? {} : { bundle: manifest.dsh.bundle }) }
+      ...(manifest.liwa?.bundle === undefined ? {} : { bundle: manifest.liwa.bundle }) }
     packages.set(pkg.name, pkg)
     directories.set(resolve(root, pkg.directory), pkg)
   }
@@ -154,7 +154,7 @@ export function verifyProductUse(
     if (target !== undefined) scanSource(target, reach)
     else if (pkg !== undefined && !/\.(?:json|css|svg|ya?ml)$/.test(specifier)) {
       failures.push(`${display(from)}: ${specifier} does not resolve to workspace source; add a tsconfig.base.json paths mapping`)
-    } else if (pkg === undefined && specifier.startsWith('@deepseek-ai/dsh-')) {
+    } else if (pkg === undefined && isLiwaRuntimePackage(specifier.split('/').slice(0, 2).join('/'))) {
       failures.push(`${display(from)}: unknown workspace package ${specifier}`)
     }
   }
@@ -171,7 +171,7 @@ export function verifyProductUse(
         scanEntries(row.config as unknown[], from, reach, stack)
       }
       if (isAgentPresetEntry(row)) scanEntries(row.config.plugins, from, reach, stack)
-      if ((row.name !== '@deepseek-ai/cordis-plugin-include' && row.name !== 'cordis:include') || !isRecord(row.config)) continue
+      if ((row.name !== '@liwa/cordis-plugin-include' && row.name !== 'cordis:include') || !isRecord(row.config)) continue
       const path = row.config.path
       if (typeof path !== 'string') { failures.push(`${display(from)}: Include path must be a literal string`); continue }
       const filename = path.startsWith('file:') ? fileURLToPath(path) : resolve(dirname(from), path)
@@ -195,7 +195,7 @@ export function verifyProductUse(
   for (const name of PROFILES) if (!isRecord(templates[name])) failures.push(`${PROFILE_SOURCE}: missing shipped ${name} profile`)
   const layers = (names: readonly string[], reach: Reachability): PatchOptions[][] => names.flatMap((name) => {
     const pkg = packages.get(name)
-    if (pkg?.bundle === undefined) { failures.push(`${PROFILE_SOURCE}: ${name} must declare dsh.bundle.patch`); return [] }
+    if (pkg?.bundle === undefined) { failures.push(`${PROFILE_SOURCE}: ${name} must declare liwa.bundle.patch`); return [] }
     reach.packages.add(pkg.directory)
     return [bundlePatchPaths(resolve(root, pkg.directory), pkg.bundle).flatMap((path) => {
       configs.add(path)

@@ -2,15 +2,15 @@
 import { join } from 'node:path'
 import { Buffer } from 'node:buffer'
 import { tmpdir } from 'node:os'
-import { withFileLock } from '@deepseek-ai/dsh-atomic-write'
-import type { Context } from '@deepseek-ai/cordis'
-import Schema from '@deepseek-ai/schemastery'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import { ComputerUseProviderName } from '@deepseek-ai/dsh-computer-use/brand'
-import { admitEncodedImages } from '@deepseek-ai/dsh-attachment'
-import type { ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
-import type { ContentBlock } from '@deepseek-ai/dsh-llm'
-import type { JsonValue } from '@deepseek-ai/dsh-util-values'
+import { withFileLock } from '@liwa/atomic-write'
+import type { Context } from '@liwa/cordis'
+import Schema from '@liwa/schemastery'
+import type { Agent } from '@liwa/agent'
+import { ComputerUseProviderName } from '@liwa/computer-use/brand'
+import { admitEncodedImages } from '@liwa/attachment'
+import type { ImageAttachmentRef } from '@liwa/attachment'
+import type { ContentBlock } from '@liwa/llm'
+import type { JsonValue } from '@liwa/util-values'
 import { z } from 'zod'
 import { NativeClient, NativeError, type NativeClientConfig, type NativeChannelFactory } from './native-client.ts'
 import { CuaPermissionStore } from './permission-store.ts'
@@ -19,14 +19,14 @@ import type { CuaApplicationGrant, CuaApplicationId } from './access-types.ts'
 import type { CuaAppHandle, CuaOperation } from './types.ts'
 import { ApplicationIcon, AppResult, NativeScreenshotResult, Request, ScreenshotResult, StateResult, WindowsResult } from './protocol.ts'
 import { CuaCoordinates } from './coordinates.ts'
-import { createScope, type Scope } from '@deepseek-ai/dsh-scope'
-import type {} from '@deepseek-ai/dsh-agent-preset-registry'
-import type { PromptSection } from '@deepseek-ai/dsh-system-prompt'
-import type { ToolDefinition, ToolExecution } from '@deepseek-ai/dsh-tools'
-import type {} from '@deepseek-ai/dsh-subprocess'
-import type {} from '@deepseek-ai/dsh-computer-use'
-import type {} from '@deepseek-ai/dsh-ptc-runtime'
-import type {} from '@deepseek-ai/cordis-plugin-loader'
+import { createScope, type Scope } from '@liwa/scope'
+import type {} from '@liwa/agent-preset-registry'
+import type { PromptSection } from '@liwa/system-prompt'
+import type { ToolDefinition, ToolExecution } from '@liwa/tools'
+import type {} from '@liwa/subprocess'
+import type {} from '@liwa/computer-use'
+import type {} from '@liwa/ptc-runtime'
+import type {} from '@liwa/cordis-plugin-loader'
 
 export { CuaAccess } from './access.ts'
 
@@ -106,7 +106,7 @@ export const CuaConfig = Schema.object({
 
 
 function executionAgent(execution: Readonly<ToolExecution>): Agent {
-  if (!execution.agent) throw new Error('dsh-cua requires an agent-owned execution')
+  if (!execution.agent) throw new Error('liwa-cua requires an agent-owned execution')
   return execution.agent
 }
 
@@ -180,7 +180,7 @@ export function installCua(ctx: Context, config: CuaConfig, backend: CuaBackend)
   }>()
   const closedOwners = new WeakSet<Agent>()
   function ownerFor(agent: Agent) {
-    if (closedOwners.has(agent) || ctx.agents.get(agent.id) !== agent) throw new Error('dsh-cua agent has been disposed')
+    if (closedOwners.has(agent) || ctx.agents.get(agent.id) !== agent) throw new Error('liwa-cua agent has been disposed')
     const existing = ownerCleanups.get(agent)
     if (existing) return existing
     const controller = new AbortController()
@@ -199,13 +199,13 @@ export function installCua(ctx: Context, config: CuaConfig, backend: CuaBackend)
         }
       })
     }
-    const release = agent.ctx.effect(() => close, 'dsh-cua.agent')
+    const release = agent.ctx.effect(() => close, 'liwa-cua.agent')
     const owner = { close, release, signal: controller.signal, coordinates: new CuaCoordinates() }
     ownerCleanups.set(agent, owner)
     return owner
   }
   ctx.effect(function* () {
-    yield ctx.computerUse.register(ComputerUseProviderName('dsh-cua'))
+    yield ctx.computerUse.register(ComputerUseProviderName('liwa-cua'))
     yield async () => {
       lifetime.abort()
       const permissions = Promise.allSettled([access.dispose()])
@@ -215,7 +215,7 @@ export function installCua(ctx: Context, config: CuaConfig, backend: CuaBackend)
       const releases = await Promise.allSettled(owners.map(owner => owner.release()))
       const errors: unknown[] = []
       for (const result of [...await permissions, ...results, ...releases]) if (result.status === 'rejected') errors.push(result.reason)
-      if (errors.length > 0) throw new AggregateError(errors, 'dsh-cua helper cleanup failed')
+      if (errors.length > 0) throw new AggregateError(errors, 'liwa-cua helper cleanup failed')
     }
     const callNative = async (request: CuaOperation, execution: Readonly<CuaExecution>) => {
       const { method, params: parsedParams } = request
@@ -252,7 +252,7 @@ export function installCua(ctx: Context, config: CuaConfig, backend: CuaBackend)
           pixelWidth: image.width, pixelHeight: image.height, coordinateSpace: 'screenshot-pixels', attachment }
       }
       const result = method === 'paste'
-        ? await withFileLock(join(tmpdir(), 'dsh-cua-system-clipboard'), requestNative, { waitMs: config.timeoutMs, signal })
+        ? await withFileLock(join(tmpdir(), 'liwa-cua-system-clipboard'), requestNative, { waitMs: config.timeoutMs, signal })
         : await requestNative()
       if (method === 'getApp') {
         const prepared = AppResult.extend({ pid: AppResult.shape.pid.nullable() }).parse(result)
@@ -323,7 +323,7 @@ export function installCua(ctx: Context, config: CuaConfig, backend: CuaBackend)
       },
     }
     const prompt: PromptSection = {
-      name: 'computer-use:dsh-cua', order: ctx.systemPrompt.getSectionOrder('TOOL_COMPUTER_USE'),
+      name: 'computer-use:liwa-cua', order: ctx.systemPrompt.getSectionOrder('TOOL_COMPUTER_USE'),
       text: () => {
         const runtime = ctx.get('ptcRuntime')
         return !runtime?.retainsState ? guidance : `${guidance}
@@ -369,7 +369,7 @@ var cua = connectCua(() => tools.cua, text => console.log(text));
       })
       yield () => consumer.dispose()
     }
-  }, 'dsh-cua.runtime')
+  }, 'liwa-cua.runtime')
 }
 
 /** Host marker for the optional Client contribution; platform providers install native execution separately. */

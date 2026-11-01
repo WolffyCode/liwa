@@ -1,4 +1,4 @@
-/** Replace only the external SDK; the harness selects source or built provider code. */
+/** Replace only the external SDK; Liwa selects source or built provider code. */
 import { registerHooks } from 'node:module'
 
 export const name = 'computer-use-native-fixture'
@@ -16,6 +16,6 @@ export async function apply(ctx) {
     })
     return () => hooks.deregister()
   }, 'computer-use-native-fixture.module')
-  const provider = await import('@deepseek-ai/dsh-experimental-computer-use-cua-driver-native')
+  const provider = await import('@liwa/experimental-computer-use-cua-driver-native')
   await ctx.plugin(provider)
 }

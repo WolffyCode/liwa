@@ -43,10 +43,10 @@ The [final V3 vocabulary](cookbook/adding-a-session-format-version.md#final-v3-v
 
 ```yaml session-format-release
 latestReleasedVersion: 4
-evidenceTag: dsh-v0.2.0-rc.2
+evidenceTag: liwa-v0.2.0-rc.2
 ```
 
-Evidence: published product tag `dsh-v0.2.0-rc.2`; tagged writer: `packages/core/session/src/types.ts`.
+Evidence: published product tag `liwa-v0.2.0-rc.2`; tagged writer: `packages/core/session/src/types.ts`.
 
 <a id="updating-the-record"></a>
 ## Updating the record

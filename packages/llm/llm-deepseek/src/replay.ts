@@ -1,9 +1,9 @@
-/** Minimal native thinking metadata; durable Harness blocks own all response text. */
+/** Minimal native thinking metadata; durable Liwa blocks own all response text. */
 
-import { LlmError } from '@deepseek-ai/dsh-llm'
-import type { Message, ReplayEnvelope } from '@deepseek-ai/dsh-llm'
+import { LlmError } from '@liwa/llm'
+import type { Message, ReplayEnvelope } from '@liwa/llm'
 
-/** Index-aligned metadata retained alongside each emitted Harness block. */
+/** Index-aligned metadata retained alongside each emitted Liwa block. */
 export interface ReplayBlock {
   type: 'text' | 'reasoning' | 'tool-call'
   signature?: string

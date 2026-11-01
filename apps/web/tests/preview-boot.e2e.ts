@@ -32,14 +32,14 @@ import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
 import type { Browser, Page } from 'playwright'
 import { expect, it } from 'vitest'
-import { OPTIONAL_BUNDLES } from '@deepseek-ai/dsh-official-bundles'
+import { OPTIONAL_BUNDLES } from '@liwa/official-bundles'
 import {
   packPreviewFixture, packRepositoryImage, previewFixtures, WRAPPER_CONTRACT,
-} from '@deepseek-ai/dsh-experimental-webworker-packer'
+} from '@liwa/experimental-webworker-packer'
 import {
   IMAGE_FILE_NAME, IMAGE_MANIFEST_PATH, parseImageManifest, parseTar, PREVIEW_FIXTURE_MANIFEST_FILE,
   PREVIEW_FIXTURE_MANIFEST_VERSION, type ImageManifest, type PreviewFixtureManifest,
-} from '@deepseek-ai/dsh-experimental-webworker-runtime'
+} from '@liwa/experimental-webworker-runtime'
 import {
   VFS_EXAMPLE_SESSION_IDS,
   VFS_EXAMPLE_REASONING,
@@ -64,15 +64,15 @@ const SNAPSHOT_MODE = webSnapshotMode()
 const PROFILE = 'web'
 
 /** Optional bundle whose patch layer disables a base row and inserts its replacement. */
-const SESSION_TITLES_BUNDLE = '@deepseek-ai/dsh-experimental-session-titles-bundle'
-const BASE_TITLE_MODULE = '@deepseek-ai/dsh-session-title-first-prompt-llm'
-const BUNDLE_TITLE_MODULE = '@deepseek-ai/dsh-session-title-all-prompts-llm'
-const INSPECTOR_BUNDLE = '@deepseek-ai/dsh-experimental-inspector-profile'
-const INSPECTOR_MODULE = '@deepseek-ai/dsh-experimental-inspector'
-const SESSION_INSPECTOR_MODULE = '@deepseek-ai/dsh-experimental-session-inspector'
+const SESSION_TITLES_BUNDLE = '@liwa/experimental-session-titles-bundle'
+const BASE_TITLE_MODULE = '@liwa/session-title-first-prompt-llm'
+const BUNDLE_TITLE_MODULE = '@liwa/session-title-all-prompts-llm'
+const INSPECTOR_BUNDLE = '@liwa/experimental-inspector-profile'
+const INSPECTOR_MODULE = '@liwa/experimental-inspector'
+const SESSION_INSPECTOR_MODULE = '@liwa/experimental-session-inspector'
 
 /** Package whose terminal chunk the page requests through `require.async`. */
-const TERMINAL_PACKAGE = '@deepseek-ai/dsh-client-ui-sidebar-terminal'
+const TERMINAL_PACKAGE = '@liwa/client-ui-sidebar-terminal'
 const TERMINAL_CHUNK = `node_modules/${TERMINAL_PACKAGE}/lib/client.terminal.js`
 
 /** Stable labels authored by the deterministic VFS example fixture. */
@@ -155,7 +155,7 @@ function requirePreviewPages(): void {
  */
 function requireVfsAssets(): PreviewAssets {
   const fixtureDefinitions = previewFixtures(REPO_ROOT)
-  const directory = mkdtempSync(join(tmpdir(), 'dsh-preview-boot-'))
+  const directory = mkdtempSync(join(tmpdir(), 'liwa-preview-boot-'))
   const overrides = new Map<string, string>()
   const writeAsset = (relativePath: string, bytes: Uint8Array | string): void => {
     const path = join(directory, relativePath)
@@ -361,7 +361,7 @@ async function bootPreview(site: Site, manifest: ImageManifest, browser: Browser
       interface PreviewTransport {
         fetch(input: string, init: RequestInit): Promise<Response>
       }
-      const transport = (globalThis as typeof globalThis & { __DSH_TRANSPORT__?: PreviewTransport }).__DSH_TRANSPORT__
+      const transport = (globalThis as typeof globalThis & { __LIWA_TRANSPORT__?: PreviewTransport }).__LIWA_TRANSPORT__
       if (transport === undefined) throw new Error('preview transport is absent after boot')
       const response = await transport.fetch('/api/session/list', {
         method: 'POST',
@@ -409,7 +409,7 @@ async function bootPreview(site: Site, manifest: ImageManifest, browser: Browser
           'skills/list', { request: { sessionId } },
         )
       }
-      await createDirectory('/dsh/workspace/.agents/skills', 'runtime-created')
+      await createDirectory('/liwa/workspace/.agents/skills', 'runtime-created')
       // Settings and credentials both answer over the Remote carrier, so this
       // half of the sweep posts the generated endpoints directly like the
       // session read above.
@@ -461,7 +461,7 @@ async function bootPreview(site: Site, manifest: ImageManifest, browser: Browser
     expect(exercised.rereadTimeout).toBe(61_000)
     expect(exercised.resetTimeout).toBe(exercised.initialTimeout)
     expect(exercised.resetOverrides).not.toHaveProperty('timeoutMs')
-    await expect.poll(() => page.evaluate(() => document.body.style.getPropertyValue('--dsh-content-font-size')))
+    await expect.poll(() => page.evaluate(() => document.body.style.getPropertyValue('--liwa-content-font-size')))
       .toBe('17px')
     expect(exercised.renamedTitle).toBe(SHOWCASE_TITLE)
     expect(exercised.renameAdvanced).toBe(true)
@@ -539,7 +539,7 @@ async function bootPreview(site: Site, manifest: ImageManifest, browser: Browser
 
     await page.getByRole('button', { name: 'Parent workspace guide:1–8', exact: true }).click()
     const preview = page.locator('[data-rightbar-col]')
-    await expect.poll(() => preview.locator('[data-textpreview-path]').textContent()).toBe('/dsh/workspace/PREVIEW.md')
+    await expect.poll(() => preview.locator('[data-textpreview-path]').textContent()).toBe('/liwa/workspace/PREVIEW.md')
     await preview.getByRole('heading', { name: 'Preview Workspace', exact: true }).waitFor({ state: 'visible' })
     expect(await preview.locator('[data-dockkit-tab-title]').allTextContents()).toEqual(['PREVIEW.md'])
 
@@ -583,14 +583,14 @@ async function requestLazyChunk(page: Page, site: Site, manifest: ImageManifest)
   expect(fetched()).toBe(0)
   const chunk = await page.evaluate(async ({ id }) => {
     const transport = (globalThis as typeof globalThis & {
-      __DSH_TRANSPORT__?: { fetch(input: string, init: RequestInit): Promise<Response> }
-      __DSH_BOOT__?: { entries: Array<{ id: string; rev: string }> }
+      __LIWA_TRANSPORT__?: { fetch(input: string, init: RequestInit): Promise<Response> }
+      __LIWA_BOOT__?: { entries: Array<{ id: string; rev: string }> }
     })
-    const row = transport.__DSH_BOOT__?.entries.find(entry => entry.id === id)
-    if (transport.__DSH_TRANSPORT__ === undefined || row === undefined) throw new Error(`no boot graph row for ${id}`)
+    const row = transport.__LIWA_BOOT__?.entries.find(entry => entry.id === id)
+    if (transport.__LIWA_TRANSPORT__ === undefined || row === undefined) throw new Error(`no boot graph row for ${id}`)
     const results: Array<{ status: number; size: number }> = []
     for (let attempt = 0; attempt < 2; attempt += 1) {
-      const response = await transport.__DSH_TRANSPORT__.fetch(`/plugins/${id}/client.terminal.js?rev=${row.rev}`, { method: 'GET' })
+      const response = await transport.__LIWA_TRANSPORT__.fetch(`/plugins/${id}/client.terminal.js?rev=${row.rev}`, { method: 'GET' })
       results.push({ status: response.status, size: (await response.text()).length })
     }
     return results
@@ -617,10 +617,10 @@ async function toggleOptionalBundles(page: Page): Promise<void> {
   expect(listed.filter(name => name !== null && OPTIONAL_BUNDLES.includes(name)).length).toBeGreaterThan(0)
   // Package assets resolve from the Worker image: ui-chat's injected mask is a Blob URL that decodes.
   const mask = await page.evaluate(async () => {
-    const styles = [...document.querySelectorAll('style[data-plugin="@deepseek-ai/dsh-client-ui-chat"]')]
+    const styles = [...document.querySelectorAll('style[data-plugin="@liwa/client-ui-chat"]')]
       .map(style => style.textContent).join('\n')
     const url = /url\((blob:[^)]+)\)/u.exec(styles)?.[1]
-    const unresolved = styles.includes('plugins/@deepseek-ai/dsh-client-ui-chat/assets/')
+    const unresolved = styles.includes('plugins/@liwa/client-ui-chat/assets/')
     if (url === undefined) return { url: null, width: 0, unresolved }
     const image = new Image()
     image.src = url
@@ -633,8 +633,8 @@ async function toggleOptionalBundles(page: Page): Promise<void> {
   const result = await page.evaluate(async () => {
     type Result<T> = { result: { ok: true; value: T } | { ok: false; error: { message: string } } }
     const transport = (globalThis as typeof globalThis & {
-      __DSH_TRANSPORT__?: { fetch(input: string, init: RequestInit): Promise<Response> }
-    }).__DSH_TRANSPORT__
+      __LIWA_TRANSPORT__?: { fetch(input: string, init: RequestInit): Promise<Response> }
+    }).__LIWA_TRANSPORT__
     if (transport === undefined) throw new Error('preview transport is absent after boot')
     const remote = async <T>(endpoint: string, args: object): Promise<T> => {
       const answered = await transport.fetch(`/api/${endpoint}`, {
@@ -676,7 +676,7 @@ async function toggleOptionalBundles(page: Page): Promise<void> {
     // the same patch batch without racing the declaration service; the ordinary Web scaffold covers
     // that bundle's enable/disable path (plugin-manager.e2e.ts), so the packed toggle list skips it.
     for (const entry of bundles.filter(candidate => candidate.optional
-      && candidate.name !== '@deepseek-ai/dsh-experimental-liveshare')) {
+      && candidate.name !== '@liwa/experimental-liveshare')) {
       const enable = await remote<{ application: string; error?: unknown }>('pluginManager/setBundleEnabled', { name: entry.name, enabled: true })
       const plugins = await remote<Plugin[]>('pluginManager/listPlugins', {})
       const disable = await remote<{ application: string }>('pluginManager/setBundleEnabled', { name: entry.name, enabled: false })
@@ -706,19 +706,19 @@ async function toggleOptionalBundles(page: Page): Promise<void> {
   expect(result.optional.map(entry => entry.name).sort()).toEqual([...OPTIONAL_BUNDLES].sort())
   expect(result.optional.filter(entry => entry.enabled || entry.availability !== 'installation')).toEqual([])
   expect(result.optional.filter(entry => entry.error !== null)).toEqual([
-    expect.objectContaining({ name: '@deepseek-ai/dsh-cua-bundle', error: { code: 'unsupported-platform' } }),
+    expect.objectContaining({ name: '@liwa/cua-bundle', error: { code: 'unsupported-platform' } }),
   ])
   // Metadata resolves through the Worker's Node internal modules: every optional bundle shows its title and icon.
   expect(result.optional.filter(entry => entry.metaError !== null || entry.title !== 'object' || entry.icon !== 'string')).toEqual([])
   expect(result.inventoryErrors).toEqual([])
   console.info(`preview boot: optional bundle toggles ${JSON.stringify(result.toggles.map(({ name, enable, disable, error }) => ({ name, enable, disable, error })))}`)
-  expect(result.toggles.find(toggle => toggle.name === '@deepseek-ai/dsh-cua-bundle')).toMatchObject({
+  expect(result.toggles.find(toggle => toggle.name === '@liwa/cua-bundle')).toMatchObject({
     enable: 'failed', disable: 'applied', error: { code: 'unsupported-platform' },
     changed: 0, inactive: [], restored: true,
   })
   // The packed worker composition excludes LiveShare from its generic toggles; plugin-manager.e2e.ts
   // covers that bundle's enable/disable path in the ordinary Web scaffold.
-  const supported = result.toggles.filter(toggle => toggle.name !== '@deepseek-ai/dsh-cua-bundle')
+  const supported = result.toggles.filter(toggle => toggle.name !== '@liwa/cua-bundle')
   expect(supported.filter(toggle => toggle.enable !== 'applied' || toggle.disable !== 'applied')
     .map(({ name, enable, disable }) => ({ name, enable, disable }))).toEqual([])
   // Each bundle changes Loader rows, every enabled row it changes runs, and switching it off restores the prior rows.
@@ -752,8 +752,8 @@ async function toggleOptionalBundles(page: Page): Promise<void> {
 async function setBundle(page: Page, bundle: string, enabled: boolean): Promise<string> {
   return await page.evaluate(async ({ name, enabled }) => {
     const transport = (globalThis as typeof globalThis & {
-      __DSH_TRANSPORT__?: { fetch(input: string, init: RequestInit): Promise<Response> }
-    }).__DSH_TRANSPORT__
+      __LIWA_TRANSPORT__?: { fetch(input: string, init: RequestInit): Promise<Response> }
+    }).__LIWA_TRANSPORT__
     if (transport === undefined) throw new Error('preview transport is absent after boot')
     const answered = await transport.fetch('/api/pluginManager/setBundleEnabled', {
       method: 'POST',
@@ -815,8 +815,8 @@ async function bootEmptyPreview(origin: string, browser: Browser): Promise<void>
     await page.getByRole('textbox', { name: 'Choose workspace' }).waitFor({ timeout: HERO_TIMEOUT_MS })
     const sessionCount = await page.evaluate(async () => {
       const transport = (globalThis as typeof globalThis & {
-        __DSH_TRANSPORT__?: { fetch(input: string, init: RequestInit): Promise<Response> }
-      }).__DSH_TRANSPORT__
+        __LIWA_TRANSPORT__?: { fetch(input: string, init: RequestInit): Promise<Response> }
+      }).__LIWA_TRANSPORT__
       if (transport === undefined) throw new Error('empty preview transport is absent after boot')
       const response = await transport.fetch('/api/session/list', {
         method: 'POST',

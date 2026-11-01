@@ -3,7 +3,7 @@ description: "The out-of-process ACP subagent backend for users and maintainers 
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-subagent-acp
+# @liwa/subagent-acp
 
 English | [中文](README.zh.md)
 
@@ -43,20 +43,20 @@ Choose this backend when the child must run with its own runtime, model, and too
 | `disposeEofGraceMs` | `6000` | Grace after stdin EOF before platform termination |
 | `disposeGraceMs` | `3000` | Bound for observing structured process facts after failure and, on POSIX, the SIGTERM-to-SIGKILL grace |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-subagent-acp) is the exhaustive source for every accepted field and its JSDoc.
+The generated [configuration catalog](../../../docs/config-catalog.md#liwasubagent-acp) is the exhaustive source for every accepted field and its JSDoc.
 
-A DeepSeek Harness child uses the product launcher and an explicit absolute `DSH_HOME`. The isolated home prevents a nested runtime from discovering the launching person's profiles or credentials; the generic ACP provider does not impose this requirement on non-DSH agents.
+A Liwa child uses the product launcher and an explicit absolute `LIWA_HOME`. The isolated home prevents a nested runtime from discovering the launching person's profiles or credentials; the generic ACP provider does not impose this requirement on non-Liwa agents.
 
 ```yaml
 - id: subagent-acp
-  name: '@deepseek-ai/dsh-subagent-acp'
+  name: '@liwa/subagent-acp'
   config:
     providerName: acp
-    command: dsh
+    command: liwa
     args: ['--profile', 'acp', '--patch', '/absolute/path/to/acp.patch.yml']
     permission: reject
     env:
-      DSH_HOME: /absolute/path/to/isolated-child-home
+      LIWA_HOME: /absolute/path/to/isolated-child-home
       DEEPSEEK_API_KEY: !!js process.env.DEEPSEEK_API_KEY
 ```
 
@@ -110,10 +110,10 @@ The child spawns through the subprocess seam: credential-shaped ambient variable
 Read these pages when the package-level contract is not enough. They move from this backend to the seam it plugs into and the protocol it drives.
 
 - [Subagent subsystem](../../../docs/subsystems/subagent.md) — the service contract, provider contract, and terminal result semantics.
-- [dsh-subagent seam](../subagent/README.md) — the registry and start API this provider registers on.
+- [liwa-subagent seam](../subagent/README.md) — the registry and start API this provider registers on.
 - [Agent Client Protocol automation server](../../acp/acp/README.md) — the automation-only server this provider drives as a client.
-- [dsh-subprocess seam](../../subprocess/subprocess/README.md) — the process-spawn and teardown machinery behind each run.
-- [Generated configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-subagent-acp) — every accepted config field and its source declaration.
+- [liwa-subprocess seam](../../subprocess/subprocess/README.md) — the process-spawn and teardown machinery behind each run.
+- [Generated configuration catalog](../../../docs/config-catalog.md#liwasubagent-acp) — every accepted config field and its source declaration.
 
 -----
 
@@ -138,7 +138,7 @@ Independent of the parent request cache. Each ACP child can reuse only prefixes 
 
 #### What the model sees
 
-Through `dsh-tool-subagent`, the parent model first receives a child id, then a completion notice containing final or partial assistant text, the stop reason, and safe diagnostic. The parent Session independently retains the external task identity and complete terminal result. Intermediate messages and tool traffic do not enter the parent Session.
+Through `liwa-tool-subagent`, the parent model first receives a child id, then a completion notice containing final or partial assistant text, the stop reason, and safe diagnostic. The parent Session independently retains the external task identity and complete terminal result. Intermediate messages and tool traffic do not enter the parent Session.
 
 #### Token effect
 

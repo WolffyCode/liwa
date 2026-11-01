@@ -1,0 +1,67 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/context/liwa-dev-context/README.md
+/:
+  en: 1099141f17380bfa
+  zh: 38230a38b2b6de85
+/liwa-liwa-dev-context:
+  en: 62c9ca30e0980610
+  zh: a559666132b9a516
+/liwa-liwa-dev-context/summary:
+  en: b9a1cd704085fa9e
+  zh: 456914a11a82fc6a
+/liwa-liwa-dev-context/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 09388d293f9be9cb
+/liwa-liwa-dev-context/use-this-package:
+  en: 5f53c85d2c82fdd4
+  zh: a81331040e6e0000
+/liwa-liwa-dev-context/use-this-package/what-the-model-gets:
+  en: 677fa4ed954766cf
+  zh: 66d8cf0af534d79a
+/liwa-liwa-dev-context/use-this-package/sessions-from-earlier-releases:
+  en: d810950db5118265
+  zh: d20e3965fa78e0f8
+/liwa-liwa-dev-context/understand-the-implementation:
+  en: 2d21fa2aad5a729d
+  zh: cfbfada0eb647435
+/liwa-liwa-dev-context/understand-the-implementation/design-concept:
+  en: e0f069630f785988
+  zh: fe22eb7ea04b6f07
+/liwa-liwa-dev-context/understand-the-implementation/source-map:
+  en: 4696b6c3a1f91f96
+  zh: 3a56d257ec768a5e
+/liwa-liwa-dev-context/understand-the-implementation/main-flow:
+  en: 55c4cdd475f9f851
+  zh: ac4fb96e7be88810
+/liwa-liwa-dev-context/further-exploration:
+  en: f19ab106fbe85437
+  zh: d0359fe86b6c695d
+/liwa-liwa-dev-context/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/liwa-liwa-dev-context/model-experience/liwa-checkout-and-web-gui:
+  en: 29e221cc7ca88f3c
+  zh: aaf932dc530f4492
+/liwa-liwa-dev-context/model-experience/liwa-checkout-and-web-gui/what-the-model-sees:
+  en: f3236c45cf5bc3a6
+  zh: 1a3499b2e21f4761
+/liwa-liwa-dev-context/model-experience/liwa-checkout-and-web-gui/what-the-model-sees/system-prompt-paragraphs:
+  en: c6c9fa4caf6f2f30
+  zh: f501149c17c0ea60
+/liwa-liwa-dev-context/model-experience/liwa-checkout-and-web-gui/what-the-model-sees/runtime-context-lines:
+  en: 37680cbe3eaabef5
+  zh: 8c1b432ddf7d20b5
+/liwa-liwa-dev-context/model-experience/liwa-checkout-and-web-gui/token-effect:
+  en: 2c629df08d801b36
+  zh: 437d43a9c5fdc68a
+/liwa-liwa-dev-context/model-experience/liwa-checkout-and-web-gui/kv-cache-effect:
+  en: e8f89a14bd36dae0
+  zh: bd4ec43e07e234c9
+/liwa-liwa-dev-context/known-limitations-and-deferred-work:
+  en: bc758bd6df64c646
+  zh: f1f9e49869f07c93
+/liwa-liwa-dev-context/known-limitations-and-deferred-work/dev-note:
+  en: e67f633dc6fe7773
+  zh: e88aeb617ffb74ea

@@ -1,0 +1,21 @@
+# Keyless parent-model overlay for the Liwa SDK diagnostic snapshot.
+
+- id: llm-deepseek
+  name: '@liwa/llm-deepseek-api-key'
+  disabled: true
+
+- insert:
+    - id: llm-replay
+      name: '@liwa/llm-replay'
+      config:
+        providers:
+          - id: deepseek-official
+            name: DeepSeek
+            models:
+              # The live route's published facts, so replay reconstructs the recorded request header.
+              - id: deepseek-flash
+                contextWindow: 1048576
+                defaultMaxTokens: 256000
+                reasoningEfforts: [off, low, high, max]
+                defaultReasoningEffort: max
+                systemPromptUpdate: in-history

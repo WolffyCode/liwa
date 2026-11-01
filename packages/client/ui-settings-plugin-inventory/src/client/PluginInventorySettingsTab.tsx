@@ -1,17 +1,17 @@
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react'
-import type { ClientEntryState } from '@deepseek-ai/dsh-client-modules/client'
-import type { ObservableSnapshot } from '@deepseek-ai/dsh-client-store'
-import type { PluginInventorySnapshot } from '@deepseek-ai/dsh-api-remotes/client'
-import type { LocalizedText } from '@deepseek-ai/dsh-package-manifest'
+import type { ClientEntryState } from '@liwa/client-modules/client'
+import type { ObservableSnapshot } from '@liwa/client-store'
+import type { PluginInventorySnapshot } from '@liwa/api-remotes/client'
+import type { LocalizedText } from '@liwa/package-manifest'
 import {
   IconChevronDownOutlineRegular,
   IconSearchOutlineRegular,
   Menu,
   StateDot,
   Tag,
-} from '@deepseek-ai/dsh-client-ui-primitives'
-import type { StateDotState, TagTone } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
+} from '@liwa/client-ui-primitives'
+import type { StateDotState, TagTone } from '@liwa/client-ui-primitives'
+import type { InjectFace, PropsLocale, PropsRuntime } from '@liwa/client-ui-slots'
 import type { PluginInventoryLocaleKey } from './locales.ts'
 import css from './PluginInventorySettingsTab.module.css'
 
@@ -68,11 +68,15 @@ function phaseLabel(phase: PluginFiberPhase, t: Translate): string {
 
 /** Compact technical names for Settings without changing their module identity. */
 function moduleShortName(moduleName: string): string {
+  // Own packages are scoped (`@liwa/client-ui-chat`); community plugins use the unscoped `liwa-` prefix.
+  if (moduleName.startsWith('@liwa/')) {
+    return moduleName.slice('@liwa/'.length).replace(/^cordis-plugin-/, '').replace(/^(?:host-|client-)/, '')
+  }
   const unscoped = moduleName.startsWith('@') ? moduleName.slice(moduleName.indexOf('/') + 1) : moduleName
   return unscoped
     .replace(/^cordis:/, '')
     .replace(/^cordis-plugin-/, '')
-    .replace(/^dsh-(?:host-|client-)?/, '')
+    .replace(/^liwa-(?:host-|client-)?/, '')
 }
 
 /** Display an entry identity without the composition-only `include:` marker. */

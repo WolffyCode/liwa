@@ -1,15 +1,15 @@
 /**
  * Instruction-file discovery and bounded, abort-aware provider reads.
  *
- * @module @deepseek-ai/dsh-agent-instructions/files
+ * @module @liwa/agent-instructions/files
  */
 
 import { createReadStream } from 'node:fs'
 import { stat } from 'node:fs/promises'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
-import type { FileSystem, FsInfo, FsTarget, FsVersion } from '@deepseek-ai/dsh-fs'
-import { agentsHomeDisplay, dshHomeDisplay } from '@deepseek-ai/dsh-home-paths'
-import { assertNever } from '@deepseek-ai/dsh-util-values'
+import type { FileSystem, FsInfo, FsTarget, FsVersion } from '@liwa/fs'
+import { agentsHomeDisplay, liwaHomeDisplay } from '@liwa/home-paths'
+import { assertNever } from '@liwa/util-values'
 import { resolveConfig, resolveDiscoveryConfig, type ResolvedConfig, type ResolvedDiscoveryConfig } from './config.ts'
 import { trimmedInstructionDigest } from './digest.ts'
 import {
@@ -54,10 +54,10 @@ export interface ProbedInstructionFile extends InstructionFile {
 interface DiscoverOptions {
   cwd: string
   /**
-   * Already-resolved harness home. The plugin resolves it once at mount and
+   * Already-resolved Liwa home. The plugin resolves it once at mount and
    * passes it down so reconciliation and baseline loading cannot disagree.
    */
-  dshHome?: string
+  liwaHome?: string
   /**
    * Already-resolved shared agents root. The plugin resolves it once at mount
    * and passes it down so reconciliation and baseline loading cannot disagree.
@@ -80,9 +80,9 @@ interface UserGlobalRoot {
 }
 
 /**
- * Ordered user-global instruction roots: the harness home, then the shared
+ * Ordered user-global instruction roots: the Liwa home, then the shared
  * agents root. Both contribute the fixed {@link USER_GLOBAL_FILE} candidate and
- * form one candidate group, so a file that matches the harness-home content
+ * form one candidate group, so a file that matches the Liwa-home content
  * renders once.
  * @param config - normalized discovery configuration.
  * @returns the roots in model precedence order.
@@ -91,7 +91,7 @@ function userGlobalRoots(config: ResolvedDiscoveryConfig): UserGlobalRoot[] {
   return USER_GLOBAL_DIRECTORIES.map((directory) => {
     switch (directory) {
       case USER_GLOBAL_DIRECTORY:
-        return { directory, home: config.dshHome, display: dshHomeDisplay(config.dshHome) }
+        return { directory, home: config.liwaHome, display: liwaHomeDisplay(config.liwaHome) }
       case AGENTS_GLOBAL_DIRECTORY:
         return { directory, home: config.agentsHome, display: agentsHomeDisplay(config.agentsHome) }
       /* v8 ignore next -- USER_GLOBAL_DIRECTORIES is closed; this arm only makes adding a label a compile error. */
@@ -370,7 +370,7 @@ async function discoverInstructionFiles(
  * Discover host-visible user-global and root-to-cwd instruction candidates.
  * All present candidates in each directory are returned; trimmed-content
  * duplicates are collapsed later, once content is read.
- * @param options - cwd, resolved harness home, root marker, and candidate configuration.
+ * @param options - cwd, resolved Liwa home, root marker, and candidate configuration.
  * @returns path-deduplicated instruction candidates in model precedence order.
  * @throws the original root-marker metadata error or cancellation reason when
  * discovery cannot identify the project root.
@@ -421,7 +421,7 @@ async function readBounded(
  * the same candidate group. Different groups never collapse even when identical;
  * within one group the earliest candidate in discovery order is kept and its
  * original bytes are rendered. The two user-global roots form one group, so a
- * shared file matching the harness-home content collapses behind it. A candidate
+ * shared file matching the Liwa-home content collapses behind it. A candidate
  * that symlinks a sibling resolves to the same content and collapses here like
  * any byte-identical real file.
  * @param files - loaded files in discovery order.

@@ -3,13 +3,13 @@ description: "进程本地后台任务注册表，供组合、容量评估或排
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-jobs-local
+# @liwa/jobs-local
 
 [English](README.md) | 中文
 
 ## 概述
 
-`dsh-jobs-local` 在 agent（智能体）继续推进时，于 harness 进程内运行后台任务。拥有任务的 agent 可以读取、等待、列出和取消任务；同时挂载 `dsh-tool-jobs` 时，还会收到会话内完成通知。可配置的并发与输出保留上限约束资源使用。生产方可以提供供定期读取的输出，也可以直接追加；用户可以观察保留的输出，而不消耗 agent 尚未读取的内容。任务在拥有者或 harness 关闭时结束。
+`liwa-jobs-local` 在 agent（智能体）继续推进时，于灵鲸进程内运行后台任务。拥有任务的 agent 可以读取、等待、列出和取消任务；同时挂载 `liwa-tool-jobs` 时，还会收到会话内完成通知。可配置的并发与输出保留上限约束资源使用。生产方可以提供供定期读取的输出，也可以直接追加；用户可以观察保留的输出，而不消耗 agent 尚未读取的内容。任务在拥有者或灵鲸关闭时结束。
 
 ## 目录
 
@@ -25,18 +25,18 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-当组合需要进程内后台任务时加载本插件：长时间运行的工具注册其工作，拥有它的 agent 在不阻塞自身轮次的情况下读取、等待、列出和取消。它实现 [`dsh-jobs`](../jobs/README.zh.md) 约定；模型侧的 `job_output`、`job_list` 与 `job_kill` 工具来自 [`dsh-tool-jobs`](../tool-jobs/README.zh.md)。
+当组合需要进程内后台任务时加载本插件：长时间运行的工具注册其工作，拥有它的 agent 在不阻塞自身轮次的情况下读取、等待、列出和取消。它实现 [`liwa-jobs`](../jobs/README.zh.md) 约定；模型侧的 `job_output`、`job_list` 与 `job_kill` 工具来自 [`liwa-tool-jobs`](../tool-jobs/README.zh.md)。
 
 ### 何时选择
 
-当任务应存活于 harness 进程内、并随进程终止时选择它。当工作必须跨重启存活或跨进程存在时避免它：记录保存在内存中，持久或跨进程后端必须以不同方式实现同一约定。
+当任务应存活于灵鲸进程内、并随进程终止时选择它。当工作必须跨重启存活或跨进程存在时避免它：记录保存在内存中，持久或跨进程后端必须以不同方式实现同一约定。
 
 ### 最小配置
 
 加载插件即注册 `ctx.jobs`；每个字段都是可选的。
 
 ```yaml
-- name: '@deepseek-ai/dsh-jobs-local'
+- name: '@liwa/jobs-local'
 ```
 
 | 字段 | 默认值 | 含义 |
@@ -46,7 +46,7 @@ kind: "package-reference"
 | `settledRetainBytes` | `16384` | 任务结算后保留的环容量，UTF-8 字节；模型尚未读取的字节保留到它的首次终态读取 |
 | `pumpPollMs` | `150` | 任务拉取源的轮询间隔，毫秒 |
 
-生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-jobs-local)是每个受支持字段的穷尽式真源。
+生成的[配置目录](../../../docs/config-catalog.zh.md#liwajobs-local)是每个受支持字段的穷尽式真源。
 
 ### 每个所有者得到什么
 
@@ -64,7 +64,7 @@ kind: "package-reference"
 
 ### 可能出什么问题
 
-没有服务于所有者的控制器时无法启动工作——加载 `dsh-tool-jobs` 即附加一个，否则 `start()` 会以指出它的消息拒绝。返回但始终未结算 `done` 的生产方取消与缓慢停止无法区分，可能使销毁停滞并持续占用一个容量名额。运行期注册表记录会在 harness 进程退出时消失；已持久化的生命周期事件会保留。
+没有服务于所有者的控制器时无法启动工作——加载 `liwa-tool-jobs` 即附加一个，否则 `start()` 会以指出它的消息拒绝。返回但始终未结算 `done` 的生产方取消与缓慢停止无法区分，可能使销毁停滞并持续占用一个容量名额。运行期注册表记录会在灵鲸进程退出时消失；已持久化的生命周期事件会保留。
 
 -----
 
@@ -100,7 +100,7 @@ kind: "package-reference"
 
 ### 准入与结算
 
-`activeJobCount` 按精确所有者或共享无主桶统计权威记录。`settle` 只记录一次终止结果（把记录下来的 kill 原因合并进 `killed` 的 detail），清除进度行，把环裁剪到结算保留量（保留模型游标尚未消费的全部字节），解析每个等待方，然后发出带原因的 `settled` 与环的最终 `output` 信号。原因在 `JobRegistry.kill` 之后为 `kill`，在所有者或服务取消之后为 `teardown`，否则为 `producer`；`dsh-tool-jobs` 据此跳过没人能读的通知。
+`activeJobCount` 按精确所有者或共享无主桶统计权威记录。`settle` 只记录一次终止结果（把记录下来的 kill 原因合并进 `killed` 的 detail），清除进度行，把环裁剪到结算保留量（保留模型游标尚未消费的全部字节），解析每个等待方，然后发出带原因的 `settled` 与环的最终 `output` 信号。原因在 `JobRegistry.kill` 之后为 `kill`，在所有者或服务取消之后为 `teardown`，否则为 `producer`；`liwa-tool-jobs` 据此跳过没人能读的通知。
 
 ### 销毁
 
@@ -128,7 +128,7 @@ kind: "package-reference"
 <a id="model-experience"></a>
 ## 模型体验
 
-通过生产方插件与 `dsh-tool-jobs` 间接影响模型，注册表后端把全部模型渲染委托给它们。
+通过生产方插件与 `liwa-tool-jobs` 间接影响模型，注册表后端把全部模型渲染委托给它们。
 
 #### KV Cache 影响
 
@@ -141,7 +141,7 @@ kind: "package-reference"
 
 这些限制说明注册表何时不合适。它们是当前包约束，不是任务积压。
 
-- **任务只存在于进程本地**——运行期执行与输出环会随 harness 进程终止而消失；持久或跨重启执行需要一个单独实现该 seam 的后端。
+- **任务只存在于进程本地**——运行期执行与输出环会随灵鲸进程终止而消失；持久或跨重启执行需要一个单独实现该 seam 的后端。
 - **销毁期间不保证最后一条结算持久化**——正常的一次性运行结束、信号关停或硬退出，都可能在最后一条 `job/settled` 写入存储前停止 Session 路由或关闭写句柄。缺少结算时，消费方必须将区间保留为不完整；跨 fiber 的关停顺序不属于本日志的约定。
 - **静默无效的取消可能使销毁停滞并持续占用容量**——如果 `cancel` 返回后始终未结算 `done`，注册表就无法将其与缓慢停止区分开；该任务会在服务剩余生命周期内持续占用一个桶名额，只有显式抛出异常才能安全地强制标为失败。
 

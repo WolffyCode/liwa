@@ -3,11 +3,11 @@
  * including the format refusals shared by every backend: a stored log this
  * build cannot faithfully interpret is refused, never misread, and the
  * refusal points at the raw artifact when the backend keeps one per session.
- * @module @deepseek-ai/dsh-session-persistence/errors
+ * @module @liwa/session-persistence/errors
  */
 
-import { SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
-import type { SessionId } from '@deepseek-ai/dsh-session'
+import { SESSION_FORMAT_VERSION } from '@liwa/session'
+import type { SessionId } from '@liwa/session'
 
 /** The requested Session identity has no durable log visible to this caller. */
 export class SessionPersistenceNotFoundError extends Error {
@@ -125,7 +125,7 @@ export class SessionFormatUnsupportedError extends Error {
  * build does not read. Shared by load-time checks and by backends that must
  * refuse BEFORE decoding version-dependent structure (a future format may not
  * satisfy this build's structural checks at all, and the user must see
- * "upgrade the harness", never "corrupt").
+ * "upgrade Liwa", never "corrupt").
  * @param id - the stored session id, for message context.
  * @param version - the stored format version.
  * @returns the stable refusal text, without a raw-log path suffix.

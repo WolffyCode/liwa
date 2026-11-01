@@ -4,10 +4,10 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import NodeModule, { createRequire } from 'node:module'
-import { Context, type Plugin } from '@deepseek-ai/cordis'
-import Loader, { type ModuleJob, type ModuleLoader } from '@deepseek-ai/cordis-plugin-loader'
-import Timer from '@deepseek-ai/cordis-plugin-timer'
-import z from '@deepseek-ai/schemastery'
+import { Context, type Plugin } from '@liwa/cordis'
+import Loader, { type ModuleJob, type ModuleLoader } from '@liwa/cordis-plugin-loader'
+import Timer from '@liwa/cordis-plugin-timer'
+import z from '@liwa/schemastery'
 import { expect, it, onTestFinished, vi } from 'vitest'
 import Hmr from '../src/index.ts'
 
@@ -22,7 +22,7 @@ interface ModuleReload {
 }
 
 async function fixture(version: 'v1' | 'v2' = 'v2') {
-  const dir = mkdtempSync(join(tmpdir(), 'dsh-hmr-graph-'))
+  const dir = mkdtempSync(join(tmpdir(), 'liwa-hmr-graph-'))
   const ctx = new Context()
   ctx.baseUrl = pathToFileURL(dir).href + '/'
   onTestFinished(async () => { await ctx.fiber.dispose(); rmSync(dir, { recursive: true, force: true }) })

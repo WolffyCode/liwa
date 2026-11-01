@@ -3,68 +3,68 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/boot/app-boot/README.md
 /:
-  en: 822ef8977098c703
-  zh: c0673e854310840f
-/deepseek-ai-dsh-app-boot:
-  en: fdb73259898590a5
-  zh: aee057cd436da2e2
-/deepseek-ai-dsh-app-boot/summary:
-  en: e5db70f7cdcdbe9c
-  zh: 6852efb61109a349
-/deepseek-ai-dsh-app-boot/table-of-contents:
+  en: e7d33e07e6c2f63f
+  zh: 24aeb7a3aa55b902
+/liwa-app-boot:
+  en: 2874f6afe9dfad83
+  zh: 07d7a6c2a52b88ab
+/liwa-app-boot/summary:
+  en: 4c89afb7a5e2db55
+  zh: 180cf4b91aed7191
+/liwa-app-boot/table-of-contents:
   en: d152484eb41ac6b4
   zh: 09388d293f9be9cb
-/deepseek-ai-dsh-app-boot/use-this-package:
+/liwa-app-boot/use-this-package:
   en: f6fa378225009c8f
   zh: 324c0e4640bb1358
-/deepseek-ai-dsh-app-boot/use-this-package/when-to-use-it:
-  en: 2fdfe02f2ed4a258
-  zh: d748228ece579c4a
-/deepseek-ai-dsh-app-boot/use-this-package/starting-the-app:
+/liwa-app-boot/use-this-package/when-to-use-it:
+  en: 9a38542e0cee1c1d
+  zh: 3b4a3e47ec7a33c4
+/liwa-app-boot/use-this-package/starting-the-app:
   en: 65bf2834b81f87da
   zh: c864ac60a3005b99
-/deepseek-ai-dsh-app-boot/use-this-package/profiles:
-  en: a9c82cd220ae8d59
-  zh: 8c7c1c97efcdfc25
-/deepseek-ai-dsh-app-boot/use-this-package/previewing-the-effective-configuration:
+/liwa-app-boot/use-this-package/profiles:
+  en: 53eb78b763ca0169
+  zh: f2393560f1bef8c7
+/liwa-app-boot/use-this-package/previewing-the-effective-configuration:
   en: 646a0ccdd7881ad1
   zh: e3696acb1573dd7b
-/deepseek-ai-dsh-app-boot/use-this-package/inspecting-plugin-configuration-schemas:
-  en: c4a301652b851ce9
-  zh: 784871e19cd9db0a
-/deepseek-ai-dsh-app-boot/use-this-package/reading-plugin-display-metadata:
-  en: 91d80c444ac0cfe5
-  zh: e7db496043528ffb
-/deepseek-ai-dsh-app-boot/use-this-package/startup-and-reload-failures:
-  en: dc13dfa1f79292e4
-  zh: d51682ced7a18ac2
-/deepseek-ai-dsh-app-boot/understand-the-implementation:
+/liwa-app-boot/use-this-package/inspecting-plugin-configuration-schemas:
+  en: 229102cae01c325b
+  zh: 39f39d51e1531223
+/liwa-app-boot/use-this-package/reading-plugin-display-metadata:
+  en: 3d30d0a33238e774
+  zh: d51982ed2a3268a4
+/liwa-app-boot/use-this-package/startup-and-reload-failures:
+  en: 3fc1b9bee0f84d5a
+  zh: b2b2ca33a30dbef4
+/liwa-app-boot/understand-the-implementation:
   en: f4a2695cb4c8a570
   zh: 89837235d2f376cf
-/deepseek-ai-dsh-app-boot/understand-the-implementation/design-notes:
-  en: 6eba01e24a2a68ab
-  zh: 64af424489087ec7
-/deepseek-ai-dsh-app-boot/understand-the-implementation/helper-behavior:
+/liwa-app-boot/understand-the-implementation/design-notes:
+  en: bbb057eafb1ebc3c
+  zh: 512f75ad6d11be62
+/liwa-app-boot/understand-the-implementation/helper-behavior:
   en: 6fa850d1bb000d0e
   zh: aa83a40a9d3db295
-/deepseek-ai-dsh-app-boot/understand-the-implementation/source-map:
+/liwa-app-boot/understand-the-implementation/source-map:
   en: 541700d5c39e0ab4
   zh: 7522dbd9cd68c930
-/deepseek-ai-dsh-app-boot/further-exploration:
-  en: 401269cc5ea8593e
-  zh: cd337c356b320565
-/deepseek-ai-dsh-app-boot/model-experience:
+/liwa-app-boot/further-exploration:
+  en: 33265be3379b8bb4
+  zh: 2628944d540511f7
+/liwa-app-boot/model-experience:
   en: d2d0a21502d88c50
   zh: 82a60c7a490a6834
-/deepseek-ai-dsh-app-boot/model-experience/kv-cache-effect:
+/liwa-app-boot/model-experience/kv-cache-effect:
   en: 5a1d9344c8fdc790
   zh: 0b32579f658b2ca1
-/deepseek-ai-dsh-app-boot/known-limitations-and-deferred-work:
-  en: 1400c4f22a79b59a
-  zh: 269f6c91584aec3e
-/deepseek-ai-dsh-app-boot/known-limitations-and-deferred-work/dev-note:
+/liwa-app-boot/known-limitations-and-deferred-work:
+  en: ef999f8e0c53bb5b
+  zh: 67dec65b66fcf760
+/liwa-app-boot/known-limitations-and-deferred-work/dev-note:
   en: d2f0d68fe29fb750
   zh: 323d21ee73a9e3f6
-/deepseek-ai-dsh-app-boot/known-limitations-and-deferred-work/dev-note/open-yaml-config-dump-stability:
-  en: 032f14ed5cd78efa
-  zh: ecc81f819f0bc39b
+/liwa-app-boot/known-limitations-and-deferred-work/dev-note/open-yaml-config-dump-stability:
+  en: 8f9417ac64ea66ea
+  zh: 04bc1f26a7b844e4

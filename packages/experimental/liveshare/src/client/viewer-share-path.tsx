@@ -3,18 +3,18 @@
  *
  * The viewer renders the shipped right Sidebar, which resolves every address through its tab-type
  * registry and refuses one no type claims. A share hands over workspace paths, not file contents, so
- * this page claims `dsh-resource://file/**` itself and says so in the tab: the address is answered by
+ * this page claims `liwa-resource://file/**` itself and says so in the tab: the address is answered by
  * the page that owns the fact, not by Chat's call site.
  *
  * The Liveshare client face mounts this module only on a viewer page.
  *
- * @module @deepseek-ai/dsh-experimental-liveshare/src/client/viewer-share-path
+ * @module @liwa/experimental-liveshare/src/client/viewer-share-path
  */
 
 import type { ReactNode } from 'react'
-import type { Context as ClientContext } from '@deepseek-ai/cordis'
-import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
-import type { SidebarRightTabDefinition } from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
+import type { Context as ClientContext } from '@liwa/cordis'
+import type { PropsLocale, PropsRuntime } from '@liwa/client-ui-slots'
+import type { SidebarRightTabDefinition } from '@liwa/client-ui-sidebar-right/client'
 import { NS } from './locales.ts'
 import css from './viewer-share-path.module.css'
 
@@ -24,7 +24,7 @@ export const name = 'liveshare-viewer-share-path'
 export const inject: readonly string[] = ['slots', 'sidebarRightTabs']
 
 /** This implementation's identity in the tab system; also the key its body registers under. */
-const SHARE_PATH_ID = '@deepseek-ai/dsh-experimental-liveshare/viewer-share-path'
+const SHARE_PATH_ID = '@liwa/experimental-liveshare/viewer-share-path'
 
 /** The tab kind this page owns. */
 const SHARE_PATH_KIND = 'liveshare-share-path'
@@ -62,7 +62,7 @@ function sharePathDefinition(): SidebarRightTabDefinition {
   return {
     id: SHARE_PATH_ID,
     kind: SHARE_PATH_KIND,
-    patterns: ['dsh-resource://file/**'],
+    patterns: ['liwa-resource://file/**'],
     priority: 'builtin',
     title: basenameOf,
   }

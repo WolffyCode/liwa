@@ -1,6 +1,6 @@
 /**
- * @deepseek-ai/dsh-web-app — the browser-surface bundle's runtime glue plugin
- * plus the bundle patch (`cordis.patch.yml`, declared by the `dsh.bundle.patch`
+ * @liwa/web-app — the browser-surface bundle's runtime glue plugin
+ * plus the bundle patch (`cordis.patch.yml`, declared by the `liwa.bundle.patch`
  * manifest field). The plugin owns the browser-surface glue: it resolves
  * the built frontend dist (workspace knowledge of this bundle, never user
  * config), mounts the `frontend-static` fallback owner over it, registers the
@@ -9,34 +9,34 @@
  * `publicUrl` replaces the published bind-address URL. Non-loopback
  * HTTP binds trigger an exposure warning. App command-line values arrive
  * through the `webStartup` service expressions in the bundle patch.
- * @module @deepseek-ai/dsh-web-app
+ * @module @liwa/web-app
  */
 
 import { spawn, type ChildProcess } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { auditStartupEntries } from '@deepseek-ai/dsh-app-boot'
-import type {} from '@deepseek-ai/dsh-client-connection'
-import * as FrontendStatic from '@deepseek-ai/dsh-host-frontend-static'
-import { bindUrlHost, isLoopbackHost } from '@deepseek-ai/dsh-host-webserver'
-import { launchedThroughSsh, launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment'
-import { scrubbedParentEnv } from '@deepseek-ai/dsh-subprocess'
-import type {} from '@deepseek-ai/cordis-plugin-loader'
-import type {} from '@deepseek-ai/dsh-shell-env'
+import { Context } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import { auditStartupEntries } from '@liwa/app-boot'
+import type {} from '@liwa/client-connection'
+import * as FrontendStatic from '@liwa/host-frontend-static'
+import { bindUrlHost, isLoopbackHost } from '@liwa/host-webserver'
+import { launchedThroughSsh, launchEnvironmentOf } from '@liwa/launch-environment'
+import { scrubbedParentEnv } from '@liwa/subprocess'
+import type {} from '@liwa/cordis-plugin-loader'
+import type {} from '@liwa/shell-env'
 import { parsePublicUrl } from './public-url.ts'
 
 /** The Web GUI this process serves, provided by the `web-runtime` row. */
 export interface WebApp {
   /**
-   * The URL this GUI advertises, also used for `DSH_WEB_URL` and the startup URL line.
+   * The URL this GUI advertises, also used for `LIWA_WEB_URL` and the startup URL line.
    * @returns the configured `publicUrl`, otherwise the listener origin.
    */
   getAdvertisedUrl(): string
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     /** The Web GUI this process serves; absent when no Web runtime is mounted. */
     webApp: WebApp
@@ -58,13 +58,13 @@ export interface Config {
   /** Print the URL line on activation; a non-interactive layer can turn it off. */
   printUrl: boolean
   /**
-   * Register the `DSH_WEB_URL` bash variable naming this GUI. A one-shot
+   * Register the `LIWA_WEB_URL` bash variable naming this GUI. A one-shot
    * non-interactive layer can turn it off when its user is not in the GUI.
    */
   surfaceContext: boolean
   /**
    * Canonical HTTP(S) root to advertise in the printed and opened URL,
-   * `DSH_WEB_URL`, and `webApp.getAdvertisedUrl()`, which supplies the Web GUI
+   * `LIWA_WEB_URL`, and `webApp.getAdvertisedUrl()`, which supplies the Web GUI
    * URL in agent runtime context, e.g. `https://app.example/ui/`, normalized to end in `/`. Configures no routing
    * or authentication; see [public deployments](../README.md#public-deployments).
    * Absent or YAML `null` advertises the bind-address URL.
@@ -80,7 +80,7 @@ export const Config: z<Config> = z.object({
 })
 
 /** Environment variable naming the advertised URL of this Web GUI. */
-const DSH_WEB_URL = 'DSH_WEB_URL' as const
+const LIWA_WEB_URL = 'LIWA_WEB_URL' as const
 
 const BROWSER_OPENER_MODULE = import.meta.resolve('open')
 
@@ -123,14 +123,14 @@ try {
 function resolveDistIndex(): string {
   const require = createRequire(import.meta.url)
   try {
-    return join(dirname(require.resolve('@deepseek-ai/dsh-web-frontend/package.json')), 'dist', 'index.html')
+    return join(dirname(require.resolve('@liwa/web-frontend/package.json')), 'dist', 'index.html')
   } catch {
     /* v8 ignore next 2 -- reachable only when the frontend package is absent from the checkout */
-    throw new Error('web-app: @deepseek-ai/dsh-web-frontend is not resolvable from this composition')
+    throw new Error('web-app: @liwa/web-frontend is not resolvable from this composition')
   }
 }
 
-/** Start the maintained platform opener without forwarding Harness credentials. */
+/** Start the maintained platform opener without forwarding Liwa credentials. */
 function spawnBrowserLauncher(url: string): ChildProcess {
   return spawn(process.execPath, [
     '--input-type=module',
@@ -195,7 +195,7 @@ export function apply(ctx: Context, config: Config): void {
     )
   }
   if (ctx.webServer.protocol === 'http:' && !isLoopbackHost(boundHost)) {
-    console.warn(`dsh web: listening on ${boundHost} over plain HTTP; restrict this port to a trusted proxy or network`)
+    console.warn(`liwa web: listening on ${boundHost} over plain HTTP; restrict this port to a trusted proxy or network`)
   }
   // The bind URL belongs to this host. Under SSH, the operator reaches it
   // through a local forwarding address that this process cannot derive.
@@ -209,9 +209,9 @@ export function apply(ctx: Context, config: Config): void {
       runtimeCtx.shellEnv.register({
         name: 'web-runtime',
         variables: {
-          [DSH_WEB_URL]: { description: 'Advertised URL of the DeepSeek Harness Web GUI serving this session.' },
+          [LIWA_WEB_URL]: { description: 'Advertised URL of the Liwa Web GUI serving this session.' },
         },
-        resolve: () => ({ [DSH_WEB_URL]: appRootUrl() }),
+        resolve: () => ({ [LIWA_WEB_URL]: appRootUrl() }),
       })
     })
   }
@@ -228,13 +228,13 @@ export function apply(ctx: Context, config: Config): void {
         const authenticatedUrl = connectionCtx.connection.authenticatedUrl(webUrl)
         ANNOUNCED_ROOTS.add(connectionCtx[Context.root])
         if (config.printUrl) {
-          console.log(`dsh web: ${authenticatedUrl}`)
+          console.log(`liwa web: ${authenticatedUrl}`)
         }
         if (handoffBrowser) {
-          console.log('dsh web: opening the default browser; pass --no-open to disable')
+          console.log('liwa web: opening the default browser; pass --no-open to disable')
           void internals.openBrowser(authenticatedUrl).catch((error: unknown) => {
             const reason = error instanceof Error ? error.message : String(error)
-            console.error(`web-app: could not open the default browser because ${reason}; use the dsh web URL printed at startup`)
+            console.error(`web-app: could not open the default browser because ${reason}; use the liwa web URL printed at startup`)
           })
         }
       }
@@ -245,7 +245,7 @@ export function apply(ctx: Context, config: Config): void {
       if (settled === undefined) announceReady()
       else {
         void settled.then(async () => {
-          await auditStartupEntries(connectionCtx[Context.root], 'dsh web', () => {})
+          await auditStartupEntries(connectionCtx[Context.root], 'liwa web', () => {})
           // The tree can be disposed while the boot was in flight (early
           // SIGTERM); a URL line or browser tab for a dead server would only
           // mislead, and reading torn-down services would turn a clean shutdown

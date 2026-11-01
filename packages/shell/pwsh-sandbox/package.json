@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-pwsh-sandbox",
-  "description": "Sandbox-consuming implementation of the DeepSeek Harness PowerShell executor seam (confines every command via ctx.sandbox, reports denial/enforcement result facts)",
+  "name": "@liwa/pwsh-sandbox",
+  "description": "Sandbox-consuming implementation of the Liwa PowerShell executor seam (confines every command via ctx.sandbox, reports denial/enforcement result facts)",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/shell/pwsh-sandbox"
   },
   "type": "module",
@@ -29,20 +29,20 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-shell": "workspace:*",
-    "@deepseek-ai/dsh-pwsh-local": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/shell": "workspace:*",
+    "@liwa/pwsh-local": "workspace:*",
+    "@liwa/sandbox": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-shell": "workspace:*",
-    "@deepseek-ai/dsh-pwsh-local": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-local": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-subprocess-local": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/shell": "workspace:*",
+    "@liwa/pwsh-local": "workspace:*",
+    "@liwa/sandbox": "workspace:*",
+    "@liwa/sandbox-local": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/subprocess-local": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   }
 }

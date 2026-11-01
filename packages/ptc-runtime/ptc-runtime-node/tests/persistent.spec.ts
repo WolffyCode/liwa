@@ -2,14 +2,14 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { setImmediate } from 'node:timers/promises'
-import { Context } from '@deepseek-ai/cordis'
-import type { PtcBindingFunction, PtcRunRequest } from '@deepseek-ai/dsh-ptc-runtime'
+import { Context } from '@liwa/cordis'
+import type { PtcBindingFunction, PtcRunRequest } from '@liwa/ptc-runtime'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import type { Config } from '../src/index.ts'
 import { mountRuntime } from './setup.ts'
 
 async function setupRuntime(config: Config = {}) {
-  const cwd = await mkdtemp(join(tmpdir(), 'dsh-persistent-ptc-'))
+  const cwd = await mkdtemp(join(tmpdir(), 'liwa-persistent-ptc-'))
   const ctx = new Context()
   onTestFinished(async () => { await ctx.fiber.dispose(); await rm(cwd, { recursive: true, force: true }) })
   const { runtime, fiber } = await mountRuntime(ctx, { executionMode: 'persistent-in-memory', ...config })

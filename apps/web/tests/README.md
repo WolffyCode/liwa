@@ -2,12 +2,12 @@
 
 English | [中文](README.zh.md)
 
-These tests boot the real web composition in-process and drive it with real browsers over real HTTP. Chromium runs the full lane; the [model and reasoning picker scenario](declared-reasoning.e2e.ts) also runs in WebKit to cover native mouse focus behavior. [Session replay recovery](session-replay-reload.e2e.ts) also runs in WebKit, sharing the `fresh-round-trip` recording and expected output without rewriting them. It covers active-stream reload, completed-turn reload, and reopening a Session. The lane's mechanics — modes, fixtures, goldens, and the deliberate composition divergences from `dsh web` — are documented in [`scaffold.ts`](scaffold.ts) and the [browser e2e Agent Note](../../../.agents/notes/implemented/testing/2026-07-24-web-gui-browser-e2e-lane.md).
+These tests boot the real web composition in-process and drive it with real browsers over real HTTP. Chromium runs the full lane; the [model and reasoning picker scenario](declared-reasoning.e2e.ts) also runs in WebKit to cover native mouse focus behavior. [Session replay recovery](session-replay-reload.e2e.ts) also runs in WebKit, sharing the `fresh-round-trip` recording and expected output without rewriting them. It covers active-stream reload, completed-turn reload, and reopening a Session. The lane's mechanics — modes, fixtures, goldens, and the deliberate composition divergences from `liwa web` — are documented in [`scaffold.ts`](scaffold.ts) and the [browser e2e Agent Note](../../../.agents/notes/implemented/testing/2026-07-24-web-gui-browser-e2e-lane.md).
 
 After installing workspace dependencies, install the browsers and their system dependencies from the repository root:
 
 ```sh
-pnpm --filter @deepseek-ai/dsh-web-frontend exec playwright install --with-deps chromium webkit
+pnpm --filter @liwa/web-frontend exec playwright install --with-deps chromium webkit
 ```
 
 On Linux, `--with-deps` installs dependencies through the system package manager. The persistent CI VM must provide these dependencies through image maintenance; CI installs only the browser binaries, as required by the [failover runbook](../../../.agents/notes/implemented/process/2026-07-26-ci-failover-runbook.md).
@@ -18,7 +18,7 @@ Same-day message goldens use the shared `WEB_FIXTURE_TIME`: seeded transcripts p
 
 ## Completion observations
 
-State-sensitive cases use Workspace, admission, attachment, and model-stream barriers to separate visible intermediate states from completed operations. Model-picker persistence assertions wait for the saved default, independently of menu closure. Details close waits for frame transitions; archive verification assigns an explicit title to the seeded Session and follows that identity across reload. The [CI test reliability workflow](../../../.agents/skills/dsh-ci-test-reliability/SKILL.md#synchronize-on-state) owns these synchronization rules.
+State-sensitive cases use Workspace, admission, attachment, and model-stream barriers to separate visible intermediate states from completed operations. Model-picker persistence assertions wait for the saved default, independently of menu closure. Details close waits for frame transitions; archive verification assigns an explicit title to the seeded Session and follows that identity across reload. The [CI test reliability workflow](../../../.agents/skills/liwa-ci-test-reliability/SKILL.md#synchronize-on-state) owns these synchronization rules.
 
 [Idle-submission handoff](idle-submission-handoff.e2e.ts) waits up to the scaffold's 30-second turn-completion budget for Host frames and browser placement. Vitest owns scaffold teardown so a replay-consumption error does not replace the failed scenario assertion.
 
@@ -38,7 +38,7 @@ They type-check in the root `tsconfig.host.json`, not in the Client aggregate, b
 
 A new scenario joins both program lists in the same change: its file in the root `tsconfig.host.json` include and in the Client aggregate's `apps/web/tsconfig.json` exclude. That project includes all of `tests`, so a file missing from the exclude compiles as Client code, and the Client compiler gate of `pnpm run typecheck` keeps failing with Host-service errors until it is listed.
 
-## Do not import `@deepseek-ai/dsh-client-*` here
+## Do not import `@liwa/client-*` here
 
 Importing a Client package — a value or a type — pulls its TypeScript project and referenced projects into the Host build graph. Generated Remote declarations are available before package compilation, but this does not make the Host and Client Cordis `Context` declarations compatible. Keep these tests on the Host face and use only the explicit built-client harness exception below.
 

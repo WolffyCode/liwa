@@ -3,13 +3,13 @@ description: "The model-facing web tools (web_search, web_fetch) over ctx.web: h
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-tool-web
+# @liwa/tool-web
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-tool-web` lets models search the web with `web_search` and retrieve pages with `web_fetch`. Choose it when an agent needs current information or full source text, and enable either tool independently through package configuration. Results label provider-controlled text as external and untrusted, while fetched HTML excludes active and hidden content. If a configured provider is missing or unavailable, the tool remains visible and returns a structured error the model can act on; a request is not offered a tool whose operations the selected provider cannot authenticate. Timeout and result-size limits are deployment settings rather than model arguments.
+`liwa-tool-web` lets models search the web with `web_search` and retrieve pages with `web_fetch`. Choose it when an agent needs current information or full source text, and enable either tool independently through package configuration. Results label provider-controlled text as external and untrusted, while fetched HTML excludes active and hidden content. If a configured provider is missing or unavailable, the tool remains visible and returns a structured error the model can act on; a request is not offered a tool whose operations the selected provider cannot authenticate. Timeout and result-size limits are deployment settings rather than model arguments.
 
 ## Table of Contents
 
@@ -36,9 +36,9 @@ Choose this package when the model should discover current information or read a
 Load the web service, at least one backend, and this package; both tools register by default.
 
 ```yaml
-- name: '@deepseek-ai/dsh-web'
-- name: '@deepseek-ai/dsh-web-search-exa'
-- name: '@deepseek-ai/dsh-tool-web'
+- name: '@liwa/web'
+- name: '@liwa/web-search-exa'
+- name: '@liwa/tool-web'
 ```
 
 | Field | Default | Meaning |
@@ -52,14 +52,14 @@ Load the web service, at least one backend, and this package; both tools registe
 | `searchTimeoutMs` | `30000` | Cooperative tool-call timeout budget (ms) for `web_search` |
 | `fetchMaxOutputChars` | `200000` | Cap on source characters converted synchronously and on one complete `web_fetch` output |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-tool-web) is the exhaustive source for every accepted field and its JSDoc. `searchMaxQueries` bounds the accepted array before exact-string deduplication and provider fan-out; validation rejects an oversized array before any search starts. The timeout budgets attach to each tool definition and are enforced by [`@deepseek-ai/dsh-tool-call-timeout-policy`](../../guard/timeout-policy/README.md); the model-facing schemas expose no timeout argument.
+The generated [configuration catalog](../../../docs/config-catalog.md#liwatool-web) is the exhaustive source for every accepted field and its JSDoc. `searchMaxQueries` bounds the accepted array before exact-string deduplication and provider fan-out; validation rejects an oversized array before any search starts. The timeout budgets attach to each tool definition and are enforced by [`@liwa/tool-call-timeout-policy`](../../guard/timeout-policy/README.md); the model-facing schemas expose no timeout argument.
 
 ### Using web_search
 
 Call `web_search` with a `queries` array of one to `searchMaxQueries` non-empty strings. Exact duplicate queries run once; multiple queries run concurrently and their sources merge round-robin before the combined `searchMaxResults` cap applies. The result is an optional provider answer followed by `Sources:` with one line per source — `- [<title-or-url>](<url>)`, optionally with the source summary, else its snippet, and date — and a standing instruction to cite the URLs. A summary has its whitespace collapsed to single spaces and is capped at `searchSummaryMaxChars`; the search card keeps showing the snippet.
 
 ```text
-web_search({ queries: ['deepseek harness documentation'] })
+web_search({ queries: ['liwa documentation'] })
 ```
 
 If any query in a multi-query call fails, `web_search` aborts the remaining searches, waits for every started search to settle, discards successful results, and returns `Error: <message>` for the first failure.
@@ -79,7 +79,7 @@ Tool registration follows product enablement, not backend availability: a tool s
 <a id="search-readiness"></a>
 ### Search and fetch readiness
 
-Each model step admits `web_search` and `web_fetch`, and so declares, describes, and dispatches them, only while `ctx.web.searchReady()` and `ctx.web.fetchReady()` answer true for the chat route of the step's model selection. The service asks only the provider that `search()` or `fetch()` would select; a provider that does not implement readiness counts as ready, and a selection failure also answers true, so the stable-registration errors above still reach the model. [`dsh-web-search-deepseek`](../web-search-deepseek/README.md#authentication) and [`dsh-web-deepseek-api`](../web-deepseek-api/README.md#authentication) are not ready when the step's operation has no credential. The shipped HTTP fetch provider needs no credential, so `web_fetch` stays admitted while it is selected. The check runs for every step, so a model switch or a newly stored key applies to the next step. A step that does not admit a tool also leaves it out of PTC program bindings, and a call to it fails as `UNKNOWN_TOOL`.
+Each model step admits `web_search` and `web_fetch`, and so declares, describes, and dispatches them, only while `ctx.web.searchReady()` and `ctx.web.fetchReady()` answer true for the chat route of the step's model selection. The service asks only the provider that `search()` or `fetch()` would select; a provider that does not implement readiness counts as ready, and a selection failure also answers true, so the stable-registration errors above still reach the model. [`liwa-web-search-deepseek`](../web-search-deepseek/README.md#authentication) and [`liwa-web-deepseek-api`](../web-deepseek-api/README.md#authentication) are not ready when the step's operation has no credential. The shipped HTTP fetch provider needs no credential, so `web_fetch` stays admitted while it is selected. The check runs for every step, so a model switch or a newly stored key applies to the next step. A step that does not admit a tool also leaves it out of PTC program bindings, and a call to it fails as `UNKNOWN_TOOL`.
 
 ### Failures and recovery
 
@@ -137,10 +137,10 @@ Read these pages when the package-level contract is not enough. They move from t
 
 - [Web subsystem](../../../docs/subsystems/web.md) — the exhaustive search/fetch requests and results, provider availability, and error codes.
 - [Web package map](../README.md) — the six-package family and each role.
-- [dsh-web](../web/README.md) — the web service the tools execute through.
-- [Generated tool catalog](../../../docs/tool-catalog.md#deepseek-aidsh-tool-web) — the exact `web_search` and `web_fetch` schemas.
-- [dsh-tool-call-timeout-policy](../../guard/timeout-policy/README.md) — the deployment policy that enforces each tool's timeout budget.
-- [Generated configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-tool-web) — every accepted config field and its source declaration.
+- [liwa-web](../web/README.md) — the web service the tools execute through.
+- [Generated tool catalog](../../../docs/tool-catalog.md#liwatool-web) — the exact `web_search` and `web_fetch` schemas.
+- [liwa-tool-call-timeout-policy](../../guard/timeout-policy/README.md) — the deployment policy that enforces each tool's timeout budget.
+- [Generated configuration catalog](../../../docs/config-catalog.md#liwatool-web) — every accepted config field and its source declaration.
 - [Web capability seam decision](../../../.agents/notes/implemented/architecture/2026-06-24-web-capability-seam.md) — why search and fetch share one provider-selection service.
 - [Search readiness decision](../../../.agents/notes/implemented/architecture/2026-09-27-web-search-offered-by-provider-readiness.md) — why readiness splits across the provider, `ctx.web`, and this package.
 
@@ -185,7 +185,7 @@ Prefix-stable while visible tools, scope, and guidance text are unchanged. Confi
 
 #### What the model sees
 
-The model sees the generated [`web_search` and `web_fetch` schemas](../../../docs/tool-catalog.md#deepseek-aidsh-tool-web). Result-count and timeout budgets are deployment settings, not model arguments.
+The model sees the generated [`web_search` and `web_fetch` schemas](../../../docs/tool-catalog.md#liwatool-web). Result-count and timeout budgets are deployment settings, not model arguments.
 
 #### Token effect
 

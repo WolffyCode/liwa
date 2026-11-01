@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-config-editor",
+  "name": "@liwa/config-editor",
   "description": "Persist plugin configuration through profile patches and Loader reconciliation",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/boot/config-editor"
   },
   "type": "module",
@@ -29,25 +29,25 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-hmr": "workspace:*",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/dsh-app-boot": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/hmr": "workspace:*",
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/app-boot": "workspace:*"
   },
   "dependencies": {
-    "@deepseek-ai/dsh-atomic-write": "workspace:*",
+    "@liwa/atomic-write": "workspace:*",
     "yaml": "^2.8.1"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-hmr": "workspace:*",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/dsh-app-boot": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/hmr": "workspace:*",
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/app-boot": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-hmr": {
+    "@liwa/hmr": {
       "optional": true
     }
   }

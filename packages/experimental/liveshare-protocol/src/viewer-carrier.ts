@@ -14,11 +14,11 @@
  * {@link installViewerCarrier} runs in the browser from its own source text, so it must reference no
  * module binding: every constant and helper it needs is declared inside its body.
  *
- * @module @deepseek-ai/dsh-experimental-liveshare-protocol
+ * @module @liwa/experimental-liveshare-protocol
  */
 
 /** Page global naming the share one viewer page presents; the Liveshare client plugin reads it. */
-export const LIVESHARE_VIEWER_GLOBAL = '__DSH_LIVESHARE_VIEWER__'
+export const LIVESHARE_VIEWER_GLOBAL = '__LIWA_LIVESHARE_VIEWER__'
 
 /** Share one served viewer page presents. */
 export interface ViewerPageTarget {
@@ -37,7 +37,7 @@ export interface ViewerCarrierOptions extends ViewerPageTarget {
 
 /**
  * Install the viewer globals in the current page. Runs before the shell entry so the Connection
- * plugin finds `__DSH_TRANSPORT__` when it installs.
+ * plugin finds `__LIWA_TRANSPORT__` when it installs.
  * @param options - Page target and read budget.
  */
 export function installViewerCarrier(options: ViewerCarrierOptions): void {
@@ -56,12 +56,12 @@ export function installViewerCarrier(options: ViewerCarrierOptions): void {
   let nextStreamId = (crypto.getRandomValues(new Uint32Array(1))[0] ?? 0) % 0x7fff_ff00 + 1
 
   type Answer = { readonly status: number; readonly body: unknown }
-  type Marked = Error & { dshRemoteStreamFailure?: object }
+  type Marked = Error & { liwaRemoteStreamFailure?: object }
   const isRecord = (value: unknown): value is Record<string, unknown> =>
     typeof value === 'object' && value !== null && !Array.isArray(value)
   const carrier = (message: string): Error => {
     const error: Marked = new Error(message)
-    error.dshRemoteStreamFailure = { kind: 'carrier' }
+    error.liwaRemoteStreamFailure = { kind: 'carrier' }
     return error
   }
   const refusal = (answer: Answer): { readonly code?: string; readonly message?: string } => {
@@ -79,7 +79,7 @@ export function installViewerCarrier(options: ViewerCarrierOptions): void {
     const { code = 'liveshare/read-refused', message = `${subject} refused (HTTP ${String(answer.status)})` } = refusal(answer)
     const error: Marked = new Error(message)
     error.name = code
-    error.dshRemoteStreamFailure = { kind: 'remote', code, details: { status: answer.status } }
+    error.liwaRemoteStreamFailure = { kind: 'remote', code, details: { status: answer.status } }
     return error
   }
   const post = async (request: object, subject: string, signal?: AbortSignal): Promise<Answer> => {
@@ -122,7 +122,7 @@ export function installViewerCarrier(options: ViewerCarrierOptions): void {
     if (carrierCodes.has(code)) return carrier(message)
     const error: Marked = new Error(message)
     error.name = code
-    error.dshRemoteStreamFailure = { kind: 'remote', code, details: isRecord(value.details) ? value.details : {} }
+    error.liwaRemoteStreamFailure = { kind: 'remote', code, details: isRecord(value.details) ? value.details : {} }
     return error
   }
 
@@ -183,7 +183,7 @@ export function installViewerCarrier(options: ViewerCarrierOptions): void {
     })
   }
 
-  // Installed over the page's own fetch so app code that does not go through `__DSH_TRANSPORT__` still
+  // Installed over the page's own fetch so app code that does not go through `__LIWA_TRANSPORT__` still
   // reaches the owner. Every request outside the forwarded set is handed to the fetch this replaced.
   const pageFetch = globalThis.fetch
   const carrierFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
@@ -290,8 +290,8 @@ export function installViewerCarrier(options: ViewerCarrierOptions): void {
   })
 
   const page = globalThis as Record<string, unknown>
-  page.__DSH_LIVESHARE_VIEWER__ = { basePath: options.basePath, shareId: options.shareId, sessionId: options.sessionId }
-  page.__DSH_TRANSPORT__ = { fetch: fetchCall, openStream }
+  page.__LIWA_LIVESHARE_VIEWER__ = { basePath: options.basePath, shareId: options.shareId, sessionId: options.sessionId }
+  page.__LIWA_TRANSPORT__ = { fetch: fetchCall, openStream }
 }
 
 /**

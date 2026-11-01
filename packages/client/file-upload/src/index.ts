@@ -1,13 +1,13 @@
 /** Host file-upload service: streamed intake and Session-owned staged receipts. */
 
 import { randomUUID } from 'node:crypto'
-import type { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
-import type {} from '@deepseek-ai/dsh-client-connection'
-import type { CommandFileReceiptResolver } from '@deepseek-ai/dsh-commands'
-import type { Session, SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
-import { Remote, RemoteError, remoteErrorOf, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
+import type { Context } from '@liwa/cordis'
+import type { Agent } from '@liwa/agent'
+import type { ImageAttachmentRef } from '@liwa/attachment'
+import type {} from '@liwa/client-connection'
+import type { CommandFileReceiptResolver } from '@liwa/commands'
+import type { Session, SessionEvent, SessionId } from '@liwa/session'
+import { Remote, RemoteError, remoteErrorOf, TypertRemoteService } from '@liwa/typert-protocol'
 import { handleFileUploadHttp } from './http-route.ts'
 import { FILE_UPLOAD_PATH } from './protocol.ts'
 import type {
@@ -16,7 +16,7 @@ import type {
 
 export type * from './types.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     /** Host storage and staged-receipt service for browser file and image uploads. */
     fileUploads: FileUploads

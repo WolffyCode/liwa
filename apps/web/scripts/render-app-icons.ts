@@ -4,18 +4,18 @@
  *
  * A browser installs a Web App only with a raster 192px and a 512px icon, masks
  * the icon it puts on the home screen, and has no manifest support for iOS,
- * which reads `apple-touch-icon` instead. The whale favicon is the bare mark
- * drawn edge to edge: handed to a launcher directly it loses its fins to the
+ * which reads `apple-touch-icon` instead. The favicon is the bare mark drawn
+ * edge to edge: handed to a launcher directly it loses its outer edge to the
  * mask, and it carries neither the tile nor a background of its own. This
  * script rasterizes the official application tile (`apps/desktop/resources/icon.svg`,
  * the artwork the desktop application ships) into the committed PNGs under
  * `public/`. Every variant crops the tile's drop shadow, which belongs to a
  * desktop window rather than a launcher; the maskable variant additionally
- * scales the whale inside the safe zone a platform mask may crop, leaving the
- * tile's own gradient to fill the icon so no mask meets a seam.
+ * scales the mark inside the safe zone a platform mask may crop, leaving the
+ * tile's own background to fill the icon so no mask meets a seam.
  *
  * The committed PNGs are the output; rerun
- * `pnpm --filter @deepseek-ai/dsh-web-frontend run render:app-icons` after the
+ * `pnpm --filter @liwa/web-frontend run render:app-icons` after the
  * tile artwork changes.
  * @module render-app-icons
  */
@@ -23,7 +23,7 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { assertNever } from '@deepseek-ai/dsh-util-values'
+import { assertNever } from '@liwa/util-values'
 
 /** Vector source owned by the desktop application; 1104 units square with the tile inset. */
 export const TILE_SOURCE = fileURLToPath(new URL('../../desktop/resources/icon.svg', import.meta.url))
@@ -48,8 +48,8 @@ const RENDER_SCALE = 4
 
 /**
  * Fraction of a maskable icon the artwork keeps: the platform may crop the
- * border outside it. The tile's own ink reaches 0.461 of its edge from the
- * centre, so 0.868 is the largest scale a circular mask still shows whole;
+ * border outside it. The tile's own ink reaches 0.431 of its edge from the
+ * centre, so 0.928 is the largest scale a circular mask still shows whole;
  * `pwa-manifest.e2e.ts` checks the committed artwork against that circle.
  */
 export const MASKABLE_ARTWORK_SCALE = 0.82
@@ -63,7 +63,7 @@ const SOURCE_ROOT = /^<svg[^>]*>/u
 /** The tile group's drop shadow; stripped because a launcher icon has no window around it. */
 const TILE_SHADOW_GROUP = '<g filter="url(#filter0_d_1637_371)">'
 
-/** The whale group inside the tile; the only element a maskable icon scales. */
+/** The mark's group inside the tile; the only element a maskable icon scales. */
 const TILE_ARTWORK_GROUP = '<g filter="url(#filter1_ddi_1637_371)">'
 
 /** One committed install icon: the manifest or link member it serves and its edge in pixels. */
@@ -121,9 +121,9 @@ export function tileDocument(source: string): string {
 }
 
 /**
- * Rewrite the tile source into a maskable icon. The tile keeps its own gradient
+ * Rewrite the tile source into a maskable icon. The tile keeps its own background
  * and extent, so the icon's border is the real tile rather than an extension;
- * only the whale scales into the safe zone a platform mask may crop.
+ * only the mark scales into the safe zone a platform mask may crop.
  * @param source - complete `icon.svg` document.
  * @returns an SVG document whose artwork survives a circular mask whole.
  */

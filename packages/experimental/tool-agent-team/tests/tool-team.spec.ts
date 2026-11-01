@@ -1,26 +1,26 @@
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
+import { executeToolFixture } from '@liwa/tool-testkit'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
-import { ToolCallId, createUserMessage } from '@deepseek-ai/dsh-llm'
-import { scopeOf } from '@deepseek-ai/dsh-scope'
-import { SessionId, SessionLogOffset } from '@deepseek-ai/dsh-session'
-import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import SessionQueryEngine from '@deepseek-ai/dsh-session-query'
-import SubagentService from '@deepseek-ai/dsh-subagent'
-import * as SubagentFork from '@deepseek-ai/dsh-subagent-fork-in-process'
-import * as SubagentSpawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
-import { renderPrompt, renderContextSnapshot } from '@deepseek-ai/dsh-system-prompt'
-import * as ToolSubagentControl from '@deepseek-ai/dsh-tool-subagent-control'
-import { defineContentToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import { resolveAdapterOptions } from '@deepseek-ai/dsh-llm-deepseek'
-import { serialize } from '@deepseek-ai/dsh-llm-deepseek/src/serialize.ts'
-import type { GenerateOptions } from '@deepseek-ai/dsh-llm'
+import { Context } from '@liwa/cordis'
+import type { Agent } from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import { mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
+import { ToolCallId, createUserMessage } from '@liwa/llm'
+import { scopeOf } from '@liwa/scope'
+import { SessionId, SessionLogOffset } from '@liwa/session'
+import * as JsonlSessionPersistence from '@liwa/session-persistence-jsonl'
+import SessionQueryEngine from '@liwa/session-query'
+import SubagentService from '@liwa/subagent'
+import * as SubagentFork from '@liwa/subagent-fork-in-process'
+import * as SubagentSpawn from '@liwa/subagent-spawn-in-process'
+import { renderPrompt, renderContextSnapshot } from '@liwa/system-prompt'
+import * as ToolSubagentControl from '@liwa/tool-subagent-control'
+import { defineContentToolFixture } from '@liwa/tool-testkit'
+import { resolveAdapterOptions } from '@liwa/llm-deepseek'
+import { serialize } from '@liwa/llm-deepseek/src/serialize.ts'
+import type { GenerateOptions } from '@liwa/llm'
 import { MockAdapter, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import { mountWorkingDirectoryFixture } from '../../../subagent/subagent/tests/working-directory-fixture.ts'
 import TeamService from '../../agent-team/src/index.ts'
@@ -75,7 +75,7 @@ async function setup(script: ConstructorParameters<typeof MockAdapter>[0], legac
   contexts.add(ctx)
   await mountAgentLoopTestDependencies(ctx)
   await mountWorkingDirectoryFixture(ctx)
-  const storageRoot = mkdtempSync(join(tmpdir(), 'dsh-tool-team-'))
+  const storageRoot = mkdtempSync(join(tmpdir(), 'liwa-tool-team-'))
   roots.push(storageRoot)
   await ctx.plugin(JsonlSessionPersistence, { root: storageRoot })
   await ctx.plugin(TestSessionQuery)
@@ -142,7 +142,7 @@ async function waitNoAgent(ctx: Context, id: SessionId): Promise<void> {
   await vi.waitFor(() => { expect(ctx.agents.get(id)).toBeUndefined() }, { timeout: 5_000 })
 }
 
-describe('dsh-tool-team', () => {
+describe('liwa-tool-team', () => {
   it.each(['running', 'inactive', 'provisioning', 'failed'] as const)(
     'projects %s members consistently in creation, listing, and schemas', async (status) => {
       const { ctx, lead } = await setup([])

@@ -6,7 +6,7 @@
 
 ## 什么是服务
 
-在 Harness 中，`tools`、`llm`、`agents` 都是服务。服务是挂载在 `ctx` 上的命名能力：
+在灵鲸中，`tools`、`llm`、`agents` 都是服务。服务是挂载在 `ctx` 上的命名能力：
 
 ```ts ignore-check
 ctx.tools    // ToolRuntime service
@@ -36,7 +36,7 @@ export function apply(ctx: Context) {
 ### 使用 Service 基类
 
 ```ts
-import { Service, type Context } from '@deepseek-ai/cordis'
+import { Service, type Context } from '@liwa/cordis'
 
 export default class MetricsService extends Service {
   static inject = ['llm']  // A service may depend on other services.
@@ -67,9 +67,9 @@ export function apply(ctx: Context) {
 使用 TypeScript 声明合并让 `ctx.metrics` 有正确类型：
 
 ```ts
-import { Service, type Context } from '@deepseek-ai/cordis'
+import { Service, type Context } from '@liwa/cordis'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     metrics: MetricsService
   }
@@ -116,23 +116,23 @@ export function apply(ctx: Context) {
 
 ```yaml
 - id: group-a
-  name: '@deepseek-ai/cordis-plugin-group'
+  name: '@liwa/cordis-plugin-group'
   group: true
   isolate:
     shell: true
   config:
-    - name: '@deepseek-ai/dsh-bash-local'
+    - name: '@liwa/bash-local'
       config:
         timeoutMs: 5000
     - name: './src/plugin-a.ts'
 
 - id: group-b
-  name: '@deepseek-ai/cordis-plugin-group'
+  name: '@liwa/cordis-plugin-group'
   group: true
   isolate:
     shell: true
   config:
-    - name: '@deepseek-ai/dsh-bash-local'
+    - name: '@liwa/bash-local'
       config:
         timeoutMs: 60000
     - name: './src/plugin-b.ts'
@@ -140,7 +140,7 @@ export function apply(ctx: Context) {
 
 `plugin-a` 和 `plugin-b` 各自看到自己组内的 Bash 实例，互不影响。
 
-## Harness 内置服务
+## 灵鲸内置服务
 
 服务名、公开方法和源码位置由仓库自动生成到各服务的[子系统页面](../../../subsystems/core.zh.md)。开发插件时应以这些生成区块和服务的 TypeScript 接口为准，不要维护另一份静态清单。
 

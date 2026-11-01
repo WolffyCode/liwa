@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-19-profile-resolution-lookup-order.md
 /agent-note-resolve-profile-modules-along-the-ancestor-chain-with-an-interception-layer:
-  en: 7754ffbd03cff339
-  zh: cbf34c74b346654a
+  en: 9b7db8cdd939a014
+  zh: 144cc9f03692387c
 /agent-note-resolve-profile-modules-along-the-ancestor-chain-with-an-interception-layer/problem:
   en: 51374538814c0796
   zh: ebd74420bec9687a
 /agent-note-resolve-profile-modules-along-the-ancestor-chain-with-an-interception-layer/decision:
-  en: d69f81d4fc545e29
-  zh: 9fc532af8015cb28
+  en: 5dd7af9eb8a15810
+  zh: 76a800b40797904d
 /agent-note-resolve-profile-modules-along-the-ancestor-chain-with-an-interception-layer/decision/part-1-resolution-rules:
   en: de6ea16534218e69
   zh: fd8e1d470a2cf056
@@ -21,8 +21,8 @@
   en: 7acd592cb967f08f
   zh: 5b20fd69c832287b
 /agent-note-resolve-profile-modules-along-the-ancestor-chain-with-an-interception-layer/decision/part-1-resolution-rules/3-linked-directories-peer-interception-at-each-ancestor-position:
-  en: 8b0ded021ddb87b4
-  zh: 2f4d5c33dadf50e7
+  en: 118bfb99e382f728
+  zh: 04d663b67972eb9e
 /agent-note-resolve-profile-modules-along-the-ancestor-chain-with-an-interception-layer/decision/part-1-resolution-rules/4-what-the-interception-layer-holds-the-runtime-resolution-s-scan-contents:
   en: 5fffd66f08d4b977
   zh: 020ef8953b20cc8a

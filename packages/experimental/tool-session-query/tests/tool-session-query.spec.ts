@@ -1,13 +1,13 @@
-import { ToolExecutionPipeline } from '@deepseek-ai/dsh-tools/pipeline'
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import { ToolExecutionPipeline } from '@liwa/tools/pipeline'
+import { executeToolFixture } from '@liwa/tool-testkit'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Context, type Fiber } from '@deepseek-ai/cordis'
-import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
-import { createUserMessage, ToolCallId, HarnessError , createMessage } from '@deepseek-ai/dsh-llm'
-import type { ContextFormed } from '@deepseek-ai/dsh-llm'
-import { MAX_TIMER_DELAY_MS, TimeoutReason } from '@deepseek-ai/dsh-timeout'
-import * as TimeoutPolicy from '@deepseek-ai/dsh-tool-call-timeout-policy'
+import { Context, type Fiber } from '@liwa/cordis'
+import AgentRegistry, { type Agent } from '@liwa/agent'
+import { createUserMessage, ToolCallId, LiwaError , createMessage } from '@liwa/llm'
+import type { ContextFormed } from '@liwa/llm'
+import { MAX_TIMER_DELAY_MS, TimeoutReason } from '@liwa/timeout'
+import * as TimeoutPolicy from '@liwa/tool-call-timeout-policy'
 import SessionStore, {
   SESSION_FORMAT_VERSION,
   SessionId,
@@ -16,8 +16,8 @@ import SessionStore, {
   type SessionEvent,
   type SessionHeader,
   type SessionId as SessionIdValue,
-} from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+} from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
 import SessionQueryEngine, {
   SessionQueryError,
   SessionSearchCursor,
@@ -30,13 +30,13 @@ import SessionQueryEngine, {
   type SessionSearchPage,
   type SessionSearchRequest,
   type SessionTitleObservationResult,
-} from '@deepseek-ai/dsh-session-query'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime, { type ToolExecutionResult } from '@deepseek-ai/dsh-tools'
-import type { Config as ToolSessionQueryConfig } from '@deepseek-ai/dsh-tool-session-query'
-import * as ToolSessionQuery from '@deepseek-ai/dsh-tool-session-query'
+} from '@liwa/session-query'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime, { type ToolExecutionResult } from '@liwa/tools'
+import type { Config as ToolSessionQueryConfig } from '@liwa/tool-session-query'
+import * as ToolSessionQuery from '@liwa/tool-session-query'
 
-declare module '@deepseek-ai/dsh-llm' {
+declare module '@liwa/llm' {
   interface MessageSourceMap {
     'test': { kind: 'test' } & ContextFormed
   }
@@ -1683,7 +1683,7 @@ describe('search paging, prior-history bounds, titles, and cancellation', () => 
   it('preserves base results when a title read fails, annotates the code, and logs the full error', async () => {
     const mounted = await mount()
     const hit = createSession(mounted.ctx, 'hit', '/work')
-    const failure = new HarnessError('title backend failed', 'TITLE_BACKEND')
+    const failure = new LiwaError('title backend failed', 'TITLE_BACKEND')
     FakeQuery.titles.set(hit.id, failure)
     FakeQuery.sessionSearch = () => Promise.resolve({ items: [sessionHit(hit.id, '/work')] })
     const warn = vi.spyOn(mounted.ctx.logger, 'warn').mockImplementation(() => undefined)
@@ -1692,7 +1692,7 @@ describe('search paging, prior-history bounds, titles, and cancellation', () => 
     expect(text(result)).toContain('untitled (title unavailable: SESSION_QUERY_TOOL_FAILED)')
     expect(JSON.stringify(result)).not.toContain('title backend failed')
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('title backend failed'))
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('HarnessError'))
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('LiwaError'))
   })
 
   it('reports unknown title failures and preserves an Error without a stack', async () => {
@@ -1796,7 +1796,7 @@ describe('search paging, prior-history bounds, titles, and cancellation', () => 
   it('does not downgrade an authorization failure returned by title observation', async () => {
     const mounted = await mount()
     const hit = createSession(mounted.ctx, 'unauthorized-title-error', '/work')
-    const failure = new HarnessError(
+    const failure = new LiwaError(
       'title observation became unauthorized',
       'SESSION_QUERY_TOOL_UNAUTHORIZED',
     )

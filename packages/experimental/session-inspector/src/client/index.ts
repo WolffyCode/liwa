@@ -1,8 +1,8 @@
 /** Browser plugin contributing the Session Inspector Log sidebar tab. */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-client-locale/client'
-import type {} from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
+import type { Context } from '@liwa/cordis'
+import type {} from '@liwa/client-locale/client'
+import type {} from '@liwa/client-ui-sidebar-right/client'
 import { en, ja, es, fr, de, ru, pt, NS, zh } from './locales.ts'
 import { registerInspectorTab } from './views/index.ts'
 

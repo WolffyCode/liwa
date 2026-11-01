@@ -1,5 +1,5 @@
 /** Browser wire client: Remote transport and connection generations. */
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@liwa/cordis'
 import {
   ConnectionController,
   type ConnectionRecoveryConfig,
@@ -18,7 +18,7 @@ import { openConnectionWebSocket, type ConnectionWebSocket, type ConnectionWebSo
 export type { ConnectionInteractions } from '../connect-protocol.ts'
 export type { ConnectionWebSocket, ConnectionWebSocketFactory } from './socket.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Events {
     /**
      * A connection generation was established. Wire-derived caches must
@@ -121,8 +121,8 @@ export interface ClientTransportHooks {
 
 /** Page global carrying {@link ClientTransportHooks}; absent in the served web app. */
 interface ClientTransportGlobal {
-  __DSH_TRANSPORT__?: ClientTransportHooks
-  __DSH_CONNECTION_RECOVERY__?: unknown
+  __LIWA_TRANSPORT__?: ClientTransportHooks
+  __LIWA_CONNECTION_RECOVERY__?: unknown
 }
 
 /** Browser location fields used to classify loopback authority. */
@@ -343,10 +343,10 @@ export function installConnection(ctx: Context, options: ConnectionInstallOption
 export function apply(ctx: Context): void {
   const globals = globalThis as ClientTransportGlobal
   const pageLocation = typeof location === 'undefined' ? undefined : location
-  const transport = globals.__DSH_TRANSPORT__
+  const transport = globals.__LIWA_TRANSPORT__
   installConnection(ctx, {
     ...(transport === undefined ? {} : { transport }),
-    recovery: resolveConnectionConfig(globals.__DSH_CONNECTION_RECOVERY__),
+    recovery: resolveConnectionConfig(globals.__LIWA_CONNECTION_RECOVERY__),
     ...(pageLocation === undefined ? {} : { location: pageLocation }),
   })
 }

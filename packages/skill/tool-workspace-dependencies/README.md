@@ -1,15 +1,15 @@
 ---
-description: "The load_workspace_dependencies tool: absolute paths into a bundled Python, Node.js, and pnpm payload, used in place or installed under the Harness home."
+description: "The load_workspace_dependencies tool: absolute paths into a bundled Python, Node.js, and pnpm payload, used in place or installed under the Liwa home."
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-tool-workspace-dependencies
+# @liwa/tool-workspace-dependencies
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-Deployments that ship their own script runtimes (Desktop's primary runtime, or a container image layer) mount this tool so the agent can ask where the bundled Python, Node.js, and pnpm live instead of discovering a system interpreter. The tool returns absolute paths and recorded distribution versions; it changes neither `PATH` nor package-manager settings. The payload is either copied under the Harness home on first use (Desktop) or used where it lies (read-only carriers).
+Deployments that ship their own script runtimes (Desktop's primary runtime, or a container image layer) mount this tool so the agent can ask where the bundled Python, Node.js, and pnpm live instead of discovering a system interpreter. The tool returns absolute paths and recorded distribution versions; it changes neither `PATH` nor package-manager settings. The payload is either copied under the Liwa home on first use (Desktop) or used where it lies (read-only carriers).
 
 ## Table of Contents
 
@@ -25,12 +25,12 @@ Deployments that ship their own script runtimes (Desktop's primary runtime, or a
 <a id="use-this-package"></a>
 ## Use this package
 
-Mount the plugin beside the tool registry with the payload directory. Configuration validation requires a nonempty `source` and rejects empty `root` values before activation; both paths must be absolute. The bundled Office skills (`@deepseek-ai/dsh-skill-office`) reference this tool by name for their default interpreter.
+Mount the plugin beside the tool registry with the payload directory. Configuration validation requires a nonempty `source` and rejects empty `root` values before activation; both paths must be absolute. The bundled Office skills (`@liwa/skill-office`) reference this tool by name for their default interpreter.
 
 ### Minimal configuration
 
 ```yaml
-- name: '@deepseek-ai/dsh-tool-workspace-dependencies'
+- name: '@liwa/tool-workspace-dependencies'
   config:
     source: /path/to/primary-runtime
 ```
@@ -38,7 +38,7 @@ Mount the plugin beside the tool registry with the payload directory. Configurat
 | Field | Default | Meaning |
 |---|---|---|
 | `source` | required | Absolute payload directory carrying `runtime.json` and `dependencies/`. |
-| `root` | unset | Absolute installation directory under the Harness home. Set: the payload is copied there on the first call and reused while `runtime.json` is unchanged. Unset: the payload is validated and used in place; nothing is copied. |
+| `root` | unset | Absolute installation directory under the Liwa home. Set: the payload is copied there on the first call and reused while `runtime.json` is unchanged. Unset: the payload is validated and used in place; nothing is copied. |
 
 ### Payload layout
 
@@ -46,13 +46,13 @@ Mount the plugin beside the tool registry with the payload directory. Configurat
 
 On macOS and Linux, the builder retains `python` and `python3` as relative links to the sibling versioned interpreter (for example, `python3.12`). Installation preserves these two aliases and materializes other links. Alias validation requires the exact sibling filename and a regular target file; carriers that cannot preserve links, including Python wheels, retain supported regular command files. Windows keeps its ordinary `python.exe` file.
 
-The packaged `sdk` profile uses its bundled Python and Office skills by default; `DSH_PRIMARY_RUNTIME` overrides the resource location, and an empty value opts out. Source launches without a carrier default remain opt-in. See [runtime configuration](../../../python/sdk-runtime/README.md) for independent skill selection. Missing skill resources produce a startup warning; invalid or incomplete external runtime payloads fail the first tool call. Profile configuration changes require restarting the SDK process.
+The packaged `sdk` profile uses its bundled Python and Office skills by default; `LIWA_PRIMARY_RUNTIME` overrides the resource location, and an empty value opts out. Source launches without a carrier default remain opt-in. See [runtime configuration](../../../python/sdk-runtime/README.md) for independent skill selection. Missing skill resources produce a startup warning; invalid or incomplete external runtime payloads fail the first tool call. Profile configuration changes require restarting the SDK process.
 
 ### Build a carrier payload
 
-From a repository checkout with dependencies installed, `CI=true pnpm run prepare:primary-runtime --target linux-x64 --output /tmp/dsh-office` writes `primary-runtime/` and `office-skills/`. The shared [download lock](../../../scripts/primary-runtime/lock.json) also covers `linux-arm64`, `mac-arm64`, `mac-x64`, and `win-x64`. `--python-only` omits Node.js and pnpm; `--cache` selects the hash-verified archive cache. The entry executes interpreter and Office read/write checks only for a native target. Cross-target builds require those checks on the target host before deployment.
+From a repository checkout with dependencies installed, `CI=true pnpm run prepare:primary-runtime --target linux-x64 --output /tmp/liwa-office` writes `primary-runtime/` and `office-skills/`. The shared [download lock](../../../scripts/primary-runtime/lock.json) also covers `linux-arm64`, `mac-arm64`, `mac-x64`, and `win-x64`. `--python-only` omits Node.js and pnpm; `--cache` selects the hash-verified archive cache. The entry executes interpreter and Office read/write checks only for a native target. Cross-target builds require those checks on the target host before deployment.
 
-A container can copy both directories into an immutable image layer and set `DSH_PRIMARY_RUNTIME` to the absolute `primary-runtime/` path. The SDK queries that payload in place. Desktop uses the same builder and retains its Harness-home installation and signing checks.
+A container can copy both directories into an immutable image layer and set `LIWA_PRIMARY_RUNTIME` to the absolute `primary-runtime/` path. The SDK queries that payload in place. Desktop uses the same builder and retains its Liwa-home installation and signing checks.
 
 -----
 
@@ -87,7 +87,7 @@ A container can copy both directories into an immutable image layer and set `DSH
 
 #### What the model sees
 
-The model sees the generated [`load_workspace_dependencies` schema](../../../docs/tool-catalog.md#deepseek-aidsh-tool-workspace-dependencies).
+The model sees the generated [`load_workspace_dependencies` schema](../../../docs/tool-catalog.md#liwatool-workspace-dependencies).
 
 #### Token effect
 

@@ -2,8 +2,8 @@
 
 import type {
   ChangeRequestCheck, ChangeRequestKey, ChangeRequestRef, ChangeRequestSnapshot, ForgeFailure,
-} from '@deepseek-ai/dsh-experimental-forge/types'
-import type { BindingOrigin } from '@deepseek-ai/dsh-experimental-forge-session/types'
+} from '@liwa/experimental-forge/types'
+import type { BindingOrigin } from '@liwa/experimental-forge-session/types'
 import type {
   ForgeChangeRequestListState, ForgeCheckout, ForgePanelChangeRequest, ForgePanelState, ForgePanelWorktree, ForgeSessionWorktree,
   ForgeWorktreeCreation, ForgeWorktreeFailure,
@@ -104,19 +104,19 @@ export function checkout(overrides: Partial<ForgeCheckout> = {}): ForgeCheckout 
   return { root: '/work/repo', branch: 'main', linked: false, commit: '0a1b2c3', ...overrides }
 }
 
-/** Worktree the panel created at `/work/repo-dsh` from the checkout `/work/repo`, on a new branch started from `main`. */
+/** Worktree the panel created at `/work/repo-liwa` from the checkout `/work/repo`, on a new branch started from `main`. */
 export function created(overrides: Partial<ForgeSessionWorktree> = {}): ForgeSessionWorktree {
-  return { path: '/work/repo-dsh', branch: 'dsh/0a1b2c3d', from: 'main', baseCommit: 'c'.repeat(40), repositoryRoot: '/work/repo', ...overrides }
+  return { path: '/work/repo-liwa', branch: 'liwa/0a1b2c3d', from: 'main', baseCommit: 'c'.repeat(40), repositoryRoot: '/work/repo', ...overrides }
 }
 
-/** Running creation of the branch `dsh/0a1b2c3d` from `main`, in its preparation step, that a message waits for. */
+/** Running creation of the branch `liwa/0a1b2c3d` from `main`, in its preparation step, that a message waits for. */
 export function creation(overrides: Partial<ForgeWorktreeCreation> = {}): ForgeWorktreeCreation {
-  return { phase: 'prepare', branch: 'dsh/0a1b2c3d', from: 'main', held: true, ...overrides }
+  return { phase: 'prepare', branch: 'liwa/0a1b2c3d', from: 'main', held: true, ...overrides }
 }
 
-/** Failed attempt to create the branch `dsh/0a1b2c3d` from `main`, in its preparation step. */
+/** Failed attempt to create the branch `liwa/0a1b2c3d` from `main`, in its preparation step. */
 export function failure(overrides: Partial<ForgeWorktreeFailure> = {}): ForgeWorktreeFailure {
-  return { branch: 'dsh/0a1b2c3d', from: 'main', phase: 'prepare', message: 'fatal: invalid reference: main', ...overrides }
+  return { branch: 'liwa/0a1b2c3d', from: 'main', phase: 'prepare', message: 'fatal: invalid reference: main', ...overrides }
 }
 
 /**
@@ -150,7 +150,7 @@ export function requested(from: string | null = 'main', overrides: Partial<Forge
 }
 
 /**
- * Panel state of a Session that works in the worktree it created at `/work/repo-dsh` after that directory was removed.
+ * Panel state of a Session that works in the worktree it created at `/work/repo-liwa` after that directory was removed.
  * @param branchExists - whether the worktree's branch remains.
  * @param waiting - whether a message waits for the worktree to be restored or left.
  * @param overrides - further worktree facts, such as a running restoration.
@@ -159,8 +159,8 @@ export function removed(
   branchExists: boolean | null = true, waiting = false, overrides: Partial<ForgePanelWorktree> = {},
 ): ForgePanelState {
   return ready({
-    directory: '/work/repo-dsh',
-    checkout: { state: 'failed', message: 'fatal: cannot change to \'/work/repo-dsh\': No such file or directory' },
+    directory: '/work/repo-liwa',
+    checkout: { state: 'failed', message: 'fatal: cannot change to \'/work/repo-liwa\': No such file or directory' },
     worktree: worktree({ created: created(), missing: { branchExists }, waiting: waiting ? 'restoration' : null, ...overrides }),
   })
 }

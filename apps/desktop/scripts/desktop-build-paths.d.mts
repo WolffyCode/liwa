@@ -8,10 +8,10 @@ export interface DesktopTargetBuildPaths {
   readonly unnotarizedArtifacts: string
   readonly runtime: string
   readonly packageSet: string
-  readonly dsh: string
-  readonly dshPnpm: string
+  readonly liwa: string
+  readonly liwaPnpm: string
   readonly electron: string
-  readonly packedDsh: string
+  readonly packedLiwa: string
   readonly packedVendor: string
   readonly packedLandlock: string
   readonly downloads: string

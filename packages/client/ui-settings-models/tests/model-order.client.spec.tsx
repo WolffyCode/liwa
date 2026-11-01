@@ -78,7 +78,7 @@ describe.each(['deepseek', 'pi-ai'] as const)('%s model ordering', (family) => {
 
     const dataTransfer = transfer()
     fireEvent.dragStart(source, { dataTransfer })
-    expect(dataTransfer.setData).toHaveBeenCalledExactlyOnceWith('application/x-dsh-model-order', '1')
+    expect(dataTransfer.setData).toHaveBeenCalledExactlyOnceWith('application/x-liwa-model-order', '1')
     fireEvent.dragOver(destination, { dataTransfer })
     expect(changed).not.toHaveBeenCalled()
     fireEvent.drop(destination, { dataTransfer })

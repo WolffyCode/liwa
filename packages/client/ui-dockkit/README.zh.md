@@ -1,15 +1,15 @@
 ---
-description: "dsh Web 客户端的停靠布局套件：带可逆操作的标签格分裂树、planner、线性历史，以及渲染并驱动它的组件。"
+description: "liwa Web 客户端的停靠布局套件：带可逆操作的标签格分裂树、planner、线性历史，以及渲染并驱动它的组件。"
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-client-ui-dockkit
+# @liwa/client-ui-dockkit
 
 [English](README.md) | 中文
 
 ## 概述
 
-一套停靠布局套件：由带可逆操作的标签格组成的分裂树，以及渲染并驱动它的组件。Harness Web 客户端是它的第一个嵌入方；这里的代码对此一无所知。
+一套停靠布局套件：由带可逆操作的标签格组成的分裂树，以及渲染并驱动它的组件。灵鲸 Web 客户端是它的第一个嵌入方；这里的代码对此一无所知。
 
 > **内部引擎。** 本包之所以发布，是因为 Sidebar 以静态链接方式使用它，而非作为稳定 API：它的导出——`LayoutState`、`LayoutOp`、各 planner、`DockIntents`、`DockLabels`、`DockMode`——在任何版本都可能变化，并且没有任何一个出现在服务接口里（`ctx.sidebarRight` 只暴露操作，从不暴露布局快照或操作日志）。
 

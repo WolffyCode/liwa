@@ -30,7 +30,7 @@ describe.skipIf(MODE === 'record').each([false, true])('web e2e: native credenti
     page = await browser.newPage({ viewport: { width: 1440, height: 960 }, locale: ZH_BROWSER_LOCALE })
     // The shared menu golden uses the Linux shortcut profile on every test host.
     await page.addInitScript(() => { Object.defineProperty(navigator, 'platform', { value: 'Linux x86_64' }) })
-    if (desktop) await page.addInitScript(() => { Object.defineProperty(globalThis, 'dshDesktop', { value: { protocolVersion: 1 } }) })
+    if (desktop) await page.addInitScript(() => { Object.defineProperty(globalThis, 'liwaDesktop', { value: { protocolVersion: 1 } }) })
     tripwire = watchConsole(page)
   })
 
@@ -41,7 +41,7 @@ describe.skipIf(MODE === 'record').each([false, true])('web e2e: native credenti
 
   it('keeps the notice and Models settings without another credential dialog or credential write', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-onboarding-native'))
-    const credentialPath = join(scaffold.harnessHome, '.credentials.yaml')
+    const credentialPath = join(scaffold.liwaHome, '.credentials.yaml')
     const credentials = await readFile(credentialPath, 'utf8')
     await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
     const welcome = page.getByRole('dialog', { name: WELCOME_NOTICE_COPY.zh.title })

@@ -1,9 +1,9 @@
 /** Model tool descriptions and complete batch execution owned by plugins. @module */
-import { HarnessError } from '@deepseek-ai/dsh-llm'
-import type { ToolCallBlock, ToolCallId } from '@deepseek-ai/dsh-llm'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { UserMessage } from '@deepseek-ai/dsh-session'
-import type { PromptSection, ToolProviderResult } from '@deepseek-ai/dsh-system-prompt'
+import { LiwaError } from '@liwa/llm'
+import type { ToolCallBlock, ToolCallId } from '@liwa/llm'
+import type { Agent } from '@liwa/agent'
+import type { UserMessage } from '@liwa/session'
+import type { PromptSection, ToolProviderResult } from '@liwa/system-prompt'
 import type { ResolvedToolSet, ToolDefinition, ToolExecutionResult } from './contracts.ts'
 
 /** Model-call schemas produced by an executor. */
@@ -94,7 +94,7 @@ export class ToolBatchExecutionError extends Error {
 }
 
 /** The selected provider is missing or unloaded; another provider must not take its calls. */
-export class ToolExecutorUnavailableError extends HarnessError {
+export class ToolExecutorUnavailableError extends LiwaError {
   constructor() {
     super('The selected tool executor is unavailable. Load an executor in this composition before running the agent.', 'TOOL_EXECUTOR_UNAVAILABLE')
     this.name = 'ToolExecutorUnavailableError'

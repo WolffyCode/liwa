@@ -10,12 +10,12 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import Include from '@deepseek-ai/cordis-plugin-include'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import * as SessionStatsPlugin from '@deepseek-ai/dsh-session-stats'
+import { Context } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
+import Include from '@liwa/cordis-plugin-include'
+import SessionStore, { SessionId } from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import * as SessionStatsPlugin from '@liwa/session-stats'
 
 let root: string | undefined
 let context: Context | undefined
@@ -28,7 +28,7 @@ afterEach(async () => {
 })
 
 async function loadYaml(lines: readonly string[]): Promise<Context> {
-  root = await mkdtemp(join(tmpdir(), 'dsh-session-stats-loader-'))
+  root = await mkdtemp(join(tmpdir(), 'liwa-session-stats-loader-'))
   const configPath = join(root, 'cordis.yml')
   await writeFile(configPath, [...lines, ''].join('\n'))
 
@@ -37,9 +37,9 @@ async function loadYaml(lines: readonly string[]): Promise<Context> {
   await context.plugin(Loader)
   context.loader.builtins.include = Include
   const modules = new Map<string, unknown>([
-    ['@deepseek-ai/dsh-session', SessionStore],
-    ['@deepseek-ai/dsh-session-projection', SessionProjectionRegistry],
-    ['@deepseek-ai/dsh-session-stats', SessionStatsPlugin],
+    ['@liwa/session', SessionStore],
+    ['@liwa/session-projection', SessionProjectionRegistry],
+    ['@liwa/session-stats', SessionStatsPlugin],
   ])
   context.loader.internal = {
     version: 'v2',
@@ -59,9 +59,9 @@ async function loadYaml(lines: readonly string[]): Promise<Context> {
 describe('real Loader composition', () => {
   it('loads the shipped session-stats YAML shape and serves whole-log counts', async () => {
     const loaded = await loadYaml([
-      "- name: '@deepseek-ai/dsh-session'",
-      "- name: '@deepseek-ai/dsh-session-projection'",
-      "- name: '@deepseek-ai/dsh-session-stats'",
+      "- name: '@liwa/session'",
+      "- name: '@liwa/session-projection'",
+      "- name: '@liwa/session-stats'",
     ])
 
     const unloaded = [...loaded.loader.entries()]

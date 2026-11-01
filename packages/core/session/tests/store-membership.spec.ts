@@ -1,16 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { deepFreeze } from '@deepseek-ai/dsh-util-values'
+import { Context } from '@liwa/cordis'
+import { deepFreeze } from '@liwa/util-values'
 import SessionStore, {
   appendPluginRecord,
   Session,
   SessionId,
   SessionLogOffset,
   SessionSeq,
-} from '@deepseek-ai/dsh-session'
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
+} from '@liwa/session'
+import type { SessionEvent } from '@liwa/session'
 
-declare module '@deepseek-ai/dsh-session/types' {
+declare module '@liwa/session/types' {
   interface PluginRecordMap {
     'plugin:test/store-membership': { value: number }
   }

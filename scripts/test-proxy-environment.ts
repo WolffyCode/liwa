@@ -2,13 +2,13 @@
  * Remove the machine's proxy configuration from every Vitest process.
  *
  * A developer's Clash and a CI runner's squid both export `HTTP_PROXY` and its siblings. Now that
- * the harness honors them, an ambient value silently decides test outcomes: a request meant for a
+ * Liwa honors them, an ambient value silently decides test outcomes: a request meant for a
  * local fixture server is sent to a proxy that cannot resolve the fixture's hostname, and the
  * proxy's error page is recorded as the expected output. The same value also stands in for "what
  * the user exported" in any assertion about inherited proxy names.
  *
  * Clearing here gives every suite one known starting environment, so a test that needs a proxy sets
- * exactly the names it means to exercise. Suites that spawn a real `dsh` still clear the child's
+ * exactly the names it means to exercise. Suites that spawn a real `liwa` still clear the child's
  * environment themselves — they must hold whether or not a Vitest setup ran.
  *
  * One name resists this: `NODE_USE_ENV_PROXY`. Node samples the proxy environment when the process

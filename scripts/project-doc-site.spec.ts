@@ -28,7 +28,7 @@ afterEach(() => {
 })
 
 function fixture(): { root: string; pages: DocsPage[] } {
-  const root = mkdtempSync(join(tmpdir(), 'dsh-doc-site-'))
+  const root = mkdtempSync(join(tmpdir(), 'liwa-doc-site-'))
   roots.push(root)
   mkdirSync(join(root, 'docs'), { recursive: true })
   mkdirSync(join(root, 'packages'), { recursive: true })
@@ -76,7 +76,7 @@ describe('documentation site build', () => {
     { mode: 'SPA', mpa: false, expectedMpa: undefined },
     { mode: 'MPA', mpa: true, expectedMpa: 'true' },
   ])('$mode build removes stale output before writing', async ({ mpa, expectedMpa }) => {
-    const root = mkdtempSync(join(tmpdir(), 'dsh-doc-build-'))
+    const root = mkdtempSync(join(tmpdir(), 'liwa-doc-build-'))
     roots.push(root)
     const outDir = join(root, '.dist')
     const stale = join(outDir, 'stale.md')
@@ -91,8 +91,8 @@ describe('documentation site build', () => {
   })
 
   it('refuses to remove the site root or an outside directory', () => {
-    const root = mkdtempSync(join(tmpdir(), 'dsh-doc-build-root-'))
-    const outside = mkdtempSync(join(tmpdir(), 'dsh-doc-build-outside-'))
+    const root = mkdtempSync(join(tmpdir(), 'liwa-doc-build-root-'))
+    const outside = mkdtempSync(join(tmpdir(), 'liwa-doc-build-outside-'))
     roots.push(root, outside)
     writeFileSync(join(root, 'keep'), 'root\n')
     writeFileSync(join(outside, 'keep'), 'outside\n')
@@ -108,8 +108,8 @@ describe('documentation site build', () => {
   })
 
   it('unlinks a link-shaped output without removing its target', () => {
-    const root = mkdtempSync(join(tmpdir(), 'dsh-doc-build-link-root-'))
-    const outside = mkdtempSync(join(tmpdir(), 'dsh-doc-build-link-target-'))
+    const root = mkdtempSync(join(tmpdir(), 'liwa-doc-build-link-root-'))
+    const outside = mkdtempSync(join(tmpdir(), 'liwa-doc-build-link-target-'))
     roots.push(root, outside)
     const outDir = join(root, '.dist')
     const keep = join(outside, 'keep')
@@ -123,8 +123,8 @@ describe('documentation site build', () => {
   })
 
   it('refuses output whose nearest existing parent resolves outside the site root', () => {
-    const root = mkdtempSync(join(tmpdir(), 'dsh-doc-build-parent-link-root-'))
-    const outside = mkdtempSync(join(tmpdir(), 'dsh-doc-build-parent-link-target-'))
+    const root = mkdtempSync(join(tmpdir(), 'liwa-doc-build-parent-link-root-'))
+    const outside = mkdtempSync(join(tmpdir(), 'liwa-doc-build-parent-link-target-'))
     roots.push(root, outside)
     const linkedParent = join(root, 'linked')
     const outDir = join(linkedParent, 'missing', '.dist')
@@ -154,7 +154,7 @@ describe('publishableImage', () => {
     // Publication copies the bytes onto the site, so a reference reaching a
     // build-machine file must not be treated as an image the repository owns.
     const { root } = fixture()
-    const outside = mkdtempSync(join(tmpdir(), 'dsh-doc-site-outside-'))
+    const outside = mkdtempSync(join(tmpdir(), 'liwa-doc-site-outside-'))
     roots.push(outside)
     writeFileSync(join(outside, 'secret.png'), 'not really a png\n')
     symlinkSync(join(outside, 'secret.png'), join(root, 'packages/linked.png'))
@@ -192,7 +192,7 @@ describe('rewriteMarkdown', () => {
       repositoryRef: 'abc123',
     })).toBe(
       '[B](./reference/b.md#part) '
-      + '[source](https://github.com/deepseek-ai/deepseek-harness/blob/abc123/packages/tool.ts#L2) '
+      + '[source](https://github.com/WolffyCode/liwa/blob/abc123/packages/tool.ts#L2) '
       + '[web](https://example.com)\n',
     )
   })
@@ -218,7 +218,7 @@ describe('rewriteMarkdown', () => {
       pages,
       repoRoot: root,
       repositoryRef: 'abc123',
-    })).toBe('![logo](https://raw.githubusercontent.com/deepseek-ai/deepseek-harness/abc123/packages/logo.svg)\n')
+    })).toBe('![logo](https://raw.githubusercontent.com/WolffyCode/liwa/abc123/packages/logo.svg)\n')
   })
 
   it('hands an image to the placer and uses the URL it returns', () => {
@@ -297,7 +297,7 @@ describe('rewriteMarkdown', () => {
       repositoryRef: 'abc123',
     })).toBe(
       '[title](./reference/b.md "b.md") '
-      + '[escaped](https://github.com/deepseek-ai/deepseek-harness/blob/abc123/docs/x(y).md)\n',
+      + '[escaped](https://github.com/WolffyCode/liwa/blob/abc123/docs/x(y).md)\n',
     )
   })
 
@@ -361,7 +361,7 @@ describe('docsPages locale routes', () => {
       expect(projected).toContain('layout: false')
       expect(projected).toContain('http-equiv: refresh')
       expect(projected).toContain('content: 0; url=./guide/quickstart')
-      expect(projected).not.toContain('# DeepSeek Harness')
+      expect(projected).not.toContain('# Liwa')
     }
   })
 
@@ -437,9 +437,9 @@ describe('docsPages locale routes', () => {
 
   it('places the shared todo fragment alias on the translated todo section', () => {
     const catalog = readFileSync(resolve(repositoryRoot, 'docs/tool-catalog.zh.md'), 'utf8')
-    expect(catalog.match(/<a id="deepseek-aidsh-tool-todo"><\/a>/g)).toHaveLength(1)
+    expect(catalog.match(/<a id="liwatool-todo"><\/a>/g)).toHaveLength(1)
     expect(catalog).toContain(
-      '<a id="deepseek-aidsh-tool-todo"></a>\n\n## `@deepseek-ai/dsh-tool-todo`',
+      '<a id="liwatool-todo"></a>\n\n## `@liwa/tool-todo`',
     )
   })
 
@@ -603,7 +603,7 @@ describe('projectedPageContent', () => {
 
   it('omits the source-only body from locale home pages', () => {
     expect(projectedPageContent(
-      '---\nlayout: false\nhead:\n  - - meta\n    - http-equiv: refresh\n      content: 0; url=./guide/quickstart\n---\n\n# Harness\n\n[English](index.md) | 中文\n',
+      '---\nlayout: false\nhead:\n  - - meta\n    - http-equiv: refresh\n      content: 0; url=./guide/quickstart\n---\n\n# Liwa\n\n[English](index.md) | 中文\n',
       page(null),
     )).toBe('---\nlayout: false\nhead:\n  - - meta\n    - http-equiv: refresh\n      content: 0; url=./guide/quickstart\n---\n')
   })
@@ -621,7 +621,7 @@ describe('projectedPageContent', () => {
   })
 
   it('drops the repository badge every page links from its footer', () => {
-    const badge = '[![](https://img.shields.io/badge/powered_by-dsh-4D6BFE?style=flat-square)](https://github.com/deepseek-ai/deepseek-harness)'
+    const badge = '[![](https://img.shields.io/badge/powered_by-liwa-4D6BFE?style=flat-square)](https://github.com/WolffyCode/liwa)'
     expect(projectedPageContent(`# Guide\n\nBody.\n\n${badge}\n`, page('zh-guide')))
       .toBe('# Guide\n\nBody.\n')
   })
@@ -633,7 +633,7 @@ describe('projectedPageContent', () => {
   })
 
   it('rejects a locale home source without frontmatter', () => {
-    expect(() => projectedPageContent('# Harness\n', page(null)))
+    expect(() => projectedPageContent('# Liwa\n', page(null)))
       .toThrow('locale home source "docs/index.zh.md" must start with YAML frontmatter')
   })
 })
@@ -641,13 +641,13 @@ describe('projectedPageContent', () => {
 describe('rawMarkdownPageContent', () => {
   it('keeps the home body the rendered site omits and drops the VitePress frontmatter', () => {
     expect(rawMarkdownPageContent(
-      '---\nlayout: false\nhead:\n  - - meta\n    - http-equiv: refresh\n      content: 0; url=./guide/quickstart\n---\n\n# Harness\n\nEnglish | [中文](./index.md)\n\nBody.\n',
+      '---\nlayout: false\nhead:\n  - - meta\n    - http-equiv: refresh\n      content: 0; url=./guide/quickstart\n---\n\n# Liwa\n\nEnglish | [中文](./index.md)\n\nBody.\n',
       'docs/user/index.zh.md',
-    )).toBe('# Harness\n\nBody.\n')
+    )).toBe('# Liwa\n\nBody.\n')
   })
 
   it('drops the language switcher and repository badge like the rendered site', () => {
-    const badge = '[![](https://img.shields.io/badge/powered_by-dsh-4D6BFE?style=flat-square)](https://github.com/deepseek-ai/deepseek-harness)'
+    const badge = '[![](https://img.shields.io/badge/powered_by-liwa-4D6BFE?style=flat-square)](https://github.com/WolffyCode/liwa)'
     expect(rawMarkdownPageContent(`# Guide\n\nEnglish | [中文](./x)\n\nBody.\n\n${badge}\n`, 'docs/guide.md'))
       .toBe('# Guide\n\nBody.\n')
   })
@@ -662,7 +662,7 @@ describe('rawMarkdownPageContent', () => {
 
 describe('emitRawMarkdownPages', () => {
   function mirrorDir(): string {
-    const out = mkdtempSync(join(tmpdir(), 'dsh-doc-mirror-'))
+    const out = mkdtempSync(join(tmpdir(), 'liwa-doc-mirror-'))
     roots.push(out)
     return out
   }
@@ -760,7 +760,7 @@ describe('raw Markdown projection of the published manifest', () => {
   // Coverage instrumentation on a loaded CI runner stretches the full-manifest
   // emission and the 181-file link walk past vitest's 5s default.
   beforeAll(() => {
-    mirror = mkdtempSync(join(tmpdir(), 'dsh-doc-mirror-real-'))
+    mirror = mkdtempSync(join(tmpdir(), 'liwa-doc-mirror-real-'))
     emitRawMarkdownPages(mirror, { pages: docsPages, repoRoot: repositoryRoot, repositoryRef: 'master' })
   }, 60_000)
 
@@ -775,10 +775,10 @@ describe('raw Markdown projection of the published manifest', () => {
   })
 
   it('emits home pages with their bodies instead of the frontmatter stub', () => {
-    for (const route of ['index.md', 'en/index.md']) {
+    for (const [route, title] of [['index.md', '# 灵鲸'], ['en/index.md', '# Liwa']] as const) {
       const home = new TextDecoder().decode(readFileSync(join(mirror, route)))
       expect(home.startsWith('---'), route).toBe(false)
-      expect(home, route).toContain('# DeepSeek Harness')
+      expect(home, route).toContain(title)
     }
   })
 
@@ -815,7 +815,7 @@ function relativeTargets(markdown: string): string[] {
 }
 
 describe('llmsTxt', () => {
-  const site = { base: '/x/', title: 'DeepSeek Harness', description: '插件化 SDK' }
+  const site = { base: '/x/', title: 'Liwa', description: '插件化 SDK' }
 
   it('lists every sidebar page as a base-prefixed raw-Markdown link', () => {
     const text = llmsTxt(site)
@@ -833,7 +833,7 @@ describe('llmsTxt', () => {
 
   it('carries the site identity and the raw-Markdown convention', () => {
     const text = llmsTxt(site)
-    expect(text.startsWith('# DeepSeek Harness\n')).toBe(true)
+    expect(text.startsWith('# Liwa\n')).toBe(true)
     expect(text).toContain('> 插件化 SDK')
     expect(text).toMatch(/`\.md`/)
   })

@@ -3,20 +3,20 @@
  *
  * The served page renders the owner's Session, so the model it runs on and the reasoning effort it
  * asks for are facts about that Session rather than choices for the reader. This seat fills the
- * composer's own model position — where a DSH user looks for it — with that model's name, or its id
+ * composer's own model position — where a Liwa user looks for it — with that model's name, or its id
  * before the catalog arrives, and with the effort the next request would use. It renders through
  * {@link ViewerSeat}, whose `readOnly` switch is what keeps it a label.
  *
- * @module @deepseek-ai/dsh-experimental-liveshare/src/client/viewer-model
+ * @module @liwa/experimental-liveshare/src/client/viewer-model
  */
 
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
-import type { Context as ClientContext } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-api-remotes/client'
-import type {} from '@deepseek-ai/dsh-api-session-controller/client'
-import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
+import type { Context as ClientContext } from '@liwa/cordis'
+import type {} from '@liwa/api-remotes/client'
+import type {} from '@liwa/api-session-controller/client'
+import type {} from '@liwa/client-ui-renderer/client'
+import type { SessionId } from '@liwa/session/types'
+import type { PropsLocale } from '@liwa/client-ui-slots'
 import { NS } from './locales.ts'
 import { ViewerSeat, VIEWER_SEAT_PRIORITY } from './viewer-seat.tsx'
 

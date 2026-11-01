@@ -5,7 +5,7 @@
 
 [English](module-graph.md) | 中文
 
-`@deepseek-ai/dsh-*` harness 包之间的 peer 依赖关系。peer 表示消费端需要提供共享实例，不包括普通运行时 dependency 或仅开发期关系。该图按 `packages/<group>/<pkg>` 层级分组；边 `a --> b` 表示包 `a` peer 依赖包 `b`。名称中的 `@deepseek-ai/dsh-` 前缀已移除。
+`packages/` 下 `@liwa/*` 灵鲸包之间的 peer 依赖关系。peer 表示消费端需要提供共享实例，不包括普通运行时 dependency 或仅开发期关系。该图按 `packages/<group>/<pkg>` 层级分组；边 `a --> b` 表示包 `a` peer 依赖包 `b`。名称中的 `@liwa/` 前缀已移除。
 
 ```mermaid
 flowchart TD
@@ -82,8 +82,8 @@ flowchart TD
     pkg_subagent_acp["subagent-acp"]
     pkg_subagent_claude_code["subagent-claude-code"]
     pkg_subagent_codex["subagent-codex"]
-    pkg_subagent_dsh_sdk["subagent-dsh-sdk"]
     pkg_subagent_fork_in_process["subagent-fork-in-process"]
+    pkg_subagent_liwa_sdk["subagent-liwa-sdk"]
     pkg_subagent_spawn_in_process["subagent-spawn-in-process"]
     pkg_tool_subagent["tool-subagent"]
     pkg_tool_subagent_control["tool-subagent-control"]
@@ -234,7 +234,7 @@ flowchart TD
     pkg_agent_instructions["agent-instructions"]
     pkg_file_reference["file-reference"]
     pkg_file_reference_local["file-reference-local"]
-    pkg_harness_dev_context["harness-dev-context"]
+    pkg_liwa_dev_context["liwa-dev-context"]
     pkg_session_reference["session-reference"]
     pkg_time_context["time-context"]
     pkg_tmux_context["tmux-context"]
@@ -679,10 +679,10 @@ flowchart TD
   pkg_goal --> pkg_session_projection
   pkg_goal --> pkg_typert_protocol
   pkg_file_reference --> pkg_agent
-  pkg_harness_dev_context --> pkg_agent
-  pkg_harness_dev_context --> pkg_session
-  pkg_harness_dev_context --> pkg_session_projection
-  pkg_harness_dev_context --> pkg_system_prompt
+  pkg_liwa_dev_context --> pkg_agent
+  pkg_liwa_dev_context --> pkg_session
+  pkg_liwa_dev_context --> pkg_session_projection
+  pkg_liwa_dev_context --> pkg_system_prompt
   pkg_time_context --> pkg_agent
   pkg_time_context --> pkg_llm
   pkg_time_context --> pkg_session
@@ -1473,12 +1473,12 @@ flowchart TD
   pkg_client_test_runtime --> pkg_session
   pkg_client_test_runtime --> pkg_subagent
   pkg_client_test_runtime --> pkg_typert_protocol
-  pkg_subagent_dsh_sdk --> pkg_agent
-  pkg_subagent_dsh_sdk --> pkg_llm
-  pkg_subagent_dsh_sdk --> pkg_sdk_client
-  pkg_subagent_dsh_sdk --> pkg_session
-  pkg_subagent_dsh_sdk --> pkg_subagent
-  pkg_subagent_dsh_sdk --> pkg_subprocess
+  pkg_subagent_liwa_sdk --> pkg_agent
+  pkg_subagent_liwa_sdk --> pkg_llm
+  pkg_subagent_liwa_sdk --> pkg_sdk_client
+  pkg_subagent_liwa_sdk --> pkg_session
+  pkg_subagent_liwa_sdk --> pkg_subagent
+  pkg_subagent_liwa_sdk --> pkg_subprocess
   pkg_tool_schedule --> pkg_llm
   pkg_tool_schedule --> pkg_schedule
   pkg_tool_schedule --> pkg_subagent
@@ -1728,7 +1728,7 @@ flowchart TD
 | [`agent-default-model`](../packages/core/agent-default-model) | `core` | [`agent`](../packages/core/agent), [`llm`](../packages/llm/llm) |
 | [`goal`](../packages/goal/goal) | `goal` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`typert-protocol`](../packages/typert/protocol) |
 | [`file-reference`](../packages/context/file-reference) | `context` | [`agent`](../packages/core/agent) |
-| [`harness-dev-context`](../packages/context/harness-dev-context) | `context` | [`agent`](../packages/core/agent), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`system-prompt`](../packages/core/system-prompt) |
+| [`liwa-dev-context`](../packages/context/liwa-dev-context) | `context` | [`agent`](../packages/core/agent), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`system-prompt`](../packages/core/system-prompt) |
 | [`time-context`](../packages/context/time-context) | `context` | [`agent`](../packages/core/agent), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`util-time`](../packages/util/time) |
 | [`tmux-context`](../packages/context/tmux-context) | `context` | [`agent`](../packages/core/agent), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`shell`](../packages/shell/shell) |
 | [`deepseek-account`](../packages/credentials/deepseek-account) | `credentials` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm), [`util-values`](../packages/util/values) |
@@ -1866,7 +1866,7 @@ flowchart TD
 | [`schedule`](../packages/schedule/schedule) | `schedule` | [`agent`](../packages/core/agent), [`api-session-controller`](../packages/api/session-controller), [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`session-projection`](../packages/session/session-projection), [`storage-domain`](../packages/storage/storage-domain), [`subagent`](../packages/subagent/subagent), [`tools`](../packages/core/tools), [`typert-protocol`](../packages/typert/protocol), [`util-time`](../packages/util/time), [`workspace`](../packages/workspace/workspace) |
 | [`sdk-client`](../packages/sdk/client) | `sdk` | [`llm`](../packages/llm/llm), [`sdk-protocol`](../packages/sdk/protocol), [`session`](../packages/core/session) |
 | [`client-test-runtime`](../packages/test-support/client-runtime) | `test-support` | [`api-gateway`](../packages/api/gateway), [`api-session-controller`](../packages/api/session-controller), [`api-workspace-controller`](../packages/api/workspace-controller), [`attachment`](../packages/attachment/attachment), [`client-connection`](../packages/client/connection), [`client-hmr`](../packages/client/hmr), [`client-modules`](../packages/client/modules), [`client-store`](../packages/client/store), [`client-ui-chat`](../packages/client/ui-chat), [`client-ui-conversation`](../packages/client/ui-conversation), [`client-ui-renderer`](../packages/client/ui-renderer), [`client-ui-session`](../packages/client/ui-session), [`client-ui-settings`](../packages/client/ui-settings), [`client-ui-slots`](../packages/client/ui-slots), [`client-web`](../packages/client/web), [`remote-mock`](../packages/test-support/remote-mock), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`typert-protocol`](../packages/typert/protocol) |
-| [`subagent-dsh-sdk`](../packages/subagent/subagent-dsh-sdk) | `subagent` | [`agent`](../packages/core/agent), [`llm`](../packages/llm/llm), [`sdk-client`](../packages/sdk/client), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`subprocess`](../packages/subprocess/subprocess) |
+| [`subagent-liwa-sdk`](../packages/subagent/subagent-liwa-sdk) | `subagent` | [`agent`](../packages/core/agent), [`llm`](../packages/llm/llm), [`sdk-client`](../packages/sdk/client), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`subprocess`](../packages/subprocess/subprocess) |
 | [`tool-schedule`](../packages/schedule/tool-schedule) | `schedule` | [`llm`](../packages/llm/llm), [`schedule`](../packages/schedule/schedule), [`subagent`](../packages/subagent/subagent), [`tools`](../packages/core/tools) |
 | [`sdk-jsonrpc-server`](../packages/sdk/server) | `sdk` | [`agent`](../packages/core/agent), [`attachment`](../packages/attachment/attachment), [`llm`](../packages/llm/llm), [`llm-deepseek-api-key`](../packages/llm/llm-deepseek-api-key), [`schedule`](../packages/schedule/schedule), [`scope`](../packages/core/scope), [`sdk-protocol`](../packages/sdk/protocol), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`user-approval`](../packages/interaction/user-approval), [`user-questions`](../packages/interaction/user-questions), [`working-directory`](../packages/session/working-directory) |
 <!-- END GENERATED module-graph:packages -->

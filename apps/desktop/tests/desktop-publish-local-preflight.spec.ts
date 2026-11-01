@@ -12,7 +12,7 @@ it('checks the retained preset before approval and the approved preset before up
     const manifest = join(releases, '42', '2')
     await mkdir(manifest, { recursive: true })
     await writeFile(join(manifest, 'manifest.json'), JSON.stringify({ source: { preset: 'test' } }))
-    const env = { DSH_PACKAGING_CONFIG_DIR: configRoot, DSH_DESKTOP_RELEASES_DIR: releases,
+    const env = { LIWA_PACKAGING_CONFIG_DIR: configRoot, LIWA_DESKTOP_RELEASES_DIR: releases,
       DESKTOP_PACKAGE_SELECTION: JSON.stringify({ run: { id: 42, run_attempt: 2 } }) }
     await expect(preflightDesktopPublishLocal(env)).rejects.toThrow(`publication configuration is missing, unreadable or invalid JSON: ${join(configRoot, 'publishing', 'test.json')}`)
     await mkdir(join(configRoot, 'publishing'), { recursive: true })
@@ -28,8 +28,8 @@ it('checks the retained preset before approval and the approved preset before up
     await expect(preflightDesktopPublishLocal(approved)).resolves.toBeUndefined()
     await expect(preflightDesktopPublishLocal({ ...approved, DESKTOP_PUBLISH_ROUTE: '{"preset":"../test"}' })).rejects.toThrow('preset must be')
     await expect(preflightDesktopPublishLocal({ ...env, DESKTOP_PACKAGE_SELECTION: '{"run":{"id":"../42","run_attempt":2}}' })).rejects.toThrow('positive run ID')
-    await expect(preflightDesktopPublishLocal({ ...env, DSH_DESKTOP_RELEASES_DIR: '' })).rejects.toThrow('retained package manifest')
-    await expect(preflightDesktopPublishLocal({ ...env, DSH_PACKAGING_CONFIG_DIR: 'relative' })).rejects.toThrow('absolute machine')
+    await expect(preflightDesktopPublishLocal({ ...env, LIWA_DESKTOP_RELEASES_DIR: '' })).rejects.toThrow('retained package manifest')
+    await expect(preflightDesktopPublishLocal({ ...env, LIWA_PACKAGING_CONFIG_DIR: 'relative' })).rejects.toThrow('absolute machine')
   } finally {
     await rm(root, { recursive: true, force: true })
   }

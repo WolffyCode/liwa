@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-20-sidebar-retained-tab-layout.md
 /agent-note-stable-sidebar-tab-mounting-and-session-retention:
-  en: 79bf4b50c50b52d4
-  zh: cfd15cdb020ef7c8
+  en: 8dfbfa8b510cb2e9
+  zh: bed60a60fca5978e
 /agent-note-stable-sidebar-tab-mounting-and-session-retention/problem:
   en: fd5b83cd022f1696
   zh: fd14a1bc7f5d9119
@@ -18,17 +18,17 @@
   en: 60a4450a1a4f398c
   zh: cc0054505b973c91
 /agent-note-stable-sidebar-tab-mounting-and-session-retention/decision/provider-responsibilities:
-  en: a34c228751a1a329
-  zh: 8e8b962b55e7c68e
+  en: 074f19020c61428a
+  zh: 2eccd6e6a7e63612
 /agent-note-stable-sidebar-tab-mounting-and-session-retention/decision/retention-versus-recovery:
-  en: 61e4a975fea17a9a
-  zh: 911f4d1caab1efd0
+  en: 88453202556a38be
+  zh: 99cfbda7f2e8de84
 /agent-note-stable-sidebar-tab-mounting-and-session-retention/alternatives-considered:
   en: 84cfe7613657bfdb
   zh: 4a0a499eb5d36d22
 /agent-note-stable-sidebar-tab-mounting-and-session-retention/consequences:
-  en: 9569f8398823e0da
-  zh: 9b95fb2f5d53b963
+  en: 2950607f3ad6d0ec
+  zh: 3b4e7cd8e581e66a
 /agent-note-stable-sidebar-tab-mounting-and-session-retention/verification:
   en: 8d6fd48c494ba5f6
   zh: 1aa02f822f58d73b

@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-experimental-worktree",
+  "name": "@liwa/experimental-worktree",
   "description": "Creates a named Git worktree and changes the calling Session working directory",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -25,36 +25,36 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/experimental/worktree"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~",
-    "@deepseek-ai/dsh-timeout": "workspace:*"
+    "@liwa/schemastery": "workspace:~",
+    "@liwa/timeout": "workspace:*"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-fs": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/dsh-subprocess": "workspace:*",
-    "@deepseek-ai/dsh-working-directory": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/fs": "workspace:*",
+    "@liwa/sandbox": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/subprocess": "workspace:*",
+    "@liwa/working-directory": "workspace:*"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:*",
-    "@deepseek-ai/dsh-fs": "workspace:*",
-    "@deepseek-ai/dsh-fs-local": "workspace:*",
-    "@deepseek-ai/dsh-sandbox": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-local": "workspace:*",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-subprocess": "workspace:*",
-    "@deepseek-ai/dsh-subprocess-local": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-working-directory": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-loop-testkit": "workspace:*",
+    "@liwa/fs": "workspace:*",
+    "@liwa/fs-local": "workspace:*",
+    "@liwa/sandbox": "workspace:*",
+    "@liwa/sandbox-local": "workspace:*",
+    "@liwa/sandbox-policy": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/subprocess": "workspace:*",
+    "@liwa/subprocess-local": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/working-directory": "workspace:*"
   }
 }

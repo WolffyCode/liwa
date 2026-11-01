@@ -1,8 +1,8 @@
 /** File-provider metadata reads, target subscriptions, failures, and cancellation. */
-import { RemoteError } from '@deepseek-ai/dsh-client-test-runtime'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import type { RemoteFailure, RemoteResult } from '@deepseek-ai/dsh-typert-protocol'
-import { absoluteFileAddress, sessionFileAddress } from '@deepseek-ai/dsh-util-workspace-path'
+import { RemoteError } from '@liwa/client-test-runtime'
+import type { SessionId } from '@liwa/session/types'
+import type { RemoteFailure, RemoteResult } from '@liwa/typert-protocol'
+import { absoluteFileAddress, sessionFileAddress } from '@liwa/util-workspace-path'
 import type { WorkspaceFileStat } from '../src/types.ts'
 import { describe, expect, it, onTestFinished } from 'vitest'
 import { ChangeFeed } from '../src/client/change-feed.ts'
@@ -60,10 +60,10 @@ async function live(version = 'v0', bytes = 3) {
 
 describe('file provider — the address', () => {
   it.each([
-    ['another scope', 'dsh-resource://file/shared/x/w/a.txt'],
-    ['no path', 'dsh-resource://file/session/s1'],
-    ['an absolute address with no path', 'dsh-resource://file/absolute/'],
-    ['another resource type', 'dsh-resource://terminal/session/s1/1'],
+    ['another scope', 'liwa-resource://file/shared/x/w/a.txt'],
+    ['no path', 'liwa-resource://file/session/s1'],
+    ['an absolute address with no path', 'liwa-resource://file/absolute/'],
+    ['another resource type', 'liwa-resource://terminal/session/s1/1'],
     ['the retired file:// grammar', 'file://sessions/s1/w/a.txt'],
     ['a bare file URL', 'file:///w/a.txt'],
     ['another protocol', 'sidebar:guide'],

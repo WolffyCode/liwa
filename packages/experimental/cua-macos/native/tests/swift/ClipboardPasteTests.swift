@@ -8,7 +8,7 @@ import Testing
     let board = NSPasteboard.withUniqueName()
     defer { board.releaseGlobally() }
     let item = NSPasteboardItem()
-    let custom = NSPasteboard.PasteboardType("org.deepseek-harness.test.original")
+    let custom = NSPasteboard.PasteboardType("org.liwa.test.original")
     #expect(item.setString("original", forType: .string))
     #expect(item.setData(Data([1, 2, 3]), forType: custom))
     #expect(board.writeObjects([item]))

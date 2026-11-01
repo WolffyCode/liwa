@@ -1,7 +1,7 @@
-/** Durable attachment storage seam (`ctx.attachments`). @module @deepseek-ai/dsh-attachment */
+/** Durable attachment storage seam (`ctx.attachments`). @module @liwa/attachment */
 
 import { Buffer } from 'node:buffer'
-import { Context, Service } from '@deepseek-ai/cordis'
+import { Context, Service } from '@liwa/cordis'
 import { admitEncodedFile as admitFileInput, admitEncodedImages } from './admission.ts'
 import { AttachmentError, isAttachmentError as matchesAttachmentError } from './error.ts'
 import type {
@@ -45,7 +45,7 @@ export type {
   StoredImageAttachment,
 } from './types.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     attachments: AttachmentStore
   }
@@ -195,7 +195,7 @@ export abstract class AttachmentStore extends Service {
   abstract readImage(ref: ImageAttachmentRef, signal?: AbortSignal): Promise<StoredImageAttachment>
 
   /**
-   * Locate the provider-owned normalized object in the harness host filesystem.
+   * Locate the provider-owned normalized object in the Liwa host filesystem.
    * @param ref - durable normalized attachment reference.
    * @returns an absolute host path, or undefined when this backend is not host-file-backed.
    * @throws an AttachmentError when the durable reference is invalid.
@@ -257,7 +257,7 @@ export abstract class AttachmentStore extends Service {
   }
 
   /**
-   * Locate the verbatim stored file object in the harness host filesystem.
+   * Locate the verbatim stored file object in the Liwa host filesystem.
    * @param ref - durable file reference.
    * @returns an absolute host path, or undefined when this backend is not host-file-backed.
    * @throws an AttachmentError when the durable reference is invalid.

@@ -1,7 +1,7 @@
 /** Session binding vocabulary, the binding plugin record, and the host-only projection state. */
 
-import type { ChangeRequestRef, ChangeRequestUpdate } from '@deepseek-ai/dsh-experimental-forge/types'
-import type { SessionSeq } from '@deepseek-ai/dsh-session/types'
+import type { ChangeRequestRef, ChangeRequestUpdate } from '@liwa/experimental-forge/types'
+import type { SessionSeq } from '@liwa/session/types'
 
 /**
  * How a change request became bound to a Session: `created` when a
@@ -93,14 +93,14 @@ export interface Config {
   discoveryTimeoutMs?: number
 }
 
-declare module '@deepseek-ai/dsh-session/types' {
+declare module '@liwa/session/types' {
   interface PluginRecordMap {
     /** A caller or discovery action that binds, restores, or hides one change request. */
     'plugin:forge-session/binding': BindingRecord
   }
 }
 
-declare module '@deepseek-ai/dsh-session-projection/types' {
+declare module '@liwa/session-projection/types' {
   interface SessionProjectionMap {
     /** Every change request bound to the Session, hidden ones included, in binding order. */
     forgeChangeRequests: readonly BindingState[]

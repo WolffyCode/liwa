@@ -1,16 +1,16 @@
 import { createHash } from 'node:crypto'
 import { afterEach, expect, it, vi } from 'vitest'
-import { Context, Service } from '@deepseek-ai/cordis'
+import { Context, Service } from '@liwa/cordis'
 import { mkdtemp, rm, readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { createServer as createTcpServer, connect, Socket } from 'node:net'
 import { join } from 'node:path'
 import { createServer, IncomingMessage, ServerResponse } from 'node:http'
-import WebServer from '@deepseek-ai/dsh-host-webserver'
-import AuthorizationService from '@deepseek-ai/dsh-authorization'
-import type { AccountClientMetadata } from '@deepseek-ai/dsh-deepseek-account'
-import { LocalCredentialProvider } from '@deepseek-ai/dsh-credentials-local'
-import { credentialKey, credentialRef } from '@deepseek-ai/dsh-credentials'
+import WebServer from '@liwa/host-webserver'
+import AuthorizationService from '@liwa/authorization'
+import type { AccountClientMetadata } from '@liwa/deepseek-account'
+import { LocalCredentialProvider } from '@liwa/credentials-local'
+import { credentialKey, credentialRef } from '@liwa/credentials'
 import { Config, PlatformAccount } from '../src/index.ts'
 import { browserUrl, platformHeaders, platformOrigin, loginOrigin } from '../src/protocol.ts'
 
@@ -36,7 +36,7 @@ async function fixture(
   desktopPlatform: 'darwin' | 'win32' | null = null,
   balanceTimeoutMs = 30_000,
 ) {
-  const home = await mkdtemp(join(tmpdir(), 'dsh-account-'))
+  const home = await mkdtemp(join(tmpdir(), 'liwa-account-'))
   cleanups.push(() => rm(home, { recursive: true, force: true }))
   let init: Record<string, string> = {}
   const cancellations: Array<Record<string, string>> = []
@@ -342,11 +342,11 @@ it.each([
 
 it('preserves Platform business client_type in the completion URL', async () => {
   const f = await fixture()
-  f.exchangeResponse({ authorized_url: `${f.origin}/dsh/authorized?client_type=DSH` })
+  f.exchangeResponse({ authorized_url: `${f.origin}/dsh/authorized?client_type=Liwa` })
   await f.account.startSignIn(clientMetadata(), f.callbackOrigin, 'web')
   await f.wait('waiting-browser')
   const response = await fetch(f.callback(), { redirect: 'manual' })
-  expect(response.headers.get('location')).toBe(`${f.origin}/dsh/authorized?client_type=DSH&login_source=web`)
+  expect(response.headers.get('location')).toBe(`${f.origin}/dsh/authorized?client_type=Liwa&login_source=web`)
 })
 
 it.each([undefined, 'https://other.example/dsh/authorized', '/dsh/authorized'])('rejects an invalid exchange completion URL %s before storing a token', async (authorizedUrl) => {
@@ -576,7 +576,7 @@ it('adds private deployment cookies to every Platform request without exposing t
 
 it('rejects reserved, duplicate and malformed deployment headers without disclosing values', () => {
   for (const headers of [
-    { Authorization: 'secret-value' }, { 'X-DSH-Auth-Token': 'secret-value' }, { HOST: 'secret-value' }, { 'Content-Length': '5' },
+    { Authorization: 'secret-value' }, { 'X-Dsh-Auth-Token': 'secret-value' }, { HOST: 'secret-value' }, { 'Content-Length': '5' },
     { Cookie: 'secret-value', cookie: 'other' }, { 'bad name': 'secret-value' },
     { Cookie: 'secret-value\r\ninjected: x' },
   ]) {
@@ -1097,7 +1097,7 @@ it('returns no credentials when signed out or disposed', async () => {
   const f = await fixture()
   expect(await f.account.resolveToken('https://api.deepseek.com')).toBeUndefined()
   expect(await f.account.getPlatformSession()).toBeNull()
-  await f.account.cancelSignIn('missing' as import('@deepseek-ai/dsh-deepseek-account').SignInAttemptId)
+  await f.account.cancelSignIn('missing' as import('@liwa/deepseek-account').SignInAttemptId)
   await f.dispose()
   expect(await f.account.getProfile(clientMetadata())).toBeNull()
   expect(await f.account.getPlatformSession()).toBeNull()

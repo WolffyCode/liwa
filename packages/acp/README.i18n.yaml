@@ -4,22 +4,22 @@
 #   pnpm run verify-translation-pairing --write packages/acp/README.md
 /:
   en: 911abc3a94d688a1
-  zh: 1d7f8c7aa14c5767
+  zh: 3cda312ecb8e9278
 /acp-agent-client-protocol-automation:
-  en: e260145826e27c15
-  zh: a4bd9c26b6632ece
+  en: 95e0c8325f81c694
+  zh: 2bc3797807f6fe0d
 /acp-agent-client-protocol-automation/summary:
-  en: 10a6812f323c256c
-  zh: cea8fa5292019ac6
+  en: f5d013a9c209af6e
+  zh: 4a0a3d8417e872a8
 /acp-agent-client-protocol-automation/table-of-contents:
   en: 1eb35b015a6c423f
   zh: a8a3dceee2c9e943
 /acp-agent-client-protocol-automation/packages:
-  en: e8a1cf12592f3ad2
-  zh: 7b7e193f18294750
+  en: 104e12e36515e939
+  zh: 34a5a1eb454a9c2c
 /acp-agent-client-protocol-automation/related-documentation:
-  en: 8a6902df545370aa
-  zh: 898a2886286b3b98
+  en: fc2c6b119690685e
+  zh: 0dd678917f82cc2c
 /acp-agent-client-protocol-automation/dev-note:
   en: b75c8458928b72b9
   zh: 003ba4e17b4b5269

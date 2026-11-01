@@ -17,9 +17,9 @@ import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed } from 'vitest'
 import {
   SESSION_FORMAT_VERSION, SessionId as sessionId, type SessionEvent, type SessionHeader, type SessionId,
-} from '@deepseek-ai/dsh-session'
-import { SUBAGENT_DESCRIPTOR_VERSION } from '@deepseek-ai/dsh-subagent'
-import { createSystemMessage, createUserMessage } from '@deepseek-ai/dsh-llm'
+} from '@liwa/session'
+import { SUBAGENT_DESCRIPTOR_VERSION } from '@liwa/subagent'
+import { createSystemMessage, createUserMessage } from '@liwa/llm'
 import {
   captureStableAria, compareOrRefreshGolden, launchWebScaffold, seedSession, watchConsole,
   webSnapshotMode, type WebScaffold,
@@ -227,7 +227,7 @@ describe('web e2e: agent-preset selection', () => {
 
   beforeAll(async () => {
     // The failed declaration remains in the registry, outside the selectable options.
-    fixtureRoot = await realpath(await mkdtemp(join(tmpdir(), 'dsh-web-e2e-refusing-')))
+    fixtureRoot = await realpath(await mkdtemp(join(tmpdir(), 'liwa-web-e2e-refusing-')))
     await seedRefusingPreset(fixtureRoot)
     scaffold = await launchWebScaffold({
       agentPresets: { default: 'standard', definitions: [{ id: REFUSING_ID, name: 'Refusing mode', description: 'Refuses to start.', plugins: [{ name: pathToFileURL(join(fixtureRoot, REFUSING_ID, 'refuses.mjs')).href }] }] },
@@ -384,7 +384,7 @@ describe('web e2e: agent-preset selection', () => {
     // The current Session is still the Workspace's only blank, so New Session names it for
     // reuse and the Host runs it under the reset default instead of its kept Minimal mode.
     const currentSessionId = await page.evaluate(() =>
-      (JSON.parse(localStorage.getItem('dsh.sessions.current') ?? '{}') as { sessionId?: string }).sessionId)
+      (JSON.parse(localStorage.getItem('liwa.sessions.current') ?? '{}') as { sessionId?: string }).sessionId)
     expect(currentSessionId).toBeDefined()
     const creation = page.waitForResponse('**/api/session/create')
     await page.getByRole('button', { name: 'New session', exact: true }).last().click()

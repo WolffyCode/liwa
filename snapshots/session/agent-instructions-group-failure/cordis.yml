@@ -1,25 +1,25 @@
-# The snapshot harness supplies scenario-local .dsh and .agents roots.
+# The snapshot harness supplies scenario-local .liwa and .agents roots.
 - id: agent-default-model
-  name: '@deepseek-ai/dsh-agent-default-model'
+  name: '@liwa/agent-default-model'
   config:
     provider: deepseek-official
     model: deepseek-v4-pro
 
 - id: session-persistence-jsonl
-  name: '@deepseek-ai/dsh-session-persistence-jsonl'
+  name: '@liwa/session-persistence-jsonl'
   config:
-    root: !!js dshHomePath('sessions')
+    root: !!js liwaHomePath('sessions')
     compression: none
 
 - id: agent-instructions
-  name: '@deepseek-ai/dsh-agent-instructions'
+  name: '@liwa/agent-instructions'
   config:
     maxBytes: 65536
     projectRootMarkers:
-      - .dsh-project
+      - .liwa-project
 
 - id: system-prompt
-  name: '@deepseek-ai/dsh-system-prompt'
+  name: '@liwa/system-prompt'
   config:
     personaPrefix: |
       You are a coding assistant powered by the {{model}} model.

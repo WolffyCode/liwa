@@ -338,6 +338,7 @@ function normalizeUnions(input: readonly SchemaNode[]): SchemaNode[] {
  */
 export function schemaDigest(schema: CanonicalSchema): string {
   const version = schemaHasCompatibility(schema) ? 2 : 1
+  // The digest domain is baked into every recorded persistence digest, so it keeps the upstream spelling.
   return createHash('sha256').update(`dsh-persistence-schema-v${String(version)}\n`).update(JSON.stringify(schema)).digest('hex')
 }
 

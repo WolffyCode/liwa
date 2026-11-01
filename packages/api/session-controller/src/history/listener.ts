@@ -1,11 +1,11 @@
 /** Passive per-Session streams; subscriptions never acquire Session observations. */
 
-import type { Context } from '@deepseek-ai/cordis'
-import { Deque } from '@deepseek-ai/dsh-deque'
-import { SessionLogOffset } from '@deepseek-ai/dsh-session'
-import type { Session, SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
-import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
-import type { JsonValue } from '@deepseek-ai/dsh-util-values'
+import type { Context } from '@liwa/cordis'
+import { Deque } from '@liwa/deque'
+import { SessionLogOffset } from '@liwa/session'
+import type { Session, SessionEvent, SessionId } from '@liwa/session'
+import { RemoteError } from '@liwa/typert-protocol'
+import type { JsonValue } from '@liwa/util-values'
 import { entryFor } from '../history.ts'
 import type { SessionProjectionChange, SessionEventEntry } from '../types.ts'
 

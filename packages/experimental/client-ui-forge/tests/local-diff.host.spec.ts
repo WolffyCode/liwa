@@ -2,8 +2,8 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { Context } from '@deepseek-ai/cordis'
-import { FsError } from '@deepseek-ai/dsh-fs'
+import type { Context } from '@liwa/cordis'
+import { FsError } from '@liwa/fs'
 import { gitIn, inspectCheckout } from '../src/git.ts'
 import type { Inspection } from '../src/git.ts'
 import { aheadOf, DiffTooLarge, forkPoint, localChanges, localDiff, localText, NoForkPoint } from '../src/local-diff.ts'
@@ -23,7 +23,7 @@ afterEach(async () => {
 })
 
 async function directory(): Promise<string> {
-  const { path, remove } = await scratch('dsh-forge-diff-')
+  const { path, remove } = await scratch('liwa-forge-diff-')
   cleanups.push(remove)
   return path
 }

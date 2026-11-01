@@ -1,12 +1,12 @@
 /** React-free browser terminal state and reconnecting Remote-stream ownership. */
 import { preferredShell, rememberShell } from './shell-preference.ts'
 import type { TerminalInventory } from './inventory.ts'
-import { createSnapshotStore, type SnapshotStore } from '@deepseek-ai/dsh-client-store'
-import { Deque } from '@deepseek-ai/dsh-deque'
-import { RemoteStreamCarrierError, type ClientRemote, type RemoteStream } from '@deepseek-ai/dsh-api-gateway/client'
-import { RemoteError, remoteErrorOf, type RemoteResult, type RemoteStreamHandle, type RemoteUplinkWindow } from '@deepseek-ai/dsh-typert-protocol'
-import type {} from '@deepseek-ai/dsh-api-terminal-controller/remote'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import { createSnapshotStore, type SnapshotStore } from '@liwa/client-store'
+import { Deque } from '@liwa/deque'
+import { RemoteStreamCarrierError, type ClientRemote, type RemoteStream } from '@liwa/api-gateway/client'
+import { RemoteError, remoteErrorOf, type RemoteResult, type RemoteStreamHandle, type RemoteUplinkWindow } from '@liwa/typert-protocol'
+import type {} from '@liwa/api-terminal-controller/remote'
+import type { SessionId } from '@liwa/session/types'
 import type {
   TerminalInput, TerminalEnvironment, TerminalFrame,
   WebTerminalId, WebTerminalInfo,
@@ -18,7 +18,7 @@ export type TerminalRemote = ClientRemote['terminal']
 /** Product error identifiers translated by the terminal UI. */
 export type TerminalViewIssue = 'missingTerminal' | 'inputFull' | 'attachmentEnded' | 'invalidOutput' | 'terminalLimit'
 
-declare module '@deepseek-ai/dsh-typert-protocol' {
+declare module '@liwa/typert-protocol' {
   interface RemoteErrorDetailsMap {
     /** Client terminal failure preserved through the Remote stream supervisor. */
     'terminal/view': { readonly issue: TerminalViewIssue }

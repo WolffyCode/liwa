@@ -17,7 +17,7 @@
     "./search/locale/*.json": "./locale/search/*.json",
     "./review/locale/*.json": "./locale/review/*.json"
   },
-  "dsh": {
+  "liwa": {
     "bundle": {
       "patch": "./cordis.patch.yml"
     }

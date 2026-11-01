@@ -1,7 +1,7 @@
 /**
  * Minimal real-profile base for the three-mode acceptance driver.
  *
- * A normal `dsh` profile starts with real Session, controller, Agent, permissions and file tools in
+ * A normal `liwa` profile starts with real Session, controller, Agent, permissions and file tools in
  * a private temp home; one completed turn runs through that pipeline with a deterministic keyless
  * model, and the real `write` tool must have created a file inside the run's workspace before every
  * resource is reclaimed. Only the model is a fixture: execution, authorization, the controller and
@@ -17,24 +17,24 @@ import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execa } from 'execa'
 import { describe, expect, it } from 'vitest'
-import { resolveExampleLaunch } from '@deepseek-ai/dsh-loader-smoke'
+import { resolveExampleLaunch } from '@liwa/loader-smoke'
 
-const dshBinScript = fileURLToPath(new URL('../../../../apps/cli/src/bin.ts', import.meta.url))
+const liwaBinScript = fileURLToPath(new URL('../../../../apps/cli/src/bin.ts', import.meta.url))
 const tsconfigPath = fileURLToPath(new URL('../../../../tsconfig.json', import.meta.url))
 const fixturePlugin = pathToFileURL(fileURLToPath(new URL('./fixtures/base-llm.mjs', import.meta.url))).href
 
-/** One `dsh` run against the private home; the model is the only fixture. */
+/** One `liwa` run against the private home; the model is the only fixture. */
 async function run(cwd: string, home: string, args: readonly string[]) {
   const launch = resolveExampleLaunch({
-    srcBin: dshBinScript,
+    srcBin: liwaBinScript,
     configArgs: ['--profile', 'headless', ...args],
     tsconfigPath,
     // Source diagnostics use the hook the launch contract names; artifact acceptance uses built lib.
     sourceImport: 'tsx/esm',
     env: {
-      DSH_HOME: home,
-      DSH_AGENTS_HOME: join(cwd, '.agents'),
-      DSH_TELEMETRY_DISABLED: '1',
+      LIWA_HOME: home,
+      LIWA_AGENTS_HOME: join(cwd, '.agents'),
+      LIWA_TELEMETRY_DISABLED: '1',
       DEEPSEEK_API_KEY: '',
       NODE_OPTIONS: [
         process.env.NODE_OPTIONS,
@@ -84,15 +84,15 @@ describe('three-mode acceptance: real-profile base', () => {
   it('completes one real turn, writes through the real tool, and reclaims the workspace', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'liveshare-profile-'))
     try {
-      const home = join(cwd, '.dsh')
+      const home = join(cwd, '.liwa')
       const sessions = join(home, 'sessions')
       const profileDir = join(home, 'profiles', 'headless')
       await mkdir(profileDir, { recursive: true })
       await writeFile(join(profileDir, 'package.json'), JSON.stringify({
-        name: 'dsh-profile-headless',
+        name: 'liwa-profile-headless',
         private: true,
-        dependencies: { '@deepseek-ai/dsh-experimental-liveshare': 'workspace:^' },
-        dsh: { profile: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-headless'] } },
+        dependencies: { '@liwa/experimental-liveshare': 'workspace:^' },
+        liwa: { profile: { bundles: ['@liwa/base', '@liwa/headless'] } },
       }, undefined, 2) + '\n')
       await writeFile(join(profileDir, 'cordis.patch.yml'), [
         '- id: llm-deepseek',

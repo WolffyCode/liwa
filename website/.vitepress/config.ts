@@ -158,14 +158,14 @@ const sharedTheme: Pick<DefaultTheme.Config, 'search' | 'socialLinks' | 'editLin
     },
   },
   socialLinks: [
-    { icon: 'github', link: 'https://github.com/deepseek-ai/deepseek-harness' },
+    { icon: 'github', link: 'https://github.com/WolffyCode/liwa' },
   ],
   editLink: {
     pattern: ({ frontmatter }: PageData) => {
       const data: unknown = frontmatter
       const editSource: unknown = typeof data === 'object' && data !== null ? Reflect.get(data, 'editSource') : undefined
       if (typeof editSource !== 'string') throw new Error('Projected documentation page has no editSource frontmatter.')
-      return `https://github.com/deepseek-ai/deepseek-harness/edit/master/${editSource}`
+      return `https://github.com/WolffyCode/liwa/edit/main/${editSource}`
     },
     text: '在 GitHub 上编辑此页',
   },
@@ -176,7 +176,7 @@ const base = process.env.DOCS_BASE ?? '/'
 
 /** Site identity shared by the VitePress configuration and the llms.txt index. */
 const siteIdentity = {
-  title: 'DeepSeek Harness',
+  title: 'Liwa',
   description: '用于构建 Agent Harness 的插件化 SDK',
 }
 
@@ -186,7 +186,7 @@ const siteIdentity = {
  */
 const wordmark = readFileSync(resolve(import.meta.dirname, '../public/wordmark.svg'), 'utf8')
   .trim()
-  .replace('<svg ', '<svg class="dsh-wordmark" ')
+  .replace('<svg ', '<svg class="liwa-wordmark" ')
 
 /**
  * Head-injected styles for the site identity and sidebar scrollbar.
@@ -199,9 +199,9 @@ const wordmark = readFileSync(resolve(import.meta.dirname, '../public/wordmark.s
  * stay behind a query only Firefox answers.
  */
 const siteStyle = `
-.dsh-lockup { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
-.dsh-wordmark { display: block; height: 22px; width: auto; color: var(--vp-c-text-1); }
-.dsh-tag {
+.liwa-lockup { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.liwa-wordmark { display: block; height: 22px; width: auto; color: var(--vp-c-text-1); }
+.liwa-tag {
   display: inline-flex;
   align-items: center;
   border: 1px solid var(--vp-c-brand-soft);
@@ -259,7 +259,7 @@ const scrollbarScript = `
  * @returns Markup placed beside the navigation-bar home link.
  */
 function siteTitle(previewTag: string): string {
-  return `<span class="dsh-lockup">${wordmark}<span class="dsh-tag">${previewTag}</span></span>`
+  return `<span class="liwa-lockup">${wordmark}<span class="liwa-tag">${previewTag}</span></span>`
 }
 
 export default withMermaid({
@@ -328,7 +328,7 @@ export default withMermaid({
             const data: unknown = frontmatter
             const editSource: unknown = typeof data === 'object' && data !== null ? Reflect.get(data, 'editSource') : undefined
             if (typeof editSource !== 'string') throw new Error('Projected documentation page has no editSource frontmatter.')
-            return `https://github.com/deepseek-ai/deepseek-harness/edit/master/${editSource}`
+            return `https://github.com/WolffyCode/liwa/edit/main/${editSource}`
           },
           text: 'Edit this page on GitHub',
         },
@@ -343,7 +343,7 @@ export default withMermaid({
     publicDir: resolve(import.meta.dirname, '../public'),
     plugins: [
       {
-        name: 'deepseek-harness-doc-projector',
+        name: 'liwa-doc-projector',
         configureServer(server) {
           watchCanonicalDocs(server)
           serveRawMarkdown(server)

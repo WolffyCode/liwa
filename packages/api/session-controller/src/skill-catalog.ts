@@ -1,15 +1,15 @@
 /** Session-addressed, cold-readable skill catalog Remote. */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-agent-preset-registry/types'
-import { SessionQueryError } from '@deepseek-ai/dsh-session-query'
-import { isUserInvocable } from '@deepseek-ai/dsh-skill'
-import type {} from '@deepseek-ai/dsh-working-directory'
-import type { ScopeKey } from '@deepseek-ai/dsh-scope'
-import { Remote, RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
+import type { Context } from '@liwa/cordis'
+import type {} from '@liwa/agent-preset-registry/types'
+import { SessionQueryError } from '@liwa/session-query'
+import { isUserInvocable } from '@liwa/skill'
+import type {} from '@liwa/working-directory'
+import type { ScopeKey } from '@liwa/scope'
+import { Remote, RemoteError, TypertRemoteService } from '@liwa/typert-protocol'
 import type { SkillListRequest, SkillListValue } from './types.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     /** Host owner of the Session-addressed `skills` Remote namespace. */
     sessionSkillCatalog: SessionSkillCatalog
@@ -67,7 +67,7 @@ export class SessionSkillCatalog extends TypertRemoteService {
     if (skillRegistry === undefined) {
       throw new RemoteError(
         'gateway/internal',
-        'skill registry is absent: neither this session\'s agent preset nor the host composition mounts @deepseek-ai/dsh-skill',
+        'skill registry is absent: neither this session\'s agent preset nor the host composition mounts @liwa/skill',
         {},
       )
     }

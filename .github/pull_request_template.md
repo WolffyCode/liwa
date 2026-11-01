@@ -1,4 +1,4 @@
-<!-- 本 PR 正文按 .agents/skills/dsh-pr-description/SKILL.md 填写。 -->
+<!-- 本 PR 正文按 .agents/skills/liwa-pr-description/SKILL.md 填写。 -->
 
 ## Motivation
 

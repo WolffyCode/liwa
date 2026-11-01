@@ -1,9 +1,9 @@
 /**
- * Shared boot glue for `dsh` profiles, including the CLI packaged by the Python runtime wheel: load the gitignored
+ * Shared boot glue for `liwa` profiles, including the CLI packaged by the Python runtime wheel: load the gitignored
  * `.env`, install the fail-loud Loader guards, resolve the config path (snapshot-aware), load the
- * optional user patch layers from the Harness home (`~/.dsh`), expose its path resolver to
+ * optional user patch layers from the Liwa home (`~/.liwa`), expose its path resolver to
  * config expressions, and drive the Cordis Loader against a leaf `cordis.yml` until the tree settles.
- * @module @deepseek-ai/dsh-app-boot
+ * @module @liwa/app-boot
  */
 
 import { pathToFileURL } from 'node:url'
@@ -12,15 +12,15 @@ import { inspect, parseEnv } from 'node:util'
 import { captureStartupComposition, type StartupCompositionDiagnostic } from './startup-diagnostics.ts'
 export type { StartupCompositionDiagnostic, StartupPluginState, StartupServiceState } from './startup-diagnostics.ts'
 import { basename, dirname, isAbsolute, resolve } from 'node:path'
-import { Context, type Fiber, type FiberState } from '@deepseek-ai/cordis'
-import Loader, { type Entry, type EntryGroup, type EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
-import Include, { applyPatches, parseEntryYaml, stringifyEntryYaml, type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
-import Group from '@deepseek-ai/cordis-plugin-group'
-import { dshHomePath, resolveDshHome } from '@deepseek-ai/dsh-home-paths'
-import { createLaunchEnvironmentSnapshot, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
+import { Context, type Fiber, type FiberState } from '@liwa/cordis'
+import Loader, { type Entry, type EntryGroup, type EntryOptions } from '@liwa/cordis-plugin-loader'
+import Include, { applyPatches, parseEntryYaml, stringifyEntryYaml, type PatchOptions } from '@liwa/cordis-plugin-include'
+import Group from '@liwa/cordis-plugin-group'
+import { liwaHomePath, resolveLiwaHome } from '@liwa/home-paths'
+import { createLaunchEnvironmentSnapshot, type LaunchEnvironmentSnapshot } from '@liwa/launch-environment'
 export { readBundlePatches, readProfilePatches, resolveTelemetryPatch, type ProfileContext, type ProfilePnpmInvocation } from './profile-context.ts'
 export { sanitizeProfile } from './profile-sanitize.ts'
-export { getDshRuntimeVersion, evaluatePluginCompatibility, pluginCompatibilityWarning, type PluginCompatibility } from './plugin-compatibility.ts'
+export { getLiwaRuntimeVersion, evaluatePluginCompatibility, isLiwaRuntimePackage, pluginCompatibilityWarning, type PluginCompatibility } from './plugin-compatibility.ts'
 export {
   PROFILE_COMPATIBILITY_FILENAME, readProfileCompatibility, readProfileVersionExemptions,
   setProfileVersionExemption, validatePluginVersionExemption, type ProfileCompatibility,
@@ -39,10 +39,10 @@ export {
   type ProfilePluginLocation, type ProfilePluginDependency, type ProfilePluginInventory, type ProfilePluginReconciliation,
 } from './profile-plugins.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
-    /** Harness-home path resolver available to Loader `!!js` config expressions. */
-    dshHomePath?: typeof dshHomePath
+    /** Liwa-home path resolver available to Loader `!!js` config expressions. */
+    liwaHomePath?: typeof liwaHomePath
   }
 
   interface Events {
@@ -93,7 +93,7 @@ export { ResolutionRestartRequired } from './profile-resolution/resolver.ts'
  * Resolve the config to boot. Replay swaps a `cordis.yml` basename for
  * `cordis.snapshot.yml` in the same directory; every other mode keeps the path.
  * @param configPath - the requested config path (absolute, or relative to `cwd`).
- * @param snapshotMode - the bin's `$DSH_SNAPSHOT` value; only `'replay'` swaps the
+ * @param snapshotMode - the bin's `$LIWA_SNAPSHOT` value; only `'replay'` swaps the
  *   basename.
  * @param cwd - the base a relative `configPath` resolves against.
  * @returns the absolute path of the config to boot.
@@ -154,12 +154,12 @@ const BOOTSTRAP_NAMES = new Set([
 ])
 
 /** Name prefixes no discovered file may set. */
-const BOOTSTRAP_PREFIXES = ['DSH_', 'XDG_', 'DYLD_', 'BASH_FUNC_']
+const BOOTSTRAP_PREFIXES = ['LIWA_', 'XDG_', 'DYLD_', 'BASH_FUNC_']
 
 /**
- * The bootstrap names the Harness-home `.env` alone may set. A proxy chooses the route every
+ * The bootstrap names Liwa-home `.env` alone may set. A proxy chooses the route every
  * request takes, so the invoking directory's file — which arrives with a clone — keeps refusing
- * them; the home file is the user's own, and `DSH_HOME` is itself bootstrap-only, so no `.env` can
+ * them; the home file is the user's own, and `LIWA_HOME` is itself bootstrap-only, so no `.env` can
  * relocate this exemption. The CA and TLS names in the same group stay refused everywhere: they
  * change what is trusted, not where traffic goes.
  */
@@ -167,7 +167,7 @@ const HOME_LAYER_PROXY_NAMES = new Set(['HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY'
 
 /**
  * Whether a variable may come only from the inherited process environment
- * because it changes process, runtime, VCS, or network bootstrap. The Harness-home
+ * because it changes process, runtime, VCS, or network bootstrap. Liwa-home
  * file is additionally allowed {@link HOME_LAYER_PROXY_NAMES}.
  * @param name - the variable name.
  * @returns true when only the inherited environment may supply it.
@@ -183,7 +183,7 @@ function isBootstrapOnly(name: string): boolean {
  * @param binName - the diagnostic prefix on the thrown error.
  * @param dir - the directory whose `.env` to read.
  * @param warn - sink for the one-line unreadable-file diagnostic.
- * @param home - the resolved Harness home; when `dir` is it, {@link HOME_LAYER_PROXY_NAMES} are accepted.
+ * @param home - the resolved Liwa home; when `dir` is it, {@link HOME_LAYER_PROXY_NAMES} are accepted.
  * @returns the parsed entries, or `undefined` when the file is absent or unreadable.
  * @throws when the file declares a name {@link isBootstrapOnly} rejects and this layer may not set.
  */
@@ -222,21 +222,21 @@ function readEnvLayer(
 }
 
 /**
- * Load the product CLI's inherited > invoking-directory `.env` > Harness-home
- * `.env` snapshot. The Harness home resolves before either file; both files
+ * Load the product CLI's inherited > invoking-directory `.env` > Liwa-home
+ * `.env` snapshot. The Liwa home resolves before either file; both files
  * are checked before either is applied, and accepted values are materialized
  * without replacing inherited ones. The snapshot preserves which layer supplied each value.
  * @param binName - the diagnostic prefix on the diagnostics.
  * @param cwd - the invoking directory whose `.env` is the project layer.
  * @param warn - sink for the one-line misconfiguration diagnostics.
  * @returns this run's frozen environment snapshot.
- * @throws when either file declares a bootstrap-only variable, except {@link HOME_LAYER_PROXY_NAMES} in the Harness-home file.
+ * @throws when either file declares a bootstrap-only variable, except {@link HOME_LAYER_PROXY_NAMES} in Liwa-home file.
  */
 export function loadLayeredEnv(
   binName: string, cwd: string = process.cwd(),
   warn: (line: string) => void = line => void process.stderr.write(line),
 ): LaunchEnvironmentSnapshot {
-  const home = resolveDshHome()
+  const home = resolveLiwaHome()
   const inherited = { ...process.env } as Record<string, string>
   // Parse both layers first: a rejection must not leave one file applied.
   const project = readEnvLayer(binName, cwd, warn, home)
@@ -501,7 +501,7 @@ async function resume(ctx: Context, invalidated: readonly Entry[]): Promise<void
 
 /**
  * Load an optional patch-list file: a top-level YAML array of loader patch
- * entries (`@deepseek-ai/cordis-plugin-include`'s `PatchOptions`): id-targeted config
+ * entries (`@liwa/cordis-plugin-include`'s `PatchOptions`): id-targeted config
  * overrides and `insert` lists, with `!!js` expressions allowed. A missing
  * file means "no layer"; an unreadable, unparsable, or non-array file throws —
  * a present patch file that cannot apply is a misconfiguration and must fail
@@ -554,7 +554,7 @@ function anchorInsertedPluginNames(patches: PatchOptions[], file: string): Patch
 }
 /**
  * Parse one loader patch list: a top-level YAML array of
- * `@deepseek-ai/cordis-plugin-include` `PatchOptions` (id-targeted config overrides and
+ * `@liwa/cordis-plugin-include` `PatchOptions` (id-targeted config overrides and
  * `insert` lists, `!!js` expressions allowed). Every invalid field or value throws,
  * because a patch file that cannot be applied at all is a misconfiguration; a
  * single patch whose target row is absent stays a per-entry Loader warning, so
@@ -737,7 +737,7 @@ function groupedDump(
  * @param patches - initial app and user patches, applied in order.
  * @param bareModuleBaseUrl - optional installed-host base for bare package
  * names; relative names continue to resolve beside the configuration file.
- * @param binName - diagnostic prefix for a profile plugin denied by compatibility policy; defaults to `dsh`.
+ * @param binName - diagnostic prefix for a profile plugin denied by compatibility policy; defaults to `liwa`.
  * @returns the created root Include entry, or `undefined` when a surface
  * disposed the whole tree (taking the Loader service with it) while the
  * entry creation was in flight.
@@ -747,7 +747,7 @@ export async function mountRootInclude(
   absoluteConfigPath: string,
   patches: readonly PatchOptions[] = [],
   bareModuleBaseUrl?: string,
-  binName = 'dsh',
+  binName = 'liwa',
 ): Promise<Entry | undefined> {
   ctx.loader.builtins.include = bareModuleBaseUrl === undefined
     ? Include
@@ -764,7 +764,7 @@ export async function mountRootInclude(
     }
   // `cordis:group` alongside it: a group row is how a composition gives one
   // `isolate` realm to a provider and its consumers together, and an agent
-  // preset living outside this workspace cannot resolve `@deepseek-ai/cordis-plugin-group`
+  // preset living outside this workspace cannot resolve `@liwa/cordis-plugin-group`
   // by name. Both builtins load through the ambient module pipeline, so neither
   // depends on the included tree's own specifier resolution.
   ctx.loader.builtins.group = Group
@@ -944,7 +944,7 @@ const FIBER_FAILED = 3 as FiberState.FAILED
 const FIBER_DISPOSED = 4 as FiberState.DISPOSED
 
 /**
- * Entry ids whose presence defines a usable DSH application.
+ * Entry ids whose presence defines a usable Liwa application.
  *
  * The list is global rather than profile metadata. Missing or disabled ids do
  * not affect startup; an enabled listed entry must activate. The list covers
@@ -1142,7 +1142,7 @@ function startupDiagnostic(binName: string, failures: readonly InactiveEntry[], 
 }
 
 /**
- * Apply DSH startup policy to a settled Loader tree.
+ * Apply Liwa startup policy to a settled Loader tree.
  *
  * Inactive entries from the global required list reject startup. Other
  * inactive entries join that failure diagnostic, or produce one warning when
@@ -1227,7 +1227,7 @@ export async function boot(
   let stage = 'host preparation failed'
   try {
     ctx.baseUrl = pathToFileURL(dirname(absoluteConfigPath)).href + '/'
-    ctx.provide('dshHomePath', dshHomePath)
+    ctx.provide('liwaHomePath', liwaHomePath)
     await ctx.plugin(Loader)
     await prepare?.(ctx)
     stage = 'plugin tree failed to load'

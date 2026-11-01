@@ -6,7 +6,7 @@ import { load } from 'js-yaml'
 import { describe, expect, it } from 'vitest'
 
 const root = resolve(import.meta.dirname, '../..')
-const repository = 'deepseek-harness/deepseek-harness'
+const repository = 'WolffyCode/liwa'
 const selfhosted = ['self-hosted', 'linux', 'x64', 'vm-backup']
 const hosted = 'ubuntu-24.04'
 
@@ -45,7 +45,7 @@ function assertSharedPersistentStore(run: string | undefined): void {
 }
 
 const trustedPr = {
-  'vars.DSH_CI_FAILOVER_LINUX': 'selfhosted',
+  'vars.LIWA_CI_FAILOVER_LINUX': 'selfhosted',
   'github.repository': repository,
   'github.actor': 'maintainer',
   'github.event_name': 'pull_request',
@@ -55,16 +55,16 @@ const trustedPr = {
   'github.event.pull_request.user.login': 'contributor',
 }
 const trustedPush = {
-  'vars.DSH_CI_FAILOVER_LINUX': 'selfhosted',
+  'vars.LIWA_CI_FAILOVER_LINUX': 'selfhosted',
   'github.repository': repository,
   'github.actor': 'maintainer',
   'github.event_name': 'push',
   'github.ref': 'refs/heads/master',
 }
 const fallbackCases: Array<[string, Record<string, string | boolean>]> = [
-  ['unset switch', { ...trustedPr, 'vars.DSH_CI_FAILOVER_LINUX': '' }],
-  ['hosted switch', { ...trustedPr, 'vars.DSH_CI_FAILOVER_LINUX': 'hosted' }],
-  ['unknown switch', { ...trustedPr, 'vars.DSH_CI_FAILOVER_LINUX': 'true' }],
+  ['unset switch', { ...trustedPr, 'vars.LIWA_CI_FAILOVER_LINUX': '' }],
+  ['hosted switch', { ...trustedPr, 'vars.LIWA_CI_FAILOVER_LINUX': 'hosted' }],
+  ['unknown switch', { ...trustedPr, 'vars.LIWA_CI_FAILOVER_LINUX': 'true' }],
   ['fork PR', { ...trustedPr, 'github.event.pull_request.head.repo.full_name': 'outsider/fork', 'github.event.pull_request.head.repo.fork': true }],
   ['different head repository', { ...trustedPr, 'github.event.pull_request.head.repo.full_name': 'outsider/repo' }],
   ['fork flag', { ...trustedPr, 'github.event.pull_request.head.repo.fork': true }],
@@ -72,11 +72,11 @@ const fallbackCases: Array<[string, Record<string, string | boolean>]> = [
   ['Dependabot PR actor', { ...trustedPr, 'github.actor': 'dependabot[bot]' }],
   ['Dependabot push actor', { ...trustedPush, 'github.actor': 'dependabot[bot]' }],
   ['non-master push', { ...trustedPush, 'github.ref': 'refs/heads/topic' }],
-  ['tag push', { ...trustedPush, 'github.ref': 'refs/tags/dsh-v1.0.0' }],
+  ['tag push', { ...trustedPush, 'github.ref': 'refs/tags/liwa-v1.0.0' }],
   ['push in another repository', { ...trustedPush, 'github.repository': 'outsider/fork' }],
   ['dispatch on master', { ...trustedPush, 'github.event_name': 'workflow_dispatch' }],
   ['dispatch on topic', { ...trustedPush, 'github.event_name': 'workflow_dispatch', 'github.ref': 'refs/heads/topic' }],
-  ['dispatch on tag', { ...trustedPush, 'github.event_name': 'workflow_dispatch', 'github.ref': 'refs/tags/dsh-v1.0.0' }],
+  ['dispatch on tag', { ...trustedPush, 'github.event_name': 'workflow_dispatch', 'github.ref': 'refs/tags/liwa-v1.0.0' }],
   ['pull_request_target', { ...trustedPr, 'github.event_name': 'pull_request_target' }],
   ['missing PR payload', { ...trustedPush, 'github.event_name': 'pull_request' }],
 ]
@@ -96,7 +96,7 @@ for (const [file, jobIds] of [['release.yml', ['dependencies', 'pack']], ['relea
         it('routes trusted PRs and master pushes onto the existing Linux pool', () => {
           expect(evaluate(job['runs-on'], trustedPr)).toEqual(selfhosted)
           expect(evaluate(job['runs-on'], trustedPush)).toEqual(selfhosted)
-          expect(evaluate(job['runs-on'], { ...trustedPush, 'vars.DSH_CI_FAILOVER_LINUX': '' })).toBe(hosted)
+          expect(evaluate(job['runs-on'], { ...trustedPush, 'vars.LIWA_CI_FAILOVER_LINUX': '' })).toBe(hosted)
         })
         it.each(fallbackCases)('keeps %s hosted', (_name, context) => {
           expect(evaluate(job['runs-on'], context)).toBe(hosted)
@@ -144,16 +144,16 @@ for (const [file, jobIds] of [['release.yml', ['dependencies', 'pack']], ['relea
             expect(combined).toContain('verify-npm-install-layout')
             expect(combined).toContain('wait "$layout_pid"')
           } else {
-            const family = file === 'release.yml' ? 'dsh' : 'vendor'
-            const output = family === 'dsh' ? 'dist/npm' : 'dist/npm-vendor'
+            const family = file === 'release.yml' ? 'liwa' : 'vendor'
+            const output = family === 'liwa' ? 'dist/npm' : 'dist/npm-vendor'
             expect(job.steps[0]?.with?.['fetch-depth']).toBe(0)
             expect(commands).toContain('pnpm run release:verify --family ' + family)
-            expect(commands).toContain(family === 'dsh'
+            expect(commands).toContain(family === 'liwa'
               ? "${{ github.event_name == 'pull_request' && 'pnpm run build:artifacts --profile official' || 'pnpm run build:official' }}"
               : "${{ github.event_name == 'pull_request' && 'pnpm exec tsx scripts/compile-referenced-projects.ts host-libraries' || 'pnpm run build:lib:host' }}")
             expect(commands).toContain('pnpm run release:pack --family ' + family + ' --out ' + output + ' --concurrency 8')
             expect(commands).toContain('pnpm run release:verify-packed-install --family ' + family + ' --from ' + output
-              + (family === 'dsh' ? ' --from dist/npm-vendor --from dist/npm-landlock' : ''))
+              + (family === 'liwa' ? ' --from dist/npm-vendor --from dist/npm-landlock' : ''))
             expect(job.steps.at(-1)).toMatchObject({ uses: 'actions/upload-artifact@v7.0.1', with: { path: output + '/*', 'retention-days': 7 } })
           }
           expect(JSON.stringify(job)).not.toMatch(/secrets\.|release:publish|npm-publish/)

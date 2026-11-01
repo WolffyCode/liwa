@@ -2,7 +2,7 @@
 
 English | [中文](deepseek-llm-api-wire-extensions.zh.md)
 
-This reference defines every DeepSeek Harness-specific HTTP header and additive JSON field sent by [`@deepseek-ai/dsh-llm-deepseek`](../packages/llm/llm-deepseek/README.md) on `deepseek-official` Messages requests. It does not redefine fields owned by the upstream DeepSeek API. The provider-neutral LLM interface and `llm-pi-ai` do not implement these additions.
+This reference defines every Liwa-specific HTTP header and additive JSON field sent by [`@liwa/llm-deepseek`](../packages/llm/llm-deepseek/README.md) on `deepseek-official` Messages requests. It does not redefine fields owned by the upstream DeepSeek API. The provider-neutral LLM interface and `llm-pi-ai` do not implement these additions.
 
 The adapter sends the additions to its resolved `baseURL`, including a configured gateway. They remain outside `messages`, system prompts, and tool schemas, so they do not add model-input tokens or alter the model-visible prefix.
 
@@ -12,7 +12,7 @@ The adapter sends the additions to its resolved `baseURL`, including a configure
 |---|---|---|
 | HTTP field names | Lowercase kebab-case; HTTP matching remains case-insensitive | `user-agent`, `x-deepseek-harness-session-id` |
 | DeepSeek request-body extension fields | Snake case with the reserved `dsh_` prefix | `dsh_plugin_packages`, `dsh_session_log` |
-| DSH-owned nested JSON members | Camel case | `afterSeq`, `throughSeq`, `sessionId` |
+| Liwa-owned nested JSON members | Camel case | `afterSeq`, `throughSeq`, `sessionId` |
 | Tagged values | Kebab-case strings; durable events use `domain/action` | `session-log-deepseek/delivery-accepted` |
 
 Each body extension owns its `version` independently. A version applies only to the object that contains it; no compatibility or ordering relationship exists between versions of different fields. JSON member order is not part of the protocol.
@@ -24,7 +24,7 @@ The [`DeepSeekLlmApiExtensionRegistry`](../packages/llm/deepseek-llm-api-extensi
 | Header | Presence | Value |
 |---|---|---|
 | `user-agent` | Every provider HTTP request, including Files API operations | Application identity in `product/version (+url)` form; the default product is `deepseek-harness` |
-| `x-deepseek-harness-user-id` | Every authorized model request | The stable anonymous UUID for the resolved Harness home |
+| `x-deepseek-harness-user-id` | Every authorized model request | The stable anonymous UUID for the resolved Liwa home |
 | `x-deepseek-harness-session-id` | Model requests carrying a Session id | The exact request `sessionId` string |
 | `x-deepseek-harness-compact` | Model requests whose purpose is `compaction` | The literal string `1` |
 
@@ -40,7 +40,7 @@ After the configured endpoint returns HTTP 2xx, the adapter runs the prepared `a
 
 ## `dsh_plugin_packages`
 
-[`@deepseek-ai/dsh-plugin-package-inventory-deepseek`](../packages/llm/plugin-package-inventory-deepseek/README.md) contributes the complete active Loader-backed plugin package inventory. The field is enabled by default.
+[`@liwa/plugin-package-inventory-deepseek`](../packages/llm/plugin-package-inventory-deepseek/README.md) contributes the complete active Loader-backed plugin package inventory. The field is enabled by default.
 
 ```json
 {
@@ -48,7 +48,7 @@ After the configured endpoint returns HTTP 2xx, the adapter runs the prepared `a
     "version": 1,
     "packages": [
       {
-        "name": "@deepseek-ai/dsh-example",
+        "name": "@liwa/example",
         "version": "0.1.1-rc.2"
       }
     ]
@@ -73,7 +73,7 @@ An enabled inventory with no qualifying entries sends `packages: []`; disabling 
 
 ## `dsh_session_log`
 
-[`@deepseek-ai/dsh-session-log-deepseek`](../packages/session/session-log-deepseek/README.md) contributes one contiguous suffix of the canonical Session log. The field is enabled by default. It applies to a request with a live Session and at least one event; a direct request, a stale Session id, or an empty log omits the field, as does a request whose first pending event alone exceeds `maxBytes` or cannot be serialized; a composition disables it with `enabled: false`. The examples below use logical Session format 2 only to illustrate the wire fields; they do not identify the [current writer format](session-format-status.md).
+[`@liwa/session-log-deepseek`](../packages/session/session-log-deepseek/README.md) contributes one contiguous suffix of the canonical Session log. The field is enabled by default. It applies to a request with a live Session and at least one event; a direct request, a stale Session id, or an empty log omits the field, as does a request whose first pending event alone exceeds `maxBytes` or cannot be serialized; a composition disables it with `enabled: false`. The examples below use logical Session format 2 only to illustrate the wire fields; they do not identify the [current writer format](session-format-status.md).
 
 ```json
 {
@@ -157,6 +157,6 @@ Transport failures, non-2xx responses, and requests sent without extension field
 
 ## Exposure and receiver requirements
 
-The request headers expose the Harness application version, one anonymous Harness-home identity, and an optional Session identity. `dsh_plugin_packages` exposes active npm package names and versions. Unless a composition disables it, `dsh_session_log` may expose the Session working directory, system-prompt snapshots, user and Assistant content, embedded Assistant streams, failed-attempt output, tool arguments and results, compaction summaries, feedback, and plugin-owned events. Adapter API keys are not Session events and therefore do not enter the field. A gateway selected through `baseURL` receives the same values as the official endpoint.
+The request headers expose the Liwa application version, one anonymous Liwa-home identity, and an optional Session identity. `dsh_plugin_packages` exposes active npm package names and versions. Unless a composition disables it, `dsh_session_log` may expose the Session working directory, system-prompt snapshots, user and Assistant content, embedded Assistant streams, failed-attempt output, tool arguments and results, compaction summaries, feedback, and plugin-owned events. Adapter API keys are not Session events and therefore do not enter the field. A gateway selected through `baseURL` receives the same values as the official endpoint.
 
 Receivers address extension fields by name, dispatch each field by its own `version`, preserve distinct package versions, and ignore JSON member ordering. A session-log receiver validates the contiguous sequence range before interpreting event types. An unrecognized canonical event without `ignorable: true` prevents lossless reconstruction. The base request remains usable without either the registry or a particular contribution; field absence means that contribution did not apply to that request. While a session-log backlog drains, `throughSeq` trails the Session's latest event, so a 2xx does not show that the receiver holds the current log.

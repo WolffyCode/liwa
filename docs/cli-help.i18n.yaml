@@ -5,30 +5,30 @@
 /:
   en: d11ca88bdc409249
   zh: d11ca88bdc409249
-/dsh-cli-help:
-  en: b7174eab3476579d
-  zh: 5ddab967320e3cff
-/dsh-cli-help/contents:
-  en: 00308bcc6dc90afd
-  zh: 16f7442b76686a02
-/dsh-cli-help/dsh:
-  en: e0695abcf7d8b521
-  zh: 712c23b3c8a115ca
-/dsh-cli-help/dsh-plugin:
-  en: adad99c125d0ac51
-  zh: f11024971184f737
-/dsh-cli-help/dsh-acp:
-  en: bcb0f84577ce5f03
-  zh: 4382e617006849db
-/dsh-cli-help/dsh-headless:
-  en: 878a1dd78017964d
-  zh: bb43d91b4beb9bda
-/dsh-cli-help/dsh-sdk:
-  en: 701f239c5157dedb
-  zh: ee11be2932b05ce4
-/dsh-cli-help/dsh-sdk-minimal:
-  en: 8f0d7548d299ffd3
-  zh: fa2262e70d6819a0
-/dsh-cli-help/dsh-web:
-  en: 5d073104e8954cc8
-  zh: 91cd28f7c6ac96ac
+/liwa-cli-help:
+  en: 61c3711221599eaf
+  zh: c8db4819685a2ace
+/liwa-cli-help/contents:
+  en: b9c1bc5d10fc9ae5
+  zh: 36b983dcd67403bb
+/liwa-cli-help/liwa:
+  en: 6e378bdef10b56a2
+  zh: 80b63c70e0a76539
+/liwa-cli-help/liwa-plugin:
+  en: 7d917912c5cb13ba
+  zh: d652a01867236c15
+/liwa-cli-help/liwa-acp:
+  en: d45858a8db89c5b0
+  zh: 24689d6f3138fb5d
+/liwa-cli-help/liwa-headless:
+  en: a32ba49919f06c38
+  zh: 59577d8add5fb501
+/liwa-cli-help/liwa-sdk:
+  en: 9bf3807a4cdb8165
+  zh: dc790af391f5aeb3
+/liwa-cli-help/liwa-sdk-minimal:
+  en: 109bb5464965a366
+  zh: bc7495a33afd7014
+/liwa-cli-help/liwa-web:
+  en: e9cb2d48f1b8fd79
+  zh: 8bebf4066e1c6dc9

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * The reader page's own workspace-file claim: the tab type it registers for
- * `dsh-resource://file/**`, and the notice its body states.
+ * `liwa-resource://file/**`, and the notice its body states.
  *
  * The bench boots the shipped right Sidebar (the type registry and the seat that resolves an address
  * through it) and the resources face it pins through, then mounts the viewer module, so the
@@ -10,16 +10,16 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, waitFor } from '@testing-library/react'
-import { SlotTestRuntime } from '@deepseek-ai/dsh-client-test-runtime'
-import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import { apply as resourcesApply, inject as resourcesInject } from '@deepseek-ai/dsh-client-resources/src/client/index.ts'
-import { apply as sidebarApply, inject as sidebarInject } from '@deepseek-ai/dsh-client-ui-sidebar-right/src/client/index.ts'
+import { SlotTestRuntime } from '@liwa/client-test-runtime'
+import { LocaleRuntime } from '@liwa/client-locale/client'
+import type { SessionId } from '@liwa/session/types'
+import { apply as resourcesApply, inject as resourcesInject } from '@liwa/client-resources/src/client/index.ts'
+import { apply as sidebarApply, inject as sidebarInject } from '@liwa/client-ui-sidebar-right/src/client/index.ts'
 import { en, NS, zh } from '../src/client/locales.ts'
 import { apply, inject } from '../src/client/viewer-share-path.tsx'
 
 const SESSION = 'reader' as SessionId
-const ADDRESS = `dsh-resource://file/session/${SESSION}/src/a.ts`
+const ADDRESS = `liwa-resource://file/session/${SESSION}/src/a.ts`
 const UNAVAILABLE = '此页面无法打开工作区文件：分享提供的是文件路径，不是文件内容。'
 const SHORTCUT_CATALOG: readonly never[] = []
 let runtime: SlotTestRuntime | undefined
@@ -62,7 +62,7 @@ describe('viewer share-path claim', () => {
     const h = await boot()
     const [definition] = h.rt.ctx.sidebarRightTabs.candidates(ADDRESS)
     expect(definition).toMatchObject({
-      kind: 'liveshare-share-path', patterns: ['dsh-resource://file/**'], priority: 'builtin',
+      kind: 'liveshare-share-path', patterns: ['liwa-resource://file/**'], priority: 'builtin',
     })
     expect(definition?.title(ADDRESS)).toBe('a.ts')
     expect(h.rt.ctx.sidebarRightTabs.claim(ADDRESS)).toEqual({
@@ -75,7 +75,7 @@ describe('viewer share-path claim', () => {
     const [definition] = h.rt.ctx.sidebarRightTabs.candidates(ADDRESS)
 
     // A directory-shaped address has no basename to show, so the address is the title.
-    const directory = `dsh-resource://file/session/${SESSION}/src/`
+    const directory = `liwa-resource://file/session/${SESSION}/src/`
     expect(definition?.title(directory)).toBe(directory)
   })
 
@@ -84,8 +84,8 @@ describe('viewer share-path claim', () => {
     const [definition] = h.rt.ctx.sidebarRightTabs.candidates(ADDRESS)
 
     // Decoding a malformed sequence fails; the reader still sees the name the address states.
-    expect(definition?.title('dsh-resource://file/session/x/100%.ts')).toBe('100%.ts')
-    expect(definition?.title('dsh-resource://file/session/x/a%20b.ts')).toBe('a b.ts')
+    expect(definition?.title('liwa-resource://file/session/x/100%.ts')).toBe('100%.ts')
+    expect(definition?.title('liwa-resource://file/session/x/a%20b.ts')).toBe('a b.ts')
   })
 
   it('states in the tab why this page cannot show the file', async () => {

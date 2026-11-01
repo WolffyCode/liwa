@@ -1,5 +1,5 @@
 /**
- * User patch-layer behavior of `dsh-app-boot`: the optional patch-list loader
+ * User patch-layer behavior of `liwa-app-boot`: the optional patch-list loader
  * (a profile's `cordis.patch.yml`) and `boot()` applying the user layer over
  * a real Loader tree with live file watching.
  */
@@ -9,17 +9,17 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { FSWatcher, type ChokidarOptions } from 'chokidar'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import Hmr from '../src/index.ts'
-import Timer from '@deepseek-ai/cordis-plugin-timer'
+import Timer from '@liwa/cordis-plugin-timer'
 import {
   boot,
   loadOptionalPatches,
   PROFILE_PATCH_FILENAME,
   reconcileProfilePatches,
-} from '@deepseek-ai/dsh-app-boot'
+} from '@liwa/app-boot'
 
-const NAME = 'dsh-test-bin'
+const NAME = 'liwa-test-bin'
 
 const configWatch = vi.hoisted(() => ({
   create: undefined as ((paths: string | string[], options?: ChokidarOptions) => FSWatcher | undefined) | undefined,
@@ -39,7 +39,7 @@ afterAll(() => {
 })
 
 const tmp = (): string => {
-  const dir = mkdtempSync(join(tmpdir(), 'dsh-user-patches-'))
+  const dir = mkdtempSync(join(tmpdir(), 'liwa-user-patches-'))
   tempRoots.push(dir)
   return dir
 }

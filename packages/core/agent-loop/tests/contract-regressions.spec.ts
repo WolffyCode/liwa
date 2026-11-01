@@ -1,18 +1,18 @@
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import LlmRuntime, { type RequestMessage, createUserMessage, ToolCallId, LlmError, MessageSource, ProviderRequestId, StreamChunk  } from '@deepseek-ai/dsh-llm'
-import type { ContextFormed } from '@deepseek-ai/dsh-llm'
-import SessionStore, { Session, SessionEvent, SessionId, TurnEndReason, type UserMessage } from '@deepseek-ai/dsh-session'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime, { type PostToolDecision } from '@deepseek-ai/dsh-tools'
-import { defineContentToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import { Context } from '@liwa/cordis'
+import LlmRuntime, { type RequestMessage, createUserMessage, ToolCallId, LlmError, MessageSource, ProviderRequestId, StreamChunk  } from '@liwa/llm'
+import type { ContextFormed } from '@liwa/llm'
+import SessionStore, { Session, SessionEvent, SessionId, TurnEndReason, type UserMessage } from '@liwa/session'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime, { type PostToolDecision } from '@liwa/tools'
+import { defineContentToolFixture } from '@liwa/tool-testkit'
+import AgentRegistry, { type Agent } from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import SessionProjectionRegistry from '@liwa/session-projection'
 import { MockAdapter, textResponse, toolCallResponse } from './mock-adapter.ts'
 
-declare module '@deepseek-ai/dsh-llm' {
+declare module '@liwa/llm' {
   interface MessageSourceMap {
     'test': { kind: 'test' } & ContextFormed
   }

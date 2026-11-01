@@ -1,5 +1,5 @@
 /**
- * Profile machinery of `dsh-app-boot`: directory resolution and init,
+ * Profile machinery of `liwa-app-boot`: directory resolution and init,
  * manifest round-trips, two-anchor bundle resolution, patch-layer loading,
  * empty-root composition, and runtime package resolution.
  */
@@ -15,7 +15,7 @@ import { afterAll, describe, expect, it, onTestFinished, vi } from 'vitest'
 import {
   composeEntries,
   createRuntimeResolution,
-  getDshRuntimeVersion,
+  getLiwaRuntimeVersion,
   initProfile,
   loadProfile,
   loadProfileDirectory,
@@ -31,7 +31,7 @@ import {
   type Profile,
   type RuntimeResolution,
 } from '../src/index.ts'
-import { PROFILE_TEMPLATES } from '@deepseek-ai/dsh-official-bundles'
+import { PROFILE_TEMPLATES } from '@liwa/official-bundles'
 import { installRuntimeInterception } from '../src/profile-resolution/resolver.ts'
 
 const tempRoots: string[] = []
@@ -40,7 +40,7 @@ afterAll(() => {
 })
 
 const tmp = (): string => {
-  const dir = realpathSync.native(mkdtempSync(join(tmpdir(), 'dsh-profile-')))
+  const dir = realpathSync.native(mkdtempSync(join(tmpdir(), 'liwa-profile-')))
   tempRoots.push(dir)
   return dir
 }
@@ -48,7 +48,7 @@ const tmp = (): string => {
 /** Stage a fake installed app: package.json with deps and a node_modules holding bundles. */
 function stageInstallation(
   bundles: Record<string, { patch?: string; deps?: Record<string, string>; platforms?: string[] }>,
-  appName = 'dsh-app',
+  appName = 'liwa-app',
 ): string {
   const root = tmp()
   const appDir = join(root, 'app')
@@ -64,7 +64,7 @@ function stageInstallation(
       type: 'module',
       main: './index.js',
       dependencies: spec.deps ?? {},
-      ...spec.patch === undefined ? {} : { dsh: { bundle: { patch: './cordis.patch.yml', ...spec.platforms === undefined ? {} : { platforms: spec.platforms } } } },
+      ...spec.patch === undefined ? {} : { liwa: { bundle: { patch: './cordis.patch.yml', ...spec.platforms === undefined ? {} : { platforms: spec.platforms } } } },
     }))
     writeFileSync(join(dir, 'index.js'), `export const packageName = ${JSON.stringify(name)}\n`)
     if (spec.patch !== undefined) writeFileSync(join(dir, 'cordis.patch.yml'), spec.patch)
@@ -229,15 +229,15 @@ describe('initProfile', () => {
   it('creates manifest, user patch layer, and pnpm workspace once, never overwriting', () => {
     const home = tmp()
     const dir = resolveProfileDir('tui', home)
-    initProfile(dir, ['@deepseek-ai/dsh-base'])
+    initProfile(dir, ['@liwa/base'])
     const manifest = readProfileManifest('t', dir)
-    expect(manifest.dsh?.profile?.bundles).toEqual(['@deepseek-ai/dsh-base'])
+    expect(manifest.liwa?.profile?.bundles).toEqual(['@liwa/base'])
     expect(readFileSync(join(dir, PROFILE_PATCH_FILENAME), 'utf8')).toContain('[]')
     expect(readFileSync(join(dir, 'pnpm-workspace.yaml'), 'utf8')).toContain('nodeLinker: hoisted')
     // Re-init keeps user edits.
     writeFileSync(join(dir, PROFILE_PATCH_FILENAME), '- id: x\n  config: {}\n')
     initProfile(dir, ['other'])
-    expect(readProfileManifest('t', dir).dsh?.profile?.bundles).toEqual(['@deepseek-ai/dsh-base'])
+    expect(readProfileManifest('t', dir).liwa?.profile?.bundles).toEqual(['@liwa/base'])
     expect(readFileSync(join(dir, PROFILE_PATCH_FILENAME), 'utf8')).toContain('- id: x')
   })
 })
@@ -245,8 +245,8 @@ describe('initProfile', () => {
 describe('manifest round-trip', () => {
   it('writes and reads back, and fails loud on a broken manifest', () => {
     const dir = tmp()
-    writeProfileManifest(dir, { name: 'p', dsh: { profile: { bundles: ['a'] } } })
-    expect(readProfileManifest('t', dir).dsh?.profile?.bundles).toEqual(['a'])
+    writeProfileManifest(dir, { name: 'p', liwa: { profile: { bundles: ['a'] } } })
+    expect(readProfileManifest('t', dir).liwa?.profile?.bundles).toEqual(['a'])
     writeFileSync(join(dir, 'package.json'), '[]')
     expect(() => readProfileManifest('t', dir)).toThrow('must hold a JSON object')
     expect(() => readProfileManifest('t', join(dir, 'nope'))).toThrow('failed to read profile manifest')
@@ -279,7 +279,7 @@ describe('resolveBundleDir', () => {
       name: 'sealed-bundle',
       version: '0.0.0',
       exports: { '.': './index.js' },
-      dsh: { bundle: { patch: './cordis.patch.yml' } },
+      liwa: { bundle: { patch: './cordis.patch.yml' } },
     }))
     writeFileSync(join(dir, 'index.js'), '')
     writeFileSync(join(dir, 'cordis.patch.yml'), '[]\n')
@@ -298,7 +298,7 @@ describe('loadProfile', () => {
     expect(profile.layers.map(layer => layer.packageName)).toEqual(['bundle-a'])
   })
 
-  it('resolves each dsh.profile.bundles entry to its patch layer in order, plus the user layer', () => {
+  it('resolves each liwa.profile.bundles entry to its patch layer in order, plus the user layer', () => {
     const anchor = stageInstallation({
       'bundle-a': { patch: '- insert:\n    - id: a\n      name: pkg-a\n' },
       'bundle-b': { patch: '- id: a\n  config:\n    v: 2\n' },
@@ -315,7 +315,7 @@ describe('loadProfile', () => {
       profile.patches,
     ])
     expect(entries).toEqual([{ id: 'a', name: 'pkg-a', config: { v: 3 } }])
-    // A hand-made profile without the user layer file or dsh section: empty layers, no throw.
+    // A hand-made profile without the user layer file or liwa section: empty layers, no throw.
     rmSync(join(dir, PROFILE_PATCH_FILENAME))
     expect(loadProfile('t', 'demo', anchor, home).patches).toEqual([])
     writeProfileManifest(dir, { name: 'bare' })
@@ -323,18 +323,18 @@ describe('loadProfile', () => {
     expect(bare.layers).toEqual([])
   })
 
-  it('applies a dsh.bundle.patch list in order, anchoring inserted paths beside each file', () => {
+  it('applies a liwa.bundle.patch list in order, anchoring inserted paths beside each file', () => {
     const anchor = stageInstallation({ 'multi': { patch: '[]\n' }, 'broken': { patch: '[]\n' } })
     const bundleDir = join(anchor, '..', 'node_modules', 'multi')
     mkdirSync(join(bundleDir, 'layers'), { recursive: true })
     writeFileSync(join(bundleDir, 'package.json'), JSON.stringify({
       name: 'multi', version: '0.0.0', type: 'module', main: './index.js',
-      dsh: { bundle: { patch: ['./first.patch.yml', './layers/second.patch.yml'] } },
+      liwa: { bundle: { patch: ['./first.patch.yml', './layers/second.patch.yml'] } },
     }))
     writeFileSync(join(bundleDir, 'first.patch.yml'), '- insert:\n    - id: a\n      name: ./local.js\n      config: { v: 1 }\n')
     writeFileSync(join(bundleDir, 'layers', 'second.patch.yml'), '- id: a\n  config: { v: 2 }\n- insert:\n    - id: b\n      name: ./local.js\n')
     const brokenManifest = join(anchor, '..', 'node_modules', 'broken', 'package.json')
-    writeFileSync(brokenManifest, JSON.stringify({ name: 'broken', version: '0.0.0', dsh: { bundle: { patch: [1] } } }))
+    writeFileSync(brokenManifest, JSON.stringify({ name: 'broken', version: '0.0.0', liwa: { bundle: { patch: [1] } } }))
     const home = tmp()
     const dir = resolveProfileDir('demo', home)
     initProfile(dir, ['multi', 'broken'])
@@ -350,7 +350,7 @@ describe('loadProfile', () => {
       { id: 'b', name: pathToFileURL(join(bundleDir, 'layers', 'local.js')).href },
     ])
     expect(profile.skippedBundles).toEqual([
-      { packageName: 'broken', reason: 'Error: dsh.bundle.patch must be a file path or a list of file paths' },
+      { packageName: 'broken', reason: 'Error: liwa.bundle.patch must be a file path or a list of file paths' },
     ])
   })
 
@@ -360,54 +360,54 @@ describe('loadProfile', () => {
     expect(() => loadProfile('t', 'custom', anchor, home))
       .toThrow('profile "custom" does not exist')
     loadProfile('t', 'web', anchor, home)
-    expect(readProfileManifest('t', resolveProfileDir('web', home)).dsh?.profile?.bundles)
+    expect(readProfileManifest('t', resolveProfileDir('web', home)).liwa?.profile?.bundles)
       .toEqual([...PROFILE_TEMPLATES.web?.bundles ?? []])
   })
 
   it('normalizes only the exact installation-owned headless bundle tuple', () => {
     const anchor = stageInstallation({
-      '@deepseek-ai/dsh-base': { patch: '[]\n' },
-      '@deepseek-ai/dsh-web-app': { patch: '[]\n' },
-      '@deepseek-ai/dsh-headless': { patch: '[]\n' },
+      '@liwa/base': { patch: '[]\n' },
+      '@liwa/web-app': { patch: '[]\n' },
+      '@liwa/headless': { patch: '[]\n' },
       'custom-bundle': { patch: '[]\n' },
     })
     const home = tmp()
     const stock = resolveProfileDir('headless', home)
     initProfile(stock, [
-      '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-headless',
+      '@liwa/base', '@liwa/web-app', '@liwa/headless',
     ])
     const retiredManifest = readProfileManifest('t', stock)
     writeProfileManifest(stock, retiredManifest)
     loadProfile('t', 'headless', anchor, home)
-    expect(readProfileManifest('t', stock).dsh?.profile).toEqual({
-      bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-headless'],
+    expect(readProfileManifest('t', stock).liwa?.profile).toEqual({
+      bundles: ['@liwa/base', '@liwa/headless'],
     })
 
     const customHome = tmp()
     const custom = resolveProfileDir('headless', customHome)
     initProfile(custom, [
-      '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-headless', 'custom-bundle',
+      '@liwa/base', '@liwa/web-app', '@liwa/headless', 'custom-bundle',
     ])
     loadProfile('t', 'headless', anchor, customHome)
-    expect(readProfileManifest('t', custom).dsh?.profile?.bundles).toEqual([
-      '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-headless', 'custom-bundle',
+    expect(readProfileManifest('t', custom).liwa?.profile?.bundles).toEqual([
+      '@liwa/base', '@liwa/web-app', '@liwa/headless', 'custom-bundle',
     ])
   })
 
   it('removes a retired bundle from an application-owned profile and keeps the rest of the manifest', () => {
     const anchor = stageInstallation({
-      '@deepseek-ai/dsh-base': { patch: '[]\n' },
+      '@liwa/base': { patch: '[]\n' },
       'custom-bundle': { patch: '[]\n' },
     })
     const dir = join(tmp(), 'app-profile')
-    initProfile(dir, ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-experimental-schedule-bundle', 'custom-bundle'])
+    initProfile(dir, ['@liwa/base', '@liwa/experimental-schedule-bundle', 'custom-bundle'])
     writeProfileManifest(dir, { ...readProfileManifest('t', dir), dependencies: { 'custom-bundle': '^1.0.0' } })
     const profile = loadProfileDirectory('t', dir, anchor)
     expect(profile.skippedBundles).toEqual([])
-    expect(profile.layers.map(layer => layer.packageName)).toEqual(['@deepseek-ai/dsh-base', 'custom-bundle'])
+    expect(profile.layers.map(layer => layer.packageName)).toEqual(['@liwa/base', 'custom-bundle'])
     expect(readProfileManifest('t', dir)).toMatchObject({
       dependencies: { 'custom-bundle': '^1.0.0' },
-      dsh: { profile: { bundles: ['@deepseek-ai/dsh-base', 'custom-bundle'] } },
+      liwa: { profile: { bundles: ['@liwa/base', 'custom-bundle'] } },
     })
   })
 
@@ -447,7 +447,7 @@ describe('loadProfile', () => {
       const resolution = await createRuntimeResolution({ installAnchor: anchor, profile, home })
       const unavailable = failure === 'missing package' || failure === 'invalid manifest'
       expect(resolution.entries.map(entry => entry.name))
-        .toEqual(['dsh-app', 'before', ...unavailable ? [] : ['broken'], 'after'])
+        .toEqual(['liwa-app', 'before', ...unavailable ? [] : ['broken'], 'after'])
       mkdirSync(bundleDir, { recursive: true })
       writeFileSync(manifestPath, original)
       writeFileSync(patchPath, '[]\n')
@@ -456,24 +456,24 @@ describe('loadProfile', () => {
     },
   )
 
-  it('skips a bundle whose own dsh peers are incompatible until the profile exempts that exact pair', () => {
+  it('skips a bundle whose own liwa peers are incompatible until the profile exempts that exact pair', () => {
     const anchor = stageInstallation({
       guarded: { patch: '- insert: [{ id: a, name: pkg-a }]\n' },
       kept: { patch: '- insert: [{ id: b, name: pkg-b }]\n' },
     })
     const manifestPath = join(anchor, '..', 'node_modules', 'guarded', 'package.json')
     writeFileSync(manifestPath, JSON.stringify({
-      ...JSON.parse(readFileSync(manifestPath, 'utf8')) as object, peerDependencies: { '@deepseek-ai/dsh': '999.0.0' },
+      ...JSON.parse(readFileSync(manifestPath, 'utf8')) as object, peerDependencies: { '@liwa/cli': '999.0.0' },
     }))
     const dir = resolveProfileDir('demo', tmp())
     initProfile(dir, ['guarded', 'kept'])
-    const denied = loadProfileDirectory('dsh', dir, anchor)
+    const denied = loadProfileDirectory('liwa', dir, anchor)
     expect(denied.layers.map(layer => layer.packageName)).toEqual(['kept'])
     expect(denied.skippedBundles).toEqual([{ packageName: 'guarded', reason: expect.stringContaining(
-      `Error: Plugin guarded@0.0.0 is incompatible with dsh ${getDshRuntimeVersion()}`,
+      `Error: Plugin guarded@0.0.0 is incompatible with liwa ${getLiwaRuntimeVersion()}`,
     ) as string }])
-    writeFileSync(join(dir, PROFILE_COMPATIBILITY_FILENAME), JSON.stringify({ 'guarded@0.0.0': [getDshRuntimeVersion()] }))
-    expect(loadProfileDirectory('dsh', dir, anchor).layers.map(layer => layer.packageName)).toEqual(['guarded', 'kept'])
+    writeFileSync(join(dir, PROFILE_COMPATIBILITY_FILENAME), JSON.stringify({ 'guarded@0.0.0': [getLiwaRuntimeVersion()] }))
+    expect(loadProfileDirectory('liwa', dir, anchor).layers.map(layer => layer.packageName)).toEqual(['guarded', 'kept'])
   })
 
   it('still rejects invalid profile manifests and user patches', () => {
@@ -518,7 +518,7 @@ describe('createRuntimeResolution', () => {
     writeFileSync(join(modules, 'dep-of-a', 'package.json'), JSON.stringify({ name: 'dep-of-a', version: '0.0.0' }))
     const home = tmp()
     const resolution = await createRuntimeResolution({ installAnchor: anchor, home })
-    expect(resolution.entries.map(entry => entry.name)).toEqual(['dsh-app', 'bundle-a', 'plain-lib', 'dep-of-a'])
+    expect(resolution.entries.map(entry => entry.name)).toEqual(['liwa-app', 'bundle-a', 'plain-lib', 'dep-of-a'])
     expect(resolution.entries.find(entry => entry.name === 'dep-of-a')?.packageDir).toBe(join(modules, 'dep-of-a'))
     expect(existsSync(join(home, 'profiles', 'node_modules'))).toBe(false)
     await expect(createRuntimeResolution({ installAnchor: anchor, home })).resolves.toEqual(resolution)
@@ -765,11 +765,11 @@ describe('removeLinkProjections', () => {
     writeFileSync(join(dir, 'package.json'), JSON.stringify({ name, version }))
   }
 
-  it('removes only the symlinks that point into .dsh-module-fallback and the directory itself', () => {
+  it('removes only the symlinks that point into .liwa-module-fallback and the directory itself', () => {
     const home = tmp()
     const profile = join(home, 'profiles', 'web')
     const modules = join(profile, 'node_modules')
-    const owned = join(profile, '.dsh-module-fallback', 'node_modules')
+    const owned = join(profile, '.liwa-module-fallback', 'node_modules')
     packageAt(join(modules, 'my-bundle'), 'my-bundle', '1.0.0')
     packageAt(join(modules, 'my-bundle', 'node_modules', 'bridge'), 'bridge', '1.0.0')
     packageAt(join(modules, '@scope', 'helper'), '@scope/helper', '1.0.0')
@@ -784,7 +784,7 @@ describe('removeLinkProjections', () => {
 
     removeLinkProjections(profile)
 
-    expect(existsSync(join(profile, '.dsh-module-fallback'))).toBe(false)
+    expect(existsSync(join(profile, '.liwa-module-fallback'))).toBe(false)
     expect(lstatSync(join(modules, 'bridge'), { throwIfNoEntry: false })).toBeUndefined()
     expect(lstatSync(join(modules, '@scope', 'tool'), { throwIfNoEntry: false })).toBeUndefined()
     expect(lstatSync(join(modules, 'my-bundle')).isDirectory()).toBe(true)
@@ -799,15 +799,15 @@ describe('removeLinkProjections', () => {
   it('removes the directory when the profile has no node_modules and keeps links whose target parent is gone', () => {
     const home = tmp()
     const profile = join(home, 'profiles', 'web')
-    mkdirSync(join(profile, '.dsh-module-fallback', 'node_modules'), { recursive: true })
+    mkdirSync(join(profile, '.liwa-module-fallback', 'node_modules'), { recursive: true })
     removeLinkProjections(profile)
-    expect(existsSync(join(profile, '.dsh-module-fallback'))).toBe(false)
+    expect(existsSync(join(profile, '.liwa-module-fallback'))).toBe(false)
 
     const other = join(home, 'profiles', 'other')
-    mkdirSync(join(other, '.dsh-module-fallback', 'node_modules'), { recursive: true })
+    mkdirSync(join(other, '.liwa-module-fallback', 'node_modules'), { recursive: true })
     link(join(home, 'missing-parent', 'pkg'), join(other, 'node_modules', 'orphan'))
     removeLinkProjections(other)
-    expect(existsSync(join(other, '.dsh-module-fallback'))).toBe(false)
+    expect(existsSync(join(other, '.liwa-module-fallback'))).toBe(false)
     expect(lstatSync(join(other, 'node_modules', 'orphan')).isSymbolicLink()).toBe(true)
   })
 

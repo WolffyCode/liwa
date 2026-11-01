@@ -3,11 +3,11 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/subsystems/workflow.md
 /workflow:
-  en: 4b264eb88e5cedfb
-  zh: 78585763a79cd1c9
+  en: 70883f0cd8e76119
+  zh: e39d21cebe6c502e
 /workflow/the-start-request:
-  en: 6c8755833293a36c
-  zh: a0f061387fe0d3a6
+  en: c3107122b83188ef
+  zh: d483b22620d80a8d
 /workflow/the-workflow-s-identity-workflowmeta:
   en: ab33fd965499d38c
   zh: d32893a2a7edd7d6
@@ -18,11 +18,11 @@
   en: a86b204323005042
   zh: 82b691e28ed4dcd3
 /workflow/failure-discipline-workflowerror-fatal:
-  en: 4d390801bb07374c
-  zh: 1099f053c2ee26ec
+  en: bfc281cfa535dc1d
+  zh: 9dc7dc5d5ed26bf0
 /workflow/events:
   en: de123821a128c1d1
   zh: e50bcaea2812575a
 /workflow/durable-chat-records:
-  en: eefba4d75e7bcfe9
-  zh: feeeaf660f97f96d
+  en: fa07b47a67758f07
+  zh: 816b737fb2d8ca17

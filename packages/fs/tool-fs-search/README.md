@@ -3,13 +3,13 @@ description: "The model-facing glob and grep discovery tools for users and maint
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-tool-fs-search
+# @liwa/tool-fs-search
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-Use `dsh-tool-fs-search` to give models `glob` file discovery and `grep` content search over a local workspace. Searches need no host `rg` installation or filesystem provider, return workdir-relative results, and include hidden and ignored files while excluding VCS metadata. Configurable caps bound inline output; with an optional spill store, capped results remain fully recoverable. Choose the sibling `dsh-tool-fs` package for reading, writing, or editing files.
+Use `liwa-tool-fs-search` to give models `glob` file discovery and `grep` content search over a local workspace. Searches need no host `rg` installation or filesystem provider, return workdir-relative results, and include hidden and ignored files while excluding VCS metadata. Configurable caps bound inline output; with an optional spill store, capped results remain fully recoverable. Choose the sibling `liwa-tool-fs` package for reading, writing, or editing files.
 
 ## Table of Contents
 
@@ -34,11 +34,11 @@ Mount the tools after a `ctx.subprocess` backend; no host `rg` install is needed
 A subprocess backend, then the tools; the spill backend is optional and makes capped results fully recoverable.
 
 ```yaml
-- name: '@deepseek-ai/dsh-subprocess-local'
-- name: '@deepseek-ai/dsh-tool-fs-search'
+- name: '@liwa/subprocess-local'
+- name: '@liwa/tool-fs-search'
   config:
     sampleOverCapGlobResults: false
-- name: '@deepseek-ai/dsh-spill-local'
+- name: '@liwa/spill-local'
 ```
 
 `sampleOverCapGlobResults` is required and has no fallback: deployments choose the over-cap ordering contract explicitly. When formatted spill succeeds, both modes preserve the complete sorted list in the spill artifact.
@@ -68,7 +68,7 @@ Routine budgets stay out of the model-facing schema: a model that needs surround
 | `stderrMaxBytes` | `65536` | Diagnostic-tail budget for `rg` stderr |
 | `searchMetaMaxBytes` | `65536` | Max bytes of one search's serialized `presentationMeta`; trailing groups/paths drop past it |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-tool-fs-search) is the exhaustive source for every accepted field and its JSDoc.
+The generated [configuration catalog](../../../docs/config-catalog.md#liwatool-fs-search) is the exhaustive source for every accepted field and its JSDoc.
 
 ### Deployment requirement
 
@@ -117,9 +117,9 @@ After `pnpm run build`, compile the package-local diagnostic with external runti
 cd packages/fs/tool-fs-search
 node --input-type=module <<'JS'
 import { build } from 'tsdown';
-await build({ config: false, tsconfig: false, dts: false, entry: 'tests/glob-native.perf.ts', outDir: 'tests/.dsh-build', clean: false, deps: { neverBundle: [/^[^./]/] } });
+await build({ config: false, tsconfig: false, dts: false, entry: 'tests/glob-native.perf.ts', outDir: 'tests/.liwa-build', clean: false, deps: { neverBundle: [/^[^./]/] } });
 JS
-node tests/.dsh-build/glob-native.perf.mjs
+node tests/.liwa-build/glob-native.perf.mjs
 ```
 
 The diagnostic creates 20,000 unrelated files and six matches, then measures five `ctx.tools.execute()` calls through the Native executor with a real Agent, working-directory service, and local subprocess backend. It reports raw timings, the median, and a hash of the complete value, text, and presentation metadata. `--plugin <built-module>` selects another search-package revision; `--workspace <directory>` opts into a read-only existing workspace instead of the synthetic tree. Setup, model generation, UI, and Session persistence are excluded; there is no timing threshold.
@@ -142,7 +142,7 @@ Read these pages when the package-level contract is not enough. They move from t
 - [Subprocess capability](../../../docs/subsystems/subprocess.md) — the spawn seam these tools execute through.
 - [Spill store](../../spill/spill/README.md) — the optional backend that makes capped results fully recoverable.
 - [Timeout utility](../../util/timeout/README.md) — the `MAX_TIMER_DELAY_MS` bound on the terminate grace.
-- [Generated tool catalog](../../../docs/tool-catalog.md#deepseek-aidsh-tool-fs-search) — the exhaustive schemas this package registers.
+- [Generated tool catalog](../../../docs/tool-catalog.md#liwatool-fs-search) — the exhaustive schemas this package registers.
 
 -----
 
@@ -179,7 +179,7 @@ Prefix-stable while the visible tool set, plugin scope, sampling choice, and gui
 
 #### What the model sees
 
-The glob description states the configured over-cap ordering. The generated [`glob` and `grep` schemas](../../../docs/tool-catalog.md#deepseek-aidsh-tool-fs-search) use `sampleOverCapGlobResults: true`; the tools are registered unconditionally.
+The glob description states the configured over-cap ordering. The generated [`glob` and `grep` schemas](../../../docs/tool-catalog.md#liwatool-fs-search) use `sampleOverCapGlobResults: true`; the tools are registered unconditionally.
 
 #### Token effect
 

@@ -1,4 +1,4 @@
-/** Boot the materialized target runtime without access to a user's Harness profile. */
+/** Boot the materialized target runtime without access to a user's Liwa profile. */
 
 import { appendFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
@@ -14,7 +14,7 @@ import type { DesktopRuntimeDescriptor } from '../src/runtime-tree.ts'
 
 /**
  * Check CLI package operations, Host startup, its frontend, external plugins and real Office-to-PDF conversion.
- * @param root - Materialized dsh resources.
+ * @param root - Materialized liwa resources.
  * @param node - Prepared target Electron executable.
  * @param runtime - Verified resource descriptor.
  * @param environment - Credential-scrubbed build environment and private native cache.
@@ -24,11 +24,11 @@ import type { DesktopRuntimeDescriptor } from '../src/runtime-tree.ts'
 export async function smokeDesktopRuntime(
   root: string, node: string, runtime: DesktopRuntimeDescriptor, environment: NodeJS.ProcessEnv, resourcesRuntime: string,
 ): Promise<void> {
-  const home = mkdtempSync(join(tmpdir(), 'dsh-desktop-smoke-'))
+  const home = mkdtempSync(join(tmpdir(), 'liwa-desktop-smoke-'))
   const profile = join(home, 'profiles', 'desktop')
   const hostEnvironment = {
     ...Object.fromEntries(Object.entries(environment).filter(([name]) => !/^(?:npm|pnpm|corepack)_/iu.test(name))),
-    DSH_HOME: home, HOME: home, USERPROFILE: home,
+    LIWA_HOME: home, HOME: home, USERPROFILE: home,
     XDG_CONFIG_HOME: home, XDG_CACHE_HOME: home, XDG_STATE_HOME: home,
     APPDATA: home, LOCALAPPDATA: home,
     npm_config_userconfig: join(home, 'npmrc'), npm_config_globalconfig: join(home, 'npmrc'),
@@ -48,7 +48,7 @@ export async function smokeDesktopRuntime(
     const installedPlugin = join(home, installedName)
     mkdirSync(installedPlugin)
     writeFileSync(join(installedPlugin, 'package.json'), JSON.stringify({
-      name: installedName, version: '1.0.0', type: 'module', exports: './index.js', dsh: { bundle: { patch: './bundle.yml' } },
+      name: installedName, version: '1.0.0', type: 'module', exports: './index.js', liwa: { bundle: { patch: './bundle.yml' } },
     }))
     writeFileSync(join(installedPlugin, 'index.js'), `
 export function apply(ctx) {
@@ -58,7 +58,7 @@ export function apply(ctx) {
 `)
     writeFileSync(join(installedPlugin, 'bundle.yml'), `- insert:\n    - id: ${installedName}\n      name: ${installedName}\n      inject: [webServer]\n`)
     appendFileSync(join(profile, 'pnpm-workspace.yaml'), 'offline: true\nupdateNotifier: false\n')
-    const cli = join(root, 'node_modules', '@deepseek-ai', 'dsh-desktop-host', 'lib', 'cli.js')
+    const cli = join(root, 'node_modules', '@liwa', 'desktop-host', 'lib', 'cli.js')
     const runCli = (args: string[]) => promisify(execFile)(node,
       ['--expose-internals', cli, 'plugin', '--profile', 'desktop', ...args],
       { cwd: home, env: { ...hostEnvironment, ELECTRON_RUN_AS_NODE: '1' }, timeout: 120_000, windowsHide: true })
@@ -77,14 +77,14 @@ export function apply(ctx) {
     { env: environment, timeout: 120_000, windowsHide: true })
     const inputs = ['docx', 'xlsx', 'pptx'].map(extension => ({ extension,
       bytes: readFileSync(join(home, `input.${extension}`)).toString('base64') }))
-    const cordis = runtime.sharedPackages.find(entry => entry.name === '@deepseek-ai/cordis')
+    const cordis = runtime.sharedPackages.find(entry => entry.name === '@liwa/cordis')
     if (cordis === undefined) throw new Error('desktop runtime: missing shared Cordis package')
     writeFileSync(join(plugin, 'package.json'), JSON.stringify({
       name: pluginName, version: '1.0.0', type: 'module', exports: './index.js',
-      peerDependencies: { '@deepseek-ai/cordis': cordis.version }, dsh: { bundle: { patch: './bundle.yml' } },
+      peerDependencies: { '@liwa/cordis': cordis.version }, liwa: { bundle: { patch: './bundle.yml' } },
     }))
     writeFileSync(join(plugin, 'index.js'), `
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { inspect, promisify } from 'node:util'
 import { execFile } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
@@ -139,10 +139,10 @@ export function apply(ctx) {
     cpSync(plugin, join(profile, 'node_modules', pluginName), { recursive: true })
     const manifest = JSON.parse(readFileSync(join(profile, 'package.json'), 'utf8')) as {
       dependencies?: Record<string, string>
-      dsh: { profile: { bundles: string[] } }
+      liwa: { profile: { bundles: string[] } }
     }
     manifest.dependencies = { ...manifest.dependencies, [pluginName]: `file:${plugin}` }
-    manifest.dsh.profile.bundles.push(pluginName)
+    manifest.liwa.profile.bundles.push(pluginName)
     writeFileSync(join(profile, 'package.json'), JSON.stringify(manifest))
     writeFileSync(join(profile, 'cordis.patch.yml'), '- id: webserver\n  config:\n    host: 127.0.0.1\n    port: 0\n')
     const ready = await Promise.race([host.start(), new Promise<never>((_, reject) => {

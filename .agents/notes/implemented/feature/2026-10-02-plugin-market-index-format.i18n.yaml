@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-02-plugin-market-index-format.md
 /agent-note-plugin-market-index-format:
-  en: ee3515adb22d4af6
-  zh: 5dfd687255f64e95
+  en: fd4fa7654264e6cb
+  zh: 3980f3cc79b8feb4
 /agent-note-plugin-market-index-format/problem:
   en: ce5e4a362f558af6
   zh: 29d93e0655b99217
 /agent-note-plugin-market-index-format/decision:
-  en: 906ac925fc53dd87
-  zh: affcc405e186b0d7
+  en: c294ecbf785a5d77
+  zh: aa1b595373b3b143
 /agent-note-plugin-market-index-format/decision/example:
   en: 1b1c960c966cf912
   zh: 97be87cb14893c26
@@ -21,11 +21,11 @@
   en: b79abd05a957948b
   zh: b6f0c203ea8e4838
 /agent-note-plugin-market-index-format/decision/version-fields:
-  en: d6c0fa99e1cbb068
-  zh: 3d2a7b85299c679a
+  en: 8c1e4e79f51ba9f6
+  zh: 4ae0e0af960c37a8
 /agent-note-plugin-market-index-format/decision/install-arguments:
-  en: c748cdc4d8ce349a
-  zh: 5740fa0d6106e637
+  en: 9afff2c4089e7633
+  zh: 9895dd888b4937ad
 /agent-note-plugin-market-index-format/decision/dsh-compatibility:
   en: 00fe507b9b5dfea7
   zh: 55de6aaeb3865e84

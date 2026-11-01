@@ -9,7 +9,7 @@ import { mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'n
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { canonicalPath, workspaceWritableRoots, writableRoots } from '@deepseek-ai/dsh-sandbox'
+import { canonicalPath, workspaceWritableRoots, writableRoots } from '@liwa/sandbox'
 
 /** Every temp root created by this file, removed after each test. */
 const roots: string[] = []
@@ -19,7 +19,7 @@ afterEach(() => {
 
 describe('canonicalPath', () => {
   it('resolves symlinks (an existing path realpaths)', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dsh-roots-'))
+    const dir = mkdtempSync(join(tmpdir(), 'liwa-roots-'))
     roots.push(dir)
     expect(canonicalPath(dir)).toBe(realpathSync.native(dir))
   })
@@ -31,14 +31,14 @@ describe('canonicalPath', () => {
 
 describe('workspaceWritableRoots', () => {
   it('workspace-write grants only the workspace when no extra root is configured', () => {
-    const ws = mkdtempSync(join(tmpdir(), 'dsh-ws-'))
+    const ws = mkdtempSync(join(tmpdir(), 'liwa-ws-'))
     roots.push(ws)
     expect(workspaceWritableRoots({ mode: 'workspace-write', workspaceRoot: ws })).toEqual([realpathSync.native(ws)])
   })
 
   it('workspace-write deduplicates physical extra directories and rejects symlink aliases', () => {
-    const ws = mkdtempSync(join(tmpdir(), 'dsh-ws-'))
-    const extra = realpathSync.native(mkdtempSync(join(tmpdir(), 'dsh-extra-')))
+    const ws = mkdtempSync(join(tmpdir(), 'liwa-ws-'))
+    const extra = realpathSync.native(mkdtempSync(join(tmpdir(), 'liwa-extra-')))
     const alias = join(ws, 'alias')
     symlinkSync(extra, alias, 'dir')
     roots.push(ws, extra)
@@ -53,7 +53,7 @@ describe('workspaceWritableRoots', () => {
   })
 
   it('rejects missing and non-directory extra roots before granting access', () => {
-    const ws = realpathSync.native(mkdtempSync(join(tmpdir(), 'dsh-roots-')))
+    const ws = realpathSync.native(mkdtempSync(join(tmpdir(), 'liwa-roots-')))
     roots.push(ws)
     const file = join(ws, 'file.txt')
     writeFileSync(file, 'file')
@@ -75,7 +75,7 @@ describe('writableRoots', () => {
   })
 
   it('workspace-write grants the workspace root plus the platform temp areas, canonical and deduplicated', () => {
-    const ws = mkdtempSync(join(tmpdir(), 'dsh-ws-'))
+    const ws = mkdtempSync(join(tmpdir(), 'liwa-ws-'))
     roots.push(ws)
     const writable = writableRoots({ mode: 'workspace-write', workspaceRoot: ws })
     expect(writable).toContain(realpathSync.native(ws))
@@ -86,8 +86,8 @@ describe('writableRoots', () => {
   })
 
   it('workspace-write includes an explicit extra directory beside the temp areas', () => {
-    const ws = mkdtempSync(join(tmpdir(), 'dsh-ws-'))
-    const extra = realpathSync.native(mkdtempSync(join(tmpdir(), 'dsh-extra-')))
+    const ws = mkdtempSync(join(tmpdir(), 'liwa-ws-'))
+    const extra = realpathSync.native(mkdtempSync(join(tmpdir(), 'liwa-extra-')))
     roots.push(ws, extra)
     expect(writableRoots({
       mode: 'workspace-write',

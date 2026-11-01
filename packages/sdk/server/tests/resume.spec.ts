@@ -2,15 +2,15 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
-import { ReasoningEffortId, type LlmModelReasoningInfo } from '@deepseek-ai/dsh-llm'
-import { SessionId, SessionSeq } from '@deepseek-ai/dsh-session'
-import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import type { JsonRpcTransportPeer, SessionEventNotification } from '@deepseek-ai/dsh-sdk-protocol'
+import { Context } from '@liwa/cordis'
+import AgentLoop from '@liwa/agent-loop'
+import { mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
+import { ReasoningEffortId, type LlmModelReasoningInfo } from '@liwa/llm'
+import { SessionId, SessionSeq } from '@liwa/session'
+import * as JsonlSessionPersistence from '@liwa/session-persistence-jsonl'
+import type { JsonRpcTransportPeer, SessionEventNotification } from '@liwa/sdk-protocol'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
-import { HarnessSdkJsonRpcServer } from '../src/index.ts'
+import { LiwaSdkJsonRpcServer } from '../src/index.ts'
 
 const cleanups: (() => Promise<void>)[] = []
 afterEach(async () => {
@@ -38,7 +38,7 @@ async function runtime(root: string, persistence = true, reasoning?: LlmModelRea
       if (method === 'session.event') events.push(params as SessionEventNotification)
     },
   }
-  const server = new HarnessSdkJsonRpcServer(ctx, transport)
+  const server = new LiwaSdkJsonRpcServer(ctx, transport)
   cleanups.push(() => server.shutdown().then(() => {}))
   return { ctx, server, adapter, events }
 }

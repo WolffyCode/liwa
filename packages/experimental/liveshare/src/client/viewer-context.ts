@@ -1,14 +1,14 @@
 /**
  * The viewer page's own read of the share it presents.
  *
- * One answer carries both halves of the page's identity: which DSH the owner runs and who shared this
+ * One answer carries both halves of the page's identity: which Liwa the owner runs and who shared this
  * Session, and what the owner lets this reader do beyond reading. The page owns that read rather than
  * a component, because every surface re-reads what the share says while it renders.
  *
- * @module @deepseek-ai/dsh-experimental-liveshare/src/client/viewer-context
+ * @module @liwa/experimental-liveshare/src/client/viewer-context
  */
 
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
+import { createSnapshotStore } from '@liwa/client-store'
 import { publishViewerCapabilities } from './viewer-capabilities.ts'
 import { noteViewerStatusFacts } from './viewer-status.ts'
 import { VIEWER_READ_TIMEOUT_MS } from '../read-budgets.ts'
@@ -23,7 +23,7 @@ export interface ViewerContextFacts {
   readonly viewerDisplayName?: string
   /** Subject the Relay reported for the reader viewing this page. */
   readonly viewerSubjectId?: string
-  readonly dshVersion?: string
+  readonly liwaVersion?: string
   readonly relay?: string
 }
 
@@ -142,7 +142,7 @@ export async function readViewerContext(basePath: string, shareId: string, signa
       })
       const owner = readText(answer, 'ownerDisplayName') ?? readText(capabilities, 'ownerDisplayName')
       const ownerSubjectId = readText(answer, 'ownerSubjectId')
-      const dshVersion = readText(answer, 'dshVersion')
+      const liwaVersion = readText(answer, 'liwaVersion')
       const rawViewer = typeof answer?.['viewer'] === 'object' && answer['viewer'] !== null
         && !Array.isArray(answer['viewer']) ? answer['viewer'] as Record<string, unknown> : undefined
       const viewerSubjectId = readText(rawViewer, 'subjectId')
@@ -150,7 +150,7 @@ export async function readViewerContext(basePath: string, shareId: string, signa
       noteFacts({
         ...(owner === undefined ? {} : { owner }),
         ...(ownerSubjectId === undefined ? {} : { ownerSubjectId }),
-        ...(dshVersion === undefined ? {} : { dshVersion }),
+        ...(liwaVersion === undefined ? {} : { liwaVersion }),
         ...(viewerSubjectId === undefined ? {} : { viewerSubjectId }),
         ...(viewerDisplayName === undefined ? {} : { viewerDisplayName }),
       })

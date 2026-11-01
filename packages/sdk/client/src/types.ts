@@ -2,43 +2,43 @@
  * Types for the TypeScript SDK client: launch options, notification shapes,
  * and owned activity results.
  *
- * @module @deepseek-ai/dsh-sdk-client/types
+ * @module @liwa/sdk-client/types
  */
 
-import type { ContentBlock, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
-import type { SdkPromptContentBlock, SdkUserQuestionAnswer, SdkUserQuestionRequest } from '@deepseek-ai/dsh-sdk-protocol'
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
+import type { ContentBlock, ReasoningEffortId } from '@liwa/llm'
+import type { SdkPromptContentBlock, SdkUserQuestionAnswer, SdkUserQuestionRequest } from '@liwa/sdk-protocol'
+import type { SessionEvent } from '@liwa/session'
 
 /** One server-to-client notification as received off the wire. */
-export interface HarnessNotification {
+export interface LiwaNotification {
   /** The JSON-RPC notification method name. */
   method: string
-  /** The raw params object; see `HarnessSdkNotificationMap` for the shapes per method. */
+  /** The raw params object; see `LiwaSdkNotificationMap` for the shapes per method. */
   params: Record<string, unknown>
 }
 
 /** Predicate deciding whether a subscription receives a notification. */
-export type NotificationFilter = (notification: HarnessNotification) => boolean
+export type NotificationFilter = (notification: LiwaNotification) => boolean
 
-/** Launch and timeout options for {@link HarnessClient}. */
-export interface HarnessClientOptions {
+/** Launch and timeout options for {@link LiwaClient}. */
+export interface LiwaClientOptions {
   /** Answer runtime questions without prescribing a UI; observe the signal to release host work on cancellation. */
   onUserQuestion?: (request: SdkUserQuestionRequest, context: { signal: AbortSignal }) => Promise<SdkUserQuestionAnswer>
-  /** Absolute or caller-relative dsh CLI module; omitted resolves this package's same-version dependency. */
-  dshBin?: string
+  /** Absolute or caller-relative liwa CLI module; omitted resolves this package's same-version dependency. */
+  liwaBin?: string
   /** Named profile serving the SDK protocol (default `sdk`). */
   profile?: string
   /** Ordered per-launch profile patches; relative paths resolve before spawn. */
   patches?: string[]
-  /** Explicit Harness home for this child; relative paths resolve before spawn. */
-  dshHome?: string
-  /** Working directory for the dsh process itself. */
+  /** Explicit Liwa home for this child; relative paths resolve before spawn. */
+  liwaHome?: string
+  /** Working directory for the liwa process itself. */
   processCwd?: string
   /**
-   * The complete child environment, read when {@link HarnessClient.start}
+   * The complete child environment, read when {@link LiwaClient.start}
    * spawns. `undefined` reads the parent env at that time; passing an object
    * reads that object at spawn and replaces the parent environment entirely, so callers own
-   * credential policy (see `scrubbedParentEnv` in `@deepseek-ai/dsh-subprocess`
+   * credential policy (see `scrubbedParentEnv` in `@liwa/subprocess`
    * for the shared scrub-then-merge base).
    */
   env?: NodeJS.ProcessEnv
@@ -54,8 +54,8 @@ export interface HarnessClientOptions {
   disposeGraceMs?: number
 }
 
-/** Options for the high-level {@link DeepSeekHarness} wrapper. */
-export interface DeepSeekHarnessOptions extends HarnessClientOptions {
+/** Options for the high-level {@link Liwa} wrapper. */
+export interface LiwaOptions extends LiwaClientOptions {
   /** Workspace cwd recorded on every SDK-created session (default: the process cwd, else `process.cwd()`). */
   cwd?: string
   /** Provider route for SDK-created agents (default `deepseek-official`). */
@@ -79,7 +79,7 @@ export interface RunResult {
   /** Every `session.event` payload for the root session, in wire order. */
   events: SessionEvent[]
   /** Every notification for the root session and discovered descendants, in wire order. */
-  notifications: HarnessNotification[]
+  notifications: LiwaNotification[]
 }
 
 /** Re-exported content-block alias so SDK callers need no extra import. */

@@ -3,32 +3,32 @@ import { mkdtemp, mkdir, writeFile, readFile, rename, symlink, rm } from 'node:f
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, it, onTestFinished, vi } from 'vitest'
-import type { Context } from '@deepseek-ai/cordis'
-import Timer from '@deepseek-ai/cordis-plugin-timer'
-import { boot, initProfile, loadProfileDirectory, readProfilePatches, readProfileManifest, type ProfileContext } from '@deepseek-ai/dsh-app-boot'
-import Hmr from '@deepseek-ai/dsh-hmr'
-import PluginManager from '@deepseek-ai/dsh-plugin-manager'
-import Sessions, { SessionId } from '@deepseek-ai/dsh-session'
-import Projections from '@deepseek-ai/dsh-session-projection'
-import Agents from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import Llm, { createUserMessage, ToolCallId } from '@deepseek-ai/dsh-llm'
-import Skills from '@deepseek-ai/dsh-skill'
-import * as SkillTool from '@deepseek-ai/dsh-tool-skill'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import Tools from '@deepseek-ai/dsh-tools'
-import * as NativeExecutor from '@deepseek-ai/dsh-tool-executor-native'
-import FsLocal from '@deepseek-ai/dsh-fs-local'
-import WorkingDirectory from '@deepseek-ai/dsh-working-directory'
-import Access from '@deepseek-ai/dsh-api-remote-access'
-import * as ActionCards from '@deepseek-ai/dsh-action-cards'
-import type { SubagentActivation, SubagentActivationSpec } from '@deepseek-ai/dsh-subagent'
+import type { Context } from '@liwa/cordis'
+import Timer from '@liwa/cordis-plugin-timer'
+import { boot, initProfile, loadProfileDirectory, readProfilePatches, readProfileManifest, type ProfileContext } from '@liwa/app-boot'
+import Hmr from '@liwa/hmr'
+import PluginManager from '@liwa/plugin-manager'
+import Sessions, { SessionId } from '@liwa/session'
+import Projections from '@liwa/session-projection'
+import Agents from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import Llm, { createUserMessage, ToolCallId } from '@liwa/llm'
+import Skills from '@liwa/skill'
+import * as SkillTool from '@liwa/tool-skill'
+import SystemPrompt from '@liwa/system-prompt'
+import Tools from '@liwa/tools'
+import * as NativeExecutor from '@liwa/tool-executor-native'
+import FsLocal from '@liwa/fs-local'
+import WorkingDirectory from '@liwa/working-directory'
+import Access from '@liwa/api-remote-access'
+import * as ActionCards from '@liwa/action-cards'
+import type { SubagentActivation, SubagentActivationSpec } from '@liwa/subagent'
 import { MockAdapter, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import * as Recommendations from '../src/index.ts'
 import { RESULT_TEXT, writeBundle } from './fixture.ts'
 
 it.each(['portable-bundle', 'foreign-nested-row'] as const)('validates and installs through pnpm/HMR: %s', async (scenario) => {
-  const home = await mkdtemp(join(tmpdir(), 'dsh-creation-loader-'))
+  const home = await mkdtemp(join(tmpdir(), 'liwa-creation-loader-'))
   let owner: Context | undefined
   onTestFinished(async () => { await owner?.fiber.dispose(); await rm(home, { recursive: true, force: true }) })
   const dir = join(home, 'profiles', 'test')
@@ -37,7 +37,7 @@ it.each(['portable-bundle', 'foreign-nested-row'] as const)('validates and insta
   await mkdir(base)
   await writeFile(anchor, JSON.stringify({ name: 'installation', dependencies: {} }))
   await writeFile(join(base, 'package.json'), JSON.stringify({ name: 'fixture-base', version: '1.0.0',
-    dsh: { bundle: { patch: './cordis.patch.yml' } } }))
+    liwa: { bundle: { patch: './cordis.patch.yml' } } }))
   await writeFile(join(base, 'cordis.patch.yml'), JSON.stringify([{ insert: [
     ['session', 'sessions'], ['projection', 'projections'], ['llm', 'llm'], ['prompt', 'prompt'], ['tools', 'tools'],
     ['executor', 'executor'], ['fs', 'fs'], ['working-directory', 'workingDirectory'], ['skills', 'skills'], ['tool-skill', 'toolSkill'],
@@ -113,13 +113,13 @@ it.each(['portable-bundle', 'foreign-nested-row'] as const)('validates and insta
     expect([...ctx.loader.entries()].find(entry => entry.options.id === 'access')).toBe(access)
     expect(access?.options.name).toBe('cordis:access')
     expect(access?.fiber).toBeDefined()
-    expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toEqual(['fixture-base'])
+    expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toEqual(['fixture-base'])
     return
   }
   await vi.waitFor(() => { expect(receipt()?.phase).toBe('installed') }, { timeout: 20_000 })
   expect(receipt()?.data?.application).toBe('applied')
   expect(starts[0]?.request.agentPreset).toBe('cordis')
-  expect(starts[0]?.request.cwd?.startsWith(join(home, '.dsh-created-plugins'))).toBe(true)
+  expect(starts[0]?.request.cwd?.startsWith(join(home, '.liwa-created-plugins'))).toBe(true)
   await rm(starts[0]!.request.cwd!, { recursive: true })
   const name = receipt()?.data?.bundleName
   if (typeof name !== 'string') throw new Error('the installed card records no bundle name')
@@ -127,14 +127,14 @@ it.each(['portable-bundle', 'foreign-nested-row'] as const)('validates and insta
   expect((await ctx.pluginManager.setBundleEnabled(name, true)).application).toBe('applied')
   const live = () => [...ctx.loader.entries()].find(entry => entry.options.id === name + '-counter')?.fiber
   expect(live()).toBeDefined()
-  expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toContain(name)
+  expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toContain(name)
   await ctx.actionCards.act(agent, callId, 'keep')
   expect(receipt()?.phase).toBe('kept')
   expect(live()).toBeDefined()
   await ctx.actionCards.act(agent, callId, 'undo')
   expect(receipt()?.phase).toBe('removed')
   expect(live()).toBeUndefined()
-  expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toEqual(['fixture-base'])
+  expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toEqual(['fixture-base'])
   expect((await ctx.pluginManager.listBundles()).find(bundle => bundle.name === name)?.installed).not.toBe(true)
   const feature = [...ctx.loader.entries()].find(entry => entry.options.id === 'recommendations')
   expect(feature?.fiber).toBeDefined()

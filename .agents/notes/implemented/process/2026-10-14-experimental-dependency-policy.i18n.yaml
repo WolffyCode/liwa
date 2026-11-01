@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-10-14-experimental-dependency-policy.md
 /agent-note-experimental-packages-follow-the-same-dependency-declaration-rules:
-  en: ec44b9c40ce4bb25
-  zh: 2e5731c96fa82ba8
+  en: 750f644c0aa9e717
+  zh: 60ed9aba6b8449b1
 /agent-note-experimental-packages-follow-the-same-dependency-declaration-rules/problem:
-  en: ee78aec260872b62
-  zh: 005e4c3c2b54a9ef
+  en: 17002b62a64e1d75
+  zh: f93d8e232c8385f2
 /agent-note-experimental-packages-follow-the-same-dependency-declaration-rules/decision:
-  en: 081508647fade940
-  zh: 496cffe0fba8544f
+  en: b4c7773992ccd901
+  zh: bf3fc572fd36e500
 /agent-note-experimental-packages-follow-the-same-dependency-declaration-rules/alternatives-considered:
   en: 28c320fb3547502d
   zh: 9563fd1709ed8b54

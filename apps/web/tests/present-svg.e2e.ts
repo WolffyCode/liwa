@@ -7,8 +7,8 @@ import { fileURLToPath } from 'node:url'
 import { chromium, type Browser, type Page } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import WebSocket from 'ws'
-import type {} from '@deepseek-ai/dsh-tool-present/types'
-import { deriveReplayScript, parseSessionLog } from '@deepseek-ai/dsh-llm-replay'
+import type {} from '@liwa/tool-present/types'
+import { deriveReplayScript, parseSessionLog } from '@liwa/llm-replay'
 import {
   assertFinalWorkspaceSnapshot, captureExpandedTurnProcessAria, compareOrRefreshGolden,
   fixtureUserPrompts, launchWebScaffold, recordFixture, watchConsole,
@@ -77,7 +77,7 @@ describe('web e2e: requested SVG is explicitly delivered', () => {
     }
     let replayOverride: string | undefined
     if (MODE !== 'record') {
-      replayRoot = await mkdtemp(join(tmpdir(), 'dsh-present-svg-replay-'))
+      replayRoot = await mkdtemp(join(tmpdir(), 'liwa-present-svg-replay-'))
       replayOverride = join(replayRoot, 'replay.override.json')
       const script = deriveReplayScript(parseSessionLog(await readFile(FIXTURE, 'utf8')))
       // Recorded absolute paths must follow each isolated Session's working directory.

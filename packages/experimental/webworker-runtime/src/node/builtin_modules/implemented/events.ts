@@ -13,7 +13,7 @@ type Listener = (...args: unknown[]) => void
  */
 type OnceWrapper = Listener & { listener: Listener }
 
-/** The `node:events` subset the harness registers on: add, remove, and emit. */
+/** The `node:events` subset Liwa registers on: add, remove, and emit. */
 export class EventEmitter {
   private readonly registry = new Map<string, Listener[]>()
 

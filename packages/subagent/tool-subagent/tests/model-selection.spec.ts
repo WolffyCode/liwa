@@ -1,16 +1,16 @@
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import { executeToolFixture } from '@liwa/tool-testkit'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 import { mountWorkingDirectoryFixture } from '../../subagent/tests/working-directory-fixture.ts'
 import { describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { ReasoningEffortId, ToolCallId } from '@deepseek-ai/dsh-llm'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import SubagentRuntime from '@deepseek-ai/dsh-subagent'
-import type { SubagentStartRequest } from '@deepseek-ai/dsh-subagent'
-import { Session, SessionId } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import { Context } from '@liwa/cordis'
+import { ReasoningEffortId, ToolCallId } from '@liwa/llm'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime from '@liwa/tools'
+import type { Agent } from '@liwa/agent'
+import SubagentRuntime from '@liwa/subagent'
+import type { SubagentStartRequest } from '@liwa/subagent'
+import { Session, SessionId } from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
 import { MockAdapter } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import * as mock from './scripted-provider.ts'
 import * as tool from '../src/index.ts'
@@ -40,7 +40,7 @@ function parentWithRoute(
   return { id, options, session: Session.create(id) } as unknown as Agent
 }
 
-describe('dsh-tool-subagent model selection', () => {
+describe('liwa-tool-subagent model selection', () => {
   it('rejects empty route ids at the configuration boundary', () => {
     expect(() => { assertAllowedModelRoutes([{ provider: '', model: 'model' }]) })
       .toThrow('requires non-empty provider and model ids')

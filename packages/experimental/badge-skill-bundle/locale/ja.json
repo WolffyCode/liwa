@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "DSH バッジスキル",
-    "description": "エージェントが文書や PR などの成果物に「powered by dsh」バッジを追加できます。",
+    "title": "Liwa バッジスキル",
+    "description": "エージェントが文書や PR などの成果物に「powered by liwa」バッジを追加できます。",
     "detail": "docs/DETAIL.md"
   }
 }

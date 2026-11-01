@@ -5,9 +5,9 @@
  * Runs the built package under plain Node.
  */
 
-import { Context } from '@deepseek-ai/cordis'
-import { SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
-import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
+import { Context } from '@liwa/cordis'
+import { SESSION_FORMAT_VERSION } from '@liwa/session'
+import * as JsonlSessionPersistence from '@liwa/session-persistence-jsonl'
 
 const [root, sessionId] = process.argv.slice(2)
 const ctx = new Context()

@@ -1,29 +1,29 @@
 import { describe, expect, it, vi } from 'vitest'
-import { unsupportedModel, provideWorkingDirectoryFixture, unsupportedInbox } from '@deepseek-ai/dsh-agent-loop-testkit'
+import { unsupportedModel, provideWorkingDirectoryFixture, unsupportedInbox } from '@liwa/agent-loop-testkit'
 import { PassThrough } from 'node:stream'
 import { resolve } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import SessionStore, { SESSION_FORMAT_VERSION, Session, SessionId } from '@deepseek-ai/dsh-session'
-import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
-import SandboxProvider from '@deepseek-ai/dsh-sandbox'
-import type { ConfinedArgv, SandboxPolicy } from '@deepseek-ai/dsh-sandbox'
-import SandboxPolicyService, { setSandboxMode } from '@deepseek-ai/dsh-sandbox-policy'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import TerminalSessionService, { TerminalBackendCleanupError, TerminalSessionId } from '@deepseek-ai/dsh-terminal'
-import type { TerminalSendRequest, TerminalWaitReason } from '@deepseek-ai/dsh-terminal'
-import { BashTerminalBackend, PWSH_PROMPT_SETUP } from '@deepseek-ai/dsh-terminal-bash'
-import { ENCODING_PREAMBLE } from '@deepseek-ai/dsh-pwsh-local'
-import * as ptyLocal from '@deepseek-ai/dsh-terminal-bash'
-import type { ResolvedConfig } from '@deepseek-ai/dsh-terminal-bash/src/config.ts'
-import type { LocalPtySession } from '@deepseek-ai/dsh-terminal-bash/src/session.ts'
-import { SubprocessRuntime } from '@deepseek-ai/dsh-subprocess'
+import { Context } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
+import SessionStore, { SESSION_FORMAT_VERSION, Session, SessionId } from '@liwa/session'
+import AgentRegistry, { type Agent } from '@liwa/agent'
+import SandboxProvider from '@liwa/sandbox'
+import type { ConfinedArgv, SandboxPolicy } from '@liwa/sandbox'
+import SandboxPolicyService, { setSandboxMode } from '@liwa/sandbox-policy'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import TerminalSessionService, { TerminalBackendCleanupError, TerminalSessionId } from '@liwa/terminal'
+import type { TerminalSendRequest, TerminalWaitReason } from '@liwa/terminal'
+import { BashTerminalBackend, PWSH_PROMPT_SETUP } from '@liwa/terminal-bash'
+import { ENCODING_PREAMBLE } from '@liwa/pwsh-local'
+import * as ptyLocal from '@liwa/terminal-bash'
+import type { ResolvedConfig } from '@liwa/terminal-bash/src/config.ts'
+import type { LocalPtySession } from '@liwa/terminal-bash/src/session.ts'
+import { SubprocessRuntime } from '@liwa/subprocess'
 import type {
   SubprocessHandle,
   SubprocessSpawnSpec,
   SubprocessTerminalHandle,
   SubprocessTerminalSpawnSpec,
-} from '@deepseek-ai/dsh-subprocess'
+} from '@liwa/subprocess'
 
 class EmptySandbox extends SandboxProvider {
   async confine(_argv: readonly string[], _policy: SandboxPolicy): Promise<ConfinedArgv> {
@@ -286,9 +286,9 @@ describe('BashTerminalBackend startup rollback', () => {
       cwd: '/work',
       graceMs: 10,
       env: {
-        TERM: 'dumb', PAGER: 'cat', GIT_PAGER: 'cat', PS1: 'dsh> ', BASH_SILENCE_DEPRECATION_WARNING: '1',
-        PROMPT_COMMAND: 'printf "\\033]133;D;%s\\007" "$?"; PS1=\'dsh> \'',
-        DSH_SHELL: '1', DSH_SESSION_ID: 'agent', DSH_PTY_SESSION_ID: 'pty-1',
+        TERM: 'dumb', PAGER: 'cat', GIT_PAGER: 'cat', PS1: 'liwa> ', BASH_SILENCE_DEPRECATION_WARNING: '1',
+        PROMPT_COMMAND: 'printf "\\033]133;D;%s\\007" "$?"; PS1=\'liwa> \'',
+        LIWA_SHELL: '1', LIWA_SESSION_ID: 'agent', LIWA_PTY_SESSION_ID: 'pty-1',
       },
     })
     expect(spawned?.env?.PTY_TEST_SECRET).toBeUndefined()
@@ -417,14 +417,14 @@ describe('BashTerminalBackend startup rollback', () => {
         outcome.resolve({ exitCode: null, signal: 'SIGTERM' })
       },
     }
-    queueMicrotask(() => { output.write(Buffer.from('\x1b]133;D;0\x07dsh> ')) })
+    queueMicrotask(() => { output.write(Buffer.from('\x1b]133;D;0\x07liwa> ')) })
     const backend = new BashTerminalBackend(
       ctx,
       config(),
       async () => terminal,
     )
     const session = await backend.spawn(spec(agent(ctx)))
-    expect(session.motd).toBe('dsh> ')
+    expect(session.motd).toBe('liwa> ')
     await session.close('test complete')
   })
 
@@ -442,7 +442,7 @@ describe('BashTerminalBackend startup rollback', () => {
         sent = request
         return {
           done: Promise.resolve({
-            viewport: 'setup-echo dsh> ', waitReason: 'stdin_read' as const,
+            viewport: 'setup-echo liwa> ', waitReason: 'stdin_read' as const,
             sessionStatus: { kind: 'running' as const }, truncated: false,
           }),
           readOutput: () => ({ delta: '', truncated: false }),
@@ -459,9 +459,9 @@ describe('BashTerminalBackend startup rollback', () => {
     )
     expect(await backend.spawn(spec(agent(ctx)))).toBe(session)
     expect(sent).toMatchObject({ text: ENCODING_PREAMBLE + PWSH_PROMPT_SETUP, submit: true })
-    expect(session.motd).toBe('setup-echo dsh> ')
+    expect(session.motd).toBe('setup-echo liwa> ')
     expect(spawned?.env).toMatchObject({
-      TERM: 'dumb', NO_COLOR: '1', DSH_SHELL: '1', DSH_SESSION_ID: 'agent', DSH_PTY_SESSION_ID: 'pty-1',
+      TERM: 'dumb', NO_COLOR: '1', LIWA_SHELL: '1', LIWA_SESSION_ID: 'agent', LIWA_PTY_SESSION_ID: 'pty-1',
     })
     expect(spawned?.env?.PS1).toBeUndefined()
     expect(spawned?.env?.PROMPT_COMMAND).toBeUndefined()
@@ -481,7 +481,7 @@ describe('BashTerminalBackend startup rollback', () => {
         const second = sends.length > 1
         return {
           done: Promise.resolve({
-            viewport: second ? 'dsh> ' : "function prompt { 'dsh> ' }\n",
+            viewport: second ? 'liwa> ' : "function prompt { 'liwa> ' }\n",
             waitReason: second ? 'stdin_read' as const : 'inferred_idle' as const,
             sessionStatus: { kind: 'running' as const }, truncated: false,
           }),
@@ -500,7 +500,7 @@ describe('BashTerminalBackend startup rollback', () => {
     await backend.spawn(spec(agent(ctx)))
     expect(sends).toHaveLength(2)
     expect(sends[1]).toMatchObject({ text: '', submit: false })
-    expect(session.motd).toBe('dsh> ')
+    expect(session.motd).toBe('liwa> ')
   })
 
   it('rejects a pwsh bootstrap whose shell exits or times out', async () => {
@@ -596,7 +596,7 @@ describe('BashTerminalBackend startup rollback', () => {
         sends.push(request)
         return {
           done: Promise.resolve({
-            viewport: 'dsh> ', waitReason: 'stdin_read' as const,
+            viewport: 'liwa> ', waitReason: 'stdin_read' as const,
             sessionStatus: { kind: 'running' as const }, truncated: false,
           }),
           readOutput: () => ({ delta: '', truncated: false }),
@@ -613,7 +613,7 @@ describe('BashTerminalBackend startup rollback', () => {
     )
     const signal = new AbortController().signal
     const spawned = await backend.spawn({ ...spec(agent(ctx)), signal })
-    expect(spawned.motd).toBe('dsh> ')
+    expect(spawned.motd).toBe('liwa> ')
     expect(sends).toHaveLength(1)
     expect(sends[0]?.signal).toBe(signal)
   })

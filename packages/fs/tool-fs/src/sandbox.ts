@@ -2,20 +2,20 @@
  * The sandbox-escalation API shared by the `write` and `edit` tools: the
  * per-call policy resolution, the advertised escalation fields, and the denial-marker
  * mapping — all delegating the vocabulary and the fail-closed approval
- * sequence to `@deepseek-ai/dsh-sandbox` (the same pieces `@deepseek-ai/dsh-tool-bash`
+ * sequence to `@liwa/sandbox` (the same pieces `@liwa/tool-bash`
  * uses), so bash and fs escalate identically. Built ONCE per plugin from
  * `ctx.fs.sandboxMode` (the capability fact — is a confining backend mounted?)
  * and shared by both mutating tools.
  *
- * @module @deepseek-ai/dsh-tool-fs/sandbox
+ * @module @liwa/tool-fs/sandbox
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type { ToolExecution } from '@deepseek-ai/dsh-tools'
-import type { SandboxExecutionPolicy, SandboxMode } from '@deepseek-ai/dsh-sandbox'
-import { ESCALATION_TARGETS, approveEscalation, escalationHintMarker, sandboxDenialMarker, sandboxPermissionsDescription, validateEscalationArgs } from '@deepseek-ai/dsh-sandbox'
-import type { SandboxPolicyService } from '@deepseek-ai/dsh-sandbox-policy'
-import { FsError } from '@deepseek-ai/dsh-fs'
+import type { Context } from '@liwa/cordis'
+import type { ToolExecution } from '@liwa/tools'
+import type { SandboxExecutionPolicy, SandboxMode } from '@liwa/sandbox'
+import { ESCALATION_TARGETS, approveEscalation, escalationHintMarker, sandboxDenialMarker, sandboxPermissionsDescription, validateEscalationArgs } from '@liwa/sandbox'
+import type { SandboxPolicyService } from '@liwa/sandbox-policy'
+import { FsError } from '@liwa/fs'
 
 /** The two escalation arguments a mutating tool may carry (advertised only under a confining backend). */
 export interface FsEscalationArgs {
@@ -117,7 +117,7 @@ export class FsSandboxController {
    * `FsError` whose text is the shared `[sandbox: …]` denial marker plus the
    * same-turn escalation hint, so a policy denial reads identically to bash's
    * WHILE keeping the structured `FS_SANDBOX_DENIED` code — `ToolRuntime`
-   * populates `result.error` only for `HarnessError` instances, so a plain
+   * populates `result.error` only for `LiwaError` instances, so a plain
    * `Error` would strip the code retry/observers key off. Any other error
    * passes through unchanged. A `FS_SANDBOX_DENIED` only arises under a
    * confining backend, which always advertises the escalation fields, so the

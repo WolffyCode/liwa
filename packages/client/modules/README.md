@@ -3,13 +3,13 @@ description: "Client module system for the web GUI: the host composes the boot g
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-client-modules
+# @liwa/client-modules
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-client-modules` turns a plugin package's `dsh.client` declaration into a loadable browser bundle: the host half scans enabled Loader entries and composes the boot graph, an available Web carrier serves each bundle over `/plugins`, and a shell-owned carrier dispatches the same exact bundle responses through `fetchBundle()`. The browser half loads those bundles lazily on demand. Plugin bundles execute lazily — running a bundle only registers a factory, and module side effects run at materialization — so nothing runs until a plugin is first used. Everything here is browser-kernel machinery; the model never sees it.
+`liwa-client-modules` turns a plugin package's `liwa.client` declaration into a loadable browser bundle: the host half scans enabled Loader entries and composes the boot graph, an available Web carrier serves each bundle over `/plugins`, and a shell-owned carrier dispatches the same exact bundle responses through `fetchBundle()`. The browser half loads those bundles lazily on demand. Plugin bundles execute lazily — running a bundle only registers a factory, and module side effects run at materialization — so nothing runs until a plugin is first used. Everything here is browser-kernel machinery; the model never sees it.
 
 ## Table of Contents
 
@@ -25,13 +25,13 @@ English | [中文](README.zh.md)
 <a id="use-this-package"></a>
 ## Use this package
 
-Use [`DshClientManifest`](../../util/package-manifest/README.md) for the declaration type. Client-modules validates the JSON and owns the normalized boot graph.
+Use [`LiwaClientManifest`](../../util/package-manifest/README.md) for the declaration type. Client-modules validates the JSON and owns the normalized boot graph.
 
-Use it when you compose or build a browser client plugin: the package turns a package's `dsh.client` declaration into a loadable browser bundle with no per-plugin wiring. It activates with the web composition; the shell boots it before any plugin runs.
+Use it when you compose or build a browser client plugin: the package turns a package's `liwa.client` declaration into a loadable browser bundle with no per-plugin wiring. It activates with the web composition; the shell boots it before any plugin runs.
 
 ### Declaring a client plugin
 
-A browser plugin package declares `dsh.client` in its `package.json` with `platform: 'web'`, exports a `./client` bundle, and lists any non-baseline module requests under `dsh.client.external`. The host half turns each declaration into a served bundle under `/plugins`, ordered so dynamic providers load before their consumers.
+A browser plugin package declares `liwa.client` in its `package.json` with `platform: 'web'`, exports a `./client` bundle, and lists any non-baseline module requests under `liwa.client.external`. The host half turns each declaration into a served bundle under `/plugins`, ordered so dynamic providers load before their consumers.
 
 <a id="package-assets"></a>
 ### Package assets
@@ -52,7 +52,7 @@ Every graph carries the Host release identity as `release`: this package's `vers
 
 ### Sharing modules
 
-The shell seeds a frozen module table ([`PLATFORM_MODULES`](../web/README.md#the-shared-module-table)); every dynamic bundle resolves its externals against exactly that baseline. `dsh.client.external` adds only exact non-baseline requests, each answered by the dynamic package row it names or an exact static-table key. Type-only imports are erased and create no request. Composition rejects malformed requests, missing suppliers, self-requests, and synchronous request cycles.
+The shell seeds a frozen module table ([`PLATFORM_MODULES`](../web/README.md#the-shared-module-table)); every dynamic bundle resolves its externals against exactly that baseline. `liwa.client.external` adds only exact non-baseline requests, each answered by the dynamic package row it names or an exact static-table key. Type-only imports are erased and create no request. Composition rejects malformed requests, missing suppliers, self-requests, and synchronous request cycles.
 
 ### Build requirements
 
@@ -70,7 +70,7 @@ This section explains how the module system is built; observable behavior is cov
 
 ### Design concept
 
-The package has two sides: the Node half is the composition and serving side (`ctx.clientModules`, `ClientModuleRegistry`), the browser half is the loading side (`ctx.modules`, `ClientModuleSystem`). The wire between them is the boot graph — `WebBootEntry` rows injected as `window.__DSH_BOOT__`, with `<` escaped so plugin-controlled strings cannot break out of the script element. The vendored Loader's only consumption point is `EntryTree.import`, so the module system is the single replacement for "how plugin code arrives".
+The package has two sides: the Node half is the composition and serving side (`ctx.clientModules`, `ClientModuleRegistry`), the browser half is the loading side (`ctx.modules`, `ClientModuleSystem`). The wire between them is the boot graph — `WebBootEntry` rows injected as `window.__LIWA_BOOT__`, with `<` escaped so plugin-controlled strings cannot break out of the script element. The vendored Loader's only consumption point is `EntryTree.import`, so the module system is the single replacement for "how plugin code arrives".
 
 ### Lazy-CJS model
 
@@ -78,7 +78,7 @@ Executing a plugin bundle only registers its factory; every module-body side eff
 
 ### Incremental composition
 
-The Node half scans incrementally per package — no full-rescan path. Every `internal/plugin` emission marks the fiber's entry name dirty; a microtask flush reconciles each dirty name against the live loader entries, and the activation pass seeds the same dirty set and flushes synchronously, so first scan and steady state share one implementation. Each reconciliation reads the package manifest and the bundle metadata again, so an entry that restarts after its package was reinstalled, upgraded, or moved publishes its current `dsh.client` declaration and client export; a reconciliation that finds the same manifest and bundle metadata publishes nothing and reads no bundle bytes, and an unchanged bundle keeps its revision, so the browser keeps the loaded plugin. The resolved manifest package name identifies the browser module. Distinct active Loader sources resolving to one package name are rejected; removing the conflict promotes the remaining source without requiring its fiber to restart. A bundle rebuilt without an entry restart reaches the graph through `rebuilt()` (the HMR hook).
+The Node half scans incrementally per package — no full-rescan path. Every `internal/plugin` emission marks the fiber's entry name dirty; a microtask flush reconciles each dirty name against the live loader entries, and the activation pass seeds the same dirty set and flushes synchronously, so first scan and steady state share one implementation. Each reconciliation reads the package manifest and the bundle metadata again, so an entry that restarts after its package was reinstalled, upgraded, or moved publishes its current `liwa.client` declaration and client export; a reconciliation that finds the same manifest and bundle metadata publishes nothing and reads no bundle bytes, and an unchanged bundle keeps its revision, so the browser keeps the loaded plugin. The resolved manifest package name identifies the browser module. Distinct active Loader sources resolving to one package name are rejected; removing the conflict promotes the remaining source without requiring its fiber to restart. A bundle rebuilt without an entry restart reaches the graph through `rebuilt()` (the HMR hook).
 
 The Node half snapshots each `client.js` entry before publication and creates combo descriptors without building response bodies. It groups resources into combo route keys (`/plugins/??...&rev=...`), with one bootstrap combo for the modules row and one or more application combos for the other rows; each phase is partitioned before a URL exceeds 3 KiB. The graph and batch descriptors carry the app-directory-relative form of the same key (`plugins/??...&rev=...`), which a browser document resolves under its own mount, while the response table stays keyed by the absolute route; the source-map trailer is resolved against the combo script's own directory. A script body is combined once on its first `GET` and ends with its map reference. The corresponding map files are read, validated, and combined separately on the first map `GET`; `HEAD` materializes neither body. The Host does not scan or preload sibling chunks: an exact `/plugins/<package>/client.<name>.js?rev=<rev>` request reads that script through the asynchronous file API, so a filesystem that materializes files on first asynchronous read can supply it, and caches it; its map remains uncomputed until the map URL is requested. The chunk reference the browser derives from its owner row is document-relative as well (`plugins/<package>/client.<name>.js?rev=<rev>`), and a chunk script's map trailer is the bare `client.<name>.js.map?rev=<rev>` name, which resolves against the script's own directory. Every combo or chunk map is Indexed Source Map v3 and uses an authored section when available or an identity section for the packaged bundle. Initial publication and HMR derive per-plugin revisions from the entry's `mtimeMs`, `ctimeMs`, and size, without hashing artifact contents. Status-change time distinguishes rewrites that preserve mtime and size. Unchanged artifacts therefore retain their revisions across Host restarts, so SSE reconnection does not replace their browser plugins. The shared preset stamps `client.js` after every package output is written, so a chunk-only rebuild changes the owner revision without a Host-side chunk scan. Combo revisions derive from the ordered row revisions. Advertised combo responses and requested chunk responses remain immutable across unrelated graph recomposition, and an unknown resource or revision returns 404.
 
@@ -102,7 +102,7 @@ The host contributes structured index rows that inject, into `<head>`: the `wind
 | [`src/client/system.ts`](src/client/system.ts) | `ClientModuleSystem`: load/materialize/invalidate machinery |
 | [`src/client/entries.ts`](src/client/entries.ts) | Page entry reconciliation, retries and code replacement |
 | [`src/client/entry-lifecycle.ts`](src/client/entry-lifecycle.ts) | Loader fiber teardown through the registry and owned-style cleanup |
-| [`src/client/manifest.ts`](src/client/manifest.ts) | Wire types, boot-manifest parsing, and the `dsh.client` declaration parser |
+| [`src/client/manifest.ts`](src/client/manifest.ts) | Wire types, boot-manifest parsing, and the `liwa.client` declaration parser |
 
 </details>
 
@@ -116,7 +116,7 @@ Read these when the module contract is not enough: the subsystem reference, the 
 - [Client modules subsystem](../../../docs/subsystems/client-modules.md) — the web plugin table, `WebBootGraph` wire, and the bundle route.
 - [Web boot kernel](../web/README.md) — the shell that creates the module system and boots the plugin tree.
 - [Client HMR driver](../hmr/README.md) — the reload chain that drives `invalidate`/`prefetch` on rebuilt bundles.
-- [Client authoring rules](../AGENTS.md#shared-modules-and-the-module-graph) — the shared-module baseline and `dsh.client.external` semantics.
+- [Client authoring rules](../AGENTS.md#shared-modules-and-the-module-graph) — the shared-module baseline and `liwa.client.external` semantics.
 - [Client group map](../README.md) — the browser half this package belongs to.
 
 -----

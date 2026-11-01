@@ -1,19 +1,19 @@
 /**
  * Persistent shell PTY backend over the subprocess terminal primitive, shared
  * sandbox policy, bounded output, and provider-owned session cleanup.
- * @module @deepseek-ai/dsh-terminal-bash
+ * @module @liwa/terminal-bash
  */
 
-import type {} from '@deepseek-ai/dsh-working-directory'
-import { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
-import { TerminalBackendCleanupError } from '@deepseek-ai/dsh-terminal'
-import type { TerminalBackend, TerminalBackendSpawnSpec, TerminalSendOperation } from '@deepseek-ai/dsh-terminal'
-import type { SubprocessTerminalHandle, SubprocessTerminalSpawnSpec } from '@deepseek-ai/dsh-subprocess'
-import type { SandboxExecutionPolicy } from '@deepseek-ai/dsh-sandbox'
-import type {} from '@deepseek-ai/dsh-sandbox-policy'
-import { ENCODING_PREAMBLE } from '@deepseek-ai/dsh-pwsh-local'
+import type {} from '@liwa/working-directory'
+import { Context } from '@liwa/cordis'
+import type { Agent } from '@liwa/agent'
+import type { Session, SessionEvent } from '@liwa/session'
+import { TerminalBackendCleanupError } from '@liwa/terminal'
+import type { TerminalBackend, TerminalBackendSpawnSpec, TerminalSendOperation } from '@liwa/terminal'
+import type { SubprocessTerminalHandle, SubprocessTerminalSpawnSpec } from '@liwa/subprocess'
+import type { SandboxExecutionPolicy } from '@liwa/sandbox'
+import type {} from '@liwa/sandbox-policy'
+import { ENCODING_PREAMBLE } from '@liwa/pwsh-local'
 import { type Config, type ResolvedConfig, resolveConfig, type ShellDialect, validateConfig } from './config.ts'
 import { LocalPtySession } from './session.ts'
 import { CONTROLLED_PROMPT } from './sanitize.ts'
@@ -65,9 +65,9 @@ function childEnvironment(spec: TerminalBackendSpawnSpec, dialect: ShellDialect)
     TERM: 'dumb',
     PAGER: 'cat',
     GIT_PAGER: 'cat',
-    DSH_SHELL: '1',
-    DSH_SESSION_ID: spec.owner.id,
-    DSH_PTY_SESSION_ID: spec.sessionId,
+    LIWA_SHELL: '1',
+    LIWA_SESSION_ID: spec.owner.id,
+    LIWA_PTY_SESSION_ID: spec.sessionId,
   }
   if (dialect === 'pwsh') {
     // pwsh ignores PS1/PROMPT_COMMAND; its prompt is installed by the startup

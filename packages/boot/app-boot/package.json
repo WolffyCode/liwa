@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-app-boot",
+  "name": "@liwa/app-boot",
   "description": "Shared boot glue for the app bins: .env loading, fail-loud Loader guards, snapshot-aware config resolution, and the Loader boot sequence",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/boot/app-boot"
   },
   "type": "module",
@@ -32,9 +32,9 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-atomic-write": "workspace:*",
-    "@deepseek-ai/dsh-official-bundles": "workspace:*",
-    "@deepseek-ai/dsh-package-manifest": "workspace:*",
+    "@liwa/atomic-write": "workspace:*",
+    "@liwa/official-bundles": "workspace:*",
+    "@liwa/package-manifest": "workspace:*",
     "@eslint-community/regexpp": "^4.12.2",
     "ajv": "^8.20.0",
     "node-addon-require-builtin": "^0.1.9",
@@ -43,23 +43,23 @@
     "yaml": "^2.9.1"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis-plugin-group": "workspace:~",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-launch-environment": "workspace:*",
-    "@deepseek-ai/dsh-home-paths": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis-plugin-group": "workspace:~",
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/launch-environment": "workspace:*",
+    "@liwa/home-paths": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/schemastery": "workspace:~",
-    "@deepseek-ai/cordis-plugin-group": "workspace:~",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/cordis-plugin-timer": "workspace:~",
-    "@deepseek-ai/dsh-launch-environment": "workspace:*",
-    "@deepseek-ai/dsh-home-paths": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
+    "@liwa/schemastery": "workspace:~",
+    "@liwa/cordis-plugin-group": "workspace:~",
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/cordis-plugin-timer": "workspace:~",
+    "@liwa/launch-environment": "workspace:*",
+    "@liwa/home-paths": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
     "@types/semver": "^7.8.0",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   }
 }

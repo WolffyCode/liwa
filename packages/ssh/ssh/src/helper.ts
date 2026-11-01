@@ -3,16 +3,16 @@ import { createHash, randomUUID } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { mkdtemp, rm } from 'node:fs/promises'
 import type { Readable, Writable } from 'node:stream'
-import { Context } from '@deepseek-ai/cordis'
-import { brandString } from '@deepseek-ai/dsh-brand'
-import { FsError, type FsTarget, type FsWriteIntent, type FsVersion } from '@deepseek-ai/dsh-fs'
-import { SandboxedFileSystem } from '@deepseek-ai/dsh-fs-sandbox'
-import type {} from '@deepseek-ai/dsh-subprocess'
-import { LocalSubprocessRuntime } from '@deepseek-ai/dsh-subprocess-local'
-import { LocalSandboxProvider } from '@deepseek-ai/dsh-sandbox-local'
-import { SandboxPolicyService } from '@deepseek-ai/dsh-sandbox-policy'
-import { SessionProjectionRegistry } from '@deepseek-ai/dsh-session-projection'
-import type { SandboxExecutionPolicy, SandboxPolicy } from '@deepseek-ai/dsh-sandbox'
+import { Context } from '@liwa/cordis'
+import { brandString } from '@liwa/brand'
+import { FsError, type FsTarget, type FsWriteIntent, type FsVersion } from '@liwa/fs'
+import { SandboxedFileSystem } from '@liwa/fs-sandbox'
+import type {} from '@liwa/subprocess'
+import { LocalSubprocessRuntime } from '@liwa/subprocess-local'
+import { LocalSandboxProvider } from '@liwa/sandbox-local'
+import { SandboxPolicyService } from '@liwa/sandbox-policy'
+import { SessionProjectionRegistry } from '@liwa/session-projection'
+import type { SandboxExecutionPolicy, SandboxPolicy } from '@liwa/sandbox'
 import { z } from 'zod'
 import { SshRpcPeer, RemoteOperationError, SSH_MAX_PROCESS_HANDLES, SSH_MAX_TEXT_STREAMS, SSH_PROTOCOL_VERSION } from './protocol.ts'
 import { RemoteProcesses } from './helper-processes.ts'
@@ -58,7 +58,7 @@ export async function runSshHelper(transport: HelperTransport): Promise<void> {
   transport.signal.throwIfAborted()
   const runtime = await services()
   const { ctx } = runtime
-  const root = await mkdtemp('/tmp/dsh-ssh-')
+  const root = await mkdtemp('/tmp/liwa-ssh-')
   const processes = new RemoteProcesses(ctx, root, SSH_MAX_PROCESS_HANDLES, 30_000)
   const lifetime = new AbortController()
   const iterators = new Map<SshTextStreamId, { iterator: AsyncIterator<string>; controller: AbortController }>()

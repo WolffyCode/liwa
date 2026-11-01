@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 /** What the viewer page's own plugin blocks under its access snapshot, and whose scopes it touches. */
 
-import { Context } from '@deepseek-ai/cordis'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
+import { Context } from '@liwa/cordis'
+import { createSnapshotStore } from '@liwa/client-store'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { SessionId } from '@liwa/session/types'
 import { apply, inject, viewerSignInHref } from '../src/client/viewer-session-plugin.ts'
 import { publishViewerCapabilities, viewerCapabilities } from '../src/client/viewer-capabilities.ts'
 import { viewerContextFacts } from '../src/client/viewer-context.ts'
@@ -12,7 +12,7 @@ import { viewerStatus, viewerStatusFacts } from '../src/client/viewer-status.ts'
 import { en, zh } from '../src/client/locales.ts'
 import { cleanup, render } from '@testing-library/react'
 import { createElement, createRef } from 'react'
-import { DraftEditor } from '@deepseek-ai/dsh-client-ui-conversation/src/client/input/editor/DraftEditor.tsx'
+import { DraftEditor } from '@liwa/client-ui-conversation/src/client/input/editor/DraftEditor.tsx'
 import {
   provideViewerConnection, provideViewerLocale, provideViewerRemoteAccess, type ViewerRemoteAccess,
 } from './viewer-plugin-services.client.ts'
@@ -22,7 +22,7 @@ const CHILD = 'fx-child' as SessionId
 const OTHER = 'fx-other' as SessionId
 
 interface ViewerTargetWindow {
-  __DSH_LIVESHARE_VIEWER__?: { shareId: string; sessionId: string; basePath?: string }
+  __LIWA_LIVESHARE_VIEWER__?: { shareId: string; sessionId: string; basePath?: string }
 }
 
 /** Blocks one Session's composer carries, keyed by the store the plugin wrote. */
@@ -71,7 +71,7 @@ async function bench(
   const access = provideViewerRemoteAccess(ctx, initial)
   const connection = provideViewerConnection(ctx)
   if (options.target !== false) {
-    (globalThis as ViewerTargetWindow).__DSH_LIVESHARE_VIEWER__ = {
+    (globalThis as ViewerTargetWindow).__LIWA_LIVESHARE_VIEWER__ = {
       shareId: 'share-1',
       sessionId: SHARED,
       basePath: '',
@@ -143,7 +143,7 @@ function listRows(page: Awaited<ReturnType<typeof bench>>, options: { ownFork: b
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
-  delete (globalThis as ViewerTargetWindow).__DSH_LIVESHARE_VIEWER__
+  delete (globalThis as ViewerTargetWindow).__LIWA_LIVESHARE_VIEWER__
   viewerCapabilities.set({ mode: 'view' })
   viewerStatusFacts.set({})
   viewerStatus.set('connecting')
@@ -156,7 +156,7 @@ describe('viewer page state lifetime', () => {
       return Promise.resolve(url.includes('/__liveshare/context')
         ? Response.json({
           ownerDisplayName: 'Owner',
-          dshVersion: '0.1.5-rc.2',
+          liwaVersion: '0.1.5-rc.2',
           viewer: { providerId: 'oidc', subjectId: 'subject-42', displayName: '许翰翔' },
           capabilities: { sessionMode: 'write', online: true },
         })
@@ -168,7 +168,7 @@ describe('viewer page state lifetime', () => {
         expect(viewerCapabilities.getSnapshot().mode).toBe('write')
         expect(viewerContextFacts.getSnapshot()).toMatchObject({
           owner: 'Owner',
-          dshVersion: '0.1.5-rc.2',
+          liwaVersion: '0.1.5-rc.2',
           viewerSubjectId: 'subject-42',
           viewerDisplayName: '许翰翔',
         })
@@ -568,7 +568,7 @@ describe('viewer session plugin', () => {
       expect(location.reload).toHaveBeenCalledOnce()
 
       // A served document that names no base path points the page at its own origin's root.
-      ;(globalThis as ViewerTargetWindow).__DSH_LIVESHARE_VIEWER__ = { shareId: 'share-1', sessionId: SHARED }
+      ;(globalThis as ViewerTargetWindow).__LIWA_LIVESHARE_VIEWER__ = { shareId: 'share-1', sessionId: SHARED }
       viewerStatus.set('reauthenticate')
       await vi.waitFor(() => { expect(bannerAction('sign-in')).toBeDefined() })
       bannerAction('sign-in').click()

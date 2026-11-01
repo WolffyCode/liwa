@@ -2,7 +2,7 @@
 
 English | [中文](user-questions.zh.md)
 
-The user-questions seam of [dsh-user-questions](../../packages/interaction/user-questions). It is the provider-neutral vocabulary a tool or permission plugin uses when it needs the human to answer before the agent can continue. Agent-scoped waterfall listeners compose the available UI surfaces, including listeners relayed to a connected client.
+The user-questions seam of [liwa-user-questions](../../packages/interaction/user-questions). It is the provider-neutral vocabulary a tool or permission plugin uses when it needs the human to answer before the agent can continue. Agent-scoped waterfall listeners compose the available UI surfaces, including listeners relayed to a connected client.
 
 Source: [`packages/interaction/user-questions/src/index.ts`](../../packages/interaction/user-questions/src/index.ts)
 
@@ -209,11 +209,11 @@ After a Host restart, the Remote layer resumes the root agent when the Session r
 
 ## Errors
 
-`UserQuestionError` extends `HarnessError`, so `ctx.tools.execute()` preserves `{ name, code }` for model-facing tool failures such as `EMPTY_QUESTIONS`, `BAD_INTENT`, `NO_PROVIDER`, `ASK_ABORTED`, or UI-side cancellation.
+`UserQuestionError` extends `LiwaError`, so `ctx.tools.execute()` preserves `{ name, code }` for model-facing tool failures such as `EMPTY_QUESTIONS`, `BAD_INTENT`, `NO_PROVIDER`, `ASK_ABORTED`, or UI-side cancellation.
 
 ```ts type-equiv
 /** Stable error taxonomy for user-questions failures. */
-class UserQuestionError extends HarnessError {
+class UserQuestionError extends LiwaError {
   constructor(message: string, code: string, options?: ErrorOptions) {
     super(message, code, options)
     this.name = 'UserQuestionError'
@@ -305,13 +305,13 @@ Source: [`packages/interaction/user-questions/src/index.ts`](../../packages/inte
 
 #### `user-questions/request` — waterfall
 
-Ask composed answerers for structured user input. Return an answer to claim the request or call `next()` to delegate. Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.
+Ask composed answerers for structured user input. Return an answer to claim the request or call `next()` to delegate. Scope-filtered dispatch (`@liwa/scope`): agent-scoped listeners receive only that agent.
 
 ```ts cordis-catalog
 /**
  * Ask composed answerers for structured user input. Return an answer to
  * claim the request or call `next()` to delegate. Scope-filtered dispatch
- * (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.
+ * (`@liwa/scope`): agent-scoped listeners receive only that agent.
  * @param request - pending user-question request.
  * @mode waterfall
  */

@@ -1,5 +1,5 @@
 /**
- * Tool bridge: discovers MCP tools, registers them on the harness ToolRuntime
+ * Tool bridge: discovers MCP tools, registers them on Liwa ToolRuntime
  * under deterministic server-qualified public names, and handles re-sync when
  * the server's tool list changes.
  *
@@ -15,14 +15,14 @@
 import { createHash } from 'node:crypto'
 import { isDeepStrictEqual } from 'node:util'
 import { specTypeSchemas, type Client, type ImageContent } from '@modelcontextprotocol/client'
-import type { Context } from '@deepseek-ai/cordis'
-import { isImageAdmissionError } from '@deepseek-ai/dsh-attachment'
-import type { AttachmentStore, ImageAttachmentRef, ImageMediaType, SaveImageAttachment } from '@deepseek-ai/dsh-attachment'
-import type { ContentBlock } from '@deepseek-ai/dsh-llm'
-import type { ToolDefinition, ToolExecution, ToolExecutionResult } from '@deepseek-ai/dsh-tools'
-import { assertSupportedJsonSchema } from '@deepseek-ai/dsh-tools'
-import type { JsonSchemaNode } from '@deepseek-ai/dsh-tools'
-import type { JsonValue } from '@deepseek-ai/dsh-util-values'
+import type { Context } from '@liwa/cordis'
+import { isImageAdmissionError } from '@liwa/attachment'
+import type { AttachmentStore, ImageAttachmentRef, ImageMediaType, SaveImageAttachment } from '@liwa/attachment'
+import type { ContentBlock } from '@liwa/llm'
+import type { ToolDefinition, ToolExecution, ToolExecutionResult } from '@liwa/tools'
+import { assertSupportedJsonSchema } from '@liwa/tools'
+import type { JsonSchemaNode } from '@liwa/tools'
+import type { JsonValue } from '@liwa/util-values'
 
 /** Resolved options relevant to tool bridging. */
 export interface ToolBridgeOptions {
@@ -87,7 +87,7 @@ export function publicToolName(serverName: string, rawName: string): string {
 }
 
 /**
- * Sync the MCP server's tool list into the harness ToolRuntime.
+ * Sync the MCP server's tool list into Liwa ToolRuntime.
  *
  * Two phases keep the swap safe:
  *

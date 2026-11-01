@@ -2,7 +2,7 @@
 $ErrorActionPreference = 'Stop'
 $runnerRoot = [IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot)).TrimEnd('\','/')
 $digest = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($runnerRoot.ToUpperInvariant())))
-$taskName = 'DSH-Packaging-' + $digest.Substring(0,16)
+$taskName = 'Liwa-Packaging-' + $digest.Substring(0,16)
 $log = Join-Path $PSScriptRoot ('run-' + [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ') + '-' + $PID + '.log')
 try {
     $config = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'config.json') -Raw | ConvertFrom-Json

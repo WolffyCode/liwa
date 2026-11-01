@@ -1,22 +1,22 @@
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
-import LlmRuntime, { createUserMessage, isAgentLoopRequest, LlmAdapter, ReasoningEffortId, ToolCallId } from '@deepseek-ai/dsh-llm'
+import LlmRuntime, { createUserMessage, isAgentLoopRequest, LlmAdapter, ReasoningEffortId, ToolCallId } from '@liwa/llm'
 import type {
   FinishReason,
   GenerateOptions,
   LlmResolvedModelInfo,
   StreamChunk,
-} from '@deepseek-ai/dsh-llm'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import { SessionTitleProviderId } from '@deepseek-ai/dsh-session-title'
-import type { SessionTitleProviderRequest } from '@deepseek-ai/dsh-session-title'
-import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
+} from '@liwa/llm'
+import SessionStore, { SessionId } from '@liwa/session'
+import { SessionTitleProviderId } from '@liwa/session-title'
+import type { SessionTitleProviderRequest } from '@liwa/session-title'
+import { MAX_TIMER_DELAY_MS } from '@liwa/timeout'
 import {
   executeSessionTitleLlm,
   resolveSessionTitleLlmConfig,
   SESSION_TITLE_TIMEOUT_CODE,
-} from '@deepseek-ai/dsh-session-title-llm'
-import type { SessionTitleLlmConfig, SessionTitleLlmPreparedRequest } from '@deepseek-ai/dsh-session-title-llm'
+} from '@liwa/session-title-llm'
+import type { SessionTitleLlmConfig, SessionTitleLlmPreparedRequest } from '@liwa/session-title-llm'
 
 class RecordingAdapter extends LlmAdapter {
   readonly requests: GenerateOptions[] = []

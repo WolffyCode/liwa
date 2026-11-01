@@ -1,14 +1,14 @@
 /** Host timer over stored tasks; Session activation is a delivery operation. */
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import type { ContextFormed } from '@deepseek-ai/dsh-llm'
-declare module '@deepseek-ai/dsh-llm' {
+import { createUserMessage } from '@liwa/llm'
+import type { ContextFormed } from '@liwa/llm'
+declare module '@liwa/llm' {
   interface MessageSourceMap {
     'schedule': { kind: 'schedule' } & ContextFormed
   }
 }
-import type { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { SessionId } from '@deepseek-ai/dsh-session'
+import type { Context } from '@liwa/cordis'
+import type { Agent } from '@liwa/agent'
+import type { SessionId } from '@liwa/session'
 import { isRecurringScheduleRecord, renderReminderFraming, renderRecurringReminderBatchFraming, resolveRecurringOccurrence } from './domain.ts'
 import type { DeliveryRetentionBounds, RecurringScheduleRecord } from './types.ts'
 import type { ScheduleTask } from './storage.ts'

@@ -4,7 +4,7 @@ import { globSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import ts from 'typescript'
-import type { DshBundleManifest, LocalizedText } from '../packages/util/package-manifest/src/types.ts'
+import type { LiwaBundleManifest, LocalizedText } from '../packages/util/package-manifest/src/types.ts'
 import { ON_DEMAND_BUNDLES } from '../packages/util/official-bundles/src/bundles.ts'
 import type { OfficialBundleCatalogEntry } from '../packages/util/official-bundles/src/index.ts'
 import { readPluginMeta, resolvePluginResource } from '../packages/boot/app-boot/src/package-meta.ts'
@@ -22,7 +22,7 @@ const OUTPUT = 'packages/util/official-bundles/src/catalog.generated.ts'
  */
 export function generateOfficialBundleCatalog(root: string, names: readonly string[] = ON_DEMAND_BUNDLES): OfficialBundleCatalogEntry[] {
   if (names.length === 0 || new Set(names).size !== names.length) throw new Error('Official on-demand catalog must contain distinct package names')
-  const manifests = new Map<string, { path: string; private: boolean; bundle: boolean; platforms?: DshBundleManifest['platforms']; runtime: string[] }>()
+  const manifests = new Map<string, { path: string; private: boolean; bundle: boolean; platforms?: LiwaBundleManifest['platforms']; runtime: string[] }>()
   for (const path of globSync(['packages/*/*/package.json', 'apps/*/package.json', 'vendor/*/package.json'], { cwd: root }).map(path => path.replaceAll('\\', '/')).sort()) {
     const manifest = JSON.parse(readFileSync(resolve(root, path), 'utf8')) as {
       name: string
@@ -30,27 +30,27 @@ export function generateOfficialBundleCatalog(root: string, names: readonly stri
       dependencies?: Record<string, string>
       optionalDependencies?: Record<string, string>
       peerDependencies?: Record<string, string>
-      dsh?: { bundle?: { patch?: unknown; platforms?: DshBundleManifest['platforms'] } }
+      liwa?: { bundle?: { patch?: unknown; platforms?: LiwaBundleManifest['platforms'] } }
     }
     if (manifests.has(manifest.name)) throw new Error(`duplicate workspace package ${manifest.name}`)
     const runtime = ['dependencies', 'optionalDependencies', 'peerDependencies'] as const
-    manifests.set(manifest.name, { path, private: manifest.private === true, bundle: manifest.dsh?.bundle?.patch !== undefined,
-      ...manifest.dsh?.bundle?.platforms === undefined ? {} : { platforms: manifest.dsh.bundle.platforms },
+    manifests.set(manifest.name, { path, private: manifest.private === true, bundle: manifest.liwa?.bundle?.patch !== undefined,
+      ...manifest.liwa?.bundle?.platforms === undefined ? {} : { platforms: manifest.liwa.bundle.platforms },
       runtime: runtime.flatMap(section => Object.keys(manifest[section] ?? {})) })
   }
   const visited = new Set<string>()
   const checkInstallation = (name: string): void => {
     if (visited.has(name)) return
     visited.add(name)
-    if (names.includes(name)) throw new Error(`${name}: on-demand providers must not be installed by the DSH distribution`)
+    if (names.includes(name)) throw new Error(`${name}: on-demand providers must not be installed by the Liwa distribution`)
     for (const dependency of manifests.get(name)?.runtime ?? []) checkInstallation(dependency)
   }
-  if (!manifests.has('@deepseek-ai/dsh')) throw new Error('Official catalog requires the DSH installation manifest')
-  checkInstallation('@deepseek-ai/dsh')
+  if (!manifests.has('@liwa/cli')) throw new Error('Official catalog requires the Liwa installation manifest')
+  checkInstallation('@liwa/cli')
   return names.map((packageName) => {
     const entry = manifests.get(packageName)
-    if (entry === undefined || !entry.path.startsWith('packages/') || !packageName.startsWith('@deepseek-ai/dsh-') || entry.private || !entry.bundle) {
-      throw new Error(`${packageName}: Official catalog entries must be public DSH bundle packages`)
+    if (entry === undefined || !entry.path.startsWith('packages/') || !packageName.startsWith('@liwa/') || entry.private || !entry.bundle) {
+      throw new Error(`${packageName}: Official catalog entries must be public Liwa bundle packages`)
     }
     try { assertBundlePlatform(entry.platforms, process.platform) } catch (error) {
       // Catalog generation validates every declaration, including bundles for another Host.

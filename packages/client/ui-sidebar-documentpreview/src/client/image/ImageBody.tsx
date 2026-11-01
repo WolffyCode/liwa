@@ -1,9 +1,9 @@
 /** Complete image bytes rendered in a shared zoom viewport. */
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
-import { DraggableImage } from '@deepseek-ai/dsh-client-ui-primitives'
+import { DraggableImage } from '@liwa/client-ui-primitives'
 import { bindImagePan } from './pan.ts'
-import type { PropsLocale, PropsStore } from '@deepseek-ai/dsh-client-ui-slots'
-import { pathPartsOf } from '@deepseek-ai/dsh-util-workspace-path'
+import type { PropsLocale, PropsStore } from '@liwa/client-ui-slots'
+import { pathPartsOf } from '@liwa/util-workspace-path'
 import type { DocumentPreviewProps } from '../document/contract.ts'
 import { LoadingIndicator } from '../LoadingIndicator.tsx'
 import { hostFileOf } from '../rpc.ts'
@@ -28,7 +28,7 @@ type ImageMediaType = typeof IMAGE_MEDIA_TYPES[keyof typeof IMAGE_MEDIA_TYPES]
 
 /** Image-only operations injected alongside the shared zoom lifecycle. */
 export interface ImageBodyInjected extends ZoomInjected {
-  readonly fileDrag: import('@deepseek-ai/dsh-client-ui-primitives').FileDragActions
+  readonly fileDrag: import('@liwa/client-ui-primitives').FileDragActions
 }
 
 /** Standard document props plus the image renderer's dictionary. */

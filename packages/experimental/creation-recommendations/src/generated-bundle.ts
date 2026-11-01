@@ -16,16 +16,16 @@ const ROW_ID_SEPARATOR = '-'
  * @param directory - Host-reserved output directory.
  * @param name - Host-reserved package name.
  * @returns after package identity, insert-only rows, built entries, the built `./client` entry of a package declaring
- * `dsh.client`, and portable links have been checked; does not execute code.
+ * `liwa.client`, and portable links have been checked; does not execute code.
  */
 export async function validateGeneratedBundle(directory: string, name: string): Promise<void> {
   const manifestPath = await containedFile(directory, 'package.json')
   const manifest = z.looseObject({
     name: z.literal(name), version: z.string().min(1),
     main: z.string().optional(), exports: z.unknown().optional(),
-    dsh: z.object({ bundle: z.object({ patch: z.literal('./cordis.patch.yml') }), client: z.looseObject({}).optional() }),
+    liwa: z.object({ bundle: z.object({ patch: z.literal('./cordis.patch.yml') }), client: z.looseObject({}).optional() }),
   }).parse(JSON.parse(await readFile(manifestPath, 'utf8')))
-  const patchPath = await containedFile(directory, manifest.dsh.bundle.patch)
+  const patchPath = await containedFile(directory, manifest.liwa.bundle.patch)
   const document = parseDocument(await readFile(patchPath, 'utf8'), { schema: 'core', customTags: [] })
   if (document.errors.length || document.warnings.length) throw new Error('Generated patches must use plain YAML without custom tags or includes.')
   const patch = z.array(z.object({
@@ -47,8 +47,8 @@ export async function validateGeneratedBundle(directory: string, name: string): 
     const entry = await containedFile(directory, target)
     if (!(await lstat(entry)).isFile()) throw new Error(`The runtime entry for ${row.name} must be a built file.`)
   }
-  // The client module system loads `exports["./client"]` for every package declaring `dsh.client`.
-  if (manifest.dsh.client !== undefined && !(await isBuiltFile(directory, exportedEntry(manifest, name + '/client')))) {
+  // The client module system loads `exports["./client"]` for every package declaring `liwa.client`.
+  if (manifest.liwa.client !== undefined && !(await isBuiltFile(directory, exportedEntry(manifest, name + '/client')))) {
     throw new Error('Build and export the "./client" entry before installation.')
   }
   await validateLinks(await realpath(directory), directory)

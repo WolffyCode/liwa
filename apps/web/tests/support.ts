@@ -13,6 +13,12 @@ export const DIST_INDEX = fileURLToPath(new URL('../dist/index.html', import.met
 export const REPO_ROOT = fileURLToPath(new URL('../../..', import.meta.url))
 
 /**
+ * `liwa web --patch` overlay for a subprocess host: it keeps first-use Workspace
+ * creation under the subprocess cwd instead of the account's real Documents directory.
+ */
+export const WORLD_DOCUMENTS_OVERLAY = fileURLToPath(new URL('./fixtures/world-documents.overlay.yml', import.meta.url))
+
+/**
  * Read the `meta.description` an experimental bundle's plugin page shows for one locale.
  * @param bundle - Package directory under `packages/experimental`.
  * @param locale - Locale resource name, such as `en` or `zh`.
@@ -26,7 +32,7 @@ export function experimentalBundleDescription(bundle: string, locale: string): s
 const installationRequire = createRequire(join(REPO_ROOT, 'apps/cli/package.json'))
 
 /**
- * The built copy of a workspace package, as the dsh installation resolves it.
+ * The built copy of a workspace package, as the liwa installation resolves it.
  * The Host plugins a scaffold profile loads run from built packages through
  * Node's own loader; a scaffold call that must share their module state
  * (app-boot keeps the root Include it mounted per context) has to run that
@@ -184,7 +190,7 @@ export function requireDist(): void {
   }
 }
 
-/** OS-assigned free port, released before use (the spawned `dsh web` needs a concrete --port). */
+/** OS-assigned free port, released before use (the spawned `liwa web` needs a concrete --port). */
 export function probeFreePort(): Promise<number> {
   return new Promise((resolvePort, reject) => {
     const probe = createServer()

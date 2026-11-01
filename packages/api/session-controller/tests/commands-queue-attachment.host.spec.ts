@@ -1,26 +1,26 @@
-import TypertRegistry from '@deepseek-ai/dsh-typert-registry'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
-import { Context } from '@deepseek-ai/cordis'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import type { Agent, Inbox } from '@deepseek-ai/dsh-agent'
-import { AttachmentError, AttachmentId } from '@deepseek-ai/dsh-attachment'
-import type { ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
-import { createUserMessage, MessageId } from '@deepseek-ai/dsh-llm'
-import type { ContextFormed } from '@deepseek-ai/dsh-llm'
+import TypertRegistry from '@liwa/typert-registry'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import { RemoteError } from '@liwa/typert-protocol'
+import { Context } from '@liwa/cordis'
+import AgentRegistry from '@liwa/agent'
+import type { Agent, Inbox } from '@liwa/agent'
+import { AttachmentError, AttachmentId } from '@liwa/attachment'
+import type { ImageAttachmentRef } from '@liwa/attachment'
+import { createUserMessage, MessageId } from '@liwa/llm'
+import type { ContextFormed } from '@liwa/llm'
 import SessionStore, {
   Session, SessionId, SessionLogOffset,
-} from '@deepseek-ai/dsh-session'
-import type { UserMessage } from '@deepseek-ai/dsh-session'
-import { snapshotSubagentDescriptor, SUBAGENT_DESCRIPTOR_VERSION } from '@deepseek-ai/dsh-subagent'
-import { subagentIdentityProjectionDefinition } from '@deepseek-ai/dsh-subagent/src/projection.ts'
+} from '@liwa/session'
+import type { UserMessage } from '@liwa/session'
+import { snapshotSubagentDescriptor, SUBAGENT_DESCRIPTOR_VERSION } from '@liwa/subagent'
+import { subagentIdentityProjectionDefinition } from '@liwa/subagent/src/projection.ts'
 import { describe, expect, it, vi } from 'vitest'
 import { ApiSessionAgentController } from '../src/agent.ts'
 import { SessionCommandController } from '../src/commands.ts'
-import { unsupportedModel, createInboxStub } from '@deepseek-ai/dsh-agent-loop-testkit'
+import { unsupportedModel, createInboxStub } from '@liwa/agent-loop-testkit'
 import { installSessionReadTestServices } from './test-remote.ts'
 
-declare module '@deepseek-ai/dsh-llm' {
+declare module '@liwa/llm' {
   interface MessageSourceMap {
     'test': { kind: 'test' } & ContextFormed
   }

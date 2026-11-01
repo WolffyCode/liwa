@@ -3,15 +3,15 @@ description: "面向用户与维护者的 agent（智能体）平面呈现选择
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-agent-tool-presentation
+# @liwa/agent-tool-presentation
 
 [English](README.md) | 中文
 
-> **已弃用：** 新配置请直接挂载 `@deepseek-ai/dsh-tool-executor-native` 或 `@deepseek-ai/dsh-tool-executor-ptc`。现有配置仍受支持。迁移时，将本选择器条目替换为对应的 executor 条目，并移除 `config.mode`；不要在同一作用域同时加载两者。
+> **已弃用：** 新配置请直接挂载 `@liwa/tool-executor-native` 或 `@liwa/tool-executor-ptc`。现有配置仍受支持。迁移时，将本选择器条目替换为对应的 executor 条目，并移除 `config.mode`；不要在同一作用域同时加载两者。
 
 ## 概述
 
-现有 [agent preset](../../preset/agent-preset-registry/README.zh.md) 可以继续使用 `dsh-agent-tool-presentation`，选择模型看到全部原生工具 schema，还是只有带生成 SDK 的 `run_code`。每个 preset 可独立选择，因此 native 与 PTC agent 可以共享同一进程，而不共享工具目录。选择 `ptc` 需要兼容的 PTC 运行时。使用本包时 `mode` 字段为必填；省略本包则沿用部署默认值。
+现有 [agent preset](../../preset/agent-preset-registry/README.zh.md) 可以继续使用 `liwa-agent-tool-presentation`，选择模型看到全部原生工具 schema，还是只有带生成 SDK 的 `run_code`。每个 preset 可独立选择，因此 native 与 PTC agent 可以共享同一进程，而不共享工具目录。选择 `ptc` 需要兼容的 PTC 运行时。使用本包时 `mode` 字段为必填；省略本包则沿用部署默认值。
 
 ## 目录
 
@@ -32,7 +32,7 @@ kind: "package-reference"
 ### 把这一行加入 preset
 
 ```yaml
-- name: '@deepseek-ai/dsh-agent-tool-presentation'
+- name: '@liwa/agent-tool-presentation'
   config:
     mode: ptc
 ```
@@ -41,11 +41,11 @@ kind: "package-reference"
 |---|---|---|
 | `mode` | 必填 | `native`——每个 schema；`ptc`——`run_code` 加生成 SDK |
 
-生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-agent-tool-presentation)是每个受支持字段的穷尽式真源。`mode` 是必填而非有默认值，因为不带这一行的 preset 会继承部署默认值。
+生成的[配置目录](../../../docs/config-catalog.zh.md#liwaagent-tool-presentation)是每个受支持字段的穷尽式真源。`mode` 是必填而非有默认值，因为不带这一行的 preset 会继承部署默认值。
 
 ### PTC 模式需要什么
 
-选择 `ptc` 需要已组合的 PTC 运行时（`ctx.ptcRuntime`），且其语言有已注册的 SDK 渲染器——TypeScript 运行时经 [`dsh-ptc-runtime-node`](../../ptc-runtime/ptc-runtime-node/README.zh.md) 交付，TypeScript 与 Python 的 SDK 渲染器都内置在 `dsh-tool-executor-ptc` 中。在运行时首次可用之前，此兼容选择器会保留继承的执行器。若需要在 preset 激活时拒绝缺少运行时的配置，请直接挂载 `dsh-tool-executor-ptc`。
+选择 `ptc` 需要已组合的 PTC 运行时（`ctx.ptcRuntime`），且其语言有已注册的 SDK 渲染器——TypeScript 运行时经 [`liwa-ptc-runtime-node`](../../ptc-runtime/ptc-runtime-node/README.zh.md) 交付，TypeScript 与 Python 的 SDK 渲染器都内置在 `liwa-tool-executor-ptc` 中。在运行时首次可用之前，此兼容选择器会保留继承的执行器。若需要在 preset 激活时拒绝缺少运行时的配置，请直接挂载 `liwa-tool-executor-ptc`。
 
 ### 每个 agent 只声明一次呈现方式
 
@@ -95,7 +95,7 @@ kind: "package-reference"
 <a id="model-experience"></a>
 ## 模型体验
 
-通过在 `dsh-tools` 中选择的工具呈现方式间接影响——这一行只在 `dsh-tools` 拥有的两种投影之间选择，本身不注册任何提示词、schema 或结果。
+通过在 `liwa-tools` 中选择的工具呈现方式间接影响——这一行只在 `liwa-tools` 拥有的两种投影之间选择，本身不注册任何提示词、schema 或结果。
 
 #### KV Cache 影响
 

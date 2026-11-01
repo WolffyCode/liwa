@@ -1,0 +1,10 @@
+version: 1
+scenario: subagent-liwa-sdk-dynamic-route
+profile: sdk
+composition: sdk-liwa-sdk-dynamic-route
+recording: authored
+header:
+  class: sdk-liwa-sdk-dynamic-route
+  pin: true
+  childSystemPrompts: [1]
+  childToolSchemas: [1]

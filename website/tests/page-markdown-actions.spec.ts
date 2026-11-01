@@ -147,13 +147,13 @@ describe('page Markdown actions', () => {
 
   it.each(['en-US', 'zh-CN'])('offers a working raw link before hydration in %s', async (lang) => {
     data.lang.value = lang
-    data.site.value = { base: '/deepseek-harness/' }
+    data.site.value = { base: '/liwa/' }
     const path = `${lang === 'en-US' ? 'en/' : ''}guide/quickstart.md`
     data.frontmatter.value = { rawMarkdownPath: path }
     host.innerHTML = await renderToString(createSSRApp(Theme.Layout))
     expect(queryAllByRole(host, 'button')).toHaveLength(0)
     const link = getByRole(host, 'link')
-    expect(link.getAttribute('href')).toBe(`/deepseek-harness/${path}`)
+    expect(link.getAttribute('href')).toBe(`/liwa/${path}`)
     expect(link.getAttribute('target')).toBe('_blank')
     expect(link.getAttribute('aria-label')).toBe(lang === 'en-US'
       ? 'View as Markdown (opens in a new tab)' : '以 Markdown 格式查看（在新标签页打开）')
@@ -294,7 +294,7 @@ describe('page Markdown actions', () => {
     }
   })
 
-  it.each(['/', '/deepseek-harness/'])('uses the manifest index route under base %s, independent of the visible URL', async (base) => {
+  it.each(['/', '/liwa/'])('uses the manifest index route under base %s, independent of the visible URL', async (base) => {
     data.site.value = { base }
     data.frontmatter.value = { rawMarkdownPath: 'en/reference/index.md' }
     route.path = `${base}en/reference/index.html?from=nav#api`
@@ -325,7 +325,7 @@ describe('page Markdown actions', () => {
     expect(copied).toBeUndefined()
     fireEvent.click(button)
     expect(fetchMock).toHaveBeenCalledOnce()
-    expect(fetchMock.mock.calls[0]?.[0]).toBe('/en/guide/quickstart.md?dsh-raw=1')
+    expect(fetchMock.mock.calls[0]?.[0]).toBe('/en/guide/quickstart.md?liwa-raw=1')
     expect(fetchMock.mock.calls[0]?.[1]?.signal).toBeInstanceOf(AbortSignal)
     await nextTick()
     expect(button).toHaveProperty('disabled', false)
@@ -473,7 +473,7 @@ describe('page Markdown actions', () => {
       expect(getByRole(host, 'status').textContent).toBe('')
       fireEvent.click(getByRole(host, 'button', { name: change === 'route' ? 'Copy page' : '复制页面' }))
       await waitFor(() => { expect(getByRole(host, 'status').textContent).toBe(change === 'route' ? 'Markdown copied.' : '已复制 Markdown。') })
-      expect(fetchMock.mock.calls[1]?.[0]).toBe(change === 'route' ? '/en/reference/index.md?dsh-raw=1' : '/guide/quickstart.md?dsh-raw=1')
+      expect(fetchMock.mock.calls[1]?.[0]).toBe(change === 'route' ? '/en/reference/index.md?liwa-raw=1' : '/guide/quickstart.md?liwa-raw=1')
     }
   })
 })

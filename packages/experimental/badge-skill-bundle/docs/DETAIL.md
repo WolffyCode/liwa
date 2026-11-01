@@ -1,1 +1,1 @@
-![DSH badge skill feature preview](preview.svg)
+![Liwa badge skill feature preview](preview.svg)

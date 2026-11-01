@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-mcp-client",
+  "name": "@liwa/mcp-client",
   "description": "MCP client bridge: connects to MCP servers and registers their tools on ctx.tools",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/mcp/mcp-client"
   },
   "type": "module",
@@ -29,46 +29,46 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-attachment": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-scope": "workspace:*",
-    "@deepseek-ai/dsh-subprocess": "workspace:*",
-    "@deepseek-ai/dsh-timeout": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-mcp-resources": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*"
+    "@liwa/attachment": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/scope": "workspace:*",
+    "@liwa/subprocess": "workspace:*",
+    "@liwa/timeout": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/mcp-resources": "workspace:*",
+    "@liwa/system-prompt": "workspace:*"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~",
+    "@liwa/schemastery": "workspace:~",
     "@modelcontextprotocol/client": "2.2.0",
-    "@deepseek-ai/dsh-util-values": "workspace:*"
+    "@liwa/util-values": "workspace:*"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-attachment": "workspace:*",
-    "@deepseek-ai/dsh-attachment-local": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-scope": "workspace:*",
-    "@deepseek-ai/dsh-subprocess": "workspace:*",
-    "@deepseek-ai/dsh-timeout": "workspace:*",
-    "@deepseek-ai/dsh-tool-executor-native": "workspace:*",
-    "@deepseek-ai/dsh-tool-testkit": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
+    "@liwa/attachment": "workspace:*",
+    "@liwa/attachment-local": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/scope": "workspace:*",
+    "@liwa/subprocess": "workspace:*",
+    "@liwa/timeout": "workspace:*",
+    "@liwa/tool-executor-native": "workspace:*",
+    "@liwa/tool-testkit": "workspace:*",
+    "@liwa/tools": "workspace:*",
     "@modelcontextprotocol/server-everything": "^2026.8.31",
     "@modelcontextprotocol/server-filesystem": "^2026.8.31",
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-http-proxy": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/http-proxy": "workspace:*",
     "@modelcontextprotocol/server": "2.2.0",
     "@modelcontextprotocol/node": "2.0.0",
     "zod": "4.4.3",
-    "@deepseek-ai/dsh-mcp-resources": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*"
+    "@liwa/mcp-resources": "workspace:*",
+    "@liwa/system-prompt": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-mcp-resources": {
+    "@liwa/mcp-resources": {
       "optional": true
     },
-    "@deepseek-ai/dsh-system-prompt": {
+    "@liwa/system-prompt": {
       "optional": true
     }
   }

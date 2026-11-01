@@ -6,10 +6,10 @@
  * is later loaded through, so it cannot itself be a graph row. A page imports
  * it directly and decides where the worker bundle and image live; nothing
  * here mounts into a shipped roster.
- * @module @deepseek-ai/dsh-experimental-webworker-runtime/client
+ * @module @liwa/experimental-webworker-runtime/client
  */
 import { IMAGE_FILE_NAME } from '../image-layout.ts'
-import type { ClientFileUploadHooks } from '@deepseek-ai/dsh-client-file-upload/types'
+import type { ClientFileUploadHooks } from '@liwa/client-file-upload/types'
 import { PREVIEW_FIXTURE_MANIFEST_FILE } from '../fixture-manifest.ts'
 import { WorkerTunnel, type TunnelFetch } from './client.ts'
 import { applyIndexInjections } from './apply-injections.ts'
@@ -25,7 +25,7 @@ export {
 
 /** Transport global the connection plugin reads instead of building an HTTP carrier. */
 interface ClientTransportGlobal {
-  __DSH_TRANSPORT__?: {
+  __LIWA_TRANSPORT__?: {
     fetch: TunnelFetch
     openStream: (
       endpoint: string,
@@ -43,7 +43,7 @@ interface ClientTransportGlobal {
 
 /** Upload hook consumed by the independent Client file-upload service. */
 interface ClientFileUploadGlobal {
-  __DSH_FILE_UPLOAD__?: ClientFileUploadHooks
+  __LIWA_FILE_UPLOAD__?: ClientFileUploadHooks
 }
 
 /** Inputs for {@link connectWorkerHost}. */
@@ -82,11 +82,11 @@ export interface WorkerHostConnection {
 
 /** Boot-readiness deferred shared with the client entry's pre-boot await. */
 interface BootReadyGlobal {
-  __DSH_BOOT_READY__?: PromiseWithResolvers<void>
+  __LIWA_BOOT_READY__?: PromiseWithResolvers<void>
 }
 
 function bootReadyGate(): PromiseWithResolvers<void> {
-  return (globalThis as BootReadyGlobal).__DSH_BOOT_READY__ ??= Promise.withResolvers<void>()
+  return (globalThis as BootReadyGlobal).__LIWA_BOOT_READY__ ??= Promise.withResolvers<void>()
 }
 
 /**
@@ -134,8 +134,8 @@ export async function chooseWorkerHostSource(
  * Order is fixed by the web boot protocol: the transport global must exist
  * before any bundle executes; the injection table then reproduces the served
  * boot rows — the `__ModuleLoader__` registration queue, the parser-preload
- * bundles, `__DSH_BOOT__`, the theme bootstrap — in table order. The
- * boot-readiness deferred (`__DSH_BOOT_READY__`) is installed before the
+ * bundles, `__LIWA_BOOT__`, the theme bootstrap — in table order. The
+ * boot-readiness deferred (`__LIWA_BOOT_READY__`) is installed before the
  * first await and settles with the handshake, so a client entry evaluating
  * concurrently in the same document holds at its pre-boot await until every
  * row has taken effect, and surfaces a failed handshake instead of
@@ -156,7 +156,7 @@ export async function connectWorkerHost(worker: Worker, options?: WorkerHostConn
       (options?.overlays ?? []).map(overlay => new URL(overlay, document.baseURI).href),
     )
     const [payload, resolveAsset] = await Promise.all([tunnel.bootPayload(), tunnel.packageAssets()])
-    ;(globalThis as ClientTransportGlobal).__DSH_TRANSPORT__ = {
+    ;(globalThis as ClientTransportGlobal).__LIWA_TRANSPORT__ = {
       fetch: (input, init) => tunnel.fetch(input, init),
       openStream: (endpoint, payload, signal, uplink) => tunnel.open(endpoint, payload, signal, uplink),
       loadBundle: (url: string) => tunnel.loadBundle(url),
@@ -165,7 +165,7 @@ export async function connectWorkerHost(worker: Worker, options?: WorkerHostConn
       // the privileged surface stays reachable off loopback authorities.
       ownsHost: true,
     }
-    ;(globalThis as ClientFileUploadGlobal).__DSH_FILE_UPLOAD__ = {
+    ;(globalThis as ClientFileUploadGlobal).__LIWA_FILE_UPLOAD__ = {
       fetch: (input, init) => tunnel.fetch(input, init),
     }
     await applyIndexInjections(payload.injections, src => tunnel.loadBundle(src))

@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-07-27-worktree-local-lefthook.md
 /agent-note-make-lefthook-installation-worktree-local:
-  en: 2a11ec534041e270
-  zh: 9cbd4adbaecd1b32
+  en: b1e3d7f61ff6843b
+  zh: 3b433206492702c9
 /agent-note-make-lefthook-installation-worktree-local/problem:
   en: b3ec2245644b46e6
   zh: 83de1cb620f9ddcf

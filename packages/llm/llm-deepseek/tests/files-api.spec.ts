@@ -1,7 +1,7 @@
 import { once } from 'node:events'
 import { createServer } from 'node:http'
 import { describe, expect, it, vi } from 'vitest'
-import { LlmError, userAgent } from '@deepseek-ai/dsh-llm'
+import { LlmError, userAgent } from '@liwa/llm'
 import { DeepSeekFileId } from '../src/file-id.ts'
 import {
   DeepSeekFilesClient,
@@ -385,7 +385,7 @@ describe('DeepSeekFilesClient', () => {
   })
 })
 
-it('authenticates Files with the raw DSH token', async () => {
+it('authenticates Files with the raw Liwa token', async () => {
   const client = new DeepSeekFilesClient({
     baseURL: 'https://api.deepseek.com', headers: { 'x-dsh-auth-token': 'account-token' },
     fetch: (_url, init) => {

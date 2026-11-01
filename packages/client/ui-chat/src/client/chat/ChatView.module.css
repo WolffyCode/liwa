@@ -29,7 +29,7 @@
   overflow-y: auto;
   /* Sides = composer clearance + 16px: on narrow viewports the transcript
      stays exactly 32px narrower than the input card (the shared width rule). */
-  padding: 16px calc(var(--dsh-composer-side-clearance) + 16px);
+  padding: 16px calc(var(--liwa-composer-side-clearance) + 16px);
   /* Inline-size query container: wide markdown tables size their breakout
      against this box's content width (100cqw in AssistantMarkdown's
      md-table-wide rule) — the CSS stand-in for deepsuite chat's JS-measured
@@ -58,12 +58,12 @@
   min-height: auto;
 }
 
-/* Message column: shared chat width (ConversationRoot --dsh-chat-content-width),
+/* Message column: shared chat width (ConversationRoot --liwa-chat-content-width),
    centered on the same axis as the input box (which caps at chat + 16px); the
    scroller itself stays full-bleed. */
 .column {
   position: relative;
-  max-width: var(--dsh-chat-content-width);
+  max-width: var(--liwa-chat-content-width);
   width: 100%;
   margin: 0 auto;
   display: flex;
@@ -78,18 +78,18 @@
   ~ :not([hidden]):not(.textInteraction):not(.flowItem:is(:empty, :has(> [data-slot="conversation.chat.node"]:empty))),
 .column > .older + :global([data-slot="conversation.chat.flow"])
   > :not([hidden]):not(.textInteraction):not(.flowItem:is(:empty, :has(> [data-slot="conversation.chat.node"]:empty))) {
-  margin-top: var(--dsh-chat-flow-gap, 4px);
+  margin-top: var(--liwa-chat-flow-gap, 4px);
 }
 
 /* Process rows sit 4px apart; an Assistant response is separated from its
    neighbours by 12px. */
 .flowItem[data-chat-group-part="response"] {
-  --dsh-chat-flow-gap: 12px;
+  --liwa-chat-flow-gap: 12px;
 }
 
 :is(.column, :global([data-slot="conversation.chat.flow"])) > [data-chat-group-part="response"]:not([hidden]):not(:empty)
   + :not([hidden]):not(.flowItem:is(:empty, :has(> [data-slot="conversation.chat.node"]:empty))):not(.running):not(:has(> [data-slot="conversation.chat.node"] > [data-chat-steering-batch])) {
-  --dsh-chat-flow-gap: 12px;
+  --liwa-chat-flow-gap: 12px;
 }
 
 /* Settled-flow identity boundary. It is neutral until it becomes the natural
@@ -135,7 +135,7 @@
 .flowItem[data-chat-flow-kind="turn-process"],
 :is(.column, :global([data-slot="conversation.chat.flow"])) > [data-chat-flow-kind="turn-process"]:not(:empty, :has(> [data-slot="conversation.chat.node"]:empty)) + :not([hidden]):not(.flowItem:is(:empty, :has(> [data-slot="conversation.chat.node"]:empty))):not(.running):not(:has(> [data-slot="conversation.chat.node"] > [data-chat-steering-batch])),
 :is(.column, :global([data-slot="conversation.chat.flow"])) > [data-chat-flow-kind="turn-process"] + :not([hidden]):not(.flowItem:is(:empty, :has(> [data-slot="conversation.chat.node"]:empty))):not(.running):not([data-submission-echo], [data-pending-steering]):not(:has(> [data-slot="conversation.chat.node"] > [data-chat-steering-batch])) {
-  --dsh-chat-flow-gap: 16px;
+  --liwa-chat-flow-gap: 16px;
 }
 
 /* Tail slot: the running status and a completed Turn's actions row both take
@@ -148,11 +148,11 @@
    without moving any bubble. Neighbour gap rules exclude the batch start so
    this slot always applies. */
 :is(.column, :global([data-slot="conversation.chat.flow"])) > .flowItem:has(> [data-slot="conversation.chat.node"] > [data-chat-steering-batch="start"]) {
-  --dsh-chat-flow-gap: calc(44px + var(--dsh-content-font-delta, 0px));
+  --liwa-chat-flow-gap: calc(44px + var(--liwa-content-font-delta, 0px));
 }
 
 .running + [data-pending-steering] {
-  --dsh-chat-flow-gap: 0px;
+  --liwa-chat-flow-gap: 0px;
 }
 
 /* A completed Turn's actions row owns the tail slot; the status can trail it
@@ -184,7 +184,7 @@
 @keyframes running-enters-slot {
   from {
     opacity: 0;
-    translate: 0 calc(-44px - var(--dsh-content-font-delta, 0px));
+    translate: 0 calc(-44px - var(--liwa-content-font-delta, 0px));
   }
   40% {
     opacity: 1;
@@ -206,8 +206,8 @@
 
 .hint {
   color: var(--dsw-alias-label-tertiary);
-  font-size: var(--dsh-content-font-size-secondary, 13px);
-  line-height: calc(18px + var(--dsh-content-font-delta-secondary, 0px));
+  font-size: var(--liwa-content-font-size-secondary, 13px);
+  line-height: calc(18px + var(--liwa-content-font-delta-secondary, 0px));
 }
 
 .running {
@@ -215,11 +215,11 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  --dsh-chat-flow-gap: 12px;
+  --liwa-chat-flow-gap: 12px;
   --dsw-alias-label-shimmer: var(--dsw-alias-label-deep-diving-shimmer);
   color: var(--dsw-alias-label-deep-diving);
-  font-size: calc(var(--dsh-content-font-size, 14px) - 2px);
-  line-height: calc(22px + var(--dsh-content-font-delta, 0px));
+  font-size: calc(var(--liwa-content-font-size, 14px) - 2px);
+  line-height: calc(22px + var(--liwa-content-font-delta, 0px));
 }
 
 /* After the Session stops running and before the Turn's actions row arrives, the status keeps its slot
@@ -265,7 +265,7 @@
   min-width: 0;
   gap: 6px;
   margin-top: 4px;
-  height: calc(28px + var(--dsh-content-font-delta, 0px));
+  height: calc(28px + var(--liwa-content-font-delta, 0px));
 }
 
 .runningText {
@@ -277,8 +277,8 @@
   position: relative;
   display: inline-flex;
   flex: none;
-  width: calc(14px + var(--dsh-content-font-delta, 0px));
-  height: calc(14px + var(--dsh-content-font-delta, 0px));
+  width: calc(14px + var(--liwa-content-font-delta, 0px));
+  height: calc(14px + var(--liwa-content-font-delta, 0px));
   /* The fixed footprint contains the animation's layout and paint. */
   contain: strict;
   overflow: hidden;
@@ -313,8 +313,8 @@
 
 .openError {
   color: var(--dsw-alias-state-error-primary);
-  font-size: var(--dsh-content-font-size-secondary, 13px);
-  line-height: calc(18px + var(--dsh-content-font-delta-secondary, 0px));
+  font-size: var(--liwa-content-font-size-secondary, 13px);
+  line-height: calc(18px + var(--liwa-content-font-delta-secondary, 0px));
 }
 
 .older {
@@ -353,8 +353,8 @@
   display: flex;
   justify-content: flex-end;
   padding-right: max(
-    calc(var(--dsh-composer-side-clearance) + 16px),
-    calc((100% - var(--dsh-chat-content-width)) / 2)
+    calc(var(--liwa-composer-side-clearance) + 16px),
+    calc((100% - var(--liwa-chat-content-width)) / 2)
   );
   pointer-events: none;
 }
@@ -362,10 +362,10 @@
 :global([data-conversation-scroll]) .toBottomSlot {
   position: sticky;
   /* Clears the sticky composer stack (docks + input card + stats): the live
-     height rides --dsh-composer-height (ConversationRoot's seat observer) so
+     height rides --liwa-composer-height (ConversationRoot's seat observer) so
      the control follows a growing textarea; the fallback covers the first
      paint before the observer fires. */
-  bottom: calc(var(--dsh-composer-height, 152px) + 16px);
+  bottom: calc(var(--liwa-composer-height, 152px) + 16px);
 }
 
 .toBottom {

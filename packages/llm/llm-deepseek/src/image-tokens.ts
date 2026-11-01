@@ -8,11 +8,11 @@
  * configuration has no alignment pad and no aspect-ratio clamp. Actual usage
  * remains authoritative.
  *
- * @module dsh-llm-deepseek/image-tokens
+ * @module liwa-llm-deepseek/image-tokens
  */
 
-import { longEdgeDimensions } from '@deepseek-ai/dsh-attachment'
-import type { ProjectedDimensions } from '@deepseek-ai/dsh-attachment'
+import { longEdgeDimensions } from '@liwa/attachment'
+import type { ProjectedDimensions } from '@liwa/attachment'
 /** Vision patch edge in pixels. */
 const PATCH_SIZE = 14
 /** Per-axis patch-to-token downsampling ratio. */
@@ -119,7 +119,7 @@ function sameResize(a: GridResize, b: GridResize): boolean {
 }
 
 /**
- * Dimensions the harness sends so the provider keeps the whole image: the
+ * Dimensions Liwa sends so the provider keeps the whole image: the
  * source itself when its patch-padded grid fits the token cap, otherwise the
  * source aspect ratio at the solved grid's long edge. The provider pads the
  * short edge to whole patches on its side. Rounding the aspect-preserving

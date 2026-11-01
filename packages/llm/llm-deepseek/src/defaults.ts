@@ -18,7 +18,7 @@ export const DEFAULT_IMAGE_OFFLOAD_COUNT_QUANTUM = 20
 export const DEFAULT_FILE_EXPIRY_SECONDS = 7 * 24 * 60 * 60
 /** Default proactive refresh window for indexed file ids. */
 export const DEFAULT_FILE_REFRESH_MARGIN_SECONDS = 60 * 60
-/** Default number of oldest harness-owned files removed on quota recovery. */
+/** Default number of oldest Liwa-owned files removed on quota recovery. */
 export const DEFAULT_FILE_QUOTA_CLEANUP_BATCH = 100
 /** Default deadline for resolving one request image through the Files API. */
 export const DEFAULT_FILES_API_TIMEOUT_MS = 60_000

@@ -8,12 +8,12 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve, sep } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import { SESSION_FORMAT_VERSION, Session, SessionId } from '@deepseek-ai/dsh-session'
-import SandboxPolicyService, { SANDBOX_MODES, setSandboxMode } from '@deepseek-ai/dsh-sandbox-policy'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import SystemPrompt, { renderContextSnapshot, renderPrompt } from '@deepseek-ai/dsh-system-prompt'
+import { Context } from '@liwa/cordis'
+import type { Agent } from '@liwa/agent'
+import { SESSION_FORMAT_VERSION, Session, SessionId } from '@liwa/session'
+import SandboxPolicyService, { SANDBOX_MODES, setSandboxMode } from '@liwa/sandbox-policy'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import SystemPrompt, { renderContextSnapshot, renderPrompt } from '@liwa/system-prompt'
 
 async function mounted(config: { mode?: 'read-only' | 'workspace-write' | 'danger-full-access'; workspaceRoot?: string; additionalWritableRoots?: string[] } = {}) {
   const ctx = new Context()
@@ -122,7 +122,7 @@ describe('SandboxPolicyService', () => {
   })
 
   it.skipIf(process.platform === 'win32')('preserves symlink-sensitive session cwd for its enforcing provider', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'dsh-policy-cwd-'))
+    const root = mkdtempSync(join(tmpdir(), 'liwa-policy-cwd-'))
     try {
       const lexical = join(root, 'lexical')
       const physical = join(root, 'physical')
@@ -195,9 +195,9 @@ describe('sandbox:policy request context', () => {
     const ctx = await promptMounted({ mode, workspaceRoot: '/fallback' })
     const workspaceRoot = '/projects/../projects/current'
     const expected = {
-      'read-only': 'Current DSH file policy: read-only. Any available operation enforced by the DSH file sandbox cannot modify files in the standing mode. Do not refuse a required modification from this policy alone: try an available tool normally and follow any denial and escalation guidance it returns.',
-      'workspace-write': `Current DSH file policy: workspace-write. Any available operation enforced by the DSH file sandbox may modify files under the session workspace: ${JSON.stringify(workspaceRoot)}. Some platform temporary areas may also be writable.`,
-      'danger-full-access': 'Current DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations.',
+      'read-only': 'Current Liwa file policy: read-only. Any available operation enforced by the Liwa file sandbox cannot modify files in the standing mode. Do not refuse a required modification from this policy alone: try an available tool normally and follow any denial and escalation guidance it returns.',
+      'workspace-write': `Current Liwa file policy: workspace-write. Any available operation enforced by the Liwa file sandbox may modify files under the session workspace: ${JSON.stringify(workspaceRoot)}. Some platform temporary areas may also be writable.`,
+      'danger-full-access': 'Current Liwa file policy: danger-full-access. The Liwa file sandbox does not restrict file modifications by available operations.',
     } as const
 
     expect(await policyContext(ctx, session(`sess-${mode}`, '/projects/../projects/current'))).toBe(expected[mode])
@@ -210,7 +210,7 @@ describe('sandbox:policy request context', () => {
       additionalWritableRoots: ['/projects/shared/.git', '/projects/shared/worktrees'],
     })
     expect(await policyContext(ctx, session('sess-extra', '/projects/current'))).toBe(
-      `Current DSH file policy: workspace-write. Any available operation enforced by the DSH file sandbox may modify files under the session workspace: ${JSON.stringify('/projects/current')}. Additional writable directories: ["/projects/shared/.git","/projects/shared/worktrees"]. Some platform temporary areas may also be writable.`,
+      `Current Liwa file policy: workspace-write. Any available operation enforced by the Liwa file sandbox may modify files under the session workspace: ${JSON.stringify('/projects/current')}. Additional writable directories: ["/projects/shared/.git","/projects/shared/worktrees"]. Some platform temporary areas may also be writable.`,
     )
   })
 
@@ -221,7 +221,7 @@ describe('sandbox:policy request context', () => {
       additionalWritableRoots: ['/projects/shared/.git'],
     })
     expect(await policyContext(ctx, session('sess-readonly-extra', '/projects/current'))).toBe(
-      'Current DSH file policy: read-only. Any available operation enforced by the DSH file sandbox cannot modify files in the standing mode. Do not refuse a required modification from this policy alone: try an available tool normally and follow any denial and escalation guidance it returns.',
+      'Current Liwa file policy: read-only. Any available operation enforced by the Liwa file sandbox cannot modify files in the standing mode. Do not refuse a required modification from this policy alone: try an available tool normally and follow any denial and escalation guidance it returns.',
     )
   })
 
@@ -253,11 +253,11 @@ describe('sandbox:policy request context', () => {
 
     setSandboxMode(active, 'danger-full-access')
     const danger = await policyContext(ctx, active)
-    expect(danger).toBe('Current DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations.')
+    expect(danger).toBe('Current Liwa file policy: danger-full-access. The Liwa file sandbox does not restrict file modifications by available operations.')
     expect(await policyContext(ctx, active)).toBe(danger)
 
     setSandboxMode(active, 'workspace-write')
-    expect(await policyContext(ctx, active)).toBe(`Current DSH file policy: workspace-write. Any available operation enforced by the DSH file sandbox may modify files under the session workspace: ${JSON.stringify('/projects/current')}. Some platform temporary areas may also be writable.`)
+    expect(await policyContext(ctx, active)).toBe(`Current Liwa file policy: workspace-write. Any available operation enforced by the Liwa file sandbox may modify files under the session workspace: ${JSON.stringify('/projects/current')}. Some platform temporary areas may also be writable.`)
   })
 
   it('reconstructs resumed policy from the session log and omits diagnostics without an agent', async () => {

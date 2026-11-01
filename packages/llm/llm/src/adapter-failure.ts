@@ -1,10 +1,10 @@
 /**
  * Normalization for values thrown by a final LLM adapter boundary.
  *
- * @module @deepseek-ai/dsh-llm/adapter-failure
+ * @module @liwa/llm/adapter-failure
  */
 
-import { HarnessError } from './error.ts'
+import { LiwaError } from './error.ts'
 import type { LlmFailure } from './types.ts'
 
 /**
@@ -16,14 +16,14 @@ import type { LlmFailure } from './types.ts'
 export function normalizeLlmFailure(value: unknown): LlmFailure {
   const error = value instanceof Error
     ? value
-    : new HarnessError(thrownMessage(value), 'UNKNOWN', { cause: value })
+    : new LiwaError(thrownMessage(value), 'UNKNOWN', { cause: value })
   // Cross-package copies preserve own data but not class identity. Trust the
   // carried facts only when both own properties agree after validation.
   const carried = ownFailureSnapshot(error)
   if (carried !== undefined && carried.code === ownErrorCode(error)) return carried
   return Object.freeze({
     message: errorMessage(error),
-    code: harnessErrorCode(error),
+    code: liwaErrorCode(error),
   })
 }
 
@@ -101,7 +101,7 @@ function errorMessage(error: Error): string {
   return 'LLM adapter failed'
 }
 
-/** Trust only Harness-owned codes; third-party SDK codes are not our taxonomy. */
-function harnessErrorCode(error: Error): string {
-  return error instanceof HarnessError ? error.code : 'UNKNOWN'
+/** Trust only Liwa-owned codes; third-party SDK codes are not our taxonomy. */
+function liwaErrorCode(error: Error): string {
+  return error instanceof LiwaError ? error.code : 'UNKNOWN'
 }

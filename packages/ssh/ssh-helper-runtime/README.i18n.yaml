@@ -5,39 +5,39 @@
 /:
   en: a8ede80015ba210b
   zh: ac73420044549cec
-/deepseek-ai-dsh-ssh-helper-runtime:
-  en: d9dd3aa5a0109b4f
-  zh: 9b28c6e7486bd870
-/deepseek-ai-dsh-ssh-helper-runtime/summary:
+/liwa-ssh-helper-runtime:
+  en: 02b197db7f26a833
+  zh: f12878e02f25c5e3
+/liwa-ssh-helper-runtime/summary:
   en: cbdda5fe932f43b7
   zh: 25ca2a89284d7364
-/deepseek-ai-dsh-ssh-helper-runtime/table-of-contents:
+/liwa-ssh-helper-runtime/table-of-contents:
   en: d152484eb41ac6b4
   zh: 725b47765ee8f30b
-/deepseek-ai-dsh-ssh-helper-runtime/use-this-package:
+/liwa-ssh-helper-runtime/use-this-package:
   en: bbff250eba0f1b89
   zh: 0a618f05cc88ee2b
-/deepseek-ai-dsh-ssh-helper-runtime/use-this-package/build-and-installation:
-  en: ef43df6992ef3867
-  zh: 404db21de66a544f
-/deepseek-ai-dsh-ssh-helper-runtime/use-this-package/verification-and-publication:
-  en: 7fd676d3488874f5
-  zh: a262a3464908ca4d
-/deepseek-ai-dsh-ssh-helper-runtime/understand-the-implementation:
+/liwa-ssh-helper-runtime/use-this-package/build-and-installation:
+  en: 95fafd6b3d47d5b6
+  zh: 19615d8590e59e92
+/liwa-ssh-helper-runtime/use-this-package/verification-and-publication:
+  en: 5cfee80a597a9e0e
+  zh: 153bc83ffcee9299
+/liwa-ssh-helper-runtime/understand-the-implementation:
   en: 34544471b08457c0
   zh: e19c2446b41d71c8
-/deepseek-ai-dsh-ssh-helper-runtime/further-exploration:
-  en: 945baefe44c3af2e
-  zh: e86ce5914939c315
-/deepseek-ai-dsh-ssh-helper-runtime/model-experience:
+/liwa-ssh-helper-runtime/further-exploration:
+  en: 7939d7236d7b24a3
+  zh: fff172442473e0a9
+/liwa-ssh-helper-runtime/model-experience:
   en: fe11317de618b542
   zh: 98b565c7696ccc13
-/deepseek-ai-dsh-ssh-helper-runtime/model-experience/kv-cache-effect:
+/liwa-ssh-helper-runtime/model-experience/kv-cache-effect:
   en: 114c43a84688994b
   zh: 7e10514ffbf0d88b
-/deepseek-ai-dsh-ssh-helper-runtime/known-limitations-and-deferred-work:
+/liwa-ssh-helper-runtime/known-limitations-and-deferred-work:
   en: fefc4bbe02ce3c04
   zh: 25ee0c8c4c74d942
-/deepseek-ai-dsh-ssh-helper-runtime/known-limitations-and-deferred-work/dev-note:
+/liwa-ssh-helper-runtime/known-limitations-and-deferred-work/dev-note:
   en: e67f633dc6fe7773
   zh: 8ec3e73528ddb1a6

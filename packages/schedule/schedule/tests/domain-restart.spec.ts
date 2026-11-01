@@ -3,12 +3,12 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import Storage from '@deepseek-ai/dsh-storage'
-import { DomainFacility } from '@deepseek-ai/dsh-storage-domain'
-import { JsonStorageBackend } from '@deepseek-ai/dsh-storage-json'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import { MessageId } from '@deepseek-ai/dsh-llm/brand'
+import { Context } from '@liwa/cordis'
+import Storage from '@liwa/storage'
+import { DomainFacility } from '@liwa/storage-domain'
+import { JsonStorageBackend } from '@liwa/storage-json'
+import { SessionId } from '@liwa/session'
+import { MessageId } from '@liwa/llm/brand'
 import { scheduleDomain, scheduleTaskSchema, type ScheduleTask } from '../src/storage.ts'
 import {
   createAfterScheduleRecord, createAtScheduleRecord, createDailyScheduleRecord, createEveryScheduleRecord,
@@ -34,7 +34,7 @@ async function open(root: string) {
 }
 
 it('reopens persisted task bindings and coalesces an overdue recurring schedule', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-schedule-domain-')); roots.push(root)
+  const root = await mkdtemp(join(tmpdir(), 'liwa-schedule-domain-')); roots.push(root)
   const createdAt = Date.parse('2026-09-16T00:00:00Z')
   const record = createEveryScheduleRecord(ScheduleId('persisted'), 'Check progress', 300, createdAt, 'Check progress')
   const first = await open(root)
@@ -54,7 +54,7 @@ it('reopens persisted task bindings and coalesces an overdue recurring schedule'
 })
 
 it('retains an ended task and receipt in JSON storage until explicit deletion', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-schedule-ended-')); roots.push(root)
+  const root = await mkdtemp(join(tmpdir(), 'liwa-schedule-ended-')); roots.push(root)
   const record = createAfterScheduleRecord(ScheduleId('ended'), 'Delivered', 1, Date.parse('2026-09-16T00:00:00Z'), 'Delivered')
   const task = {
     sessionId: SessionId('original'), record, status: 'inactive' as const,
@@ -75,7 +75,7 @@ it('retains an ended task and receipt in JSON storage until explicit deletion', 
 })
 
 it('reopens active and ended daily tasks with their rules and receipts alongside all three existing kinds', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-schedule-daily-')); roots.push(root)
+  const root = await mkdtemp(join(tmpdir(), 'liwa-schedule-daily-')); roots.push(root)
   const createdAt = Date.parse('2026-09-16T00:00:00.000Z')
   const daily = createDailyScheduleRecord(ScheduleId('daily-active'), 'Daily check', {
     time: '08:30:00.125', time_zone: 'Asia/Shanghai',
@@ -126,7 +126,7 @@ it('reopens active and ended daily tasks with their rules and receipts alongside
 })
 
 it('preserves a stored daily zone alias and pinned UTC target across JSON reopen', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-schedule-daily-alias-')); roots.push(root)
+  const root = await mkdtemp(join(tmpdir(), 'liwa-schedule-daily-alias-')); roots.push(root)
   const task: ScheduleTask = {
     sessionId: SessionId('alias-session'), status: 'active',
     record: {
@@ -150,7 +150,7 @@ it('preserves a stored daily zone alias and pinned UTC target across JSON reopen
 })
 
 it('reopens a weekly task with its stored zone alias, weekday set, receipts, and history', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-schedule-weekly-alias-')); roots.push(root)
+  const root = await mkdtemp(join(tmpdir(), 'liwa-schedule-weekly-alias-')); roots.push(root)
   const task: ScheduleTask = {
     sessionId: SessionId('weekly-session'), status: 'active',
     record: {

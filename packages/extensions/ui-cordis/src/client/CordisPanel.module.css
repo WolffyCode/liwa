@@ -98,8 +98,8 @@
   --dsw-elevation-stroke-color: var(--dsw-alias-border-l1);
   box-shadow: var(--dsw-elevation-prominent);
   /* Only `.body` scrolls; the header remains fixed above it. */
-  --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
-  --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
+  --liwa-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --liwa-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
 }
 
 .panel::before {
@@ -191,7 +191,7 @@
 .rowId {
   flex: none;
   color: var(--dsw-alias-label-tertiary);
-  font-family: var(--dsh-font-mono, monospace);
+  font-family: var(--liwa-font-mono, monospace);
   font-size: 11px;
   line-height: 20px;
 }

@@ -5,45 +5,45 @@
 /:
   en: dca7dd27c5f2c369
   zh: 00d34e3837bed75a
-/deepseek-ai-dsh-creation-recommendations:
-  en: f2cefc8c9ad1d38f
-  zh: 9d3a5dc7ac8e2329
-/deepseek-ai-dsh-creation-recommendations/summary:
+/liwa-creation-recommendations:
+  en: ec29bf0eaed607f5
+  zh: c85c4901decbc21a
+/liwa-creation-recommendations/summary:
   en: 3c8dec4a44f298a4
   zh: 6d6bd77206942c76
-/deepseek-ai-dsh-creation-recommendations/table-of-contents:
+/liwa-creation-recommendations/table-of-contents:
   en: d152484eb41ac6b4
   zh: b00dddf4c88f0a45
-/deepseek-ai-dsh-creation-recommendations/use-this-package:
-  en: e5e313410faf1ec0
-  zh: 0683eb113eb52c96
-/deepseek-ai-dsh-creation-recommendations/use-this-package/outcomes-and-recovery:
+/liwa-creation-recommendations/use-this-package:
+  en: 28df2944e9ea5001
+  zh: ad9c809ddda41341
+/liwa-creation-recommendations/use-this-package/outcomes-and-recovery:
   en: 1d96f4897b1a5a28
   zh: 25ca08bc167d1e4a
-/deepseek-ai-dsh-creation-recommendations/understand-the-implementation:
-  en: 825aa7414c0a8d90
-  zh: 082dd0334a10dca0
-/deepseek-ai-dsh-creation-recommendations/further-exploration:
-  en: 056d3e9b67fd628e
-  zh: 71db00e1a971d495
-/deepseek-ai-dsh-creation-recommendations/model-experience:
+/liwa-creation-recommendations/understand-the-implementation:
+  en: 9cbd6505b7f70907
+  zh: bbc77d9b26afee08
+/liwa-creation-recommendations/further-exploration:
+  en: 2abb812c73a91cf1
+  zh: e840ddd9bb957929
+/liwa-creation-recommendations/model-experience:
   en: 215e7ba838619b7b
   zh: a311da3843709f90
-/deepseek-ai-dsh-creation-recommendations/model-experience/creation-recommendations:
+/liwa-creation-recommendations/model-experience/creation-recommendations:
   en: b950fbe9f29693d4
   zh: 2dd7edb2d1c72941
-/deepseek-ai-dsh-creation-recommendations/model-experience/creation-recommendations/what-the-model-sees:
-  en: 8911f9d135dbfe34
-  zh: c3cb68ecd4dd9308
-/deepseek-ai-dsh-creation-recommendations/model-experience/creation-recommendations/token-effect:
+/liwa-creation-recommendations/model-experience/creation-recommendations/what-the-model-sees:
+  en: feddd8bc82dbf577
+  zh: 8a1332e23da6a17e
+/liwa-creation-recommendations/model-experience/creation-recommendations/token-effect:
   en: bd78818f4a9f5422
   zh: 0f54dbd0f41c5622
-/deepseek-ai-dsh-creation-recommendations/model-experience/creation-recommendations/kv-cache-effect:
-  en: c2046060f1ce1f08
-  zh: 08e37f9f758939bc
-/deepseek-ai-dsh-creation-recommendations/known-limitations-and-deferred-work:
-  en: 7f6c43730b74d1f5
-  zh: 8fdd41c9abba4190
-/deepseek-ai-dsh-creation-recommendations/known-limitations-and-deferred-work/dev-note:
+/liwa-creation-recommendations/model-experience/creation-recommendations/kv-cache-effect:
+  en: de4d7f329b1c41b0
+  zh: dea5aa75cdc0b4a9
+/liwa-creation-recommendations/known-limitations-and-deferred-work:
+  en: 64a3536ffa9cfa38
+  zh: c2240b8a4fdfad6e
+/liwa-creation-recommendations/known-limitations-and-deferred-work/dev-note:
   en: e67f633dc6fe7773
   zh: 8ec3e73528ddb1a6

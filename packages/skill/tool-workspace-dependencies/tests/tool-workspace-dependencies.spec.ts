@@ -1,20 +1,20 @@
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import { executeToolFixture } from '@liwa/tool-testkit'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 import * as fs from 'node:fs/promises'
 import { lstat, mkdir, mkdtemp, readFile, readlink, rename, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterEach, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import Include from '@deepseek-ai/cordis-plugin-include'
-import z from '@deepseek-ai/schemastery'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
-import { ToolCallId } from '@deepseek-ai/dsh-llm'
+import { Context } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
+import Include from '@liwa/cordis-plugin-include'
+import z from '@liwa/schemastery'
+import AgentRegistry from '@liwa/agent'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime from '@liwa/tools'
+import { ToolCallId } from '@liwa/llm'
 import * as workspaceDependencies from '../src/index.ts'
 import { copyPrimaryRuntime, installPrimaryRuntime, parsePrimaryRuntime, readPrimaryRuntime, resolvePrimaryRuntime, workspaceDependencyPaths, type PrimaryRuntimeManifest } from '../src/index.ts'
 
@@ -30,10 +30,10 @@ afterEach(async () => {
 })
 
 async function fixture() {
-  const directory = await mkdtemp(join(tmpdir(), 'dsh-primary-runtime-'))
+  const directory = await mkdtemp(join(tmpdir(), 'liwa-primary-runtime-'))
   roots.push(directory)
   const source = join(directory, 'resources')
-  const root = join(directory, 'home', 'dsh-runtimes', 'dsh-primary-runtime')
+  const root = join(directory, 'home', 'liwa-runtimes', 'liwa-primary-runtime')
   const manifest: PrimaryRuntimeManifest = {
     desktopVersion: '1.0.0', platform: process.platform, arch: process.arch,
     python: '3.12.14', node: '24.21.0', pnpm: '11.7.0',
@@ -291,7 +291,7 @@ it('uses a payload in place without copying and tolerates a payload without Node
     pythonPackages: join(source, 'dependencies', 'python', ...(process.platform === 'win32' ? ['Lib'] : ['lib', 'python3.12']), 'site-packages'),
     pythonDistributions: { 'python-docx': '1.2.0' },
   })
-  await expect(readFile(join(directory, 'home', 'dsh-runtimes', 'dsh-primary-runtime', 'runtime.json'))).rejects.toMatchObject({ code: 'ENOENT' })
+  await expect(readFile(join(directory, 'home', 'liwa-runtimes', 'liwa-primary-runtime', 'runtime.json'))).rejects.toMatchObject({ code: 'ENOENT' })
   await rm(paths.python)
   await expect(resolvePrimaryRuntime(source)).rejects.toMatchObject({ code: 'ENOENT' })
 })

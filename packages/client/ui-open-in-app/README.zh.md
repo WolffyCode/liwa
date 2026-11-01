@@ -3,13 +3,13 @@ description: "Web \"Open In...\" 控件：会话头部在记住的应用中打�
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-client-ui-open-in-app
+# @liwa/client-ui-open-in-app
 
 [English](README.md) | 中文
 
 ## 概述
 
-本包提供 open-in-app 功能的浏览器表面。会话头部的分体按钮在记住的应用中打开当前会话的 workspace 目录（会话摘要的 `cwd`），下拉箭头列出主机探测到已安装的全部 catalog 应用；可用性、图标与启动均来自 [`dsh-host-open-in-app`](../../host/open-in-app/README.zh.md) 的主机路由，所以两个包要一起挂载。在右侧 Sidebar 的文档预览里，一个「打开」分体按钮和一个空态按钮经由 Session Remote 用默认应用打开当前文件或显示其位置。主机没有这项能力时，这些控件一个都不渲染。
+本包提供 open-in-app 功能的浏览器表面。会话头部的分体按钮在记住的应用中打开当前会话的 workspace 目录（会话摘要的 `cwd`），下拉箭头列出主机探测到已安装的全部 catalog 应用；可用性、图标与启动均来自 [`liwa-host-open-in-app`](../../host/open-in-app/README.zh.md) 的主机路由，所以两个包要一起挂载。在右侧 Sidebar 的文档预览里，一个「打开」分体按钮和一个空态按钮经由 Session Remote 用默认应用打开当前文件或显示其位置。主机没有这项能力时，这些控件一个都不渲染。
 
 ## 目录
 
@@ -25,11 +25,11 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-把本插件与 [`dsh-host-open-in-app`](../../host/open-in-app/README.zh.md) 并排挂进 Web 组合；这对包用两行 cordis.yml 组成完整功能，本行不接受任何配置。只要主机探测到至少一个已安装的 catalog 应用且会话有已知的 workspace 目录，会话头部就会出现 "Open In..." 分体按钮。只要 Host 通过 Session Remote 的 `session.canOpenWorkspacePath` 报告有桌面，[`ui-sidebar-documentpreview`](../ui-sidebar-documentpreview/README.zh.md) 的文档预览就会长出文件控件；删掉这一行会一次去掉所有控件。
+把本插件与 [`liwa-host-open-in-app`](../../host/open-in-app/README.zh.md) 并排挂进 Web 组合；这对包用两行 cordis.yml 组成完整功能，本行不接受任何配置。只要主机探测到至少一个已安装的 catalog 应用且会话有已知的 workspace 目录，会话头部就会出现 "Open In..." 分体按钮。只要 Host 通过 Session Remote 的 `session.canOpenWorkspacePath` 报告有桌面，[`ui-sidebar-documentpreview`](../ui-sidebar-documentpreview/README.zh.md) 的文档预览就会长出文件控件；删掉这一行会一次去掉所有控件。
 
 ### 预期行为
 
-会话标题栏、文件树标题栏和文档标题栏共用同一个高 24px、圆角 9px 的分体按钮。这些标题栏都只显示图标，悬停提示显示默认应用名称或文件定位动作。它们都显示默认动作的图标，在菜单的默认应用后标注“（默认）”，仅在自己的操作执行期间禁用，并通过短暂提示报告失败。文件树打开按钮以 `absolutePath` 传入的显示目录为目标，并与会话头部共享应用选择和启动状态。目录适配器使用已有的跨平台应用列表，将最后一次成功选择保存在 `dsh.open-in-app.choice` 中；原选择不可用时回退到第一个可用应用。
+会话标题栏、文件树标题栏和文档标题栏共用同一个高 24px、圆角 9px 的分体按钮。这些标题栏都只显示图标，悬停提示显示默认应用名称或文件定位动作。它们都显示默认动作的图标，在菜单的默认应用后标注“（默认）”，仅在自己的操作执行期间禁用，并通过短暂提示报告失败。文件树打开按钮以 `absolutePath` 传入的显示目录为目标，并与会话头部共享应用选择和启动状态。目录适配器使用已有的跨平台应用列表，将最后一次成功选择保存在 `liwa.open-in-app.choice` 中；原选择不可用时回退到第一个可用应用。
 
 在 iOS、Android 手机和平板上（包括已安装的 PWA），原生打开获得确认后显示「已在其它设备打开」，文件定位则显示「已在其它设备显示文件位置」。电脑端成功时不提示，包括窄窗口浏览器与已安装的桌面 PWA。Host 拒绝请求或无法连通时，所有客户端都会收到失败 toast。成功表示 Host 已接受原生操作，不代表目标应用已完成文件加载。反馈复用现有移动设备判定，不依据窗口宽度或安装模式。
 
@@ -47,7 +47,7 @@ kind: "package-reference"
 <details>
 <summary>实现内幕——点击展开</summary>
 
-两个目录插槽均通过显式的 `absolutePath` 使用 `OpenInAppAction`。`conversation.session.header.utilities` 的注册函数读取会话 cwd，`sidebar.right.tab.files.actions` 则接收所属组件传入的显示目录。插件以一个 effect 注册 `open-in-app` 词典。一个页面生命周期的 controller（[`src/client/controller.ts`](src/client/controller.ts)）拥有每页一次的可用性读取、持久化选择的 snapshot store 与启动 POST；组件经 inject 的 `hooks` 隔间接收共享源，因此所有会话头部共享同一份事实。文档相对的路由形式与 wire 载荷类型来自主机包的浏览器安全子路径 `@deepseek-ai/dsh-host-open-in-app/shared`。controller 守卫执行中的启动，并发布所捕获的目录与等待状态。适配器将原生操作和传输失败解析为具名结果；被忽略或取消的请求返回跳过结果，不作播报。
+两个目录插槽均通过显式的 `absolutePath` 使用 `OpenInAppAction`。`conversation.session.header.utilities` 的注册函数读取会话 cwd，`sidebar.right.tab.files.actions` 则接收所属组件传入的显示目录。插件以一个 effect 注册 `open-in-app` 词典。一个页面生命周期的 controller（[`src/client/controller.ts`](src/client/controller.ts)）拥有每页一次的可用性读取、持久化选择的 snapshot store 与启动 POST；组件经 inject 的 `hooks` 隔间接收共享源，因此所有会话头部共享同一份事实。文档相对的路由形式与 wire 载荷类型来自主机包的浏览器安全子路径 `@liwa/host-open-in-app/shared`。controller 守卫执行中的启动，并发布所捕获的目录与等待状态。适配器将原生操作和传输失败解析为具名结果；被忽略或取消的请求返回跳过结果，不作播报。
 
 目录和文件适配器把应用信息与操作交给 [`OpenTargetButton`](src/client/OpenTargetButton.tsx)，由它统一管理菜单顺序、默认标记、图标和尺寸。注入的回调将结果交给本功能在 `shell.overlay` 中持有的唯一 toast，因此切换会话或关闭发起操作的预览不会丢失结果。文件标题栏和空态共用 `FileOpenTarget`，`OpenPathInjected.applications` 通过 [`open-path.ts`](src/client/open-path.ts) 查询 `session.workspacePathApplications`。打开操作使用 `session.openWorkspacePath`，Host 在启动前重新验证指定的关联应用。`FileRouteAction` 通过 `deliverables.file.actions` 和 `deliverables.review.file.actions` 为交付卡片和变更对比页提供同一控件，其认证路由保留会话文件校验。目录适配器继续使用已有的应用列表路由，文件查询失败或不可用时无需增加平台专用的界面实现。
 
@@ -58,8 +58,8 @@ kind: "package-reference"
 <a id="further-exploration"></a>
 ## 进一步探索
 
-- [dsh-host-open-in-app](../../host/open-in-app/README.zh.md)——提供可用性、图标与启动的主机路由，及其背后的目录。
-- [dsh-session-log-export](../../session-query/session-log-export/README.zh.md)——会话头部的姊妹动作。
+- [liwa-host-open-in-app](../../host/open-in-app/README.zh.md)——提供可用性、图标与启动的主机路由，及其背后的目录。
+- [liwa-session-log-export](../../session-query/session-log-export/README.zh.md)——会话头部的姊妹动作。
 - [ui-sidebar-documentpreview](../ui-sidebar-documentpreview/README.zh.md)——声明文件控件所占头部与空态子 slot 的文档预览。
 - [ui-deliverables](../ui-deliverables/README.zh.md)——交付卡片，仍通过自己的路由打开声明过的文件。
 - [Web client 架构](../../../docs/subsystems/web-client.zh.md)——浏览器插件行如何加载并注册 slot。
@@ -81,7 +81,7 @@ Host 在打开或定位前通过当前文件系统验证路径。没有对应 Ho
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **词典把守菜单。** 主机目录的新条目若在两份词典中没有对应的 `app.<id>` 条目，将保持不可见而不是显示裸 id；扩展目录意味着同时扩展 [`dsh-host-open-in-app`](../../host/open-in-app/README.zh.md) 与本包的 locale。
+- **词典把守菜单。** 主机目录的新条目若在两份词典中没有对应的 `app.<id>` 条目，将保持不可见而不是显示裸 id；扩展目录意味着同时扩展 [`liwa-host-open-in-app`](../../host/open-in-app/README.zh.md) 与本包的 locale。
 - **可用性每页只读一次。** 页面打开期间安装的应用要重新加载页面后才出现（主机侧还需主机重启）；文件控件背后的桌面回答同样每页只读一次。
 - **所有平台共用一个定位标签。** Session Remote 只报告有没有桌面，不报告它跑的是哪个文件管理器，所以菜单写「显示文件位置」，而不像交付卡片那样点名访达或文件资源管理器。
 - **交付卡片保留自己的打开器。** [`ui-deliverables`](../ui-deliverables/README.zh.md) 仍通过自己按 Session 与事件定位的路由打开声明过的文件；把这些卡片并到这里的文件控件上仍属延期工作。

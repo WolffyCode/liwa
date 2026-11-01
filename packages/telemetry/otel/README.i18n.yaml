@@ -5,33 +5,33 @@
 /:
   en: 49f35d8bc0fe3689
   zh: ef2fd903cca7d129
-/deepseek-ai-dsh-otel:
-  en: 925bc4650e9895d6
-  zh: 02f8917c4048f6e2
-/deepseek-ai-dsh-otel/summary:
+/liwa-otel:
+  en: f8206eadf0412a05
+  zh: 352c31a2c64f80a0
+/liwa-otel/summary:
   en: e32c122f34c04593
   zh: bea48183ab438454
-/deepseek-ai-dsh-otel/table-of-contents:
+/liwa-otel/table-of-contents:
   en: 23386452a66b2fbd
   zh: 55b2121ae6059425
-/deepseek-ai-dsh-otel/use-this-package:
-  en: f141a9d909c555d8
-  zh: e4f5b690ccb1337c
-/deepseek-ai-dsh-otel/understand-the-implementation:
+/liwa-otel/use-this-package:
+  en: 2d2b6361963c606e
+  zh: 7886c7cb98130b63
+/liwa-otel/understand-the-implementation:
   en: 56298bd5a3be2cdb
   zh: 4dff467a0cb30a38
-/deepseek-ai-dsh-otel/further-exploration:
-  en: ee17b991de098cc0
-  zh: f90257e411921f2b
-/deepseek-ai-dsh-otel/model-experience:
+/liwa-otel/further-exploration:
+  en: 5815f2b90b6bbf3b
+  zh: e17da0b45fff9a5c
+/liwa-otel/model-experience:
   en: 5b364b9451ced69f
   zh: 025feb91ef96bdb8
-/deepseek-ai-dsh-otel/model-experience/kv-cache-effect:
+/liwa-otel/model-experience/kv-cache-effect:
   en: 8be9251f0d5256ed
   zh: d46143a02855c8bc
-/deepseek-ai-dsh-otel/known-limitations-and-deferred-work:
+/liwa-otel/known-limitations-and-deferred-work:
   en: 5c3e29312d45ee52
   zh: b148e3a6decc0f7d
-/deepseek-ai-dsh-otel/known-limitations-and-deferred-work/dev-note:
+/liwa-otel/known-limitations-and-deferred-work/dev-note:
   en: 0a1253c6f7b5e8b9
   zh: 9f56528562c7c914

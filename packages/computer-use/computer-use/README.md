@@ -3,13 +3,13 @@ description: "Computer-use provider registration for deployments that enable one
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-computer-use
+# @liwa/computer-use
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-A deployment can enable one computer-use provider at a time. Loading another provider fails with the registered provider name. Both DSH's native CUA and the Cua Driver adapters use this registry. Each provider supplies its own tools and desktop operations. This package adds no model-visible tools and does not coordinate concurrent Sessions.
+A deployment can enable one computer-use provider at a time. Loading another provider fails with the registered provider name. Both Liwa's native CUA and the Cua Driver adapters use this registry. Each provider supplies its own tools and desktop operations. This package adds no model-visible tools and does not coordinate concurrent Sessions.
 
 ## Table of Contents
 
@@ -28,10 +28,10 @@ A deployment can enable one computer-use provider at a time. Loading another pro
 Mount the service once beside the chosen provider in a Cordis composition:
 
 ```yaml
-- name: '@deepseek-ai/dsh-computer-use'
+- name: '@liwa/computer-use'
 ```
 
-The service has no configuration. Provider plugins inject `computerUse` and call `ctx.computerUse.register(ComputerUseProviderName(name))`; the brand is exported from `@deepseek-ai/dsh-computer-use/brand`. The returned effect disposer releases that registration.
+The service has no configuration. Provider plugins inject `computerUse` and call `ctx.computerUse.register(ComputerUseProviderName(name))`; the brand is exported from `@liwa/computer-use/brand`. The returned effect disposer releases that registration.
 
 Providers stop admitting tool calls, close their resources, and await owned work before releasing the registration. `ctx.computerUse.providerName` reports the registered name until release.
 
@@ -53,9 +53,9 @@ One private name owns the slot. Cordis effects remove contributions when their p
 ## Further Exploration
 
 - [Computer use](../../../docs/subsystems/computer-use.md) — provider selection and shared-desktop limits.
-- [Computer Use bundle](../../experimental/cua-bundle/README.md) — enable DSH's native CUA and permission controls.
+- [Computer Use bundle](../../experimental/cua-bundle/README.md) — enable Liwa's native CUA and permission controls.
 - [Shared CUA library](../../experimental/cua/README.md) — application/window objects, tool execution, and application consent.
-- [macOS CUA provider](../../experimental/cua-macos/README.md) — DSH's Swift implementation and native helper lifecycle.
+- [macOS CUA provider](../../experimental/cua-macos/README.md) — Liwa's Swift implementation and native helper lifecycle.
 - [Cua Driver MCP provider](../../experimental/computer-use-cua-driver-mcp/README.md) — use an installed driver.
 - [Cua Driver native provider](../../experimental/computer-use-cua-driver-native/README.md) — use the npm runtime.
 
@@ -76,7 +76,7 @@ Registration does not alter model requests. Provider-owned tools and guidance de
 
 The service limits registrations within its Cordis service instance.
 
-- **Shared desktop** — concurrent Sessions and separate DSH processes can operate the same desktop; callers coordinate whole computer-use workflows.
+- **Shared desktop** — concurrent Sessions and separate Liwa processes can operate the same desktop; callers coordinate whole computer-use workflows.
 - **Provider selection** — configuration selects the provider; the model cannot switch registered drivers at runtime.
 
 <a id="dev-note"></a>

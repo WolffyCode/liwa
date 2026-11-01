@@ -30,9 +30,9 @@ vi.mock('node:fs', async importOriginal => ({
 
 afterEach(() => { vi.unstubAllEnvs(); vi.clearAllMocks() })
 
-const environment = { DSH_DESKTOP_APP_ID: 'com.example.test', DSH_DESKTOP_AUTO_UPDATE_ENV: 'test',
+const environment = { LIWA_DESKTOP_APP_ID: 'com.example.test', LIWA_DESKTOP_AUTO_UPDATE_ENV: 'test',
   DOWNLOAD_TEST_ORIGIN: 'https://updates.example.com', DOWNLOAD_TEST_RELEASE_ID: '0123456789abcdef0123456789abcdef',
-  DSH_DESKTOP_WINDOWS_TOKEN_PIN: 'fixture-pin', DSH_DESKTOP_WINDOWS_SIGNATURE_CACHE_CONCURRENCY: '2' }
+  LIWA_DESKTOP_WINDOWS_TOKEN_PIN: 'fixture-pin', LIWA_DESKTOP_WINDOWS_SIGNATURE_CACHE_CONCURRENCY: '2' }
 
 function supervisor(failure?: string) {
   vi.stubEnv('npm_execpath', 'fixture-pnpm.cjs')
@@ -52,7 +52,7 @@ it.each(['pack', 'runtime'] as const)('overlaps Windows preparation and waits fo
   const finished = new Set<string>()
   run.run.mockImplementation(async (stage) => {
     stages.push(stage)
-    if (stage.startsWith('run release:pack --family dsh ')) await pack.promise
+    if (stage.startsWith('run release:pack --family liwa ')) await pack.promise
     if (stage === 'run prepare:runtime --defer-primary-runtime-smoke') {
       await runtime.promise
       finished.add('runtime')
@@ -64,7 +64,7 @@ it.each(['pack', 'runtime'] as const)('overlaps Windows preparation and waits fo
   const outcome = operation.then(() => undefined, (error: unknown) => error)
   try {
     await vi.waitFor(() => {
-      expect(stages.some(stage => stage.startsWith('run release:pack --family dsh '))).toBe(true)
+      expect(stages.some(stage => stage.startsWith('run release:pack --family liwa '))).toBe(true)
       expect(stages).toContain('run prepare:runtime --defer-primary-runtime-smoke')
     })
     expect(stages).not.toContain('run sign:primary-runtime')
@@ -91,7 +91,7 @@ it.each(['pack', 'runtime'] as const)('drains the other Windows preparation afte
   let settled = false
   run.run.mockImplementation(async (stage) => {
     stages.push(stage)
-    if (stage.startsWith('run release:pack --family dsh ')) await pack.promise
+    if (stage.startsWith('run release:pack --family liwa ')) await pack.promise
     if (stage === 'run prepare:runtime --defer-primary-runtime-smoke') await runtime.promise
   })
   const outcome = packageTarget(parseDesktopPackageInvocation(['win-x64'], 'win32', 'x64'), environment, run).then(
@@ -100,7 +100,7 @@ it.each(['pack', 'runtime'] as const)('drains the other Windows preparation afte
   )
   try {
     await vi.waitFor(() => {
-      expect(stages.some(stage => stage.startsWith('run release:pack --family dsh '))).toBe(true)
+      expect(stages.some(stage => stage.startsWith('run release:pack --family liwa '))).toBe(true)
       expect(stages).toContain('run prepare:runtime --defer-primary-runtime-smoke')
     })
     ;(failed === 'pack' ? pack : runtime).reject(failure)
@@ -113,7 +113,7 @@ it.each(['pack', 'runtime'] as const)('drains the other Windows preparation afte
     expect(stages.some(stage => stage.startsWith('--dir apps/desktop-host pack'))).toBe(false)
     expect(stages.some(stage => stage.startsWith('--dir native/system'))).toBe(false)
     expect(stages.some(stage => stage.startsWith('run sign:primary-runtime'))).toBe(false)
-    expect(stages.some(stage => stage.startsWith('run prepare:packages') || stage.startsWith('run prepare:dsh'))).toBe(false)
+    expect(stages.some(stage => stage.startsWith('run prepare:packages') || stage.startsWith('run prepare:liwa'))).toBe(false)
     expect(writeFileSync).not.toHaveBeenCalled()
   } finally {
     pack.resolve(undefined)
@@ -126,25 +126,25 @@ it.each([undefined, '3'])('passes the package cache and selected compression to 
   const { run } = supervisor()
   const cache = resolve('fixture-package-cache')
   await packageTarget(parseDesktopPackageInvocation(['win-x64'], 'win32', 'x64'), {
-    ...environment, DSH_DESKTOP_PACKAGE_CACHE_DIR: cache,
-    ...(level === undefined ? {} : { DSH_DESKTOP_WINDOWS_COMPRESSION_LEVEL: level }),
+    ...environment, LIWA_DESKTOP_PACKAGE_CACHE_DIR: cache,
+    ...(level === undefined ? {} : { LIWA_DESKTOP_WINDOWS_COMPRESSION_LEVEL: level }),
     ELECTRON_BUILDER_COMPRESSION_LEVEL: '0',
   }, run)
-  const prepare = run.run.mock.calls.find(([stage]) => stage.startsWith('run prepare:dsh'))!
-  expect(prepare[3].env.DSH_DESKTOP_PACKAGE_CACHE_DIR).toBe(cache)
+  const prepare = run.run.mock.calls.find(([stage]) => stage.startsWith('run prepare:liwa'))!
+  expect(prepare[3].env.LIWA_DESKTOP_PACKAGE_CACHE_DIR).toBe(cache)
   const builder = run.run.mock.calls.find(([stage]) => stage.startsWith('exec electron-builder'))!
   expect(builder[3].env.ELECTRON_BUILDER_COMPRESSION_LEVEL).toBe(level ?? '0')
 })
 
 it.each([undefined, '2'])('uses bounded Windows packing while retaining signing and smoke (workers=%s)', async (workers) => {
   const { run, stages } = supervisor()
-  const settings = workers === undefined ? environment : { ...environment, DSH_DESKTOP_WINDOWS_PACK_CONCURRENCY: workers }
+  const settings = workers === undefined ? environment : { ...environment, LIWA_DESKTOP_WINDOWS_PACK_CONCURRENCY: workers }
   await packageTarget(parseDesktopPackageInvocation(['win-x64'], 'win32', 'x64'), settings, run)
   const packs = stages.filter(stage => stage.startsWith('run release:pack'))
   expect(packs).toHaveLength(2)
   for (const stage of packs) expect(stage).toContain(`--concurrency ${workers ?? '4'}`)
   expect(stages).toContain('preflight:windows-signing')
-  expect(stages).toContain('run sign:primary-runtime --dsh')
+  expect(stages).toContain('run sign:primary-runtime --liwa')
   expect(stages.at(-1)).toBe('exec tsx scripts/smoke-packaged-runtime.ts')
 })
 
@@ -155,17 +155,17 @@ it('requires one signing preflight before building, then records only the comple
   expect(stages.filter(stage => stage === 'preflight:windows-signing')).toHaveLength(1)
   expect(vi.mocked(withWindowsSigningStage).mock.calls.map(([options]) => options.stage))
     .toEqual(['preflight', 'artifacts'])
-  expect(run.run.mock.calls[0]![3]).toMatchObject({ env: { DSH_DESKTOP_WINDOWS_TOKEN_PIN: 'fixture-pin' }, timeoutMs: 60_000 })
-  expect(run.run.mock.calls[1]![3].env).not.toHaveProperty('DSH_DESKTOP_WINDOWS_TOKEN_PIN')
-  expect(stages.indexOf('run sign:primary-runtime --dsh')).toBeGreaterThan(stages.indexOf('run prepare:dsh --defer-runtime-smoke'))
+  expect(run.run.mock.calls[0]![3]).toMatchObject({ env: { LIWA_DESKTOP_WINDOWS_TOKEN_PIN: 'fixture-pin' }, timeoutMs: 60_000 })
+  expect(run.run.mock.calls[1]![3].env).not.toHaveProperty('LIWA_DESKTOP_WINDOWS_TOKEN_PIN')
+  expect(stages.indexOf('run sign:primary-runtime --liwa')).toBeGreaterThan(stages.indexOf('run prepare:liwa --defer-runtime-smoke'))
   expect(stages.at(-1)).toBe('exec tsx scripts/smoke-packaged-runtime.ts')
   for (const call of run.run.mock.calls) {
     if (call[0].startsWith('run prepare:') || call[0].includes('smoke-packaged-runtime')) {
-      expect(call[3].env).not.toHaveProperty('DSH_DESKTOP_WINDOWS_TOKEN_PIN')
-      expect(call[3].env).not.toHaveProperty('DSH_DESKTOP_WINDOWS_SIGNATURE_CACHE_CONCURRENCY')
+      expect(call[3].env).not.toHaveProperty('LIWA_DESKTOP_WINDOWS_TOKEN_PIN')
+      expect(call[3].env).not.toHaveProperty('LIWA_DESKTOP_WINDOWS_SIGNATURE_CACHE_CONCURRENCY')
     }
     if (call[0].startsWith('run sign:primary-runtime')) {
-      expect(call[3].env).toHaveProperty('DSH_DESKTOP_WINDOWS_SIGNATURE_CACHE_CONCURRENCY', '2')
+      expect(call[3].env).toHaveProperty('LIWA_DESKTOP_WINDOWS_SIGNATURE_CACHE_CONCURRENCY', '2')
     }
   }
   expect(writeFileSync).toHaveBeenCalledOnce()
@@ -183,7 +183,7 @@ it('initializes shared storage only after acquiring the preflight stage lock', a
   await packageTarget(parseDesktopPackageInvocation(['win-x64'], 'win32', 'x64'), environment, run)
 })
 
-it.each(['preflight:windows-signing', 'run build:official', 'run sign:primary-runtime', 'run prepare:dsh --defer-runtime-smoke', 'run sign:primary-runtime --dsh',
+it.each(['preflight:windows-signing', 'run build:official', 'run sign:primary-runtime', 'run prepare:liwa --defer-runtime-smoke', 'run sign:primary-runtime --liwa',
   'exec tsx scripts/smoke-packaged-runtime.ts',
   'exec electron-builder --config electron-builder.config.mjs --win --x64 --publish never'])
 ('never continues or records a release after %s fails', async (failure) => {
@@ -200,9 +200,9 @@ it.each(['--unsigned', '--prepare-only'])('keeps %s hardware-free and creates no
   expect(stages[0]).toBe(mode === '--unsigned' ? 'run build --profile local' : 'run build:official')
   expect(stages).not.toContain('preflight:windows-signing')
   expect(stages).not.toContain('run sign:primary-runtime')
-  expect(stages).not.toContain('run sign:primary-runtime --dsh')
+  expect(stages).not.toContain('run sign:primary-runtime --liwa')
   expect(withWindowsSigningStage).not.toHaveBeenCalled()
-  for (const call of run.run.mock.calls) expect(call[3].env).not.toHaveProperty('DSH_DESKTOP_WINDOWS_TOKEN_PIN')
+  for (const call of run.run.mock.calls) expect(call[3].env).not.toHaveProperty('LIWA_DESKTOP_WINDOWS_TOKEN_PIN')
   expect(writeFileSync).not.toHaveBeenCalled()
   expect(stages.includes('exec tsx scripts/smoke-packaged-runtime.ts --unsigned')).toBe(mode === '--unsigned')
 })
@@ -219,14 +219,14 @@ it.each(['mac-arm64', 'mac-x64', 'win-x64'] as const)('selects branding from the
     await packageTarget(invocation, {
       ...environment,
       APPLE_KEYCHAIN_PROFILE: 'fixture',
-      DSH_BUILD_CLIENT_PROFILE: unsigned ? 'official' : 'local',
-      DSH_CLIENT_BUILD_PROFILE: unsigned ? 'official' : 'local',
-      DSH_CLIENT_TITLE: 'Inherited title',
+      LIWA_BUILD_CLIENT_PROFILE: unsigned ? 'official' : 'local',
+      LIWA_CLIENT_BUILD_PROFILE: unsigned ? 'official' : 'local',
+      LIWA_CLIENT_TITLE: 'Inherited title',
     }, run)
     const build = stages.find(stage => stage.startsWith('run build'))
     expect(build).toBe(unsigned ? 'run build --profile local' : 'run build:official')
     expect(stages.some(stage => stage.startsWith('exec tsx apps/desktop/scripts/pack-local-packages.ts'))).toBe(unsigned)
-    expect(stages.some(stage => stage.startsWith('run release:pack --family dsh'))).toBe(!unsigned)
+    expect(stages.some(stage => stage.startsWith('run release:pack --family liwa'))).toBe(!unsigned)
   }
 })
 
@@ -265,13 +265,13 @@ it.each([
   const { run, stages } = supervisor()
   await packageTarget(parseDesktopPackageInvocation([target, '--unsigned', ...(directory ? ['--dir'] : [])], 'darwin', 'arm64'), {
     ...environment, CSC_LINK: 'unused.p12', CSC_KEY_PASSWORD: 'unused-secret', APPLE_API_KEY: 'unused.p8',
-    DSH_DESKTOP_MACOS_SIGNING_IDENTITY: 'Unused identity', DSH_DESKTOP_MACOS_TEAM_ID: 'TEAMID1234',
+    LIWA_DESKTOP_MACOS_SIGNING_IDENTITY: 'Unused identity', LIWA_DESKTOP_MACOS_TEAM_ID: 'TEAMID1234',
   }, run)
   expect(stages.at(-2)).toBe(`exec electron-builder --config electron-builder.config.mjs --mac --${target === 'mac-arm64' ? 'arm64' : 'x64'} --publish never${directory ? ' --dir' : ''}`)
   expect(stages.at(-1)).toBe('exec tsx scripts/smoke-packaged-runtime.ts --unsigned')
   for (const call of run.run.mock.calls) {
-    expect(call[3].env).toMatchObject({ DSH_DESKTOP_UNSIGNED: '1', CSC_IDENTITY_AUTO_DISCOVERY: 'false' })
-    for (const key of ['CSC_LINK', 'CSC_KEY_PASSWORD', 'APPLE_API_KEY', 'DSH_DESKTOP_MACOS_SIGNING_IDENTITY', 'DSH_DESKTOP_MACOS_TEAM_ID']) {
+    expect(call[3].env).toMatchObject({ LIWA_DESKTOP_UNSIGNED: '1', CSC_IDENTITY_AUTO_DISCOVERY: 'false' })
+    for (const key of ['CSC_LINK', 'CSC_KEY_PASSWORD', 'APPLE_API_KEY', 'LIWA_DESKTOP_MACOS_SIGNING_IDENTITY', 'LIWA_DESKTOP_MACOS_TEAM_ID']) {
       expect(call[3].env).not.toHaveProperty(key)
     }
   }
@@ -308,16 +308,16 @@ it('checks macOS directory packages without writing a release record', async () 
 it.each([undefined, '2'])('passes macOS pack concurrency %s only to workspace packing and download routing only to download stages', async (concurrency) => {
   const { run } = supervisor()
   await packageTarget(parseDesktopPackageInvocation(['mac-arm64', '--prepare-only'], 'darwin', 'arm64'), {
-    ...environment, DSH_DESKTOP_MACOS_PACK_CONCURRENCY: concurrency,
-    DSH_DESKTOP_MACOS_DOWNLOAD_PROXY: 'http://downloads.example:8080',
-    DSH_DESKTOP_MACOS_NOTARIZATION_PROXY: 'http://apple.example:8081',
+    ...environment, LIWA_DESKTOP_MACOS_PACK_CONCURRENCY: concurrency,
+    LIWA_DESKTOP_MACOS_DOWNLOAD_PROXY: 'http://downloads.example:8080',
+    LIWA_DESKTOP_MACOS_NOTARIZATION_PROXY: 'http://apple.example:8081',
   }, run)
   const calls = run.run.mock.calls
   const packs = calls.filter(call => call[0].startsWith('run release:pack'))
   expect(packs).toHaveLength(2)
   for (const call of packs) expect(call[2].slice(-2)).toEqual(['--concurrency', concurrency ?? '4'])
   for (const call of calls) {
-    expect(call[3].env.HTTP_PROXY).toBe(/^run prepare:(?:runtime|dsh)$/u.test(call[0]) ? 'http://downloads.example:8080' : undefined)
+    expect(call[3].env.HTTP_PROXY).toBe(/^run prepare:(?:runtime|liwa)$/u.test(call[0]) ? 'http://downloads.example:8080' : undefined)
   }
   expect(withMacOSNotarizationProxy).not.toHaveBeenCalled()
 })
@@ -325,7 +325,7 @@ it.each([undefined, '2'])('passes macOS pack concurrency %s only to workspace pa
 it.each([false, true])('scopes the Apple proxy around notarization (directory=%s)', async (directory) => {
   const { run } = supervisor()
   await packageTarget(parseDesktopPackageInvocation(['mac-arm64', ...(directory ? ['--dir'] : [])], 'darwin', 'arm64'), {
-    ...environment, APPLE_KEYCHAIN_PROFILE: 'fixture', DSH_DESKTOP_MACOS_NOTARIZATION_PROXY: 'http://apple.example:8081',
+    ...environment, APPLE_KEYCHAIN_PROFILE: 'fixture', LIWA_DESKTOP_MACOS_NOTARIZATION_PROXY: 'http://apple.example:8081',
   }, run)
   expect(withMacOSNotarizationProxy).toHaveBeenCalledExactlyOnceWith('http://apple.example:8081', expect.any(Function), undefined, undefined, expect.any(Function))
   expect(packageMacOSArtifacts).toHaveBeenCalledTimes(directory ? 0 : 1)
@@ -353,7 +353,7 @@ it.each([false, true])('keeps signing and runtime verification when notarization
   if (!directory) expect(stages.at(-2)).toContain('--mac zip')
   expect(stages.at(-1)).toBe('exec tsx scripts/smoke-packaged-runtime.ts --skip-notarization')
   expect(run.run.mock.calls.at(-2)![3].env).toMatchObject({
-    DSH_DESKTOP_UNSIGNED: '0', DSH_DESKTOP_MACOS_SKIP_NOTARIZATION: '1', CSC_LINK: 'signing.p12',
+    LIWA_DESKTOP_UNSIGNED: '0', LIWA_DESKTOP_MACOS_SKIP_NOTARIZATION: '1', CSC_LINK: 'signing.p12',
   })
   expect(withMacOSNotarizationProxy).not.toHaveBeenCalled()
   expect(packageMacOSArtifacts).not.toHaveBeenCalled()
@@ -365,7 +365,7 @@ it.each(['mac-arm64', 'mac-x64'] as const)('applies ZIP compression without chan
     const { run } = supervisor()
     await packageTarget(parseDesktopPackageInvocation([target, '--skip-notarization'], 'darwin', 'arm64'), {
       ...environment, ELECTRON_BUILDER_COMPRESSION_LEVEL: '9',
-      ...(level === undefined ? {} : { DSH_DESKTOP_MACOS_ZIP_COMPRESSION_LEVEL: level }),
+      ...(level === undefined ? {} : { LIWA_DESKTOP_MACOS_ZIP_COMPRESSION_LEVEL: level }),
     }, run)
     const builders = run.run.mock.calls.filter(call => call[0].startsWith('exec electron-builder'))
     expect(builders).toHaveLength(3)
@@ -379,8 +379,8 @@ it.each(['mac-arm64', 'mac-x64'] as const)('applies ZIP compression without chan
     for (const call of [dmg!, zip!]) {
       expect(call[0]).toContain('--prepackaged')
       expect(call[0]).toContain('unnotarized-artifacts')
-      expect(call[3].env.DSH_DESKTOP_MACOS_SKIP_NOTARIZATION).toBe('1')
-      expect(call[3].env.DSH_DESKTOP_UNSIGNED).toBe('0')
+      expect(call[3].env.LIWA_DESKTOP_MACOS_SKIP_NOTARIZATION).toBe('1')
+      expect(call[3].env.LIWA_DESKTOP_UNSIGNED).toBe('0')
     }
   }
   expect(packageMacOSArtifacts).not.toHaveBeenCalled()
@@ -414,7 +414,7 @@ it.each([undefined, '7'])('applies file-owned compression only to the final nota
     await build({ format: 'zip', appPath: '/fixture/app', output: '/fixture/zip' })
   })
   const settings = { ...environment, ELECTRON_BUILDER_COMPRESSION_LEVEL: '9',
-    ...(level === undefined ? {} : { DSH_DESKTOP_MACOS_ZIP_COMPRESSION_LEVEL: level }) }
+    ...(level === undefined ? {} : { LIWA_DESKTOP_MACOS_ZIP_COMPRESSION_LEVEL: level }) }
   await packageTarget(parseDesktopPackageInvocation(['mac-arm64'], 'darwin', 'arm64'), settings, run)
   const zip = run.run.mock.calls.find(call => call[0].includes('--mac zip'))
   const dmg = run.run.mock.calls.find(call => call[0].includes('--mac dmg'))

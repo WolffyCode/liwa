@@ -25,14 +25,14 @@ describe('web e2e: repairs a stored provider after catalog drift', () => {
   let tripwire: ReturnType<typeof watchConsole>
 
   beforeAll(async () => {
-    home = await mkdtemp(join(tmpdir(), 'dsh-models-recovery-'))
+    home = await mkdtemp(join(tmpdir(), 'liwa-models-recovery-'))
     await mkdir(join(home, 'profiles', 'scaffold'), { recursive: true })
     await writeFile(join(home, 'profiles', 'scaffold', 'cordis.patch.yml'), [
       '- id: llm-pi-ai', '  config:', '    providers:', '      openrouter:', '        models:',
       '          - id: "111"', '      zai: {}', '      acme-gateway:',
       '        baseURL: https://gateway.example/v1', '        models:', '          - id: "custom-model"', '',
     ].join('\n'))
-    scaffold = await launchWebScaffold({ harnessHome: home })
+    scaffold = await launchWebScaffold({ liwaHome: home })
     browser = await chromium.launch()
     page = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: ZH_BROWSER_LOCALE })
     tripwire = watchConsole(page)

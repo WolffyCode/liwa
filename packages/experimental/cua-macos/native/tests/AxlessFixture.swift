@@ -19,7 +19,7 @@ final class AxlessFixture: NSObject, NSApplicationDelegate, NSWindowDelegate {
         window = NSWindow(contentRect: NSRect(x: 120, y: 120, width: 360, height: 180),
                           styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: false)
         window.delegate = self
-        window.title = "DSH AXless window fixture"
+        window.title = "Liwa AXless window fixture"
         window.isReleasedWhenClosed = false
         window.animationBehavior = .none
         window.collectionBehavior = [.canJoinAllApplications, .stationary]

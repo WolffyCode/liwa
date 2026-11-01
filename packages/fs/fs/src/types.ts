@@ -2,11 +2,11 @@
  * Vocabulary for the filesystem Service Definition (`ctx.fs`): the opaque target/version
  * identities, the metadata `stat` returns, the write-intent and outcome shapes, the
  * literal-edit request/outcome, and the typed error taxonomy.
- * @module @deepseek-ai/dsh-fs/types
+ * @module @liwa/fs/types
  */
 
-import { HarnessError } from '@deepseek-ai/dsh-llm'
-import type { Branded } from '@deepseek-ai/dsh-brand'
+import { LiwaError } from '@liwa/llm'
+import type { Branded } from '@liwa/brand'
 
 /**
  * Opaque key for stale guards and target lookup. The local backend uses a
@@ -188,12 +188,12 @@ export type FsErrorCode =
   | 'FS_ABORTED'
 
 /**
- * Typed filesystem error. Extends {@link HarnessError} so it carries a stable
- * {@link FsErrorCode} and chains `cause`. `dsh-fs` owns this vocabulary so
+ * Typed filesystem error. Extends {@link LiwaError} so it carries a stable
+ * {@link FsErrorCode} and chains `cause`. `liwa-fs` owns this vocabulary so
  * backends and the policy layer raise the same codes instead of each inventing
  * message strings.
  */
-export class FsError extends HarnessError {
+export class FsError extends LiwaError {
   override readonly code: FsErrorCode
 
   constructor(message: string, code: FsErrorCode, options?: ErrorOptions) {

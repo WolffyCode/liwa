@@ -4,13 +4,13 @@
  * mapped interfaces make the content, source, and finish unions extensible.
  */
 
-import type { Branded } from '@deepseek-ai/dsh-brand'
-import type { FileAttachmentRef, ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
-import type { LocalizedText } from '@deepseek-ai/dsh-package-manifest'
+import type { Branded } from '@liwa/brand'
+import type { FileAttachmentRef, ImageAttachmentRef } from '@liwa/attachment'
+import type { LocalizedText } from '@liwa/package-manifest'
 import type { MessageId, ToolCallId, ProviderRequestId, ReasoningEffortId } from './brand.ts'
 import type { Message, UserMessage } from './message.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Events {
     /**
      * The provider topology changed: an adapter registered or unregistered
@@ -59,7 +59,7 @@ export interface LlmFailure {
   /**
    * With code `IMAGE_OFFLOAD_REQUIRED`: how many more of the oldest retained
    * image occurrences the route needs offloaded before the same request fits
-   * its exact byte accounting. `dsh-compaction-image-offload` records the
+   * its exact byte accounting. `liwa-compaction-image-offload` records the
    * selected occurrences in an `image/offload` event and retries the step.
    */
   readonly offloadImages?: number
@@ -313,7 +313,7 @@ export interface LlmModelDiscoveryRequest {
   baseURL?: string
   /** Wire protocol the endpoint speaks, when the draft names one. */
   api?: string
-  /** Credential for this interrogation alone; the harness never stores it. */
+  /** Credential for this interrogation alone; Liwa never stores it. */
   apiKey?: string
 }
 
@@ -323,7 +323,7 @@ export interface LlmModelDiscoveryOperation extends LlmModelDiscoveryRequest {
   signal?: AbortSignal
 }
 
-declare module '@deepseek-ai/dsh-typert-protocol' {
+declare module '@liwa/typert-protocol' {
   interface RemoteErrorDetailsMap {
     /** A draft provider interrogation refused or failed. */
     'llm/model-discovery-rejected': {
@@ -467,7 +467,7 @@ export interface LlmResolvedModelInfo extends LlmModelInfo {
 /**
  * Adapter-private lossless-JSON state for replaying a successful response,
  * carried by a terminal `finish` chunk and stored on the assembled assistant
- * message's model source. Both halves stay opaque to the harness; only the
+ * message's model source. Both halves stay opaque to Liwa; only the
  * split is shared vocabulary, so assembly can keep stored metadata aligned
  * with stored content without reading either half.
  */
@@ -510,8 +510,8 @@ export type StreamChunk =
 /**
  * JSON-schema description of a tool, as sent to the model.
  *
- * Declared here (not in dsh-tools) because it is part of {@link GenerateOptions};
- * dsh-tools' ToolDefinition and dsh-system-prompt's PromptAssembly both import
+ * Declared here (not in liwa-tools) because it is part of {@link GenerateOptions};
+ * liwa-tools' ToolDefinition and liwa-system-prompt's PromptAssembly both import
  * it from this package.
  */
 export interface ToolSchema {
@@ -560,7 +560,7 @@ export interface GenerateOptions {
   reasoningEffort?: ReasoningEffortId
   /**
    * Ordered conversation messages, exactly as the provider sees them. A
-   * loop-built request passes the derived history (dsh-agent-loop), whose
+   * loop-built request passes the derived history (liwa-agent-loop), whose
    * leading system-role message carries the system prompt; a hand-built
    * one-shot may include identity-free user inputs.
    */

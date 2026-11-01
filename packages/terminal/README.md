@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-The `terminal/` family lets agents keep interactive shell and REPL sessions alive across tool calls, including the working directory, environment variables, and running child processes. Use `terminal/` for owner-isolated session management, `terminal-bash/` for sandboxed interactive bash or pwsh sessions. Choose this family when a task needs interactive input or state that a one-shot bash command cannot retain. Sessions remain local to one harness process and do not survive a restart.
+The `terminal/` family lets agents keep interactive shell and REPL sessions alive across tool calls, including the working directory, environment variables, and running child processes. Use `terminal/` for owner-isolated session management, `terminal-bash/` for sandboxed interactive bash or pwsh sessions. Choose this family when a task needs interactive input or state that a one-shot bash command cannot retain. Sessions remain local to one Liwa process and do not survive a restart.
 
 ## Table of Contents
 

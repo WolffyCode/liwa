@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /** Account surfaces follow `account/watch` access: a revocation withdraws them and a later grant restores them. */
 import { afterEach, expect, it, vi } from 'vitest'
-import type { AccountView } from '@deepseek-ai/dsh-deepseek-account/types'
+import type { AccountView } from '@liwa/deepseek-account/types'
 import { apply, type AccountSectionInjected } from '../src/client/index.ts'
 
 afterEach(() => { vi.unstubAllEnvs() })
@@ -38,7 +38,7 @@ function revoke(guards: readonly Guard[]): void {
 }
 
 it('withdraws every account surface and the account stream on revocation, and restores them on the next grant', async () => {
-  vi.stubEnv('DSH_CLIENT_VERSION', '0.0.0-test')
+  vi.stubEnv('LIWA_CLIENT_VERSION', '0.0.0-test')
   const links = { usageUrl: 'https://example.test/usage', topUpUrl: 'https://example.test/top_up' }
   const signedIn: AccountView = { status: 'credential-stored', links, attempt: null }
   const guards: Guard[] = []
@@ -111,7 +111,7 @@ it('withdraws every account surface and the account stream on revocation, and re
 })
 
 it('drops reads a revoked grant started, and the next grant shows no account section before its first frame', async () => {
-  vi.stubEnv('DSH_CLIENT_VERSION', '0.0.0-test')
+  vi.stubEnv('LIWA_CLIENT_VERSION', '0.0.0-test')
   const links = { usageUrl: 'https://example.test/usage', topUpUrl: 'https://example.test/top_up' }
   const signedIn: AccountView = { status: 'credential-stored', links, attempt: null }
   const guards: Guard[] = []
@@ -267,7 +267,7 @@ function revocationHarness(scripts: StreamScript[]) {
 }
 
 it('ignores a frame the stream delivered just before the revocation', async () => {
-  vi.stubEnv('DSH_CLIENT_VERSION', '0.0.0-test')
+  vi.stubEnv('LIWA_CLIENT_VERSION', '0.0.0-test')
   // The stream hands out its first frame after access is already withdrawn.
   const b = revocationHarness([() => { revoke(b.guards) }])
   try {
@@ -283,7 +283,7 @@ it('ignores a frame the stream delivered just before the revocation', async () =
 })
 
 it('closes the sign-in dialog, its failure, and the pending authorization tab on revocation', async () => {
-  vi.stubEnv('DSH_CLIENT_VERSION', '0.0.0-test')
+  vi.stubEnv('LIWA_CLIENT_VERSION', '0.0.0-test')
   const popup = { opener: null, closed: false, close: vi.fn(), location: { replace: vi.fn() } }
   const open = vi.spyOn(window, 'open').mockReturnValue(popup as never)
   const b = revocationHarness([() => {}, () => {}])

@@ -1,14 +1,14 @@
 // @vitest-environment jsdom
 /** The plugin fills each region's More menu with the discovery and Creator actions. */
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@liwa/cordis'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, within } from '@testing-library/react'
 import type { ComponentProps } from 'react'
 import { useState } from 'react'
-import { makeTranslate, SlotTestRuntime } from '@deepseek-ai/dsh-client-test-runtime'
-import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
-import type { PropsRenderSlots } from '@deepseek-ai/dsh-client-ui-slots'
-import type { TrackProductEvent } from '@deepseek-ai/dsh-client-product-analytics/client'
+import { makeTranslate, SlotTestRuntime } from '@liwa/client-test-runtime'
+import { LocaleRuntime } from '@liwa/client-locale/client'
+import type { PropsRenderSlots } from '@liwa/client-ui-slots'
+import type { TrackProductEvent } from '@liwa/client-product-analytics/client'
 import { EntryMenuContent } from '../src/client/EntryMenuContent.tsx'
 import { en } from '../src/client/locales.ts'
 import { apply, inject } from '../src/client/index.ts'
@@ -187,12 +187,12 @@ describe('More menu registrations', () => {
   })
 
   it.each([
-    ['en', 'sidebar.panellist.actions', 'Create a DSH plugin with a left sidebar entry.'],
-    ['en', 'conversation.session.header.views.actions', 'Create a DSH conversation view plugin.'],
-    ['en', 'sidebar.right.tab.guide.actions', 'Create a DSH plugin with a right sidebar entry.'],
-    ['zh', 'sidebar.panellist.actions', '创建一个带左侧栏入口的 DSH 插件。'],
-    ['zh', 'conversation.session.header.views.actions', '创建一个 DSH 会话视图插件。'],
-    ['zh', 'sidebar.right.tab.guide.actions', '创建一个带右侧栏入口的 DSH 插件。'],
+    ['en', 'sidebar.panellist.actions', 'Create a Liwa plugin with a left sidebar entry.'],
+    ['en', 'conversation.session.header.views.actions', 'Create a Liwa conversation view plugin.'],
+    ['en', 'sidebar.right.tab.guide.actions', 'Create a Liwa plugin with a right sidebar entry.'],
+    ['zh', 'sidebar.panellist.actions', '创建一个带左侧栏入口的灵鲸插件。'],
+    ['zh', 'conversation.session.header.views.actions', '创建一个灵鲸会话视图插件。'],
+    ['zh', 'sidebar.right.tab.guide.actions', '创建一个带右侧栏入口的灵鲸插件。'],
   ] as const)('starts an unsent %s Creator draft from %s', async (language, seat, prompt) => {
     const b = await bench(language)
     fireEvent.click(within(b.view.getByRole('menu', { name: seat }))

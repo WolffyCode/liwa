@@ -1,15 +1,15 @@
 ---
-description: "The SDK wire protocol for client and server implementers: the newline-delimited JSON-RPC transport and the named request, result, and notification types spoken between a Harness runtime and its SDK clients."
+description: "The SDK wire protocol for client and server implementers: the newline-delimited JSON-RPC transport and the named request, result, and notification types spoken between a Liwa runtime and its SDK clients."
 kind: "package-library"
 ---
 
-# @deepseek-ai/dsh-sdk-protocol
+# @liwa/sdk-protocol
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-sdk-protocol` lets a DeepSeek Harness runtime and its SDK clients exchange JSON-RPC 2.0 messages over newline-delimited byte streams: one transport class plus the named request, result, and notification types both wire ends speak. The serving side is the [`dsh-sdk-jsonrpc-server`](../server/README.md) plugin; the clients are the TypeScript [`dsh-sdk-client`](../client/README.md) and the [Python SDK](../../../python/README.md), which mirrors these shapes without importing them. Use this package when you implement or debug a wire end: framing rules, method names, payload types, and error semantics all live here. It is a pure library — no plugin, no configuration, no registrations.
+`liwa-sdk-protocol` lets a Liwa runtime and its SDK clients exchange JSON-RPC 2.0 messages over newline-delimited byte streams: one transport class plus the named request, result, and notification types both wire ends speak. The serving side is the [`liwa-sdk-jsonrpc-server`](../server/README.md) plugin; the clients are the TypeScript [`liwa-sdk-client`](../client/README.md) and the [Python SDK](../../../python/README.md), which mirrors these shapes without importing them. Use this package when you implement or debug a wire end: framing rules, method names, payload types, and error semantics all live here. It is a pure library — no plugin, no configuration, no registrations.
 
 ## Table of Contents
 
@@ -27,7 +27,7 @@ English | [中文](README.zh.md)
 
 Use this package when you build or debug an SDK wire end — the serving plugin, a client library, or custom tooling that speaks the SDK protocol. It gives you one transport for JSON-RPC 2.0 over caller-owned byte streams and the typed shapes for every SDK method and notification.
 
-`InitializeParams.approvalRequests: true` enables `approval/request` server requests, indexed by `HarnessSdkClientRequestMap`. `ApprovalRequestParams` contains `sessionId`, `toolName`, optional `callId`, and optional `reason`; `ApprovalRequestResult` is `{ outcome: "allowed-once" | "rejected" | "cancelled" }`. Omission or `false` leaves existing answerers in control. Only `allowed-once` grants one operation. Cancellation discards the pending request and late responses; shutdown and transport loss fail pending decisions closed. The client must keep reading and answering requests while waiting for an Agent to finish.
+`InitializeParams.approvalRequests: true` enables `approval/request` server requests, indexed by `LiwaSdkClientRequestMap`. `ApprovalRequestParams` contains `sessionId`, `toolName`, optional `callId`, and optional `reason`; `ApprovalRequestResult` is `{ outcome: "allowed-once" | "rejected" | "cancelled" }`. Omission or `false` leaves existing answerers in control. Only `allowed-once` grants one operation. Cancellation discards the pending request and late responses; shutdown and transport loss fail pending decisions closed. The client must keep reading and answering requests while waiting for an Agent to finish.
 
 ### Framing and transport
 
@@ -54,7 +54,7 @@ Both wire ends share one method set: client-to-server requests, opt-in server-to
 | server→client | `subagent.started` | `SubagentStartedNotification` |
 | server→client | `subagent.finished` | `SubagentFinishedNotification` (in-process runs only) |
 
-`HarnessSdkRequestMap`, `HarnessSdkClientRequestMap`, `HarnessSdkHostRequestMap`, and `HarnessSdkNotificationMap` index these shapes by method name; the package root exports them together with the transport.
+`LiwaSdkRequestMap`, `LiwaSdkClientRequestMap`, `LiwaSdkHostRequestMap`, and `LiwaSdkNotificationMap` index these shapes by method name; the package root exports them together with the transport.
 
 `session/wait` accepts `{ sessionId }` for an existing SDK-owned session and returns `{}` after the root stays idle and progressing managed descendant work finishes. Idle descendants with parked input remain resident without blocking this wait. Unknown ids and live Agent failures without a newer committed terminal are rejected. Notifications committed during the wait precede its response on the same transport; raw `session.status` transitions retain their whole-agent meaning.
 
@@ -69,7 +69,7 @@ An answering host sets `initialize.capabilities.userQuestions: true`. The runtim
 
 ### Payload semantics
 
-`SessionPromptResult.messageId` identifies the queued user message; it does not identify a later assistant message, turn ending, or prompt result. `SdkPromptContentBlock` accepts ordinary durable content plus `SdkEncodedImageBlock { type: "image", data, mimeType }`; the server converts encoded images to durable references before enqueue. `InitializeParams.reasoningEffort` is an optional non-empty adapter-owned identifier for the selected provider/model route; omission preserves that model's default. `InitializeParams.maxTokens` is an optional positive safe integer that caps each conversation-model output for SDK-created agents and their in-process descendants; omission lets the selected adapter's exact-model default apply. The server resolves the exact route during initialization and rejects `session/prompt` until that handshake succeeds, so a missing adapter, unavailable model, or unsupported effort cannot fall back to constructor defaults. `SubagentFinishedNotification.lastAssistantMessage` carries the child's last non-empty assistant message, or its accumulated assistant text when no such message exists; the field is absent when the child produced neither. `serverInfo.name` stays the wire-stable `deepseek-harness-sdk-runtime`. Notification payloads depend on `SessionEvent` (`dsh-session`), `ContentBlock` (`dsh-llm`), and `SubagentStopReason` (`dsh-subagent`), so the session vocabulary is part of the wire contract.
+`SessionPromptResult.messageId` identifies the queued user message; it does not identify a later assistant message, turn ending, or prompt result. `SdkPromptContentBlock` accepts ordinary durable content plus `SdkEncodedImageBlock { type: "image", data, mimeType }`; the server converts encoded images to durable references before enqueue. `InitializeParams.reasoningEffort` is an optional non-empty adapter-owned identifier for the selected provider/model route; omission preserves that model's default. `InitializeParams.maxTokens` is an optional positive safe integer that caps each conversation-model output for SDK-created agents and their in-process descendants; omission lets the selected adapter's exact-model default apply. The server resolves the exact route during initialization and rejects `session/prompt` until that handshake succeeds, so a missing adapter, unavailable model, or unsupported effort cannot fall back to constructor defaults. `SubagentFinishedNotification.lastAssistantMessage` carries the child's last non-empty assistant message, or its accumulated assistant text when no such message exists; the field is absent when the child produced neither. `serverInfo.name` stays the wire-stable `liwa-sdk-runtime`. Notification payloads depend on `SessionEvent` (`liwa-session`), `ContentBlock` (`liwa-llm`), and `SubagentStopReason` (`liwa-subagent`), so the session vocabulary is part of the wire contract.
 
 -----
 
@@ -109,7 +109,7 @@ Read these pages when the wire contract is not enough. They move from the servin
 - [JSON-RPC serving plugin](../server/README.md) — the runtime plugin that serves this protocol over stdio.
 - [TypeScript SDK client](../client/README.md) — the client that drives this protocol.
 - [Python SDK](../../../python/README.md) — the Python counterpart that mirrors these shapes.
-- [SDK application bundle](../../bundle/sdk-app/README.md) — the `dsh --profile sdk` application that boots the server.
+- [SDK application bundle](../../bundle/sdk-app/README.md) — the `liwa --profile sdk` application that boots the server.
 
 -----
 

@@ -9,7 +9,7 @@
  * Deferred resolution retains their diagnostics so stored catalog drift does
  * not prevent inspection, repair, or requests to independently valid models.
  *
- * @module dsh-llm-pi-ai/catalog
+ * @module liwa-llm-pi-ai/catalog
  */
 
 import { builtinProviders, getAllBuiltinModels, getBuiltinModels } from '@earendil-works/pi-ai/providers/all'
@@ -31,7 +31,7 @@ import type {
 } from '@earendil-works/pi-ai'
 
 /**
- * Pricing for a model the installed catalog does not describe. The harness
+ * Pricing for a model the installed catalog does not describe. Liwa
  * never reads pi-ai's cost metadata — `replay.ts` zeroes it and no consumer
  * reports spend — so this is the absence of a fact, not a configurable rate.
  */
@@ -838,7 +838,7 @@ export interface RouteCatalog {
    *
    * Separate from `Model.maxTokens` because the two answer different
    * questions: pi-ai requires `maxTokens` as the model's output *capability*,
-   * while the harness seam's `defaultMaxTokens` is a cap the deployment chose
+   * while the Liwa seam's `defaultMaxTokens` is a cap the deployment chose
    * to send on requests that name none. Materializing a catalog capability as
    * a request default would start capping every request at a number nobody
    * picked, so only an explicit configuration lands here.

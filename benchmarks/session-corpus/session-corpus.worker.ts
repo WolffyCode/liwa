@@ -4,27 +4,27 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { performance } from 'node:perf_hooks'
 import { scheduler } from 'node:timers/promises'
-import { Context } from '@deepseek-ai/cordis'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
-import { agentPresetProjectionDefinition } from '@deepseek-ai/dsh-agent-preset-registry'
-import RemoteAccessService from '@deepseek-ai/dsh-api-remote-access'
-import type SessionController from '@deepseek-ai/dsh-api-session-controller'
-import { currentSessionMessageProjections } from '@deepseek-ai/dsh-session-format-catalog/message-projections'
-import { Session, SessionLogOffset } from '@deepseek-ai/dsh-session'
-import type { SessionId } from '@deepseek-ai/dsh-session'
-import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import SessionProjectionCache, { checkpointRecord, projectionCacheDomainSpec } from '@deepseek-ai/dsh-session-projection-cache'
-import type { CheckpointRecord } from '@deepseek-ai/dsh-session-projection-cache'
-import SqliteSessionQueryEngine from '@deepseek-ai/dsh-session-query-sqlite'
-import * as SessionStatsPlugin from '@deepseek-ai/dsh-session-stats'
-import SessionTitleService from '@deepseek-ai/dsh-session-title'
-import * as SessionTurnOutlinePlugin from '@deepseek-ai/dsh-session-turn-outline'
-import Storage from '@deepseek-ai/dsh-storage'
-import * as StorageDomain from '@deepseek-ai/dsh-storage-domain'
-import type { KvTable } from '@deepseek-ai/dsh-storage-domain'
-import * as StorageJson from '@deepseek-ai/dsh-storage-json'
-import TokenMeter from '@deepseek-ai/dsh-token-meter'
+import { Context } from '@liwa/cordis'
+import AgentLoop from '@liwa/agent-loop'
+import { mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
+import { agentPresetProjectionDefinition } from '@liwa/agent-preset-registry'
+import RemoteAccessService from '@liwa/api-remote-access'
+import type SessionController from '@liwa/api-session-controller'
+import { currentSessionMessageProjections } from '@liwa/session-format-catalog/message-projections'
+import { Session, SessionLogOffset } from '@liwa/session'
+import type { SessionId } from '@liwa/session'
+import * as JsonlSessionPersistence from '@liwa/session-persistence-jsonl'
+import SessionProjectionCache, { checkpointRecord, projectionCacheDomainSpec } from '@liwa/session-projection-cache'
+import type { CheckpointRecord } from '@liwa/session-projection-cache'
+import SqliteSessionQueryEngine from '@liwa/session-query-sqlite'
+import * as SessionStatsPlugin from '@liwa/session-stats'
+import SessionTitleService from '@liwa/session-title'
+import * as SessionTurnOutlinePlugin from '@liwa/session-turn-outline'
+import Storage from '@liwa/storage'
+import * as StorageDomain from '@liwa/storage-domain'
+import type { KvTable } from '@liwa/storage-domain'
+import * as StorageJson from '@liwa/storage-json'
+import TokenMeter from '@liwa/token-meter'
 import { assertBuiltBenchmarkRuntime } from '../support/built-worker.ts'
 import { serializeRecord } from '../../packages/storage/storage-json/src/format.ts'
 import { ANCHOR_COUNT } from './corpus-shape.ts'
@@ -360,10 +360,10 @@ async function measureFork(root: string, ranks: readonly number[]): Promise<Fork
 }
 
 assertBuiltBenchmarkRuntime(import.meta.url, Object.fromEntries([
-  '@deepseek-ai/dsh-api-session-controller',
-  '@deepseek-ai/dsh-session-persistence-jsonl',
-  '@deepseek-ai/dsh-session-query-sqlite',
-  '@deepseek-ai/dsh-session-projection-cache',
+  '@liwa/api-session-controller',
+  '@liwa/session-persistence-jsonl',
+  '@liwa/session-query-sqlite',
+  '@liwa/session-projection-cache',
 ].map(name => [name, import.meta.resolve(name)])))
 
 const USAGE = 'usage: session-corpus.worker.js <root> <anchors anchors...|seed name count|list count|search|fork ranks...>'

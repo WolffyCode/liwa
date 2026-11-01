@@ -2,8 +2,8 @@
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
 import { expect, it } from 'vitest'
-import { LlmAdapter, type GenerateOptions, type StreamChunk } from '@deepseek-ai/dsh-llm'
-import type {} from '@deepseek-ai/dsh-agent-default-model'
+import { LlmAdapter, type GenerateOptions, type StreamChunk } from '@liwa/llm'
+import type {} from '@liwa/agent-default-model'
 import {
   captureStableAria, compareOrRefreshGolden, launchWebScaffold, watchConsole, webSnapshotMode,
 } from './scaffold.ts'
@@ -13,7 +13,7 @@ const SUMMARY = `Next paragraph: ${'inspect the loaded context and pending tools
 const DELTAS = ['First paragraph', `\nDetails\n\n\n${SUMMARY}`, '\nMore detail']
 const UI_EXPECTED = fileURLToPath(new URL('./expected/reasoning-preview/running.expected.md', import.meta.url))
 /** Computed mask of the animated whale: the ui-chat package asset URL, whose `@` is percent-encoded. */
-const WHALE_MASK = /^url\("([^"]*\/plugins\/@deepseek-ai\/dsh-client-ui-chat\/assets\/running-whale%402x-[0-9a-f]{12}\.png)"\)$/
+const WHALE_MASK = /^url\("([^"]*\/plugins\/@liwa\/client-ui-chat\/assets\/running-whale%402x-[0-9a-f]{12}\.png)"\)$/
 
 class PausedReasoningAdapter extends LlmAdapter {
   override async listModels(provider: string) { return [{ provider, id: 'paused', name: `${provider}/paused` }] }

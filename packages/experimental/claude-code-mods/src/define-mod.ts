@@ -1,13 +1,13 @@
 /**
- * `defineMod`: wrap a Claude Code mod's `register(on, options)` as a DSH
+ * `defineMod`: wrap a Claude Code mod's `register(on, options)` as a Liwa
  * plugin. Mounting the plugin registers the mod with the bridge service
  * (`ctx.claudeCodeMods`); unmounting it removes the mod's hooks, timers, and
  * registrations. Mods load in composition order, which is their chain order.
  * @module
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
+import type { Context } from '@liwa/cordis'
+import z from '@liwa/schemastery'
 import type { ModDefinition, ModRegister, PluginOptions } from './types.ts'
 
 /** The option values a composition may set for a mod: `userConfig`'s value types. */
@@ -25,7 +25,7 @@ export interface ModSpec {
   readonly register: ModRegister
 }
 
-/** A mod wrapped as a DSH plugin; its config is the mod's `options`. */
+/** A mod wrapped as a Liwa plugin; its config is the mod's `options`. */
 export interface ModPlugin {
   readonly name: string
   readonly inject: readonly string[]
@@ -38,7 +38,7 @@ export interface ModPlugin {
 const optionValue = z.union([z.string(), z.number(), z.boolean(), z.array(z.string())])
 
 /**
- * Wrap one mod as a DSH plugin.
+ * Wrap one mod as a Liwa plugin.
  * @param spec - the mod's identity, `userConfig` defaults, and `register`.
  * @returns a plugin object for `cordis.yml` or `ctx.plugin`; its `config` overlays `userConfig` as `register`'s `options`.
  */

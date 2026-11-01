@@ -13,16 +13,16 @@
  * The image packer is this transform's only caller: it lowers every JavaScript
  * entry it packs and records `LOWERING_VERSION` in the image manifest, so the
  * worker wraps those bodies without carrying a compiler of its own.
- * @module @deepseek-ai/dsh-experimental-webworker-runtime/src/compile/transform
+ * @module @liwa/experimental-webworker-runtime/src/compile/transform
  */
 import { parse } from 'acorn'
 
 const HELPER_SOURCE: Record<string, string> = {
-  def: 'const __dsh$def=(t,k,get)=>Object.defineProperty(t,k,{enumerable:true,configurable:true,get});',
-  default: 'const __dsh$default=(m)=>(m&&m.__esModule?m.default:m);',
-  ns: 'const __dsh$ns=(m)=>(m&&m.__esModule?m:Object.assign({},m,{default:m}));',
-  exportAll: 'const __dsh$exportAll=(t,m)=>{for(const k of Object.keys(m))if(k!=="default"&&!(k in t))__dsh$def(t,k,()=>m[k]);};',
-  dynImport: 'const __dsh$dynImport=(s)=>Promise.resolve().then(()=>__dsh$ns(require(s)));',
+  def: 'const __liwa$def=(t,k,get)=>Object.defineProperty(t,k,{enumerable:true,configurable:true,get});',
+  default: 'const __liwa$default=(m)=>(m&&m.__esModule?m.default:m);',
+  ns: 'const __liwa$ns=(m)=>(m&&m.__esModule?m:Object.assign({},m,{default:m}));',
+  exportAll: 'const __liwa$exportAll=(t,m)=>{for(const k of Object.keys(m))if(k!=="default"&&!(k in t))__liwa$def(t,k,()=>m[k]);};',
+  dynImport: 'const __liwa$dynImport=(s)=>Promise.resolve().then(()=>__liwa$ns(require(s)));',
 }
 
 const HELPER_DEPENDENCIES: Record<string, readonly string[]> = {
@@ -86,12 +86,12 @@ class Transformer {
   private helper(name: string): string {
     for (const dependency of HELPER_DEPENDENCIES[name] ?? []) this.helper(dependency)
     this.helpers.add(name)
-    return `__dsh$${name}`
+    return `__liwa$${name}`
   }
 
   private moduleTemp(): string {
     this.modules += 1
-    return `__dsh$m${this.modules}`
+    return `__liwa$m${this.modules}`
   }
 
   private alsTemp(): string {
@@ -375,7 +375,7 @@ class Transformer {
         const meta = record.meta as Node
         if (meta.name === 'import') {
           this.moduleSyntax = true
-          this.replace(record.start, record.end, '__dsh$meta')
+          this.replace(record.start, record.end, '__liwa$meta')
         }
         break
       }
@@ -490,7 +490,7 @@ class Transformer {
       if (this.helpers.has(name)) prologue.push(source)
     }
     for (const { exported, local } of this.bindings) {
-      prologue.push(`__dsh$def(exports,${JSON.stringify(exported)},()=>${local});`)
+      prologue.push(`__liwa$def(exports,${JSON.stringify(exported)},()=>${local});`)
     }
 
     const sorted = [...this.edits].sort((left, right) => left.start - right.start || left.end - right.end)

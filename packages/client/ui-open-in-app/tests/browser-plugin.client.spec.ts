@@ -1,26 +1,26 @@
 // @vitest-environment jsdom
 import { createElement } from 'react'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { bindSnapshotSelector, makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import { isMobileDevice } from '@deepseek-ai/dsh-client-ui-primitives'
+import { bindSnapshotSelector, makeTranslate } from '@liwa/client-test-runtime'
+import { createSnapshotStore } from '@liwa/client-store'
+import { isMobileDevice } from '@liwa/client-ui-primitives'
 /**
  * Browser-half lifecycle over the real SlotRegistry: the dictionary,
  * header-slot, and document-preview path registrations with fiber teardown
  * proving removal (HMR safety) and the injected controller faces.
  */
 
-import type { PropsRuntime, SlotComponent } from '@deepseek-ai/dsh-client-ui-slots'
-import type { ShortcutCommand } from '@deepseek-ai/dsh-client-shortcuts/client'
-import type { SessionListState } from '@deepseek-ai/dsh-api-session-controller/client'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import { Context } from '@deepseek-ai/cordis'
+import type { PropsRuntime, SlotComponent } from '@liwa/client-ui-slots'
+import type { ShortcutCommand } from '@liwa/client-shortcuts/client'
+import type { SessionListState } from '@liwa/api-session-controller/client'
+import type { SessionId } from '@liwa/session/types'
+import { Context } from '@liwa/cordis'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { SlotRegistry } from '@deepseek-ai/dsh-client-ui-renderer/client'
-import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
-import { LayoutController, type MainPanelId } from '@deepseek-ai/dsh-client-ui-layout/client'
-import { createLayoutStore } from '@deepseek-ai/dsh-client-ui-layout/src/client/stores.ts'
-import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
+import { SlotRegistry } from '@liwa/client-ui-renderer/client'
+import { LocaleRuntime } from '@liwa/client-locale/client'
+import { LayoutController, type MainPanelId } from '@liwa/client-ui-layout/client'
+import { createLayoutStore } from '@liwa/client-ui-layout/src/client/stores.ts'
+import type {} from '@liwa/client-ui-conversation/client'
 import { apply, inject, type OpenInAppActionInjected, type OpenPathInjected } from '../src/client/index.ts'
 import { apply as nodeApply } from '../src/index.ts'
 import { OpenInAppAction } from '../src/client/OpenInAppAction.tsx'
@@ -32,8 +32,8 @@ import type { OpenInAppOutcome } from '../src/client/outcome.ts'
 import { OpenInAppToast, type OpenInAppToastProps, type OpenInAppToastSource } from '../src/client/open-toast.tsx'
 import { en, NS, zh } from '../src/client/locales.ts'
 
-vi.mock('@deepseek-ai/dsh-client-ui-primitives', async original => ({
-  ...await original<typeof import('@deepseek-ai/dsh-client-ui-primitives')>(),
+vi.mock('@liwa/client-ui-primitives', async original => ({
+  ...await original<typeof import('@liwa/client-ui-primitives')>(),
   isMobileDevice: vi.fn(() => false),
 }))
 

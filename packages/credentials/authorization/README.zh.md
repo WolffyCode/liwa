@@ -3,13 +3,13 @@ description: "面向用户与维护者的授权 flow 注册表：获取配置无
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-authorization
+# @liwa/authorization
 
 [English](README.md) | 中文
 
 ## 概述
 
-`dsh-authorization` 让配置 UI 或其他调用方通过人引导的登录、输入码或回答问题来获取凭据。每次尝试只把 notice 与 prompt 发送到发起它的界面。只有新凭据已存储时，它才报告 `authorized`；拒绝或撤销会报告 `cancelled`，而故障仍作为错误。当凭据无法通过配置提供时选择它。它需要凭据存储和一个定义可用授权方法的集成；本包自身不提供特定提供方的授权方法。
+`liwa-authorization` 让配置 UI 或其他调用方通过人引导的登录、输入码或回答问题来获取凭据。每次尝试只把 notice 与 prompt 发送到发起它的界面。只有新凭据已存储时，它才报告 `authorized`；拒绝或撤销会报告 `cancelled`，而故障仍作为错误。当凭据无法通过配置提供时选择它。它需要凭据存储和一个定义可用授权方法的集成；本包自身不提供特定提供方的授权方法。
 
 ## 目录
 
@@ -36,9 +36,9 @@ kind: "package-reference"
 你的插件为它持有的每个凭据声明一个 flow，以该 flow 写入的 `<scope>/<id>` 凭据记录为键——scope 点名你的插件，id 点名它拥有的一条凭据：
 
 ```ts
-import type { Context } from '@deepseek-ai/cordis'
-import type { AuthorizationSession } from '@deepseek-ai/dsh-authorization'
-import { credentialKey } from '@deepseek-ai/dsh-credentials'
+import type { Context } from '@liwa/cordis'
+import type { AuthorizationSession } from '@liwa/authorization'
+import { credentialKey } from '@liwa/credentials'
 
 declare const ctx: Context
 declare const exchangeCode: (code: string, signal: AbortSignal) => Promise<{ token: string }>

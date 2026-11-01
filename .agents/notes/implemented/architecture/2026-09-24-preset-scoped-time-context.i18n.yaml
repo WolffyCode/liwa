@@ -3,17 +3,17 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-24-preset-scoped-time-context.md
 /agent-note-preset-scoped-time-context:
-  en: dabc6e224d2af71c
-  zh: 81dafffcf9dcb0e2
+  en: b561b5022ca696ba
+  zh: 2c467c55630c3258
 /agent-note-preset-scoped-time-context/problem:
   en: 6b0d2bf60e97809f
   zh: 8a32ad297b908ebb
 /agent-note-preset-scoped-time-context/decision:
-  en: 650d78ef725cd741
-  zh: 95dc34667246d2b5
+  en: 81a288d3f4d30d2e
+  zh: 84c36bb11168b508
 /agent-note-preset-scoped-time-context/alternatives-considered:
-  en: 3db88ad95898e9ee
-  zh: aa211bd55052331c
+  en: 0c9a72eb447195ef
+  zh: 69fc424891d02b42
 /agent-note-preset-scoped-time-context/consequences:
   en: 3d92e8f922a8d812
   zh: 78078ba2c38f6727

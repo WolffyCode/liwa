@@ -24,14 +24,14 @@
  * as the empty unit. An existing declared table directory, even when empty,
  * or a declared global document suppresses the bootstrap for the whole unit.
  * The legacy file is never changed or deleted.
- * @module @deepseek-ai/dsh-storage-json/src/per-record-unit
+ * @module @liwa/storage-json/src/per-record-unit
  */
 
 import { mkdir, readFile, readdir, rename, rm } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import type { Dirent } from 'node:fs'
-import { StorageError } from '@deepseek-ai/dsh-storage'
-import type { KvUnit, KvUnitDescriptor } from '@deepseek-ai/dsh-storage'
+import { StorageError } from '@liwa/storage'
+import type { KvUnit, KvUnitDescriptor } from '@liwa/storage'
 import { fsyncDirectory, writeAtomic } from './atomic.ts'
 import { parseRecord, serializeRecord } from './format.ts'
 import type { UnitState } from './format.ts'

@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-06-24-web-capability-seam.md
 /agent-note-web-capability-seam-stable-tools-over-multiple-providers:
-  en: ca120635fc40431c
-  zh: 6be7c5ae3c86cdcc
+  en: ac3ef37c39fb5156
+  zh: 2e8bc45b00f08e73
 /agent-note-web-capability-seam-stable-tools-over-multiple-providers/problem:
   en: c8b932b02a4e1c80
   zh: 96c466be1a521f3f
 /agent-note-web-capability-seam-stable-tools-over-multiple-providers/decision:
-  en: 2e08d801099cbe18
-  zh: 8c5ab162ada9cc41
+  en: 9fb69613bc2c341a
+  zh: c99d06ef94edfb8c
 /agent-note-web-capability-seam-stable-tools-over-multiple-providers/package-topology:
   en: 5ea3ddfae82df181
   zh: 2d05d95e51081696
@@ -18,8 +18,8 @@
   en: b432f80a424c3e49
   zh: faa26925fdd98387
 /agent-note-web-capability-seam-stable-tools-over-multiple-providers/provider-availability-and-selection:
-  en: 4e4ec068c2a22383
-  zh: b7030d0f00bfdb74
+  en: 5997ac221427e3d9
+  zh: 029c687a2cc64ede
 /agent-note-web-capability-seam-stable-tools-over-multiple-providers/search-request-and-result-schema:
   en: ec3703b7e7c6b23d
   zh: 325755e6e90092da
@@ -33,8 +33,8 @@
   en: 3440f2b34b93f4a1
   zh: 57a8f784c7e26eff
 /agent-note-web-capability-seam-stable-tools-over-multiple-providers/testing:
-  en: 7f73699ac4459432
-  zh: c16be49ac50c34c8
+  en: fbbde1e8862da0dd
+  zh: 81604f727d7aa91e
 /agent-note-web-capability-seam-stable-tools-over-multiple-providers/alternatives-considered:
   en: 6119e2aff3b6be5a
   zh: 76136ef5249c23eb

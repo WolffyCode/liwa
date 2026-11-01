@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import WebRuntime, {
   WebError,
   type WebFetchProvider,
@@ -7,7 +7,7 @@ import WebRuntime, {
   type WebSearchProvider,
   type WebSearchRequest,
   type WebSearchResult,
-} from '@deepseek-ai/dsh-web'
+} from '@liwa/web'
 
 /** A scripted search provider for contract tests. */
 function makeSearchProvider(
@@ -299,7 +299,7 @@ describe('WebRuntime fetch readiness', () => {
 })
 
 describe('WebError', () => {
-  it('is a HarnessError carrying its code', () => {
+  it('is a LiwaError carrying its code', () => {
     const error = new WebError('boom', 'WEB_INVALID_URL')
     expect(error.code).toBe('WEB_INVALID_URL')
     expect(error.name).toBe('WebError')

@@ -3,13 +3,13 @@ description: "Web Session-log ZIP export and Markdown copy: Host streaming, auth
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-session-log-export
+# @liwa/session-log-export
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-session-log-export` lets the Web interface export a session's complete history. The Session Header's more-actions menu offers `Copy Session as Markdown` and `Download session log`; an `/export` slash command also starts the ZIP download. The ZIP contains the session, its sub-sessions, and attachments. The package owns both authenticated Host routes, the Markdown transcript formatter, and the browser controls and feedback. The browser chooses the download destination and owns the clipboard. Setup and usage come first; implementation details follow.
+`liwa-session-log-export` lets the Web interface export a session's complete history. The Session Header's more-actions menu offers `Copy Session as Markdown` and `Download session log`; an `/export` slash command also starts the ZIP download. The ZIP contains the session, its sub-sessions, and attachments. The package owns both authenticated Host routes, the Markdown transcript formatter, and the browser controls and feedback. The browser chooses the download destination and owns the clipboard. Setup and usage come first; implementation details follow.
 
 ## Table of Contents
 
@@ -25,7 +25,7 @@ English | [中文](README.zh.md)
 <a id="use-this-package"></a>
 ## Use this package
 
-Use this package when the Web bundle should let users export a session log. It requires Connection, the command registry, Session query and persistence, and attachments. Mount the plugin, then choose `Copy Session as Markdown` or `Download session log` from the Session Header's more-actions menu, or type `/export`; the browser copies the transcript or downloads `dsh-session-<id>.zip`.
+Use this package when the Web bundle should let users export a session log. It requires Connection, the command registry, Session query and persistence, and attachments. Mount the plugin, then choose `Copy Session as Markdown` or `Download session log` from the Session Header's more-actions menu, or type `/export`; the browser copies the transcript or downloads `liwa-session-<id>.zip`.
 
 ### Copy Session as Markdown
 
@@ -46,8 +46,8 @@ Choose it for a Web deployment that needs user-facing session export: a readable
 The package entry also exports `formatSessionMarkdown(events, sourcePath?)`: a pure backend utility for callers that already hold a complete committed logical event snapshot in seq order, including any inherited prefix. It reads the latest `session/title` event, returns Markdown ending in one newline, performs no IO, starts no plugin or Session, and does not mutate the events. An optional backend-resolved `sourcePath` is emitted verbatim in a dynamic fenced `Session file:` block after the title; omitted or empty paths add no block. Missing or blank titles produce `Untitled Session`. Only the supplied events are converted; descendant Session logs are not read.
 
 ```ts
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
-import { formatSessionMarkdown } from '@deepseek-ai/dsh-session-log-export'
+import type { SessionEvent } from '@liwa/session'
+import { formatSessionMarkdown } from '@liwa/session-log-export'
 
 export function convertTranscript(events: readonly SessionEvent[], sourcePath?: string): string {
   return formatSessionMarkdown(events, sourcePath)
@@ -58,10 +58,10 @@ export function convertTranscript(events: readonly SessionEvent[], sourcePath?: 
 
 ```yaml
 - id: session-log-download
-  name: '@deepseek-ai/dsh-session-log-export'
+  name: '@liwa/session-log-export'
 ```
 
-The Web bundle mounts the package with Connection, `dsh-commands`, `dsh-client-ui-commands`, `dsh-client-ui-conversation`, and `dsh-client-ui-layout`. The layout package declares the `shell.overlay` seat used by copy feedback; the other client packages provide the Header seat, locale, and command surface.
+The Web bundle mounts the package with Connection, `liwa-commands`, `liwa-client-ui-commands`, `liwa-client-ui-conversation`, and `liwa-client-ui-layout`. The layout package declares the `shell.overlay` seat used by copy feedback; the other client packages provide the Header seat, locale, and command surface.
 
 ### Configuration
 
@@ -123,9 +123,9 @@ The controller holds one pending operation and one `shell.overlay` toast entry. 
 
 Read these pages when the package-level contract is not enough. They move from the Web control to the host endpoint and the surrounding command and session surfaces.
 
-- [dsh-client-connection](../../client/connection/README.md) — the authenticated Fetch-route carrier used by the Host endpoint.
+- [liwa-client-connection](../../client/connection/README.md) — the authenticated Fetch-route carrier used by the Host endpoint.
 - [Commands subsystem reference](../../../docs/subsystems/commands.md) — the human-command registry the `/export` command registers on.
-- [dsh-client-ui-commands](../../client/ui-commands/README.md) — the browser command surface that renders and acknowledges `/export`.
+- [liwa-client-ui-commands](../../client/ui-commands/README.md) — the browser command surface that renders and acknowledges `/export`.
 - [Session Query package map](../README.md) — the retrieval family this package belongs to.
 
 -----

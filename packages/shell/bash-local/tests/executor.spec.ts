@@ -2,13 +2,13 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { LocalBashExecutor } from '@deepseek-ai/dsh-bash-local'
-import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
-import SubprocessRuntime from '@deepseek-ai/dsh-subprocess'
-import type { SubprocessHandle, SubprocessOutcome, SubprocessOutputReader } from '@deepseek-ai/dsh-subprocess'
-import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
-import type { ShellExecSpec, ShellExecution, ShellProcess, ShellRunResult } from '@deepseek-ai/dsh-shell'
+import { Context } from '@liwa/cordis'
+import { LocalBashExecutor } from '@liwa/bash-local'
+import LocalSubprocessRuntime from '@liwa/subprocess-local'
+import SubprocessRuntime from '@liwa/subprocess'
+import type { SubprocessHandle, SubprocessOutcome, SubprocessOutputReader } from '@liwa/subprocess'
+import { MAX_TIMER_DELAY_MS } from '@liwa/timeout'
+import type { ShellExecSpec, ShellExecution, ShellProcess, ShellRunResult } from '@liwa/shell'
 
 /** Historical foreground shorthand over the unified execute() seam. */
 async function run(x: { execute(spec: ShellExecSpec): Promise<ShellExecution> }, spec: ShellExecSpec): Promise<ShellRunResult> {
@@ -21,7 +21,7 @@ function start(x: { execute(spec: ShellExecSpec): Promise<ShellExecution> }, spe
 }
 
 
-const spillDir = mkdtempSync(join(tmpdir(), 'dsh-bash-exec-spec-'))
+const spillDir = mkdtempSync(join(tmpdir(), 'liwa-bash-exec-spec-'))
 
 afterAll(() => {
   rmSync(spillDir, { recursive: true, force: true })
@@ -148,31 +148,31 @@ describe('LocalBashExecutor.run', () => {
 
   it('rejects on spawn failure (bad workdir)', async () => {
     const { bash } = await setup()
-    await expect(run(bash, bash.resolve({ command: 'true', workdir: '/nonexistent-dsh' }))).rejects.toThrow(/ENOENT/)
+    await expect(run(bash, bash.resolve({ command: 'true', workdir: '/nonexistent-liwa' }))).rejects.toThrow(/ENOENT/)
   })
 
-  it('resolve() carries stdin/env/dshEnv onto the spec, and run() threads them to the command', async () => {
+  it('resolve() carries stdin/env/liwaEnv onto the spec, and run() threads them to the command', async () => {
     const { bash } = await setup()
     const spec = bash.resolve({
-      command: 'cat; echo "[$SEAM_VAR][$DSH_SEAM_VAR]"',
+      command: 'cat; echo "[$SEAM_VAR][$LIWA_SEAM_VAR]"',
       stdin: 'piped\n',
       env: { SEAM_VAR: 'env-ok' },
-      dshEnv: { DSH_SEAM_VAR: 'dsh-ok' },
+      liwaEnv: { LIWA_SEAM_VAR: 'liwa-ok' },
     })
     // resolve() keeps the optional input/environment fields verbatim.
     expect(spec.stdin).toBe('piped\n')
     expect(spec.env).toEqual({ SEAM_VAR: 'env-ok' })
-    expect(spec.dshEnv).toEqual({ DSH_SEAM_VAR: 'dsh-ok' })
+    expect(spec.liwaEnv).toEqual({ LIWA_SEAM_VAR: 'liwa-ok' })
     const result = await run(bash, spec)
-    expect(result.stdout.text).toBe('piped\n[env-ok][dsh-ok]\n')
+    expect(result.stdout.text).toBe('piped\n[env-ok][liwa-ok]\n')
   })
 
-  it('resolve() omits stdin/env/dshEnv when the request supplies none', async () => {
+  it('resolve() omits stdin/env/liwaEnv when the request supplies none', async () => {
     const { bash } = await setup()
     const spec = bash.resolve({ command: 'true' })
     expect('stdin' in spec).toBe(false)
     expect('env' in spec).toBe(false)
-    expect('dshEnv' in spec).toBe(false)
+    expect('liwaEnv' in spec).toBe(false)
   })
 })
 
@@ -201,12 +201,12 @@ describe('LocalBashExecutor.start (background process handles)', () => {
   it('threads stdin and extra env into a background process', async () => {
     const { bash } = await setup()
     const proc = (await start(bash, bash.resolve({
-      command: 'cat; echo "[$BG_VAR][$DSH_BG_VAR]"',
+      command: 'cat; echo "[$BG_VAR][$LIWA_BG_VAR]"',
       stdin: 'bg-stdin\n',
       env: { BG_VAR: 'bg-env' },
-      dshEnv: { DSH_BG_VAR: 'bg-dsh-env' },
+      liwaEnv: { LIWA_BG_VAR: 'bg-liwa-env' },
     })))
-    const output = await readUntil(proc, '[bg-env][bg-dsh-env]')
+    const output = await readUntil(proc, '[bg-env][bg-liwa-env]')
     expect(output).toContain('bg-stdin')
     await proc.done
     expect(proc.exitCode).toBe(0)
@@ -440,7 +440,7 @@ describe('LocalBashExecutor.start (background process handles)', () => {
 
   it('an asynchronous creation failure settles as killed with a stage-neutral note', async () => {
     const { bash } = await setup()
-    const proc = (await start(bash, bash.resolve({ command: 'true', workdir: '/nonexistent-dsh' })))
+    const proc = (await start(bash, bash.resolve({ command: 'true', workdir: '/nonexistent-liwa' })))
     // done resolves (never rejects) even though the process never ran.
     await expect(proc.done).resolves.toBeUndefined()
     expect(proc.status).toBe('killed')

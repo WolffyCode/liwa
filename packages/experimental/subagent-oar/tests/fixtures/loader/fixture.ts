@@ -1,8 +1,8 @@
 /** Parent model fixture for a composition that must not start a turn. */
 
-import type { Context } from '@deepseek-ai/cordis'
-import { LlmAdapter } from '@deepseek-ai/dsh-llm'
-import type { GenerateOptions, StreamChunk } from '@deepseek-ai/dsh-llm'
+import type { Context } from '@liwa/cordis'
+import { LlmAdapter } from '@liwa/llm'
+import type { GenerateOptions, StreamChunk } from '@liwa/llm'
 
 class CompositionOnlyAdapter extends LlmAdapter {
   async * stream(_options: GenerateOptions): AsyncIterable<StreamChunk> {

@@ -1,15 +1,15 @@
 /** Optional action cards below an answer: the `propose_action` tool, card state, user actions and status notices for registered kinds. */
-import { FiberState, Service, type Context } from '@deepseek-ai/cordis'
+import { FiberState, Service, type Context } from '@liwa/cordis'
 import { z, type ZodError, type ZodType } from 'zod'
-import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
-import { createUserMessage, HarnessError, type ToolCallId } from '@deepseek-ai/dsh-llm'
-import { defineTool, type ToolRunContext } from '@deepseek-ai/dsh-tools'
-import { appendPluginRecord, SessionSeq, type Session } from '@deepseek-ai/dsh-session'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { ProjectionHandle } from '@deepseek-ai/dsh-session-projection'
-import type { JsonValue } from '@deepseek-ai/dsh-util-values'
-import type {} from '@deepseek-ai/dsh-api-remote-access'
-import type {} from '@deepseek-ai/dsh-sandbox-policy'
+import { Remote, TypertRemoteService } from '@liwa/typert-protocol'
+import { createUserMessage, LiwaError, type ToolCallId } from '@liwa/llm'
+import { defineTool, type ToolRunContext } from '@liwa/tools'
+import { appendPluginRecord, SessionSeq, type Session } from '@liwa/session'
+import type { Agent } from '@liwa/agent'
+import type { ProjectionHandle } from '@liwa/session-projection'
+import type { JsonValue } from '@liwa/util-values'
+import type {} from '@liwa/api-remote-access'
+import type {} from '@liwa/sandbox-policy'
 import { actionCardProjection, PROPOSE_ACTION, type ActionCardState } from './projection.ts'
 import type { ActionCardDecision, ActionCardFields, ActionCardProposal, ActionCardResult, ActionCardView } from './types.ts'
 export type * from './types.ts'
@@ -22,7 +22,7 @@ export const Config = z.object({
 /** Validated card limits after schema defaults. */
 export type Config = z.infer<typeof Config>
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context { actionCards: ActionCards }
 }
 
@@ -62,7 +62,7 @@ export function isPluginStopping(owner: PluginFiber, draining: boolean): boolean
 }
 
 /** A refused `propose_action` call; the message tells the model what to do instead. */
-export class ActionCardError extends HarnessError {}
+export class ActionCardError extends LiwaError {}
 
 /** Shared checks one user action of a kind requires before the kind handles it. */
 export interface ActionCardVerb {

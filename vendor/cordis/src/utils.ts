@@ -1,4 +1,4 @@
-import { defineProperty } from '@deepseek-ai/cosmokit'
+import { defineProperty } from '@liwa/cosmokit'
 import type { Context } from './context.ts'
 import type { Service } from './service.ts'
 

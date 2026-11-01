@@ -1,5 +1,5 @@
 /**
- * Experimental bridge for Claude Code mods. A mod is a DSH plugin built with
+ * Experimental bridge for Claude Code mods. A mod is a Liwa plugin built with
  * {@link defineMod} around the mod's `register(on, options)`; this service
  * keeps the loaded mods and raises their events from harness extension
  * points — `session.start` on `agent/created`, `prompt.submit` and
@@ -7,26 +7,26 @@
  * `turn.complete` on `turn/end`, `session.end` on `agent/disposed`, and
  * `command.run` from the commands a mod registers. The `$` a hook receives is
  * served by {@link createHostOps} over the composed harness services.
- * @module @deepseek-ai/dsh-experimental-claude-code-mods
+ * @module @liwa/experimental-claude-code-mods
  */
 
-import { FiberState, type Context } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-working-directory'
-import z from '@deepseek-ai/schemastery'
-import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
-import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
-import type { AssistantMessage, ContentBlock, TokenUsage } from '@deepseek-ai/dsh-llm'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import type { UserMessage } from '@deepseek-ai/dsh-session'
-import { scopeOf } from '@deepseek-ai/dsh-scope'
-import { validateJsonSchemaValue } from '@deepseek-ai/dsh-tools'
-import type { PostToolDecision, ToolExecutionResult, ToolExecutionToken } from '@deepseek-ai/dsh-tools'
+import { FiberState, type Context } from '@liwa/cordis'
+import type {} from '@liwa/working-directory'
+import z from '@liwa/schemastery'
+import type { Agent, PreStepDecision } from '@liwa/agent'
+import { Remote, TypertRemoteService } from '@liwa/typert-protocol'
+import type { AssistantMessage, ContentBlock, TokenUsage } from '@liwa/llm'
+import { SessionId } from '@liwa/session'
+import type { UserMessage } from '@liwa/session'
+import { scopeOf } from '@liwa/scope'
+import { validateJsonSchemaValue } from '@liwa/tools'
+import type { PostToolDecision, ToolExecutionResult, ToolExecutionToken } from '@liwa/tools'
 import type { LoadedMod } from './chain.ts'
 import { RewriteRefusedError } from './chain.ts'
 import { ModsEngine } from './engine.ts'
 import { createHostOps, toolCallResultOf } from './host-ops.ts'
 import type { AgentBinding } from './host-ops.ts'
-import type { JsonValue } from '@deepseek-ai/dsh-util-values'
+import type { JsonValue } from '@liwa/util-values'
 import { SurfaceTable } from './surfaces.ts'
 import { createToolNameAliases } from './tool-names.ts'
 import { messageOf, record, stringify } from './values.ts'
@@ -36,7 +36,7 @@ import type {
   SurfaceSnapshot, TurnStartResult, TurnUsage, UiRenderInput, UiRenderResult,
 } from './types.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     claudeCodeMods: ClaudeCodeMods
   }
@@ -193,7 +193,7 @@ function modAnswered(text: string, code: 'MOD_DENIED' | 'MOD_ANSWERED', rendered
 }
 
 /**
- * The bridge service: loaded mods, their hooks, and the harness listeners
+ * The bridge service: loaded mods, their hooks, and Liwa listeners
  * that raise their events. Mods join through {@link ClaudeCodeMods.add},
  * which {@link defineMod} calls when a mod plugin mounts. The Remote methods
  * let a Client draw each session's band above the prompt and press its buttons.

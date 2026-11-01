@@ -11,7 +11,7 @@ import type { PersistenceRoot, PersistenceSchemaInventory, PersistenceType, Sche
 import { loadPersistenceReleases, runPersistenceReleases } from './persistence-releases.ts'
 import type { PersistenceReleaseManifest, PersistenceReleaseRecord } from './persistence-releases.ts'
 
-const TAGS = ['dsh-v0.1.0-alpha.1', 'dsh-v0.1.0-rc.1', 'dsh-v0.1.0-rc.2'] as const
+const TAGS = ['liwa-v0.1.0-alpha.1', 'liwa-v0.1.0-rc.1', 'liwa-v0.1.0-rc.2'] as const
 const temporary: string[] = []
 afterEach(() => { for (const root of temporary.splice(0)) rmSync(root, { recursive: true, force: true }) })
 
@@ -72,7 +72,7 @@ function saveRecord(directory: string, record: PersistenceReleaseRecord): void {
 }
 
 function fixture(): Fixture {
-  const root = mkdtempSync(join(tmpdir(), 'dsh-persistence-releases-'))
+  const root = mkdtempSync(join(tmpdir(), 'liwa-persistence-releases-'))
   temporary.push(root)
   const directory = join(root, 'docs/persistence-changes/releases')
   mkdirSync(directory, { recursive: true })
@@ -182,7 +182,7 @@ describe('pinned persistence releases', () => {
   it('rejects malformed manifest identities and version metadata', () => {
     const data = fixture()
     for (const changes of [
-      { tag: 'dsh-v0.1.0-beta.1' }, { sourceDate: '2026-09-01' },
+      { tag: 'liwa-v0.1.0-beta.1' }, { sourceDate: '2026-09-01' },
       { publishedAt: 'yesterday' }, { sessionFormatVersion: -1 }, { sessionFormatVersion: 1.5 },
     ]) {
       writeFileSync(join(data.directory, 'manifest.json'), JSON.stringify({ ...data.manifest,

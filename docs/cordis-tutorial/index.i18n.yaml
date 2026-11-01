@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/cordis-tutorial/index.md
 /cordis-tutorial:
-  en: 07671d53f483c796
-  zh: 495179dd609bf5a9
+  en: 3845ae746959535a
+  zh: 8d05e85be0549a65
 /cordis-tutorial/setup:
-  en: beffc06ab58daf2d
-  zh: a0a2dd15e4a3989e
+  en: ac7ae899671b8b3c
+  zh: d0152f1b93ba9882
 /cordis-tutorial/chapters:
-  en: 1b72d8e48e2688f3
-  zh: a4beaacdca936766
+  en: fc5f13f70ba6ade2
+  zh: 5ad90e56a78af19b
 /cordis-tutorial/typescript-notes:
-  en: 60a3f108ca98e532
-  zh: 1cd4aabf471a576a
+  en: d9d34835786369bd
+  zh: f858a773ac4bc525

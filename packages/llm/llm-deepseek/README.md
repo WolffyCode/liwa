@@ -3,7 +3,7 @@ description: "Configure DeepSeek Messages, reasoning, and image input."
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-llm-deepseek
+# @liwa/llm-deepseek
 
 English | [中文](README.zh.md)
 
@@ -27,19 +27,19 @@ Provide the shared DeepSeek Messages transport, request configuration, and model
 <a id="use-this-package"></a>
 ## Use this package
 
-This package exports the transport library; the provider plugins register routes with the harness LLM service. It captures connection options from Config references once per operation.
+This package exports the transport library; the provider plugins register routes with the Liwa LLM service. It captures connection options from Config references once per operation.
 
 The adapter accepts the LLM service's [request-only user inputs](../llm/README.md#use-this-package) alongside durable history; omitting request-only identity and attribution does not alter provider content.
 
 ### When to choose it
 
-Choose this adapter for DeepSeek's official API or a Messages-compatible gateway through `baseURL`. Choose `dsh-llm-pi-ai` when the same composition also routes other providers or hand-declared gateways through pi-ai's catalogs; the two adapters can be mounted together because their route names do not collide. Registering any other adapter for `deepseek-official` fails with `DUPLICATE_ADAPTER`.
+Choose this adapter for DeepSeek's official API or a Messages-compatible gateway through `baseURL`. Choose `liwa-llm-pi-ai` when the same composition also routes other providers or hand-declared gateways through pi-ai's catalogs; the two adapters can be mounted together because their route names do not collide. Registering any other adapter for `deepseek-official` fails with `DUPLICATE_ADAPTER`.
 
 <a id="minimal-configuration"></a>
 ### Minimal configuration
 
 ```yaml
-- name: '@deepseek-ai/dsh-llm-deepseek-api-key'
+- name: '@liwa/llm-deepseek-api-key'
   config:
     apiKeyEnv: DEEPSEEK_API_KEY  # credential reference, resolved per request
     reasoningEffort: high        # optional; off | low | high | max
@@ -70,10 +70,10 @@ A request selects the route with `provider: deepseek-official`; the model id pas
 | `filesApiTimeoutMs` | `60,000` | Per-image Files resolution deadline |
 | `fileExpiresAfterSeconds` | `604,800` | Requested uploaded-image lifetime and local reuse bound |
 | `fileRefreshMarginSeconds` | `3,600` | Remaining reuse lifetime below which an id is replaced |
-| `fileQuotaCleanupBatch` | `100` | Oldest harness-owned files removed before one quota retry |
-| `retryPolicy` | normal, 5 retries | Provider-owned retry policy executed by `dsh-llm-retry` |
+| `fileQuotaCleanupBatch` | `100` | Oldest Liwa-owned files removed before one quota retry |
+| `retryPolicy` | normal, 5 retries | Provider-owned retry policy executed by `liwa-llm-retry` |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-llm-deepseek-api-key) is the exhaustive source for every accepted field and its JSDoc.
+The generated [configuration catalog](../../../docs/config-catalog.md#liwallm-deepseek-api-key) is the exhaustive source for every accepted field and its JSDoc.
 
 When [proactive compaction](../../compaction/compaction-basic/README.md#use-this-package) is enabled, `models[].contextWindow` (or `defaultContextWindow` when absent) must exceed the effective request `maxTokens` plus the compaction policy’s `headroomTokens`. Requests without an explicit output cap use the model’s `maxTokens` or the adapter default. For small-window deployments, configure headroom within that capacity; lower `thresholdRatio` to compact earlier.
 
@@ -96,7 +96,7 @@ An image-capable route chooses each durable reference's request target and resol
 
 The adapter normally uploads those exact request bytes through `/v1/files` and sends file-id references. Files requests and model requests containing file ids include `anthropic-beta: files-api-2025-04-14`. All requests reject redirects so credentials remain on the configured origin. A failed or timed-out file resolution rebuilds the whole model request with inline base64 under the inline budget; one request never mixes file ids and inline images. Caller cancellation stops the request.
 
-Cached ids are scoped by endpoint and credential, refreshed before expiry, invalidated from provider stale-file errors, and resolved through singleflight with waiter-local cancellation. Uploads request expiry through `expires_after[anchor]=created_at` and `expires_after[seconds]`. Messages file metadata omits remote expiry, so its local reuse deadline uses the original upload time plus `fileExpiresAfterSeconds`; this does not guarantee remote deletion. Quota failure deletes one configured batch of the oldest harness-owned files before one upload retry.
+Cached ids are scoped by endpoint and credential, refreshed before expiry, invalidated from provider stale-file errors, and resolved through singleflight with waiter-local cancellation. Uploads request expiry through `expires_after[anchor]=created_at` and `expires_after[seconds]`. Messages file metadata omits remote expiry, so its local reuse deadline uses the original upload time plus `fileExpiresAfterSeconds`; this does not guarantee remote deletion. Quota failure deletes one configured batch of the oldest Liwa-owned files before one upload retry.
 
 Files mode bounds retained request versions by `maxRequestFilesBytes` and `maxImagesPerRequest`; inline fallback has its own base64 budget. Both remove an oldest prefix in configured byte or count quanta. Each omitted image gets its own model-visible placeholder with its display name or attachment id and, when available, normalized dimensions, media type, and current read-only path. The stepped high-watermark policy avoids rewriting an old request prefix after every new image.
 
@@ -112,7 +112,7 @@ When `ctx.deepseekLlmApiExtensions` is present, the adapter prepares its registe
 
 ### Failures and recovery
 
-Configuration accepts Messages only and has no `protocol` field. If resolution reports `protocol is not configurable`, remove `protocol` from the `config` of the `llm-deepseek` entry in `$DSH_HOME/profiles/<profile>/cordis.patch.yml` and from any overriding home patch or command-line overlay. Keep the intended `baseURL`, `apiKeyEnv`, and `models` fields. A stored configuration rejected by adapter validation makes subsequent requests fail until corrected; saving other fields in the Models card does not remove an unknown property. Edit the configuration file, then let the profile reload it through HMR or restart the profile if HMR is disabled.
+Configuration accepts Messages only and has no `protocol` field. If resolution reports `protocol is not configurable`, remove `protocol` from the `config` of the `llm-deepseek` entry in `$LIWA_HOME/profiles/<profile>/cordis.patch.yml` and from any overriding home patch or command-line overlay. Keep the intended `baseURL`, `apiKeyEnv`, and `models` fields. A stored configuration rejected by adapter validation makes subsequent requests fail until corrected; saving other fields in the Models card does not remove an unknown property. Edit the configuration file, then let the profile reload it through HMR or restart the profile if HMR is disabled.
 
 Successful Files responses must contain valid JSON. JSON decoding failures from upload, list, retrieve, and delete throw `INVALID_RESPONSE` with the operation and HTTP status in the message, the status in `LlmError.failure`, and the original parser error as `cause`. Body-read transport and cancellation errors retain their identity.
 
@@ -140,7 +140,7 @@ The plugin is built on one explicit resolve step and one registration fact. `res
 
 ### Wire flow
 
-One `stream()` call normally makes one model request: resolve deterministic request images, prefer Files ids, prepare any registered top-level request extensions, fetch from the resolved `baseURL`, accept extension transactions after HTTP 2xx, and translate the SSE stream into the harness protocol. File-resolution failure makes the first request inline; a provider stale-file response permits one replacement attempt, also inline if replacement resolution fails. Every model and Files call carries shared attribution. Model requests also carry the stable anonymous user id outside model input, plus a session id when present. Reasoning history is serialized back when required, and cache accounting maps DeepSeek's cache-hit metrics into harness usage.
+One `stream()` call normally makes one model request: resolve deterministic request images, prefer Files ids, prepare any registered top-level request extensions, fetch from the resolved `baseURL`, accept extension transactions after HTTP 2xx, and translate the SSE stream into the Liwa protocol. File-resolution failure makes the first request inline; a provider stale-file response permits one replacement attempt, also inline if replacement resolution fails. Every model and Files call carries shared attribution. Model requests also carry the stable anonymous user id outside model input, plus a session id when present. Reasoning history is serialized back when required, and cache accounting maps DeepSeek's cache-hit metrics into harness usage.
 
 </details>
 
@@ -151,7 +151,7 @@ One `stream()` call normally makes one model request: resolve deterministic requ
 
 Read these pages when the package-level contract is not enough. They move from the service contract to the twin adapter, the retry executor, and the shared types.
 
-- [dsh-llm service](../llm/README.md) — the provider-neutral service this adapter registers on.
+- [liwa-llm service](../llm/README.md) — the provider-neutral service this adapter registers on.
 - [llm-pi-ai adapter](../llm-pi-ai/README.md) — the library-backed twin serving other providers and gateways.
 - [LLM streaming subsystem](../../../docs/subsystems/llm-streaming.md) — the `StreamChunk` protocol and adapter contract.
 - [llm-retry](../llm-retry/README.md) — the retry executor that applies this adapter's `retryPolicy`.
@@ -170,11 +170,11 @@ Read these pages when the package-level contract is not enough. They move from t
 
 #### What the model sees
 
-The selected DeepSeek model receives the harness system prompt, message history, tool schemas, stop sequences, and call config (`maxTokens`, `reasoningEffort`, `temperature`) without adapter-authored prompt prose. Provider-specific request-extension fields remain outside model input. The vision model normally receives retained user and tool-result images as Files API references beside attachment handles and request-preview dimensions. It also receives a normalized-object path when the current execution filesystem maps the attachment provider's host object; the descriptor marks this copy read-only and warns that normalization may have resized or re-encoded the upload. A Files resolution failure sends all retained images as inline base64 instead, and an over-budget older image keeps the access resolved for that request in its placeholder. Reasoning content from a prior assistant turn is passed back verbatim, whether or not that turn called a tool. Messages sends `{}` for historical tool arguments that are malformed JSON or are not objects. This argument fallback preserves call ids, tool names, and tool results; the original arguments stay in the Session log. Newly generated Messages tool arguments still require valid JSON objects. Messages omits `reasoning` and `tool-call` blocks inside user messages and tool results. This also permits replay of saved subagent notices containing assistant output; the original Session content remains intact. Empty user messages are skipped after conversion, while empty tool results retain their call ids and error flags. Other unsupported input blocks still fail with `UNSUPPORTED_CONTENT`.
+The selected DeepSeek model receives Liwa system prompt, message history, tool schemas, stop sequences, and call config (`maxTokens`, `reasoningEffort`, `temperature`) without adapter-authored prompt prose. Provider-specific request-extension fields remain outside model input. The vision model normally receives retained user and tool-result images as Files API references beside attachment handles and request-preview dimensions. It also receives a normalized-object path when the current execution filesystem maps the attachment provider's host object; the descriptor marks this copy read-only and warns that normalization may have resized or re-encoded the upload. A Files resolution failure sends all retained images as inline base64 instead, and an over-budget older image keeps the access resolved for that request in its placeholder. Reasoning content from a prior assistant turn is passed back verbatim, whether or not that turn called a tool. Messages sends `{}` for historical tool arguments that are malformed JSON or are not objects. This argument fallback preserves call ids, tool names, and tool results; the original arguments stay in the Session log. Newly generated Messages tool arguments still require valid JSON objects. Messages omits `reasoning` and `tool-call` blocks inside user messages and tool results. This also permits replay of saved subagent notices containing assistant output; the original Session content remains intact. Empty user messages are skipped after conversion, while empty tool results retain their call ids and error flags. Other unsupported input blocks still fail with `UNSUPPORTED_CONTENT`.
 
 #### Token effect
 
-Provider tokenization governs exact text and image-token input. The adapter declares per-route `imageRequestPricing`: it prices each occurrence selected by a logged image-offload decision as its placeholder text and each retained image at its projected dimensions with the published vision accounting (14px patch grid, 3:1 downsampling, 544×544 scale-up floor, 1024-token cap). This lets the token meter price image pressure before a request; reported usage remains authoritative. Reasoning passback carries every reasoned turn's chain of thought into later requests, while offloaded images stop costing visual tokens. A request whose retained occurrences exceed the file-mode or inline-fallback budget (`maxRequestFilesBytes`, `maxImagesPerRequest`, both quanta) at their exact request-version bytes fails with `IMAGE_OFFLOAD_REQUIRED` naming the additional oldest occurrences to offload, and `dsh-compaction-image-offload` records the selected occurrences in an `image/offload` event and retries. Cache-read usage is reported when available. Messages totals include uncached input, output, cache-read, and cache-write tokens. `imageRequestTarget(provider, model, image)` exposes the same request-image dimensions and byte target to screenshot consumers; adapters without image resizing preserve the normalized source.
+Provider tokenization governs exact text and image-token input. The adapter declares per-route `imageRequestPricing`: it prices each occurrence selected by a logged image-offload decision as its placeholder text and each retained image at its projected dimensions with the published vision accounting (14px patch grid, 3:1 downsampling, 544×544 scale-up floor, 1024-token cap). This lets the token meter price image pressure before a request; reported usage remains authoritative. Reasoning passback carries every reasoned turn's chain of thought into later requests, while offloaded images stop costing visual tokens. A request whose retained occurrences exceed the file-mode or inline-fallback budget (`maxRequestFilesBytes`, `maxImagesPerRequest`, both quanta) at their exact request-version bytes fails with `IMAGE_OFFLOAD_REQUIRED` naming the additional oldest occurrences to offload, and `liwa-compaction-image-offload` records the selected occurrences in an `image/offload` event and retries. Cache-read usage is reported when available. Messages totals include uncached input, output, cache-read, and cache-write tokens. `imageRequestTarget(provider, model, image)` exposes the same request-image dimensions and byte target to screenshot consumers; adapters without image resizing preserve the normalized source.
 
 #### KV Cache effect
 
@@ -215,4 +215,4 @@ These limits define where the adapter stops and future work begins. They are cur
 
 None.
 
-`deepseek-official` uses only its configured API-key reference; `deepseek-account` uses only the stored DSH grant for the account provider’s allowed inference origin. Both routes share the Messages transport with independently configured model and file settings. Missing or ineligible account credentials reject the request with a sign-in prompt; neither route falls back to the other. Chat and Files requests reject redirects. The account provider owns sign-out cancellation using running Agents’ logged request contexts, including tool execution; the transport receives the existing request abort signal.
+`deepseek-official` uses only its configured API-key reference; `deepseek-account` uses only the stored Liwa grant for the account provider’s allowed inference origin. Both routes share the Messages transport with independently configured model and file settings. Missing or ineligible account credentials reject the request with a sign-in prompt; neither route falls back to the other. Chat and Files requests reject redirects. The account provider owns sign-out cancellation using running Agents’ logged request contexts, including tool execution; the transport receives the existing request abort signal.

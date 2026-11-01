@@ -1,12 +1,12 @@
 /**
  * Client-safe PTC dispatch events and message-source declarations.
  *
- * @module @deepseek-ai/dsh-tool-executor-ptc/types
+ * @module @liwa/tool-executor-ptc/types
  */
 
-import type { ToolCallId } from '@deepseek-ai/dsh-llm/brand'
-import type { ContentBlock } from '@deepseek-ai/dsh-llm/types'
-import type { JsonValue } from '@deepseek-ai/dsh-util-values'
+import type { ToolCallId } from '@liwa/llm/brand'
+import type { ContentBlock } from '@liwa/llm/types'
+import type { JsonValue } from '@liwa/util-values'
 
 /** Payload recorded when one nested PTC mode Tool dispatch starts. */
 export interface PtcDispatchStartEventData {
@@ -27,7 +27,7 @@ export interface PtcDispatchEventData extends PtcDispatchStartEventData {
   error?: { name: string; code: string; reason?: string }
 }
 
-declare module '@deepseek-ai/dsh-session/types' {
+declare module '@liwa/session/types' {
   interface SessionEventMap {
     /**
      * One sub-dispatch STARTING inside a `run_code` program: the parent
@@ -62,7 +62,7 @@ declare module '@deepseek-ai/dsh-session/types' {
   }
 }
 
-declare module '@deepseek-ai/dsh-llm' {
+declare module '@liwa/llm' {
   interface MessageSourceMap {
     /** Images deferred from a successful PTC subcall's final result. */
     'ptc-mode': { kind: 'ptc-mode' }

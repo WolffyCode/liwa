@@ -1,5 +1,5 @@
 /**
- * Build the dsh executables and development Node carrier for the Python runtime wheel. The fixed
+ * Build the liwa executables and development Node carrier for the Python runtime wheel. The fixed
  * `@yao-pkg/pkg --sea` route, deploy flags, and artifact layout are owned by
  * .agents/notes/implemented/architecture/2026-07-10-single-file-executable-sdk-runtime-distribution.md.
  * The staged closure is symlink-free, and whole-tree assets cover Cordis's
@@ -25,16 +25,16 @@ import primaryLock from './primary-runtime/lock.json' with { type: 'json' }
 const root = resolve(import.meta.dirname, '..')
 
 /** The closure manifest whose dependencies define the executable. */
-const DEPLOY_ROOT_PACKAGE = 'dsh-python-runtime-closure'
+const DEPLOY_ROOT_PACKAGE = 'liwa-python-runtime-closure'
 /** The sole executable entry inside the deployed closure. */
 const ENTRY_BIN = 'runtime-bootstrap.mjs'
 /** Python-visible executable basename. */
-const OUTPUT_BASENAME = 'deepseek-harness-sdk-runtime'
+const OUTPUT_BASENAME = 'liwa-sdk-runtime'
 /** Default Node major; SEA mode requires at least Node 22. */
 const DEFAULT_NODE_RANGE = 'node24'
 const OUT_DIR = 'dist-exe'
 /** Python package destination; created when absent. */
-const PYTHON_RUNTIME_DIR = 'python/sdk-runtime/src/deepseek_harness_runtime/runtime'
+const PYTHON_RUNTIME_DIR = 'python/sdk-runtime/src/liwa_runtime/runtime'
 /** The deployed closure doubles as the node-mode carrier. */
 const PYTHON_NODE_SUBDIR = 'node'
 /** Legacy deploy may hoist peer-specialized workspace packages back here. */
@@ -56,7 +56,7 @@ const ASSET_GLOBS = [
   'node_modules/**/package.json',
   'node_modules/**/*.json',
   // Plugin display metadata resolves these package-owned images at runtime.
-  'node_modules/@deepseek-ai/dsh-*/**/*.{svg,png,jpg,jpeg,webp}',
+  'node_modules/@liwa/*/**/*.{svg,png,jpg,jpeg,webp}',
   // Package-owned Markdown includes runtime skill instructions.
   'node_modules/**/*.md',
   'node_modules/**/*.dylib',
@@ -68,9 +68,9 @@ const ASSET_GLOBS = [
   'node_modules/**/*.yaml',
   'node_modules/**/*.yml',
   // web-app builds this path dynamically, so pkg cannot discover the static frontend.
-  'node_modules/@deepseek-ai/dsh-web-frontend/dist/**/*',
+  'node_modules/@liwa/web-frontend/dist/**/*',
   // The diagnosis provider extracts its PowerShell script for an external interpreter.
-  'node_modules/@deepseek-ai/dsh-sandbox-windows-acl/assets/**/*',
+  'node_modules/@liwa/sandbox-windows-acl/assets/**/*',
 ]
 
 const PLATFORMS = ['linux', 'macos', 'win'] as const
@@ -392,7 +392,7 @@ class SingleExeBuild {
     try {
       await bundle({ config: false, tsconfig: false, inputOptions: { tsconfig: false }, target: 'es2024', entry: entries,
         outDir: this.staging, clean: false, format: 'esm', platform: 'node', dts: false,
-        deps: { neverBundle: [/^@deepseek-ai\//u], alwaysBundle: [/.*/u] }, shims: true, outExtensions: () => ({ js: '.mjs' }),
+        deps: { neverBundle: [/^@liwa\//u], alwaysBundle: [/.*/u] }, shims: true, outExtensions: () => ({ js: '.mjs' }),
         define: { 'import.meta.main': 'false' } })
     } finally {
       for (const entry of Object.values(entries)) await rm(entry, { force: true })
@@ -443,7 +443,7 @@ class SingleExeBuild {
       const inputs = { version, target: `${target.platform === 'macos' ? 'mac' : target.platform}-${target.arch}`, office, pnpm }
       const identity = createHash('sha256').update(JSON.stringify({ ...inputs, primaryLock })).digest('hex')
       await writeFile(join(resources, 'downloads.json'), JSON.stringify({ ...inputs, identity }, undefined, 2) + '\n')
-      await prepareOfficeSkillAssets(join(this.staging, 'node_modules/@deepseek-ai/dsh-skill-office/assets'), join(resources, 'office-skills'))
+      await prepareOfficeSkillAssets(join(this.staging, 'node_modules/@liwa/skill-office/assets'), join(resources, 'office-skills'))
     }
     if (target.platform !== 'macos') return [product, ripgrep, resources]
     const spawnHelper = `${product}-spawn-helper`

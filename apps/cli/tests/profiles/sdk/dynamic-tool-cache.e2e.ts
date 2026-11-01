@@ -4,13 +4,13 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { lastAssistantStreamChunk, type RetryPolicyConfig, type TokenUsage } from '@deepseek-ai/dsh-llm'
-import { DeepSeekHarness } from '@deepseek-ai/dsh-sdk-client'
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
+import { lastAssistantStreamChunk, type RetryPolicyConfig, type TokenUsage } from '@liwa/llm'
+import { Liwa } from '@liwa/sdk-client'
+import type { SessionEvent } from '@liwa/session'
 import { describe, expect, it, onTestFinished } from 'vitest'
 
 const fixturePath = fileURLToPath(new URL('./fixtures/dynamic-tool-cache.mjs', import.meta.url))
-const dshBin = fileURLToPath(new URL('../../../lib/bin.js', import.meta.url))
+const liwaBin = fileURLToPath(new URL('../../../lib/bin.js', import.meta.url))
 const sampleTool = 'cache_sample'
 const sampleLabelGuidance = 'Place each generated sample label on its own line.'
 // Provider cache blocks may leave a short uncached suffix of an unchanged request.
@@ -73,7 +73,7 @@ function registryChanges(previous: ObservedRequest, request: ObservedRequest): {
 
 describe.skipIf(!process.env.DEEPSEEK_API_KEY)('SDK native tool updates with real DeepSeek', () => {
   it.each([false, true])('keeps the preceding conversation cached after a tool addition (prompt update: %s)', async (updatePrompt) => {
-    const root = await mkdtemp(join(tmpdir(), 'dsh-sdk-tool-cache-'))
+    const root = await mkdtemp(join(tmpdir(), 'liwa-sdk-tool-cache-'))
     onTestFinished(async () => { await rm(root, { recursive: true, force: true }) })
     const sampleLabel = `CACHE_SAMPLE_${randomUUID()}`
     const evidencePath = join(root, 'requests.jsonl')
@@ -89,10 +89,10 @@ describe.skipIf(!process.env.DEEPSEEK_API_KEY)('SDK native tool updates with rea
       { id: 'plugin-package-inventory-deepseek', disabled: true },
       { insert: [{ id: 'sdk-dynamic-tool-cache-fixture', name: fixturePath, config: { evidencePath, callsPath, sampleLabel, updatePrompt } }] },
     ]))
-    const harness = new DeepSeekHarness({
-      dshBin, profile: 'sdk', patches: [patch], dshHome: join(root, 'home'),
+    const harness = new Liwa({
+      liwaBin, profile: 'sdk', patches: [patch], liwaHome: join(root, 'home'),
       cwd: root, processCwd: root, provider: 'deepseek-official', model: 'deepseek-flash',
-      env: { ...process.env, DSH_TELEMETRY_DISABLED: '1', DSH_PERMISSION_MODE: 'danger-full-access' },
+      env: { ...process.env, LIWA_TELEMETRY_DISABLED: '1', LIWA_PERMISSION_MODE: 'danger-full-access' },
       initializeTimeoutMs: 30_000,
     })
     onTestFinished(async () => { await harness.close() })

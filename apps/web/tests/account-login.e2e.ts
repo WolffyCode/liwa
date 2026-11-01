@@ -14,7 +14,7 @@ import { saveFailureShot } from './support.ts'
 
 const OVERLAY_TEMPLATE = fileURLToPath(new URL('./fixtures/account-login/cordis.patch.yml', import.meta.url))
 const MODE = webSnapshotMode()
-const TOKEN = 'dsh_web_login_test'
+const TOKEN = 'liwa_web_login_test'
 const CODE = 'web-login-code'
 const AVATAR_EXPECTED = fileURLToPath(new URL('./expected/account-login/avatar-retry.expected.md', import.meta.url))
 
@@ -104,7 +104,7 @@ describe.skipIf(MODE === 'record')('web e2e: DeepSeek account sign-in in a plain
 
   beforeAll(async () => {
     platform = await mockPlatform()
-    root = await mkdtemp(join(tmpdir(), 'dsh-web-account-login-'))
+    root = await mkdtemp(join(tmpdir(), 'liwa-web-account-login-'))
     const overlay = join(root, 'account-login.overlay.yml')
     await writeFile(overlay, (await readFile(OVERLAY_TEMPLATE, 'utf8')).replaceAll('{{origin}}', platform.origin))
     scaffold = await launchWebScaffold({ extraOverlayPath: overlay })

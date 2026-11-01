@@ -55,6 +55,6 @@
     - status
     - switch "启用 @fixture/bundle" [checked]
   - listitem:
-    - button "查看 dsh-web-scaffold-defaults": dsh-web-scaffold-defaults
+    - button "查看 liwa-web-scaffold-defaults": liwa-web-scaffold-defaults
     - status
-    - switch "启用 dsh-web-scaffold-defaults" [checked]
+    - switch "启用 liwa-web-scaffold-defaults" [checked]

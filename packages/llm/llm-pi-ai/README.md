@@ -1,15 +1,15 @@
 ---
-description: "The pi-ai-backed multi-provider adapter for users and maintainers routing the harness LLM service through pi-ai catalogs and hand-declared gateways."
+description: "The pi-ai-backed multi-provider adapter for users and maintainers routing the Liwa LLM service through pi-ai catalogs and hand-declared gateways."
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-llm-pi-ai
+# @liwa/llm-pi-ai
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-`@deepseek-ai/dsh-llm-pi-ai` routes model requests to multiple pi-ai providers, OpenAI-compatible gateways, or self-hosted servers from one configuration. Installed pi-ai providers supply endpoint, protocol, and model-catalog defaults; custom routes can declare those values without code changes. Profiles and credentials are resolved for each request, so settings changes take effect on the next request without a restart. Supported providers can use stored OAuth or interactive-key sign-in with cross-process refresh locking. The package may start with no routes and activate when user settings add them.
+`@liwa/llm-pi-ai` routes model requests to multiple pi-ai providers, OpenAI-compatible gateways, or self-hosted servers from one configuration. Installed pi-ai providers supply endpoint, protocol, and model-catalog defaults; custom routes can declare those values without code changes. Profiles and credentials are resolved for each request, so settings changes take effect on the next request without a restart. Supported providers can use stored OAuth or interactive-key sign-in with cross-process refresh locking. The package may start with no routes and activate when user settings add them.
 
 ## Table of Contents
 
@@ -31,14 +31,14 @@ The adapter accepts the LLM service's [request-only user inputs](../llm/README.m
 
 ### When to choose it
 
-Choose this adapter when the same composition serves several providers, when a route needs pi-ai's catalog defaults with a few fields corrected, or when a hand-declared gateway must be reached through its own endpoint and protocol. Choose `dsh-llm-deepseek` for the direct DeepSeek route when the deployment needs no other provider. Both adapters can be mounted together because their route names do not collide; registering a route another adapter already owns fails plugin loading.
+Choose this adapter when the same composition serves several providers, when a route needs pi-ai's catalog defaults with a few fields corrected, or when a hand-declared gateway must be reached through its own endpoint and protocol. Choose `liwa-llm-deepseek` for the direct DeepSeek route when the deployment needs no other provider. Both adapters can be mounted together because their route names do not collide; registering a route another adapter already owns fails plugin loading.
 
 ### Configure provider routes
 
-Each profile may set a `retryPolicy`; omission uses normal mode with five retries. `apiKeyEnv` is a credential reference resolved per request through the harness credential seam, so no secret enters the configuration file; a reference that resolves to nothing fails the request with `MISSING_CREDENTIAL`. Omitting it leaves the route configured-but-keyless, which for an installed catalog route defers to pi-ai's provider-native ambient discovery.
+Each profile may set a `retryPolicy`; omission uses normal mode with five retries. `apiKeyEnv` is a credential reference resolved per request through the Liwa credential seam, so no secret enters the configuration file; a reference that resolves to nothing fails the request with `MISSING_CREDENTIAL`. Omitting it leaves the route configured-but-keyless, which for an installed catalog route defers to pi-ai's provider-native ambient discovery.
 
 ```yaml
-- name: '@deepseek-ai/dsh-llm-pi-ai'
+- name: '@liwa/llm-pi-ai'
   config:
     providers:
       openai:
@@ -86,13 +86,13 @@ Each profile may set a `retryPolicy`; omission uses normal mode with five retrie
 | `requestImagePixelBudget` | `4,194,304` | Total-pixel budget for each deterministic request image |
 | `requestImageMaxBytes` | `1 MiB` | Encoded-byte target for each request image before base64 expansion |
 | `maxRequestImageBytes` | `20 MiB` | Aggregate base64 image-payload bound; a request whose retained images exceed it fails with `IMAGE_OFFLOAD_REQUIRED` |
-| `retryPolicy` | normal, 5 retries | Provider-owned retry policy executed by `dsh-llm-retry` |
+| `retryPolicy` | normal, 5 retries | Provider-owned retry policy executed by `liwa-llm-retry` |
 
-The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-llm-pi-ai) is the exhaustive source for every accepted field and its JSDoc.
+The generated [configuration catalog](../../../docs/config-catalog.md#liwallm-pi-ai) is the exhaustive source for every accepted field and its JSDoc.
 
 ### Sign in to a provider
 
-A provider pi-ai ships a login for can be signed into through the harness authorization seam: the flow offers OAuth or an interactive key prompt (a key is typed into pi-ai's own login prompt, not into the settings form), and the resulting credential is stored in the harness credential store at `llm-pi-ai/<provider id>`. The stored sign-in authenticates its route beneath any `apiKeyEnv` override and refreshes itself under the store's cross-process lock; signing out deletes the stored record. A hand-declared route key outside the record grammar — a lowercase hyphenated identifier — cannot be signed into, because a record write for it refuses with `LlmError('UNSTORABLE_PROVIDER_ID')`; such a route authenticates through `apiKeyEnv` or ambient provider settings instead.
+A provider pi-ai ships a login for can be signed into through Liwa authorization seam: the flow offers OAuth or an interactive key prompt (a key is typed into pi-ai's own login prompt, not into the settings form), and the resulting credential is stored in the Liwa credential store at `llm-pi-ai/<provider id>`. The stored sign-in authenticates its route beneath any `apiKeyEnv` override and refreshes itself under the store's cross-process lock; signing out deletes the stored record. A hand-declared route key outside the record grammar — a lowercase hyphenated identifier — cannot be signed into, because a record write for it refuses with `LlmError('UNSTORABLE_PROVIDER_ID')`; such a route authenticates through `apiKeyEnv` or ambient provider settings instead.
 
 ### Resolve the model catalog
 
@@ -136,7 +136,7 @@ This section explains the design behind the adapter; the observable behavior is 
 
 ### Design philosophy
 
-The adapter is built on immutable snapshots and per-operation resolution. Each operation captures a whole snapshot — the profiles plus a `createModels()` collection holding the `Provider` each route built — before its first `await`, and a configuration change builds a new collection rather than mutating the one in use, so a request that started under one configuration never finishes under another. A route's own credential reference resolves through the harness seam and rides as the request's `apiKey` option, which pi-ai treats as the highest-priority auth override — that is what keeps the fail-loud reference semantics. Everything that override does not cover reaches pi-ai through the collection's own auth: the credential store holds the records a login wrote and a refresh rotates (addressed as `llm-pi-ai/<provider id>`), and the auth context answers the ambient questions a provider asks while resolving. Both are stable across snapshots, so a configuration change rebuilds the collection without forgetting who is signed in. Runtime imports use pi-ai's provider, API, and utility entry points; `src/models.ts` supplies the small model-helper subset this adapter needs without evaluating pi-ai's aggregate entry point.
+The adapter is built on immutable snapshots and per-operation resolution. Each operation captures a whole snapshot — the profiles plus a `createModels()` collection holding the `Provider` each route built — before its first `await`, and a configuration change builds a new collection rather than mutating the one in use, so a request that started under one configuration never finishes under another. A route's own credential reference resolves through the Liwa seam and rides as the request's `apiKey` option, which pi-ai treats as the highest-priority auth override — that is what keeps the fail-loud reference semantics. Everything that override does not cover reaches pi-ai through the collection's own auth: the credential store holds the records a login wrote and a refresh rotates (addressed as `llm-pi-ai/<provider id>`), and the auth context answers the ambient questions a provider asks while resolving. Both are stable across snapshots, so a configuration change rebuilds the collection without forgetting who is signed in. Runtime imports use pi-ai's provider, API, and utility entry points; `src/models.ts` supplies the small model-helper subset this adapter needs without evaluating pi-ai's aggregate entry point.
 
 Initial prompt text and active tools use pi-ai's `Context.systemPrompt` and `Context.tools`; later system and tool updates remain in `Context.messages`. pi-ai normalizes these fields and applies the selected protocol's serialization rules.
 
@@ -145,14 +145,14 @@ Initial prompt text and active tools use pi-ai's `Context.systemPrompt` and `Con
 | File | Role |
 |---|---|
 | [`src/index.ts`](src/index.ts) | Config snapshots, directory and route registration |
-| [`src/auth.ts`](src/auth.ts) | The credential store and ambient auth context over the harness credential plane |
+| [`src/auth.ts`](src/auth.ts) | The credential store and ambient auth context over the Liwa credential plane |
 | [`src/login.ts`](src/login.ts) | Authorization flows for the installed providers that ship a login |
 | [`src/config.ts`](src/config.ts) | Profile schema, resolution, and serviceability checks |
 | [`src/catalog.ts`](src/catalog.ts) | Installed-catalog integration and drift gates |
 | [`src/provider-data.ts`](src/provider-data.ts) | Generated authentication and endpoint metadata for configuration surfaces |
 | [`src/models.ts`](src/models.ts) | Model collections, static providers, and reasoning levels over narrow pi-ai entry points |
 | [`src/provider.ts`](src/provider.ts) | The supported-protocol table and provider construction |
-| [`src/context.ts`](src/context.ts) | Harness-to-pi-ai context conversion, image handling, replay restore |
+| [`src/context.ts`](src/context.ts) | Liwa-to-pi-ai context conversion, image handling, replay restore |
 | [`src/stream.ts`](src/stream.ts) | pi-ai event conversion into harness `StreamChunk` values |
 | [`src/replay.ts`](src/replay.ts) | Versioned `ReplayEnvelope` storage and validation |
 | [`src/discovery.ts`](src/discovery.ts) | Endpoint interrogation for configuration surfaces |
@@ -182,7 +182,7 @@ The `pre-commit` hook runs `node_modules/.bin/tsx packages/llm/llm-pi-ai/scripts
 
 ### Replay and vocabulary
 
-Successful assistant responses store a versioned, lossless-JSON replay state beside the provider and model that produced them — response-level facts plus one per-block entry per streamed block. At request time, `LlmRuntime` passes replay state only when the same adapter instance owns both routes; the adapter validates it and restores native response ids, provider signatures, and optional `providerThinkingLevel` effort metadata, keeping absent effort metadata absent. Replay validates the requested model identity against the assistant source and uses it to retain same-model signatures; provider-reported response models remain diagnostic metadata. Absent or unusable replay state degrades to provider-neutral content while preserving the assistant source’s required provider and model. pi-ai tool-call arguments are parsed objects, so the adapter parses input and re-stringifies output to the harness raw-JSON convention; pi-ai in-stream error events map to terminal `finish` chunks. Protocol conversion operates on request-local copies. Switching from A to B and back to A preserves the stored content, including empty text blocks, tool ids, original block order, and native replay metadata; requests to a different provider, API, or model omit unsupported signatures and reasoning blocks. Degraded replay without native metadata also omits reasoning. Valid native replay retains the stored reasoning when the original model resumes.
+Successful assistant responses store a versioned, lossless-JSON replay state beside the provider and model that produced them — response-level facts plus one per-block entry per streamed block. At request time, `LlmRuntime` passes replay state only when the same adapter instance owns both routes; the adapter validates it and restores native response ids, provider signatures, and optional `providerThinkingLevel` effort metadata, keeping absent effort metadata absent. Replay validates the requested model identity against the assistant source and uses it to retain same-model signatures; provider-reported response models remain diagnostic metadata. Absent or unusable replay state degrades to provider-neutral content while preserving the assistant source’s required provider and model. pi-ai tool-call arguments are parsed objects, so the adapter parses input and re-stringifies output to Liwa raw-JSON convention; pi-ai in-stream error events map to terminal `finish` chunks. Protocol conversion operates on request-local copies. Switching from A to B and back to A preserves the stored content, including empty text blocks, tool ids, original block order, and native replay metadata; requests to a different provider, API, or model omit unsupported signatures and reasoning blocks. Degraded replay without native metadata also omits reasoning. Valid native replay retains the stored reasoning when the original model resumes.
 
 </details>
 
@@ -193,12 +193,12 @@ Successful assistant responses store a versioned, lossless-JSON replay state bes
 
 Read these pages when the package-level contract is not enough. They move from the service contract to the twin adapter and the shared types.
 
-- [dsh-llm service](../llm/README.md) — the provider-neutral service this adapter registers on.
+- [liwa-llm service](../llm/README.md) — the provider-neutral service this adapter registers on.
 - [llm-deepseek adapter](../llm-deepseek/README.md) — the direct DeepSeek twin for the `deepseek-official` route.
 - [LLM streaming subsystem](../../../docs/subsystems/llm-streaming.md) — the `StreamChunk` protocol and adapter contract.
 - [llm-retry](../llm-retry/README.md) — the retry executor that applies each profile's `retryPolicy`.
 - [Twin LLM adapters](../../../.agents/notes/implemented/architecture/2026-06-13-twin-llm-adapters.md) — why the DeepSeek route ships two structurally different adapters.
-- [Generated configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-llm-pi-ai) — every accepted config field and its source declaration.
+- [Generated configuration catalog](../../../docs/config-catalog.md#liwallm-pi-ai) — every accepted config field and its source declaration.
 
 -----
 
@@ -209,7 +209,7 @@ Read these pages when the package-level contract is not enough. They move from t
 
 #### What the model sees
 
-The selected catalog model receives system-message text, conversation history, tools, and supported sampling fields. The adapter preserves later system messages in history order when the catalog model declares `supportsMidConvoSystemMessages`. Otherwise, it converts each non-empty later system message to a user message wrapped in `<system-reminder>` before passing it to pi-ai. The wrapper does not grant system-role priority. One-shot `GenerateOptions.system` precedes the initial history prompt. Repeated system messages remain repeated; empty system messages are skipped without discarding earlier text. Tool-update capabilities select the shared historical declaration projection; pi-ai receives initially active tools and grouped developer updates carrying additions and supported removals. When every projected declaration of an Anthropic request with tool updates is deferred, the initially active tools are one placeholder, `DeferredToolPlaceholder`, whose description tells the model never to call it; a call reaches the ordinary unknown-tool result. Anthropic receives later tool definitions inline in the update message. Replay preserves tool-call namespaces for dynamically loaded Responses tools. Each retained image is preceded by text naming its complete attachment id and actual request dimensions. When the current execution filesystem maps the attachment provider's host object, the text also carries a read-only normalized-object path and warns that normalization or request projection may have resized or re-encoded the upload. Each occurrence selected by a logged image-offload decision keeps its own identity and currently resolved access in replacement text, and its normalized attachment is not read or transformed. When the retained occurrences' exact base64 payload still exceeds the route's `maxRequestImageBytes`, the call fails with `IMAGE_OFFLOAD_REQUIRED` so `dsh-compaction-image-offload` records the selected occurrences in an `image/offload` event and retries the step. Provider-native replay metadata is restored only when the adapter validates it for the historical content. `imageRequestTarget(provider, model, image)` exposes the same request-image dimensions and byte target to screenshot consumers; adapters without image resizing preserve the normalized source.
+The selected catalog model receives system-message text, conversation history, tools, and supported sampling fields. The adapter preserves later system messages in history order when the catalog model declares `supportsMidConvoSystemMessages`. Otherwise, it converts each non-empty later system message to a user message wrapped in `<system-reminder>` before passing it to pi-ai. The wrapper does not grant system-role priority. One-shot `GenerateOptions.system` precedes the initial history prompt. Repeated system messages remain repeated; empty system messages are skipped without discarding earlier text. Tool-update capabilities select the shared historical declaration projection; pi-ai receives initially active tools and grouped developer updates carrying additions and supported removals. When every projected declaration of an Anthropic request with tool updates is deferred, the initially active tools are one placeholder, `DeferredToolPlaceholder`, whose description tells the model never to call it; a call reaches the ordinary unknown-tool result. Anthropic receives later tool definitions inline in the update message. Replay preserves tool-call namespaces for dynamically loaded Responses tools. Each retained image is preceded by text naming its complete attachment id and actual request dimensions. When the current execution filesystem maps the attachment provider's host object, the text also carries a read-only normalized-object path and warns that normalization or request projection may have resized or re-encoded the upload. Each occurrence selected by a logged image-offload decision keeps its own identity and currently resolved access in replacement text, and its normalized attachment is not read or transformed. When the retained occurrences' exact base64 payload still exceeds the route's `maxRequestImageBytes`, the call fails with `IMAGE_OFFLOAD_REQUIRED` so `liwa-compaction-image-offload` records the selected occurrences in an `image/offload` event and retries the step. Provider-native replay metadata is restored only when the adapter validates it for the historical content. `imageRequestTarget(provider, model, image)` exposes the same request-image dimensions and byte target to screenshot consumers; adapters without image resizing preserve the normalized source.
 
 #### Token effect
 
@@ -223,7 +223,7 @@ Later system messages supplied to the adapter stay out of the initial prompt, pr
 
 #### What the model sees
 
-pi-ai events become harness reasoning, text, tool-call, usage, and finish chunks. The adapter passes parsed tool arguments to the harness as raw JSON strings. If pi-ai reports invalid completed arguments, the attempt fails with `MALFORMED_RESPONSE` before tool dispatch and publishes no successful replay state. The default normal retry policy excludes this code; an explicit retry policy still controls recovery.
+pi-ai events become harness reasoning, text, tool-call, usage, and finish chunks. The adapter passes parsed tool arguments to Liwa as raw JSON strings. If pi-ai reports invalid completed arguments, the attempt fails with `MALFORMED_RESPONSE` before tool dispatch and publishes no successful replay state. The default normal retry policy excludes this code; an explicit retry policy still controls recovery.
 
 #### Token effect
 
@@ -242,7 +242,7 @@ These limits define where the adapter stops and future work begins. They are cur
 
 - **`maxRequestImageBytes` counts base64 image payload only** — text, tools, descriptors, and JSON structure ride outside the bound, so it must sit below the gateway's request-body cap with headroom.
 - **A sign-in lives only in the process that started it** — an authorization attempt is not durable, so reloading the page mid-login abandons it and the human starts over. Signing out is `deleteRecord` on the stored record, which forgets it locally without telling the issuer.
-- **OpenAI offers no ChatGPT sign-in** — pi-ai's Sign in with ChatGPT identifies the installation to OpenAI with a stable UUID the app supplies, and the harness keeps no installation ID meant for a third-party account sign-in; the `openai` route signs in with an API key.
+- **OpenAI offers no ChatGPT sign-in** — pi-ai's Sign in with ChatGPT identifies the installation to OpenAI with a stable UUID the app supplies, and Liwa keeps no installation ID meant for a third-party account sign-in; the `openai` route signs in with an API key.
 - **Provider-native discovery answers through this plugin's ambient context** — a route naming no credential defers to the catalog provider's own resolution, which asks for environment values (`AZURE_OPENAI_API_KEY`, `AWS_PROFILE`, and each provider's own set) and for local credential files. Both questions are answered here: the credential seam is consulted before the process environment, and file existence is checked against the host process's filesystem with `~` expanded. What it cannot do is *read* a credential file's contents — a provider that parses `~/.aws/credentials` itself does so directly, outside the seam.
 - **Reset restores inherited configuration** — resetting a route supplied by a lower profile layer restores that route.
 - **Complete Config replacement can remove inherited dictionary entries** — a field reset instead restores its inherited value.

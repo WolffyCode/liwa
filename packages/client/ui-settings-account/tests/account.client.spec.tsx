@@ -2,9 +2,9 @@
 import { cleanup, fireEvent, render, screen, act, within } from '@testing-library/react'
 import { useMemo, useSyncExternalStore } from 'react'
 import { afterEach, expect, it, onTestFinished, vi } from 'vitest'
-import type { GlobalStandardProps } from '@deepseek-ai/dsh-client-ui-slots'
-import type { AccountDetails, AccountView, SignInAttemptId } from '@deepseek-ai/dsh-deepseek-account/types'
-import type { ThemeSnapshot } from '@deepseek-ai/dsh-client-ui-theme/client'
+import type { GlobalStandardProps } from '@liwa/client-ui-slots'
+import type { AccountDetails, AccountView, SignInAttemptId } from '@liwa/deepseek-account/types'
+import type { ThemeSnapshot } from '@liwa/client-ui-theme/client'
 import type { PlatformBridge } from '../src/client/PlatformOverlay.tsx'
 import { createPlatformPages, type PlatformPages } from '../src/client/platform-pages.ts'
 import { AccountPlatformHost } from '../src/client/AccountPlatformHost.tsx'
@@ -275,10 +275,10 @@ it('keeps the confirmation dialog open after a failed sign-out', async () => {
 
 it.each([en, zh])('renders Platform profile and recharge wallet balances', async (copy) => {
   mount({ status: 'credential-stored', attempt: null }, copy, {
-    profile: { status: 'ready', value: { id: null, name: 'Harness Mock (TEST ONLY)', contact: '138****0000' } },
+    profile: { status: 'ready', value: { id: null, name: 'Liwa Mock (TEST ONLY)', contact: '138****0000' } },
     balance: { status: 'ready', bonusWallets: [], value: [{ currency: 'CNY', balance: '1234.56000000' }, { currency: 'USD', balance: '0.00000100' }] },
   })
-  expect(screen.getByText('Harness Mock (TEST ONLY)')).toBeTruthy()
+  expect(screen.getByText('Liwa Mock (TEST ONLY)')).toBeTruthy()
   expect(screen.getByText('138****0000')).toBeTruthy()
   expect(screen.getByText('¥1,234.56')).toBeTruthy()
   expect(screen.getByText('<$0.01')).toBeTruthy()
@@ -304,11 +304,11 @@ it('opens usage inside Desktop and returns to the same Account settings', async 
   act(() => { usage.focus() })
   await act(async () => { fireEvent.click(usage) })
   expect(platform.open).toHaveBeenCalledWith('usage', { x: 0, y: 0, width: 0, height: 0 })
-  const back = screen.getByRole('button', { name: en.backToHarness })
+  const back = screen.getByRole('button', { name: en.backToLiwa })
   await expect(`${back.parentElement!.parentElement!.textContent}\n`).toMatchFileSnapshot('./expected/platform-header-en.txt')
   await act(async () => { fireEvent.click(back) })
   expect(platform.close).toHaveBeenCalledOnce()
-  expect(screen.queryByRole('button', { name: en.backToHarness })).toBeNull()
+  expect(screen.queryByRole('button', { name: en.backToLiwa })).toBeNull()
   expect(screen.getByRole('region', { name: en.nav })).toBeTruthy()
   // The overlay's layout cleanup hands the page's return focus back to the link
   // that opened it, with no dialog to take it instead.
@@ -324,7 +324,7 @@ it('keeps a return action available when the native document fails to load', asy
   await act(async () => { fireEvent.click(screen.getByRole('link', { name: zh.topUp })) })
   expect(platform.open).toHaveBeenCalledWith('top-up', { x: 0, y: 0, width: 0, height: 0 })
   expect(screen.getByText(zh.platformFailed)).toBeTruthy()
-  const back = screen.getByRole('button', { name: zh.backToHarness })
+  const back = screen.getByRole('button', { name: zh.backToLiwa })
   await expect(`${back.parentElement!.parentElement!.textContent}\n`).toMatchFileSnapshot('./expected/platform-header-zh.txt')
   await act(async () => { fireEvent.click(back) })
   expect(platform.close).toHaveBeenCalledOnce()
@@ -352,13 +352,13 @@ it.each([en, zh])('retries the failed Platform destination and removes the error
   expect(screen.getByRole('status', { name: copy.loading })).toBeTruthy()
   // Retrying removes the button that was focused, so the return action keeps
   // keyboard focus instead of dropping it onto the document body.
-  const backAgain = screen.getByRole('button', { name: copy.backToHarness })
+  const backAgain = screen.getByRole('button', { name: copy.backToLiwa })
   expect(document.activeElement).toBe(backAgain)
   await act(async () => { loaded.resolve(undefined); await loaded.promise })
   expect(screen.queryByText(copy.platformFailed)).toBeNull()
   expect(screen.queryByRole('status', { name: copy.loading })).toBeNull()
   expect(document.activeElement).toBe(backAgain)
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: copy.backToHarness })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: copy.backToLiwa })) })
   expect(screen.queryByRole('dialog')).toBeNull()
   expect(platform.close).toHaveBeenCalledTimes(3)
 })
@@ -372,7 +372,7 @@ it('ignores a retried document completing after returning to Account', async () 
   mount({ status: 'credential-stored', attempt: null }, en, undefined, platform)
   await act(async () => { fireEvent.click(screen.getByRole('link', { name: en.usage })) })
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: en.platformRetry })) })
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: en.backToHarness })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: en.backToLiwa })) })
   await act(async () => { loaded.resolve(undefined); await loaded.promise })
   expect(screen.queryByRole('dialog')).toBeNull()
   expect(screen.getByRole('region', { name: en.nav })).toBeTruthy()
@@ -405,7 +405,7 @@ it.each(['usage', 'top-up'] as const)('shows an accessible spinner until %s fini
     }
   `)
   expect(status.querySelector('[aria-hidden="true"]')).not.toBeNull()
-  expect(screen.getByRole('button', { name: en.backToHarness })).toBeTruthy()
+  expect(screen.getByRole('button', { name: en.backToLiwa })).toBeTruthy()
   await act(async () => { loaded.resolve(undefined) })
   expect(screen.queryByRole('status', { name: en.loading })).toBeNull()
 })
@@ -572,12 +572,12 @@ it('opens the embedded Platform page from a failed balance row on Desktop', asyn
   const platform: PlatformBridge = { open: vi.fn(async () => {}), setBounds: vi.fn(async () => {}), close: vi.fn(async () => {}) }
   mount({ status: 'credential-stored', attempt: null }, en, { balance: { status: 'failed' } }, platform)
   // Both failed rows reach the same destination as the Usage action, so the user can
-  // inspect the balance the Harness could not load without leaving the app.
+  // inspect the balance Liwa could not load without leaving the app.
   await act(async () => { fireEvent.click(screen.getAllByRole('link', { name: en.balanceUnavailable })[0]!) })
   expect(platform.open).toHaveBeenCalledWith('usage', expect.anything())
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: en.backToHarness })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: en.backToLiwa })) })
   expect(platform.close).toHaveBeenCalledOnce()
-  expect(screen.queryByRole('button', { name: en.backToHarness })).toBeNull()
+  expect(screen.queryByRole('button', { name: en.backToLiwa })).toBeNull()
 })
 
 it('reports a rejected settings login and disables login while initial state is unavailable', async () => {
@@ -676,13 +676,13 @@ it('reads the account again when the user returns from the top-up view, and not 
   await act(async () => { fireEvent.click(screen.getByRole('link', { name: en.topUp })) })
   expect(platform.open).toHaveBeenCalledWith('top-up', expect.anything())
   expect(operations.refreshAccount).not.toHaveBeenCalled()
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: en.backToHarness })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: en.backToLiwa })) })
   // The page leaves immediately and the account reads settle behind it.
   expect(screen.queryByRole('dialog')).toBeNull()
   expect(operations.refreshAccount).toHaveBeenCalledOnce()
   await act(async () => { fireEvent.click(screen.getByRole('link', { name: en.usage })) })
   expect(platform.open).toHaveBeenCalledWith('usage', expect.anything())
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: en.backToHarness })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: en.backToLiwa })) })
   // Usage changed nothing the account owns, so returning from it reads nothing.
   expect(operations.refreshAccount).toHaveBeenCalledOnce()
 })
@@ -703,7 +703,7 @@ it('reports resize failure, ignores late native failures, and tolerates a remove
   await act(async () => { resize!() })
   expect(platform.setBounds).toHaveBeenCalled()
   expect(screen.getByText(en.platformFailed)).toBeTruthy()
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: en.backToHarness })) })
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: en.backToLiwa })) })
   await act(async () => { loaded.reject(new Error('late failure')); await loaded.promise.catch(() => {}) })
   expect(screen.queryByRole('dialog')).toBeNull()
 })

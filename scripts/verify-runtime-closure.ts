@@ -8,7 +8,7 @@ import { globSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { parseArgs } from 'node:util'
-import { parseEntryYaml } from '@deepseek-ai/cordis-plugin-include'
+import { parseEntryYaml } from '@liwa/cordis-plugin-include'
 import { isCordisGroupEntry, presetDefinitions } from './cordis-yaml.ts'
 
 interface PackageManifest {

@@ -6,19 +6,19 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import Include from '@deepseek-ai/cordis-plugin-include'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
-import AgentPresets from '@deepseek-ai/dsh-agent-preset-registry'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import { queueHostSubagentPrompt } from '@deepseek-ai/dsh-subagent/internal'
-import * as SubagentFork from '@deepseek-ai/dsh-subagent-fork-in-process'
-import * as SubagentSpawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
+import { Context } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
+import Include from '@liwa/cordis-plugin-include'
+import type { Agent } from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import { mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
+import AgentPresets from '@liwa/agent-preset-registry'
+import { createUserMessage } from '@liwa/llm'
+import { SessionId } from '@liwa/session'
+import * as JsonlSessionPersistence from '@liwa/session-persistence-jsonl'
+import { queueHostSubagentPrompt } from '@liwa/subagent/internal'
+import * as SubagentFork from '@liwa/subagent-fork-in-process'
+import * as SubagentSpawn from '@liwa/subagent-spawn-in-process'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import SubagentRuntime, { SUBAGENT_DESCRIPTOR_VERSION, snapshotSubagentDescriptor } from '../src/index.ts'
 import { TestSessionQuery } from './test-session-query.ts'
@@ -38,7 +38,7 @@ afterEach(async () => {
 
 /** Real preset mounts, Agent lifecycle, and persistence with a scripted model. */
 async function setup() {
-  const root = mkdtempSync(join(tmpdir(), 'dsh-continuation-presets-'))
+  const root = mkdtempSync(join(tmpdir(), 'liwa-continuation-presets-'))
   roots.push(root)
   const ctx = new Context()
   contexts.push(ctx)

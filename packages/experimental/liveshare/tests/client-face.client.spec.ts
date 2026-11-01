@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /** Which half of the Liveshare client face mounts: the owner's Share action, or the viewer page surfaces. */
 
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as liveshare from '../src/client/index.ts'
 import * as viewerBrand from '../src/client/viewer-brand.tsx'
@@ -12,14 +12,14 @@ import * as viewerSessionRow from '../src/client/viewer-session-row.tsx'
 import * as viewerSharePath from '../src/client/viewer-share-path.tsx'
 
 /** The generated contribution is a build artifact; the mount boundary is what this face test covers. */
-vi.mock('@deepseek-ai/dsh-experimental-liveshare/remote', () => ({ default: { package: '@deepseek-ai/dsh-experimental-liveshare', methods: {} } }))
+vi.mock('@liwa/experimental-liveshare/remote', () => ({ default: { package: '@liwa/experimental-liveshare', methods: {} } }))
 
 const VIEWER_PLUGINS = [
   viewerSession, viewerBrand, viewerModel, viewerPermission, viewerSessionRow, viewerSharePath,
 ]
 
 afterEach(() => {
-  Reflect.deleteProperty(globalThis, '__DSH_LIVESHARE_VIEWER__')
+  Reflect.deleteProperty(globalThis, '__LIWA_LIVESHARE_VIEWER__')
 })
 
 /**
@@ -76,7 +76,7 @@ describe('liveshare client face', () => {
   })
 
   it('mounts the viewer surfaces and registers no Share action on a viewer page', async () => {
-    Reflect.set(globalThis, '__DSH_LIVESHARE_VIEWER__', { basePath: '', shareId: 'share-1', sessionId: 'fx-alpha' })
+    Reflect.set(globalThis, '__LIWA_LIVESHARE_VIEWER__', { basePath: '', shareId: 'share-1', sessionId: 'fx-alpha' })
     const { ctx, fiber, registered, mounts } = await mountFace()
     // The viewer face contributes the seats whose only service is the slot registry; the owner's own
     // header action is not among them.
@@ -101,10 +101,10 @@ describe('Liveshare page constants', () => {
     const channel = await import('../src/viewer-channel.ts')
     expect(channel.LIVESHARE_VIEWER_GLOBAL).toBe(protocol.LIVESHARE_VIEWER_GLOBAL)
     protocol.installViewerCarrier({ basePath: '', shareId: 's', sessionId: 'a', readTimeoutMs: 1 })
-    const page = globalThis as { __DSH_LIVESHARE_VIEWER__?: unknown; __DSH_TRANSPORT__?: unknown }
+    const page = globalThis as { __LIWA_LIVESHARE_VIEWER__?: unknown; __LIWA_TRANSPORT__?: unknown }
     expect((globalThis as Record<string, unknown>)[channel.LIVESHARE_VIEWER_GLOBAL])
       .toEqual({ basePath: '', shareId: 's', sessionId: 'a' })
-    delete page.__DSH_LIVESHARE_VIEWER__
-    delete page.__DSH_TRANSPORT__
+    delete page.__LIWA_LIVESHARE_VIEWER__
+    delete page.__LIWA_TRANSPORT__
   })
 })

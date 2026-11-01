@@ -1,5 +1,5 @@
-import type { EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
-import type { Dict } from '@deepseek-ai/cosmokit'
+import type { EntryOptions } from '@liwa/cordis-plugin-loader'
+import type { Dict } from '@liwa/cosmokit'
 import { applyChanges, detach, flatten, place, type Journal } from './journal.ts'
 
 /** One overlay applied to an Include's entry list: an id-targeted override, or an `insert` of new entries. */

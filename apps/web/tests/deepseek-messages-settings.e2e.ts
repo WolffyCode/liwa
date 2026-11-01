@@ -102,7 +102,7 @@ describe.skipIf(webSnapshotMode() === 'record')('web e2e: DeepSeek Messages sett
     await messages.getByRole('button', { name: '保存', exact: true }).click()
     await dialog.getByText('已保存 DeepSeek (deepseek-official)。', { exact: true }).waitFor()
 
-    const settings = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
+    const settings = await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(settings).toContain('https://messages.example/anthropic')
     expect(settings).toContain('id: llm-deepseek')
     await expect(scaffold.ctx.llm.resolveModelInfo('deepseek-official', 'deepseek-flash')).resolves.toMatchObject({
@@ -110,7 +110,7 @@ describe.skipIf(webSnapshotMode() === 'record')('web e2e: DeepSeek Messages sett
     })
     expect(scaffold.ctx.settings.describe().find(row => row.ns === 'llm-deepseek')?.value).not.toHaveProperty('protocol')
     expect(settings).not.toContain('sk-e2e-')
-    const credentials = await readFile(join(scaffold.harnessHome, '.credentials.yaml'), 'utf8')
+    const credentials = await readFile(join(scaffold.liwaHome, '.credentials.yaml'), 'utf8')
     expect(credentials).toContain('DEEPSEEK_API_KEY: sk-e2e-messages')
     expect(credentials).not.toContain('DEEPSEEK_MESSAGES_API_KEY')
     expect(await page.locator('body').innerText()).not.toContain('sk-e2e-')
@@ -134,7 +134,7 @@ describe.skipIf(webSnapshotMode() === 'record')('web e2e: DeepSeek Messages sett
     onTestFailed(() => saveFailureShot(page, 'web-e2e-deepseek-messages-default'))
     await page.keyboard.press('Escape')
     await scaffold.ctx.agentDefaultModel.saveSelection({ provider: 'deepseek-official', model: 'deepseek-v4-flash' })
-    const patchPath = join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml')
+    const patchPath = join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml')
     expect(await readFile(patchPath, 'utf8')).toContain('model: deepseek-v4-flash')
     await page.reload({ waitUntil: 'load' })
     const input = page.locator('[data-composer-input]').first()

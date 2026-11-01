@@ -4,7 +4,7 @@ import type { DragEvent, ReactNode } from 'react'
 import {
   IconChevronDownOutlineRegular, IconChevronRightOutlineRegular, IconDragHandleOutlineRegular,
   IconTrashOutlineRegular, Tooltip, useRowDragPreview,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+} from '@liwa/client-ui-primitives'
 import type { DeepSeekModelDraft } from './DeepSeekModelsEditor.tsx'
 import type { ModelsKey } from './locales.ts'
 import { ModelInputTypes } from './ModelInputTypes.tsx'
@@ -90,7 +90,7 @@ export function ModelRow(props: ModelRowProps): ReactNode {
             draggable={!disabled}
             onDragStart={(event) => {
               event.dataTransfer.effectAllowed = 'move'
-              event.dataTransfer.setData('application/x-dsh-model-order', String(position))
+              event.dataTransfer.setData('application/x-liwa-model-order', String(position))
               props.order.onStart()
               preview.start(event, event.currentTarget.closest('[data-row-key]') as HTMLElement)
             }}

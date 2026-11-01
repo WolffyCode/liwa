@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-compaction-basic",
-  "description": "Token-meter-driven compaction policy and LLM summarization backend for the DeepSeek Harness",
+  "name": "@liwa/compaction-basic",
+  "description": "Token-meter-driven compaction policy and LLM summarization backend for Liwa",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/compaction/compaction-basic"
   },
   "type": "module",
@@ -29,41 +29,41 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-commands": "workspace:*",
-    "@deepseek-ai/dsh-compaction": "workspace:*",
-    "@deepseek-ai/dsh-compaction-tool-result-pruner": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-token-meter": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/commands": "workspace:*",
+    "@liwa/compaction": "workspace:*",
+    "@liwa/compaction-tool-result-pruner": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/token-meter": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-compaction-tool-result-pruner": {
+    "@liwa/compaction-tool-result-pruner": {
       "optional": true
     }
   },
   "dependencies": {
-    "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/util-values": "workspace:*",
+    "@liwa/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-agent": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop": "workspace:*",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:*",
-    "@deepseek-ai/dsh-commands": "workspace:*",
-    "@deepseek-ai/dsh-compaction": "workspace:*",
-    "@deepseek-ai/dsh-compaction-tool-result-pruner": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-llm-retry": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-token-meter": "workspace:*",
-    "@deepseek-ai/dsh-tool-testkit": "workspace:*",
-    "@deepseek-ai/dsh-tools": "workspace:*",
-    "@deepseek-ai/dsh-compaction-image-offload": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-loop": "workspace:*",
+    "@liwa/agent-loop-testkit": "workspace:*",
+    "@liwa/commands": "workspace:*",
+    "@liwa/compaction": "workspace:*",
+    "@liwa/compaction-tool-result-pruner": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/llm-retry": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/token-meter": "workspace:*",
+    "@liwa/tool-testkit": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/compaction-image-offload": "workspace:*"
   }
 }

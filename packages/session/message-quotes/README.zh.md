@@ -3,13 +3,13 @@ description: "提供引用控件与 Markdown blockquote 展示的插件。"
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-message-quotes
+# @liwa/message-quotes
 
 [English](README.md) | 中文
 
 ## 概述
 
-`dsh-message-quotes` 在 Client 注册引用控件和转录渲染。消息保留普通 Markdown 文本，无需 quote 元数据或 content 索引。
+`liwa-message-quotes` 在 Client 注册引用控件和转录渲染。消息保留普通 Markdown 文本，无需 quote 元数据或 content 索引。
 
 ## 目录
 

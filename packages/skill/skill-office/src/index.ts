@@ -5,9 +5,9 @@ import { readFile } from 'node:fs/promises'
 import { dirname, isAbsolute, join, sep } from 'node:path'
 import { isSea } from 'node:sea'
 import { fileURLToPath } from 'node:url'
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { BUNDLED_SKILL_RANK, type SkillCandidate, type SkillProvider } from '@deepseek-ai/dsh-skill'
+import type { Context } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import { BUNDLED_SKILL_RANK, type SkillCandidate, type SkillProvider } from '@liwa/skill'
 import { parse as parseYaml } from 'yaml'
 
 const SKILL_NAMES = ['office', 'office-docx', 'office-pptx', 'office-xlsx', 'office-render', 'office-recalculate', 'office-export-pdf'] as const
@@ -76,12 +76,12 @@ export function apply(ctx: Context, config: Config = {}): void {
     return {
       name: skillName, description,
       invocation: { modelInvocable: true, userInvocable: true },
-      provider: 'dsh-office', source: 'bundled', rank: BUNDLED_SKILL_RANK,
+      provider: 'liwa-office', source: 'bundled', rank: BUNDLED_SKILL_RANK,
       resourceBase: { kind: 'directory', path: directory.split(sep).join('/') }, locator: path,
     }
   })
   const provider: SkillProvider = {
-    name: 'dsh-office',
+    name: 'liwa-office',
     list: () => Promise.resolve(candidates),
     async get(candidate, options) {
       const { rank: _rank, locator, ...summary } = candidate

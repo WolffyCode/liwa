@@ -2,7 +2,7 @@
  * PTC mode codegen — Python flavor. The pure projection from registered tool schemas to the
  * Python SDK text the model programs against under `runtime.language === 'python'`. Sibling of
  * {@link ./ts-types.ts | ts-types.ts}; the two files are two projections of the same registry
- * store, keyed by the loaded {@link @deepseek-ai/dsh-ptc-runtime#PtcRuntime.language | PTC
+ * store, keyed by the loaded {@link @liwa/ptc-runtime#PtcRuntime.language | PTC
  * runtime's language}.
  *
  * With the PTC executor selected, native tool schemas are omitted from the request. This generated
@@ -13,8 +13,8 @@
  * @module
  */
 
-import { assertSupportedJsonSchema } from '@deepseek-ai/dsh-tools'
-import type { JsonSchemaNode, JsonSchemaScalar } from '@deepseek-ai/dsh-tools'
+import { assertSupportedJsonSchema } from '@liwa/tools'
+import type { JsonSchemaNode, JsonSchemaScalar } from '@liwa/tools'
 import type { ToolSdkSchema } from './ts-types.ts'
 
 /**
@@ -36,7 +36,7 @@ const IDENTIFIER = /^[\p{XID_Start}_]\p{XID_Continue}*$/u
  * NFKC stability is a second and separate condition, because CPython
  * normalizes identifiers at compile time while JSON keys are compared as
  * written: `ﬁeld` would be declared and reachable as `field`, so the SDK would
- * advertise a key under a spelling the harness never accepts, and two keys
+ * advertise a key under a spelling Liwa never accepts, and two keys
  * that normalize together would collapse into one declaration. Those names
  * take the subscript path, which carries their exact bytes.
  *

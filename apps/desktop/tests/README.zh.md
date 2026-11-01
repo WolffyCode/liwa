@@ -6,7 +6,7 @@
 
 本地下载和强更弹窗证据与生产后端联调、视觉验收、已安装应用升级分开记录。运行 [Desktop README](../README.zh.md) 中的命令可生成新的隔离报告。
 
-已安装应用验收可显式启用 `DSH_DESKTOP_UPDATE_JOURNAL_DIR`，使用安装目录树之外、两个版本共同保留的绝对路径。每个主进程将已安装版本、状态转换和人工操作标记刷新到单独的 JSONL 文件。原始诊断和请求数据被排除；存储错误会向上传播。[日志决策](../../../.agents/notes/implemented/testing/2026-09-14-desktop-installed-update-journal.zh.md)定义证据的局限。单元与主入口测试覆盖该日志；签名安装版升级仍未验证。
+已安装应用验收可显式启用 `LIWA_DESKTOP_UPDATE_JOURNAL_DIR`，使用安装目录树之外、两个版本共同保留的绝对路径。每个主进程将已安装版本、状态转换和人工操作标记刷新到单独的 JSONL 文件。原始诊断和请求数据被排除；存储错误会向上传播。[日志决策](../../../.agents/notes/implemented/testing/2026-09-14-desktop-installed-update-journal.zh.md)定义证据的局限。单元与主入口测试覆盖该日志；签名安装版升级仍未验证。
 
 ## 目录
 
@@ -23,7 +23,7 @@
 
 产品行为与限制见[故障恢复与诊断](../docs/diagnostics/README.zh.md)。
 
-使用可丢弃的 profile、独立的 Electron `userData` 和实际打包客户端。构造最小本地组合包：`package.json` 的 `dsh.bundle.patch` 指向 `cordis.patch.yml`，需要执行代码时再加入插件模块，然后打成可本地安装的 `.tgz`。这些包会故意使应用出错，不得发布或安装到日常 profile。
+使用可丢弃的 profile、独立的 Electron `userData` 和实际打包客户端。构造最小本地组合包：`package.json` 的 `liwa.bundle.patch` 指向 `cordis.patch.yml`，需要执行代码时再加入插件模块，然后打成可本地安装的 `.tgz`。这些包会故意使应用出错，不得发布或安装到日常 profile。
 
 分别构造模块导入异常、插件初始化异常、`appReady` 后的异步异常，以及 Host 非零退出。用 patch 禁用 `agent`、`session`、`llm`、`tools` 提供者，检查服务缺失诊断。跨重启场景通过 `pluginManager` 选入该组合包，再重启同一 profile。运行期场景须实际观察客户端就绪；`appReady` 不代表窗口已经显示。
 
@@ -53,7 +53,7 @@ pnpm exec tsc -b apps/desktop/tsconfig.host.json
 apps/desktop/.desktop-build/targets/mac-arm64/electron/Electron.app/Contents/MacOS/Electron apps/desktop/tests/fixtures/update-overlay-visibility.mjs
 ```
 
-夹具使用独立 profile，在 `.desktop-build/qualification/update-overlay-*` 下写入 `result.json`。它检查可见和隐藏的父窗口、不创建原生子窗口、父窗口可见性通知后独立对照窗口仍保留焦点，以及销毁父窗口时的视图和输入清理。它不使用网络、产品登录或 dsh Host。这项验证覆盖窗内承载方式，不覆盖完整的首次登录或安装流程。
+夹具使用独立 profile，在 `.desktop-build/qualification/update-overlay-*` 下写入 `result.json`。它检查可见和隐藏的父窗口、不创建原生子窗口、父窗口可见性通知后独立对照窗口仍保留焦点，以及销毁父窗口时的视图和输入清理。它不使用网络、产品登录或 liwa Host。这项验证覆盖窗内承载方式，不覆盖完整的首次登录或安装流程。
 
 <a id="verification-interactive"></a>
 

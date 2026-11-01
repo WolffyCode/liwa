@@ -1,12 +1,12 @@
 /** Host registry for model-visible, read-only Cordis capability queries. */
 
-import { Service } from '@deepseek-ai/cordis'
-import type { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type {} from '@deepseek-ai/dsh-api-gateway'
-import { snapshotJsonValue, type JsonValue } from '@deepseek-ai/dsh-util-values'
-import { assertSupportedJsonSchema, validateJsonSchemaValue } from '@deepseek-ai/dsh-tools'
-import type { JsonSchemaNode } from '@deepseek-ai/dsh-tools'
+import { Service } from '@liwa/cordis'
+import type { Context } from '@liwa/cordis'
+import type { Agent } from '@liwa/agent'
+import type {} from '@liwa/api-gateway'
+import { snapshotJsonValue, type JsonValue } from '@liwa/util-values'
+import { assertSupportedJsonSchema, validateJsonSchemaValue } from '@liwa/tools'
+import type { JsonSchemaNode } from '@liwa/tools'
 import type {
   CordisInspectMethodManifest, CordisInspectPlatform, CordisInspectProviderManifest,
   CordisInspectProviderView, CordisInspectQueryRequest, CordisInspectQueryResolution,
@@ -36,7 +36,7 @@ interface PendingClientQuery {
   settle(resolution: CordisInspectQueryResolution): void
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     /** Host registry for Cordis inspect providers and Client manifest/query routing. */
     cordisInspect: CordisInspectRegistryService
@@ -183,7 +183,7 @@ export class CordisInspectRegistryService extends Service {
     signal.throwIfAborted()
     const gateway = this.ctx.get('typertGateway')
     if (gateway !== undefined && !gateway.hasLiveClient()) {
-      throw new Error(`Client inspect query ${providerId}.${methodName} has no connected Harness page. Open or reconnect the Harness page, then retry.`)
+      throw new Error(`Client inspect query ${providerId}.${methodName} has no connected Liwa page. Open or reconnect the Liwa page, then retry.`)
     }
     const requestId = `inspect-${this.nextRequest++}` as CordisInspectRequestId
     const request: CordisInspectQueryRequest = {
@@ -219,7 +219,7 @@ export class CordisInspectRegistryService extends Service {
       const pending = this.pending.get(requestId)
       if (pending === undefined) return
       const detail = pending.failure === undefined
-        ? 'Open or reconnect the Harness page, then retry.'
+        ? 'Open or reconnect the Liwa page, then retry.'
         : `Client failure: ${pending.failure}`
       pending.settle({
         ok: false,

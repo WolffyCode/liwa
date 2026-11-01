@@ -3,7 +3,7 @@
 import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { claudeRuntime } from '@botiverse/oar/runtimes/claude'
 import { expect, it } from 'vitest'
 import { externalTestParent } from '../../../subagent/subagent/tests/external-activation-helpers.ts'
@@ -17,12 +17,12 @@ const removedEnvironment = Object.fromEntries([
   'CLAUDE_CODE_USE_BEDROCK', 'CLAUDE_CODE_USE_VERTEX', 'CLAUDE_CODE_USE_FOUNDRY',
 ].map(name => [name, null]))
 
-it.skipIf(process.env.DSH_OAR_NATIVE_PERMISSIONS !== '1').for([
+it.skipIf(process.env.LIWA_OAR_NATIVE_PERMISSIONS !== '1').for([
   { mode: 'dontAsk', writes: false },
   { mode: 'acceptEdits', writes: true },
   { mode: 'plan', writes: false },
 ])('enforces Claude $mode through the patched dependency', { timeout: 90_000, retry: 0 }, async ({ mode, writes }, test) => {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-oar-permission-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-oar-permission-'))
   const workspace = join(root, 'workspace')
   const config = join(root, 'claude-config')
   await mkdir(workspace)

@@ -1,8 +1,8 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
-import { createUserMessage, ToolCallId } from '@deepseek-ai/dsh-llm'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import type { BundleInfo, ChangeResult } from '@deepseek-ai/dsh-plugin-manager/types'
+import { createUserMessage, ToolCallId } from '@liwa/llm'
+import { SessionId } from '@liwa/session'
+import { executeToolFixture } from '@liwa/tool-testkit'
+import type { BundleInfo, ChangeResult } from '@liwa/plugin-manager/types'
 import { MockAdapter, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import * as PluginRecommendations from '../src/index.ts'
 import { ACTION, bundle, callId, fixture, logProposal, proposal, RESULT_TEXT } from './fixture.ts'
@@ -55,7 +55,7 @@ describe('official recommendations', () => {
     ])
     f.ctx.llm.registerAdapter(['mock'], adapter)
     const agent = await f.ctx.agentLoop.create(SessionId('invitation'), { provider: 'mock', model: 'mock' })
-    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'Can DSH search my old conversations?' }], source: { kind: 'user' } }))
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'Can Liwa search my old conversations?' }], source: { kind: 'user' } }))
     await agent.whenIdle()
     const results = agent.session.snapshotEvents().flatMap(event => event.type === 'tool/result' ? [event.data.message] : [])
     expect(results.map(message => message.isError === true)).toEqual([false, false, true])

@@ -3,20 +3,20 @@ import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
-import { Context } from '@deepseek-ai/cordis'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import { unsupportedModel, unsupportedInbox } from '@deepseek-ai/dsh-agent-loop-testkit'
-import LocalFileSystem from '@deepseek-ai/dsh-fs-local'
-import SandboxProvider from '@deepseek-ai/dsh-sandbox'
-import type { ConfinedArgv, SandboxMode, SandboxPolicy } from '@deepseek-ai/dsh-sandbox'
-import SandboxPolicyService from '@deepseek-ai/dsh-sandbox-policy'
-import LocalSandbox from '@deepseek-ai/dsh-sandbox-local'
-import { Session, SessionId, SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import WorkingDirectoryService from '@deepseek-ai/dsh-working-directory'
+import { Context } from '@liwa/cordis'
+import AgentRegistry from '@liwa/agent'
+import type { Agent } from '@liwa/agent'
+import { unsupportedModel, unsupportedInbox } from '@liwa/agent-loop-testkit'
+import LocalFileSystem from '@liwa/fs-local'
+import SandboxProvider from '@liwa/sandbox'
+import type { ConfinedArgv, SandboxMode, SandboxPolicy } from '@liwa/sandbox'
+import SandboxPolicyService from '@liwa/sandbox-policy'
+import LocalSandbox from '@liwa/sandbox-local'
+import { Session, SessionId, SESSION_FORMAT_VERSION } from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import LocalSubprocessRuntime from '@liwa/subprocess-local'
+import SystemPrompt from '@liwa/system-prompt'
+import WorkingDirectoryService from '@liwa/working-directory'
 import WorktreeService from '../src/index.ts'
 import type { Config } from '../src/index.ts'
 
@@ -52,7 +52,7 @@ export function testAgent(ctx: Context, cwd: string, name = 'worktree-test'): Ag
 }
 
 export async function repository(parent = tmpdir()): Promise<string> {
-  const path = await realpath(await mkdtemp(join(parent, 'dsh-worktree-')))
+  const path = await realpath(await mkdtemp(join(parent, 'liwa-worktree-')))
   try {
     await git(path, 'init', '-b', 'main')
     await git(path, 'config', 'core.autocrlf', 'false')

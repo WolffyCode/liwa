@@ -1,15 +1,15 @@
 /**
  * Session-query service error containment and model-safe translation.
  *
- * @module @deepseek-ai/dsh-tool-session-query/service-boundary
+ * @module @liwa/tool-session-query/service-boundary
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import { HarnessError } from '@deepseek-ai/dsh-llm'
+import type { Context } from '@liwa/cordis'
+import { LiwaError } from '@liwa/llm'
 import {
   SessionQueryError,
   type SessionQueryErrorCode,
-} from '@deepseek-ai/dsh-session-query'
+} from '@liwa/session-query'
 
 interface ModelSafeServiceFailure {
   readonly code: SessionQueryErrorCode | 'SESSION_QUERY_TOOL_FAILED'
@@ -89,8 +89,8 @@ const SAFE_SESSION_QUERY_FAILURES = {
   },
 } satisfies Record<SessionQueryErrorCode, ModelSafeServiceFailure>
 
-function unauthorizedTarget(): HarnessError {
-  return new HarnessError(
+function unauthorizedTarget(): LiwaError {
+  return new LiwaError(
     'session target is outside the caller workspace',
     'SESSION_QUERY_TOOL_UNAUTHORIZED',
   )
@@ -117,7 +117,7 @@ function sanitizeError(
   ctx: Context,
   operation: string,
   error: unknown,
-): HarnessError {
+): LiwaError {
   const generic = genericFailure()
   const diagnostic = fullError(error)
   try {
@@ -131,7 +131,7 @@ function sanitizeError(
         return new SessionQueryError(failure.message, failure.code)
       }
     }
-    if (error instanceof HarnessError && error.code === 'SESSION_QUERY_TOOL_UNAUTHORIZED') {
+    if (error instanceof LiwaError && error.code === 'SESSION_QUERY_TOOL_UNAUTHORIZED') {
       return unauthorizedTarget()
     }
   } catch {
@@ -140,8 +140,8 @@ function sanitizeError(
   return generic
 }
 
-function genericFailure(): HarnessError {
-  return new HarnessError(
+function genericFailure(): LiwaError {
+  return new LiwaError(
     'session query operation failed',
     'SESSION_QUERY_TOOL_FAILED',
   )

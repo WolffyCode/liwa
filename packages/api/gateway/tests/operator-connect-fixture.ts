@@ -1,9 +1,9 @@
 /** Loader-mounted Remote methods and interactions for authenticated transport tests. */
-import { Context } from '@deepseek-ai/cordis'
-import { Remote, TypertRemoteService, type PeerScope } from '@deepseek-ai/dsh-typert-protocol'
-import type { TypertRemoteEventDispatch, TypertRemoteEventOutcome } from '@deepseek-ai/dsh-api-gateway'
-import type {} from '@deepseek-ai/dsh-client-connection'
-import type {} from '@deepseek-ai/dsh-typert-registry'
+import { Context } from '@liwa/cordis'
+import { Remote, TypertRemoteService, type PeerScope } from '@liwa/typert-protocol'
+import type { TypertRemoteEventDispatch, TypertRemoteEventOutcome } from '@liwa/api-gateway'
+import type {} from '@liwa/client-connection'
+import type {} from '@liwa/typert-registry'
 
 interface CallObservation {
   readonly peer: PeerScope
@@ -11,7 +11,7 @@ interface CallObservation {
   finished: boolean
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     operatorConnectFixture: OperatorConnectFixture
   }

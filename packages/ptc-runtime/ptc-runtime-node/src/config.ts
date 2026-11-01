@@ -1,6 +1,6 @@
 /** Execution mode and resource limits for the Node PTC provider. */
-import z from '@deepseek-ai/schemastery'
-import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
+import z from '@liwa/schemastery'
+import { MAX_TIMER_DELAY_MS } from '@liwa/timeout'
 import type { LaunchConfig } from './launch.ts'
 
 /** Deployment-varying runtime bounds and launch choices. */

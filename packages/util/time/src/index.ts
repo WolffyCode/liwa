@@ -10,7 +10,7 @@
  * `resolveLocalInstant` take already-validated values and answer a string or
  * epoch milliseconds directly; `Duration` holds a span in milliseconds with no
  * implicit numeric conversion.
- * @module @deepseek-ai/dsh-util-time
+ * @module @liwa/util-time
  */
 
 import { canonicalizeTimeZone } from './instant.ts'

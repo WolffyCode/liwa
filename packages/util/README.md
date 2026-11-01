@@ -1,5 +1,5 @@
 ---
-description: "Package map for shared utilities: atomic file writes, branded ids, deques, JSON values, harness home paths, launch environment, native commands, output retention, time and zone vocabulary, timeouts, and official package lists."
+description: "Package map for shared utilities: atomic file writes, branded ids, deques, JSON values, Liwa home paths, launch environment, native commands, output retention, time and zone vocabulary, timeouts, and official package lists."
 kind: "package-group"
 ---
 
@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-The `util/` group gives capability packages shared mechanical primitives instead of duplicate implementations. It covers atomic writes, branded ids, deques, lossless JSON values, UUIDs, Harness-home paths, launch environments, outbound proxy policy, native commands, output retention, time-zone, instant, and span vocabulary, and timeout handling. Every root entry here is a library: it registers no product service or event, and the consuming capability retains the business semantics. The exception is `official-bundles`: instead of a mechanical primitive, it holds the installation's and the plugin manager's official package lists as data their consumers apply.
+The `util/` group gives capability packages shared mechanical primitives instead of duplicate implementations. It covers atomic writes, branded ids, deques, lossless JSON values, UUIDs, Liwa-home paths, launch environments, outbound proxy policy, native commands, output retention, time-zone, instant, and span vocabulary, and timeout handling. Every root entry here is a library: it registers no product service or event, and the consuming capability retains the business semantics. The exception is `official-bundles`: instead of a mechanical primitive, it holds the installation's and the plugin manager's official package lists as data their consumers apply.
 
 ## Table of Contents
 
@@ -35,7 +35,7 @@ Each package provides one primitive or one data set; open a package page for how
 | [`deque/`](deque/README.md) | Provides amortized constant-time queue operations with bounded vacant storage |
 | [`chunked-list/`](chunked-list/README.md) | Retains immutable list versions with bounded append copying and checkpoint validation |
 | [`values/`](values/README.md) | Validates, snapshots, compares, and freezes lossless JSON-compatible values |
-| [`home-paths/`](home-paths/README.md) | Resolves the single Harness home and joins shared user-data paths |
+| [`home-paths/`](home-paths/README.md) | Resolves the single Liwa home and joins shared user-data paths |
 | [`http-proxy/`](http-proxy/README.md) | Resolves one outbound proxy policy and installs it for `fetch`, SDK agents, and spawned children |
 | [`launch-environment/`](launch-environment/README.md) | Frozen launch environment that remembers which layer supplied each value |
 | [`atomic-write/`](atomic-write/README.md) | Atomic file replacement and cross-process writer locking |

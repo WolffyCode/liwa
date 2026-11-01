@@ -1,14 +1,14 @@
-import { MessageId, createMessage } from '@deepseek-ai/dsh-llm'
+import { MessageId, createMessage } from '@liwa/llm'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { appendFile, mkdtemp, mkdir, rm, readFile, writeFile, readdir, stat, symlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
 import { scheduler } from 'node:timers/promises'
-import { SESSION_FORMAT_VERSION, SessionLogOffset, SessionSeq, SessionId } from '@deepseek-ai/dsh-session'
-import type { SessionEvent, SessionHeader } from '@deepseek-ai/dsh-session'
-import type { SessionPersistence } from '@deepseek-ai/dsh-session-persistence'
-import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
+import { SESSION_FORMAT_VERSION, SessionLogOffset, SessionSeq, SessionId } from '@liwa/session'
+import type { SessionEvent, SessionHeader } from '@liwa/session'
+import type { SessionPersistence } from '@liwa/session-persistence'
+import * as JsonlSessionPersistence from '@liwa/session-persistence-jsonl'
 import {
   assertNoRetiredHeaderFields, encodeSegment, eventLines, generationLogFilename, generationLogPath,
   logPath, parseGenerationLogFilename, projectDir, projectKey, scanLog, sessionDir, SessionLogScanner,
@@ -20,7 +20,7 @@ import {
 import { runLiveWritePathContract } from '../../session-persistence/tests/live-write-contract.ts'
 import { LIVE_WRITE_BATCH_MAX_DELAY_MS, type JsonlSessionHandle, type JsonlHandleStorage } from '../src/storage.ts'
 import { JsonlGenerationSourceChangedError } from '../src/generation.ts'
-import SessionStore from '@deepseek-ai/dsh-session'
+import SessionStore from '@liwa/session'
 
 const statRace = vi.hoisted(() => ({
   path: undefined as string | undefined,
@@ -161,7 +161,7 @@ async function expectCode(promise: Promise<unknown>, codes: readonly string[]): 
 }
 
 async function freshRoot(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'dsh-jsonl-'))
+  const dir = await mkdtemp(join(tmpdir(), 'liwa-jsonl-'))
   dirs.push(dir)
   return dir
 }
@@ -336,7 +336,7 @@ afterEach(async () => {
 })
 
 runPersistenceContract('jsonl-none', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'dsh-jsonl-'))
+  const dir = await mkdtemp(join(tmpdir(), 'liwa-jsonl-'))
   const instance = async (): Promise<{ persistence: SessionPersistence; dispose: () => Promise<void> }> => {
     const ctx = new Context()
     const fiber = await ctx.plugin(JsonlSessionPersistence, { root: dir, compression: 'none' })
@@ -362,7 +362,7 @@ runPersistenceContract('jsonl-none', async () => {
 })
 
 runLiveWritePathContract('jsonl', LIVE_WRITE_BATCH_MAX_DELAY_MS, async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'dsh-jsonl-live-'))
+  const dir = await mkdtemp(join(tmpdir(), 'liwa-jsonl-live-'))
   dirs.push(dir)
   const mount = async (): Promise<Context> => {
     const ctx = new Context()
@@ -510,7 +510,7 @@ describe('JsonlSessionPersistence: format helpers', () => {
   })
 
   it('projectKey normalizes project paths into bounded readable names', () => {
-    expect(projectKey('/Users/qyj/work/deepseek-harness')).toBe('--Users-qyj-work-deepseek-harness--')
+    expect(projectKey('/Users/qyj/work/liwa')).toBe('--Users-qyj-work-liwa--')
     expect(projectKey('/a/b-c')).toBe(projectKey('/a-b/c'))
     expect(projectKey('C:\\work\\agent')).toBe('--C-work-agent--')
     expect(projectKey('/开发/~agent')).toBe('--~5F00~53D1-~007Eagent--')
@@ -2853,7 +2853,7 @@ describe('JsonlSessionPersistence listing concurrency', () => {
   let listingCtx: Context
 
   beforeEach(async () => {
-    listingRoot = await mkdtemp(join(tmpdir(), 'dsh-jsonl-listing-'))
+    listingRoot = await mkdtemp(join(tmpdir(), 'liwa-jsonl-listing-'))
     listingCtx = new Context()
     await listingCtx.plugin(JsonlSessionPersistence, { root: listingRoot, compression: 'none', listConcurrency: 2 })
   })

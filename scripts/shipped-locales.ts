@@ -1,4 +1,4 @@
-/** Languages whose UI dictionaries and package metadata ship with Harness. */
+/** Languages whose UI dictionaries and package metadata ship with Liwa. */
 export const SHIPPED_LOCALE_IDS = ['en', 'zh', 'ja', 'es', 'fr', 'de', 'ru', 'pt'] as const
 
 /** Locale id required by repository translation checks. */

@@ -1,13 +1,13 @@
 {
-  "name": "@deepseek-ai/dsh-agent",
-  "description": "Agent interface, registry, initiator scope, and event vocabulary for the DeepSeek Harness",
+  "name": "@liwa/agent",
+  "description": "Agent interface, registry, initiator scope, and event vocabulary for Liwa",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/core/agent"
   },
   "type": "module",
@@ -34,35 +34,35 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-scope": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:*",
-    "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/dsh-workspace": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/llm": "workspace:*",
+    "@liwa/scope": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/typert-protocol": "workspace:*",
+    "@liwa/util-values": "workspace:*",
+    "@liwa/workspace": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-workspace": {
+    "@liwa/workspace": {
       "optional": true
     }
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-scope": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-projection": "workspace:*",
-    "@deepseek-ai/dsh-system-prompt": "workspace:*",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:*",
-    "@deepseek-ai/dsh-typert-registry": "workspace:*",
-    "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/dsh-workspace": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/llm": "workspace:*",
+    "@liwa/scope": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-projection": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/typert-protocol": "workspace:*",
+    "@liwa/typert-registry": "workspace:*",
+    "@liwa/util-values": "workspace:*",
+    "@liwa/workspace": "workspace:*",
+    "@liwa/cordis": "workspace:~"
   },
   "dependencies": {
-    "@deepseek-ai/dsh-brand": "workspace:*",
+    "@liwa/brand": "workspace:*",
     "zod": "4.4.3"
   }
 }

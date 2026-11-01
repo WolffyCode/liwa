@@ -1,14 +1,14 @@
 /** Client catalog projection, explicitly retained scopes, streams, and Host operations. */
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { describe, expect, vi } from 'vitest'
-import type { SessionId } from '@deepseek-ai/dsh-api-remotes/client'
+import type { SessionId } from '@liwa/api-remotes/client'
 import type { SessionReference } from '../src/client/contract/sessions.ts'
-import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
-import { LlmAttemptId } from '@deepseek-ai/dsh-llm'
-import { RemoteStreamCarrierError } from '@deepseek-ai/dsh-api-gateway/client'
-import { SESSION_FORMAT_VERSION, SessionSeq } from '@deepseek-ai/dsh-session/types'
-import { ok, streamHandle, type RemoteMock } from '@deepseek-ai/dsh-remote-mock'
-import { createClientTest, webApp } from '@deepseek-ai/dsh-client-test-runtime/src/assembly/index.ts'
+import { RemoteError } from '@liwa/typert-protocol'
+import { LlmAttemptId } from '@liwa/llm'
+import { RemoteStreamCarrierError } from '@liwa/api-gateway/client'
+import { SESSION_FORMAT_VERSION, SessionSeq } from '@liwa/session/types'
+import { ok, streamHandle, type RemoteMock } from '@liwa/remote-mock'
+import { createClientTest, webApp } from '@liwa/client-test-runtime/src/assembly/index.ts'
 import { ClientSessions, SessionCreateError, SessionForkError } from '../src/client/sessions/service.ts'
 import { scopeOf } from '../src/client/scope.ts'
 import type {
@@ -18,7 +18,7 @@ import { FOLLOW, err, followScript, sessionWorld } from './remote/session.client
 
 const sid = (s: string): SessionId => s as SessionId
 /** ClientSessions uses the Gateway client for stream supervision and the native Remote mocks for responses. */
-const API_ROSTER = webApp.closure(['@deepseek-ai/dsh-api-gateway'])
+const API_ROSTER = webApp.closure(['@liwa/api-gateway'])
 /** The first client boot pays the cold module transform of the api cone. */
 const COLD_BOOT_TIMEOUT_MS = 60_000
 

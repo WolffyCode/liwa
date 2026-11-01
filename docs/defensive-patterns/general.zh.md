@@ -132,7 +132,7 @@ const sessions = ctx.get('sessions')   // one owner, lifetime tied to the servic
 ```
 
 ```ts ignore-check
-globalThis.__dshCache = new Map()   // shared across instances, reclaimed never
+globalThis.__liwaCache = new Map()   // shared across instances, reclaimed never
 ```
 
 反例让实例之间互相覆盖、回收时机不可控，并让状态在测试之间泄漏。
@@ -225,7 +225,7 @@ throw new EndpointError('not found')   // was: return { ok: false, code: 'not_fo
 
 ## 在分发器中隔离回调异常
 
-逐个捕获并报告监听器的异常，不让分发 promise 被 reject，也不让后续监听器失去执行机会。监听器的所有者必须按[错误处理规范](../../.agents/skills/dsh-error-handling/SKILL.md#catch-recover-or-stop)处置其修改的状态；仅捕获异常不会恢复状态。
+逐个捕获并报告监听器的异常，不让分发 promise 被 reject，也不让后续监听器失去执行机会。监听器的所有者必须按[错误处理规范](../../.agents/skills/liwa-error-handling/SKILL.md#catch-recover-or-stop)处置其修改的状态；仅捕获异常不会恢复状态。
 
 判定条件是：抛异常的监听器是否能让分发 promise 被 reject，或让其后的监听器不再运行。边界是调用方自己的 await——分发器有意抛给发起该操作的那条路径的错误，不属于隔离失败。
 
@@ -241,7 +241,7 @@ async function dispatch(listeners: ((event: string) => Promise<void>)[], event: 
 
 ## 绝不将环境变量或可预测路径暴露给不可信输出
 
-启动的命令应使用经过清理的环境变量，移除名称匹配 `*KEY*`、`*SECRET*`、`*TOKEN*` 或 `*PASSWORD*` 的项，防止 harness 凭证通过命令输出、`env` 或 spill 文件泄漏。临时文件和 spill 文件应放在权限为 0700 的私有目录中，使用随机文件名，并以独占且仅所有者可访问的方式打开（`'wx'`、`0o600`）；可预测且全局可读的路径会引发符号链接竞态和信息泄露。
+启动的命令应使用经过清理的环境变量，移除名称匹配 `*KEY*`、`*SECRET*`、`*TOKEN*` 或 `*PASSWORD*` 的项，防止灵鲸凭证通过命令输出、`env` 或 spill 文件泄漏。临时文件和 spill 文件应放在权限为 0700 的私有目录中，使用随机文件名，并以独占且仅所有者可访问的方式打开（`'wx'`、`0o600`）；可预测且全局可读的路径会引发符号链接竞态和信息泄露。
 
 判定条件是：启动的进程是否继承环境变量，或是否写入别人可以预测并替换的位置。边界是不接受外部输入的受信进程内代码，本条不约束它。
 

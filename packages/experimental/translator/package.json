@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-experimental-translator",
+  "name": "@liwa/experimental-translator",
   "description": "Machine translation with reusable Session results",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/experimental/translator"
   },
   "type": "module",
@@ -34,37 +34,37 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/schemastery": "workspace:~"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-timeout": "workspace:*",
-    "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-persistence": "workspace:*",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-credentials": "workspace:*",
-    "@deepseek-ai/dsh-launch-environment": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/timeout": "workspace:*",
+    "@liwa/util-values": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-persistence": "workspace:*",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/llm": "workspace:*",
+    "@liwa/credentials": "workspace:*",
+    "@liwa/launch-environment": "workspace:*"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-app-boot": "workspace:*",
-    "@deepseek-ai/dsh-timeout": "workspace:*",
-    "@deepseek-ai/dsh-util-values": "workspace:*",
-    "@deepseek-ai/dsh-session": "workspace:*",
-    "@deepseek-ai/dsh-session-persistence": "workspace:*",
-    "@deepseek-ai/dsh-session-persistence-jsonl": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-credentials": "workspace:*",
-    "@deepseek-ai/dsh-launch-environment": "workspace:*",
-    "@deepseek-ai/dsh-llm-deepseek": "workspace:*",
-    "@deepseek-ai/dsh-llm-deepseek-api-key": "workspace:*",
-    "@deepseek-ai/dsh-llm-deepseek-account": "workspace:*",
-    "@deepseek-ai/dsh-deepseek-account": "workspace:*",
-    "@deepseek-ai/dsh-deepseek-llm-api-extensions": "workspace:*",
-    "@deepseek-ai/dsh-session-log-deepseek": "workspace:*",
-    "@deepseek-ai/dsh-session-query-sqlite": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/app-boot": "workspace:*",
+    "@liwa/timeout": "workspace:*",
+    "@liwa/util-values": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/session-persistence": "workspace:*",
+    "@liwa/session-persistence-jsonl": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/credentials": "workspace:*",
+    "@liwa/launch-environment": "workspace:*",
+    "@liwa/llm-deepseek": "workspace:*",
+    "@liwa/llm-deepseek-api-key": "workspace:*",
+    "@liwa/llm-deepseek-account": "workspace:*",
+    "@liwa/deepseek-account": "workspace:*",
+    "@liwa/deepseek-llm-api-extensions": "workspace:*",
+    "@liwa/session-log-deepseek": "workspace:*",
+    "@liwa/session-query-sqlite": "workspace:*"
   }
 }

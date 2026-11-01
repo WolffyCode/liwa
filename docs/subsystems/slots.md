@@ -2,7 +2,7 @@
 
 English | [中文](slots.zh.md)
 
-Slots are the Web Client's typed React composition system. [`dsh-client-ui-slots`](../../packages/client/ui-slots/README.md) defines the React-free registry and type algebra; [`dsh-client-ui-renderer`](../../packages/client/ui-renderer/README.md) binds observable sources to hooks, renders the tree, and owns React contexts internally. A feature plugin contributes UI through `ctx.slots.register()` and never imports another feature plugin's component.
+Slots are the Web Client's typed React composition system. [`liwa-client-ui-slots`](../../packages/client/ui-slots/README.md) defines the React-free registry and type algebra; [`liwa-client-ui-renderer`](../../packages/client/ui-renderer/README.md) binds observable sources to hooks, renders the tree, and owns React contexts internally. A feature plugin contributes UI through `ctx.slots.register()` and never imports another feature plugin's component.
 
 This page documents slot ownership, component inputs, extension APIs, and the shipped hierarchy. The surrounding boot, Remote, Client model, and Conversation paths are in [Web Client architecture](web-client.md).
 
@@ -25,10 +25,10 @@ Declaring a child has three effects: it makes the child key live, authorizes tha
 Registrations and declarations follow Cordis effect lifetimes. Disposing an entry removes its contribution and recursively collapses the child slots it declared. A feature that contributes into another package's slot therefore uses `ctx.slots.inject(key, callback)`: the callback runs for each declaration lifetime, its effects are removed when the owner collapses, and it runs again if the owner is mounted again.
 
 ```tsx ignore-check
-import type { Context } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
-import type {} from '@deepseek-ai/dsh-client-ui-session/client'
-import type { PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
+import type { Context } from '@liwa/cordis'
+import type {} from '@liwa/client-ui-conversation/client'
+import type {} from '@liwa/client-ui-session/client'
+import type { PropsRuntime } from '@liwa/client-ui-slots'
 
 type HeaderActionProps = PropsRuntime<'conversation.session.header.actions'>
 

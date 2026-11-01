@@ -1,21 +1,21 @@
 import { mountWorkingDirectoryFixture } from '../../../subagent/subagent/tests/working-directory-fixture.ts'
 /** SDK task completion retains live failures that have no durable terminal outcome. */
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import SubagentRuntime, { NO_START_CAPABILITIES } from '@deepseek-ai/dsh-subagent'
+import AgentLoop from '@liwa/agent-loop'
+import { mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
+import { createUserMessage } from '@liwa/llm'
+import { SessionId } from '@liwa/session'
+import * as JsonlSessionPersistence from '@liwa/session-persistence-jsonl'
+import SubagentRuntime, { NO_START_CAPABILITIES } from '@liwa/subagent'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
-import { HarnessSdkJsonRpcServer } from '../src/server.ts'
+import { LiwaSdkJsonRpcServer } from '../src/server.ts'
 
 async function setup(beforeServer?: (ctx: Context) => void) {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-sdk-wait-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-sdk-wait-'))
   const ctx = new Context()
   await mountAgentLoopTestDependencies(ctx)
   await ctx.plugin(AgentLoop, { agents: [] })
@@ -24,7 +24,7 @@ async function setup(beforeServer?: (ctx: Context) => void) {
   await ctx.plugin(JsonlSessionPersistence, { root })
   ctx.llm.registerAdapter(['mock'], new MockAdapter(Array.from({ length: 5 }, () => textResponse('answer'))))
   beforeServer?.(ctx)
-  const server = new HarnessSdkJsonRpcServer(ctx, {
+  const server = new LiwaSdkJsonRpcServer(ctx, {
     request: () => Promise.reject(new Error('the server must not request the client')),
     notify: () => {},
   })

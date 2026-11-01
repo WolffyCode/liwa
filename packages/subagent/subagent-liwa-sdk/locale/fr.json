@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Backend du sous-agent Liwa SDK",
+    "description": "Exécutez Liwa dans un sous-processus via TypeScript SDK et JSON-RPC sur l'entrée et la sortie standard."
+  }
+}

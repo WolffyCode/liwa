@@ -9,11 +9,11 @@ export const inject = ['cordisInspect', 'agents', 'llm', 'typertGateway']
 
 /**
  * Leave a disconnected query pending until timeout, then answer after reconnection.
- * @param {import('@deepseek-ai/cordis').Context} ctx - isolated snapshot Host.
+ * @param {import('@liwa/cordis').Context} ctx - isolated snapshot Host.
  */
 export function apply(ctx) {
   const open = registerSilentClientTransport(ctx)
-  const expected = readFileSync(process.env.DSH_SNAPSHOT_FILE, 'utf8').trim().split('\n')
+  const expected = readFileSync(process.env.LIWA_SNAPSHOT_FILE, 'utf8').trim().split('\n')
     .map(line => JSON.parse(line))
     .filter(event => event.type === 'tool/result')
     .map(event => event.data.message)

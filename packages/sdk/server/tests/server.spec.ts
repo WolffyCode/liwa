@@ -1,28 +1,40 @@
+import { mkdtempSync, rmSync } from 'node:fs'
 import { MESSAGES_RESPONSE } from './messages-response.ts'
 import { mountWorkingDirectoryFixture } from '../../../subagent/subagent/tests/working-directory-fixture.ts'
-import { createUserMessage, LlmAdapter, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
-import type { GenerateOptions, LlmResolvedModelInfo, StreamChunk } from '@deepseek-ai/dsh-llm'
+import { createUserMessage, LlmAdapter, ReasoningEffortId } from '@liwa/llm'
+import type { GenerateOptions, LlmResolvedModelInfo, StreamChunk } from '@liwa/llm'
 import { createServer } from 'node:http'
 import type { IncomingMessage, Server, ServerResponse } from 'node:http'
 import { mkdtemp, mkdir, realpath, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { scopeTarget } from '@deepseek-ai/dsh-scope'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { Context } from '@liwa/cordis'
+import { scopeTarget } from '@liwa/scope'
 import { randomUUID } from 'node:crypto'
-import AgentRegistry, { type Agent, type AgentHandle } from '@deepseek-ai/dsh-agent'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
+import AgentRegistry, { type Agent, type AgentHandle } from '@liwa/agent'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import AgentLoop from '@liwa/agent-loop'
+import { mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 
-import SessionStore, { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
-import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import * as LlmDeepSeek from '@deepseek-ai/dsh-llm-deepseek-api-key'
-import SubagentRuntime, { SubagentRunId, type SubagentStartRequest, type SubagentRun, type SubagentResult, type SubagentRunEndInfo } from '@deepseek-ai/dsh-subagent'
-import type { JsonRpcTransportPeer } from '@deepseek-ai/dsh-sdk-protocol'
-import { HarnessSdkJsonRpcServer } from '../src/index.ts'
+import SessionStore, { SessionId, type SessionEvent } from '@liwa/session'
+import * as JsonlSessionPersistence from '@liwa/session-persistence-jsonl'
+import * as LlmDeepSeek from '@liwa/llm-deepseek-api-key'
+import SubagentRuntime, { SubagentRunId, type SubagentStartRequest, type SubagentRun, type SubagentResult, type SubagentRunEndInfo } from '@liwa/subagent'
+import type { JsonRpcTransportPeer } from '@liwa/sdk-protocol'
+import { LiwaSdkJsonRpcServer } from '../src/index.ts'
+
+// Model requests resolve the anonymous user id inside $LIWA_HOME; a temp home keeps the suite off the person's ~/.liwa.
+let testHome: string
+beforeEach(() => {
+  testHome = mkdtempSync(join(tmpdir(), 'liwa-sdk-server-'))
+  vi.stubEnv('LIWA_HOME', testHome)
+})
+afterEach(() => {
+  vi.unstubAllEnvs()
+  rmSync(testHome, { recursive: true, force: true })
+})
 
 class FakeTransport implements JsonRpcTransportPeer {
   notifications: { method: string; params?: Record<string, unknown> }[] = []
@@ -130,12 +142,12 @@ async function settleSubagent(
   }
 }
 
-describe('HarnessSdkJsonRpcServer', () => {
+describe('LiwaSdkJsonRpcServer', () => {
   it('waits only for an existing SDK-owned session and includes a child-triggered root turn', async () => {
-    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-wait-'))
+    const storageDir = await mkdtemp(join(tmpdir(), 'liwa-jsonrpc-wait-'))
     const ctx = await makeHarness(storageDir)
     const transport = new FakeTransport()
-    const server = new HarnessSdkJsonRpcServer(ctx, transport)
+    const server = new LiwaSdkJsonRpcServer(ctx, transport)
     class Adapter extends LlmAdapter {
       override resolveModel(provider: string, model: string): Promise<LlmResolvedModelInfo> {
         return Promise.resolve({ provider, id: model, name: model })
@@ -181,13 +193,13 @@ describe('HarnessSdkJsonRpcServer', () => {
   })
 
   it('changes effective directories through RPC while preserving Session origins and replayable context', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'dsh-sdk-directory-'))
+    const root = await mkdtemp(join(tmpdir(), 'liwa-sdk-directory-'))
     const child = join(root, 'child')
     await mkdir(child)
     const ctx = await makeHarness(join(root, 'sessions'), true)
     ctx.llm.registerAdapter(['mock'], new MockAdapter([textResponse('directory observed')]))
     const transport = new FakeTransport()
-    const server = new HarnessSdkJsonRpcServer(ctx, transport)
+    const server = new LiwaSdkJsonRpcServer(ctx, transport)
     try {
       await expect(server.handleRequest('session/working-directory/get', { sessionId: 'a' }))
         .rejects.toThrow('SDK server is not initialized')
@@ -215,14 +227,14 @@ describe('HarnessSdkJsonRpcServer', () => {
     }
   })
   it('creates a harness agent and calls the configured OpenAI-compatible endpoint', { timeout: 15_000 }, async () => {
-    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-'))
+    const storageDir = await mkdtemp(join(tmpdir(), 'liwa-jsonrpc-'))
     const llmServer = await mockCompletionServer()
     vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
     vi.stubEnv('DEEPSEEK_BASE_URL', llmServer.url)
     const ctx = await makeHarness(storageDir)
     try {
       const transport = new FakeTransport()
-      const server = new HarnessSdkJsonRpcServer(ctx, transport)
+      const server = new LiwaSdkJsonRpcServer(ctx, transport)
 
       const init = await server.handleRequest('initialize', {
         cwd: storageDir,
@@ -231,7 +243,7 @@ describe('HarnessSdkJsonRpcServer', () => {
         reasoningEffort: 'max',
         maxTokens: 321,
       }) as { serverInfo: { name: string } }
-      expect(init.serverInfo.name).toBe('deepseek-harness-sdk-runtime')
+      expect(init.serverInfo.name).toBe('liwa-sdk-runtime')
 
       const receipt = await server.handleRequest('session/prompt', {
         sessionId: 'main',
@@ -306,7 +318,7 @@ describe('HarnessSdkJsonRpcServer', () => {
       agents: { create, get: (id: SessionId) => liveAgents.get(String(id)) },
       get: () => undefined,
     } as unknown as Context
-    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+    const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport())
     // This isolated prompt test begins after the handshake boundary.
     ;(server as unknown as { initialized: boolean }).initialized = true
     const prompt = (sessionId: string, text: string) => server.prompt({
@@ -342,7 +354,7 @@ describe('HarnessSdkJsonRpcServer', () => {
       agents: { create: vi.fn(async () => handle), get: () => agent },
       get: (name: string) => name === 'attachments' ? { saveImages } : undefined,
     } as unknown as Context
-    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+    const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport())
     // This isolated prompt test begins after the handshake boundary.
     ;(server as unknown as { initialized: boolean }).initialized = true
 
@@ -371,7 +383,7 @@ describe('HarnessSdkJsonRpcServer', () => {
       agents: { create: vi.fn(async () => handle), get: () => agent },
       get: () => undefined,
     } as unknown as Context
-    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+    const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport())
     // This isolated prompt test begins after the handshake boundary.
     ;(server as unknown as { initialized: boolean }).initialized = true
 
@@ -402,7 +414,7 @@ describe('HarnessSdkJsonRpcServer', () => {
       },
       get: (name: string) => name === 'attachments' ? { saveImages } : undefined,
     } as unknown as Context
-    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+    const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport())
     // This isolated prompt test begins after the handshake boundary.
     ;(server as unknown as { initialized: boolean }).initialized = true
 
@@ -438,7 +450,7 @@ describe('HarnessSdkJsonRpcServer', () => {
       },
       get: () => undefined,
     } as unknown as Context
-    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+    const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport())
     // This isolated prompt test begins after the handshake boundary.
     ;(server as unknown as { initialized: boolean }).initialized = true
     const prompt = (text: string) => server.prompt({
@@ -460,7 +472,7 @@ describe('HarnessSdkJsonRpcServer', () => {
     await ctx.plugin(SessionProjectionRegistry)
     await ctx.plugin(AgentRegistry)
     const transport = new FakeTransport()
-    const server = new HarnessSdkJsonRpcServer(ctx, transport)
+    const server = new LiwaSdkJsonRpcServer(ctx, transport)
     const session = ctx.sessions.create(SessionId('message-outcome'))
     const agent = ({
       id: SessionId('message-outcome'),
@@ -480,11 +492,11 @@ describe('HarnessSdkJsonRpcServer', () => {
   })
 
   it('notifies the host only for subagent sessions with a direct creator', async () => {
-    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-subagent-'))
+    const storageDir = await mkdtemp(join(tmpdir(), 'liwa-jsonrpc-subagent-'))
     const ctx = await makeHarness(storageDir)
     try {
       const transport = new FakeTransport()
-      const server = new HarnessSdkJsonRpcServer(ctx, transport)
+      const server = new LiwaSdkJsonRpcServer(ctx, transport)
 
       ctx.sessions.create(SessionId('root-session'), {
         meta: { cwd: storageDir },
@@ -515,13 +527,13 @@ describe('HarnessSdkJsonRpcServer', () => {
   })
 
   it('creates an SDK session without an optional system prompt', { timeout: 15_000 }, async () => {
-    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-no-system-'))
+    const storageDir = await mkdtemp(join(tmpdir(), 'liwa-jsonrpc-no-system-'))
     const llmServer = await mockCompletionServer()
     vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
     vi.stubEnv('DEEPSEEK_BASE_URL', llmServer.url)
     const ctx = await makeHarness(storageDir)
     try {
-      const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+      const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport())
 
       await server.initialize({ cwd: storageDir, provider: 'deepseek-official', model: 'plain-model' })
       await server.prompt({
@@ -538,11 +550,11 @@ describe('HarnessSdkJsonRpcServer', () => {
   })
 
   it('notifies the host when a subagent run settles', async () => {
-    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-subagent-end-'))
+    const storageDir = await mkdtemp(join(tmpdir(), 'liwa-jsonrpc-subagent-end-'))
     const ctx = await makeHarness(storageDir)
     try {
       const transport = new FakeTransport()
-      const server = new HarnessSdkJsonRpcServer(ctx, transport)
+      const server = new LiwaSdkJsonRpcServer(ctx, transport)
 
       const parentHandle = await ctx.agents.create({
         sessionId: SessionId('main'),
@@ -610,11 +622,11 @@ describe('HarnessSdkJsonRpcServer', () => {
   })
 
   it('ignores a remote run id that collides with a local child of the same parent', async () => {
-    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-subagent-remote-collision-'))
+    const storageDir = await mkdtemp(join(tmpdir(), 'liwa-jsonrpc-subagent-remote-collision-'))
     const ctx = await makeHarness(storageDir)
     try {
       const transport = new FakeTransport()
-      const server = new HarnessSdkJsonRpcServer(ctx, transport)
+      const server = new LiwaSdkJsonRpcServer(ctx, transport)
       const parentHandle = await ctx.agents.create({
         sessionId: SessionId('collision-parent'),
         meta: { cwd: storageDir },
@@ -649,11 +661,11 @@ describe('HarnessSdkJsonRpcServer', () => {
   })
 
   it('retains locality across continuation runs on one live child', async () => {
-    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-subagent-continuation-'))
+    const storageDir = await mkdtemp(join(tmpdir(), 'liwa-jsonrpc-subagent-continuation-'))
     const ctx = await makeHarness(storageDir)
     try {
       const transport = new FakeTransport()
-      const server = new HarnessSdkJsonRpcServer(ctx, transport)
+      const server = new LiwaSdkJsonRpcServer(ctx, transport)
       const parentHandle = await ctx.agents.create({
         sessionId: SessionId('continuation-parent'),
         meta: { cwd: storageDir },
@@ -695,11 +707,11 @@ describe('HarnessSdkJsonRpcServer', () => {
   })
 
   it('correlates reused local ids by parent scope when runs settle out of order', async () => {
-    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-subagent-reuse-'))
+    const storageDir = await mkdtemp(join(tmpdir(), 'liwa-jsonrpc-subagent-reuse-'))
     const ctx = await makeHarness(storageDir)
     try {
       const transport = new FakeTransport()
-      const server = new HarnessSdkJsonRpcServer(ctx, transport)
+      const server = new LiwaSdkJsonRpcServer(ctx, transport)
       const oldParent = await ctx.agents.create({
         sessionId: SessionId('old-parent'),
         meta: { cwd: storageDir },
@@ -797,11 +809,11 @@ describe('HarnessSdkJsonRpcServer', () => {
   })
 
   it('keeps locality bound to the accepted run across provider re-registration', async () => {
-    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-subagent-provider-reuse-'))
+    const storageDir = await mkdtemp(join(tmpdir(), 'liwa-jsonrpc-subagent-provider-reuse-'))
     const ctx = await makeHarness(storageDir)
     try {
       const transport = new FakeTransport()
-      const server = new HarnessSdkJsonRpcServer(ctx, transport)
+      const server = new LiwaSdkJsonRpcServer(ctx, transport)
       const parent = await ctx.agents.create({
         sessionId: SessionId('provider-reuse-parent'),
         meta: { cwd: storageDir },
@@ -894,7 +906,7 @@ describe('HarnessSdkJsonRpcServer', () => {
   })
 
   it('uses the recorded local flag when start was missed and ignores remote runs', async () => {
-    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-subagent-fallback-'))
+    const storageDir = await mkdtemp(join(tmpdir(), 'liwa-jsonrpc-subagent-fallback-'))
     const ctx = await makeHarness(storageDir)
     let parentHandle: AgentHandle | undefined
     let handle: AgentHandle | undefined
@@ -940,7 +952,7 @@ describe('HarnessSdkJsonRpcServer', () => {
         signal: new AbortController().signal,
       }, true)
       const transport = new FakeTransport()
-      const server = new HarnessSdkJsonRpcServer(ctx, transport, { maxTokensAsSuccess: true })
+      const server = new LiwaSdkJsonRpcServer(ctx, transport, { maxTokensAsSuccess: true })
 
       missedStartResult.resolve({ output: [], stopReason: 'max-tokens' })
       await missedStartRun.result
@@ -1008,12 +1020,12 @@ describe('HarnessSdkJsonRpcServer', () => {
   })
 
   it('does not re-register an LLM adapter whose provider already has an owner', async () => {
-    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-existing-llm-'))
+    const storageDir = await mkdtemp(join(tmpdir(), 'liwa-jsonrpc-existing-llm-'))
     const ctx = await makeHarness(storageDir)
     vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
     await ctx.plugin(LlmDeepSeek, { models: [{ id: 'preinstalled-model' }] })
     try {
-      const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+      const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport())
       const inspect = server as unknown as { hasAdapterFor(provider: string): boolean }
 
       expect(inspect.hasAdapterFor('deepseek-official')).toBe(true)
@@ -1029,12 +1041,12 @@ describe('HarnessSdkJsonRpcServer', () => {
   })
 
   it('rejects a missing non-DeepSeek provider when an LLM service already exists', async () => {
-    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-new-llm-'))
+    const storageDir = await mkdtemp(join(tmpdir(), 'liwa-jsonrpc-new-llm-'))
     const ctx = await makeHarness(storageDir)
     vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
     await ctx.plugin(LlmDeepSeek)
     try {
-      const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+      const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport())
 
       await expect(server.initialize({ cwd: storageDir, provider: 'private', model: 'new-model' }))
         .rejects.toThrow('no adapter registered for provider "private"')
@@ -1052,10 +1064,10 @@ describe('HarnessSdkJsonRpcServer', () => {
   it.each([0, -1, 1.5, Number.NaN, Number.MAX_SAFE_INTEGER + 1])(
     'rejects invalid initialize maxTokens %s at the wire boundary',
     async (maxTokens) => {
-      const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-invalid-max-tokens-'))
+      const storageDir = await mkdtemp(join(tmpdir(), 'liwa-jsonrpc-invalid-max-tokens-'))
       const ctx = await makeHarness(storageDir)
       try {
-        const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+        const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport())
         await expect(server.initialize({
           cwd: storageDir,
           provider: 'deepseek-official',
@@ -1072,7 +1084,7 @@ describe('HarnessSdkJsonRpcServer', () => {
 
   it('rejects malformed initialize reasoningEffort values at the wire boundary', async () => {
     const ctx = new Context()
-    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+    const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport())
     try {
       for (const reasoningEffort of ['', 42]) {
         await expect(server.handleRequest('initialize', {
@@ -1089,7 +1101,7 @@ describe('HarnessSdkJsonRpcServer', () => {
   })
 
   it('rejects an unavailable exact model during initialize', async () => {
-    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-invalid-route-'))
+    const storageDir = await mkdtemp(join(tmpdir(), 'liwa-jsonrpc-invalid-route-'))
     const ctx = await makeHarness(storageDir)
     class RejectingAdapter extends LlmAdapter {
       override resolveModel(provider: string, model: string): Promise<LlmResolvedModelInfo> {
@@ -1102,7 +1114,7 @@ describe('HarnessSdkJsonRpcServer', () => {
     }
     const disposeAdapter = ctx.llm.registerAdapter(['private'], new RejectingAdapter())
     try {
-      const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+      const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport())
       await expect(server.initialize({ cwd: storageDir, provider: 'private', model: 'missing' }))
         .rejects.toThrow('model unavailable: private/missing')
       await expect(server.prompt({
@@ -1119,7 +1131,7 @@ describe('HarnessSdkJsonRpcServer', () => {
   })
 
   it('rejects prompts while exact-route initialization is pending', async () => {
-    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-pending-route-'))
+    const storageDir = await mkdtemp(join(tmpdir(), 'liwa-jsonrpc-pending-route-'))
     const ctx = await makeHarness(storageDir)
     const resolution = Promise.withResolvers<LlmResolvedModelInfo>()
     const resolvedModel = { provider: 'private', id: 'selected', name: 'Selected' }
@@ -1136,7 +1148,7 @@ describe('HarnessSdkJsonRpcServer', () => {
     }
     const disposeAdapter = ctx.llm.registerAdapter(['private'], new PendingAdapter())
     try {
-      const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+      const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport())
       const initialization = server.initialize({ cwd: storageDir, provider: 'private', model: 'selected' })
       await vi.waitFor(() => { expect(resolveModelCalled).toBe(true) })
 
@@ -1158,13 +1170,13 @@ describe('HarnessSdkJsonRpcServer', () => {
   })
 
   it('rejects an unsupported reasoning effort during initialize', async () => {
-    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-unsupported-reasoning-'))
+    const storageDir = await mkdtemp(join(tmpdir(), 'liwa-jsonrpc-unsupported-reasoning-'))
     const ctx = await makeHarness(storageDir)
     vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
     // A loopback endpoint keeps the fallback-mounted official route off the network; no request is sent.
     vi.stubEnv('DEEPSEEK_BASE_URL', 'http://127.0.0.1:9/anthropic')
     try {
-      const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+      const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport())
       await expect(server.handleRequest('initialize', {
         cwd: storageDir,
         provider: 'deepseek-official',
@@ -1182,7 +1194,7 @@ describe('HarnessSdkJsonRpcServer', () => {
   it('reports no adapter when the LLM service is absent', async () => {
     const ctx = new Context()
     try {
-      const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport()) as unknown as {
+      const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport()) as unknown as {
         hasAdapterFor(model: string): boolean
         shutdown(): Promise<Record<string, never>>
       }
@@ -1195,14 +1207,14 @@ describe('HarnessSdkJsonRpcServer', () => {
   })
 
   it('rejects unknown JSON-RPC runtime methods', async () => {
-    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-unknown-'))
+    const storageDir = await mkdtemp(join(tmpdir(), 'liwa-jsonrpc-unknown-'))
     const ctx = await makeHarness(storageDir)
     try {
-      const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+      const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport())
 
       await expect(server.handleRequest('does/not/exist', {}))
         .rejects
-        .toThrow('unknown DeepSeek Harness SDK runtime method: does/not/exist')
+        .toThrow('unknown Liwa SDK runtime method: does/not/exist')
 
       await server.shutdown()
     } finally {
@@ -1225,7 +1237,7 @@ describe('HarnessSdkJsonRpcServer', () => {
       agents: { create, get: () => undefined },
       get: () => undefined,
     } as unknown as Context
-    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport()) as unknown as {
+    const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport()) as unknown as {
       getOrCreateSession(sessionId: string): Promise<{ handle: AgentHandle }>
       shutdown(): Promise<Record<string, never>>
     }
@@ -1256,7 +1268,7 @@ describe('HarnessSdkJsonRpcServer', () => {
     }))
     const create = vi.spyOn(ctx.agents, 'create')
     const resolveCallConfig = vi.spyOn(ctx.llm, 'resolveCallConfig')
-    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+    const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport())
     try {
       await server.initialize({ cwd: '.', provider: 'mock', model: 'model', reasoningEffort: ReasoningEffortId('high'), maxTokens: 123 })
       await server.prompt({ sessionId: 'relative', contentBlocks: [{ type: 'text', text: 'test relative cwd' }] })
@@ -1291,7 +1303,7 @@ describe('HarnessSdkJsonRpcServer', () => {
       agents: { create: vi.fn(), get: () => undefined },
       get: () => undefined,
     } as unknown as Context
-    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport()) as unknown as {
+    const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport()) as unknown as {
       sessions: Map<string, { handle: AgentHandle; lastTurnEnd: undefined; activePrompt: boolean }>
       shutdown(): Promise<Record<string, never>>
     }
@@ -1319,7 +1331,7 @@ describe('HarnessSdkJsonRpcServer', () => {
       agents: { create: vi.fn(), get: () => undefined },
       get: () => undefined,
     } as unknown as Context
-    const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+    const server = new LiwaSdkJsonRpcServer(ctx, new FakeTransport())
 
     await expect(server.shutdown()).rejects.toBe(listenerFailure)
     expect(disposed.toSorted()).toEqual(Array.from({ length: subscription }, (_, index) => index + 1))

@@ -8,10 +8,10 @@
 // root listener routes them through the keymap commands); draft writes drive
 // the shell (jsdom's beforeinput lacks the ranges Lexical needs).
 
-import * as uiPrimitives from '@deepseek-ai/dsh-client-ui-primitives'
+import * as uiPrimitives from '@liwa/client-ui-primitives'
 import './control-row-dom.ts'
-import type { InboxState } from '@deepseek-ai/dsh-agent/types'
-import type { GlobalStandardProps } from '@deepseek-ai/dsh-client-ui-slots'
+import type { InboxState } from '@liwa/agent/types'
+import type { GlobalStandardProps } from '@liwa/client-ui-slots'
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { act, cleanup, fireEvent, render } from '@testing-library/react'
 import { createPortal } from 'react-dom'
@@ -19,13 +19,13 @@ import { $getRoot, $isTextNode } from 'lexical'
 import {
   allowAllAccess, bindSnapshotSelector, conversationSnapshot as conversationFixture, makeTranslate, RemoteError,
   sessionSnapshot as sessionFixture,
-} from '@deepseek-ai/dsh-client-test-runtime'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import type { SessionListState, SessionSnapshot } from '@deepseek-ai/dsh-api-session-controller/client'
-import type { ContextPressureProjection } from '@deepseek-ai/dsh-token-meter/client'
-import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
-import type { Context } from '@deepseek-ai/cordis'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+} from '@liwa/client-test-runtime'
+import { createSnapshotStore } from '@liwa/client-store'
+import type { SessionListState, SessionSnapshot } from '@liwa/api-session-controller/client'
+import type { ContextPressureProjection } from '@liwa/token-meter/client'
+import { zh as commonZh } from '@liwa/client-locale/src/locales/zh.ts'
+import type { Context } from '@liwa/cordis'
+import type { SessionId } from '@liwa/session/types'
 import type { SubmitOutcome } from '../src/client/contract/input.ts'
 import { SessionInputShell } from '../src/client/input/facade.ts'
 import { $replaceDetectSpanWithText, $selectDetectSpan } from '../src/client/input/editor/span-map.ts'
@@ -1604,7 +1604,7 @@ describe('running and lock semantics', () => {
       })
     }
     vi.resetModules()
-    const detection = await import('@deepseek-ai/dsh-client-ui-primitives/src/focus.ts')
+    const detection = await import('@liwa/client-ui-primitives/src/focus.ts')
     const device = vi.spyOn(uiPrimitives, 'isMobileDevice').mockImplementation(detection.isMobileDevice)
     onTestFinished(() => { device.mockRestore() })
     const outside = document.createElement('input')
@@ -1770,11 +1770,11 @@ describe('decorations', () => {
       )
     })
     expect(commandChipOf(view.container)?.textContent).toBe('/goal')
-    expect(textarea.style.getPropertyValue('--dsh-composer-hint')).toBe(JSON.stringify('目标内容'))
+    expect(textarea.style.getPropertyValue('--liwa-composer-hint')).toBe(JSON.stringify('目标内容'))
     // Args typed: the hint disappears, the chip stays.
     act(() => { shell.actions.insertText('发布', shell.actions.captureInsertion()) })
     expect(shell.snapshot.draft).toBe('/goal 发布')
-    expect(textarea.style.getPropertyValue('--dsh-composer-hint')).toBe('')
+    expect(textarea.style.getPropertyValue('--liwa-composer-hint')).toBe('')
     expect(commandChipOf(view.container)).not.toBeNull()
   })
 
@@ -1787,7 +1787,7 @@ describe('decorations', () => {
         { start: 0, end: 6, draftRev: shell.snapshot.draftRev },
       )
     })
-    expect(textarea.style.getPropertyValue('--dsh-composer-hint')).toBe(JSON.stringify('输入目标，智能体将持续执行'))
+    expect(textarea.style.getPropertyValue('--liwa-composer-hint')).toBe(JSON.stringify('输入目标，智能体将持续执行'))
   })
 
   it('the hint lookup keys on the claim name, so a localized claim token keeps the locale entry', () => {
@@ -1799,7 +1799,7 @@ describe('decorations', () => {
         { start: 0, end: 4, draftRev: shell.snapshot.draftRev },
       )
     })
-    expect(textarea.style.getPropertyValue('--dsh-composer-hint')).toBe(JSON.stringify('输入目标，智能体将持续执行'))
+    expect(textarea.style.getPropertyValue('--liwa-composer-hint')).toBe(JSON.stringify('输入目标，智能体将持续执行'))
   })
 
   it('suppresses placeholders throughout native composition, including a temporarily empty draft', async () => {
@@ -1830,7 +1830,7 @@ describe('decorations', () => {
     act(() => { shell.setDraft('/目标 这') })
     await act(async () => {})
     expect(textarea.hasAttribute('data-composer-composing')).toBe(false)
-    expect(textarea.style.getPropertyValue('--dsh-composer-hint')).toBe('')
+    expect(textarea.style.getPropertyValue('--liwa-composer-hint')).toBe('')
   })
 
   it('an inserted reference renders a real chip capsule with its icon and label', () => {

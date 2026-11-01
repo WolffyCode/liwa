@@ -5,29 +5,29 @@
  * commit + image-block rendering, attachment admission failures, and the
  * regression that `read` keeps its text-only contract.
  */
-import { ToolExecutionPipeline } from '@deepseek-ai/dsh-tools/pipeline'
-import { executeToolFixture, executeModelToolFixture } from '@deepseek-ai/dsh-tool-testkit'
+import { ToolExecutionPipeline } from '@liwa/tools/pipeline'
+import { executeToolFixture, executeModelToolFixture } from '@liwa/tool-testkit'
 
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
-import * as PtcToolExecutor from '@deepseek-ai/dsh-tool-executor-ptc'
-import { provideWorkingDirectoryFixture } from '@deepseek-ai/dsh-agent-loop-testkit'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
+import * as PtcToolExecutor from '@liwa/tool-executor-ptc'
+import { provideWorkingDirectoryFixture } from '@liwa/agent-loop-testkit'
 import { afterEach, beforeEach, describe, expect, it, onTestFinished } from 'vitest'
 import { mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import { PtcRuntime } from '@deepseek-ai/dsh-ptc-runtime'
-import type { PtcRunRequest, PtcRunResult } from '@deepseek-ai/dsh-ptc-runtime'
-import { ToolCallId, LlmAdapter, LlmRuntime } from '@deepseek-ai/dsh-llm'
-import type { GenerateOptions, LlmModelInfo, LlmResolvedModelInfo, Message, StreamChunk } from '@deepseek-ai/dsh-llm'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime, { RUN_CODE_NAME } from '@deepseek-ai/dsh-tools'
-import LocalFileSystem from '@deepseek-ai/dsh-fs-local'
-import * as FsPolicy from '@deepseek-ai/dsh-fs-observation-policy'
-import LocalAttachmentStore from '@deepseek-ai/dsh-attachment-local'
-import { AttachmentError, AttachmentId, AttachmentStore } from '@deepseek-ai/dsh-attachment'
-import type { ImageAttachmentLimits, ImageAttachmentRef, SaveImageAttachment, StoredImageAttachment } from '@deepseek-ai/dsh-attachment'
-import * as ToolFs from '@deepseek-ai/dsh-tool-fs'
+import { Context } from '@liwa/cordis'
+import { PtcRuntime } from '@liwa/ptc-runtime'
+import type { PtcRunRequest, PtcRunResult } from '@liwa/ptc-runtime'
+import { ToolCallId, LlmAdapter, LlmRuntime } from '@liwa/llm'
+import type { GenerateOptions, LlmModelInfo, LlmResolvedModelInfo, Message, StreamChunk } from '@liwa/llm'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime, { RUN_CODE_NAME } from '@liwa/tools'
+import LocalFileSystem from '@liwa/fs-local'
+import * as FsPolicy from '@liwa/fs-observation-policy'
+import LocalAttachmentStore from '@liwa/attachment-local'
+import { AttachmentError, AttachmentId, AttachmentStore } from '@liwa/attachment'
+import type { ImageAttachmentLimits, ImageAttachmentRef, SaveImageAttachment, StoredImageAttachment } from '@liwa/attachment'
+import * as ToolFs from '@liwa/tool-fs'
 import {
   applyReadImageTool,
   formatImageReadOutput,
@@ -75,7 +75,7 @@ class CatalogAdapter extends LlmAdapter {
 
 /** In-process PTC mode seam fake that invokes the real registry bindings. */
 class FakeRuntime extends PtcRuntime {
-  resolve(request: import('@deepseek-ai/dsh-ptc-runtime').PtcRunRequest): import('@deepseek-ai/dsh-ptc-runtime').PtcRunSpec { return { ...request, cwd: request.cwd ?? process.cwd(), timeoutMs: request.timeoutMs ?? 120_000 } }
+  resolve(request: import('@liwa/ptc-runtime').PtcRunRequest): import('@liwa/ptc-runtime').PtcRunSpec { return { ...request, cwd: request.cwd ?? process.cwd(), timeoutMs: request.timeoutMs ?? 120_000 } }
 
   readonly language = 'typescript'
   readonly isolation = 'fake'
@@ -90,8 +90,8 @@ let dir: string
 let home: string
 
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), 'dsh-read-image-'))
-  home = await mkdtemp(join(tmpdir(), 'dsh-read-image-home-'))
+  dir = await mkdtemp(join(tmpdir(), 'liwa-read-image-'))
+  home = await mkdtemp(join(tmpdir(), 'liwa-read-image-home-'))
 })
 afterEach(async () => {
   await rm(dir, { recursive: true, force: true })
@@ -121,7 +121,7 @@ async function setup(options: SetupOptions = {}) {
   await ctx.plugin(LocalFileSystem, { cwd: dir })
   await ctx.plugin(FsPolicy)
   if (options.attachments !== false) {
-    await ctx.plugin(LocalAttachmentStore, { dshHome: home, ...options.storeConfig })
+    await ctx.plugin(LocalAttachmentStore, { liwaHome: home, ...options.storeConfig })
   }
   if (options.llm !== false) {
     await ctx.plugin(LlmRuntime)
@@ -795,13 +795,13 @@ describe('registration surface', () => {
       await ctx.plugin(ToolRuntime)
       await ctx.plugin(NativeToolExecutor)
       await ctx.plugin(LocalFileSystem, { cwd: dir })
-      const attachment = await ctx.plugin(LocalAttachmentStore, { dshHome: home })
+      const attachment = await ctx.plugin(LocalAttachmentStore, { liwaHome: home })
       const plugin = await ctx.plugin(ToolFs, { read: false, write: false, edit: false })
       const names = () => ctx.tools.schemas().map(tool => tool.name).sort()
       expect(names()).toEqual(['read_image'])
       await attachment.dispose()
       expect(names()).toEqual([])
-      await ctx.plugin(LocalAttachmentStore, { dshHome: home })
+      await ctx.plugin(LocalAttachmentStore, { liwaHome: home })
       expect(names()).toEqual(['read_image'])
       await plugin.dispose()
       expect(names()).toEqual([])
@@ -818,7 +818,7 @@ describe('registration surface', () => {
     await ctx.plugin(NativeToolExecutor)
     await ctx.plugin(LocalFileSystem, { cwd: dir })
     await ctx.plugin(FsPolicy)
-    const attachmentsFiber = await ctx.plugin(LocalAttachmentStore, { dshHome: home })
+    const attachmentsFiber = await ctx.plugin(LocalAttachmentStore, { liwaHome: home })
     const toolFsFiber = await ctx.plugin(ToolFs)
     const names = () => ctx.tools.schemas().map(schema => schema.name).sort()
     expect(names()).toEqual(['edit', 'read', 'read_image', 'write'])
@@ -829,7 +829,7 @@ describe('registration surface', () => {
     expect(names()).toEqual(['edit', 'read', 'write'])
 
     // Remounting the store restores the conditional registration.
-    const remounted = await ctx.plugin(LocalAttachmentStore, { dshHome: home })
+    const remounted = await ctx.plugin(LocalAttachmentStore, { liwaHome: home })
     expect(names()).toEqual(['edit', 'read', 'read_image', 'write'])
 
     // Disposing the whole plugin withdraws every tool, read_image included.

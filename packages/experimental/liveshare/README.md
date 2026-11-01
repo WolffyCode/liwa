@@ -1,15 +1,15 @@
 ---
-description: "Share DSH Sessions through a separate Liveshare server, with verified owner sign-in, viewer controls, and bounded execution."
+description: "Share Liwa Sessions through a separate Liveshare server, with verified owner sign-in, viewer controls, and bounded execution."
 kind: "package-bundle"
 ---
 
-# @deepseek-ai/dsh-experimental-liveshare
+# @liwa/experimental-liveshare
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-Share a Session with colleagues through the normal DSH browser interface. The owner chooses viewing or bounded writing, and independently allows forking; the owner host enforces those choices. Attachment upload follows sharing itself: a Session the viewer can see accepts files. This opt-in bundle adds owner sign-in, sharing controls, the outgoing gateway, and the viewer surfaces of the owner's own Web page. The default Web profile excludes it. The separately deployed Liveshare server authenticates viewers and transports their requests; its OAuth, database, routing, and deployment implementation are not part of this package.
+Share a Session with colleagues through the normal Liwa browser interface. The owner chooses viewing or bounded writing, and independently allows forking; the owner host enforces those choices. Attachment upload follows sharing itself: a Session the viewer can see accepts files. This opt-in bundle adds owner sign-in, sharing controls, the outgoing gateway, and the viewer surfaces of the owner's own Web page. The default Web profile excludes it. The separately deployed Liveshare server authenticates viewers and transports their requests; its OAuth, database, routing, and deployment implementation are not part of this package.
 
 ## Table of Contents
 
@@ -27,7 +27,7 @@ Share a Session with colleagues through the normal DSH browser interface. The ow
 
 ### Profile and build requirements
 
-The manifest declares an installable `dsh.bundle` layer and a browser face. The bundle stays hidden until a profile enables it, as described in [Default visibility and enabling](#default-visibility-and-enabling); supported applications still start through `dsh --profile`.
+The manifest declares an installable `liwa.bundle` layer and a browser face. The bundle stays hidden until a profile enables it, as described in [Default visibility and enabling](#default-visibility-and-enabling); supported applications still start through `liwa --profile`.
 
 Owner, viewer, and the Liveshare server must use matching protocol versions. The build includes the Owner's gateway process; the viewer page has no separate build. Package version, exports, and publication contents are declared in [package.json](package.json).
 
@@ -35,16 +35,16 @@ Owner, viewer, and the Liveshare server must use matching protocol versions. The
 
 ### Default visibility and enabling
 
-A dsh installation ships this package as a runtime dependency, but no shipped profile selects its bundle, so none of its plugins run and the plugin manager lists it in neither **Built-in plugin settings** nor **Experimental plugins**, including the **More** page. The bundle ID stays addressable, so a page that opens a bundle by ID still reaches this bundle's details.
+A liwa installation ships this package as a runtime dependency, but no shipped profile selects its bundle, so none of its plugins run and the plugin manager lists it in neither **Built-in plugin settings** nor **Experimental plugins**, including the **More** page. The bundle ID stays addressable, so a page that opens a bundle by ID still reaches this bundle's details.
 
-Enable it by inserting its two entries into the active profile's patch file, `$DSH_HOME/profiles/<profile>/cordis.patch.yml`. That file is one YAML sequence of Loader patches; these are the entries the bundle's own [patch](cordis.patch.yml) inserts, and `!!js` expressions are allowed there:
+Enable it by inserting its two entries into the active profile's patch file, `$LIWA_HOME/profiles/<profile>/cordis.patch.yml`. That file is one YAML sequence of Loader patches; these are the entries the bundle's own [patch](cordis.patch.yml) inserts, and `!!js` expressions are allowed there:
 
 ```yaml
 - insert:
     - id: liveshare-viewer-declarations
-      name: '@deepseek-ai/dsh-experimental-liveshare/viewer-declarations'
+      name: '@liwa/experimental-liveshare/viewer-declarations'
     - id: liveshare-share-host
-      name: '@deepseek-ai/dsh-experimental-liveshare'
+      name: '@liwa/experimental-liveshare'
       config:
         ownerIdentityProvider: <provider-id>
         ownerIdentityTenant: <tenant-id>
@@ -53,11 +53,11 @@ Enable it by inserting its two entries into the active profile's patch file, `$D
         ownerStateFile: /path/to/owner-shares.json
 ```
 
-Replace every `<...>` placeholder with the deployment's own value: the identity provider, tenant, and subject are the ones its Liveshare server deployment was configured with, and the example holdings are placeholders rather than real identities. The environment layer works too: set `LIVESHARE_*` in `$DSH_HOME/.env` and keep the bundle's own `!!js process.env.…` expressions. The Liveshare server address is not part of this configuration: the owner enters it in the Share dialog on first use, as Owner configuration below describes.
+Replace every `<...>` placeholder with the deployment's own value: the identity provider, tenant, and subject are the ones its Liveshare server deployment was configured with, and the example holdings are placeholders rather than real identities. The environment layer works too: set `LIVESHARE_*` in `$LIWA_HOME/.env` and keep the bundle's own `!!js process.env.…` expressions. The Liveshare server address is not part of this configuration: the owner enters it in the Share dialog on first use, as Owner configuration below describes.
 
-The profile can select the bundle instead of patching it: add `"@deepseek-ai/dsh-experimental-liveshare"` to `dsh.profile.bundles` in `$DSH_HOME/profiles/<profile>/package.json`, which is the write the card's switch performs once the card is listed.
+The profile can select the bundle instead of patching it: add `"@liwa/experimental-liveshare"` to `liwa.profile.bundles` in `$LIWA_HOME/profiles/<profile>/package.json`, which is the write the card's switch performs once the card is listed.
 
-Either route takes effect only on a recomposition. With the profile's HMR row enabled, the change applies when the profile is re-read; without it, the next `dsh` start applies it. Once at least one row the bundle declares runs, its card appears under **Experimental plugins** and on the **More** page. Removing the entries, disabling them, or removing the bundle from `dsh.profile.bundles` stops those rows and the card leaves both lists again.
+Either route takes effect only on a recomposition. With the profile's HMR row enabled, the change applies when the profile is re-read; without it, the next `liwa` start applies it. Once at least one row the bundle declares runs, its card appears under **Experimental plugins** and on the **More** page. Removing the entries, disabling them, or removing the bundle from `liwa.profile.bundles` stops those rows and the card leaves both lists again.
 
 ### Owner configuration
 
@@ -66,7 +66,7 @@ Either route takes effect only on a recomposition. With the profile's HMR row en
 | `LIVESHARE_OWNER_PROVIDER_ID` / `LIVESHARE_OWNER_TENANT_ID` / `LIVESHARE_OWNER_SUBJECT_ID` | unset | Owner identity used for legacy subject matching; it does not replace a server-issued credential |
 | `LIVESHARE_OWNER_DISPLAY_NAME` | unset | Display label for the configured identity |
 | `LIVESHARE_ALLOWED_SUBJECTS` | empty | Deployment-wide subject allowlist in addition to the share's access rules |
-| `LIVESHARE_OWNER_STATE_FILE` | `$DSH_HOME/liveshare/owner-shares.json` | Stored share metadata, the saved Liveshare server address, instance identity, and management tokens |
+| `LIVESHARE_OWNER_STATE_FILE` | `$LIWA_HOME/liveshare/owner-shares.json` | Stored share metadata, the saved Liveshare server address, instance identity, and management tokens |
 | `LIVESHARE_OWNER_CREDENTIAL_FILE` | `owner-credential.json` beside the state file | Stored credential bound to the Liveshare server that issued it |
 
 The Liveshare server address is set on first use: enter it in the Share dialog's address field and save it. The saved address persists in the owner state file, and later shares publish to it; a publication already waiting for registration keeps its starting server address in its registration, stored record, and returned link, and existing shares retain their recorded Liveshare server address. Clearing the saved address through the share-management Remote leaves this host without one — creating a share then reports that an address has to be saved — rather than falling back to a deployment value. The name a reader sees beside a share comes from the display name on the Relay-verified credential, and local configuration cannot override it; a credential that carries only a subject shows that subject's label. Provider application secrets belong to the Liveshare server, not this configuration.
@@ -102,7 +102,7 @@ The Owner Gateway decides each call on the Session and Workspace it names and re
 <details>
 <summary>Implementation internals — click to expand</summary>
 
-The viewer page is the Owner's own Web shell. The Liveshare server fetches the Owner's rendered index document through an `asset` read and places the carrier script from [viewer-carrier.ts](../liveshare-protocol/src/viewer-carrier.ts) first in it. Shell assets, client plugin bundles, and the three exact top-level files the index references against the document base — `manifest.webmanifest`, `favicon.svg`, and `favicon-dark.svg` — arrive through the same read, from the Owner's frontend reader and client module registry, so the page runs every Owner plugin at the Owner's version. Source maps are refused on every asset path, and that check is the authoritative one: an `asset` read forwarded through the Liveshare server arrives here unread, so the Liveshare server's own same-named rule covers its page-resource route only. The served document also drops its manifest link, which a browser would otherwise fetch without credentials. The carrier converts Connection calls and Gateway streams into `POST {base}/__share/rpc` requests, and forwards the read-only page-origin owner routes the Liveshare server cannot answer — `/open-in-app/apps` and `/api/present.host` — through that channel instead of leaving them to the Liveshare server's tail. The Liveshare server supplies the authenticated actor outside the opaque body. The Owner's read handler dispatches each reader's calls and streams into its own Connection and Gateway as one Peer per share and reader, whose `share-viewer` principal carries the share and the server-asserted identity. The Gateway decides that Peer's calls, and the Session notifications it forwards to it, through [`dsh-api-remote-access`](../../api/remote-access/README.md) from the `share-viewer` policy this package registers: a served reader holds read roles on the shared Session, its own forks, and the Workspaces holding them, fork and write roles whose conditions apply the share's tier and its own fork switch, and nothing else; attachment upload rides the read roles. The read handler keeps the share-lifecycle refusals, Liveshare server authority refresh, cold Session preparation, and fork orchestration, reads the policy's write rules before it prepares or dispatches a prompt or stop, and disposes a reader's Peer when its grant ends, the share stops or expires, or a re-check refuses it. Preparing a share's source Session also starts when a reader asks for its page or opens a stream, so a host that restarted before that Session's agent was live still gains the actions it drives with; a share whose Session cannot be confined states that instead of the read-only fact. This package's browser face mounts the viewer surfaces when the carrier's `__DSH_LIVESHARE_VIEWER__` global is present and the Share action otherwise. The served index assigns the reader's own access snapshot to the global that every index sets to the owner baseline, and the page then follows the reader's `remoteAccess/follow` snapshot; CSS hiding is not authorization.
+The viewer page is the Owner's own Web shell. The Liveshare server fetches the Owner's rendered index document through an `asset` read and places the carrier script from [viewer-carrier.ts](../liveshare-protocol/src/viewer-carrier.ts) first in it. Shell assets, client plugin bundles, and the three exact top-level files the index references against the document base — `manifest.webmanifest`, `favicon.svg`, and `favicon-dark.svg` — arrive through the same read, from the Owner's frontend reader and client module registry, so the page runs every Owner plugin at the Owner's version. Source maps are refused on every asset path, and that check is the authoritative one: an `asset` read forwarded through the Liveshare server arrives here unread, so the Liveshare server's own same-named rule covers its page-resource route only. The served document also drops its manifest link, which a browser would otherwise fetch without credentials. The carrier converts Connection calls and Gateway streams into `POST {base}/__share/rpc` requests, and forwards the read-only page-origin owner routes the Liveshare server cannot answer — `/open-in-app/apps` and `/api/present.host` — through that channel instead of leaving them to the Liveshare server's tail. The Liveshare server supplies the authenticated actor outside the opaque body. The Owner's read handler dispatches each reader's calls and streams into its own Connection and Gateway as one Peer per share and reader, whose `share-viewer` principal carries the share and the server-asserted identity. The Gateway decides that Peer's calls, and the Session notifications it forwards to it, through [`liwa-api-remote-access`](../../api/remote-access/README.md) from the `share-viewer` policy this package registers: a served reader holds read roles on the shared Session, its own forks, and the Workspaces holding them, fork and write roles whose conditions apply the share's tier and its own fork switch, and nothing else; attachment upload rides the read roles. The read handler keeps the share-lifecycle refusals, Liveshare server authority refresh, cold Session preparation, and fork orchestration, reads the policy's write rules before it prepares or dispatches a prompt or stop, and disposes a reader's Peer when its grant ends, the share stops or expires, or a re-check refuses it. Preparing a share's source Session also starts when a reader asks for its page or opens a stream, so a host that restarted before that Session's agent was live still gains the actions it drives with; a share whose Session cannot be confined states that instead of the read-only fact. This package's browser face mounts the viewer surfaces when the carrier's `__LIWA_LIVESHARE_VIEWER__` global is present and the Share action otherwise. The served index assigns the reader's own access snapshot to the global that every index sets to the owner baseline, and the page then follows the reader's `remoteAccess/follow` snapshot; CSS hiding is not authorization.
 
 Fork requests bind the actor, share, source, operation identity, and completed prefix. A durable reservation and the recorded child let a retry of a recorded operation replay the same child; the owner's `SessionForkRequest` mints the child id, so a request interrupted after the child was created but before it was recorded forks again. Registry mutations are asynchronous and resolve only after locked read-modify-write and atomic publication; callers must await reservation, recording, and revocation. Cold activation uses the Host’s ordinary Agent lookup, with serial `agent/created` enforcement before queued input can run, not a Remote `session/prepare` endpoint. The child scope retains one fail-closed guard; reconnection replaces its enforcement installation, and releasing an old installation cannot remove its successor.
 

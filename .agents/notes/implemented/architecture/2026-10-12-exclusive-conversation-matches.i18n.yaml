@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-10-12-exclusive-conversation-matches.md
 /agent-note-exclusive-conversation-matches:
-  en: 6f78605cc85cf7f2
-  zh: f73e26bb3f9d1896
+  en: b85cbae6c91da554
+  zh: c3fdf27e0dc96347
 /agent-note-exclusive-conversation-matches/problem:
   en: 38ed7541d4cb7019
   zh: 98ed08f8c0c7c5ba

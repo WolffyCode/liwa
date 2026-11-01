@@ -1,10 +1,10 @@
-/** Model-facing query for a bundled Python, Node.js, and pnpm payload, in place or installed under the Harness home. */
+/** Model-facing query for a bundled Python, Node.js, and pnpm payload, in place or installed under the Liwa home. */
 
 import { cp, lstat, mkdir, mkdtemp, readFile, readlink, rename, rm, stat, symlink } from 'node:fs/promises'
 import { dirname, isAbsolute, join } from 'node:path'
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { defineTool } from '@deepseek-ai/dsh-tools'
+import type { Context } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import { defineTool } from '@liwa/tools'
 
 /** Cordis plugin identity. */
 export const name = 'tool-workspace-dependencies'
@@ -16,7 +16,7 @@ export interface Config {
   /** Payload directory carrying `runtime.json` and `dependencies/`. */
   readonly source: string
   /**
-   * Installation directory under the Harness home. When set, the payload is copied there on the
+   * Installation directory under the Liwa home. When set, the payload is copied there on the
    * first call (the Desktop behavior); when omitted, the payload is used in place without copying,
    * which suits read-only carriers such as container image layers.
    */
@@ -242,7 +242,7 @@ export async function resolvePrimaryRuntime(source: string): Promise<WorkspaceDe
 /**
  * Install the application-owned payload locally, retaining a complete previous tree on copy failure.
  * @param source - Payload carried by the current installation.
- * @param root - Fixed primary runtime directory under the Harness home.
+ * @param root - Fixed primary runtime directory under the Liwa home.
  * @returns Paths into the installed payload; no PATH or package-manager configuration is changed.
  */
 export async function installPrimaryRuntime(source: string, root: string): Promise<WorkspaceDependencies> {

@@ -4,9 +4,9 @@ import {
   Button, IconChevronDownOutlineRegular, IconPlusOutlineRegular, IconRefreshOutlineRegular, IconSearchOutlineRegular,
   IconSlidersTwoOutlineRegular, IconTrashOutlineRegular, IconWarningOutlineRegular, Input, Menu, Modal, Pill,
   PluginArtworkDefault, StateDot, Tag, Tooltip,
-} from '@deepseek-ai/dsh-client-ui-primitives'
-import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
-import type { MarketCompatibility, MarketListingEntry, MarketListingVersion, MarketSearchResult, MarketSort } from '@deepseek-ai/dsh-api-remotes/client'
+} from '@liwa/client-ui-primitives'
+import type { InjectFace, PropsLocale, PropsRuntime } from '@liwa/client-ui-slots'
+import type { MarketCompatibility, MarketListingEntry, MarketListingVersion, MarketSearchResult, MarketSort } from '@liwa/api-remotes/client'
 import type { DiscoverFace, DiscoverState, ListingFailure, ListingState, SourceFailure } from './market-store.ts'
 import {
   displayDeclarations, indexLabel, presentedVersion, sourceFacts, withText, type DiscoverQuery, type DisplayDeclaration, type SourceFact,
@@ -153,7 +153,7 @@ function VersionRow({ entry, version, title, t, language, onInstall }: {
   readonly onInstall: (version: MarketListingVersion) => void
 }): ReactNode {
   const current = entry.installation.installedVersion === version.version
-  // DSH ships a provided bundle; the market cannot replace it.
+  // Liwa ships a provided bundle; the market cannot replace it.
   const offered = !current && entry.installation.status !== 'provided' && installable(version.compatibility)
   const { compatibility } = version
   return (

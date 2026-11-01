@@ -8,14 +8,14 @@
 
 | Claude Code | 本桥接 | 原因或后续 |
 |---|---|---|
-| 一个插件目录，含 `.claude-plugin/plugin.json` 与指定一个钩子模块的 `hooks/hooks.json`；`claude --plugin-dir`、市场、`/plugin install` | 模组就是插件：`defineMod({ name, version, root, userConfig, register })` 包装钩子模块，并在桥接之后经 cordis.yml 挂载；不读取 `plugin.json` 与 `hooks.json` | 模组加入每个 DSH 插件都使用的同一组合机制；示例目录保留其清单，因此也能在 `claude --plugin-dir` 下运行 |
+| 一个插件目录，含 `.claude-plugin/plugin.json` 与指定一个钩子模块的 `hooks/hooks.json`；`claude --plugin-dir`、市场、`/plugin install` | 模组就是插件：`defineMod({ name, version, root, userConfig, register })` 包装钩子模块，并在桥接之后经 cordis.yml 挂载；不读取 `plugin.json` 与 `hooks.json` | 模组加入每个灵鲸插件都使用的同一组合机制；示例目录保留其清单，因此也能在 `claude --plugin-dir` 下运行 |
 | `plugin.json` 中带类型默认值的 `userConfig` schema；选项在加载时校验 | `userConfig` 是 `defineMod` 规格的默认值对象；插件的 cordis.yml `config` 覆盖其上，并按字符串、数字、布尔与字符串列表的记录校验 | 不读取清单 |
-| 层级（`user`、`project`、`managed`）与 `next.to(e, tier)` | 每个模组都以 `user` 加载；测试中的 `tier()` 被接受并忽略；`next.to` 拒绝 | 托管设置不是 DSH 的概念 |
+| 层级（`user`、`project`、`managed`）与 `next.to(e, tier)` | 每个模组都以 `user` 加载；测试中的 `tier()` 被接受并忽略；`next.to` 拒绝 | 托管设置不是灵鲸的概念 |
 | 编辑时热重载钩子模块；`claude plugin validate`、`claude plugin test`、由 `types/index.d.ts` 生成类型 | 这些命令都没有；重新挂载会在同一已求值模块上重新运行 `register`，模块级变量保留其值 | 仅按需跟进；测试工具包的 `createModTestKit` 在 Vitest 中替代 `claude plugin test` |
-| 钩子模块可以是 TypeScript | `.ts` 钩子模块只在启动器转译时可加载（源码启动可以；构建后的安装不行） | DSH 交付的是纯 Node |
-| 模组在进程内运行，`$` 是其访问宿主的唯一途径 | 钩子模块以 Node 全局对象在进程内运行，没有访问规则，并拥有进程的全部权限：`$.env` 读写 harness 环境变量，`$.http.fetch` 可访问任意 URL，`$.fs` 与 `$.tool.call` 以会话的身份行动 | 不对模组施加沙箱；只挂载你愿意作为插件运行的模组 |
-| `import type { … } from 'claude-code'`、`declare module 'claude-code' { interface PluginState }` | `claude-code` 模块名只在本仓库的测试设置中解析到桥接的类型；仓库外的模组导入 `@deepseek-ai/dsh-experimental-claude-code-mods` | 类型名是桥接自己的 |
-| `hooks.json` 中的设置钩子与模组钩子并行运行 | 不运行；为它们挂载 `@deepseek-ai/dsh-hooks-claude-code` | 不同的桥接 |
+| 钩子模块可以是 TypeScript | `.ts` 钩子模块只在启动器转译时可加载（源码启动可以；构建后的安装不行） | 灵鲸交付的是纯 Node |
+| 模组在进程内运行，`$` 是其访问宿主的唯一途径 | 钩子模块以 Node 全局对象在进程内运行，没有访问规则，并拥有进程的全部权限：`$.env` 读写灵鲸环境变量，`$.http.fetch` 可访问任意 URL，`$.fs` 与 `$.tool.call` 以会话的身份行动 | 不对模组施加沙箱；只挂载你愿意作为插件运行的模组 |
+| `import type { … } from 'claude-code'`、`declare module 'claude-code' { interface PluginState }` | `claude-code` 模块名只在本仓库的测试设置中解析到桥接的类型；仓库外的模组导入 `@liwa/experimental-claude-code-mods` | 类型名是桥接自己的 |
+| `hooks.json` 中的设置钩子与模组钩子并行运行 | 不运行；为它们挂载 `@liwa/hooks-claude-code` | 不同的桥接 |
 
 ## 事件
 
@@ -25,7 +25,7 @@
 | `session.end` | 每会话触发一次 | 由根智能体的 `agent/disposed` 触发；钩子结束前 `$.state` 可读 |
 | `prompt.submit` | `e.text` 是输入的提示词；`context` 条目各成一块跟在输入的提示词之后；插件提交的提示词带 `origin: { kind: 'plugin', name }` | 相同；`e.text` 拼接已认领批次中人类自己（`user` 来源）消息的文本块，仅含注入上下文的批次不触发，`$.prompt.submit` 排入的提示词以提交的模组为来源 |
 | `turn.start`、`turn.complete` | 每轮触发；子智能体的轮带 `agentId` | 相同；`turn.complete` 的 `{ text }` 到达宿主日志，而非答案下方的一行；`durationMs` 从 `turn/start` 起算 |
-| `tool.call` | 在 Claude Code 的权限检查之前运行；`next({ ...e, command })` 改写工具实际运行的参数，`next({ ...e, tool })` 把调用改派给另一工具 | 包裹 `tools/execute` 运行，在 harness 权限决定之后；改写参数或改名工具的钩子（或 `.catch` 处理器）会被跳过并报告——参数情形指向[工具前输入改写提案](../../.agents/notes/proposed/feature/2026-06-30-pre-tool-input-rewrite.zh.md)——因为已写入日志的调用按原样运行。`{ deny }`、`{ result }`、观察以及在 `next` 之后改写结果或 `isError` 均按描述工作 |
+| `tool.call` | 在 Claude Code 的权限检查之前运行；`next({ ...e, command })` 改写工具实际运行的参数，`next({ ...e, tool })` 把调用改派给另一工具 | 包裹 `tools/execute` 运行，在灵鲸权限决定之后；改写参数或改名工具的钩子（或 `.catch` 处理器）会被跳过并报告——参数情形指向[工具前输入改写提案](../../.agents/notes/proposed/feature/2026-06-30-pre-tool-input-rewrite.zh.md)——因为已写入日志的调用按原样运行。`{ deny }`、`{ result }`、观察以及在 `next` 之后改写结果或 `isError` 均按描述工作 |
 | `command.run` | 为模组注册的命令运行 | 相同 |
 | `ui.render` | 为每个渲染位点触发（`AbovePrompt`、`Pane`、`ToolUse`、`AssistantMessage`、`Spinner`……） | 只为 `AbovePrompt` 触发，每次会话横幅重绘一次；`Pane` 钩子只经测试工具包的 `$.ui.mount({ component: 'Pane' })` 运行 |
 | `tool.check`、`tool.describe`、`tool.list`、`tool.register` | 塑造工具列表与权限 | 不触发；`$.tool.register` 与 `$.tool.list` 作为 `$` 调用服务 |
@@ -51,7 +51,7 @@
 | `$.plugin` | `name`、`root`、`tier` | 来自 `defineMod` 规格的 `name`、`root` |
 | `$.ui` | `resolve`、`invalidate`、`open`、`close`、`panes`、`focus`、`log`、`toast`、`status`、`notice`、`ask`、`blit`、`copy`、`press`、`input`、`select` | `resolve`、`invalidate`、`open`、`close`、`panes`、`log`、`toast`、`status`、`ask`；`open` 带原因回答 `{ isPlaced: false }` 并重绘横幅；`log`、`toast`、`status` 到达宿主日志；其余拒绝 |
 | `$.command` | `register`、`run`、`list` | 相同；`run` 一个无人回答的命令时拒绝，并点名注册它的模组 |
-| `$.tool` | `register`、`call`、`list` | 相同；注册的工具为 `mcp__<plugin>__<tool>`；`call` 运行 harness 流水线，并把工具推迟的上下文注入会话 |
+| `$.tool` | `register`、`call`、`list` | 相同；注册的工具为 `mcp__<plugin>__<tool>`；`call` 运行灵鲸流水线，并把工具推迟的上下文注入会话 |
 | `$.prompt` | `submit`、`compose` | `submit`；消息为 `user` 来源，除非 `asUser` 否则套上 `Message from the "<plugin>" mod:` 框架，它触发的 `prompt.submit` 以该模组为来源 |
 | `$.session` | `id`、`cwd`、`root`、`repo`、`model`、`turns`、`messages`、`usage`、`version`、`send`、`append`、`authorize`、`compact`、`surfaces` | `id`、`cwd`、`root`、`model`、`turns`、`messages`、`usage`、`version`；`cwd` 报告已提交的当前目录；`root` 保留原始项目；在 token 计量器得知路由窗口前 `usage.context.window` 为 `0` 且无 `percent`；`rateLimits` 为空；`version` 指明本桥接 |
 | `$.state` | 按会话，热重载后保留 | 按会话，内存中；`ui.render` 期间的读取让横幅订阅该槽位 |
@@ -80,7 +80,7 @@
 
 | `claude-code/testing` | 本桥接 |
 |---|---|
-| `describe`、`test(name, ($, on) => …)`、`expect`、`mock`、`tier` | 在本仓库内同一模块名基于 Vitest 提供它们；`test` 从测试文件位置推断模组（`<mod>/tests/*.test.ts` → `<mod>/index.ts`），`defineModTests` 可覆盖。仓库外则从 `@deepseek-ai/dsh-experimental-claude-code-mods/testing` 获取 `createModTestKit` 与 `mock` |
+| `describe`、`test(name, ($, on) => …)`、`expect`、`mock`、`tier` | 在本仓库内同一模块名基于 Vitest 提供它们；`test` 从测试文件位置推断模组（`<mod>/tests/*.test.ts` → `<mod>/index.ts`），`defineModTests` 可覆盖。仓库外则从 `@liwa/experimental-claude-code-mods/testing` 获取 `createModTestKit` 与 `mock` |
 | `on` 为引擎的答案打桩；工具包自行回答 `ui.*` | 相同；`ui.open` 回答 `{ isPlaced: false }`，`ui.invalidate` 与 `ui.close` 成功；`session.cwd`、`process.run`、`fs.*`、`store.*`、`env.*` 需要桩（`mock.store`、`mock.env`、`mock.clock` 回答整个命名空间） |
 | `$.ui.mount({ plugin, surface, component, props })` → `find`、`findAll`、`press`、`unmount` | 相同，另有 `tree()` 与 `text()`；每次读取都经所有已加载模组的钩子重新渲染；`plugin` 与 `surface` 为源码兼容而接受 |
 | 测试中钩子预算 5 秒 | 相同（`budgetMs`） |
@@ -109,7 +109,7 @@ Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnp
 
 ### `ctx.claudeCodeMods` — `ClaudeCodeMods`
 
-The bridge service: loaded mods, their hooks, and the harness listeners that raise their events. Mods join through ClaudeCodeMods.add, which defineMod calls when a mod plugin mounts. The Remote methods let a Client draw each session's band above the prompt and press its buttons.
+The bridge service: loaded mods, their hooks, and Liwa listeners that raise their events. Mods join through ClaudeCodeMods.add, which defineMod calls when a mod plugin mounts. The Remote methods let a Client draw each session's band above the prompt and press its buttons.
 
 ```ts cordis-catalog
 /**

@@ -5,10 +5,10 @@
  * here reaches a Host-only symbol, so a Client compilation face reads exactly
  * the signature the Host emits.
  *
- * @module @deepseek-ai/dsh-credentials/types
+ * @module @liwa/credentials/types
  */
 
-import type { Branded } from '@deepseek-ai/dsh-brand'
+import type { Branded } from '@liwa/brand'
 
 /** Nominal reference to one credential: a POSIX-style environment-variable name. */
 export type CredentialRef = Branded<'CredentialRef'>
@@ -29,7 +29,7 @@ export type CredentialRef = Branded<'CredentialRef'>
 export type CredentialKey = Branded<'CredentialKey'>
 
 /**
- * A credential the harness itself understands: an api key, provider
+ * A credential Liwa itself understands: an api key, provider
  * environment values, or both. Either field may be absent — a record carrying
  * neither states that the owner confirmed this route authenticates from its
  * own ambient discovery, which is a different fact from having no record.
@@ -73,7 +73,7 @@ export interface CredentialInfo {
   writable: boolean
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Events {
     /**
      * Committed change to a provider-managed credential source: a `set`, an

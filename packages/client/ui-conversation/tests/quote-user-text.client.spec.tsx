@@ -1,6 +1,6 @@
 /** Quote draft persistence and prompt serialization remain composer-owned. */
 import { describe, expect, it, vi } from 'vitest'
-import { formatQuoteText } from '@deepseek-ai/dsh-client-ui-primitives'
+import { formatQuoteText } from '@liwa/client-ui-primitives'
 import { parseStoredDraft } from '../src/client/draft.ts'
 import { serializeDraftPrompt } from '../src/client/input/prompt.ts'
 
@@ -16,7 +16,7 @@ describe('quote draft spans', () => {
   })
 
   it('serializes reference owners outside quotes into ordinary Markdown text', async () => {
-    const serialize = vi.fn(() => Promise.resolve('@[Session](dsh-session:id)'))
+    const serialize = vi.fn(() => Promise.resolve('@[Session](liwa-session:id)'))
     const quote = '/review @literal'
     const quoted = formatQuoteText(quote)
     const prompt = await serializeDraftPrompt({
@@ -25,6 +25,6 @@ describe('quote draft spans', () => {
       quotes: [{ offset: 9, length: quoted.length, text: quote }],
     }, serialize)
     expect(serialize).toHaveBeenCalledExactlyOnceWith('session', 'id')
-    expect(prompt).toBe('@[Session](dsh-session:id)\n\n' + quoted)
+    expect(prompt).toBe('@[Session](liwa-session:id)\n\n' + quoted)
   })
 })

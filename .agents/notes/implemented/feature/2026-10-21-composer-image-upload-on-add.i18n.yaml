@@ -3,11 +3,11 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-21-composer-image-upload-on-add.md
 /agent-note-composer-image-upload-on-add:
-  en: 996b39b53086b9ac
-  zh: c81fade50ac895ec
+  en: b8cf218227bd816c
+  zh: 73528fda682f6459
 /agent-note-composer-image-upload-on-add/problem:
-  en: b184ade2bd353f50
-  zh: 00b97c91df54b310
+  en: d0114f5b551a22e9
+  zh: 0b18ae189f8c08eb
 /agent-note-composer-image-upload-on-add/decision:
   en: eada67e3c3d50f47
   zh: 5fb4f3a5e774e47e
@@ -21,5 +21,5 @@
   en: f2d2c59272ffcf70
   zh: 46c933fd2aeb87ea
 /agent-note-composer-image-upload-on-add/related:
-  en: 6eac98f60c3b99f9
-  zh: c1e318e74f44fbb4
+  en: 2920350125798239
+  zh: ebbd22cd25b9dddc

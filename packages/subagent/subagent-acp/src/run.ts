@@ -2,7 +2,7 @@
  * Fresh-process ACP subagent client. Drives one child session and owns cancellation and
  * quiescent disposal.
  *
- * @module @deepseek-ai/dsh-subagent-acp/run
+ * @module @liwa/subagent-acp/run
  */
 
 import { randomUUID } from 'node:crypto'
@@ -16,12 +16,12 @@ import {
   type StopReason,
   type ToolKind,
 } from '@agentclientprotocol/sdk'
-import type { ContentBlock } from '@deepseek-ai/dsh-llm'
-import { brandString } from '@deepseek-ai/dsh-brand'
-import type { SessionId } from '@deepseek-ai/dsh-session'
-import { AssistantOutputFold, settleRunResult, subprocessRunHandle } from '@deepseek-ai/dsh-subagent'
-import type { SubagentResult, SubagentRun, SubagentStartRequest, SubagentStopReason } from '@deepseek-ai/dsh-subagent'
-import type { SubprocessHandle, SubprocessOutcome, SubprocessSpawnSpec } from '@deepseek-ai/dsh-subprocess'
+import type { ContentBlock } from '@liwa/llm'
+import { brandString } from '@liwa/brand'
+import type { SessionId } from '@liwa/session'
+import { AssistantOutputFold, settleRunResult, subprocessRunHandle } from '@liwa/subagent'
+import type { SubagentResult, SubagentRun, SubagentStartRequest, SubagentStopReason } from '@liwa/subagent'
+import type { SubprocessHandle, SubprocessOutcome, SubprocessSpawnSpec } from '@liwa/subprocess'
 
 /** Fixed response to child permission requests: reject by default, or select the first allow option. */
 export type PermissionPolicy = 'allow' | 'reject'
@@ -44,8 +44,8 @@ export interface AcpRunSpec {
    * `DEEPSEEK_API_KEY`). Merged on top of the subprocess seam's scrubbed
    * parent env. A value here is forwarded even if its name matches the
    * credential-scrub pattern (an explicit opt-in for the child's own creds).
-   * Explicit `DSH_*` entries are deployment-owned facts for the child harness
-   * (e.g. `DSH_PERMISSION_MODE`); they simply merge after the scrub that
+   * Explicit `LIWA_*` entries are deployment-owned facts for the child harness
+   * (e.g. `LIWA_PERMISSION_MODE`); they simply merge after the scrub that
    * dropped their stale ambient namesakes.
    */
   env: Record<string, string>
@@ -214,7 +214,7 @@ export async function disposeAcpChild(child: SubprocessHandle, eofGraceMs: numbe
 /**
  * Map an ACP {@link StopReason} to a harness {@link SubagentStopReason}.
  * @param reason - the terminal reason from the child's `session/prompt` response.
- * @returns the harness equivalent; `max_turn_requests` and any unknown future
+ * @returns Liwa equivalent; `max_turn_requests` and any unknown future
  * variant map to `error`, so an unclean stop is never reported as `completed`.
  */
 export function acpStopReason(reason: StopReason): SubagentStopReason {
@@ -251,8 +251,8 @@ export function acpContentText(content: AcpContentBlock): string {
 }
 
 /**
- * Translate the harness prompt blocks into ACP prompt blocks (text only).
- * @param prompt - the harness prompt; non-text blocks are dropped.
+ * Translate the Liwa prompt blocks into ACP prompt blocks (text only).
+ * @param prompt - the Liwa prompt; non-text blocks are dropped.
  * @returns the ACP text blocks, in order.
  */
 export function toAcpPrompt(prompt: ContentBlock[]): AcpContentBlock[] {
@@ -341,7 +341,7 @@ export async function startAcpRun(request: SubagentStartRequest, spec: AcpRunSpe
   const id = brandString<SessionId>(randomUUID())
 
   // Keep diagnostics on parent stderr ('inherit'); only ACP output contributes
-  // to the result. The seam's scrub drops ambient credentials and DSH_* names
+  // to the result. The seam's scrub drops ambient credentials and LIWA_* names
   // while spec.env (the child's own key, its deployment facts) merges after it.
   let child: SubprocessHandle
   try {
@@ -417,7 +417,7 @@ export async function startAcpRun(request: SubagentStartRequest, spec: AcpRunSpe
   const flags = { cancelled: false }
   let latestPermission: AcpPermissionDecision | undefined
 
-  const clientApp = createAcpClientApp({ name: 'deepseek-harness-subagent-acp' })
+  const clientApp = createAcpClientApp({ name: 'liwa-subagent-acp' })
     .onNotification(methods.client.session.update, ({ params }) => {
       const update = params.update
       if (update.sessionUpdate === 'agent_message_chunk') {

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { AttachmentId } from '@deepseek-ai/dsh-attachment'
+import { Context } from '@liwa/cordis'
+import { AttachmentId } from '@liwa/attachment'
 import LlmRuntime, {
   errorChain,
   GenerateOptions,
-  HarnessError,
+  LiwaError,
   isContextWindowExceededError,
   isQuotaExceededError,
   LlmAdapter,
@@ -16,7 +16,7 @@ import LlmRuntime, {
   createMessage,
   createDeveloperMessage,
   createUserMessage,
-} from '@deepseek-ai/dsh-llm'
+} from '@liwa/llm'
 import type {
   LlmCallConfig,
   ConfigureCall,
@@ -26,10 +26,10 @@ import type {
   LlmProviderInfo,
   LlmResolvedModelInfo,
   SystemPromptUpdate,
-} from '@deepseek-ai/dsh-llm'
+} from '@liwa/llm'
 
-import type { ContextFormed } from '@deepseek-ai/dsh-llm'
-declare module '@deepseek-ai/dsh-llm' {
+import type { ContextFormed } from '@liwa/llm'
+declare module '@liwa/llm' {
   interface MessageSourceMap {
     'test': { kind: 'test' } & ContextFormed
   }
@@ -184,9 +184,9 @@ describe('LlmRuntime', () => {
   })
 
   it('errorChain collapses a cause that repeats the wrapper message verbatim', () => {
-    // The `new HarnessError(String(value), code, { cause: value })` normalization
+    // The `new LiwaError(String(value), code, { cause: value })` normalization
     // pattern repeats its cause; rendering it twice would only add noise.
-    const wrapped = new HarnessError('boom', 'UNKNOWN', { cause: 'boom' })
+    const wrapped = new LiwaError('boom', 'UNKNOWN', { cause: 'boom' })
     expect(errorChain(wrapped)).toBe('boom')
   })
 
@@ -1602,27 +1602,27 @@ describe('LlmRuntime', () => {
     expect(() => new LlmError('busy', 'RATE_LIMIT', { requestId: 1 as never })).toThrow(/requestId/)
   })
 
-  it('LlmError extends the shared HarnessError base', async () => {
-    const { HarnessError, isHarnessError } = await import('@deepseek-ai/dsh-llm')
+  it('LlmError extends the shared LiwaError base', async () => {
+    const { LiwaError, isLiwaError } = await import('@liwa/llm')
     const cause = new Error('root cause')
     const err = new LlmError('boom', 'AUTH', { cause })
-    expect(err).toBeInstanceOf(HarnessError)
-    expect(isHarnessError(err)).toBe(true)
+    expect(err).toBeInstanceOf(LiwaError)
+    expect(isLiwaError(err)).toBe(true)
     expect(err.code).toBe('AUTH')
     expect(err.cause).toBe(cause)
   })
 
-  it('HarnessError carries a code, names itself by subclass, and chains cause', async () => {
-    const { HarnessError, isHarnessError } = await import('@deepseek-ai/dsh-llm')
+  it('LiwaError carries a code, names itself by subclass, and chains cause', async () => {
+    const { LiwaError, isLiwaError } = await import('@liwa/llm')
     const root = new Error('root cause')
-    const err = new HarnessError('wrapper', 'UNKNOWN', { cause: root })
+    const err = new LiwaError('wrapper', 'UNKNOWN', { cause: root })
     expect(err).toBeInstanceOf(Error)
-    expect(err.name).toBe('HarnessError')
+    expect(err.name).toBe('LiwaError')
     expect(err.code).toBe('UNKNOWN')
     expect(err.cause).toBe(root)
-    expect(isHarnessError(err)).toBe(true)
-    expect(isHarnessError(root)).toBe(false)
-    expect(isHarnessError('nope')).toBe(false)
+    expect(isLiwaError(err)).toBe(true)
+    expect(isLiwaError(root)).toBe(false)
+    expect(isLiwaError('nope')).toBe(false)
   })
 
   it('removes the adapter when the returned disposer is called', async () => {

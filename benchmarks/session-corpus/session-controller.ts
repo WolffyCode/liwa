@@ -1,7 +1,7 @@
 /** Session-controller initialization for synthetic corpus workers without attachment I/O. */
 
-import { Service, type Context } from '@deepseek-ai/cordis'
-import SessionController, { type Config } from '@deepseek-ai/dsh-api-session-controller'
+import { Service, type Context } from '@liwa/cordis'
+import SessionController, { type Config } from '@liwa/api-session-controller'
 
 class BenchmarkSessionController extends SessionController {
   initialize(): Promise<void> {

@@ -12,7 +12,7 @@ $expected = Get-Content (Join-Path $PSScriptRoot 'expected/windows-uninstall.jso
 $roaming = [Environment]::GetFolderPath('ApplicationData')
 $local = [Environment]::GetFolderPath('LocalApplicationData')
 $installPath = Join-Path $OutputDirectory 'Uninstall App'
-$homePath = Join-Path $OutputDirectory 'Harness Home'
+$homePath = Join-Path $OutputDirectory 'Liwa Home'
 $externalPath = Join-Path $OutputDirectory 'External Project'
 $productDataPath = Join-Path $roaming $ProductName
 # Electron nests user data under the package scope; electron-builder strips the separator from the updater cache name.
@@ -67,7 +67,7 @@ try {
         # electron-builder's installUtil.nsh runs an older uninstaller with exactly these flags when replacing it.
         if ($mode -eq 'upgrade') { $arguments = '/S /KEEP_APP_DATA --updated /currentuser ' + $arguments }
         if ($mode -eq 'replaced') { $arguments = '/S /KEEP_APP_DATA /currentuser ' + $arguments }
-        if ($mode -eq 'home-inside') { $env:DSH_HOME = Join-Path $userDataPath 'home' } else { Remove-Item Env:DSH_HOME -ErrorAction SilentlyContinue }
+        if ($mode -eq 'home-inside') { $env:LIWA_HOME = Join-Path $userDataPath 'home' } else { Remove-Item Env:LIWA_HOME -ErrorAction SilentlyContinue }
         $process = Start-Process -FilePath $uninstaller -ArgumentList $arguments -PassThru -WindowStyle ($(if ($mode -eq 'interactive') { 'Normal' } else { 'Hidden' }))
         if ($mode -eq 'interactive') {
             $welcomeText = $copy.welcome
@@ -81,10 +81,10 @@ try {
         }
         Wait-Exit
         $retained = $mode -in @('upgrade', 'replaced')
-        # A DSH_HOME inside the Electron directory protects that directory (and its scope) but not the other roots.
+        # A LIWA_HOME inside the Electron directory protects that directory (and its scope) but not the other roots.
         $userDataRetained = $retained -or $mode -eq 'home-inside'
         if ([IO.File]::ReadAllText((Join-Path $externalPath 'keep.txt')) -ne 'outside data root') { throw 'Cleanup followed a junction into a project' }
-        if (-not (Test-Path (Join-Path $homePath 'session.txt'))) { throw "Harness home retention failed: $mode" }
+        if (-not (Test-Path (Join-Path $homePath 'session.txt'))) { throw "Liwa home retention failed: $mode" }
         if ((Test-Path (Join-Path $productDataPath 'state.txt')) -ne $retained) { throw "Product data retention failed: $mode" }
         if ((Test-Path (Join-Path $userDataPath 'Local State')) -ne $userDataRetained) { throw "Electron user data retention failed: $mode" }
         if ((Test-Path -LiteralPath $scopePath) -ne $userDataRetained) { throw "Package scope directory retention failed: $mode" }
@@ -92,12 +92,12 @@ try {
         Write-Output "passed: $mode"
     }
 } finally {
-    Remove-Item Env:DSH_HOME -ErrorAction SilentlyContinue
+    Remove-Item Env:LIWA_HOME -ErrorAction SilentlyContinue
     if ($process) { if (-not $process.HasExited) { $process.Kill(); $process.WaitForExit() }; $process.Dispose() }
     # Only unique test identities below known application-data parents are removed.
     foreach ($pair in @(@($productDataPath, $roaming), @($scopePath, $roaming), @($cachePath, $local))) {
         $target = [IO.Path]::GetFullPath($pair[0])
-        if ([IO.Path]::GetDirectoryName($target) -ne $pair[1] -or -not ([IO.Path]::GetFileName($target).StartsWith('Harness Installer Test ') -or [IO.Path]::GetFileName($target).StartsWith('@harness-installer-test'))) { throw 'Unexpected fixture cleanup path' }
+        if ([IO.Path]::GetDirectoryName($target) -ne $pair[1] -or -not ([IO.Path]::GetFileName($target).StartsWith('Liwa Installer Test ') -or [IO.Path]::GetFileName($target).StartsWith('@harness-installer-test'))) { throw 'Unexpected fixture cleanup path' }
         if (Test-Path -LiteralPath $target) { Remove-Item -LiteralPath $target -Recurse -Force }
     }
 }

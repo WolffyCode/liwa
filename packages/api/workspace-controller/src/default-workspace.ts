@@ -3,12 +3,12 @@
  * directory and by browser consumers that label the resulting row. A pure fold
  * with no imports, so client bundles inline it instead of requesting a
  * module-table row this package does not publish.
- * @module @deepseek-ai/dsh-api-workspace-controller/default-workspace
+ * @module @liwa/api-workspace-controller/default-workspace
  */
 
 /**
  * Leaf directory name of the first-use Workspace under
- * `<Documents>/deepseek-harness`. Language-neutral, so one installation keeps
+ * `<Documents>/liwa`. Language-neutral, so one installation keeps
  * one on-disk path across language switches. The registry derives the initial
  * title from this same segment, which is the title
  * {@link workspaceDisplayTitle} recognizes as automatic.

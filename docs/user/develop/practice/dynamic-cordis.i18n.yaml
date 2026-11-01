@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/user/develop/practice/dynamic-cordis.md
 /configure-persistent-plugins-from-a-prompt:
-  en: d50e336357663f75
-  zh: 4364e91403387e2a
+  en: 71fb32c1190678cb
+  zh: 2c5ccf16df57e37b
 /configure-persistent-plugins-from-a-prompt/connect-an-mcp-server:
-  en: f9fefda94ba8a005
-  zh: f1a9a977a0732fc0
+  en: fbfe65389c1c8a99
+  zh: 45abd037e71d5987

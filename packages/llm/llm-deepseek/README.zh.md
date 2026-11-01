@@ -3,7 +3,7 @@ description: "配置 DeepSeek Messages、推理与图片输入。"
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-llm-deepseek
+# @liwa/llm-deepseek
 
 [English](README.md) | 中文
 
@@ -27,19 +27,19 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-本包导出传输库；provider 插件向 harness LLM 服务注册路由。它在每次操作开始时从 Config 引用捕获连接选项。
+本包导出传输库；provider 插件向灵鲸 LLM 服务注册路由。它在每次操作开始时从 Config 引用捕获连接选项。
 
 适配器接受 LLM 服务的[仅供请求使用的 user 输入](../llm/README.zh.md#use-this-package)，并可将其与持久历史混用；省略请求输入的身份与来源不会改变提供方内容。
 
 ### 何时选择
 
-面向 DeepSeek 官方 API，或通过 `baseURL` 连接兼容 Messages 的网关时，选择本适配器。当同一组合还要通过 pi-ai 目录路由其他提供方或手工声明的网关时，选择 `dsh-llm-pi-ai`；两个适配器可以同时挂载，因为它们的路由名不冲突。为 `deepseek-official` 注册任何其他适配器会以 `DUPLICATE_ADAPTER` 失败。
+面向 DeepSeek 官方 API，或通过 `baseURL` 连接兼容 Messages 的网关时，选择本适配器。当同一组合还要通过 pi-ai 目录路由其他提供方或手工声明的网关时，选择 `liwa-llm-pi-ai`；两个适配器可以同时挂载，因为它们的路由名不冲突。为 `deepseek-official` 注册任何其他适配器会以 `DUPLICATE_ADAPTER` 失败。
 
 <a id="minimal-configuration"></a>
 ### 最小配置
 
 ```yaml
-- name: '@deepseek-ai/dsh-llm-deepseek-api-key'
+- name: '@liwa/llm-deepseek-api-key'
   config:
     apiKeyEnv: DEEPSEEK_API_KEY  # credential reference, resolved per request
     reasoningEffort: high        # optional; off | low | high | max
@@ -70,10 +70,10 @@ kind: "package-reference"
 | `filesApiTimeoutMs` | `60,000` | 每张图片 Files 解析截止时间 |
 | `fileExpiresAfterSeconds` | `604,800` | 请求的上传图片生存期与本地复用期限 |
 | `fileRefreshMarginSeconds` | `3,600` | 低于此剩余复用期时替换 id |
-| `fileQuotaCleanupBatch` | `100` | 配额重试前删除的、归 harness 所有的最旧文件数 |
-| `retryPolicy` | normal，5 次重试 | 由 `dsh-llm-retry` 执行的提供方自有重试策略 |
+| `fileQuotaCleanupBatch` | `100` | 配额重试前删除的、归灵鲸所有的最旧文件数 |
+| `retryPolicy` | normal，5 次重试 | 由 `liwa-llm-retry` 执行的提供方自有重试策略 |
 
-生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-llm-deepseek-api-key)是每个受支持字段及其 JSDoc 的穷尽式真源。
+生成的[配置目录](../../../docs/config-catalog.zh.md#liwallm-deepseek-api-key)是每个受支持字段及其 JSDoc 的穷尽式真源。
 
 启用[主动压缩](../../compaction/compaction-basic/README.zh.md#use-this-package)时，`models[].contextWindow`（未声明时使用 `defaultContextWindow`）必须大于生效请求的 `maxTokens` 与压缩策略 `headroomTokens` 之和。请求未覆盖输出上限时，使用模型的 `maxTokens` 或适配器默认值。小窗口部署应在容量范围内配置余量；降低 `thresholdRatio` 可以提早压缩。
 
@@ -96,7 +96,7 @@ Messages 和 Files 请求通过 `x-dsh-auth-token` 发送账号 token，不加 B
 
 适配器通常通过 `/v1/files` 上传这些确切请求字节，并发送 file-id 引用。Files 请求与包含 file id 的模型请求均携带 `anthropic-beta: files-api-2025-04-14`。全部请求拒绝重定向，确保凭据仅发送到配置的源。文件解析失败或超时会按内联预算，用内联 base64 重建整份模型请求；一次请求绝不混用 file id 与内联图片。调用方取消会停止请求。
 
-缓存 id 按端点与凭据限定作用域，在到期前刷新，根据提供方的陈旧文件错误失效，并通过带等待方局部取消的 singleflight 解析。上传通过 `expires_after[anchor]=created_at` 与 `expires_after[seconds]` 请求过期。Messages 文件元数据不含远端过期时间，因此本地复用期限使用原始上传时间加 `fileExpiresAfterSeconds`；这不保证远端文件删除。配额失败会先删除一批配置数量的最旧 harness 文件，再重试一次上传。
+缓存 id 按端点与凭据限定作用域，在到期前刷新，根据提供方的陈旧文件错误失效，并通过带等待方局部取消的 singleflight 解析。上传通过 `expires_after[anchor]=created_at` 与 `expires_after[seconds]` 请求过期。Messages 文件元数据不含远端过期时间，因此本地复用期限使用原始上传时间加 `fileExpiresAfterSeconds`；这不保证远端文件删除。配额失败会先删除一批配置数量的最旧灵鲸文件，再重试一次上传。
 
 Files 模式通过 `maxRequestFilesBytes` 与 `maxImagesPerRequest` 限制保留请求版本；内联回退有独立 base64 预算。两种模式都按配置的字节或数量量子移除最旧前缀。每张省略图片都有自己的模型可见占位符，包含显示名或附件 id，以及可用时的规范化尺寸、媒体类型与当前只读路径。分阶高水位策略避免每新增一张图片都改写旧请求前缀。
 
@@ -112,7 +112,7 @@ Files 模式通过 `maxRequestFilesBytes` 与 `maxImagesPerRequest` 限制保留
 
 ### 失败与恢复
 
-配置仅接受 Messages，不提供 `protocol` 字段。若解析报告 `protocol is not configurable`，请从 `$DSH_HOME/profiles/<profile>/cordis.patch.yml` 中 `llm-deepseek` 条目的 `config` 以及覆盖它的 home patch 或命令行 overlay 中删除 `protocol`，保留需要的 `baseURL`、`apiKeyEnv` 和 `models` 字段。已存储的配置若被适配器校验拒绝，后续请求会持续失败，直到配置修正；在模型设置卡中保存其他字段不会移除未知属性。请编辑配置文件，等待 profile 通过 HMR（热模块替换）重新加载；若未启用 HMR，则重启 profile。
+配置仅接受 Messages，不提供 `protocol` 字段。若解析报告 `protocol is not configurable`，请从 `$LIWA_HOME/profiles/<profile>/cordis.patch.yml` 中 `llm-deepseek` 条目的 `config` 以及覆盖它的 home patch 或命令行 overlay 中删除 `protocol`，保留需要的 `baseURL`、`apiKeyEnv` 和 `models` 字段。已存储的配置若被适配器校验拒绝，后续请求会持续失败，直到配置修正；在模型设置卡中保存其他字段不会移除未知属性。请编辑配置文件，等待 profile 通过 HMR（热模块替换）重新加载；若未启用 HMR，则重启 profile。
 
 成功的 Files 响应必须包含有效 JSON。上传、列举、获取和删除操作的 JSON 解码失败抛出 `INVALID_RESPONSE`，消息包含操作名称与 HTTP 状态，`LlmError.failure` 保留该状态，`cause` 保留原始解析错误。读取响应体时的传输和取消错误保留其原有身份。
 
@@ -140,7 +140,7 @@ Files 模式通过 `maxRequestFilesBytes` 与 `maxImagesPerRequest` 限制保留
 
 ### 协议流程
 
-一次 `stream()` 调用通常发一条模型请求：解析确定性请求图片、优先使用 Files id、准备所有已注册顶层请求扩展、向解析后的 `baseURL` 发起 fetch、在 HTTP 2xx 后接受扩展事务，并把 SSE 流翻译为 harness 协议。文件解析失败会让首条请求使用内联模式；提供方的陈旧文件响应允许一次替换尝试，且替换解析失败时也使用内联模式。每条模型与 Files 调用都携带共享归因。模型请求还在模型输入之外携带稳定匿名用户 id，并在存在 session id 时携带该值。推理历史会按需序列化回请求，缓存计量则把 DeepSeek 的缓存命中指标映射进 harness 用量桶。
+一次 `stream()` 调用通常发一条模型请求：解析确定性请求图片、优先使用 Files id、准备所有已注册顶层请求扩展、向解析后的 `baseURL` 发起 fetch、在 HTTP 2xx 后接受扩展事务，并把 SSE 流翻译为灵鲸协议。文件解析失败会让首条请求使用内联模式；提供方的陈旧文件响应允许一次替换尝试，且替换解析失败时也使用内联模式。每条模型与 Files 调用都携带共享归因。模型请求还在模型输入之外携带稳定匿名用户 id，并在存在 session id 时携带该值。推理历史会按需序列化回请求，缓存计量则把 DeepSeek 的缓存命中指标映射进灵鲸用量桶。
 
 </details>
 
@@ -151,7 +151,7 @@ Files 模式通过 `maxRequestFilesBytes` 与 `maxImagesPerRequest` 限制保留
 
 当包级约定不够用时阅读以下页面。它们从服务约定逐步进入孪生适配器、重试执行器与共享类型。
 
-- [dsh-llm 服务](../llm/README.zh.md)——本适配器注册其上的提供方无关服务。
+- [liwa-llm 服务](../llm/README.zh.md)——本适配器注册其上的提供方无关服务。
 - [llm-pi-ai 适配器](../llm-pi-ai/README.zh.md)——服务其他提供方与网关的库实现孪生。
 - [LLM 流式子系统](../../../docs/subsystems/llm-streaming.zh.md)——`StreamChunk` 协议与适配器约定。
 - [llm-retry](../llm-retry/README.zh.md)——应用本适配器 `retryPolicy` 的重试执行器。
@@ -170,11 +170,11 @@ Files 模式通过 `maxRequestFilesBytes` 与 `maxImagesPerRequest` 限制保留
 
 #### 模型看到什么
 
-所选 DeepSeek 模型会收到 harness 系统提示词、消息历史、工具 schema、停止序列与调用配置（`maxTokens`、`reasoningEffort`、`temperature`），不包含适配器撰写的提示词散文。提供方专用请求扩展字段留在模型输入之外。视觉模型通常接收 Files API 引用形式的用户与工具结果图片，其旁带附件句柄和请求预览尺寸。当前执行文件系统可以映射附件提供方的宿主对象时，它还会收到规范化对象路径；描述符会把该副本标记为只读，并警告规范化可能缩放或重新编码上传内容。Files 解析失败时，全部保留图片改用内联 base64；超出预算的较旧图片则在占位文本中保留当前请求已解析的访问方式。此前 assistant 轮次的推理内容会原样传回，无论该轮次是否调用了工具。 对于非法 JSON 或非对象的历史工具参数，Messages 发送 `{}`。此参数兜底保留调用 ID、工具名和工具结果；原始参数仍保留在 Session 日志中。新生成的 Messages 工具参数仍须是有效 JSON 对象。 Messages 会省略用户消息和工具结果中的 `reasoning` 与 `tool-call` 块。这也允许回放包含助手输出的已保存子 Agent 通知；原始 Session 内容保持完整。转换后的空用户消息会被跳过，空工具结果则保留调用 id 和错误标记。其他不支持的输入块仍会以 `UNSUPPORTED_CONTENT` 失败。
+所选 DeepSeek 模型会收到灵鲸系统提示词、消息历史、工具 schema、停止序列与调用配置（`maxTokens`、`reasoningEffort`、`temperature`），不包含适配器撰写的提示词散文。提供方专用请求扩展字段留在模型输入之外。视觉模型通常接收 Files API 引用形式的用户与工具结果图片，其旁带附件句柄和请求预览尺寸。当前执行文件系统可以映射附件提供方的宿主对象时，它还会收到规范化对象路径；描述符会把该副本标记为只读，并警告规范化可能缩放或重新编码上传内容。Files 解析失败时，全部保留图片改用内联 base64；超出预算的较旧图片则在占位文本中保留当前请求已解析的访问方式。此前 assistant 轮次的推理内容会原样传回，无论该轮次是否调用了工具。 对于非法 JSON 或非对象的历史工具参数，Messages 发送 `{}`。此参数兜底保留调用 ID、工具名和工具结果；原始参数仍保留在 Session 日志中。新生成的 Messages 工具参数仍须是有效 JSON 对象。 Messages 会省略用户消息和工具结果中的 `reasoning` 与 `tool-call` 块。这也允许回放包含助手输出的已保存子 Agent 通知；原始 Session 内容保持完整。转换后的空用户消息会被跳过，空工具结果则保留调用 id 和错误标记。其他不支持的输入块仍会以 `UNSUPPORTED_CONTENT` 失败。
 
 #### Token 影响
 
-提供方分词决定精确的文本与图片 token 输入。适配器声明按路由的 `imageRequestPricing`：把日志中的图片省略决策选中的每个出现位置按其占位文本计价，并按投影后的尺寸使用公开的视觉计量规则（14 px patch 网格、3:1 降采样、544×544 放大下限、单图 1024 token 上限）为每张保留图片计价。这使 token 计量服务可以在请求发出前为图片压力定价；上报的 usage 仍是权威值。推理回传会把每个推理轮次的思维链带进后续请求，而已省略的图片不再消耗视觉 token。保留的出现位置按精确请求版本字节超过 file 模式或内联回退预算（`maxRequestFilesBytes`、`maxImagesPerRequest` 与两个量子）的请求，以 `IMAGE_OFFLOAD_REQUIRED` 失败并说明还需省略多少最老的出现位置，由 `dsh-compaction-image-offload` 用 `image/offload` 事件记录所选位置并重试。可用时报告缓存读取用量。Messages 的 token 总数包含未缓存输入、输出、缓存读取与缓存写入 token。 `imageRequestTarget(provider, model, image)` 向截图调用方提供与模型请求一致的图片尺寸和字节目标；不缩放图片的适配器保留归一化后的原图。
+提供方分词决定精确的文本与图片 token 输入。适配器声明按路由的 `imageRequestPricing`：把日志中的图片省略决策选中的每个出现位置按其占位文本计价，并按投影后的尺寸使用公开的视觉计量规则（14 px patch 网格、3:1 降采样、544×544 放大下限、单图 1024 token 上限）为每张保留图片计价。这使 token 计量服务可以在请求发出前为图片压力定价；上报的 usage 仍是权威值。推理回传会把每个推理轮次的思维链带进后续请求，而已省略的图片不再消耗视觉 token。保留的出现位置按精确请求版本字节超过 file 模式或内联回退预算（`maxRequestFilesBytes`、`maxImagesPerRequest` 与两个量子）的请求，以 `IMAGE_OFFLOAD_REQUIRED` 失败并说明还需省略多少最老的出现位置，由 `liwa-compaction-image-offload` 用 `image/offload` 事件记录所选位置并重试。可用时报告缓存读取用量。Messages 的 token 总数包含未缓存输入、输出、缓存读取与缓存写入 token。 `imageRequestTarget(provider, model, image)` 向截图调用方提供与模型请求一致的图片尺寸和字节目标；不缩放图片的适配器保留归一化后的原图。
 
 #### KV Cache 影响
 
@@ -184,7 +184,7 @@ Files 模式通过 `maxRequestFilesBytes` 与 `maxImagesPerRequest` 限制保留
 
 #### 模型看到什么
 
-推理、文本与原始字符串工具参数会被翻译为 harness 分片，供 loop 记录并组装。
+推理、文本与原始字符串工具参数会被翻译为灵鲸分片，供 loop 记录并组装。
 
 #### Token 影响
 
@@ -215,4 +215,4 @@ loop 保留的响应块会追加到下一个请求，并保留其更早的可复
 
 无。
 
-`deepseek-official` 仅使用配置的 API Key 引用；`deepseek-account` 仅在账号提供方允许的推理来源使用已保存的 DSH 授权。两条路由共享 Messages 传输，模型与文件设置独立配置。账号凭证缺失或不适用于目标时拒绝请求并提示登录；两条路由均不回退到另一凭证。Chat 和 Files 请求拒绝重定向。账号提供方根据运行中 Agent 已记录的请求上下文负责退登取消，包括工具执行阶段；传输层接收现有请求的中止信号。
+`deepseek-official` 仅使用配置的 API Key 引用；`deepseek-account` 仅在账号提供方允许的推理来源使用已保存的灵鲸授权。两条路由共享 Messages 传输，模型与文件设置独立配置。账号凭证缺失或不适用于目标时拒绝请求并提示登录；两条路由均不回退到另一凭证。Chat 和 Files 请求拒绝重定向。账号提供方根据运行中 Agent 已记录的请求上下文负责退登取消，包括工具执行阶段；传输层接收现有请求的中止信号。

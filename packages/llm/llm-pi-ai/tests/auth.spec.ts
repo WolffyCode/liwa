@@ -2,10 +2,10 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import LocalCredentialProvider from '@deepseek-ai/dsh-credentials-local'
-import { credentialKey, credentialRef } from '@deepseek-ai/dsh-credentials'
-import { createLaunchEnvironmentSnapshot, DSH_LAUNCH_ENVIRONMENT_KEY } from '@deepseek-ai/dsh-launch-environment'
+import { Context } from '@liwa/cordis'
+import LocalCredentialProvider from '@liwa/credentials-local'
+import { credentialKey, credentialRef } from '@liwa/credentials'
+import { createLaunchEnvironmentSnapshot, LIWA_LAUNCH_ENVIRONMENT_KEY } from '@liwa/launch-environment'
 import { authContextFrom, credentialStoreFrom, recordKeyFor } from '../src/auth.ts'
 
 const home = vi.hoisted(() => ({ unavailable: false }))
@@ -26,15 +26,15 @@ const CODEX = recordKeyFor('openai-codex')
 
 const dirs: string[] = []
 
-/** A context whose credential records live in a throwaway `$DSH_HOME`. */
+/** A context whose credential records live in a throwaway `$LIWA_HOME`. */
 async function stored(
   layers?: Parameters<typeof createLaunchEnvironmentSnapshot>[0],
   initialRefs?: Record<string, string>,
 ): Promise<Context> {
-  const dir = await mkdtemp(join(tmpdir(), 'dsh-pi-auth-'))
+  const dir = await mkdtemp(join(tmpdir(), 'liwa-pi-auth-'))
   dirs.push(dir)
   const ctx = new Context()
-  if (layers !== undefined) ctx.provide(DSH_LAUNCH_ENVIRONMENT_KEY, createLaunchEnvironmentSnapshot(layers))
+  if (layers !== undefined) ctx.provide(LIWA_LAUNCH_ENVIRONMENT_KEY, createLaunchEnvironmentSnapshot(layers))
   const path = join(dir, '.credentials.yaml')
   if (initialRefs !== undefined) {
     const refs = Object.entries(initialRefs).map(([name, value]) => `  ${name}: ${value}`).join('\n')
@@ -214,7 +214,7 @@ describe('pi-ai ambient auth context', () => {
     const ctx = await stored([
       { source: 'process', values: { OPENAI_API_KEY: 'from-launch' } },
       { source: 'project-env', path: '/work/.env', values: { OPENAI_API_KEY: 'from-project' } },
-      { source: 'user-env', path: '/home/.dsh/.env', values: { OPENAI_API_KEY: 'from-home' } },
+      { source: 'user-env', path: '/home/.liwa/.env', values: { OPENAI_API_KEY: 'from-home' } },
     ], { OPENAI_API_KEY: 'from-credentials' })
 
     await expect(authContextFrom(ctx).env('OPENAI_API_KEY')).resolves.toBe('from-credentials')
@@ -231,7 +231,7 @@ describe('pi-ai ambient auth context', () => {
   })
 
   it('answers about the host filesystem, expanding a leading ~', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'dsh-pi-home-'))
+    const dir = await mkdtemp(join(tmpdir(), 'liwa-pi-home-'))
     dirs.push(dir)
     await writeFile(join(dir, 'creds'), 'x')
     // Both spellings of "home": os.homedir() reads HOME on POSIX and
@@ -247,7 +247,7 @@ describe('pi-ai ambient auth context', () => {
   })
 
   it('checks an absolute path without reading the home directory', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'dsh-pi-home-'))
+    const dir = await mkdtemp(join(tmpdir(), 'liwa-pi-home-'))
     dirs.push(dir)
     await writeFile(join(dir, 'creds'), 'x')
     const context = authContextFrom(await stored())

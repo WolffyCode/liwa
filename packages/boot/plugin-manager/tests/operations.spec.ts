@@ -5,11 +5,11 @@ import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
 import { PassThrough } from 'node:stream'
 import { expect, it, onTestFinished, vi } from 'vitest'
-import { getDshRuntimeVersion, initProfile, readProfileManifest } from '@deepseek-ai/dsh-app-boot'
+import { getLiwaRuntimeVersion, initProfile, readProfileManifest } from '@liwa/app-boot'
 import { anchorPathSpec, readProfileRegistry, runPluginCommand, runProfilePnpm, viewProfilePackage } from '../src/operations.ts'
 
 /** The manifest fields an inspection prints. */
-const VIEW_FIELDS = ['name', 'version', 'description', 'dsh'] as const
+const VIEW_FIELDS = ['name', 'version', 'description', 'liwa'] as const
 
 /** What execa resolves for a run that settled, including the buffered output the pre-install lookup is read for. */
 interface FakeOutcome {
@@ -165,7 +165,7 @@ function heldPipeChild(output: string) {
 function install(dir: string, name: string) {
   const path = join(dir, 'node_modules', name)
   mkdirSync(path, { recursive: true })
-  writeFileSync(join(path, 'package.json'), JSON.stringify({ name, version: '1', dsh: { bundle: { patch: './cordis.patch.yml' } } }))
+  writeFileSync(join(path, 'package.json'), JSON.stringify({ name, version: '1', liwa: { bundle: { patch: './cordis.patch.yml' } } }))
   writeFileSync(join(path, 'cordis.patch.yml'), '[]\n')
   const manifest = readProfileManifest('test', dir)
   manifest.dependencies = { ...manifest.dependencies, [name]: '1' }
@@ -178,7 +178,7 @@ it.each(['service', 'cli'] as const)('reports unsupported activation through %s 
     install(target, 'supported')
     install(target, 'restricted')
     writeFileSync(join(target, 'node_modules/restricted/package.json'), JSON.stringify({ name: 'restricted', version: '1',
-      dsh: { bundle: { patch: './cordis.patch.yml', platforms: [process.platform === 'darwin' ? 'win32' : 'darwin'] } } }))
+      liwa: { bundle: { patch: './cordis.patch.yml', platforms: [process.platform === 'darwin' ? 'win32' : 'darwin'] } } }))
   }
   const messages: string[] = []
   const result = await runPluginCommand(context, ['add', 'restricted'], {
@@ -187,11 +187,11 @@ it.each(['service', 'cli'] as const)('reports unsupported activation through %s 
   expect(result.exitCode).toBe(1)
   expect(result.output).toContain('restricted: Bundle supports Host platforms')
   expect(result.output).toContain('installed dependencies remain; bundle selection is unchanged')
-  expect(result.output).toContain('dsh plugin remove <package>')
+  expect(result.output).toContain('liwa plugin remove <package>')
   expect(readFileSync(result.logPath, 'utf8')).toContain(result.output)
   expect(messages.join('')).toContain(result.output)
   expect(readProfileManifest('test', dir).dependencies).toMatchObject({ supported: '1', restricted: '1' })
-  expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toEqual([])
+  expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toEqual([])
 })
 
 it('preserves malformed platform metadata errors without selecting the installed bundle', async () => {
@@ -199,25 +199,25 @@ it('preserves malformed platform metadata errors without selecting the installed
   pnpm.mutate = (target) => {
     install(target, 'malformed')
     writeFileSync(join(target, 'node_modules/malformed/package.json'), JSON.stringify({ name: 'malformed', version: '1',
-      dsh: { bundle: { patch: './cordis.patch.yml', platforms: ['macos'] } } }))
+      liwa: { bundle: { patch: './cordis.patch.yml', platforms: ['macos'] } } }))
   }
   await expect(runProfilePnpm(context, ['add', 'malformed'], { execution: 'service', outputBytes: 8192 }))
-    .rejects.toThrow('dsh.bundle.platforms must be a nonempty list of Node platform names')
-  expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toEqual([])
+    .rejects.toThrow('liwa.bundle.platforms must be a nonempty list of Node platform names')
+  expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toEqual([])
 })
 
 function installGuarded(dir: string, dependency: string, name = dependency, version = '1.0.0', peer = '>=999.0.0') {
   install(dir, dependency)
   writeFileSync(join(dir, 'node_modules', dependency, 'package.json'), JSON.stringify({
-    name, version, peerDependencies: { '@deepseek-ai/dsh-app-boot': peer }, dsh: { bundle: { patch: './cordis.patch.yml' } },
+    name, version, peerDependencies: { '@liwa/app-boot': peer }, liwa: { bundle: { patch: './cordis.patch.yml' } },
   }))
 }
 
-/** A path spec whose manifest declares a peer requirement the running dsh does not satisfy. */
+/** A path spec whose manifest declares a peer requirement the running liwa does not satisfy. */
 function writePathSpec(home: string, peer: string): void {
   mkdirSync(join(home, 'plugin'), { recursive: true })
   writeFileSync(join(home, 'plugin', 'package.json'), JSON.stringify({
-    name: 'plugin', version: '1.0.0', peerDependencies: { '@deepseek-ai/dsh': peer },
+    name: 'plugin', version: '1.0.0', peerDependencies: { '@liwa/cli': peer },
   }))
 }
 
@@ -237,7 +237,7 @@ it.each([
   })
   expect(outcome.exitCode).toBe(1)
   expect(outcome.incompatible).toEqual([
-    { name: 'plugin', version: '1.0.0', runtimeVersion: getDshRuntimeVersion(), requirements: { '@deepseek-ai/dsh': '999.0.0' } },
+    { name: 'plugin', version: '1.0.0', runtimeVersion: getLiwaRuntimeVersion(), requirements: { '@liwa/cli': '999.0.0' } },
   ])
   expect(outcome.output).toContain('installation rejected')
   expect(outcome.output).toContain('plugin@1.0.0')
@@ -256,7 +256,7 @@ it.each(['plugin@1.0.0', '@scope/plugin@1.0.0'])('rejects the registry spec %s t
   const name = spec.slice(0, spec.lastIndexOf('@'))
   pnpm.view = () => ({
     exitCode: 0,
-    stdout: JSON.stringify({ name, version: '1.0.0', peerDependencies: { '@deepseek-ai/dsh': '999.0.0' } }),
+    stdout: JSON.stringify({ name, version: '1.0.0', peerDependencies: { '@liwa/cli': '999.0.0' } }),
   })
   const manifestBefore = readFileSync(join(dir, 'package.json'), 'utf8')
   const outcome = await runProfilePnpm(context, ['add', spec], { execution: 'service', outputBytes: 8192 })
@@ -272,15 +272,15 @@ it.each(['plugin@1.0.0', '@scope/plugin@1.0.0'])('rejects the registry spec %s t
   expect(readFileSync(join(dir, 'package.json'), 'utf8')).toBe(manifestBefore)
 })
 
-it('rejects a registry spec whose engines.dsh the pre-install lookup denies, ignoring its peers', async () => {
+it('rejects a registry spec whose engines.liwa the pre-install lookup denies, ignoring its peers', async () => {
   const { context, pnpm } = fixture()
   pnpm.view = () => ({
     exitCode: 0,
-    stdout: JSON.stringify({ name: 'plugin', version: '1.0.0', engines: { dsh: '999.0.0' }, peerDependencies: { '@deepseek-ai/dsh': '*' } }),
+    stdout: JSON.stringify({ name: 'plugin', version: '1.0.0', engines: { liwa: '999.0.0' }, peerDependencies: { '@liwa/cli': '*' } }),
   })
   const outcome = await runProfilePnpm(context, ['add', 'plugin@1.0.0'], { execution: 'service', outputBytes: 8192 })
   expect(outcome).toMatchObject({ exitCode: 1 })
-  expect(outcome.incompatible).toMatchObject([{ name: 'plugin', version: '1.0.0', requirements: { 'engines.dsh': '999.0.0' } }])
+  expect(outcome.incompatible).toMatchObject([{ name: 'plugin', version: '1.0.0', requirements: { 'engines.liwa': '999.0.0' } }])
   expect(command.run.mock.calls[0]?.[1] as readonly string[]).toEqual(expect.arrayContaining(['view', 'engines', 'peerDependencies']))
   expect(command.run).toHaveBeenCalledTimes(1)
 })
@@ -291,7 +291,7 @@ it('reads the last match when the registry lookup answers with several versions'
     exitCode: 0,
     stdout: JSON.stringify([
       { name: 'plugin', version: '1.0.0' },
-      { name: 'plugin', version: '2.0.0', peerDependencies: { '@deepseek-ai/dsh': '999.0.0' } },
+      { name: 'plugin', version: '2.0.0', peerDependencies: { '@liwa/cli': '999.0.0' } },
     ]),
   })
   const outcome = await runProfilePnpm(context, ['add', 'plugin@^2', '--registry=https://registry.example'], {
@@ -315,19 +315,19 @@ it('runs an invocation that names no command without a registry lookup', async (
 it('installs an incompatible path spec the profile exempts', async () => {
   const { home, dir, context, pnpm } = fixture()
   writePathSpec(home, '999.0.0')
-  writeFileSync(join(dir, 'compatibility.json'), JSON.stringify({ 'plugin@1.0.0': [getDshRuntimeVersion()] }) + '\n')
+  writeFileSync(join(dir, 'compatibility.json'), JSON.stringify({ 'plugin@1.0.0': [getLiwaRuntimeVersion()] }) + '\n')
   pnpm.mutate = (target) => {
     install(target, 'plugin')
     writeFileSync(join(target, 'node_modules', 'plugin', 'package.json'), JSON.stringify({
-      name: 'plugin', version: '1.0.0', peerDependencies: { '@deepseek-ai/dsh': '999.0.0' },
-      dsh: { bundle: { patch: './cordis.patch.yml' } },
+      name: 'plugin', version: '1.0.0', peerDependencies: { '@liwa/cli': '999.0.0' },
+      liwa: { bundle: { patch: './cordis.patch.yml' } },
     }))
   }
   expect(await runProfilePnpm(context, ['add', './plugin'], { execution: 'service', outputBytes: 8192 }))
     .toMatchObject({ exitCode: 0 })
   // A path spec never needs a registry lookup, and the exemption covers the installed manifest too.
   expect(pnpm.views).toEqual([])
-  expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toEqual(['plugin'])
+  expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toEqual(['plugin'])
 })
 
 it('installs a compatible path spec', async () => {
@@ -338,7 +338,7 @@ it('installs a compatible path spec', async () => {
     .toMatchObject({ exitCode: 0 })
   expect(pnpm.views).toEqual([])
   expect(command.run).toHaveBeenCalledTimes(1)
-  expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toEqual(['plugin'])
+  expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toEqual(['plugin'])
 })
 
 it('runs the install with the caller\'s flags and its path specs anchored', async () => {
@@ -363,7 +363,7 @@ it.each([
   expect(pnpm.views).toEqual(['plugin'])
   expect(command.run).toHaveBeenCalledTimes(2)
   expect(command.run.mock.lastCall?.[1]).toEqual(['add', 'plugin'])
-  expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toEqual(['plugin'])
+  expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toEqual(['plugin'])
 })
 
 it.each(['github:owner/repo', 'https://example.com/plugin.tgz'])(
@@ -400,7 +400,7 @@ it.each([true, false])('rejects incompatible installed manifests before activati
     execution: 'service', outputBytes: 8192, activateNewBundles, onOutput: (text) => { messages.push(text) },
   })
   expect(outcome.exitCode).toBe(1)
-  expect(outcome.incompatible).toMatchObject([{ name: 'incompatible', version: '1.0.0', requirements: { '@deepseek-ai/dsh-app-boot': '>=999.0.0' } }])
+  expect(outcome.incompatible).toMatchObject([{ name: 'incompatible', version: '1.0.0', requirements: { '@liwa/app-boot': '>=999.0.0' } }])
   expect(outcome.output).toContain('incompatible@1.0.0')
   expect(outcome.output).toContain('installation rejected')
   expect(readFileSync(outcome.logPath, 'utf8')).toContain('incompatible@1.0.0')
@@ -434,7 +434,7 @@ it('reports an unrepaired node_modules when the restoring install fails', async 
   })
   expect(outcome).toMatchObject({ exitCode: 1 })
   expect(outcome.output).toContain('node_modules could not be reinstalled')
-  expect(outcome.output).toContain("run 'dsh plugin install'")
+  expect(outcome.output).toContain("run 'liwa plugin install'")
 })
 
 it('detects a version update that keeps the dependency spec and removes a lockfile the run created', async () => {
@@ -445,8 +445,8 @@ it('detects a version update that keeps the dependency spec and removes a lockfi
   // `pnpm update` keeps the manifest spec and replaces only the installed contents.
   pnpm.mutate = (target) => {
     writeFileSync(join(target, 'node_modules', 'updated', 'package.json'), JSON.stringify({
-      name: 'updated', version: '2.0.0', peerDependencies: { '@deepseek-ai/dsh-app-boot': '>=999.0.0' },
-      dsh: { bundle: { patch: './cordis.patch.yml' } },
+      name: 'updated', version: '2.0.0', peerDependencies: { '@liwa/app-boot': '>=999.0.0' },
+      liwa: { bundle: { patch: './cordis.patch.yml' } },
     }))
     writeFileSync(join(target, 'pnpm-lock.yaml'), 'changed-lock\n')
   }
@@ -466,7 +466,7 @@ it('does not fail an unrelated installation on an untouched incompatible depende
   expect(await runProfilePnpm(context, ['add', 'unrelated'], {
     execution: 'service', outputBytes: 8192, onOutput: (text) => { messages.push(text) },
   })).toMatchObject({ exitCode: 0 })
-  expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toEqual(['unrelated'])
+  expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toEqual(['unrelated'])
   expect(messages.join('')).toContain('startup denies it')
 })
 
@@ -475,13 +475,13 @@ it('installs a dependency whose installed manifest declares compatible peers', a
   pnpm.mutate = (target) => {
     install(target, 'plugin')
     writeFileSync(join(target, 'node_modules', 'plugin', 'package.json'), JSON.stringify({
-      name: 'plugin', version: '1.0.0', peerDependencies: { '@deepseek-ai/dsh': '*' },
-      dsh: { bundle: { patch: './cordis.patch.yml' } },
+      name: 'plugin', version: '1.0.0', peerDependencies: { '@liwa/cli': '*' },
+      liwa: { bundle: { patch: './cordis.patch.yml' } },
     }))
   }
   expect(await runProfilePnpm(context, ['add', 'plugin'], { execution: 'service', outputBytes: 8192 }))
     .toMatchObject({ exitCode: 0 })
-  expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toEqual(['plugin'])
+  expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toEqual(['plugin'])
 })
 
 it.each([
@@ -491,10 +491,10 @@ it.each([
   { key: 'actual@1.0.0', runtime: '999.0.0', exitCode: 1 },
 ])('matches exemptions to the actual alias manifest and exact versions: $key / $runtime', async ({ key, runtime, exitCode }) => {
   const { dir, context, pnpm } = fixture()
-  writeFileSync(join(dir, 'compatibility.json'), JSON.stringify({ [key]: [runtime === 'current' ? getDshRuntimeVersion() : runtime] }) + '\n')
+  writeFileSync(join(dir, 'compatibility.json'), JSON.stringify({ [key]: [runtime === 'current' ? getLiwaRuntimeVersion() : runtime] }) + '\n')
   pnpm.mutate = (target) => { installGuarded(target, 'alias', 'actual') }
   expect(await runProfilePnpm(context, ['add', 'alias@npm:actual@1.0.0'], { execution: 'service', outputBytes: 8192 })).toMatchObject({ exitCode })
-  expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toEqual(exitCode === 0 ? ['alias'] : [])
+  expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toEqual(exitCode === 0 ? ['alias'] : [])
 })
 
 it.each(['list', 'remove'])('allows %s with preexisting incompatible packages', async (operation) => {
@@ -529,7 +529,7 @@ it('rejects an incompatible component declared by a newly installed bundle', asy
     const component = join(packageDir, 'node_modules', 'component')
     mkdirSync(component, { recursive: true })
     writeFileSync(join(component, 'package.json'), JSON.stringify({
-      name: 'component', version: '1.0.0', peerDependencies: { '@deepseek-ai/dsh': '>=999.0.0' },
+      name: 'component', version: '1.0.0', peerDependencies: { '@liwa/cli': '>=999.0.0' },
     }))
     writeFileSync(join(packageDir, 'cordis.patch.yml'), '- insert:\n    - id: component\n      name: component/subpath\n')
   }
@@ -591,10 +591,10 @@ it('activates newly installed bundles and leaves retained disabled dependencies 
   install(dir, 'disabled')
   pnpm.mutate = (target) => { install(target, 'new-bundle') }
   expect(await runPluginCommand(context, ['add', 'new-bundle'], { execution: 'service', outputBytes: 100 })).toMatchObject({ exitCode: 0 })
-  expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toEqual(['new-bundle'])
+  expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toEqual(['new-bundle'])
   pnpm.mutate = () => {}
   await runPluginCommand(context, ['update'], { execution: 'service', outputBytes: 100 })
-  expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toEqual(['new-bundle'])
+  expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toEqual(['new-bundle'])
 })
 
 it('can install without activation and bounds output while retaining the complete log', async () => {
@@ -604,7 +604,7 @@ it('can install without activation and bounds output while retaining the complet
   const outcome = await runProfilePnpm(context, ['add', './extra'], { execution: 'service', outputBytes: 4, activateNewBundles: false })
   expect(outcome).toMatchObject({ exitCode: 0, output: '6789', truncated: true })
   expect(readFileSync(outcome.logPath, 'utf8')).toBe('0123456789')
-  expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toEqual([])
+  expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toEqual([])
   expect(command.run.mock.calls[0]?.[1]).toEqual(['add', join(context.cwd, 'extra')])
 })
 
@@ -616,9 +616,9 @@ it.each([runPluginCommand, runProfilePnpm])('installs into the supplied applicat
   const outcome = await run({ ...context, dir }, ['add', 'extra'], { execution: 'service', outputBytes: 100 })
   expect(outcome.exitCode).toBe(0)
   expect(command.run).toHaveBeenCalledWith(expect.anything(), ['add', 'extra'], expect.objectContaining({ cwd: dir }))
-  expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toEqual(['extra'])
+  expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toEqual(['extra'])
   expect(readProfileManifest('test', namedDir).dependencies).not.toHaveProperty('extra')
-  expect(readProfileManifest('test', namedDir).dsh?.profile?.bundles).toEqual([])
+  expect(readProfileManifest('test', namedDir).liwa?.profile?.bundles).toEqual([])
 })
 
 it('retains partial package-manager changes after a failed install without activating them', async () => {
@@ -627,7 +627,7 @@ it('retains partial package-manager changes after a failed install without activ
   pnpm.exitCode = 1
   expect(await runProfilePnpm(context, ['add', 'partial'], { execution: 'service', outputBytes: 100 })).toMatchObject({ exitCode: 1 })
   expect(readProfileManifest('test', dir).dependencies).toEqual({ partial: '1' })
-  expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toEqual([])
+  expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toEqual([])
 })
 
 
@@ -638,7 +638,7 @@ it('initializes missing profiles under the same lock and reports initialization'
     await runPluginCommand({ ...context, profile }, ['root'], {
       execution: 'service', outputBytes: 100, lockWaitMs: 1000, onOutput: (text) => { messages.push(text) },
     })
-    expect(readProfileManifest('test', join(home, 'profiles', profile)).dsh?.profile?.bundles).toContain('@deepseek-ai/dsh-base')
+    expect(readProfileManifest('test', join(home, 'profiles', profile)).liwa?.profile?.bundles).toContain('@liwa/base')
   }
   expect(messages.filter(text => text.includes('initialized profile'))).toHaveLength(2)
 })
@@ -738,7 +738,7 @@ it.each(['not json', 'null', '{"pid":0,"grouped":false}', '{"pid":12,"grouped":"
     writeFileSync(runRecord(dir), record)
     const outcome = await runProfilePnpm(context, ['add', './extra'], { execution: 'service', outputBytes: 8192 })
     expect(outcome).toMatchObject({ exitCode: 1 })
-    expect(outcome.output).toBe(`dsh: ${runRecord(dir)} does not name a package run; delete it once no earlier package operation is still running in this profile\n`)
+    expect(outcome.output).toBe(`liwa: ${runRecord(dir)} does not name a package run; delete it once no earlier package operation is still running in this profile\n`)
     expect(command.run).not.toHaveBeenCalled()
   },
 )
@@ -776,7 +776,7 @@ it('terminates a run that stopped printing and reports the silence bound', async
   command.run.mockImplementationOnce(() => silentChild('installing\n'))
   const outcome = await runProfilePnpm(context, ['add', './extra'], { execution: 'service', outputBytes: 100, idleTimeoutMs: 20 })
   expect(outcome).toMatchObject({ exitCode: 1, timedOut: true })
-  expect(outcome.output).toBe('installing\ndsh: pnpm printed nothing for 20ms and was terminated\n')
+  expect(outcome.output).toBe('installing\nliwa: pnpm printed nothing for 20ms and was terminated\n')
   expect(readFileSync(outcome.logPath, 'utf8')).toBe(outcome.output)
 })
 
@@ -788,7 +788,7 @@ it('settles a run whose pipes stay open past the process exit', async () => {
     execution: 'service', outputBytes: 100, activateNewBundles: false,
   })
   expect(outcome).toMatchObject({ exitCode: 0 })
-  expect(outcome.output).toBe('installed\ndsh: pnpm output was cut short after its process exited\n')
+  expect(outcome.output).toBe('installed\nliwa: pnpm output was cut short after its process exited\n')
   // The pipes never ended on their own, so the run settled by cutting them here.
   expect(child.stdout.destroyed).toBe(true)
   expect(child.stderr.destroyed).toBe(true)
@@ -840,7 +840,7 @@ it('retains built-in layers, removes deleted dependencies and warns about plain 
   const { context, dir, pnpm } = fixture()
   install(dir, 'removed')
   const manifest = readProfileManifest('test', dir)
-  manifest.dsh = { profile: { bundles: ['builtin', 'removed'] } }
+  manifest.liwa = { profile: { bundles: ['builtin', 'removed'] } }
   writeFileSync(join(dir, 'package.json'), JSON.stringify(manifest))
   const messages: string[] = []
   pnpm.mutate = (target) => {
@@ -851,7 +851,7 @@ it('retains built-in layers, removes deleted dependencies and warns about plain 
     writeFileSync(join(target, 'package.json'), JSON.stringify(after))
   }
   await runPluginCommand(context, ['remove', 'removed'], { execution: 'service', outputBytes: 100, onOutput: (text) => { messages.push(text) } })
-  expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toEqual(['builtin'])
+  expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toEqual(['builtin'])
   expect(messages.join('')).toContain('plain dependency')
 })
 
@@ -861,11 +861,11 @@ it('preserves a package-manager selected new bundle without adding it twice', as
   pnpm.mutate = (target) => {
     install(target, 'new')
     const manifest = readProfileManifest('test', target)
-    manifest.dsh = { profile: { bundles: ['new'] } }
+    manifest.liwa = { profile: { bundles: ['new'] } }
     writeFileSync(join(target, 'package.json'), JSON.stringify(manifest))
   }
   await runProfilePnpm(context, ['add', 'new'], { execution: 'service', outputBytes: 100 })
-  expect(readProfileManifest('test', dir).dsh?.profile?.bundles).toEqual(['new'])
+  expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toEqual(['new'])
 })
 
 it.each([
@@ -974,16 +974,16 @@ it('asks the registry through pnpm view in the profile directory, without pnpm\'
   const answer = (value: object) => command.run.mockResolvedValueOnce(value as never)
   answer({ exitCode: 0, stdout: '{"name":"x"}', stderr: '', timedOut: false, isCanceled: false })
   expect(await viewProfilePackage(dir, 'x@^1', { fields: VIEW_FIELDS, timeoutMs: 5 })).toEqual({ exitCode: 0, stdout: '{"name":"x"}', stderr: '', timedOut: false })
-  expect(command.run).toHaveBeenLastCalledWith('pnpm', ['view', 'x@^1', 'name', 'version', 'description', 'dsh', '--json', '--config.fetch-retries=0'],
+  expect(command.run).toHaveBeenLastCalledWith('pnpm', ['view', 'x@^1', 'name', 'version', 'description', 'liwa', '--json', '--config.fetch-retries=0'],
     expect.objectContaining({ cwd: dir, timeout: 5, reject: false, stdin: 'ignore' }))
   expect((command.run.mock.lastCall as unknown[])[2]).not.toHaveProperty('cancelSignal')
   // A registry asked by URL goes on the command line; null leaves the choice to pnpm's own configuration.
   answer({ exitCode: 0, stdout: '{"name":"x"}', stderr: '', timedOut: false, isCanceled: false })
   await viewProfilePackage(dir, 'x', { fields: VIEW_FIELDS, timeoutMs: 5, registry: 'https://registry.npmmirror.com/' })
-  expect((command.run.mock.lastCall as unknown[])[1]).toEqual(['view', 'x', 'name', 'version', 'description', 'dsh', '--json', '--registry=https://registry.npmmirror.com/', '--config.fetch-retries=0'])
+  expect((command.run.mock.lastCall as unknown[])[1]).toEqual(['view', 'x', 'name', 'version', 'description', 'liwa', '--json', '--registry=https://registry.npmmirror.com/', '--config.fetch-retries=0'])
   answer({ exitCode: 0, stdout: '{"name":"x"}', stderr: '', timedOut: false, isCanceled: false })
   await viewProfilePackage(dir, 'x', { fields: VIEW_FIELDS, timeoutMs: 5, registry: null })
-  expect((command.run.mock.lastCall as unknown[])[1]).toEqual(['view', 'x', 'name', 'version', 'description', 'dsh', '--json', '--config.fetch-retries=0'])
+  expect((command.run.mock.lastCall as unknown[])[1]).toEqual(['view', 'x', 'name', 'version', 'description', 'liwa', '--json', '--config.fetch-retries=0'])
   const signal = AbortSignal.abort()
   answer({ exitCode: undefined, stdout: '', stderr: '', timedOut: true, isCanceled: false })
   expect(await viewProfilePackage(dir, 'x', { fields: VIEW_FIELDS, timeoutMs: 5, signal })).toEqual({ exitCode: null, stdout: '', stderr: '', timedOut: true })
@@ -1006,6 +1006,6 @@ it('uses application-owned executable arguments and environment for package oper
   command.run.mockResolvedValueOnce(Object.assign({ exitCode: 0, failed: false }, { stdout: '{}', stderr: '', timedOut: false }))
   await viewProfilePackage(dir, 'example', { ...runtime, fields: VIEW_FIELDS, timeoutMs: 1000 })
   expect(command.run).toHaveBeenLastCalledWith(runtime.command,
-    [...runtime.args, 'view', 'example', 'name', 'version', 'description', 'dsh', '--json', '--config.fetch-retries=0'],
+    [...runtime.args, 'view', 'example', 'name', 'version', 'description', 'liwa', '--json', '--config.fetch-retries=0'],
     expect.objectContaining({ env: expect.objectContaining(runtime.env) as unknown }))
 })

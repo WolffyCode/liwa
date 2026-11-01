@@ -1,11 +1,11 @@
 /** Session-owned user terminals with the execution environment's system-user permissions. */
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { SessionId } from '@deepseek-ai/dsh-session'
-import type {} from '@deepseek-ai/dsh-sandbox-policy'
-import type {} from '@deepseek-ai/dsh-working-directory'
-import { Remote, RemoteError, TypertRemoteService, type RemoteStream } from '@deepseek-ai/dsh-typert-protocol'
+import type { Context } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import type { Agent } from '@liwa/agent'
+import type { SessionId } from '@liwa/session'
+import type {} from '@liwa/sandbox-policy'
+import type {} from '@liwa/working-directory'
+import { Remote, RemoteError, TypertRemoteService, type RemoteStream } from '@liwa/typert-protocol'
 import { discoverShells, resolveShell } from './shells.ts'
 import { BrowserTerminal } from './terminal.ts'
 import { TerminalRetention } from './retention.ts'
@@ -16,7 +16,7 @@ import type {
 
 export type * from './types.ts'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     /** Interactive user terminals, separate from the Agent terminal tool registry. */
     terminalController: TerminalController
@@ -319,7 +319,7 @@ export class TerminalController extends TypertRemoteService {
     if (shell === undefined) throw new Error('Selected shell is not available in this execution environment')
     const handle = await subprocess.spawnTerminal({
       argv: [shell.path, ...shell.args], cwd, cols: request.cols, rows: request.rows,
-      terminalType: 'xterm-256color', env: { DSH_SESSION_ID: agent.id },
+      terminalType: 'xterm-256color', env: { LIWA_SESSION_ID: agent.id },
       shellActivity: true,
       graceMs: this.config.disposeGraceMs, signal,
     })

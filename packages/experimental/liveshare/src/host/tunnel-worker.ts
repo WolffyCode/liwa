@@ -1,4 +1,4 @@
-/** Owner of the single tunnel worker process used by one DSH web process. */
+/** Owner of the single tunnel worker process used by one Liwa web process. */
 
 import { randomUUID } from 'node:crypto'
 import { spawn, type ChildProcess } from 'node:child_process'
@@ -12,7 +12,7 @@ import {
   type TunnelShareSpec,
   type TunnelWorkerCommand,
   type TunnelWorkerEvent,
-} from '@deepseek-ai/dsh-experimental-liveshare-protocol'
+} from '@liwa/experimental-liveshare-protocol'
 import {
   INITIAL_RETRY_BACKOFF,
   RETRY_STABLE_MS,

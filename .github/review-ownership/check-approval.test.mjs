@@ -27,7 +27,7 @@ const runApprovalCheck = options => runWithHistory({ getMergedCount: async () =>
 const HEAD_SHA = '1234567890abcdef1234567890abcdef12345678'
 
 const pullRequestEvent = ({ author = 'author', draft = false } = {}) => ({
-  repository: { full_name: 'deepseek-harness/deepseek-harness' },
+  repository: { full_name: 'WolffyCode/liwa' },
   pull_request: {
     number: 42,
     state: 'open',
@@ -88,7 +88,7 @@ test('uses each reviewer current decision and clears it on dismissal', () => {
 
 test('resolves a review workflow run to the current pull request and rejects stale heads', async () => {
   const workflowRunEvent = {
-    repository: { full_name: 'deepseek-harness/deepseek-harness' },
+    repository: { full_name: 'WolffyCode/liwa' },
     workflow_run: {
       name: 'weighted-approval-review-event:42',
       path: '.github/workflows/weighted-approval-review-event.yml',
@@ -102,7 +102,7 @@ test('resolves a review workflow run to the current pull request and rejects sta
   const current = await approvalEventFromWorkflowRun({
     event: workflowRunEvent,
     api: async path => {
-      assert.equal(path, '/repos/deepseek-harness/deepseek-harness/pulls/42')
+      assert.equal(path, '/repos/WolffyCode/liwa/pulls/42')
       return pullRequestEvent().pull_request
     },
   })
@@ -313,7 +313,7 @@ test('publishes the required status and replaces stale success with error on eva
   })
   assert.equal(result.state, 'success')
   assert.deepEqual(calls.at(-1), {
-    path: `/repos/deepseek-harness/deepseek-harness/statuses/${HEAD_SHA}`,
+    path: `/repos/WolffyCode/liwa/statuses/${HEAD_SHA}`,
     options: {
       method: 'POST',
       body: {
@@ -499,10 +499,10 @@ test('publishes setup phases without evaluating or installing dependencies', asy
 
 test('updates the App-owned run instead of creating another', async () => {
   const calls = []
-  const appRuns = [{ id: 42, app: { slug: 'dsh-weighted-approval' }, conclusion: 'success', external_id: 'weighted-approval-decision' }]
+  const appRuns = [{ id: 42, app: { slug: 'liwa-weighted-approval' }, conclusion: 'success', external_id: 'weighted-approval-decision' }]
   await runPublisher({
     event: pullRequestEvent(), policySource, runUrl: 'https://github.example/run/1', write: () => {},
-    checkAppSlug: 'dsh-weighted-approval',
+    checkAppSlug: 'liwa-weighted-approval',
     getOwnership: async () => ({ totalLines: 0, reviewerLines: {} }),
     getMergedCount: async () => 0,
     api: async (path, options = {}) => {
@@ -520,8 +520,8 @@ test('updates the App-owned run instead of creating another', async () => {
     },
   })
   assert.deepEqual(calls.map(call => call.path), [
-    `/repos/deepseek-harness/deepseek-harness/commits/${HEAD_SHA}/check-runs?check_name=weighted%20approval%20decision&filter=all&per_page=100`,
-    '/repos/deepseek-harness/deepseek-harness/check-runs/42',
+    `/repos/WolffyCode/liwa/commits/${HEAD_SHA}/check-runs?check_name=weighted%20approval%20decision&filter=all&per_page=100`,
+    '/repos/WolffyCode/liwa/check-runs/42',
   ])
   assert.equal(calls[1].method, 'PATCH')
   assert.equal(calls[1].body.name, undefined)
@@ -532,7 +532,7 @@ test('ignores job-token runs when the App token publishes', async () => {
   const jobRuns = [{ id: 7, app: { slug: 'github-actions' }, conclusion: 'success', external_id: 'weighted-approval-decision' }]
   await runPublisher({
     event: pullRequestEvent(), policySource, runUrl: 'https://github.example/run/1', write: () => {},
-    checkAppSlug: 'dsh-weighted-approval',
+    checkAppSlug: 'liwa-weighted-approval',
     getOwnership: async () => ({ totalLines: 0, reviewerLines: {} }),
     getMergedCount: async () => 0,
     api: async (path) => {
@@ -644,10 +644,10 @@ test('revokes a published success check run and updates one run per head', async
     },
   })
   assert.deepEqual(calls.map(call => call.path), [
-    `/repos/deepseek-harness/deepseek-harness/statuses/${HEAD_SHA}`,
-    `/repos/deepseek-harness/deepseek-harness/commits/${HEAD_SHA}/check-runs?check_name=weighted%20approval%20decision&filter=all&per_page=100`,
-    '/repos/deepseek-harness/deepseek-harness/check-runs/7',
-    '/repos/deepseek-harness/deepseek-harness/check-runs/10',
+    `/repos/WolffyCode/liwa/statuses/${HEAD_SHA}`,
+    `/repos/WolffyCode/liwa/commits/${HEAD_SHA}/check-runs?check_name=weighted%20approval%20decision&filter=all&per_page=100`,
+    '/repos/WolffyCode/liwa/check-runs/7',
+    '/repos/WolffyCode/liwa/check-runs/10',
   ])
   for (const call of calls.slice(2)) {
     assert.equal(call.method, 'PATCH')
@@ -747,7 +747,7 @@ test('the publisher counts merged history through the production API path', asyn
     api: async (path, options) => {
       if (path.includes('/comments?')) return []
       if (path === '/graphql') {
-        assert.equal(options.body.variables.owner, 'deepseek-harness')
+        assert.equal(options.body.variables.owner, 'WolffyCode')
         return { data: { repository: { pullRequests: {
           nodes: Array.from({ length: 25 }, (_, i) => ({
             number: i + (options.body.variables.after ? 200 : 100), author: { id: event.pull_request.user.node_id },
@@ -1184,7 +1184,7 @@ test('comment events resolve the live PR head and skip ordinary issues and close
   const event = { repository: pullRequestEvent().repository, issue: { number: 42, pull_request: {} } }
   const pull = { ...pullRequestEvent().pull_request, state: 'open' }
   const resolved = await approvalEventFromComment({ event, api: async path => {
-    assert.equal(path, '/repos/deepseek-harness/deepseek-harness/pulls/42')
+    assert.equal(path, '/repos/WolffyCode/liwa/pulls/42')
     return pull
   } })
   assert.deepEqual(resolved.pull_request, pull)

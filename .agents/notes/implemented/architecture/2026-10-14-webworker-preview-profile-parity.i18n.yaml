@@ -3,11 +3,11 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-10-14-webworker-preview-profile-parity.md
 /agent-note-boot-the-preview-worker-from-the-shipped-profile-and-fetch-lazy-chunks-on-demand:
-  en: f43aec03d4eeb831
-  zh: fb40c3fd679876f3
+  en: 22f67cd9ed345c11
+  zh: 6a98dffcc2002a07
 /agent-note-boot-the-preview-worker-from-the-shipped-profile-and-fetch-lazy-chunks-on-demand/problem:
-  en: 0dd8324644e69400
-  zh: 19d12f096078d72c
+  en: 85a29b507c216f78
+  zh: 0e7cfc72a08732cb
 /agent-note-boot-the-preview-worker-from-the-shipped-profile-and-fetch-lazy-chunks-on-demand/decision:
   en: a15c7c13f167e5ac
   zh: 63bcc2ef60c2f344

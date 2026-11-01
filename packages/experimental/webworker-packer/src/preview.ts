@@ -3,9 +3,9 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, posix } from 'node:path'
-import { isSessionFormatJsonObject, parseSessionFormatLogFilename, sessionFormatLogFilename } from '@deepseek-ai/dsh-session-format'
-import { createSessionFormatCatalogWithChildren, historicalSessionFormatCatalog, sessionFormatCatalog } from '@deepseek-ai/dsh-session-format-catalog'
-import { historicalChildCatalogSource } from '@deepseek-ai/dsh-session-format-v3-to-v4'
+import { isSessionFormatJsonObject, parseSessionFormatLogFilename, sessionFormatLogFilename } from '@liwa/session-format'
+import { createSessionFormatCatalogWithChildren, historicalSessionFormatCatalog, sessionFormatCatalog } from '@liwa/session-format-catalog'
+import { historicalChildCatalogSource } from '@liwa/session-format-v3-to-v4'
 import { packVfsOverlay, type ImageTree, type PackOverlayResult } from './pack.ts'
 import type { ImageFiles } from './transform-image.ts'
 
@@ -60,7 +60,7 @@ export function packPreviewFixture(trees: readonly ImageTree[]): PackOverlayResu
     )
   }
   if (successors.size === 0) return original
-  const directory = mkdtempSync(join(tmpdir(), 'dsh-preview-sessions-'))
+  const directory = mkdtempSync(join(tmpdir(), 'liwa-preview-sessions-'))
   try {
     for (const [imagePath, content] of successors) {
       const path = join(directory, imagePath.slice('home/sessions/'.length))

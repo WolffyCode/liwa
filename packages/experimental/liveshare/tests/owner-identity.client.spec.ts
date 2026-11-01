@@ -100,18 +100,18 @@ describe('owner identity status', () => {
   })
 
   it('never passes a credential or one-time hand-off back through a login round trip', () => {
-    expect(loginReturnUrl('https://dsh.example.test/session?shareId=s1&ownerStartupToken=secret#/tab'))
-      .toBe('https://dsh.example.test/session?shareId=s1')
-    expect(loginReturnUrl('https://dsh.example.test/?code=abc&ticket=t&token=x&state=open'))
-      .toBe('https://dsh.example.test/?state=open')
-    expect(loginReturnUrl('https://dsh.example.test/?access_token=x&session=keep'))
-      .toBe('https://dsh.example.test/?session=keep')
+    expect(loginReturnUrl('https://liwa.example.test/session?shareId=s1&ownerStartupToken=secret#/tab'))
+      .toBe('https://liwa.example.test/session?shareId=s1')
+    expect(loginReturnUrl('https://liwa.example.test/?code=abc&ticket=t&token=x&state=open'))
+      .toBe('https://liwa.example.test/?state=open')
+    expect(loginReturnUrl('https://liwa.example.test/?access_token=x&session=keep'))
+      .toBe('https://liwa.example.test/?session=keep')
     // An address the browser cannot parse is returned unchanged rather than silently rewritten.
     expect(loginReturnUrl('not a url')).toBe('not a url')
   })
 
   it('names the Relay verification entry once, with this page as the return address', () => {
-    expect(ownerLoginHref('https://relay.example.test/', 'https://dsh.example.test/?ownerStartupToken=s'))
-      .toBe('https://relay.example.test/__liveshare/auth/start?returnTo=https%3A%2F%2Fdsh.example.test%2F')
+    expect(ownerLoginHref('https://relay.example.test/', 'https://liwa.example.test/?ownerStartupToken=s'))
+      .toBe('https://relay.example.test/__liveshare/auth/start?returnTo=https%3A%2F%2Fliwa.example.test%2F')
   })
 })

@@ -76,7 +76,7 @@ type Message = MessageRoleMap[keyof MessageRoleMap]
 
 ```ts type-equiv
 /**
- * Where a message (or injected content) came from, in the harness's own
+ * Where a message (or injected content) came from, in Liwa's own
  * vocabulary. Merge-extensible sum type — each producer declares its own
  * `kind` in its own module; there is no shared catch-all `plugin` kind.
  * Model and tool sources answer their role messages; user messages carry any
@@ -172,7 +172,7 @@ type ContextFormed =
 /**
  * Adapter-private lossless-JSON state for replaying a successful response,
  * carried by a terminal `finish` chunk and stored on the assembled assistant
- * message's model source. Both halves stay opaque to the harness; only the
+ * message's model source. Both halves stay opaque to Liwa; only the
  * split is shared vocabulary, so assembly can keep stored metadata aligned
  * with stored content without reading either half.
  */
@@ -247,7 +247,7 @@ interface LlmFailure {
   /**
    * With code `IMAGE_OFFLOAD_REQUIRED`: how many more of the oldest retained
    * image occurrences the route needs offloaded before the same request fits
-   * its exact byte accounting. `dsh-compaction-image-offload` records the
+   * its exact byte accounting. `liwa-compaction-image-offload` records the
    * selected occurrences in an `image/offload` event and retries the step.
    */
   readonly offloadImages?: number
@@ -303,9 +303,9 @@ interface LlmImageRequestPricing {
 - **一次适配器调用就是一次提供方尝试。** 适配器禁用库重试。agent 层恢复会打开另一个持久、带编号的轮次；直接调用 `ctx.llm.stream()` 的调用方仍然只尝试一次。
 - **提供方停顿在传输层受到时限约束。** 两个已交付的远程适配器都暴露正数且有限的 `streamIdleTimeoutMs`，默认五分钟。watchdog 只在 iterator `next()` 尚未完成时启动，整个请求使用同一个稳定 signal，把自身到期映射为 `TIMEOUT`，并把更早发生的调用方中止保留为 `ABORTED`。
 - **上下文溢出只有一个规范 code。** 两个 DeepSeek 适配器都通过 `isContextWindowExceededError()` 对提供方的显式细节分类并暴露 `CONTEXT_WINDOW_EXCEEDED`，无论失败以抛出的 HTTP `LlmError` 还是带内 finish error 到达。消费方按 code 路由，绝不依赖提供方文本。
-- **空 completion 是可重试错误，而不是静默的成功结果。** 两个适配器都把没有携带任何内容块的终止性 `stop` 结束映射为携带规范 `EMPTY_RESPONSE` code 的 `finish {kind:'error'}`，`dsh-llm-retry` 默认会重试它。
+- **空 completion 是可重试错误，而不是静默的成功结果。** 两个适配器都把没有携带任何内容块的终止性 `stop` 结束映射为携带规范 `EMPTY_RESPONSE` code 的 `finish {kind:'error'}`，`liwa-llm-retry` 默认会重试它。
 - **每个提供方 HTTP 请求都携带应用归属头。** 适配器发送 `attributionHeaders()`（见下文）作为 `User-Agent` 基线，并通过协议级测试加以证明。
-- **回放状态归适配器所有；其切分是共享词汇。** 成功的 `finish` 可以携带一个 `ReplayEnvelope`：不透明的响应级元数据，加上与发射块序列对齐的可选逐块条目。对齐关系是 harness 的词汇——组装丢弃某个块时，同一位置的条目一并丢弃，因此存储的元数据始终描述存储的内容。循环把裁剪后的数据与组装后的 assistant 消息一起存储。后续请求中，仅当历史提供方与目标提供方当前注册到完全相同的适配器实例时，`LlmRuntime` 才会传递该状态。该适配器负责校验状态并拥有所有跨模型或跨提供方转换；其他适配器只会收到提供方无关的内容以及提供方／模型字段，不会收到私有状态。持久化内容保持权威：读取适配器无法使用的已存状态只会把这一条消息降级为提供方无关转换并带出诊断，而不是让请求失败。
+- **回放状态归适配器所有；其切分是共享词汇。** 成功的 `finish` 可以携带一个 `ReplayEnvelope`：不透明的响应级元数据，加上与发射块序列对齐的可选逐块条目。对齐关系是灵鲸的词汇——组装丢弃某个块时，同一位置的条目一并丢弃，因此存储的元数据始终描述存储的内容。循环把裁剪后的数据与组装后的 assistant 消息一起存储。后续请求中，仅当历史提供方与目标提供方当前注册到完全相同的适配器实例时，`LlmRuntime` 才会传递该状态。该适配器负责校验状态并拥有所有跨模型或跨提供方转换；其他适配器只会收到提供方无关的内容以及提供方／模型字段，不会收到私有状态。持久化内容保持权威：读取适配器无法使用的已存状态只会把这一条消息降级为提供方无关转换并带出诊断，而不是让请求失败。
 
 ## `ResolvedRetryPolicy`
 
@@ -657,7 +657,7 @@ interface GenerateOptions {
   reasoningEffort?: ReasoningEffortId
   /**
    * Ordered conversation messages, exactly as the provider sees them. A
-   * loop-built request passes the derived history (dsh-agent-loop), whose
+   * loop-built request passes the derived history (liwa-agent-loop), whose
    * leading system-role message carries the system prompt; a hand-built
    * one-shot may include identity-free user inputs.
    */
@@ -712,14 +712,14 @@ interface FinishReasonMap {
 
 `FinishReason = FinishReasonMap[keyof FinishReasonMap]`。`TokenUsage`（逐调用计量，含不相交的缓存字段）详见[下文](#tokenusage)。
 
-`GenerateOptions.tools` 携带 `ToolSchema`——工具的 JSON Schema 描述，发送给模型。它声明在 dsh-llm（而非 dsh-tools）中，正是因为它是循环每一步组装请求的一部分：
+`GenerateOptions.tools` 携带 `ToolSchema`——工具的 JSON Schema 描述，发送给模型。它声明在 liwa-llm（而非 liwa-tools）中，正是因为它是循环每一步组装请求的一部分：
 
 ```ts type-equiv
 /**
  * JSON-schema description of a tool, as sent to the model.
  *
- * Declared here (not in dsh-tools) because it is part of {@link GenerateOptions};
- * dsh-tools' ToolDefinition and dsh-system-prompt's PromptAssembly both import
+ * Declared here (not in liwa-tools) because it is part of {@link GenerateOptions};
+ * liwa-tools' ToolDefinition and liwa-system-prompt's PromptAssembly both import
  * it from this package.
  */
 interface ToolSchema {
@@ -762,7 +762,7 @@ interface LlmModelDiscoveryRequest {
   baseURL?: string
   /** Wire protocol the endpoint speaks, when the draft names one. */
   api?: string
-  /** Credential for this interrogation alone; the harness never stores it. */
+  /** Credential for this interrogation alone; Liwa never stores it. */
   apiKey?: string
 }
 ```
@@ -887,7 +887,7 @@ interface PreparedLlmCall {
 
 ```ts public-api
 /**
- * Provider-wire adapter for the harness message and stream vocabulary. Register implementations
+ * Provider-wire adapter for the Liwa message and stream vocabulary. Register implementations
  * with `ctx.llm.registerAdapter(providers, adapter)`. Every provider HTTP request must include
  * `attributionHeaders()`; prove the headers are added in the wire request or library header hook. The direct-fetch
  * DeepSeek and library-backed pi-ai adapters meet this contract through different internals.

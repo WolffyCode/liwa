@@ -1,6 +1,6 @@
 /**
  * The escalation vocabulary and choreography shared by every sandbox-enforcing
- * tool family (`@deepseek-ai/dsh-tool-bash`, `@deepseek-ai/dsh-tool-fs`): the
+ * tool family (`@liwa/tool-bash`, `@liwa/tool-fs`): the
  * strictly-wider ladder, the argument-pairing validation, the model-facing
  * denial/hint markers, and {@link approveEscalation} — the ordered fail-closed
  * sequence that resolves a `sandbox_permissions` request through a
@@ -13,10 +13,10 @@
  * hands the closure down, so this package never depends on the approval or
  * agent packages.
  *
- * @module dsh-sandbox/escalation
+ * @module liwa-sandbox/escalation
  */
 
-import { assertNever } from '@deepseek-ai/dsh-util-values'
+import { assertNever } from '@liwa/util-values'
 import { escalationDisplayReason } from './locales.ts'
 import type { SandboxMode } from './index.ts'
 

@@ -1,12 +1,12 @@
 /** Standard ACP session configuration over one Agent's model selection. */
 
 import type { SessionConfigOption, SessionConfigValueId } from '@agentclientprotocol/sdk'
-import { type Model, type ModelSelection } from '@deepseek-ai/dsh-agent'
-import { ReasoningEffortId, type LlmCallConfig, type LlmRuntime } from '@deepseek-ai/dsh-llm'
+import { type Model, type ModelSelection } from '@liwa/agent'
+import { ReasoningEffortId, type LlmCallConfig, type LlmRuntime } from '@liwa/llm'
 
 const MODEL_CONFIG_ID = 'model'
 const REASONING_CONFIG_ID = 'reasoning_effort'
-// DSH reasoning effort ids are non-empty, so the empty opaque ACP value is a disjoint provider-default choice.
+// Liwa reasoning effort ids are non-empty, so the empty opaque ACP value is a disjoint provider-default choice.
 const PROVIDER_DEFAULT_REASONING_VALUE = ''
 
 interface ModelChoice {

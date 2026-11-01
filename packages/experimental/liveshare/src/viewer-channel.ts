@@ -2,18 +2,18 @@
  * Viewer read channel: one request the Relay forwards unread and the owner's answer to it.
  *
  * The viewer page speaks this channel instead of the owner's HTTP API, so the Relay stays
- * ignorant of DSH endpoints and payloads. Both halves of the package import these types; the
+ * ignorant of Liwa endpoints and payloads. Both halves of the package import these types; the
  * Relay only moves the encoded values.
  *
- * @module @deepseek-ai/dsh-experimental-liveshare/src/viewer-channel
+ * @module @liwa/experimental-liveshare/src/viewer-channel
  */
 
 /**
  * Page global the Relay's carrier installs on a viewer page. The carrier writes the same name in
- * `@deepseek-ai/dsh-experimental-liveshare-protocol`; it is restated here because a client bundle may
+ * `@liwa/experimental-liveshare-protocol`; it is restated here because a client bundle may
  * not import that package's values.
  */
-export const LIVESHARE_VIEWER_GLOBAL = '__DSH_LIVESHARE_VIEWER__'
+export const LIVESHARE_VIEWER_GLOBAL = '__LIWA_LIVESHARE_VIEWER__'
 
 /** One unary Host RPC the viewer asks the owner to perform. */
 export interface ViewerCallRequest {

@@ -32,16 +32,16 @@ def main():
         launcher = binaries / "launcher"
         subprocess.run(["xcrun", "swiftc", "-parse-as-library", str(ROOT / "tests/LauncherFixture.swift"), "-o", str(launcher)],
                        check=True, timeout=60)
-        nested = root / "Harness Dev.app"
+        nested = root / "Liwa Dev.app"
         nested_launcher = nested / "Contents" / "MacOS" / "launcher"
         nested_launcher.parent.mkdir(parents=True)
         shutil.copy2(launcher, nested_launcher)
         identity = uuid.uuid4().hex
         register = "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
-        for role, application, name in [("owner", bundle, "Code"), ("nested", nested, "Harness Dev")]:
+        for role, application, name in [("owner", bundle, "Code"), ("nested", nested, "Liwa Dev")]:
             with (application / "Contents" / "Info.plist").open("wb") as output:
                 plistlib.dump({"CFBundleExecutable": "launcher",
-                              "CFBundleIdentifier": f"dev.dsh.cua.launcher-fixture.{role}-{identity}",
+                              "CFBundleIdentifier": f"dev.liwa.cua.launcher-fixture.{role}-{identity}",
                               "CFBundleName": name, "CFBundleDisplayName": name, "CFBundlePackageType": "APPL",
                               "LSUIElement": True}, output)
             cleanup.callback(subprocess.run, [register, "-u", str(application)], check=True,

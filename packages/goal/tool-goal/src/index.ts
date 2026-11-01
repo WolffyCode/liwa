@@ -1,23 +1,23 @@
 /**
  * Model-facing `get_goal`, `create_goal`, and `update_goal` tools over the
  * persisted same-session goal domain.
- * @module @deepseek-ai/dsh-tool-goal
+ * @module @liwa/tool-goal
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { GoalId } from '@deepseek-ai/dsh-goal'
-import type { GoalRef, GoalView } from '@deepseek-ai/dsh-goal'
-import { boundContextSummary, createUserMessage, HarnessError } from '@deepseek-ai/dsh-llm'
-import type { ContextFormed } from '@deepseek-ai/dsh-llm'
-declare module '@deepseek-ai/dsh-llm' {
+import type { Context } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import { GoalId } from '@liwa/goal'
+import type { GoalRef, GoalView } from '@liwa/goal'
+import { boundContextSummary, createUserMessage, LiwaError } from '@liwa/llm'
+import type { ContextFormed } from '@liwa/llm'
+declare module '@liwa/llm' {
   interface MessageSourceMap {
     'tool-goal': { kind: 'tool-goal' } & ContextFormed
   }
 }
 
-import { defineTool } from '@deepseek-ai/dsh-tools'
-import type { GenericCallView } from '@deepseek-ai/dsh-tools'
+import { defineTool } from '@liwa/tools'
+import type { GenericCallView } from '@liwa/tools'
 import {
   completionAuthority,
   goalToolExecution,
@@ -145,7 +145,7 @@ function hasRoundCap(value: number | undefined): value is number {
 function goalRef(goalId: string, revision: number): GoalRef {
   if (goalId.length === 0 || goalId !== goalId.trim()
     || !Number.isSafeInteger(revision) || revision < 1) {
-    throw new HarnessError(
+    throw new LiwaError(
       'goal_id must be non-empty and revision must be a positive safe integer',
       'GOAL_TOOL_INVALID_UPDATE',
     )
@@ -268,7 +268,7 @@ export function apply(ctx: Context, config: Config): void {
         const current = ctx.goals.get(execution.agent)
         if (args.action === 'resume' && current?.id === ref.id && current.revision === ref.revision
           && current.phase === 'paused') {
-          throw new HarnessError(
+          throw new LiwaError(
             'the model cannot resume a paused goal; the user must resume it',
             'GOAL_TOOL_RESUME_PAUSED',
           )
@@ -281,11 +281,11 @@ export function apply(ctx: Context, config: Config): void {
       const authority = completionAuthority(ctx, execution)
       if (args.action === 'blocked'
         && (args.blocked_reason === undefined || args.blocked_reason.trim().length === 0)) {
-        throw new HarnessError('blocked_reason is required with action blocked', 'GOAL_TOOL_INVALID_UPDATE')
+        throw new LiwaError('blocked_reason is required with action blocked', 'GOAL_TOOL_INVALID_UPDATE')
       }
       if (args.action === 'blocked' && authority.kind === 'goal-round'
         && authority.goal.roundsStarted < resolved.blockedAfterConsecutiveRounds) {
-        throw new HarnessError(
+        throw new LiwaError(
           `blocked requires at least ${resolved.blockedAfterConsecutiveRounds} consecutive goal rounds; `
           + `current round is ${authority.goal.roundsStarted}`,
           'GOAL_TOOL_BLOCK_THRESHOLD',

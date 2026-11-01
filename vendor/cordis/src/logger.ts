@@ -1,4 +1,4 @@
-import { defineProperty, hyphenate } from '@deepseek-ai/cosmokit'
+import { defineProperty, hyphenate } from '@liwa/cosmokit'
 import { Context } from './context.ts'
 import { Fiber } from './fiber.ts'
 import { Service } from './service.ts'

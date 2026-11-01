@@ -5,25 +5,25 @@
  * POSIX owners stage TERM before KILL; Windows owners terminate immediately.
  * This layer reacts to an abort signal; callers own deadlines, teardown
  * ladders, and cause classification.
- * @module dsh-subprocess-local/spawn
+ * @module liwa-subprocess-local/spawn
  */
 
 import { type ChildProcess, type SpawnOptions, spawn, spawnSync } from 'node:child_process'
 import type { Readable } from 'node:stream'
 import { setTimeout as sleepMs } from 'node:timers/promises'
-import { scrubbedParentEnv } from '@deepseek-ai/dsh-subprocess'
-import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
+import { scrubbedParentEnv } from '@liwa/subprocess'
+import { MAX_TIMER_DELAY_MS } from '@liwa/timeout'
 import type {
   SubprocessCollect,
   SubprocessHandle,
   SubprocessOutcome,
   SubprocessOutputMode,
   SubprocessSpawnSpec,
-} from '@deepseek-ai/dsh-subprocess'
+} from '@liwa/subprocess'
 import type { BoundProcessOwner, ManagedProcessLaunch } from './managed-owner.ts'
 import { waitWithAbort } from './managed-owner.ts'
 import { controlEnvironment, controlPipe } from './control-spawn.ts'
-import { SUBPROCESS_CONTROL_FD } from '@deepseek-ai/dsh-subprocess/control'
+import { SUBPROCESS_CONTROL_FD } from '@liwa/subprocess/control'
 import { linuxProcessGroupHasLiveMembers } from './process-inspector.ts'
 import { OutputCollector, prepareManagedProcessBinding, type SpillFailureReporter } from './output.ts'
 

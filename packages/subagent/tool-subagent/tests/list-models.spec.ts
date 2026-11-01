@@ -1,29 +1,29 @@
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
+import { executeToolFixture } from '@liwa/tool-testkit'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
+import AgentRegistry from '@liwa/agent'
 import { mountWorkingDirectoryFixture } from '../../subagent/tests/working-directory-fixture.ts'
 import { describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import {
   ToolCallId,
   LlmAdapter,
   ReasoningEffortId,
-} from '@deepseek-ai/dsh-llm'
+} from '@liwa/llm'
 import type {
   GenerateOptions,
   LlmModelInfo,
   LlmResolvedModelInfo,
   StreamChunk,
-} from '@deepseek-ai/dsh-llm'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import SubagentRuntime from '@deepseek-ai/dsh-subagent'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import { SessionId } from '@deepseek-ai/dsh-session'
+} from '@liwa/llm'
+import ToolRuntime from '@liwa/tools'
+import SystemPrompt from '@liwa/system-prompt'
+import SubagentRuntime from '@liwa/subagent'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import { SessionId } from '@liwa/session'
 import * as tool from '../src/index.ts'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
+import AgentLoop from '@liwa/agent-loop'
+import type { Agent } from '@liwa/agent'
+import { mountAgentLoopTestDependencies } from '@liwa/agent-loop-testkit'
 import SubagentModelSelectionConfig from '../src/model-selection-settings.ts'
 import { modelSelectionSetupAgent, ownContext, setup, testToolSignal, text } from './harness.ts'
 

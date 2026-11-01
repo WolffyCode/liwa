@@ -4,10 +4,10 @@ import clsx from 'clsx'
 import {
   Button, IconClockOutlineRegular, IconCloseOutlineRegular, IconEllipsisOutlineRegular, IconPlusOutlineRegular,
   IconSearchOutlineRegular, IconTrashOutlineRegular, Input, Menu, Modal, Tooltip,
-} from '@deepseek-ai/dsh-client-ui-primitives'
-import type { HostObservable, InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
-import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
-import type { ScheduleCatalogEntry, ScheduleId } from '@deepseek-ai/dsh-schedule/client'
+} from '@liwa/client-ui-primitives'
+import type { HostObservable, InjectFace, PropsLocale, PropsRuntime } from '@liwa/client-ui-slots'
+import type {} from '@liwa/client-ui-layout/client'
+import type { ScheduleCatalogEntry, ScheduleId } from '@liwa/schedule/client'
 import type { CatalogSnapshot } from './catalog-source.ts'
 import { CatalogFeedback } from './CatalogFeedback.tsx'
 import { TaskDetail, useTaskDetail, type TaskDetailInjected } from './TaskDetail.tsx'

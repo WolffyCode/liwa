@@ -44,22 +44,22 @@ describe('WorkspaceBrowser.module.css list', () => {
   })
 
   it('counts the themed scrollbar inside the shell trailing inset', () => {
-    expect(root?.get('--dsh-session-list-edge-inset')).toBe('var(--dsh-sidebar-inline-padding)')
-    expect(root?.get('--dsh-session-list-scrollbar-width')).toBe('5px')
-    expect(root?.get('--dsh-session-list-scrollbar-offset')).toBe('2px')
-    expect(root?.get('padding-right')).toBe('var(--dsh-session-list-edge-inset)')
+    expect(root?.get('--liwa-session-list-edge-inset')).toBe('var(--liwa-sidebar-inline-padding)')
+    expect(root?.get('--liwa-session-list-scrollbar-width')).toBe('5px')
+    expect(root?.get('--liwa-session-list-scrollbar-offset')).toBe('2px')
+    expect(root?.get('padding-right')).toBe('var(--liwa-session-list-edge-inset)')
     expect(listArea?.get('margin-left')).toBe('-4px')
     expect(listArea?.get('padding-left')).toBe('4px')
-    expect(listArea?.get('margin-right')).toBe('calc(-1 * var(--dsh-session-list-edge-inset))')
-    expect(declarations('.fade')?.get('right')).toBe('var(--dsh-session-list-edge-inset)')
-    expect(list?.get('margin-right')).toBe('var(--dsh-session-list-scrollbar-offset)')
+    expect(listArea?.get('margin-right')).toBe('calc(-1 * var(--liwa-session-list-edge-inset))')
+    expect(declarations('.fade')?.get('right')).toBe('var(--liwa-session-list-edge-inset)')
+    expect(list?.get('margin-right')).toBe('var(--liwa-session-list-scrollbar-offset)')
     expect(list?.get('margin-left')).toBe('-4px')
     expect(list?.get('padding-left')).toBe('4px')
     expect(list?.get('padding-right')).toBe([
       'calc(',
-      'var(--dsh-session-list-edge-inset)',
-      '- var(--dsh-session-list-scrollbar-width)',
-      '- var(--dsh-session-list-scrollbar-offset)',
+      'var(--liwa-session-list-edge-inset)',
+      '- var(--liwa-session-list-scrollbar-width)',
+      '- var(--liwa-session-list-scrollbar-offset)',
       ')',
     ].join(' '))
     expect(declarations('.list::-webkit-scrollbar')).toBeUndefined()
@@ -83,8 +83,8 @@ describe('WorkspaceBrowser.module.css list', () => {
     expect(listTopMarker?.get('top')).toBe('-8px')
     expect(listTopMarker?.get('left')).toBe('0')
     expect(workspaceMarker?.get('left')).toBe('0')
-    expect(sessionMarker?.get('left')).toBe('calc(-1 * var(--dsh-sidebar-paint-inset))')
-    expect(sessionMarker?.get('right')).toBe('calc(4px - var(--dsh-sidebar-paint-inset))')
+    expect(sessionMarker?.get('left')).toBe('calc(-1 * var(--liwa-sidebar-paint-inset))')
+    expect(sessionMarker?.get('right')).toBe('calc(4px - var(--liwa-sidebar-paint-inset))')
     for (const marker of [listTopMarker, workspaceMarker, sessionMarker]) {
       expect(marker?.get('height')).toBe('12px')
       expect(marker?.get('background')).not.toContain('radial-gradient')
@@ -108,9 +108,9 @@ describe('WorkspaceBrowser.module.css list', () => {
     // own box, so the title's one shared margin below needs no per-view override.
     expect(rowDeclarations('.slot')?.get('width')).toBe('16px')
     expect(rowDeclarations('.slot')?.get('height')).toBe('20px')
-    expect(rowDeclarations('.sessionRow .title')?.get('margin')).toBe('0 6px 0 var(--dsh-sidebar-label-gap)')
+    expect(rowDeclarations('.sessionRow .title')?.get('margin')).toBe('0 6px 0 var(--liwa-sidebar-label-gap)')
     expect(rowDeclarations('.searchResultRow')?.get('min-height')).toBe('48px')
-    expect(rowDeclarations('.searchResultTitle')?.get('margin')).toBe('0 var(--dsh-sidebar-label-gap)')
+    expect(rowDeclarations('.searchResultTitle')?.get('margin')).toBe('0 var(--liwa-sidebar-label-gap)')
     expect(rowDeclarations('.sessionRow.selected')?.get('background-color'))
       .toBe('var(--dsw-alias-interactive-bg-hover)')
   })
@@ -119,7 +119,7 @@ describe('WorkspaceBrowser.module.css list', () => {
     for (const selector of ['.projectRow', '.sessionRow']) {
       expect(rowDeclarations(selector)?.get('padding')).toBe('0 8px')
       expect(rowDeclarations(selector)?.get('background-clip')).toBe('padding-box')
-      expect(rowDeclarations(selector)?.get('border-inline')).toBe('var(--dsh-sidebar-paint-inset) solid transparent')
+      expect(rowDeclarations(selector)?.get('border-inline')).toBe('var(--liwa-sidebar-paint-inset) solid transparent')
     }
     expect(rowDeclarations('.rowActions')?.get('gap')).toBe('13px')
     expect(rowDeclarations('.iconButton')?.get('width')).toBe('24px')
@@ -149,7 +149,7 @@ describe('WorkspaceBrowser.module.css list', () => {
   it('aligns the expanded search field without changing list scroll ownership', () => {
     const header = declarations('.root:not(.rail) .sectionHeader:has(.searchExpanded)')
     expect(header?.get('margin-right')).toBe('0')
-    expect(header?.get('padding-inline')).toBe('calc(var(--dsh-sidebar-paint-inset) + 1px)')
+    expect(header?.get('padding-inline')).toBe('calc(var(--liwa-sidebar-paint-inset) + 1px)')
     expect(header?.get('gap')).toBe('0')
     expect(declarations('.root:not(.rail) .sectionHeader:not(:has(.searchExpanded))')?.get('padding-right')).toBe('1px')
     expect(declarations('.searchExpanded')?.get('width')).toBe('100%')

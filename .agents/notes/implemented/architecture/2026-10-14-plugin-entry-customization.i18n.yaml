@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-10-14-plugin-entry-customization.md
 /agent-note-plugin-entry-customization-region-owned-pins-and-more-menus:
-  en: 2fdf5b95d5603955
-  zh: bfdc61e7db5f5f5b
+  en: e8a3eb397f5fa668
+  zh: 28b71bcbb6273f3c
 /agent-note-plugin-entry-customization-region-owned-pins-and-more-menus/problem:
   en: 896876f139383cba
   zh: 42a4aae7e5885780

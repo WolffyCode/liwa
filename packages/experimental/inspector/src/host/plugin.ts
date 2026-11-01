@@ -1,12 +1,12 @@
 /** Host Cordis plugin for the cross-realm Inspector Worker and full fetch capture. */
 
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@liwa/cordis'
 import { fileURLToPath } from 'node:url'
 import { connect } from 'node:net'
 import type { Duplex } from 'node:stream'
-import type { IndexInjection } from '@deepseek-ai/dsh-host-webserver'
-import type {} from '@deepseek-ai/dsh-client-connection'
-import type {} from '@deepseek-ai/dsh-cmdline'
+import type { IndexInjection } from '@liwa/host-webserver'
+import type {} from '@liwa/client-connection'
+import type {} from '@liwa/cmdline'
 import { resolveInspectorOptions, startInspector, type InspectorHandle, type InspectorOptions } from './bridge/controller.ts'
 import type { InspectorClientBootstrap } from '../shared/bridge/messages/control.ts'
 import { createInspectorService } from '../shared/service.ts'
@@ -83,10 +83,10 @@ export async function apply(ctx: Context, config: HostPluginConfig): Promise<voi
       }))
       disposers.push(ctx.provide('inspector', createInspectorService(handle.source)))
       disposers.push(ctx.on('webserver/index-inject', (table: IndexInjection[]) => {
-        table.push({ kind: 'global', name: '__DSH_INSPECTOR__', value: handle.endpoint.client })
+        table.push({ kind: 'global', name: '__LIWA_INSPECTOR__', value: handle.endpoint.client })
       }))
       const assets = serveStatic(fileURLToPath(new URL('./lib/devtools/',
-        import.meta.resolve('@deepseek-ai/dsh-experimental-inspector/package.json'))), {
+        import.meta.resolve('@liwa/experimental-inspector/package.json'))), {
         index: false, redirect: false, fallthrough: true,
         setHeaders: (res) => { res.setHeader('X-Content-Type-Options', 'nosniff') },
       })
@@ -165,7 +165,7 @@ export async function apply(ctx: Context, config: HostPluginConfig): Promise<voi
         },
       }))
       // This readiness URL is emitted while the plugin tree is still loading, before a logger sink is guaranteed.
-      console.log(`dsh inspector: ${handle.endpoint.devtoolsFrontendUrl}`)
+      console.log(`liwa inspector: ${handle.endpoint.devtoolsFrontendUrl}`)
       ready.resolve(handle.endpoint.client)
       if (ctx.get('cmdlineArgs')?.get().includes('--inspect')) {
         const { default: open, apps } = await import('open')

@@ -3,7 +3,7 @@ description: "非 owner Peer 的 Remote 方法级访问控制：基于角色的 
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-api-remote-access
+# @liwa/api-remote-access
 
 [English](README.md) | 中文
 
@@ -39,13 +39,13 @@ role `{ name, resource, actions }` 是普通值，表示限定一种资源种类
 
 Gateway 依次从 `@Remote` 与 `@RemoteScope` 的 `resources` 读取函数、lookup 与 Host Context adapter 的 `resource` 声明、`typert.resources` 中的默认字段或 resolver 声明解析资源，解析顺序由 [API Gateway](../gateway/README.zh.md) 负责；本包不读取任何参数字段。不指明任何资源的调用只访问 `global` 资源，因此只有 `global` 级 role 能放行；把某个 action 放进 `global` 级 role，等于允许该 principal 在调用未指明的任何资源上调用它。资源非法的调用由 Gateway 以 `resource-invalid` 拒绝，不询问 `decide()`。
 
-policy 作者必须把 `session/attachment` 视为整个附件存储的读取权限：在任意一条 Session 资源上授予该 action，就允许调用方使用这个 `sessionId` 读取其他 Session 引用或未被任何 Session 引用的图片。Gateway 仍检查该 Session 资源，但处理函数既不检查 Session 是否存在，也不检查图片关联。需要让不同读者使用不同图片存储时，须使用独立 Host 实例及各自的 `DSH_HOME` 目录；见[图片访问规则](../../../.agents/notes/implemented/architecture/2026-10-23-store-scoped-image-reads.zh.md)。
+policy 作者必须把 `session/attachment` 视为整个附件存储的读取权限：在任意一条 Session 资源上授予该 action，就允许调用方使用这个 `sessionId` 读取其他 Session 引用或未被任何 Session 引用的图片。Gateway 仍检查该 Session 资源，但处理函数既不检查 Session 是否存在，也不检查图片关联。需要让不同读者使用不同图片存储时，须使用独立 Host 实例及各自的 `LIWA_HOME` 目录；见[图片访问规则](../../../.agents/notes/implemented/architecture/2026-10-23-store-scoped-image-reads.zh.md)。
 
 `bindings()`、condition 或 `explain()` 抛错时，本次判定以 `policy-failed` 拒绝；计算快照时，`bindings()` 抛错即该 principal 没有 grant，condition 抛错即该 action 不放行。有问题的规则因此不会破坏共享的 `$events` 事件源、快照流或页面渲染。每次 `invalidate()` 以及每次 policy 注册或撤回之后，服务日志对每个 policy 只报告第一次失败；此后该 policy 的失败不再记录，直到下一次上述变化。
 
 转发事件按其转发条目的读取函数指明的资源（条目未声明时为 `global`）判定 action `event:<name>`，对非 owner 整条送达或整条不送，从不裁剪 payload。事件携带其声明的每个资源，因此读取函数返回 `undefined` 时该事件的资源非法，Gateway 不询问 `decide()`，不送达任何非 owner。一个事件至多指明一个资源，因此集合类变化走 follow 类流（`session/follow`、`session/control`、`workspace/follow`），由这些方法内联经 `allows()` 逐项判定。
 
-本服务经 `webserver/index-inject` 为 webServer 渲染的每个 index 加入名为 `REMOTE_ACCESS_SNAPSHOT_KEY`（`__DSH_REMOTE_ACCESS__`）的 `global` 行，值为该次渲染所代表 Peer 的 `snapshotFor(peer.principal)`：owner 的浏览器页面以 `{ type: 'baseline', owner: true }` 打开，为非 owner Peer 渲染的页面（例如在 owner Host 上渲染的 liveshare 读者页）以该读者的 grant 打开。Client 入口在挂载时读取该全局。
+本服务经 `webserver/index-inject` 为 webServer 渲染的每个 index 加入名为 `REMOTE_ACCESS_SNAPSHOT_KEY`（`__LIWA_REMOTE_ACCESS__`）的 `global` 行，值为该次渲染所代表 Peer 的 `snapshotFor(peer.principal)`：owner 的浏览器页面以 `{ type: 'baseline', owner: true }` 打开，为非 owner Peer 渲染的页面（例如在 owner Host 上渲染的 liveshare 读者页）以该读者的 grant 打开。Client 入口在挂载时读取该全局。
 
 | `remote-access/denied` 的 `details.reason` | 原因 |
 |---|---|
@@ -65,7 +65,7 @@ Client 入口同步读取 index 注入在 `REMOTE_ACCESS_SNAPSHOT_KEY` 下的 ba
 - `ctx.remoteAccess.whenAccess(action, callback)`，在 `global` 资源允许 `action` 期间保持回调的效果：答案变为 true 时执行回调，变为 false 时逆序撤销其效果，下一次变为 true 时再次执行。回调返回一个 disposer 或一组 disposer，与 `ctx.slots.inject` 相同；答案已为 true 时（owner 恒为 true）回调同步执行；控制器属于调用方 fiber。允许期间的安装失败立即抛出；之后的安装失败使控制器停止，并在微任务中重新抛出。`whenResourceAccess(kind, id, action, callback)` 对已声明种类的某个资源做同样的事；
 - 标准 Hook `useRemoteAccess(action)`，回答 `global` 资源上的访问。
 
-领域 UI 包在 `source()` 之上发布各自资源的 Hook，在 `whenResourceAccess()` 之上发布各自的 `whenAccess`：[ui-session](../../client/ui-session/README.zh.md) 提供 Session 资源上的 `useSessionAccess(sessionId, action)`、会话作用域的 `useAccess(action)` 与 `ctx.uiSession.whenAccess(sessionId, action, callback)`（与 `global` 资源上的 `useRemoteAccess` 不同名），[ui-workspace](../../client/ui-workspace/README.zh.md) 提供 Workspace 资源上的 `useWorkspaceAccess(workspaceId, action)` 与 `ctx.uiWorkspace.whenAccess(workspaceId, action, callback)`。只有拥有某个资源种类的包才调用 `source()` 与 `whenResourceAccess()`；其他插件经访问 Hook 与各 `whenAccess` 读取访问。Hook 的 `action` 类型为 `RemoteEndpoint`，即某个 Client Remote namespace 声明的端点。非 owner 的答案是该资源的 grant 是否列出该 action，不回退 `global` 答案，因此没有 grant 或 grant 未列出任何 action 的资源回答 false。owner 的所有答案为 true；没有注入 baseline 的非 owner 页面、快照流终止失败的非 owner 页面，所有答案为 false；终止失败会连同错误一并报告，非 owner 附“刷新页面重连”的提示，owner 附“答案不受影响”的说明；重连期间保留上次快照。注入的 baseline 格式错误时挂载失败。Hook 从不发请求，Host 仍检查每次调用。[`dsh-client-test-runtime`](../../test-support/client-runtime/README.zh.md) 在 Client spec 中以固定答案（默认全允许）的访问替换本行。
+领域 UI 包在 `source()` 之上发布各自资源的 Hook，在 `whenResourceAccess()` 之上发布各自的 `whenAccess`：[ui-session](../../client/ui-session/README.zh.md) 提供 Session 资源上的 `useSessionAccess(sessionId, action)`、会话作用域的 `useAccess(action)` 与 `ctx.uiSession.whenAccess(sessionId, action, callback)`（与 `global` 资源上的 `useRemoteAccess` 不同名），[ui-workspace](../../client/ui-workspace/README.zh.md) 提供 Workspace 资源上的 `useWorkspaceAccess(workspaceId, action)` 与 `ctx.uiWorkspace.whenAccess(workspaceId, action, callback)`。只有拥有某个资源种类的包才调用 `source()` 与 `whenResourceAccess()`；其他插件经访问 Hook 与各 `whenAccess` 读取访问。Hook 的 `action` 类型为 `RemoteEndpoint`，即某个 Client Remote namespace 声明的端点。非 owner 的答案是该资源的 grant 是否列出该 action，不回退 `global` 答案，因此没有 grant 或 grant 未列出任何 action 的资源回答 false。owner 的所有答案为 true；没有注入 baseline 的非 owner 页面、快照流终止失败的非 owner 页面，所有答案为 false；终止失败会连同错误一并报告，非 owner 附“刷新页面重连”的提示，owner 附“答案不受影响”的说明；重连期间保留上次快照。注入的 baseline 格式错误时挂载失败。Hook 从不发请求，Host 仍检查每次调用。[`liwa-client-test-runtime`](../../test-support/client-runtime/README.zh.md) 在 Client spec 中以固定答案（默认全允许）的访问替换本行。
 
 <a id="model-experience"></a>
 ## 模型体验

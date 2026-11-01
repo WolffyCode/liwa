@@ -1,26 +1,38 @@
 /** Account route cancellation uses the real loop, registry, and tool lifecycle. */
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
-import { afterEach, expect, it, vi } from 'vitest'
-import { installAccountTaskCancellation, type DeepSeekAccount } from '@deepseek-ai/dsh-deepseek-account'
-import { Context } from '@deepseek-ai/cordis'
-import LlmRuntime, { createUserMessage, LlmAdapter, type GenerateOptions, type StreamChunk, ToolCallId } from '@deepseek-ai/dsh-llm'
-import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
-import { defineContentToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import * as DeepSeek from '@deepseek-ai/dsh-llm-deepseek-api-key'
-import * as AccountProvider from '@deepseek-ai/dsh-llm-deepseek-account'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
+import { afterEach, beforeEach, expect, it, vi } from 'vitest'
+import { installAccountTaskCancellation, type DeepSeekAccount } from '@liwa/deepseek-account'
+import { Context } from '@liwa/cordis'
+import LlmRuntime, { createUserMessage, LlmAdapter, type GenerateOptions, type StreamChunk, ToolCallId } from '@liwa/llm'
+import AgentRegistry, { type Agent } from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import SessionStore, { SessionId } from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime from '@liwa/tools'
+import { defineContentToolFixture } from '@liwa/tool-testkit'
+import * as DeepSeek from '@liwa/llm-deepseek-api-key'
+import * as AccountProvider from '@liwa/llm-deepseek-account'
 import { assemble } from './assemble.ts'
 
 const contexts: Context[] = []
+let testHome: string
+
+// Each model request resolves the anonymous user id inside $LIWA_HOME; a temp home keeps the suite off the person's ~/.liwa.
+beforeEach(() => {
+  testHome = mkdtempSync(join(tmpdir(), 'liwa-account-routing-'))
+  vi.stubEnv('LIWA_HOME', testHome)
+})
+
 afterEach(async () => {
   vi.restoreAllMocks()
   vi.unstubAllEnvs()
   vi.unstubAllGlobals()
   for (const ctx of contexts.splice(0)) await ctx.fiber.dispose()
+  rmSync(testHome, { recursive: true, force: true })
 })
 
 /** Fail the account listing request fast, so the route serves its bundled catalog and fetch mocks see only Messages traffic. */

@@ -14,7 +14,7 @@ import type { Browser, Locator, Page, Request } from 'playwright'
 import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed, onTestFinished } from 'vitest'
 import { basename, join } from 'node:path'
-import { SessionId } from '@deepseek-ai/dsh-session'
+import { SessionId } from '@liwa/session'
 import {
   acknowledgeReloadConnectionLoss, assertFixtureInventory, captureStableAria, compareOrRefreshGolden,
   launchWebScaffold, watchConsole, webSnapshotMode, type WebScaffold,
@@ -102,7 +102,7 @@ describe('web e2e: settings modal and General preferences', () => {
     await expect.poll(() => dialog.getByText('外观', { exact: true }).count(), { timeout: 5_000 }).toBe(1)
     await dialog.getByText('工作步骤展示', { exact: true }).locator('../..')
       .getByRole('button', { name: '详细', exact: true }).waitFor({ timeout: 10_000 })
-    expect(await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'))
+    expect(await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'))
       .not.toContain('transcriptView:')
     const openDocument = dialog.getByRole('button', { name: '打开配置文件' })
     await openDocument.waitFor({ timeout: 10_000 })
@@ -385,7 +385,7 @@ describe('web e2e: settings modal and General preferences', () => {
     await page.getByRole('menuitem', { name: '仅可查看' }).click()
     await dialog.getByRole('button', { name: '仅可查看' }).waitFor({ timeout: 10_000 })
 
-    const document = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
+    const document = await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(document).toContain('id: permission')
     expect(document).toContain('defaultPreset: read-only')
     expect(existing.snapshotEvents().find(event => event.type === 'permission/preset')?.data)
@@ -406,7 +406,7 @@ describe('web e2e: settings modal and General preferences', () => {
     await confirmation.getByRole('checkbox').click()
     await enable.click()
     await dialog.getByRole('button', { name: '完全权限' }).waitFor({ timeout: 10_000 })
-    const confirmedDocument = await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
+    const confirmedDocument = await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8')
     expect(confirmedDocument).toContain('defaultPreset: danger-full-access')
     const confirmed = await createSession('settings-permission-confirmed')
     expect(confirmed.snapshotEvents().map(event => [event.type, event.data])).toEqual([
@@ -447,7 +447,7 @@ describe('web e2e: settings modal and General preferences', () => {
     const darkCube = initialDialog.getByRole('button', { name: '深色' })
     await selectTheme(darkCube, 'dark')
     await expect.poll(() => darkCube.getAttribute('aria-pressed'), { timeout: 5_000 }).toBe('true')
-    await expect.poll(async () => readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'), { timeout: 5_000 })
+    await expect.poll(async () => readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'), { timeout: 5_000 })
       .toContain('preference: dark')
     await page.keyboard.press('Escape')
 
@@ -523,7 +523,7 @@ describe('web e2e: settings modal and General preferences', () => {
         faviconPaths: icons.filter(icon => matchMedia(icon.media).matches).map(icon => new URL(icon.href).pathname),
         attr: document.body.hasAttribute('data-ds-dark-theme'),
         background: computed.backgroundColor,
-        legacy: localStorage.getItem('dsh.theme'),
+        legacy: localStorage.getItem('liwa.theme'),
         themeColor: metas[0]?.content ?? null,
         themeColorCount: metas.length,
         token: computed.getPropertyValue('--dsw-alias-bg-base').trim(),
@@ -557,7 +557,7 @@ describe('web e2e: settings modal and General preferences', () => {
     expect(dark.legacy).toBeNull()
     expect(dark.token).not.toBe(light.token)
     expectThemeColorSynchronized(dark)
-    await expect.poll(async () => readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'), { timeout: 5_000 })
+    await expect.poll(async () => readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'), { timeout: 5_000 })
       .toContain('preference: dark')
     await page.keyboard.press('Escape')
 
@@ -576,7 +576,7 @@ describe('web e2e: settings modal and General preferences', () => {
     // A second live Host binds another ephemeral port but shares the same
     // user-settings home. Its fresh origin has no theme localStorage and still
     // converges to dark before the settings dialog opens.
-    const second = await launchWebScaffold({ developerTools: false, harnessHome: scaffold.harnessHome })
+    const second = await launchWebScaffold({ developerTools: false, liwaHome: scaffold.liwaHome })
     const secondPage = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: ZH_BROWSER_LOCALE })
     const secondTripwire = watchConsole(secondPage)
     try {
@@ -625,14 +625,14 @@ describe('web e2e: settings modal and General preferences', () => {
       await page.getByRole('dialog', { name: '设置', exact: true }).waitFor({ state: 'hidden' })
     })
     const readFontSize = async (target: Page = page): Promise<string> => await target.evaluate(
-      () => document.body.style.getPropertyValue('--dsh-content-font-size'),
+      () => document.body.style.getPropertyValue('--liwa-content-font-size'),
     )
     // The secondary tier resolved by the real engine: a probe element's
     // font-size forces min/max/calc evaluation, which the CSS-text specs
     // cannot exercise. Setting −1 at ≤14, setting −2 above.
     const readSecondaryFontSize = async (): Promise<string> => await page.evaluate(() => {
       const probe = document.createElement('div')
-      probe.style.fontSize = 'var(--dsh-content-font-size-secondary, 13px)'
+      probe.style.fontSize = 'var(--liwa-content-font-size-secondary, 13px)'
       document.body.appendChild(probe)
       const size = getComputedStyle(probe).fontSize
       probe.remove()
@@ -651,7 +651,7 @@ describe('web e2e: settings modal and General preferences', () => {
       expect(await response.finished()).toBeNull()
       const envelope = await response.json() as { result: { ok: boolean } }
       expect(envelope.result.ok).toBe(true)
-      await expect.poll(async () => readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'), { timeout: 5_000 })
+      await expect.poll(async () => readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'), { timeout: 5_000 })
         .toContain(`fontSize: ${px}`)
       await page.getByRole('dialog', { name: '设置' }).getByText(String(px), { exact: true }).waitFor({ timeout: 5_000 })
       await expect.poll(readFontSize, { timeout: 5_000 }).toBe(`${px}px`)
@@ -713,11 +713,11 @@ describe('web e2e: settings modal and General preferences', () => {
       return {
         text: getComputedStyle(document.body).fontFamily,
         code: probe('var(--ds-font-family-code)'),
-        textStack: probe('var(--dsh-font-family-text-default)'),
-        codeStack: probe('var(--dsh-font-family-code-default)'),
+        textStack: probe('var(--liwa-font-family-text-default)'),
+        codeStack: probe('var(--liwa-font-family-code-default)'),
       }
     })
-    const patchFile = join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml')
+    const patchFile = join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml')
     const commit = async (name: string, value: string): Promise<void> => {
       const field = page.getByRole('dialog', { name: '设置' }).getByRole('textbox', { name, exact: true })
       await field.fill(value)
@@ -796,7 +796,7 @@ describe('web e2e: settings modal and General preferences', () => {
     await details.getByRole('button', { name: '详细', exact: true }).click()
     await page.getByRole('menuitem', { name: label, exact: true }).click()
     await details.getByRole('button', { name: label, exact: true }).waitFor({ timeout: 10_000 })
-    await expect.poll(async () => readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'), { timeout: 5_000 })
+    await expect.poll(async () => readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'), { timeout: 5_000 })
       .toContain(`transcriptView: ${mode}`)
     await page.keyboard.press('Escape')
 
@@ -812,7 +812,7 @@ describe('web e2e: settings modal and General preferences', () => {
     await restoredDetails.getByRole('button', { name: label, exact: true }).click()
     await page.getByRole('menuitem', { name: '详细', exact: true }).click()
     await restoredDetails.getByRole('button', { name: '详细', exact: true }).waitFor({ timeout: 10_000 })
-    await expect.poll(async () => readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'), { timeout: 5_000 })
+    await expect.poll(async () => readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'), { timeout: 5_000 })
       .toContain('transcriptView: detailed')
     await page.keyboard.press('Escape')
     expect(tripwire.pageErrors).toEqual([])
@@ -826,8 +826,8 @@ describe('web e2e: settings modal and General preferences', () => {
     await dialog.getByRole('button', { name: '排队发送' }).click()
     await page.getByRole('menuitem', { name: '插话发送' }).click()
     await dialog.getByRole('button', { name: '插话发送' }).waitFor({ timeout: 10_000 })
-    expect(await page.evaluate(() => localStorage.getItem('dsh.conversation.busyEnter'))).toBeNull()
-    await expect.poll(async () => readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'), { timeout: 5_000 })
+    expect(await page.evaluate(() => localStorage.getItem('liwa.conversation.busyEnter'))).toBeNull()
+    await expect.poll(async () => readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'), { timeout: 5_000 })
       .toContain('busyEnter: steer')
     await page.keyboard.press('Escape')
 
@@ -839,7 +839,7 @@ describe('web e2e: settings modal and General preferences', () => {
     const reloaded = page.getByRole('dialog', { name: '设置' })
     await reloaded.getByRole('button', { name: '插话发送' }).waitFor({ timeout: 10_000 })
 
-    const second = await launchWebScaffold({ developerTools: false, harnessHome: scaffold.harnessHome })
+    const second = await launchWebScaffold({ developerTools: false, liwaHome: scaffold.liwaHome })
     const secondPage = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: ZH_BROWSER_LOCALE })
     const secondTripwire = watchConsole(secondPage)
     try {
@@ -849,7 +849,7 @@ describe('web e2e: settings modal and General preferences', () => {
       await openSettings(secondPage, 'zh')
       await secondPage.getByRole('dialog', { name: '设置' })
         .getByRole('button', { name: '插话发送' }).waitFor({ timeout: 10_000 })
-      expect(await secondPage.evaluate(() => localStorage.getItem('dsh.conversation.busyEnter'))).toBeNull()
+      expect(await secondPage.evaluate(() => localStorage.getItem('liwa.conversation.busyEnter'))).toBeNull()
       expect(secondTripwire.pageErrors).toEqual([])
       expect(secondTripwire.warnings).toEqual([])
     } finally {
@@ -860,8 +860,8 @@ describe('web e2e: settings modal and General preferences', () => {
     await reloaded.getByRole('button', { name: '插话发送' }).click()
     await page.getByRole('menuitem', { name: '排队发送' }).click()
     await reloaded.getByRole('button', { name: '排队发送' }).waitFor({ timeout: 10_000 })
-    expect(await page.evaluate(() => localStorage.getItem('dsh.conversation.busyEnter'))).toBeNull()
-    await expect.poll(async () => readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'), { timeout: 5_000 })
+    expect(await page.evaluate(() => localStorage.getItem('liwa.conversation.busyEnter'))).toBeNull()
+    await expect.poll(async () => readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'), { timeout: 5_000 })
       .toContain('busyEnter: queue')
     await page.keyboard.press('Escape')
     expect(tripwire.pageErrors).toEqual([])
@@ -892,8 +892,8 @@ describe('web e2e: settings modal and General preferences', () => {
     expect(await enDialog.getByRole('button', { name: 'General' }).getAttribute('aria-current')).toBe('true')
     await enDialog.getByText(`Current version: ${version}`, { exact: true }).waitFor()
     await expect.poll(() => enDialog.getByText('Appearance', { exact: true }).count(), { timeout: 5_000 }).toBe(1)
-    expect(await page.evaluate(() => localStorage.getItem('dsh.locale'))).toBeNull()
-    await expect.poll(async () => readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'), { timeout: 5_000 })
+    expect(await page.evaluate(() => localStorage.getItem('liwa.locale'))).toBeNull()
+    await expect.poll(async () => readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'), { timeout: 5_000 })
       .toContain('preference: en')
     // Reload keeps English; then restore zh so shared page state (and the
     // other specs' 设置-anchored selectors + goldens) see the default again.
@@ -906,7 +906,7 @@ describe('web e2e: settings modal and General preferences', () => {
 
     // A Chinese browser on another port still receives the explicit English
     // preference from the shared Host settings document.
-    const second = await launchWebScaffold({ developerTools: false, harnessHome: scaffold.harnessHome })
+    const second = await launchWebScaffold({ developerTools: false, liwaHome: scaffold.liwaHome })
     const secondPage = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: ZH_BROWSER_LOCALE })
     const secondTripwire = watchConsole(secondPage)
     try {
@@ -916,7 +916,7 @@ describe('web e2e: settings modal and General preferences', () => {
       await openSettings(secondPage, 'en')
       await secondPage.getByRole('dialog', { name: 'Settings' })
         .getByRole('button', { name: 'English' }).waitFor({ timeout: 10_000 })
-      expect(await secondPage.evaluate(() => localStorage.getItem('dsh.locale'))).toBeNull()
+      expect(await secondPage.evaluate(() => localStorage.getItem('liwa.locale'))).toBeNull()
       expect(secondTripwire.pageErrors).toEqual([])
       expect(secondTripwire.warnings).toEqual([])
     } finally {
@@ -928,8 +928,8 @@ describe('web e2e: settings modal and General preferences', () => {
     await page.getByRole('dialog', { name: 'Settings' }).getByRole('button', { name: 'English' }).click()
     await page.getByRole('menuitem', { name: '中文' }).click()
     await page.getByRole('dialog', { name: '设置' }).waitFor({ timeout: 10_000 })
-    expect(await page.evaluate(() => localStorage.getItem('dsh.locale'))).toBeNull()
-    await expect.poll(async () => readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'), { timeout: 5_000 })
+    expect(await page.evaluate(() => localStorage.getItem('liwa.locale'))).toBeNull()
+    await expect.poll(async () => readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'), { timeout: 5_000 })
       .toContain('preference: zh')
     await page.keyboard.press('Escape')
     expect(tripwire.pageErrors).toEqual([])
@@ -947,7 +947,7 @@ describe('web e2e: settings modal and General preferences', () => {
     try {
       await enPage.goto(fresh.authenticatedUrl, { waitUntil: 'load' })
       await enPage.waitForSelector('[class*="frame"]', { timeout: 30_000 })
-      expect(await enPage.evaluate(() => localStorage.getItem('dsh.locale'))).toBeNull()
+      expect(await enPage.evaluate(() => localStorage.getItem('liwa.locale'))).toBeNull()
       await openSettings(enPage, 'en')
       const dialog = enPage.getByRole('dialog', { name: 'Settings' })
       await dialog.waitFor({ timeout: 10_000 })
@@ -986,7 +986,7 @@ describe('web e2e: settings modal and General preferences', () => {
     try {
       await unsupportedPage.goto(fresh.authenticatedUrl, { waitUntil: 'load' })
       await unsupportedPage.waitForSelector('[class*="frame"]', { timeout: 30_000 })
-      expect(await unsupportedPage.evaluate(() => localStorage.getItem('dsh.locale'))).toBeNull()
+      expect(await unsupportedPage.evaluate(() => localStorage.getItem('liwa.locale'))).toBeNull()
       await openSettings(unsupportedPage, 'en')
       const dialog = unsupportedPage.getByRole('dialog', { name: 'Settings' })
       await dialog.waitFor({ timeout: 10_000 })
@@ -1122,7 +1122,7 @@ describe('web e2e: Host-backed collapse timing preference', () => {
       sessionStorage.setItem('collapse-timing-e2e-unrelated', 'retained')
     })
     const readPersistence = async (target: Page = page) => ({
-      host: await readFile(join(scaffold.harnessHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'),
+      host: await readFile(join(scaffold.liwaHome, 'profiles', 'scaffold', 'cordis.patch.yml'), 'utf8'),
       settings: structuredClone(scaffold.ctx.settings.describe({ redactSecrets: true }).map(({ ns, value }) => ({ ns, value }))),
       storage: await target.evaluate(() => ({
         local: Object.fromEntries(Object.entries(localStorage)),

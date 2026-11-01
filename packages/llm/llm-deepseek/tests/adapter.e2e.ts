@@ -1,4 +1,4 @@
-import * as Protocol from '@deepseek-ai/dsh-llm-deepseek'
+import * as Protocol from '@liwa/llm-deepseek'
 /**
  * Real Messages round trips use the official root and require credentials.
  * System-update checks additionally require DEEPSEEK_IN_HISTORY_MODEL.
@@ -10,18 +10,18 @@ import { join } from 'node:path'
 import { createRequire } from 'node:module'
 import { pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Context, LoggerLevel } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import LocalAttachments from '@deepseek-ai/dsh-attachment-local'
-import DeepSeekLlmApiExtensionRegistry from '@deepseek-ai/dsh-deepseek-llm-api-extensions'
-import LlmRuntime, { BlockAssembler, createAssistantMessage, createSystemMessage, createToolResultMessage, ReasoningEffortId, ToolCallId } from '@deepseek-ai/dsh-llm'
-import type { Message } from '@deepseek-ai/dsh-llm'
-import * as PluginPackageInventoryDeepSeek from '@deepseek-ai/dsh-plugin-package-inventory-deepseek'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import * as SessionLogDeepSeek from '@deepseek-ai/dsh-session-log-deepseek'
-import * as Messages from '@deepseek-ai/dsh-llm-deepseek-api-key'
+import { Context, LoggerLevel } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
+import AgentRegistry from '@liwa/agent'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import LocalAttachments from '@liwa/attachment-local'
+import DeepSeekLlmApiExtensionRegistry from '@liwa/deepseek-llm-api-extensions'
+import LlmRuntime, { BlockAssembler, createAssistantMessage, createSystemMessage, createToolResultMessage, ReasoningEffortId, ToolCallId } from '@liwa/llm'
+import type { Message } from '@liwa/llm'
+import * as PluginPackageInventoryDeepSeek from '@liwa/plugin-package-inventory-deepseek'
+import SessionStore, { SessionId } from '@liwa/session'
+import * as SessionLogDeepSeek from '@liwa/session-log-deepseek'
+import * as Messages from '@liwa/llm-deepseek-api-key'
 import { DeepSeekFilesClient } from '../src/files-api.ts'
 import { MESSAGES_FILES_BETA } from '../src/messages-api.ts'
 import { assemble, options, user, sourceModuleLoader } from './helpers.ts'
@@ -34,9 +34,9 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 async function boot(models?: Messages.Options['models']) {
-  const home = await mkdtemp(join(tmpdir(), 'dsh-messages-e2e-'))
+  const home = await mkdtemp(join(tmpdir(), 'liwa-messages-e2e-'))
   cleanups.push(() => rm(home, { recursive: true, force: true }))
-  vi.stubEnv('DSH_HOME', home)
+  vi.stubEnv('LIWA_HOME', home)
   const ctx = new Context()
   cleanups.push(() => ctx.fiber.dispose())
   await ctx.plugin(LlmRuntime)
@@ -141,7 +141,7 @@ describe.skipIf(!process.env.DEEPSEEK_API_KEY)('DeepSeek Messages real API', () 
   })
 
   it.each([false, true])('submits Loader package inventory and records HTTP acceptance with session-log enabled=%s', async (enabled) => {
-    const pluginRoot = await mkdtemp(join(tmpdir(), 'dsh-unversioned-plugin-e2e-'))
+    const pluginRoot = await mkdtemp(join(tmpdir(), 'liwa-unversioned-plugin-e2e-'))
     cleanups.push(() => rm(pluginRoot, { recursive: true, force: true }))
     const unversionedName = 'unversioned-e2e-plugin'
     await writeFile(join(pluginRoot, 'package.json'), JSON.stringify({ name: unversionedName, type: 'module' }))
@@ -158,13 +158,13 @@ describe.skipIf(!process.env.DEEPSEEK_API_KEY)('DeepSeek Messages real API', () 
     // Select the source module while Loader owns its active package entry.
     ctx.loader.internal = sourceModuleLoader(async (specifier) => {
       if (specifier === unversionedModule) return import(specifier)
-      if (specifier !== '@deepseek-ai/dsh-plugin-package-inventory-deepseek') throw new Error(`unexpected Loader import: ${specifier}`)
+      if (specifier !== '@liwa/plugin-package-inventory-deepseek') throw new Error(`unexpected Loader import: ${specifier}`)
       return PluginPackageInventoryDeepSeek
     })
-    await ctx.loader.create({ name: '@deepseek-ai/dsh-plugin-package-inventory-deepseek' })
+    await ctx.loader.create({ name: '@liwa/plugin-package-inventory-deepseek' })
     await ctx.loader.create({ name: unversionedModule })
     await ctx.loader.await()
-    const packagePath = createRequire(import.meta.url).resolve('@deepseek-ai/dsh-plugin-package-inventory-deepseek/package.json')
+    const packagePath = createRequire(import.meta.url).resolve('@liwa/plugin-package-inventory-deepseek/package.json')
     const packageIdentity = JSON.parse(await readFile(packagePath, 'utf8')) as { name: string; version: string }
     const session = ctx.sessions.create(SessionId(`real-messages-extensions-${randomUUID()}`))
     session.append('turn/start', { turn: 1 })

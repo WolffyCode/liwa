@@ -3,8 +3,8 @@
  * process-wide record of which policy is active.
  *
  * `undici` is imported dynamically so the pure {@link ProxyPolicy} half stays loadable where no Node
- * transport exists, matching how `dsh-web-fetch-http` defers its own transport import.
- * @module @deepseek-ai/dsh-http-proxy/install
+ * transport exists, matching how `liwa-web-fetch-http` defers its own transport import.
+ * @module @liwa/http-proxy/install
  */
 
 import type { Dispatcher, Pool } from 'undici'
@@ -286,7 +286,7 @@ export function proxyEnvironmentForChild(): Readonly<Record<string, string | und
  * installed routes nothing.
  *
  * A value the environment supplies but this package cannot use is reported and skipped rather than
- * thrown: the variable may have been exported for another tool, and a proxy the harness cannot use
+ * thrown: the variable may have been exported for another tool, and a proxy Liwa cannot use
  * must not stop the agent from starting.
  *
  * @param env - the launch environment, whose own layering already prefers real variables over `.env` files.

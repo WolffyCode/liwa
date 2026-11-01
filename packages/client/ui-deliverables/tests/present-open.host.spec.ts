@@ -2,15 +2,15 @@
 import { mkdtemp, rm, readFile, writeFile, mkdir, realpath, symlink, unlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { LocalFileSystem } from '@deepseek-ai/dsh-fs-local'
-import { WorkspaceFiles } from '@deepseek-ai/dsh-api-workspace-files'
-import { Context } from '@deepseek-ai/cordis'
-import { HostConnectionService } from '@deepseek-ai/dsh-client-connection'
-import type { BrowserAuth } from '@deepseek-ai/dsh-client-connection/src/browser-auth.ts'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
-import { SessionQueryError } from '@deepseek-ai/dsh-session-query'
-import type { SessionEventReadRequest } from '@deepseek-ai/dsh-session-query'
+import { LocalFileSystem } from '@liwa/fs-local'
+import { WorkspaceFiles } from '@liwa/api-workspace-files'
+import { Context } from '@liwa/cordis'
+import { HostConnectionService } from '@liwa/client-connection'
+import type { BrowserAuth } from '@liwa/client-connection/src/browser-auth.ts'
+import { SessionId } from '@liwa/session'
+import type { SessionEvent } from '@liwa/session'
+import { SessionQueryError } from '@liwa/session-query'
+import type { SessionEventReadRequest } from '@liwa/session-query'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { registerPresentOpen } from '../src/present-open.ts'
 import { presentedFileUrl, PRESENT_OPEN_PATH } from '../src/presented.ts'
@@ -23,7 +23,7 @@ afterEach(async () => {
 })
 
 async function fixture() {
-  const root = await mkdtemp(join(tmpdir(), 'dsh-present-open-'))
+  const root = await mkdtemp(join(tmpdir(), 'liwa-present-open-'))
   cleanups.push(() => rm(root, { recursive: true, force: true }))
   const cwd = join(root, 'workspace')
   await mkdir(cwd)

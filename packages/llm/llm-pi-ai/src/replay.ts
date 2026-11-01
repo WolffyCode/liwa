@@ -1,15 +1,15 @@
 /**
  * Durable pi-ai replay metadata and assistant-history reconstruction.
  *
- * Harness content remains the durable source for text and tool calls. This
+ * Liwa content remains the durable source for text and tool calls. This
  * module stores only the provider-native metadata needed to reconstruct a
  * pi-ai assistant message on a later request.
  *
- * @module dsh-llm-pi-ai/replay
+ * @module liwa-llm-pi-ai/replay
  */
 
-import { LlmError } from '@deepseek-ai/dsh-llm'
-import type { AssistantMessage as HarnessAssistantMessage, ModelMessageSource, ReplayEnvelope } from '@deepseek-ai/dsh-llm'
+import { LlmError } from '@liwa/llm'
+import type { AssistantMessage as HarnessAssistantMessage, ModelMessageSource, ReplayEnvelope } from '@liwa/llm'
 import type { Api, AssistantMessage, ToolCall, Usage as PiUsage } from '@earendil-works/pi-ai'
 
 /** Per-block half of the pi-ai replay envelope, one entry per content block. */
@@ -174,7 +174,7 @@ function foreignAssistant(message: HarnessAssistantMessage): AssistantMessage {
     content,
     // Deliberately never equals a catalog API: absent replay state is foreign
     // even if source names the same provider/model as this request.
-    api: 'dsh-foreign',
+    api: 'liwa-foreign',
     provider: source.provider,
     model: source.model,
     usage: emptyPiUsage(),
@@ -183,7 +183,7 @@ function foreignAssistant(message: HarnessAssistantMessage): AssistantMessage {
   }
 }
 
-/** Recombine durable Harness content with validated pi-ai replay metadata. */
+/** Recombine durable Liwa content with validated pi-ai replay metadata. */
 function replayedAssistant(message: HarnessAssistantMessage, source: ModelMessageSource, rawState: unknown): AssistantMessage {
   const state = readReplayState(rawState)
   if (state.response.provider !== source.provider) return invalidReplay('provider does not match assistant source')
@@ -212,8 +212,8 @@ function replayedAssistant(message: HarnessAssistantMessage, source: ModelMessag
         ...replay.type === 'tool-call' && replay.thoughtSignature !== undefined ? { thoughtSignature: replay.thoughtSignature } : {},
         ...replay.type === 'tool-call' && replay.namespace !== undefined ? { namespace: replay.namespace } : {},
       }
-      /* v8 ignore next -- readReplayState rejects unknown replay tags, so an equal plugin-added Harness tag cannot reach this switch */
-      default: return invalidReplay(`block ${index} has an unsupported Harness type`)
+      /* v8 ignore next -- readReplayState rejects unknown replay tags, so an equal plugin-added Liwa tag cannot reach this switch */
+      default: return invalidReplay(`block ${index} has an unsupported Liwa type`)
     }
   })
   return {
@@ -232,7 +232,7 @@ function replayedAssistant(message: HarnessAssistantMessage, source: ModelMessag
 }
 
 /**
- * Convert one durable Harness assistant message into pi-ai history.
+ * Convert one durable Liwa assistant message into pi-ai history.
  *
  * Durable content is the authoritative record; replay metadata only restores
  * native fidelity (ids, signatures). A replay state this build cannot use —

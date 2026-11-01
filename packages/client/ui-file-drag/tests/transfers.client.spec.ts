@@ -2,7 +2,7 @@
 import { File as NodeFile, Blob as NodeBlob } from 'node:buffer'
 import { webcrypto } from 'node:crypto'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
-import { FILE_DRAG_TOKEN_TYPE, type DesktopFileDrag, type FileDragHandle } from '@deepseek-ai/dsh-util-file-drag'
+import { FILE_DRAG_TOKEN_TYPE, type DesktopFileDrag, type FileDragHandle } from '@liwa/util-file-drag'
 import { FileTransfers } from '../src/client/transfers.ts'
 
 const revokeUrl = vi.fn<(url: string) => void>()
@@ -30,8 +30,8 @@ it('borrows an authorized resource before fetching URL bytes', async () => {
   const fetcher = vi.fn<typeof fetch>()
   vi.stubGlobal('fetch', fetcher)
   const files = new FileTransfers(desktop, vi.fn())
-  const prepared = await files.prepare({ kind: 'url', url: '/api/file', name: 'report.pdf', mediaType: 'application/pdf', resourceAddress: 'dsh-resource://file/session/s/report.pdf' }, signal())
-  expect(desktop.prepare).toHaveBeenCalledWith(expect.objectContaining({ kind: 'resource', address: 'dsh-resource://file/session/s/report.pdf' }), expect.any(String))
+  const prepared = await files.prepare({ kind: 'url', url: '/api/file', name: 'report.pdf', mediaType: 'application/pdf', resourceAddress: 'liwa-resource://file/session/s/report.pdf' }, signal())
+  expect(desktop.prepare).toHaveBeenCalledWith(expect.objectContaining({ kind: 'resource', address: 'liwa-resource://file/session/s/report.pdf' }), expect.any(String))
   expect(fetcher).not.toHaveBeenCalled()
   expect(prepared.start(transfer(), document.createElement('div'))).toBe(false)
   await Promise.resolve()
@@ -47,7 +47,7 @@ it('compares original Blob bytes by digest and copies a mismatching resource', a
   const desktop = native()
   vi.mocked(desktop.prepare).mockResolvedValueOnce(undefined)
   const files = new FileTransfers(desktop, vi.fn())
-  const prepared = await files.prepare({ ...blobSource(), resourceAddress: 'dsh-resource://file/session/s/report.pdf', outputExtension: '.bin' }, signal())
+  const prepared = await files.prepare({ ...blobSource(), resourceAddress: 'liwa-resource://file/session/s/report.pdf', outputExtension: '.bin' }, signal())
   expect(desktop.prepare).toHaveBeenNthCalledWith(1, expect.objectContaining({ kind: 'resource', size: 13 }), expect.any(String))
   const request = vi.mocked(desktop.prepare).mock.calls[0]![0]
   expect(request.kind === 'resource' ? request.sha256 : undefined).toMatch(/^[a-f0-9]{64}$/u)
@@ -131,7 +131,7 @@ it('copies already loaded PDF bytes when optional resource authorization rejects
   const desktop = native()
   vi.mocked(desktop.prepare).mockRejectedValueOnce(new Error('Host resource unavailable'))
   const files = new FileTransfers(desktop, vi.fn())
-  const prepared = await files.prepare({ ...blobSource(), resourceAddress: 'dsh-resource://file/session/s/report.pdf' }, signal())
+  const prepared = await files.prepare({ ...blobSource(), resourceAddress: 'liwa-resource://file/session/s/report.pdf' }, signal())
   const request = vi.mocked(desktop.prepare).mock.calls[1]![0]
   expect(request.kind).toBe('bytes')
   expect(request.name).toBe('report.pdf')

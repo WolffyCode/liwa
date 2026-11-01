@@ -1,21 +1,21 @@
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import AgentRegistry, { type Agent, type ModelSelection } from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { installModelSelection } from '@deepseek-ai/dsh-agent'
-import LlmRuntime, { createUserMessage, LlmError, ReasoningEffortId, type GenerateOptions } from '@deepseek-ai/dsh-llm'
-import { toPiContext } from '@deepseek-ai/dsh-llm-pi-ai/src/context.ts'
-import SessionStore, { Session, SessionId } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
-import { defineContentToolFixture } from '@deepseek-ai/dsh-tool-testkit'
+import { Context } from '@liwa/cordis'
+import AgentRegistry, { type Agent, type ModelSelection } from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import { installModelSelection } from '@liwa/agent'
+import LlmRuntime, { createUserMessage, LlmError, ReasoningEffortId, type GenerateOptions } from '@liwa/llm'
+import { toPiContext } from '@liwa/llm-pi-ai/src/context.ts'
+import SessionStore, { Session, SessionId } from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import SystemPrompt from '@liwa/system-prompt'
+import ToolRuntime from '@liwa/tools'
+import { defineContentToolFixture } from '@liwa/tool-testkit'
 import { MockAdapter, textResponse } from './mock-adapter.ts'
 
-declare module '@deepseek-ai/dsh-llm' {
+declare module '@liwa/llm' {
   interface MessageSourceMap {
-    'test-compaction': { kind: 'test-compaction' } & import('@deepseek-ai/dsh-llm').ContextFormed
+    'test-compaction': { kind: 'test-compaction' } & import('@liwa/llm').ContextFormed
   }
 }
 

@@ -6,7 +6,7 @@ A service is a capability one plugin exposes to other plugins. `inject` declares
 
 ## What is a service?
 
-In Harness, `tools`, `llm`, and `agents` are services. Each is a named capability mounted on `ctx`:
+In Liwa, `tools`, `llm`, and `agents` are services. Each is a named capability mounted on `ctx`:
 
 ```ts ignore-check
 ctx.tools    // ToolRuntime service
@@ -36,7 +36,7 @@ When `apply` runs, every service declared by `inject` is ready. If a service is 
 ### Extend Service
 
 ```ts
-import { Service, type Context } from '@deepseek-ai/cordis'
+import { Service, type Context } from '@liwa/cordis'
 
 export default class MetricsService extends Service {
   static inject = ['llm']  // A service may depend on other services.
@@ -67,9 +67,9 @@ export function apply(ctx: Context) {
 Use TypeScript declaration merging to type `ctx.metrics`:
 
 ```ts
-import { Service, type Context } from '@deepseek-ai/cordis'
+import { Service, type Context } from '@liwa/cordis'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     metrics: MetricsService
   }
@@ -114,23 +114,23 @@ This prevents a plugin from calling a service that no longer exists.
 
 ```yaml
 - id: group-a
-  name: '@deepseek-ai/cordis-plugin-group'
+  name: '@liwa/cordis-plugin-group'
   group: true
   isolate:
     shell: true
   config:
-    - name: '@deepseek-ai/dsh-bash-local'
+    - name: '@liwa/bash-local'
       config:
         timeoutMs: 5000
     - name: './src/plugin-a.ts'
 
 - id: group-b
-  name: '@deepseek-ai/cordis-plugin-group'
+  name: '@liwa/cordis-plugin-group'
   group: true
   isolate:
     shell: true
   config:
-    - name: '@deepseek-ai/dsh-bash-local'
+    - name: '@liwa/bash-local'
       config:
         timeoutMs: 60000
     - name: './src/plugin-b.ts'
@@ -138,7 +138,7 @@ This prevents a plugin from calling a service that no longer exists.
 
 `plugin-a` and `plugin-b` each see the Bash instance in their own group, with no cross-group effect.
 
-## Built-in Harness services
+## Built-in Liwa services
 
 The repository generates the service names, public methods, and source locations into each service's [subsystem page](../../../subsystems/core.md). Use those generated regions and the service's TypeScript interface while developing a plugin; do not maintain a second static list.
 

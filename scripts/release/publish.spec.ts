@@ -28,7 +28,7 @@ vi.mock('node:timers/promises', async importOriginal => ({
   setTimeout: vi.fn(),
 }))
 
-const CHANNEL = 'dsh-0-2-1-alpha-1'
+const CHANNEL = 'liwa-0-2-1-alpha-1'
 const ABSENT: CommandResult = { status: 1, stdout: '', stderr: 'npm error code E404' }
 const SUCCESS: CommandResult = { status: 0, stdout: '', stderr: '' }
 const CONFLICT: CommandResult = { status: 1, stdout: '', stderr: 'npm error code E409 Failed to save packument' }
@@ -41,10 +41,10 @@ interface PackedFixture {
 }
 
 function packedRelease(versions: readonly string[]): { directory: string; packages: PackedFixture[] } {
-  const directory = mkdtempSync(join(tmpdir(), 'dsh-publish-channel-'))
+  const directory = mkdtempSync(join(tmpdir(), 'liwa-publish-channel-'))
   onTestFinished(() => { rmSync(directory, { recursive: true, force: true }) })
   const packages = versions.map((version, index) => {
-    const name = `@deepseek-ai/release-fixture-${String(index)}`
+    const name = `@liwa/release-fixture-${String(index)}`
     const path = join(directory, `${String(index)}.tgz`)
     const bytes = Buffer.from(`${name}@${version}\n`)
     writeFileSync(path, bytes)
@@ -111,10 +111,10 @@ describe('release publication channels', () => {
   it.each([
     ['vendor', '1.0.6', undefined],
     ['vendor', '1.0.6-alpha.1', 'next'],
-    ['dsh', '0.2.1', undefined],
-    ['dsh', '0.2.1-alpha.1', 'alpha'],
-    ['dsh', '0.2.1-canary.1', 'canary'],
-    ['dsh', '0.2.1-rc.1', 'next'],
+    ['liwa', '0.2.1', undefined],
+    ['liwa', '0.2.1-alpha.1', 'alpha'],
+    ['liwa', '0.2.1-canary.1', 'canary'],
+    ['liwa', '0.2.1-rc.1', 'next'],
   ] as const)('uses the default %s channel for %s when no override is supplied', async (family, version, tag) => {
     const fixture = packedRelease([version])
     const [entry] = fixture.packages
@@ -150,11 +150,11 @@ describe('release publication channels', () => {
     ]))
   })
 
-  it('uses an explicit channel instead of the dsh prerelease default', async () => {
+  it('uses an explicit channel instead of the liwa prerelease default', async () => {
     const fixture = packedRelease(['0.2.1-alpha.1'])
     registry()
 
-    await publishRelease('dsh', fixture.directory, CHANNEL)
+    await publishRelease('liwa', fixture.directory, CHANNEL)
 
     expect(attemptEchoed).toHaveBeenCalledExactlyOnceWith('npm', ['publish', fixture.packages[0]!.path, '--tag', CHANNEL])
   })

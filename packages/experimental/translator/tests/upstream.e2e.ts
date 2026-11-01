@@ -1,5 +1,5 @@
 /** Opt-in native-fetch probes of the actual anonymous browser endpoints. */
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { afterEach, describe, expect, it } from 'vitest'
 import Translator from '../src/index.ts'
 
@@ -13,7 +13,7 @@ async function translator() {
   return ctx.translator
 }
 
-describe.skipIf(process.env.DSH_TRANSLATION_LIVE !== '1')('anonymous translation real endpoints', () => {
+describe.skipIf(process.env.LIWA_TRANSLATION_LIVE !== '1')('anonymous translation real endpoints', () => {
   it('uses default Bing with automatic source detection and a Simplified Chinese locale', async () => {
     const service = await translator()
     const spec = service.resolve({ text: 'Hello world.', targetLanguage: 'zh-CN' })

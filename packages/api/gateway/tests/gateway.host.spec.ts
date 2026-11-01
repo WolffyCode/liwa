@@ -1,15 +1,15 @@
 import { createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { describe, expect, it } from 'vitest'
-import { Context, Service, symbols } from '@deepseek-ai/cordis'
+import { Context, Service, symbols } from '@liwa/cordis'
 import { z } from 'zod'
-import { apply as applyConnection, inject as connectionInject } from '@deepseek-ai/dsh-client-connection'
+import { apply as applyConnection, inject as connectionInject } from '@liwa/client-connection'
 import type {
   ConnectionRpcHandler,
   HostConnectionHandle,
   PeerScope,
-} from '@deepseek-ai/dsh-client-connection'
-import type { WebServer, WebRoute } from '@deepseek-ai/dsh-host-webserver'
+} from '@liwa/client-connection'
+import type { WebServer, WebRoute } from '@liwa/host-webserver'
 import {
   bindTypertRemote,
   Remote,
@@ -19,10 +19,10 @@ import {
   type TypertContext,
   type TypertLookup,
   type TypertLookupProvider,
-} from '@deepseek-ai/dsh-typert-protocol'
-import TypertRegistry, { type TypertContribution } from '@deepseek-ai/dsh-typert-registry'
-import TypertGatewayService, { TypertGatewayError } from '@deepseek-ai/dsh-api-gateway'
-import RemoteAccessService from '@deepseek-ai/dsh-api-remote-access'
+} from '@liwa/typert-protocol'
+import TypertRegistry, { type TypertContribution } from '@liwa/typert-registry'
+import TypertGatewayService, { TypertGatewayError } from '@liwa/api-gateway'
+import RemoteAccessService from '@liwa/api-remote-access'
 import { provideBrowserCredentials } from './browser-credentials.ts'
 import { ownerPeer } from './peer.ts'
 
@@ -39,7 +39,7 @@ function fixtureScope(ctx: Context): string {
   return 'fixtureScope' in ctx ? (ctx as MarkedContext).fixtureScope ?? 'root' : 'root'
 }
 
-declare module '@deepseek-ai/dsh-typert-protocol' {
+declare module '@liwa/typert-protocol' {
   interface TypertLookupMap {
     gatewayFixture: TypertLookup<FixtureAgent, string>
     gatewayFixtureAlias: TypertLookup<FixtureAgent, string>

@@ -3,17 +3,17 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect, it } from 'vitest'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import { parseSessionLog, prepareSessionSnapshotFixtureForComparison } from '@deepseek-ai/dsh-llm-replay'
-import type { Session } from '@deepseek-ai/dsh-session'
+import { createUserMessage } from '@liwa/llm'
+import { parseSessionLog, prepareSessionSnapshotFixtureForComparison } from '@liwa/llm-replay'
+import type { Session } from '@liwa/session'
 import {
   fixtureContext, normalizeSessionSnapshots, normalizedSystemPrompts, normalizedToolSchemas,
   formatSystemPromptSnapshot, parseToolSchemasSnapshot, redactSessionSnapshotIds, refreshFixtureReplacements,
   scrubSessionSnapshot, stabilizeFixtureMessageIds, stabilizeRefreshLog, tokenizeSessionFixtureCwd,
-} from '@deepseek-ai/dsh-session-snapshot'
-import type {} from '@deepseek-ai/dsh-api-session-controller'
-import type {} from '@deepseek-ai/dsh-schedule'
-import type {} from '@deepseek-ai/dsh-subagent'
+} from '@liwa/session-snapshot'
+import type {} from '@liwa/api-session-controller'
+import type {} from '@liwa/schedule'
+import type {} from '@liwa/subagent'
 import {
   fixtureUserPrompts, launchWebScaffold, normalizeWebSessionVolatiles, rawSessionLog, readPersistedEvents,
   recordedSessionFixturePath, selectedSessionFixture, webSnapshotMode,
@@ -92,7 +92,7 @@ it.skipIf(MODE === 'record')('replays inherited schedule tools and refusals in a
       expected = redactSessionSnapshotIds(stabilizeFixtureMessageIds(raw.map((log, index) =>
         tokenizeSessionFixtureCwd(scrubSessionSnapshot(stabilizeRefreshLog(
           prepareSessionSnapshotFixtureForComparison(log), expected[index]!, replacements, context,
-        ))).split(scaffold.harnessHome).join('{{harnessHome}}')), expected))
+        ))).split(scaffold.liwaHome).join('{{liwaHome}}')), expected))
       await Promise.all(expected.map((log, index) => writeFile(
         recordedSessionFixturePath(paths[index]!, sessions[index]!.header.version), log,
       )))

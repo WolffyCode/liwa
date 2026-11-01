@@ -9,8 +9,8 @@ Accept configuration supplied through `cordis.yml`.
 Export a `Config` type and a same-named Schemastery schema. Put defaults directly on the schema fields:
 
 ```ts
-import type { Context } from '@deepseek-ai/cordis'
-import Schema from '@deepseek-ai/schemastery'
+import type { Context } from '@liwa/cordis'
+import Schema from '@liwa/schemastery'
 
 export const name = 'my-plugin'
 
@@ -49,8 +49,8 @@ When loading the plugin, Cordis uses the exported schema to validate configurati
 Use Schemastery to express stricter validation:
 
 ```ts
-import type { Context } from '@deepseek-ai/cordis'
-import Schema from '@deepseek-ai/schemastery'
+import type { Context } from '@liwa/cordis'
+import Schema from '@liwa/schemastery'
 
 export const name = 'validated-plugin'
 
@@ -77,7 +77,7 @@ The schema runs while the plugin loads. Invalid configuration fails the load wit
 
 ### Do not hardcode tunable values
 
-Harness requires **anything that two deployments may want to set differently to be a configuration field**.
+Liwa requires **anything that two deployments may want to set differently to be a configuration field**.
 
 ```ts
 // Wrong: hardcoded timeout.

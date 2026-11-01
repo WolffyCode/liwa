@@ -1,4 +1,4 @@
-/** External Chromium process fixture; the DSH launcher still owns profile cleanup. */
+/** External Chromium process fixture; the Liwa launcher still owns profile cleanup. */
 
 import { EventEmitter } from 'node:events'
 import { FixtureBrowser, fixture } from './stagehand.ts'

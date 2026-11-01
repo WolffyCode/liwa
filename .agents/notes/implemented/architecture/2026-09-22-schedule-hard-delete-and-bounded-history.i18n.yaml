@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-22-schedule-hard-delete-and-bounded-history.md
 /agent-note-schedule-deletes-task-rows-and-bounds-delivery-history:
-  en: 17a73230ad22ec0b
-  zh: 5bcf27d7c0e86764
+  en: c596b046bb89e2d6
+  zh: e91d7fd697d5cba3
 /agent-note-schedule-deletes-task-rows-and-bounds-delivery-history/problem:
   en: 98e82a0add324882
   zh: c10e85a3f2a522f8
 /agent-note-schedule-deletes-task-rows-and-bounds-delivery-history/decision:
-  en: 56328745115714b5
-  zh: f30d39f59aa06a13
+  en: e1f392fe7ae1fce5
+  zh: 4a75acb15866708d
 /agent-note-schedule-deletes-task-rows-and-bounds-delivery-history/alternatives-considered:
   en: 0c4eb01054be1141
   zh: 95980f8097fa36fd

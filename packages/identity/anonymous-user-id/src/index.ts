@@ -1,11 +1,11 @@
 /**
- * Per-harness-home anonymous user id shared by telemetry and feedback.
+ * Per-Liwa-home anonymous user id shared by telemetry and feedback.
  *
  * The id is a random UUID persisted as a bare line in `.anonymous-user-id` inside the
- * harness home resolved by {@link resolveDshHome} (`$DSH_HOME` > `~/.dsh`),
+ * Liwa home resolved by {@link resolveLiwaHome} (`$LIWA_HOME` > `~/.liwa`),
  * and never derived from the hostname, network address, git remote, or any
- * other identifying source. It is scoped to the harness home, not the
- * machine: every process sharing one `$DSH_HOME` reports the same id, and
+ * other identifying source. It is scoped to the Liwa home, not the
+ * machine: every process sharing one `$LIWA_HOME` reports the same id, and
  * deleting the file mints a fresh identity on the next launch.
  *
  * Reads and writes are synchronous so boot-time and command consumers can
@@ -13,26 +13,26 @@
  * touches the disk once, and a file deleted mid-run keeps the process's id
  * until the next launch.
  *
- * @module @deepseek-ai/dsh-anonymous-user-id
+ * @module @liwa/anonymous-user-id
  */
 
 import { randomUUID } from 'node:crypto'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import type { Branded } from '@deepseek-ai/dsh-brand'
-import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
+import type { Branded } from '@liwa/brand'
+import { resolveLiwaHome } from '@liwa/home-paths'
 
-/** A harness-home-scoped anonymous user id (random UUID v4). */
+/** A Liwa-home-scoped anonymous user id (random UUID v4). */
 export type AnonymousUserId = Branded<'AnonymousUserId'>
 
-/** File inside the harness home storing the id: a bare UUID line, no wrapper format. */
+/** File inside the Liwa home storing the id: a bare UUID line, no wrapper format. */
 export const ANONYMOUS_USER_ID_FILE_NAME = '.anonymous-user-id'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 /** Ambient hooks for locating and generating the id; every field has a default. */
 export interface AnonymousUserIdOptions {
-  /** Environment consulted for `DSH_HOME`; defaults to `process.env`. */
+  /** Environment consulted for `LIWA_HOME`; defaults to `process.env`. */
   env?: NodeJS.ProcessEnv
   /** UUID generator; defaults to `crypto.randomUUID` (test hook). */
   randomUUID?: () => string
@@ -55,7 +55,7 @@ function readPersistedId(file: string): AnonymousUserId | undefined {
 }
 
 /**
- * Return the harness home's anonymous user id, creating and persisting one on
+ * Return the Liwa home's anonymous user id, creating and persisting one on
  * first use. A concurrent first launch is settled by an exclusive-create
  * write: the loser rereads the winner's id. (A reread landing in the winner's
  * narrow create-to-write window can still yield two per-process ids for that
@@ -63,10 +63,10 @@ function readPersistedId(file: string): AnonymousUserId | undefined {
  * best-effort — a write failure (read-only home) still returns a usable id
  * for the current run so feedback and telemetry are never blocked.
  * @param options - home-location and UUID-generation seams.
- * @returns the stable per-harness-home anonymous user id.
+ * @returns the stable per-Liwa-home anonymous user id.
  */
 export function getOrCreateAnonymousUserId(options: AnonymousUserIdOptions = {}): AnonymousUserId {
-  const file = join(resolveDshHome(undefined, options.env ?? process.env), ANONYMOUS_USER_ID_FILE_NAME)
+  const file = join(resolveLiwaHome(undefined, options.env ?? process.env), ANONYMOUS_USER_ID_FILE_NAME)
   const cached = memo.get(file)
   if (cached !== undefined) return cached
 

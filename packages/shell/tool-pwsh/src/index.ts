@@ -1,13 +1,13 @@
 /**
  * Model-facing PowerShell Consumer of the `ctx.shell` capability seam. Intended for
  * Windows compositions where a PowerShell executor (e.g.
- * `@deepseek-ai/dsh-pwsh-local`) backs `ctx.shell`; the tool contract is
+ * `@liwa/pwsh-local`) backs `ctx.shell`; the tool contract is
  * PowerShell-dialect: native `C:\...` paths and `$env:NAME` variables.
  *
- * Behavior mirrors `dsh-tool-bash` call-for-call: foreground and
+ * Behavior mirrors `liwa-tool-bash` call-for-call: foreground and
  * `run_in_background` execution (with a job registry composed, every call
  * registers its process with `ctx.jobs` as it starts, and a foreground call
- * waits on its job until the timeout passes), the managed `DSH_*` environment through the
+ * waits on its job until the timeout passes), the managed `LIWA_*` environment through the
  * shared `shell-env` registry, the per-call sandbox policy resolution (the
  * calling session's mode and cwd travel to the confining executor), the
  * sandbox-denial rendering with the same-turn escalation surface
@@ -15,32 +15,32 @@
  * `ctx.approval`), and the bash marker/truncation rendering story. UI
  * presentation mirrors the bash tool's too: a completed foreground call is
  * a terminal card with the parsed exit-status pill, using the shared
- * exit-status parse from `@deepseek-ai/dsh-shell`.
+ * exit-status parse from `@liwa/shell`.
  *
- * @module @deepseek-ai/dsh-tool-pwsh
+ * @module @liwa/tool-pwsh
  */
 
 import { isAbsolute, resolve as resolvePath } from 'node:path'
-import type {} from '@deepseek-ai/dsh-working-directory'
-import { FiberState } from '@deepseek-ai/cordis'
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { defineTool, TOOL_ABORTED } from '@deepseek-ai/dsh-tools'
-import type { GenericCallView, TerminalCallView, ToolDefinition, ToolExecution, ToolResult, ToolResultView } from '@deepseek-ai/dsh-tools'
-import { HarnessError } from '@deepseek-ai/dsh-llm'
-import type { JobId, JobRegistry, JobView } from '@deepseek-ai/dsh-jobs'
-import type {} from '@deepseek-ai/dsh-shell-env'
-import type {} from '@deepseek-ai/dsh-user-approval'
-import type { SandboxExecutionPolicy, SandboxMode } from '@deepseek-ai/dsh-sandbox'
-import { ESCALATION_TARGETS, approveEscalation, sandboxPermissionsDescription, validateEscalationArgs } from '@deepseek-ai/dsh-sandbox'
-import type { SandboxPolicyService } from '@deepseek-ai/dsh-sandbox-policy'
-import type { ShellExecRequest, ShellExecSpec, ShellExecution, ShellRunResult } from '@deepseek-ai/dsh-shell'
-import { parseExitStatus } from '@deepseek-ai/dsh-shell'
+import type {} from '@liwa/working-directory'
+import { FiberState } from '@liwa/cordis'
+import type { Context } from '@liwa/cordis'
+import z from '@liwa/schemastery'
+import { defineTool, TOOL_ABORTED } from '@liwa/tools'
+import type { GenericCallView, TerminalCallView, ToolDefinition, ToolExecution, ToolResult, ToolResultView } from '@liwa/tools'
+import { LiwaError } from '@liwa/llm'
+import type { JobId, JobRegistry, JobView } from '@liwa/jobs'
+import type {} from '@liwa/shell-env'
+import type {} from '@liwa/user-approval'
+import type { SandboxExecutionPolicy, SandboxMode } from '@liwa/sandbox'
+import { ESCALATION_TARGETS, approveEscalation, sandboxPermissionsDescription, validateEscalationArgs } from '@liwa/sandbox'
+import type { SandboxPolicyService } from '@liwa/sandbox-policy'
+import type { ShellExecRequest, ShellExecSpec, ShellExecution, ShellRunResult } from '@liwa/shell'
+import { parseExitStatus } from '@liwa/shell'
 import { processJob, processOutcome, processSources, ringDelta } from './background.ts'
 import { renderPwshJobRead, renderPwshPromoted, renderPwshResult } from './render.ts'
 import type { RenderablePwshResult } from './render.ts'
 
-declare module '@deepseek-ai/dsh-jobs' {
+declare module '@liwa/jobs' {
   interface JobKindMap {
     pwsh: 'pwsh'
   }
@@ -103,7 +103,7 @@ interface PwshForegroundResult {
   sandbox?: { mode: string; denied: boolean; enforcement?: string; runnerFailed?: boolean }
 }
 
-/* jscpd:ignore-start -- minimal mirror of dsh-tool-bash's validation and execute plumbing (Agent Note). */
+/* jscpd:ignore-start -- minimal mirror of liwa-tool-bash's validation and execute plumbing (Agent Note). */
 function validatePwshArgs(args: PwshToolArgs): void {
   if (args.command.trim().length === 0) {
     throw new Error('invalid command: expected a non-empty string')
@@ -122,7 +122,7 @@ function pwshDescription(windowsSandbox: boolean): string {
   const base = 'Execute a PowerShell command (`pwsh -Command`) and return its stdout/stderr. '
     + 'Each call runs in a fresh pwsh process; pass `workdir` instead of using `cd`. Paths use native Windows form (`C:\\...`); read environment '
     + 'variables with `$env:NAME`. '
-    + 'Managed `$env:DSH_*` variables expose current harness environment facts. '
+    + 'Managed `$env:LIWA_*` variables expose current harness environment facts. '
     + 'Long output is truncated to its tail; the full output is saved to a file whose path is reported when available. '
     + 'On Windows a force-killed command settles as `[exit code: 1]` without a signal marker — treat it as an interruption, not a command failure. '
     + 'Provide `description` before `command` in the arguments. '
@@ -172,7 +172,7 @@ function canonicalPwshResult(result: ShellRunResult, cwd: string): PwshForegroun
     timedOut: result.timedOut,
     aborted: result.aborted,
     timeoutMs: result.timeoutMs,
-    /* jscpd:ignore-start -- the canonical projection and background-handle shape mirror dsh-tool-bash's by design (Agent Note). */
+    /* jscpd:ignore-start -- the canonical projection and background-handle shape mirror liwa-tool-bash's by design (Agent Note). */
     stdout: output(result.stdout),
     stderr: output(result.stderr),
     ...result.sandbox !== undefined ? {
@@ -187,8 +187,8 @@ function canonicalPwshResult(result: ShellRunResult, cwd: string): PwshForegroun
 }
 
 /** The structured abort the foreground paths throw when the caller cancels the call. */
-function toolAborted(): HarnessError {
-  const error = new HarnessError('tool call aborted', TOOL_ABORTED)
+function toolAborted(): LiwaError {
+  const error = new LiwaError('tool call aborted', TOOL_ABORTED)
   error.name = 'AbortError'
   return error
 }
@@ -208,7 +208,7 @@ const BACKGROUND_OUTPUT_PROPERTIES = {
 } as const
 /* jscpd:ignore-end */
 
-/* jscpd:ignore-start -- deliberate mirror of dsh-tool-bash's apply() preamble (pwsh-tool-and-executor Agent Note). */
+/* jscpd:ignore-start -- deliberate mirror of liwa-tool-bash's apply() preamble (pwsh-tool-and-executor Agent Note). */
 export function apply(ctx: Context, config: Config = {}): void {
   const backgroundEnabled = config.enableRunInBackground ?? true
   // Keeping a timed-out command needs the whole background surface: the job
@@ -225,7 +225,7 @@ export function apply(ctx: Context, config: Config = {}): void {
   const resolveSandboxPolicy = (exec: ToolExecution): SandboxExecutionPolicy | undefined =>
     sandboxPolicy?.resolve(exec.agent === undefined ? {} : { session: exec.agent.session })
 
-  /* jscpd:ignore-start -- deliberate mirror of dsh-tool-bash's escalation resolver (pwsh-tool-and-executor Agent Note). */
+  /* jscpd:ignore-start -- deliberate mirror of liwa-tool-bash's escalation resolver (pwsh-tool-and-executor Agent Note). */
   /**
    * Resolve a sandbox-escalation request through `ctx.approval` BEFORE
    * anything executes, delegating the shared fail-closed sequence (strict
@@ -276,7 +276,7 @@ export function apply(ctx: Context, config: Config = {}): void {
   const pwshTool = (jobs: JobRegistry | undefined): ToolDefinition => {
     const background = jobs !== undefined
     const promote = background && promoteOnTimeout
-    /* jscpd:ignore-start -- the job start and wait mirror dsh-tool-bash's by design (pwsh-tool-and-executor Agent Note). */
+    /* jscpd:ignore-start -- the job start and wait mirror liwa-tool-bash's by design (pwsh-tool-and-executor Agent Note). */
     /** Register the command as a job; the process spawns inside the starter, after admission. */
     const startJob = (registry: JobRegistry, args: PwshToolArgs, exec: ToolExecution, spec: ShellExecSpec): StartedJob => {
       let proc: ShellExecution | undefined
@@ -384,7 +384,7 @@ export function apply(ctx: Context, config: Config = {}): void {
     return defineTool({
       name: 'pwsh',
       description: pwshDescription(escalationModes.length > 0),
-      /* jscpd:ignore-start -- deliberate mirror of dsh-tool-bash's parameter surface (pwsh-tool-and-executor Agent Note). */
+      /* jscpd:ignore-start -- deliberate mirror of liwa-tool-bash's parameter surface (pwsh-tool-and-executor Agent Note). */
       parameters: {
         description: {
           type: 'string',
@@ -419,10 +419,10 @@ export function apply(ctx: Context, config: Config = {}): void {
       },
       /* jscpd:ignore-end */
       output: {
-        // The foreground result wire shape mirrors dsh-tool-bash's by contract —
+        // The foreground result wire shape mirrors liwa-tool-bash's by contract —
         // consumers of one must accept the other (see the pwsh-tool-and-executor
         // Agent Note).
-        /* jscpd:ignore-start -- deliberate result-schema symmetry with dsh-tool-bash. */
+        /* jscpd:ignore-start -- deliberate result-schema symmetry with liwa-tool-bash. */
         schema: {
           oneOf: [
             {
@@ -498,7 +498,7 @@ export function apply(ctx: Context, config: Config = {}): void {
         }],
         presentationMeta: (_args, value) => ({ cwd: value.cwd }),
       },
-      /* jscpd:ignore-start -- the execute path mirrors dsh-tool-bash's by design (see the pwsh-tool-and-executor Agent Note). */
+      /* jscpd:ignore-start -- the execute path mirrors liwa-tool-bash's by design (see the pwsh-tool-and-executor Agent Note). */
       async execute(args: PwshToolArgs, exec) {
         validatePwshArgs(args)
         // Description is display metadata; workdir defaults to the caller's session.
@@ -515,7 +515,7 @@ export function apply(ctx: Context, config: Config = {}): void {
           command: args.command,
           ...workdir !== undefined ? { workdir } : {},
           ...args.timeoutMs !== undefined ? { timeoutMs: args.timeoutMs } : {},
-          dshEnv: ctx.shellEnv.collect(exec),
+          liwaEnv: ctx.shellEnv.collect(exec),
           ...policy !== undefined ? { sandboxPolicy: policy } : {},
         }
         if (args.run_in_background === true) {
@@ -524,7 +524,7 @@ export function apply(ctx: Context, config: Config = {}): void {
             throw new Error('run_in_background is disabled for this deployment (enableRunInBackground: false)')
           }
           if (jobs === undefined) {
-            throw new Error('background jobs unavailable: load @deepseek-ai/dsh-jobs and @deepseek-ai/dsh-tool-jobs')
+            throw new Error('background jobs unavailable: load @liwa/jobs and @liwa/tool-jobs')
           }
           // The caller owns cancellation until ctx.jobs commits detached ownership.
           if (exec.signal.aborted) throw toolAborted()

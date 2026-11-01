@@ -17,12 +17,12 @@ function origin(value, name) {
  */
 export function resolveDesktopPolicyEnvironment(environment) {
   const deployment = resolveDesktopAutoUpdateEnvironment(environment)
-  const name = deployment === 'test' ? 'DSH_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN' : 'DSH_DESKTOP_MANDATORY_UPDATE_PROD_ORIGIN'
+  const name = deployment === 'test' ? 'LIWA_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN' : 'LIWA_DESKTOP_MANDATORY_UPDATE_PROD_ORIGIN'
   const selected = origin(environment[name], name)
   let settings = {}
-  if (environment.DSH_DESKTOP_MANDATORY_UPDATE_CONFIG !== undefined) {
-    try { settings = JSON.parse(environment.DSH_DESKTOP_MANDATORY_UPDATE_CONFIG) }
-    catch { throw new Error('desktop package: DSH_DESKTOP_MANDATORY_UPDATE_CONFIG must be valid JSON') }
+  if (environment.LIWA_DESKTOP_MANDATORY_UPDATE_CONFIG !== undefined) {
+    try { settings = JSON.parse(environment.LIWA_DESKTOP_MANDATORY_UPDATE_CONFIG) }
+    catch { throw new Error('desktop package: LIWA_DESKTOP_MANDATORY_UPDATE_CONFIG must be valid JSON') }
   }
   if (typeof settings !== 'object' || settings === null || Array.isArray(settings)
     || 'origin' in settings || 'authentication' in settings) {

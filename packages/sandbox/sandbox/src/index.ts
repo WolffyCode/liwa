@@ -2,12 +2,12 @@
  * Service Definition for the same-world process-confinement capability seam: wrap exact subprocess argv under a
  * host-path file policy. Containers, microVMs, and remote execution replace the
  * surrounding capability seam instead; this service shares the host kernel and filesystem.
- * @module @deepseek-ai/dsh-sandbox
+ * @module @liwa/sandbox
  */
 
-import { Context, Service } from '@deepseek-ai/cordis'
-import { HarnessError } from '@deepseek-ai/dsh-llm'
-import type { SessionId } from '@deepseek-ai/dsh-session'
+import { Context, Service } from '@liwa/cordis'
+import { LiwaError } from '@liwa/llm'
+import type { SessionId } from '@liwa/session'
 
 export {
   ESCALATION_TARGETS,
@@ -50,7 +50,7 @@ export interface SandboxExecutionPolicy {
    */
   additionalWritableRoots?: readonly string[]
   /**
-   * Opaque identity of the calling session (the branded `dsh-session`
+   * Opaque identity of the calling session (the branded `liwa-session`
    * SessionId). Backends key per-session state off it (e.g. windows-acl gives
    * each live session/workspace pair a random private temp directory and SID,
    * while the workspace SID and standing grant remain per-workspace); absent
@@ -125,7 +125,7 @@ export interface ConfinedArgv {
 
 /**
  * Error code for a requested confined mode when no backend is usable. The
- * provider fails closed, and `HarnessError` carries the code through
+ * provider fails closed, and `LiwaError` carries the code through
  * `tool/result` so callers can distinguish missing confinement from command
  * failure.
  */
@@ -136,7 +136,7 @@ export const SANDBOX_UNAVAILABLE = 'SANDBOX_UNAVAILABLE'
  * mode. Carries {@link SANDBOX_UNAVAILABLE} through the structured error
  * channel.
  */
-export class SandboxUnavailableError extends HarnessError {
+export class SandboxUnavailableError extends LiwaError {
   constructor(mode: ConfinedSandboxMode, detail?: string) {
     super(
       `sandbox mode "${mode}" is requested but no sandbox backend is usable on this host; `
@@ -152,14 +152,14 @@ export class SandboxUnavailableError extends HarnessError {
 }
 
 /** The selected backend is available but cannot enforce the requested policy. */
-export class SandboxUnsupportedPolicyError extends HarnessError {
+export class SandboxUnsupportedPolicyError extends LiwaError {
   constructor(detail: string) {
     super(detail, 'SANDBOX_UNSUPPORTED_POLICY')
     this.name = 'SandboxUnsupportedPolicyError'
   }
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     sandbox: SandboxProvider
   }

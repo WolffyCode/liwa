@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-07-20-routed-model-context-and-compaction-policy.md
 /agent-note-routed-model-context-and-compaction-policy:
-  en: eca190695d4857f5
-  zh: f9d6411b8a8612ae
+  en: 0df11163b72c148d
+  zh: 54facd2b5e6e3527
 /agent-note-routed-model-context-and-compaction-policy/problem:
   en: f7d1f343e487d725
   zh: c7f736180e44d586

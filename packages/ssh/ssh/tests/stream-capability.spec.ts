@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from 'node:fs/promises'
 import { createConnection, type Socket } from 'node:net'
 import { once } from 'node:events'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { connect as tlsConnect } from 'node:tls'
 import { describe, expect, it, vi } from 'vitest'
 import { RemoteProcesses } from '../src/helper-processes.ts'
@@ -17,7 +17,7 @@ async function connect(endpoint: SshStreamEndpoint, capability: string): Promise
 
 describe.skipIf(process.platform === 'win32')('SSH stream capabilities', () => {
   it('refuses an unknown TLS identity without consuming a legitimate reservation', async () => {
-    const root = await mkdtemp('/tmp/dsh-ssh-identity-')
+    const root = await mkdtemp('/tmp/liwa-ssh-identity-')
     const owner = new RemoteProcesses(new Context(), root, 1, 5000)
     let stream: Socket | undefined
     try {
@@ -36,7 +36,7 @@ describe.skipIf(process.platform === 'win32')('SSH stream capabilities', () => {
   })
 
   it('publishes only one of two already-connected clients for the same reservation', async () => {
-    const root = await mkdtemp('/tmp/dsh-ssh-duplicate-')
+    const root = await mkdtemp('/tmp/liwa-ssh-duplicate-')
     const owner = new RemoteProcesses(new Context(), root, 1, 5000)
     const sockets: Socket[] = []
     try {
@@ -58,7 +58,7 @@ describe.skipIf(process.platform === 'win32')('SSH stream capabilities', () => {
   })
 
   it('refuses another endpoint capability without consuming the legitimate reservation', async () => {
-    const root = await mkdtemp('/tmp/dsh-ssh-auth-')
+    const root = await mkdtemp('/tmp/liwa-ssh-auth-')
     const processes = new RemoteProcesses(new Context(), root, 4, 5000)
     const sockets: Socket[] = []
     try {
@@ -81,7 +81,7 @@ describe.skipIf(process.platform === 'win32')('SSH stream capabilities', () => {
   })
 
   it('does not treat administrative-looking bytes as a helper request on a data listener', async () => {
-    const root = await mkdtemp('/tmp/dsh-ssh-auth-')
+    const root = await mkdtemp('/tmp/liwa-ssh-auth-')
     const processes = new RemoteProcesses(new Context(), root, 4, 5000)
     let socket: Socket | undefined
     try {

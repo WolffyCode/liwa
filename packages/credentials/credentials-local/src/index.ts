@@ -1,12 +1,12 @@
 /**
- * File-backed credentials provider over `$DSH_HOME/.credentials.yaml`, layered
+ * File-backed credentials provider over `$LIWA_HOME/.credentials.yaml`, layered
  * over the environment in this precedence order:
  *
  * ```text
- * $DSH_HOME/.credentials.yaml        (provider-managed, written by set/unset)
+ * $LIWA_HOME/.credentials.yaml        (provider-managed, written by set/unset)
  * > inherited process environment    (fallback; this provider never writes it)
  * > <invocation cwd>/.env            (fallback; this provider never writes it)
- * > $DSH_HOME/.env                   (fallback; this provider never writes it)
+ * > $LIWA_HOME/.env                   (fallback; this provider never writes it)
  * ```
  *
  * The managed store wins because a credential the user explicitly saved in
@@ -28,23 +28,23 @@
  * The document holds credentials, which is why `refs` is a strict
  * `CredentialRef`-to-string mapping rather than a dotenv file; a foreign
  * top-level key another tool wrote is kept but resolves nothing: a store the
- * Harness owns and never materializes into the environment cannot also serve
+ * Liwa owns and never materializes into the environment cannot also serve
  * as the user's environment layer; a store that doubled as the environment
  * layer would shadow non-secret entries behind its precedence, making them
  * silently unreachable.
- * @module @deepseek-ai/dsh-credentials-local
+ * @module @liwa/credentials-local
  */
 
-import { Context, Service } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
+import { Context, Service } from '@liwa/cordis'
+import z from '@liwa/schemastery'
 import { watch as chokidarWatch } from 'chokidar'
 import { mkdir, readFile, stat } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { Document, isMap, isScalar, parseDocument, type YAMLError } from 'yaml'
-import { withFileLock, writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
-import { canonicalizeWatchPath, resolveDshHome } from '@deepseek-ai/dsh-home-paths'
-import { launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment'
-import { CredentialProvider, credentialRef, parseCredentialKey } from '@deepseek-ai/dsh-credentials'
+import { withFileLock, writeFileAtomic } from '@liwa/atomic-write'
+import { canonicalizeWatchPath, resolveLiwaHome } from '@liwa/home-paths'
+import { launchEnvironmentOf } from '@liwa/launch-environment'
+import { CredentialProvider, credentialRef, parseCredentialKey } from '@liwa/credentials'
 import type {
   ApiKeyRecord,
   CredentialInfo,
@@ -54,18 +54,18 @@ import type {
   CredentialRecordInfo,
   CredentialRef,
   ResolvedCredential,
-} from '@deepseek-ai/dsh-credentials'
-import type { LaunchEnvironmentEntry } from '@deepseek-ai/dsh-launch-environment'
+} from '@liwa/credentials'
+import type { LaunchEnvironmentEntry } from '@liwa/launch-environment'
 
-/** Basename of the credentials document inside the harness home. */
+/** Basename of the credentials document inside the Liwa home. */
 export const CREDENTIALS_FILENAME = '.credentials.yaml'
 
 /** Plugin config: file location and hot-reload behavior. */
 export interface Config {
-  /** Credentials document path; defaults to `.credentials.yaml` under the harness home. */
+  /** Credentials document path; defaults to `.credentials.yaml` under the Liwa home. */
   path?: string
-  /** Harness home used when `path` is omitted; defaults to `$DSH_HOME` or `~/.dsh`. */
-  dshHome?: string
+  /** Liwa home used when `path` is omitted; defaults to `$LIWA_HOME` or `~/.liwa`. */
+  liwaHome?: string
   /** Watch the document and hot-publish external edits; defaults to true. */
   watch?: boolean
   /** Watcher write-settle window in milliseconds; defaults to 100. */
@@ -81,13 +81,13 @@ interface ResolvedSpec {
 
 /**
  * Resolve the runtime spec from plugin config: an explicit `path` wins,
- * otherwise the document lives at `<harness home>/.credentials.yaml`.
+ * otherwise the document lives at `<Liwa home>/.credentials.yaml`.
  * @param config - raw plugin config.
  * @returns the resolved file location and watch behavior.
  */
 export function resolveSpec(config: Config): ResolvedSpec {
   return {
-    filename: resolve(config.path ?? join(resolveDshHome(config.dshHome), CREDENTIALS_FILENAME)),
+    filename: resolve(config.path ?? join(resolveLiwaHome(config.liwaHome), CREDENTIALS_FILENAME)),
     watch: config.watch ?? true,
     debounceMs: config.debounceMs ?? 100,
   }
@@ -105,7 +105,7 @@ const GROUP_OTHER_BITS = 0o077
  * wait is sized by the longest holder it can meet, and refs and records share
  * one file and one lock, so every writer of this document — reference writes
  * and record deletes included — waits this long, not only the mutation that
- * holds it. Like the retry cadence in `dsh-atomic-write`, this is a
+ * holds it. Like the retry cadence in `liwa-atomic-write`, this is a
  * robustness bound of the write protocol rather than a deployment choice: it
  * is sized by what a provider request costs, which no deployment varies.
  */
@@ -513,11 +513,11 @@ function sameJsonValue(left: unknown, right: unknown): boolean {
     && sameJsonValue((left as Record<string, unknown>)[key], (right as Record<string, unknown>)[key]))
 }
 
-/** File-backed credentials provider (`$DSH_HOME/.credentials.yaml`). */
+/** File-backed credentials provider (`$LIWA_HOME/.credentials.yaml`). */
 export class LocalCredentialProvider extends CredentialProvider {
   static Config: z<Config> = z.object({
     path: z.string(),
-    dshHome: z.string(),
+    liwaHome: z.string(),
     watch: z.boolean().default(true),
     debounceMs: z.number().min(0).default(100),
   })
@@ -752,7 +752,7 @@ export class LocalCredentialProvider extends CredentialProvider {
         throw new Error(`credentials-local was disposed before the queued "${ref}" ${verb} ran`)
       }
       // The writer lock's exclusive create needs the parent to exist; 0700
-      // because the harness home holds user-private data.
+      // because the Liwa home holds user-private data.
       await mkdir(dirname(this.spec.filename), { recursive: true, mode: 0o700 })
       await withFileLock(this.spec.filename, async () => {
         // Read-modify-write: fold in any on-disk state this process has not

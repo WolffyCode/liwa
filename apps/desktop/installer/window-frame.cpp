@@ -266,8 +266,8 @@ static LRESULT CALLBACK ProgressProc(HWND window, UINT message, WPARAM wparam, L
             PaintCaptionButtons(graphics, *page);
             SolidBrush background(page->dark ? Color(255, 21, 21, 23) : Color(255, 255, 255, 255));
             graphics.FillRectangle(&background, 48, 480, 504, 56);
-            const int stage = static_cast<int>(reinterpret_cast<INT_PTR>(GetPropW(GetParent(window), L"HarnessInstaller.Stage")));
-            const double fraction = reinterpret_cast<UINT_PTR>(GetPropW(GetParent(window), L"HarnessInstaller.ExtractProgress")) / 100.0;
+            const int stage = static_cast<int>(reinterpret_cast<INT_PTR>(GetPropW(GetParent(window), L"LiwaInstaller.Stage")));
+            const double fraction = reinterpret_cast<UINT_PTR>(GetPropW(GetParent(window), L"LiwaInstaller.ExtractProgress")) / 100.0;
             page->progress.Advance(stage, fraction, GetTickCount64());
             const int percent = static_cast<int>(page->progress.value);
             SolidBrush track(page->dark ? Color(255, 97, 102, 107) : Color(255, 233, 236, 242));
@@ -288,7 +288,7 @@ static LRESULT CALLBACK ProgressProc(HWND window, UINT message, WPARAM wparam, L
                paint.rcPaint.right - paint.rcPaint.left, paint.rcPaint.bottom - paint.rcPaint.top,
                page->bufferDc, paint.rcPaint.left, paint.rcPaint.top, SRCCOPY);
         if (!printing) EndPaint(window, &paint);
-        if (page->progress.value == 100) SetPropW(GetParent(window), L"HarnessInstaller.CompletedPercent", reinterpret_cast<HANDLE>(100));
+        if (page->progress.value == 100) SetPropW(GetParent(window), L"LiwaInstaller.CompletedPercent", reinterpret_cast<HANDLE>(100));
         return 0;
     }
     if (message == WM_NCDESTROY && page) {
@@ -307,7 +307,7 @@ extern "C" __declspec(dllexport) HWND __cdecl InstallerShowProgress(HWND parent,
     WNDCLASSW type = {};
     type.lpfnWndProc = ProgressProc;
     type.hInstance = module;
-    type.lpszClassName = L"HarnessInstallerProgress";
+    type.lpszClassName = L"LiwaInstallerProgress";
     type.hCursor = LoadCursorW(nullptr, IDC_ARROW);
     RegisterClassW(&type);
     auto* page = new (std::nothrow) ProgressPage{};
@@ -373,7 +373,7 @@ extern "C" __declspec(dllexport) BOOL __cdecl InstallerFinishProgress(HWND windo
     auto* page = reinterpret_cast<ProgressPage*>(GetWindowLongPtrW(window, GWLP_USERDATA));
     if (!page) return FALSE;
     const ULONGLONG started = GetTickCount64();
-    SetPropW(GetParent(window), L"HarnessInstaller.Succeeded", reinterpret_cast<HANDLE>(1));
+    SetPropW(GetParent(window), L"LiwaInstaller.Succeeded", reinterpret_cast<HANDLE>(1));
     page->progress.Complete(started);
     while (IsWindow(window) && GetTickCount64() - started < 750) {
         MSG message;
@@ -443,6 +443,6 @@ extern "C" __declspec(dllexport) BOOL __cdecl InstallerPresentWelcome(HWND windo
         FLASHWINFO flash = {sizeof(flash), window, FLASHW_TRAY | FLASHW_TIMERNOFG, 0, 0};
         FlashWindowEx(&flash);
     }
-    SetPropW(window, L"HarnessInstaller.Presented", reinterpret_cast<HANDLE>(1));
+    SetPropW(window, L"LiwaInstaller.Presented", reinterpret_cast<HANDLE>(1));
     return TRUE;
 }

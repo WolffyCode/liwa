@@ -12,14 +12,14 @@ import { mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { LAUNCHER_FAILURE_EXIT } from '@deepseek-ai/node-addon-system/landlock-run'
-import { SANDBOX_UNAVAILABLE, SandboxUnavailableError } from '@deepseek-ai/dsh-sandbox'
-import type { SandboxPolicy } from '@deepseek-ai/dsh-sandbox'
+import { Context } from '@liwa/cordis'
+import { LAUNCHER_FAILURE_EXIT } from '@liwa/node-addon-system/landlock-run'
+import { SANDBOX_UNAVAILABLE, SandboxUnavailableError } from '@liwa/sandbox'
+import type { SandboxPolicy } from '@liwa/sandbox'
 import {
   LocalSandboxProvider,
-} from '@deepseek-ai/dsh-sandbox-local'
-import type { Config } from '@deepseek-ai/dsh-sandbox-local'
+} from '@liwa/sandbox-local'
+import type { Config } from '@liwa/sandbox-local'
 import { bwrapProfileArgs, landlockProfileArgs, seatbeltProfileArgs } from '../src/profiles.ts'
 
 const RO: SandboxPolicy = { mode: 'read-only', workspaceRoot: '/ws' }
@@ -46,14 +46,14 @@ async function setup(config: Config = {}, internals: LocalSandboxProvider['inter
  * `sandbox-windows-acl/lib/runner.js`.
  */
 function absentRunnerEntry(): string {
-  const dir = mkdtempSync(join(tmpdir(), 'dsh-absent-acl-entry-'))
+  const dir = mkdtempSync(join(tmpdir(), 'liwa-absent-acl-entry-'))
   tempDirs.push(dir)
   return join(dir, 'runner.js')
 }
 
 /** Write an executable fake `landlock-run` that answers `--probe` with `report`. */
 function fakeLauncher(report = 'landlock: fully enforced'): string {
-  const dir = mkdtempSync(join(tmpdir(), 'dsh-fake-landlock-'))
+  const dir = mkdtempSync(join(tmpdir(), 'liwa-fake-landlock-'))
   tempDirs.push(dir)
   const launcher = join(dir, 'landlock-run')
   writeFileSync(launcher, `#!/bin/sh\nif [ "$1" = "--probe" ]; then echo "${report}"; exit 0; fi\nexit ${LAUNCHER_FAILURE_EXIT}\n`, { mode: 0o755 })
@@ -62,7 +62,7 @@ function fakeLauncher(report = 'landlock: fully enforced'): string {
 
 /** Write an executable fake `sandbox-exec` that exits `status` for any invocation. */
 function fakeSeatbeltExec(status: number): string {
-  const dir = mkdtempSync(join(tmpdir(), 'dsh-fake-seatbelt-'))
+  const dir = mkdtempSync(join(tmpdir(), 'liwa-fake-seatbelt-'))
   tempDirs.push(dir)
   const exec = join(dir, 'sandbox-exec')
   writeFileSync(exec, `#!/bin/sh\nexit ${status}\n`, { mode: 0o755 })
@@ -95,8 +95,8 @@ describe('profile dialects', () => {
   })
 
   it('bwrap workspace-write binds each explicit extra root beside the workspace', () => {
-    const ws = mkdtempSync(join(tmpdir(), 'dsh-ws-'))
-    const extra = realpathSync.native(mkdtempSync(join(tmpdir(), 'dsh-extra-')))
+    const ws = mkdtempSync(join(tmpdir(), 'liwa-ws-'))
+    const extra = realpathSync.native(mkdtempSync(join(tmpdir(), 'liwa-extra-')))
     tempDirs.push(ws, extra)
     const realWs = realpathSync.native(ws)
     const realExtra = realpathSync.native(extra)
@@ -107,8 +107,8 @@ describe('profile dialects', () => {
   })
 
   it('landlock workspace-write adds each explicit extra root to the writable list', () => {
-    const ws = mkdtempSync(join(tmpdir(), 'dsh-ws-'))
-    const extra = realpathSync.native(mkdtempSync(join(tmpdir(), 'dsh-extra-')))
+    const ws = mkdtempSync(join(tmpdir(), 'liwa-ws-'))
+    const extra = realpathSync.native(mkdtempSync(join(tmpdir(), 'liwa-extra-')))
     tempDirs.push(ws, extra)
     expect(landlockProfileArgs({ mode: 'workspace-write', workspaceRoot: ws, additionalWritableRoots: [extra] })).toEqual([
       '--ro', '/', '--rw', '/dev/null', '--rw', '/tmp', '--rw', realpathSync.native(ws), '--rw', realpathSync.native(extra),
@@ -138,8 +138,8 @@ describe('profile dialects', () => {
   })
 
   it('seatbelt workspace-write grants every explicit extra root', () => {
-    const ws = mkdtempSync(join(tmpdir(), 'dsh-ws-'))
-    const extra = realpathSync.native(mkdtempSync(join(tmpdir(), 'dsh-extra-')))
+    const ws = mkdtempSync(join(tmpdir(), 'liwa-ws-'))
+    const extra = realpathSync.native(mkdtempSync(join(tmpdir(), 'liwa-extra-')))
     tempDirs.push(ws, extra)
     const profile = seatbeltProfileArgs({
       mode: 'workspace-write',
@@ -271,7 +271,7 @@ describe('the platform chains', () => {
   })
 
   // The win32 chain's argv contract, denial dialect, and runner-failure rules
-  // live in @deepseek-ai/dsh-sandbox-windows-acl/tests/provider-chain.spec.ts
+  // live in @liwa/sandbox-windows-acl/tests/provider-chain.spec.ts
   // (platform-independent assertions that run in every CI lane, including
   // Windows where this package's POSIX-only suites are excluded).
 
@@ -366,7 +366,7 @@ describe('the default landlock probe (launcher CLI contract)', () => {
   })
 
   it('reads a failing launcher as unusable: the chain ends and fails closed', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dsh-fake-landlock-'))
+    const dir = mkdtempSync(join(tmpdir(), 'liwa-fake-landlock-'))
     tempDirs.push(dir)
     const launcher = join(dir, 'landlock-run')
     writeFileSync(launcher, `#!/bin/sh\nexit ${LAUNCHER_FAILURE_EXIT}\n`, { mode: 0o755 })
@@ -388,7 +388,7 @@ describe('probeTimeoutMs config', () => {
     // keep a wide margin from the launcher's 1s runtime so a loaded host (where
     // spawnSync blocks the worker and fork/exec latency inflates wall-clock)
     // cannot flip either verdict; the vitest timeout clears the patient budget.
-    const dir = mkdtempSync(join(tmpdir(), 'dsh-slow-landlock-'))
+    const dir = mkdtempSync(join(tmpdir(), 'liwa-slow-landlock-'))
     tempDirs.push(dir)
     const launcher = join(dir, 'landlock-run')
     writeFileSync(launcher, '#!/bin/sh\nsleep 1\necho "landlock: fully enforced"\nexit 0\n', { mode: 0o755 })
@@ -499,7 +499,7 @@ describe('the windows-acl probe (runner invocation contract)', () => {
   })
 
   it('loads the full source runner independently of cwd and ambient tsconfig', async () => {
-    const cwd = mkdtempSync(join(tmpdir(), 'dsh-acl-source-cwd-'))
+    const cwd = mkdtempSync(join(tmpdir(), 'liwa-acl-source-cwd-'))
     tempDirs.push(cwd)
     writeFileSync(join(cwd, 'tsconfig.json'), '{ invalid workspace configuration')
     const { sandbox } = await setup({}, {
@@ -531,7 +531,7 @@ describe('the windows-acl probe (runner invocation contract)', () => {
   })
 
   it('prefers the built lib/runner.js entry when the resolved file exists', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dsh-fake-acl-entry-'))
+    const dir = mkdtempSync(join(tmpdir(), 'liwa-fake-acl-entry-'))
     tempDirs.push(dir)
     const builtEntry = join(dir, 'runner.js')
     writeFileSync(builtEntry, '')

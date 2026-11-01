@@ -1,4 +1,4 @@
-// PID routing follows DSH's MIT-licensed Cua Driver adaptation.
+// PID routing follows Liwa's MIT-licensed Cua Driver adaptation.
 // Swift SPI signatures reference Peekaboo's BackgroundInputDriver and WindowRoutedPointerDriver.
 import CoreGraphics
 import Darwin

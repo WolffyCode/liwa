@@ -3,13 +3,13 @@ description: "面向用户与维护者的进程外 ACP（Agent Client Protocol�
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-subagent-acp
+# @liwa/subagent-acp
 
 [English](README.md) | 中文
 
 ## 概述
 
-使用本包可将任务委派给运行在全新子进程中的 ACP 兼容 agent；子 agent 拥有独立的运行时、会话、模型和工具。每次运行只共享选定的工作目录，通过 ACP 发送任务，并返回子 agent 的最终答案或安全错误；中间消息和工具流量不会进入父级对话。权限提示由配置的策略自动应答，无需人工介入。当委派需要进程隔离或需要使用非 Harness ACP agent 时选择本包；当子 agent 必须共享父级能力时，选择进程内后端。
+使用本包可将任务委派给运行在全新子进程中的 ACP 兼容 agent；子 agent 拥有独立的运行时、会话、模型和工具。每次运行只共享选定的工作目录，通过 ACP 发送任务，并返回子 agent 的最终答案或安全错误；中间消息和工具流量不会进入父级对话。权限提示由配置的策略自动应答，无需人工介入。当委派需要进程隔离或需要使用非灵鲸 ACP agent 时选择本包；当子 agent 必须共享父级能力时，选择进程内后端。
 
 ## 目录
 
@@ -29,7 +29,7 @@ kind: "package-reference"
 
 ### 何时选择
 
-当子 agent 必须在独立进程中运行、拥有自己的运行时、模型和工具时选择此后端——例如来自其他项目的 ACP agent——或者你希望委派完全无法触及父 harness 时。当子 agent 必须共享父级组合或遵守父级强制执行的能力约束时，请选择进程内后端：本提供方不声明任何可选启动时能力，因此 seam 会拒绝要求 `agentPreset`、`agentOptions`、结构化输出或深度上限 的请求，而不是静默省略。
+当子 agent 必须在独立进程中运行、拥有自己的运行时、模型和工具时选择此后端——例如来自其他项目的 ACP agent——或者你希望委派完全无法触及父灵鲸时。当子 agent 必须共享父级组合或遵守父级强制执行的能力约束时，请选择进程内后端：本提供方不声明任何可选启动时能力，因此 seam 会拒绝要求 `agentPreset`、`agentOptions`、结构化输出或深度上限 的请求，而不是静默省略。
 
 ### 配置
 
@@ -43,20 +43,20 @@ kind: "package-reference"
 | `disposeEofGraceMs` | `6000` | stdin EOF 之后、平台终止之前的宽限 |
 | `disposeGraceMs` | `3000` | 失败后观察结构化进程事实的时限；在 POSIX 上也是 SIGTERM 到 SIGKILL 的宽限 |
 
-生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-subagent-acp)是每个受支持字段及其 JSDoc 的穷尽式真源。
+生成的[配置目录](../../../docs/config-catalog.zh.md#liwasubagent-acp)是每个受支持字段及其 JSDoc 的穷尽式真源。
 
-DeepSeek Harness 子进程使用产品启动器和一个显式的绝对路径 `DSH_HOME`。隔离的 home 可防止嵌套运行时发现启动者个人的 profile 或凭据；通用 ACP 提供方不会把这一要求强加给非 DSH agent。
+灵鲸子进程使用产品启动器和一个显式的绝对路径 `LIWA_HOME`。隔离的 home 可防止嵌套运行时发现启动者个人的 profile 或凭据；通用 ACP 提供方不会把这一要求强加给非灵鲸 agent。
 
 ```yaml
 - id: subagent-acp
-  name: '@deepseek-ai/dsh-subagent-acp'
+  name: '@liwa/subagent-acp'
   config:
     providerName: acp
-    command: dsh
+    command: liwa
     args: ['--profile', 'acp', '--patch', '/absolute/path/to/acp.patch.yml']
     permission: reject
     env:
-      DSH_HOME: /absolute/path/to/isolated-child-home
+      LIWA_HOME: /absolute/path/to/isolated-child-home
       DEEPSEEK_API_KEY: !!js process.env.DEEPSEEK_API_KEY
 ```
 
@@ -110,10 +110,10 @@ spawn、初始化或新建会话失败会在发布前拒绝，通常先证明 ma
 当包级约定不够用时阅读以下页面。它们从本后端逐步进入它接入的 seam 与它驱动的协议。
 
 - [Subagent 子系统](../../../docs/subsystems/subagent.zh.md)——服务约定、提供方约定与终态结果语义。
-- [dsh-subagent seam](../subagent/README.zh.md)——本提供方注册于其上的注册表与启动 API。
+- [liwa-subagent seam](../subagent/README.zh.md)——本提供方注册于其上的注册表与启动 API。
 - [Agent Client Protocol 自动化服务器](../../acp/acp/README.zh.md)——本提供方作为客户端驱动的仅自动化服务器。
-- [dsh-subprocess seam](../../subprocess/subprocess/README.zh.md)——每次运行背后的进程 spawn 与清理机制。
-- [生成配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-subagent-acp)——每个受支持配置字段及其源声明。
+- [liwa-subprocess seam](../../subprocess/subprocess/README.zh.md)——每次运行背后的进程 spawn 与清理机制。
+- [生成配置目录](../../../docs/config-catalog.zh.md#liwasubagent-acp)——每个受支持配置字段及其源声明。
 
 -----
 
@@ -138,7 +138,7 @@ spawn、初始化或新建会话失败会在发布前拒绝，通常先证明 ma
 
 #### 模型看到什么
 
-通过 `dsh-tool-subagent`，父模型先收到 child id，随后收到含最终或部分 assistant 文本、停止原因与安全诊断的完成通知。父会话独立保存外部任务身份和完整终态结果。中间消息与工具通信不进入父会话。
+通过 `liwa-tool-subagent`，父模型先收到 child id，随后收到含最终或部分 assistant 文本、停止原因与安全诊断的完成通知。父会话独立保存外部任务身份和完整终态结果。中间消息与工具通信不进入父会话。
 
 #### Token 影响
 

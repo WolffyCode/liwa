@@ -3,13 +3,13 @@ description: "Shared messaging, interruption, and child discovery tools for user
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-tool-subagent-control
+# @liwa/tool-subagent-control
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-tool-subagent-control` lets agents message and interrupt subagents and list continuable children. One plugin instance registers all three tools for a scope shared by multiple delegation backends. Parents and continuable children inherit the same messaging definition and ordering. Tool presence does not select the delegation lifecycle.
+`liwa-tool-subagent-control` lets agents message and interrupt subagents and list continuable children. One plugin instance registers all three tools for a scope shared by multiple delegation backends. Parents and continuable children inherit the same messaging definition and ordering. Tool presence does not select the delegation lifecycle.
 
 ## Table of Contents
 
@@ -32,12 +32,12 @@ Mount this package once per tool scope. It requires `tools`, `subagents`, and `a
 With the required services available, load the subagent service, a backend, the delegation tool, and this package to expose all three control and discovery tools:
 
 ```yaml
-- name: '@deepseek-ai/dsh-subagent'
-- name: '@deepseek-ai/dsh-subagent-spawn-in-process'
-- name: '@deepseek-ai/dsh-tool-subagent'
+- name: '@liwa/subagent'
+- name: '@liwa/subagent-spawn-in-process'
+- name: '@liwa/tool-subagent'
   config:
     provider: spawn
-- name: '@deepseek-ai/dsh-tool-subagent-control'
+- name: '@liwa/tool-subagent-control'
 ```
 
 This package takes no configuration. Its main entry registers `send_message`, `interrupt_agent`, and `list_agents` together; existing tool restrictions can hide individual tools.
@@ -93,8 +93,8 @@ The tool forwards its execution signal, which owns admission only until inbox ac
 Read these pages when the package-level contract is not enough; they move from the tool schemas to the continuation service behind them.
 
 - [Subagent subsystem](../../../docs/subsystems/subagent.md) — continuable children, activations, inbox, interrupt, and follow-up authority.
-- [dsh-tool-subagent](../tool-subagent/README.md) — the delegation tool that starts continuable children.
-- [Generated tool catalog](../../../docs/tool-catalog.md#deepseek-aidsh-tool-subagent-control) — the tool schemas.
+- [liwa-tool-subagent](../tool-subagent/README.md) — the delegation tool that starts continuable children.
+- [Generated tool catalog](../../../docs/tool-catalog.md#liwatool-subagent-control) — the tool schemas.
 
 -----
 
@@ -105,7 +105,7 @@ Read these pages when the package-level contract is not enough; they move from t
 
 #### What the model sees
 
-The generated [schemas](../../../docs/tool-catalog.md#deepseek-aidsh-tool-subagent-control): `send_message` takes `agent_id` and `message`; `interrupt_agent` takes `agent_id`; `list_agents` accepts an optional `scope`.
+The generated [schemas](../../../docs/tool-catalog.md#liwatool-subagent-control): `send_message` takes `agent_id` and `message`; `interrupt_agent` takes `agent_id`; `list_agents` accepts an optional `scope`.
 
 #### Token effect
 

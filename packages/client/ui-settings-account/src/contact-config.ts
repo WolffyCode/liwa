@@ -1,11 +1,11 @@
 /** Public contact and bonus notice options shared by Host and Client. */
-import z from '@deepseek-ai/schemastery'
+import z from '@liwa/schemastery'
 
 /** Questionnaire destination and bonus notice timings shared by Host and Client. */
 export interface ContactConfig {
   /** HTTPS questionnaire URL; override for a test form. */
   contactFormUrl: string
-  /** Questionnaire source option; empty until Harness is supported by the form. */
+  /** Questionnaire source option; empty until Liwa is supported by the form. */
   contactSource: string
   /** First delay before retrying a failed bonus acknowledgement. */
   bonusAckRetryDelayMs: number
@@ -22,4 +22,4 @@ export const ContactConfigFields = {
 /** Validate public questionnaire options. */
 export const ContactConfig: z<Partial<ContactConfig>, ContactConfig> = z.object(ContactConfigFields)
 /** Bootstrap key containing no account credentials. */
-export const CONTACT_CONFIG_GLOBAL = '__DSH_CONTACT_CONFIG__'
+export const CONTACT_CONFIG_GLOBAL = '__LIWA_CONTACT_CONFIG__'

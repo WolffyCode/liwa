@@ -4,18 +4,18 @@
  * preference row into the settings General section — the locale feature owns
  * its own settings surface.
  */
-import type { Context as ClientContext } from '@deepseek-ai/cordis'
-import type { LocalizedText } from '@deepseek-ai/dsh-package-manifest'
+import type { Context as ClientContext } from '@liwa/cordis'
+import type { LocalizedText } from '@liwa/package-manifest'
 import {
   type BoundActions, type LocaleDictOf, type LocaleNamespaceMap, type Translate, type TranslateNS,
-} from '@deepseek-ai/dsh-client-ui-slots'
+} from '@liwa/client-ui-slots'
 // Type-only: the ctx.configForms Context merge and the settings slot types.
 // Cross-plugin collaboration goes through the service, never a value import
 // (client bundle purity gate).
-import type { ConfigForm } from '@deepseek-ai/dsh-client-ui-settings/client'
+import type { ConfigForm } from '@liwa/client-ui-settings/client'
 import { parseLocaleBootstrap, type LocaleBootstrap, type LocaleBridge } from './bootstrap.ts'
 // Type-only: pulls the SlotRegistry service merge (ctx.slots).
-import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
+import type {} from '@liwa/client-ui-renderer/client'
 import {
   LOCALE_ID_PATTERN, LOCALE_IDS, LOCALE_PREFERENCE_FIELD, LOCALE_SETTINGS_NAMESPACE,
   type BuiltInLocaleId, type LocaleId, type LocaleSettings,
@@ -37,9 +37,9 @@ export type { BuiltInLocaleId, LocaleId, LocaleSettings } from '../locale-settin
 // The translate currency lives in ui-slots (the render machinery synthesizes
 // the seat); re-exported here so dictionary owners import one package.
 // TranslateNS<'model'> is the namespace-addressed developer-facing form.
-export type { Translate, TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
+export type { Translate, TranslateNS } from '@liwa/client-ui-slots'
 
-declare module '@deepseek-ai/dsh-client-ui-slots' {
+declare module '@liwa/client-ui-slots' {
   interface LocaleNamespaceMap {
     /** Shared cross-feature vocabulary, consulted by the lookup chain after the entry's own namespace misses. */
     common: CommonKey
@@ -81,7 +81,7 @@ export interface LocaleSnapshot {
   revision: number
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@liwa/cordis' {
   interface Context {
     locale: LocaleRuntime
   }
@@ -248,7 +248,7 @@ export class LocaleRuntime {
    * locale, because the active value may be a provisional browser-derived or
    * fallback resolution that nothing has stored yet. Picking the language
    * already on screen is still an explicit choice, and it must survive a
-   * different browser sharing the same DSH home. Only the render notification
+   * different browser sharing the same Liwa home. Only the render notification
    * is conditional: republishing an unchanged locale would churn every
    * subscriber for nothing.
    * @param id - a registered locale id; unknown ids throw.
@@ -565,7 +565,7 @@ export const inject = ['slots', 'remote', 'configForms']
  * @returns resolves after native language initialization and plugin registration.
  */
 export async function apply(ctx: ClientContext): Promise<void> {
-  const bridge = (globalThis as { __DSH_LOCALE__?: LocaleBridge }).__DSH_LOCALE__
+  const bridge = (globalThis as { __LIWA_LOCALE__?: LocaleBridge }).__LIWA_LOCALE__
   let bootstrap: LocaleBootstrap | undefined
   if (bridge !== undefined) {
     let value: unknown

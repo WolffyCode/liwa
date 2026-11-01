@@ -1,6 +1,6 @@
 /**
  * Tool-name aliases between Claude Code's built-in tool names, which a mod's
- * matchers and `e.tool` use, and the harness tool names the registry knows.
+ * matchers and `e.tool` use, and the Liwa tool names the registry knows.
  * @module
  */
 
@@ -23,9 +23,9 @@ export const DEFAULT_TOOL_ALIASES: Readonly<Record<string, string>> = Object.fre
 
 /** Two-way tool-name translation. */
 export interface ToolNameAliases {
-  /** The name a mod sees for a harness tool: its Claude Code alias, or the harness name itself. */
+  /** The name a mod sees for a harness tool: its Claude Code alias, or Liwa name itself. */
   toMod(harnessName: string): string
-  /** The harness tool a mod named: the alias target, or the name itself. */
+  /** The Liwa tool a mod named: the alias target, or the name itself. */
   toHarness(modName: string): string
 }
 

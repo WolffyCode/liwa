@@ -14,7 +14,7 @@ const script = join(import.meta.dirname, 'verify-version-sync.ts')
  * @returns The temporary root.
  */
 function repository(files: Record<string, string | null>): string {
-  const root = mkdtempSync(join(tmpdir(), 'dsh-version-sync-'))
+  const root = mkdtempSync(join(tmpdir(), 'liwa-version-sync-'))
   for (const [path, version] of Object.entries(files)) {
     const absolute = join(root, path)
     mkdirSync(dirname(absolute), { recursive: true })
@@ -121,7 +121,7 @@ describe('verify-version-sync command', () => {
   })
 
   it('exits 1 when the tree cannot be read', () => {
-    const root = mkdtempSync(join(tmpdir(), 'dsh-version-sync-empty-'))
+    const root = mkdtempSync(join(tmpdir(), 'liwa-version-sync-empty-'))
     try {
       const result = spawnSync(process.execPath, [script, root], { encoding: 'utf8' })
       expect(result.status).toBe(1)

@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-09-forge-panel.md
 /agent-note-change-request-panel-and-worktree-sessions:
-  en: a524673f0d9cc9d8
-  zh: db8a2c1ad8f9c8a3
+  en: c575f8308f90d86c
+  zh: 065522c53e2e5246
 /agent-note-change-request-panel-and-worktree-sessions/problem:
-  en: 344bcc7e9825bbc8
-  zh: c1d0f4b54f5b3786
+  en: b5fb85d56cdb42d2
+  zh: 7704b00fca506d1a
 /agent-note-change-request-panel-and-worktree-sessions/decision:
-  en: b18b287b701aef93
-  zh: 462c0f561f1a0c18
+  en: e09e694a0084c74e
+  zh: 5b105925bab0290e
 /agent-note-change-request-panel-and-worktree-sessions/deferred:
   en: 32ef8af85f4d2f66
   zh: b82b67f94346399e

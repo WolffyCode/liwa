@@ -5,21 +5,21 @@
  * inherited executor.
  */
 
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 import { describe, expect, it, onTestFinished } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { createScope } from '@deepseek-ai/dsh-scope'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import { PtcRuntime } from '@deepseek-ai/dsh-ptc-runtime'
-import type { PtcRunRequest, PtcRunResult } from '@deepseek-ai/dsh-ptc-runtime'
-import ToolRuntime, { RUN_CODE_NAME, defineTool } from '@deepseek-ai/dsh-tools'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import { apply, Config, inject, name } from '@deepseek-ai/dsh-agent-tool-presentation'
+import { Context } from '@liwa/cordis'
+import { createScope } from '@liwa/scope'
+import SystemPrompt from '@liwa/system-prompt'
+import { PtcRuntime } from '@liwa/ptc-runtime'
+import type { PtcRunRequest, PtcRunResult } from '@liwa/ptc-runtime'
+import ToolRuntime, { RUN_CODE_NAME, defineTool } from '@liwa/tools'
+import type { Agent } from '@liwa/agent'
+import { SessionId } from '@liwa/session'
+import { apply, Config, inject, name } from '@liwa/agent-tool-presentation'
 
 /** A runtime that never runs anything: presentation never dispatches. */
 class StubRuntime extends PtcRuntime {
-  resolve(request: import('@deepseek-ai/dsh-ptc-runtime').PtcRunRequest): import('@deepseek-ai/dsh-ptc-runtime').PtcRunSpec { return { ...request, cwd: request.cwd ?? process.cwd(), timeoutMs: request.timeoutMs ?? 120_000 } }
+  resolve(request: import('@liwa/ptc-runtime').PtcRunRequest): import('@liwa/ptc-runtime').PtcRunSpec { return { ...request, cwd: request.cwd ?? process.cwd(), timeoutMs: request.timeoutMs ?? 120_000 } }
 
   readonly language = 'typescript'
   readonly isolation = 'stub'

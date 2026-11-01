@@ -2,11 +2,11 @@
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Service, type Context } from '@deepseek-ai/cordis'
+import { Service, type Context } from '@liwa/cordis'
 import { expect, it, vi } from 'vitest'
-import { boot, initProfile, readProfilePatches, type ProfileContext } from '@deepseek-ai/dsh-app-boot'
-import ConfigEditor from '@deepseek-ai/dsh-config-editor'
-import Settings from '@deepseek-ai/dsh-settings'
+import { boot, initProfile, readProfilePatches, type ProfileContext } from '@liwa/app-boot'
+import ConfigEditor from '@liwa/config-editor'
+import Settings from '@liwa/settings'
 import PluginMarket from '../src/index.ts'
 
 /** The `pluginManager` reads the market makes, with an empty profile. */
@@ -17,7 +17,7 @@ class StubPluginManager extends Service {
 }
 
 it('saves index sources without remounting, announces them, and restores them at restart', async () => {
-  const home = realpathSync(mkdtempSync(join(tmpdir(), 'dsh-plugin-market-configuration-')))
+  const home = realpathSync(mkdtempSync(join(tmpdir(), 'liwa-plugin-market-configuration-')))
   let ctx: Awaited<ReturnType<typeof boot>> | undefined
   try {
     const dir = join(home, 'profiles', 'test')
@@ -25,7 +25,7 @@ it('saves index sources without remounting, announces them, and restores them at
     const bundle = join(dir, 'node_modules', 'test-bundle')
     mkdirSync(bundle, { recursive: true })
     writeFileSync(join(home, 'package.json'), '{"name":"test-installation"}\n')
-    writeFileSync(join(bundle, 'package.json'), JSON.stringify({ name: 'test-bundle', version: '1.0.0', dsh: { bundle: { patch: 'cordis.patch.yml' } } }))
+    writeFileSync(join(bundle, 'package.json'), JSON.stringify({ name: 'test-bundle', version: '1.0.0', liwa: { bundle: { patch: 'cordis.patch.yml' } } }))
     writeFileSync(join(bundle, 'cordis.patch.yml'), readFileSync(new URL('./fixtures/market.patch.yml', import.meta.url)))
     writeFileSync(join(dir, 'cordis.yml'), '[]\n')
     const profile: ProfileContext = {
@@ -70,12 +70,12 @@ class RecordingConnection extends Service {
 }
 
 it('reads a market entry detail document and serves its images through the composed profile', async () => {
-  const home = realpathSync(mkdtempSync(join(tmpdir(), 'dsh-plugin-market-detail-')))
+  const home = realpathSync(mkdtempSync(join(tmpdir(), 'liwa-plugin-market-detail-')))
   const commit = 'c'.repeat(40)
   const raw = `https://raw.githubusercontent.com/o/r/${commit}/pkg`
   const files: Record<string, string> = {
     'https://first.example/index.json': JSON.stringify({ format: 1, title: 'Market', plugins: [{
-      name: 'from-git', versions: [{ version: '1.0.0', publishTimestamp: 1, source: { type: 'git', url: 'https://github.com/o/r', commit, path: 'pkg' }, engines: { dsh: '*' } }],
+      name: 'from-git', versions: [{ version: '1.0.0', publishTimestamp: 1, source: { type: 'git', url: 'https://github.com/o/r', commit, path: 'pkg' }, engines: { liwa: '*' } }],
     }] }),
     [`${raw}/locale/en.json`]: JSON.stringify({ meta: { detail: 'guide/DETAIL.md' } }),
     [`${raw}/locale/zh.json`]: JSON.stringify({ meta: { detail: 'guide/DETAIL.zh.md' } }),
@@ -93,7 +93,7 @@ it('reads a market entry detail document and serves its images through the compo
     const bundle = join(dir, 'node_modules', 'test-bundle')
     mkdirSync(bundle, { recursive: true })
     writeFileSync(join(home, 'package.json'), '{"name":"test-installation"}\n')
-    writeFileSync(join(bundle, 'package.json'), JSON.stringify({ name: 'test-bundle', version: '1.0.0', dsh: { bundle: { patch: 'cordis.patch.yml' } } }))
+    writeFileSync(join(bundle, 'package.json'), JSON.stringify({ name: 'test-bundle', version: '1.0.0', liwa: { bundle: { patch: 'cordis.patch.yml' } } }))
     writeFileSync(join(bundle, 'cordis.patch.yml'), readFileSync(new URL('./fixtures/market.patch.yml', import.meta.url)))
     writeFileSync(join(dir, 'cordis.yml'), '- name: cordis:connection\n')
     const profile: ProfileContext = {
@@ -112,12 +112,12 @@ it('reads a market entry detail document and serves its images through the compo
     expect(await market.readEntryDetail('https://first.example/index.json', 'from-git', '1.0.0', 'zh-CN')).toMatchObject({ origin: 'locale', markdown: '# 测试条目\n' })
     if (detail.status !== 'found') throw new Error('expected a document')
     const serve = RecordingConnection.routes.get('/api/plugin-market/detail-file')!
-    const image = await serve(new Request(`http://dsh.local/api/plugin-market/detail-file?document=${detail.document}&path=img%2Fdiagram.svg`))
+    const image = await serve(new Request(`http://liwa.local/api/plugin-market/detail-file?document=${detail.document}&path=img%2Fdiagram.svg`))
     expect(image.status).toBe(200)
     expect(image.headers.get('content-type')).toBe('image/svg+xml')
     expect(image.headers.get('content-security-policy')).toContain('sandbox')
     expect(await image.text()).toContain('<svg')
-    expect((await serve(new Request(`http://dsh.local/api/plugin-market/detail-file?document=${detail.document}&path=..%2F..%2Fpackage.json`))).status).toBe(404)
+    expect((await serve(new Request(`http://liwa.local/api/plugin-market/detail-file?document=${detail.document}&path=..%2F..%2Fpackage.json`))).status).toBe(404)
     await ctx.fiber.dispose()
     ctx = undefined
     expect(RecordingConnection.routes.has('/api/plugin-market/detail-file')).toBe(false)

@@ -4,9 +4,9 @@ import { fileURLToPath } from 'node:url'
 import type { Browser, Locator, Page } from 'playwright'
 import { chromium } from 'playwright'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, onTestFailed, vi } from 'vitest'
-import type { AccountView } from '@deepseek-ai/dsh-deepseek-account/types'
-import type {} from '@deepseek-ai/dsh-deepseek-account'
-import type {} from '@deepseek-ai/dsh-api-session-controller'
+import type { AccountView } from '@liwa/deepseek-account/types'
+import type {} from '@liwa/deepseek-account'
+import type {} from '@liwa/api-session-controller'
 import {
   compareOrRefreshGolden, launchWebScaffold, seedSession, watchConsole,
   webSnapshotMode, type WebScaffold,
@@ -374,7 +374,7 @@ describe('web e2e: sidebar search alignment and row action targets', () => {
       ? page.locator('[data-row-key="session:sidebar-action-geometry"]')
       : page.locator('[data-row-key^="workspace:"]').filter({ hasText: workspaceTitle })
     await row.evaluate((element) => {
-      element.parentElement!.style.setProperty('--dsh-workspace-indent', '24px')
+      element.parentElement!.style.setProperty('--liwa-workspace-indent', '24px')
       element.parentElement!.style.setProperty('--unrelated-preview-variable', '17px')
     })
     const box = await row.boundingBox()
@@ -400,7 +400,7 @@ describe('web e2e: sidebar search alignment and row action targets', () => {
       })
       expect(await spacing(preview)).toEqual(await spacing(row))
       expect(await preview.evaluate(element => [...element.parentElement!.style].filter(name => name.startsWith('--')).sort()))
-        .toEqual(['--dsh-sidebar-label-gap', '--dsh-sidebar-paint-inset', '--dsh-sidebar-row-padding'])
+        .toEqual(['--liwa-sidebar-label-gap', '--liwa-sidebar-paint-inset', '--liwa-sidebar-row-padding'])
       const titleOffset = (target: Locator) => target.evaluate((element) => {
         const title = element.querySelector<HTMLElement>('[class*="title"]')
         if (title === null) throw new Error('Row title is missing')

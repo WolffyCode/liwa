@@ -1,13 +1,13 @@
-/** Canonical tool-definition fixtures for repository tests. @module @deepseek-ai/dsh-tool-testkit */
+/** Canonical tool-definition fixtures for repository tests. @module @liwa/tool-testkit */
 
-import type { Context } from '@deepseek-ai/cordis'
-import { ToolExecutionPipeline } from '@deepseek-ai/dsh-tools/pipeline'
-import type { ContentBlock } from '@deepseek-ai/dsh-llm'
-import { defineTool } from '@deepseek-ai/dsh-tools'
+import type { Context } from '@liwa/cordis'
+import { ToolExecutionPipeline } from '@liwa/tools/pipeline'
+import type { ContentBlock } from '@liwa/llm'
+import { defineTool } from '@liwa/tools'
 import type {
   DefineToolOptions, InferArgs, ParameterSchemaSpec, ToolDefinition,
   ToolExecutionInput, ToolExecutionResult, ToolRunContext,
-} from '@deepseek-ai/dsh-tools'
+} from '@liwa/tools'
 
 // Expand interface fields so the fixture's content value is checked as JSON without changing runtime values.
 type JsonFields<T> = T extends string | number | boolean | null | undefined ? T

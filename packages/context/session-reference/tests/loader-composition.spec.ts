@@ -1,29 +1,29 @@
 /** Real Loader composition preserves retrievable source text outside the bounded preview. */
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
+import { executeToolFixture } from '@liwa/tool-testkit'
 
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import Include from '@deepseek-ai/cordis-plugin-include'
-import { agentEvents, type Agent } from '@deepseek-ai/dsh-agent'
-import { createUserMessage, ToolCallId } from '@deepseek-ai/dsh-llm'
-import * as systemPromptPlugin from '@deepseek-ai/dsh-system-prompt'
-import * as toolsPlugin from '@deepseek-ai/dsh-tools'
-import * as fsPlugin from '@deepseek-ai/dsh-fs-local'
-import * as toolFsPlugin from '@deepseek-ai/dsh-tool-fs'
-import * as sessionPlugin from '@deepseek-ai/dsh-session'
-import * as sessionProjectionPlugin from '@deepseek-ai/dsh-session-projection'
-import * as workingDirectoryPlugin from '@deepseek-ai/dsh-working-directory'
-import { Session, SessionId } from '@deepseek-ai/dsh-session'
-import * as queryPlugin from '@deepseek-ai/dsh-session-query-sqlite'
-import * as referencePlugin from '@deepseek-ai/dsh-session-reference'
-import * as spillPlugin from '@deepseek-ai/dsh-spill-local'
-import { sessionDir } from '@deepseek-ai/dsh-spill-local'
+import { Context } from '@liwa/cordis'
+import Loader from '@liwa/cordis-plugin-loader'
+import Include from '@liwa/cordis-plugin-include'
+import { agentEvents, type Agent } from '@liwa/agent'
+import { createUserMessage, ToolCallId } from '@liwa/llm'
+import * as systemPromptPlugin from '@liwa/system-prompt'
+import * as toolsPlugin from '@liwa/tools'
+import * as fsPlugin from '@liwa/fs-local'
+import * as toolFsPlugin from '@liwa/tool-fs'
+import * as sessionPlugin from '@liwa/session'
+import * as sessionProjectionPlugin from '@liwa/session-projection'
+import * as workingDirectoryPlugin from '@liwa/working-directory'
+import { Session, SessionId } from '@liwa/session'
+import * as queryPlugin from '@liwa/session-query-sqlite'
+import * as referencePlugin from '@liwa/session-reference'
+import * as spillPlugin from '@liwa/spill-local'
+import { sessionDir } from '@liwa/spill-local'
 import * as sourcePlugin from './fixtures/source-session.ts'
 
 let context: Context | undefined
@@ -48,17 +48,17 @@ describe('session-reference real Loader composition', () => {
     await ctx.plugin(Loader)
     ctx.loader.builtins.include = Include
     const modules = new Map<string, unknown>([
-      ['@deepseek-ai/dsh-session', sessionPlugin],
-      ['@deepseek-ai/dsh-session-projection', sessionProjectionPlugin],
-      ['@deepseek-ai/dsh-working-directory', workingDirectoryPlugin],
-      ['@deepseek-ai/dsh-system-prompt', systemPromptPlugin],
-      ['@deepseek-ai/dsh-tools', toolsPlugin],
-      ['@deepseek-ai/dsh-tool-executor-native', NativeToolExecutor],
-      ['@deepseek-ai/dsh-fs-local', fsPlugin],
-      ['@deepseek-ai/dsh-tool-fs', toolFsPlugin],
-      ['@deepseek-ai/dsh-session-query-sqlite', queryPlugin],
-      ['@deepseek-ai/dsh-session-reference', referencePlugin],
-      ['@deepseek-ai/dsh-spill-local', spillPlugin],
+      ['@liwa/session', sessionPlugin],
+      ['@liwa/session-projection', sessionProjectionPlugin],
+      ['@liwa/working-directory', workingDirectoryPlugin],
+      ['@liwa/system-prompt', systemPromptPlugin],
+      ['@liwa/tools', toolsPlugin],
+      ['@liwa/tool-executor-native', NativeToolExecutor],
+      ['@liwa/fs-local', fsPlugin],
+      ['@liwa/tool-fs', toolFsPlugin],
+      ['@liwa/session-query-sqlite', queryPlugin],
+      ['@liwa/session-reference', referencePlugin],
+      ['@liwa/spill-local', spillPlugin],
       ['./source-session.ts', sourcePlugin],
     ])
     ctx.loader.internal = {

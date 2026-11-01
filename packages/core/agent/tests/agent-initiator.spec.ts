@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import { runInNewContext } from 'node:vm'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import { SessionId } from '@deepseek-ai/dsh-session'
+import AgentRegistry from '@liwa/agent'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import type { Agent } from '@liwa/agent'
+import { SessionId } from '@liwa/session'
 
 function agent(id: string): Agent {
   return { id: SessionId(id) } as Agent

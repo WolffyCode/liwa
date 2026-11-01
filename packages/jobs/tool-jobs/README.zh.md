@@ -3,13 +3,13 @@ description: "面向模型的后台任务控制，供选择、配置或排查 jo
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-tool-jobs
+# @liwa/tool-jobs
 
 [English](README.md) | 中文
 
 ## 概述
 
-使用 `dsh-tool-jobs`，可通过 `job_output`、`job_list` 与 `job_kill` 检查和控制后台命令、PTY 工作与 subagent。读取可在配置的超时内等待，而等待会因用户 steer 提前结束；列表结果标识各任务的 kind 与状态，而取消只有在工作停止后才结算。归属明确的工作完成时，agent（智能体）会收到携带简短输出的会话内通知：繁忙的 agent 在下一步收到，空闲的 agent 则由 follow-up 轮次唤醒。配置控制等待上限、完成投递与可选的连续唤醒上限。流输出只有一个读取方，待领通知无法在所有者释放后存活。
+使用 `liwa-tool-jobs`，可通过 `job_output`、`job_list` 与 `job_kill` 检查和控制后台命令、PTY 工作与 subagent。读取可在配置的超时内等待，而等待会因用户 steer 提前结束；列表结果标识各任务的 kind 与状态，而取消只有在工作停止后才结算。归属明确的工作完成时，agent（智能体）会收到携带简短输出的会话内通知：繁忙的 agent 在下一步收到，空闲的 agent 则由 follow-up 轮次唤醒。配置控制等待上限、完成投递与可选的连续唤醒上限。流输出只有一个读取方，待领通知无法在所有者释放后存活。
 
 ## 目录
 
@@ -46,7 +46,7 @@ kind: "package-reference"
 不带配置加载插件是常用路径；`waitTimeoutMs` 高于 `maxWaitTimeoutMs` 时会在加载时失败。
 
 ```yaml
-- name: '@deepseek-ai/dsh-tool-jobs'
+- name: '@liwa/tool-jobs'
 ```
 
 | 字段 | 默认值 | 含义 |
@@ -57,7 +57,7 @@ kind: "package-reference"
 | `maxConsecutiveWakes` | 未设置 | 一个所有者可由唤醒开启的轮数，超出后通知降级为注入；未设置即不封顶 |
 | `inlineOutputBytes` | `2048` | 内联携带任务输出和最终结果的完整通知的最大长度；`0` 表示从不内联 |
 
-生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-tool-jobs)是每个受支持字段及其 JSDoc 的穷尽式真源。
+生成的[配置目录](../../../docs/config-catalog.zh.md#liwatool-jobs)是每个受支持字段及其 JSDoc 的穷尽式真源。
 
 ### 可能出什么问题
 
@@ -109,8 +109,8 @@ kind: "package-reference"
 - [jobs 组映射](../README.zh.md)——同级组页面及其包表格。
 - [注册表约定](../jobs/README.zh.md)——工具背后的抽象 `ctx.jobs` 服务。
 - [进程本地注册表](../jobs-local/README.zh.md)——任务在本进程中的运行位置。
-- [生成的工具目录](../../../docs/tool-catalog.zh.md#deepseek-aidsh-tool-jobs)——`job_output`、`job_list` 与 `job_kill` 的确切 schema。
-- [生成的配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-tool-jobs)——每个受支持配置字段及其源声明。
+- [生成的工具目录](../../../docs/tool-catalog.zh.md#liwatool-jobs)——`job_output`、`job_list` 与 `job_kill` 的确切 schema。
+- [生成的配置目录](../../../docs/config-catalog.zh.md#liwatool-jobs)——每个受支持配置字段及其源声明。
 - [任务注册表 seam Agent Note](../../../.agents/notes/archived/architecture/2026-07-26-job-registry-seam.md)——按所有者隔离的注册表约定及其理由。
 
 -----
@@ -142,7 +142,7 @@ Track every background job id you start. You are notified in-session when a job 
 
 #### 模型看到什么
 
-该工具集可见时，会看到生成的 [`job_output`、`job_list` 和 `job_kill` schema](../../../docs/tool-catalog.zh.md#deepseek-aidsh-tool-jobs)。
+该工具集可见时，会看到生成的 [`job_output`、`job_list` 和 `job_kill` schema](../../../docs/tool-catalog.zh.md#liwatool-jobs)。
 
 #### Token 影响
 

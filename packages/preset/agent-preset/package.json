@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-agent-preset",
+  "name": "@liwa/agent-preset",
   "description": "Declare an Agent capability composition in Cordis YAML",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/preset/agent-preset"
   },
   "type": "module",
@@ -30,21 +30,21 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-agent-preset-registry": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/agent-preset-registry": "workspace:*"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/cordis-plugin-include": "workspace:~",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:~",
-    "@deepseek-ai/dsh-agent-preset-registry": "workspace:*",
-    "@deepseek-ai/dsh-compaction-tool-result-pruner": "workspace:*",
-    "@deepseek-ai/dsh-skill": "workspace:*",
-    "@deepseek-ai/dsh-skill-filesystem": "workspace:*",
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/cordis-plugin-include": "workspace:~",
+    "@liwa/cordis-plugin-loader": "workspace:~",
+    "@liwa/agent-preset-registry": "workspace:*",
+    "@liwa/compaction-tool-result-pruner": "workspace:*",
+    "@liwa/skill": "workspace:*",
+    "@liwa/skill-filesystem": "workspace:*",
+    "@liwa/schemastery": "workspace:~"
   }
 }

@@ -3,20 +3,20 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-18-declarative-agent-presets.md
 /agent-note-declarative-agent-presets-and-retained-revisions:
-  en: 0a9b9ab7a29ddce9
-  zh: 10893a464cde0f97
+  en: 6840b64e19677c5a
+  zh: 257d0b47529bcb21
 /agent-note-declarative-agent-presets-and-retained-revisions/problem:
   en: 725f773bb350218e
   zh: dd8fbc09ef48208d
 /agent-note-declarative-agent-presets-and-retained-revisions/decision:
-  en: 88edb925b556300c
-  zh: c6f05b641513d768
+  en: d4cb7de3adf15850
+  zh: f00c06beee3276eb
 /agent-note-declarative-agent-presets-and-retained-revisions/alternatives-considered:
   en: 09f40eab4659e9f6
   zh: 7a70da0d0ae6845b
 /agent-note-declarative-agent-presets-and-retained-revisions/consequences:
-  en: 24179c31261b0942
-  zh: 651c61bb5e53fd78
+  en: 1795123eaae05595
+  zh: 38c9a399d6993058
 /agent-note-declarative-agent-presets-and-retained-revisions/testing:
   en: d1a38a45212d4ebd
   zh: 6ca7a86078515284

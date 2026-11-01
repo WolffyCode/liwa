@@ -1,7 +1,7 @@
-import { Context } from '@deepseek-ai/cordis'
-import Sessions, { SessionId } from '@deepseek-ai/dsh-session'
-import SandboxPolicy, { setSandboxMode } from '@deepseek-ai/dsh-sandbox-policy'
-import SessionProjections from '@deepseek-ai/dsh-session-projection'
+import { Context } from '@liwa/cordis'
+import Sessions, { SessionId } from '@liwa/session'
+import SandboxPolicy, { setSandboxMode } from '@liwa/sandbox-policy'
+import SessionProjections from '@liwa/session-projection'
 import { expect, it, onTestFinished, vi } from 'vitest'
 import { PtcCalls } from '../src/ptc-calls.ts'
 

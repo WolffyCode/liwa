@@ -22,11 +22,11 @@
 
 ## 市场记录
 
-[Plugin Market](../../packages/boot/plugin-market/README.zh.md) 读取第 1 版索引格式，校验由 [`dsh-plugin-market-index`](../../packages/util/plugin-market-index/README.zh.md) 完成。
+[Plugin Market](../../packages/boot/plugin-market/README.zh.md) 读取第 1 版索引格式，校验由 [`liwa-plugin-market-index`](../../packages/util/plugin-market-index/README.zh.md) 完成。
 
 `MarketIndexSummary` 携带一个已配置的索引 URL，以及最近一次成功读取得到的 `title` 和 `description`；最近一次读取失败时，还携带其 `error`。
 
-`MarketQuery` 选择索引的一页：模糊匹配的 `text`、一个 `category`、必须全部具备的 `labels`、一个 `MarketSort`、`offset`、不超过 100 的 `limit`、表示重新获取而不使用缓存文档的 `refresh`，以及用于继续读取同一文档后续页的 `fetchedAt`。`MarketSearchResult` 携带索引 URL、`title`、可选的 `description`、市场 `metadata`、该文档的 `fetchedAt`、本页的 `entries`、匹配总数 `total` 和 `nextOffset`。每个 `MarketListingEntry` 额外携带 `defaultVersion`，即默认安装的版本，以及 `installation`，即该包名在当前 profile 中的状态；其 `versions` 中的每个版本额外携带 `install`，即交给 `installBundle` 的精确 spec 和可选的首选 registry，以及 `compatibility`，即包含版本豁免在内的 `engines.dsh` 评估结果。
+`MarketQuery` 选择索引的一页：模糊匹配的 `text`、一个 `category`、必须全部具备的 `labels`、一个 `MarketSort`、`offset`、不超过 100 的 `limit`、表示重新获取而不使用缓存文档的 `refresh`，以及用于继续读取同一文档后续页的 `fetchedAt`。`MarketSearchResult` 携带索引 URL、`title`、可选的 `description`、市场 `metadata`、该文档的 `fetchedAt`、本页的 `entries`、匹配总数 `total` 和 `nextOffset`。每个 `MarketListingEntry` 额外携带 `defaultVersion`，即默认安装的版本，以及 `installation`，即该包名在当前 profile 中的状态；其 `versions` 中的每个版本额外携带 `install`，即交给 `installBundle` 的精确 spec 和可选的首选 registry，以及 `compatibility`，即包含版本豁免在内的 `engines.liwa` 评估结果。
 
 `PluginDetail` 是市场条目的详细介绍：`{ status: 'found' }` 携带其 `origin`（`locale`、`readme` 或 `repository`）、`markdown`，以及一个 `document` id，该文档中的图片由 `GET /api/plugin-market/detail-file` 提供；否则为 `{ status: 'none' }`。读取其来源的顺序见[插件市场的说明](../../packages/boot/plugin-market/README.zh.md#plugin-detail-documents)。
 
@@ -172,7 +172,7 @@ runExclusive<T>(operation: () => Promise<T>): Promise<T>
 async watchConfig(filename: string, refresh: () => Promise<void>): Promise<() => Promise<void>>
 
 /**
- * Watch one file through the reload queue: the `ctx.hmr.watch()` contract of `@deepseek-ai/cordis-plugin-hmr`,
+ * Watch one file through the reload queue: the `ctx.hmr.watch()` contract of `@liwa/cordis-plugin-hmr`,
  * which Include uses to refresh its config file. The callback runs for additions, changes and removals once the
  * application is ready, serialized with module replacement and profile reloads; the path is watched even outside
  * {@link HmrConfig.root}.
@@ -235,7 +235,7 @@ Manage profile files and apply their declared reload lifecycle.
 
 /** Grant or revoke one exact plugin/runtime exemption and reevaluate live plugins.
  * @param packageVersion Exact manifest package name followed by @ and its version; never an installation spec or alias.
- * @param runtimeVersion Exact current DSH version for grants; revocation may name a previous runtime.
+ * @param runtimeVersion Exact current Liwa version for grants; revocation may name a previous runtime.
  * @param enabled Whether to grant rather than revoke the exemption.
  * @param acceptRisk Required true for grants after the user accepts possible crashes and data loss.
  * @returns Saved and runtime outcomes. Startup-only profiles require restart.
@@ -268,18 +268,18 @@ Manage profile files and apply their declared reload lifecycle.
 @Remote async inspect(spec: string, options?: InspectOptions, signal?: AbortSignal): Promise<PluginSpecInspection>
 
 /** Read the published versions newer than an installed registry package's version, from the first registry that answers.
- * Official bundles follow the DSH version and are not listed.
+ * Official bundles follow the Liwa version and are not listed.
  * @param name Installed profile dependency name.
  * @param options The registry asked first; absent, the one the package was installed from in this process, else the configured one.
  * @param signal Ends the lookups early.
  * @returns At most `versionListLimit` newer versions, newest first, with their tags, deprecation, bundle declaration,
- * and DSH compatibility, and the registry that answered; or why no list could be read, with every registry asked.
+ * and Liwa compatibility, and the registry that answered; or why no list could be read, with every registry asked.
  */
 @Remote async listVersions(name: string, options?: ListVersionsOptions, signal?: AbortSignal): Promise<PluginVersionList>
 
 /**
  * Replace an installed registry bundle with a newer published version. The target is checked on the registry first:
- * it must exist, declare a bundle, and accept the running DSH version, or nothing changes. With HMR the installed
+ * it must exist, declare a bundle, and accept the running Liwa version, or nothing changes. With HMR the installed
  * version is removed, so its plugins stop, and the target is installed with the same selection; when that
  * installation fails or is cancelled, the removed version is installed again from the registry it came from.
  * Without HMR the target is installed over the running version and the result reports the restart.
@@ -306,7 +306,7 @@ Manage profile files and apply their declared reload lifecycle.
 @Remote setBundleEnabled(name: string, enabled: boolean): Promise<ChangeResult>
 
 /**
- * Install a package using the same pnpm implementation as dsh plugin. GitHub
+ * Install a package using the same pnpm implementation as liwa plugin. GitHub
  * repositories get a connection check bounded by githubConnectionTimeoutMs before pnpm starts;
  * only network failures or timeouts stop installation, while pnpm owns authentication and transport fallback. An
  * HTTP(S) Git URL on another host is installed over SSH instead when access probes bounded by gitTransportTimeoutMs
@@ -334,7 +334,7 @@ Manage profile files and apply their declared reload lifecycle.
  */
 @Remote async cancelInstall(requestId: PluginInstallRequestId): Promise<PluginInstallCancellation>
 
-/** Unload and remove a profile-owned bundle dependency through dsh plugin's pnpm path; a selected name no
+/** Unload and remove a profile-owned bundle dependency through liwa plugin's pnpm path; a selected name no
  * dependency holds is only deselected.
  * @param name Installed dependency or selected bundle name.
  * @returns Removal diagnostics and the remaining profile state.

@@ -1,21 +1,21 @@
-import { executeToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import { ToolExecutionPipeline } from '@deepseek-ai/dsh-tools/pipeline'
-import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
+import { executeToolFixture } from '@liwa/tool-testkit'
+import { ToolExecutionPipeline } from '@liwa/tools/pipeline'
+import * as NativeToolExecutor from '@liwa/tool-executor-native'
 import { describe, expect, expectTypeOf, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import LlmRuntime, { createUserMessage, ToolCallId, HarnessError, type ContentBlock  } from '@deepseek-ai/dsh-llm'
-import type { ContextFormed } from '@deepseek-ai/dsh-llm'
-import SessionStore, { Session, SessionId } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import ApprovalService, { type ApprovalOutcome, type ApprovalRequest } from '@deepseek-ai/dsh-user-approval'
-import ToolRuntime, { defineTool, JsonSchemaError, parameterSchemaSpecToJsonSchema, validateArgs, ToolArgsError, ToolNotFoundError, TOOL_ABORTED, TOOL_ABORTED_BEFORE_DISPATCH, type InferArgs, type ParameterSchemaSpec, type PreToolDecision, type PostToolDecision, type JsonSchemaNode, type ToolDefinition, type ToolDispatchExecution, type ToolExecutionResult, type ToolExecutionToken } from '@deepseek-ai/dsh-tools'
-import { defineContentToolFixture } from '@deepseek-ai/dsh-tool-testkit'
-import type { JsonValue } from '@deepseek-ai/dsh-util-values'
+import { Context } from '@liwa/cordis'
+import LlmRuntime, { createUserMessage, ToolCallId, LiwaError, type ContentBlock  } from '@liwa/llm'
+import type { ContextFormed } from '@liwa/llm'
+import SessionStore, { Session, SessionId } from '@liwa/session'
+import SessionProjectionRegistry from '@liwa/session-projection'
+import SystemPrompt from '@liwa/system-prompt'
+import AgentRegistry, { type Agent } from '@liwa/agent'
+import AgentLoop from '@liwa/agent-loop'
+import ApprovalService, { type ApprovalOutcome, type ApprovalRequest } from '@liwa/user-approval'
+import ToolRuntime, { defineTool, JsonSchemaError, parameterSchemaSpecToJsonSchema, validateArgs, ToolArgsError, ToolNotFoundError, TOOL_ABORTED, TOOL_ABORTED_BEFORE_DISPATCH, type InferArgs, type ParameterSchemaSpec, type PreToolDecision, type PostToolDecision, type JsonSchemaNode, type ToolDefinition, type ToolDispatchExecution, type ToolExecutionResult, type ToolExecutionToken } from '@liwa/tools'
+import { defineContentToolFixture } from '@liwa/tool-testkit'
+import type { JsonValue } from '@liwa/util-values'
 
-declare module '@deepseek-ai/dsh-llm' {
+declare module '@liwa/llm' {
   interface MessageSourceMap {
     'blocker': { kind: 'blocker' } & ContextFormed
     'child': { kind: 'child' } & ContextFormed
@@ -777,9 +777,9 @@ describe('ToolRuntime', () => {
   })
 
   it('ToolNotFoundError carries a stable message and code', async () => {
-    const { HarnessError } = await import('@deepseek-ai/dsh-llm')
+    const { LiwaError } = await import('@liwa/llm')
     const err = new ToolNotFoundError('ghost')
-    expect(err).toBeInstanceOf(HarnessError)
+    expect(err).toBeInstanceOf(LiwaError)
     expect(err.name).toBe('ToolNotFoundError')
     expect(err.code).toBe('UNKNOWN_TOOL')
     expect(err.message).toBe('unknown tool "ghost"')
@@ -1019,7 +1019,7 @@ describe('ToolRuntime', () => {
     }))
     ctx.on('tools/pre-execute', async () => {
       dispose()
-      throw new HarnessError('policy failed', 'POLICY_FAILED')
+      throw new LiwaError('policy failed', 'POLICY_FAILED')
     })
 
     const result = await executeToolFixture(ctx, { signal: testToolSignal, callId: ToolCallId('bounded'), name: 'bounded', arguments: {} })
@@ -1029,7 +1029,7 @@ describe('ToolRuntime', () => {
       isError: true,
       error: {
         message: 'policy failed',
-        info: { name: 'HarnessError', code: 'POLICY_FAILED' },
+        info: { name: 'LiwaError', code: 'POLICY_FAILED' },
       },
     })
   })
@@ -1549,7 +1549,7 @@ describe('ToolRuntime', () => {
     ctx.on('tools/execute', async () => {
       entered.resolve(undefined)
       await release.promise
-      throw new HarnessError('wrapper failed', 'WRAPPER_FAILURE')
+      throw new LiwaError('wrapper failed', 'WRAPPER_FAILURE')
     })
     const controller = new AbortController()
     const pending = executeToolFixture(ctx, {
@@ -1563,7 +1563,7 @@ describe('ToolRuntime', () => {
     await expect(pending).resolves.toMatchObject({
       content: [{ type: 'text', text: 'Error: wrapper failed' }],
       isError: true,
-      error: { info: { name: 'HarnessError', code: 'WRAPPER_FAILURE' } },
+      error: { info: { name: 'LiwaError', code: 'WRAPPER_FAILURE' } },
     })
     expect(dispatched).toBe(0)
   })
@@ -1578,7 +1578,7 @@ describe('ToolRuntime', () => {
         entered.resolve(undefined)
         return new Promise<never>((_resolve, reject) => {
           exec.signal.addEventListener('abort', () => {
-            reject(new HarnessError('tool failed', 'TOOL_FAILURE'))
+            reject(new LiwaError('tool failed', 'TOOL_FAILURE'))
           }, { once: true })
         })
       },
@@ -1594,7 +1594,7 @@ describe('ToolRuntime', () => {
     await expect(pending).resolves.toMatchObject({
       content: [{ type: 'text', text: 'Error: tool failed' }],
       isError: true,
-      error: { info: { name: 'HarnessError', code: 'TOOL_FAILURE' } },
+      error: { info: { name: 'LiwaError', code: 'TOOL_FAILURE' } },
     })
   })
 
@@ -1606,7 +1606,7 @@ describe('ToolRuntime', () => {
     ctx.on('tools/post-execute', async () => {
       entered.resolve(undefined)
       await release.promise
-      throw new HarnessError('post-policy failed', 'POST_FAILURE')
+      throw new LiwaError('post-policy failed', 'POST_FAILURE')
     })
     const controller = new AbortController()
     const pending = executeToolFixture(ctx, {
@@ -1620,7 +1620,7 @@ describe('ToolRuntime', () => {
     await expect(pending).resolves.toMatchObject({
       content: [{ type: 'text', text: 'Error: post-policy failed' }],
       isError: true,
-      error: { info: { name: 'HarnessError', code: 'POST_FAILURE' } },
+      error: { info: { name: 'LiwaError', code: 'POST_FAILURE' } },
     })
   })
 
@@ -1845,7 +1845,7 @@ describe('ToolRuntime', () => {
     ctx.tools.register({
       ...echoTool,
       name: 'boom',
-      async execute() { throw new HarnessError('kaboom', 'BOOM') },
+      async execute() { throw new LiwaError('kaboom', 'BOOM') },
     })
 
     let seen: { isError: boolean; error?: unknown } | undefined
@@ -1860,7 +1860,7 @@ describe('ToolRuntime', () => {
     const result = await executeToolFixture(ctx, { signal: testToolSignal, callId: ToolCallId('c1'), name: 'boom', arguments: {} })
     expect(seen).toEqual({
       isError: true,
-      error: { message: 'kaboom', info: { name: 'HarnessError', code: 'BOOM' } },
+      error: { message: 'kaboom', info: { name: 'LiwaError', code: 'BOOM' } },
     })
     expect(result.isError).toBe(true)
     expect(result.content[0]).toMatchObject({ text: 'Error: kaboom' })
@@ -2073,18 +2073,18 @@ describe('ToolRuntime', () => {
     })
   })
 
-  it('preserves structured error info when a tools/pre-execute listener throws HarnessError', async () => {
+  it('preserves structured error info when a tools/pre-execute listener throws LiwaError', async () => {
     const ctx = await setup()
     ctx.tools.register(echoTool)
     ctx.on('tools/pre-execute', async () => {
-      throw new HarnessError('denied', 'DENIED')
+      throw new LiwaError('denied', 'DENIED')
     })
 
     const result = await executeToolFixture(ctx, { signal: testToolSignal, callId: ToolCallId('c1'), name: 'echo', arguments: { text: 'hi' } })
 
     expect(result).toMatchObject({
       isError: true,
-      error: { message: 'denied', info: { name: 'HarnessError', code: 'DENIED' } },
+      error: { message: 'denied', info: { name: 'LiwaError', code: 'DENIED' } },
     })
   })
 
@@ -2802,23 +2802,23 @@ describe('defineTool validation (the runtime-validation Agent Note, part 1)', ()
     })
   })
 
-  it('a tool throwing a HarnessError surfaces its name and code', async () => {
-    const { HarnessError } = await import('@deepseek-ai/dsh-llm')
+  it('a tool throwing a LiwaError surfaces its name and code', async () => {
+    const { LiwaError } = await import('@liwa/llm')
     const ctx = await setup()
     ctx.tools.register({
       ...echoTool,
       name: 'coded',
       async execute() {
-        throw new HarnessError('disk full', 'ENOSPC')
+        throw new LiwaError('disk full', 'ENOSPC')
       },
     })
     const result = await executeToolFixture(ctx, { signal: testToolSignal, callId: ToolCallId('c1'), name: 'coded', arguments: {} })
     expect(result.isError).toBe(true)
-    expect(result.error).toEqual({ message: 'disk full', info: { name: 'HarnessError', code: 'ENOSPC' } })
+    expect(result.error).toEqual({ message: 'disk full', info: { name: 'LiwaError', code: 'ENOSPC' } })
     expect(result.content[0]).toMatchObject({ text: 'Error: disk full' })
   })
 
-  it('a non-HarnessError throw retains only its message', async () => {
+  it('a non-LiwaError throw retains only its message', async () => {
     const ctx = await setup()
     ctx.tools.register({
       ...echoTool,

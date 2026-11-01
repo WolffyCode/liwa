@@ -3,20 +3,20 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/glossary.md
 /glossary:
-  en: 9b364904616b2266
-  zh: 934b9d189a4f34a2
+  en: 640fcc5090cdd3f2
+  zh: a3aaa06f86c6f466
 /glossary/capability-seam:
-  en: 18eea8301b73be7e
-  zh: 50f1adf512543a7e
+  en: bb59b354bcb30522
+  zh: 7ceb2b874d3569f2
 /glossary/agent-scope:
-  en: 893655aaaa6a9db4
-  zh: 48b699fd15fa7ba6
+  en: 37bb11b50438a752
+  zh: 4cab4148d98e2aa4
 /glossary/goal:
   en: c64d9e91d54c6315
   zh: a2918c9d276af8a1
 /glossary/human-command:
-  en: 38a55fc61b359ace
-  zh: 567cae201b3a1bdf
+  en: 919c2abb878e6493
+  zh: 3e23823da9c1e8b3
 /glossary/loop-hierarchy:
   en: 6bf1ad7dd53f79cc
   zh: 6231e68c769fdefa

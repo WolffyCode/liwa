@@ -3,13 +3,13 @@ description: "供用户与维护者在组合或调试可继续子级控制功能
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-tool-subagent-control
+# @liwa/tool-subagent-control
 
 [English](README.md) | 中文
 
 ## 概述
 
-`dsh-tool-subagent-control` 让 agent 向子智能体发消息、中断子智能体、列出可继续子级。一个插件实例为多个委派后端共享的作用域注册全部三个工具。父级与可继续子级继承相同的消息定义和顺序。工具存在不选择委派生命周期。
+`liwa-tool-subagent-control` 让 agent 向子智能体发消息、中断子智能体、列出可继续子级。一个插件实例为多个委派后端共享的作用域注册全部三个工具。父级与可继续子级继承相同的消息定义和顺序。工具存在不选择委派生命周期。
 
 ## 目录
 
@@ -32,12 +32,12 @@ kind: "package-reference"
 在所需服务可用后，加载 subagent 服务、一个后端、委派工具与本包，即可公开全部三个控制和发现工具：
 
 ```yaml
-- name: '@deepseek-ai/dsh-subagent'
-- name: '@deepseek-ai/dsh-subagent-spawn-in-process'
-- name: '@deepseek-ai/dsh-tool-subagent'
+- name: '@liwa/subagent'
+- name: '@liwa/subagent-spawn-in-process'
+- name: '@liwa/tool-subagent'
   config:
     provider: spawn
-- name: '@deepseek-ai/dsh-tool-subagent-control'
+- name: '@liwa/tool-subagent-control'
 ```
 
 本包不接收任何配置。主入口一起注册 `send_message`、`interrupt_agent` 和 `list_agents`；现有工具限制可以隐藏单个工具。
@@ -93,8 +93,8 @@ kind: "package-reference"
 当包级约定不够用时阅读以下页面；它们从工具 schema 进入其背后的继续执行服务。
 
 - [Subagent 子系统](../../../docs/subsystems/subagent.zh.md)——可继续子级、Activation、inbox、中断与后续消息权限。
-- [dsh-tool-subagent](../tool-subagent/README.zh.md)——启动可继续子级的委派工具。
-- [生成工具目录](../../../docs/tool-catalog.zh.md#deepseek-aidsh-tool-subagent-control)——工具 schema。
+- [liwa-tool-subagent](../tool-subagent/README.zh.md)——启动可继续子级的委派工具。
+- [生成工具目录](../../../docs/tool-catalog.zh.md#liwatool-subagent-control)——工具 schema。
 
 -----
 
@@ -105,7 +105,7 @@ kind: "package-reference"
 
 #### 模型看到什么
 
-已生成的 [schema](../../../docs/tool-catalog.zh.md#deepseek-aidsh-tool-subagent-control)：`send_message` 接受 `agent_id` 与 `message`；`interrupt_agent` 接受 `agent_id`；`list_agents` 接受可选的 `scope`。
+已生成的 [schema](../../../docs/tool-catalog.zh.md#liwatool-subagent-control)：`send_message` 接受 `agent_id` 与 `message`；`interrupt_agent` 接受 `agent_id`；`list_agents` 接受可选的 `scope`。
 
 #### Token 影响
 

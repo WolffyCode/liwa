@@ -5,39 +5,39 @@
 /:
   en: db1b5b42664d338d
   zh: 6985139d86d1b08f
-/deepseek-ai-dsh-experimental-client-ui-stats:
-  en: 5f8749a942af8c93
-  zh: 969e2b9f331bd83e
-/deepseek-ai-dsh-experimental-client-ui-stats/summary:
+/liwa-experimental-client-ui-stats:
+  en: ee3fa360f137707a
+  zh: b1d58000b61160be
+/liwa-experimental-client-ui-stats/summary:
   en: cd8563fb8d8a9a3f
   zh: a5fd771cabccedd7
-/deepseek-ai-dsh-experimental-client-ui-stats/table-of-contents:
+/liwa-experimental-client-ui-stats/table-of-contents:
   en: d152484eb41ac6b4
   zh: 09388d293f9be9cb
-/deepseek-ai-dsh-experimental-client-ui-stats/use-this-package:
+/liwa-experimental-client-ui-stats/use-this-package:
   en: 0fde622d41dedcbf
   zh: a5d6e96e732f81ce
-/deepseek-ai-dsh-experimental-client-ui-stats/use-this-package/when-to-choose-it:
-  en: 2fd311c521059d04
-  zh: c9a5373274039878
-/deepseek-ai-dsh-experimental-client-ui-stats/use-this-package/minimal-configuration:
+/liwa-experimental-client-ui-stats/use-this-package/when-to-choose-it:
+  en: eccc3b460d321f95
+  zh: a9d9c51c2a636114
+/liwa-experimental-client-ui-stats/use-this-package/minimal-configuration:
   en: e001601f2f9779b1
   zh: 077d3703b8c82774
-/deepseek-ai-dsh-experimental-client-ui-stats/understand-the-implementation:
+/liwa-experimental-client-ui-stats/understand-the-implementation:
   en: 7e560f4017eed7a8
   zh: ea7d8b4c0f938dab
-/deepseek-ai-dsh-experimental-client-ui-stats/further-exploration:
-  en: 285cfe1d7a99af34
-  zh: fbcee76e0c2f20fb
-/deepseek-ai-dsh-experimental-client-ui-stats/model-experience:
+/liwa-experimental-client-ui-stats/further-exploration:
+  en: 299c506abad52652
+  zh: b72a87dccaba3b03
+/liwa-experimental-client-ui-stats/model-experience:
   en: 9cc467886fff1f2d
   zh: 4b10d95f64769bad
-/deepseek-ai-dsh-experimental-client-ui-stats/model-experience/kv-cache-effect:
+/liwa-experimental-client-ui-stats/model-experience/kv-cache-effect:
   en: 7605bb868f93b4a8
   zh: 184ca10ce6680499
-/deepseek-ai-dsh-experimental-client-ui-stats/known-limitations-and-deferred-work:
-  en: 952b20669aec9c80
-  zh: d44f0a126f111e9a
-/deepseek-ai-dsh-experimental-client-ui-stats/known-limitations-and-deferred-work/dev-note:
-  en: 3518dbaf30fb19a6
-  zh: 73565f0bcc32a364
+/liwa-experimental-client-ui-stats/known-limitations-and-deferred-work:
+  en: 4891d86157a38be6
+  zh: 5810970303603937
+/liwa-experimental-client-ui-stats/known-limitations-and-deferred-work/dev-note:
+  en: 92e2ceabc635da67
+  zh: dc984273e85cb3df

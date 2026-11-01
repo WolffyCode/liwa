@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 /** FontSizeRow behavior: value display, arrow clicks drive setFontSize,
  * bound-value arrows disable, display follows the store mirror. */
-import type { GlobalStandardProps } from '@deepseek-ai/dsh-client-ui-slots'
+import type { GlobalStandardProps } from '@liwa/client-ui-slots'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import type { SessionListState } from '@deepseek-ai/dsh-api-session-controller/client'
-import type { WorkspaceSnapshot } from '@deepseek-ai/dsh-api-workspace-controller/client'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import { allowAllAccess, bindSnapshotSelector } from '@deepseek-ai/dsh-client-test-runtime'
+import type { SessionListState } from '@liwa/api-session-controller/client'
+import type { WorkspaceSnapshot } from '@liwa/api-workspace-controller/client'
+import { createSnapshotStore } from '@liwa/client-store'
+import { allowAllAccess, bindSnapshotSelector } from '@liwa/client-test-runtime'
 import { FontSizeRow } from '../src/client/FontSizeRow.tsx'
 import type { FontSizeRowComponentProps } from '../src/client/FontSizeRow.tsx'
 import { createFontRowStore } from '../src/client/settings-store.ts'

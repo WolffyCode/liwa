@@ -3,11 +3,11 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/proposed/architecture/2026-07-28-storage-root-and-derived-medium-recovery.md
 /agent-note-storage-root-placement-and-derived-medium-recovery:
-  en: 9ebb460b39f06952
-  zh: 0fc0480869566600
+  en: db822b06ae05b9c9
+  zh: 8c0eaa8ecf736093
 /agent-note-storage-root-placement-and-derived-medium-recovery/problem:
-  en: 82f3782b8c856da9
-  zh: f3d7be6283a6a07d
+  en: ae4b01e41058cf97
+  zh: 73dd1eb3ce1a166a
 /agent-note-storage-root-placement-and-derived-medium-recovery/proposal:
   en: bd212f50ff01960a
   zh: de2c69ef9be74629

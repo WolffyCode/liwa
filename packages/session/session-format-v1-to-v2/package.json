@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-session-format-v1-to-v2",
+  "name": "@liwa/session-format-v1-to-v2",
   "description": "Frozen released-v1 Session codec and assistant-stream migration to v2",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
     "directory": "packages/session/session-format-v1-to-v2"
   },
   "type": "module",
@@ -26,7 +26,7 @@
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
-  "dsh": {
+  "liwa": {
     "sessionFormatMigration": {
       "from": 1,
       "to": 2,
@@ -39,16 +39,16 @@
     }
   },
   "dependencies": {
-    "@deepseek-ai/dsh-llm": "workspace:*",
-    "@deepseek-ai/dsh-session-format": "workspace:*",
-    "@deepseek-ai/dsh-session-format-v0-to-v1": "workspace:*",
-    "@deepseek-ai/dsh-util-values": "workspace:*"
+    "@liwa/llm": "workspace:*",
+    "@liwa/session-format": "workspace:*",
+    "@liwa/session-format-v0-to-v1": "workspace:*",
+    "@liwa/util-values": "workspace:*"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:~"
+    "@liwa/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-session": "workspace:*"
+    "@liwa/cordis": "workspace:~",
+    "@liwa/session": "workspace:*"
   }
 }

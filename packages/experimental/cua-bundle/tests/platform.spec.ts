@@ -1,8 +1,8 @@
 /** Explicit patch overlays bypass bundle admission and must not import an absent native provider. */
 import { readFile } from 'node:fs/promises'
-import { Context } from '@deepseek-ai/cordis'
-import Loader, { interpolate, type EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
-import { parseEntryYaml } from '@deepseek-ai/cordis-plugin-include'
+import { Context } from '@liwa/cordis'
+import Loader, { interpolate, type EntryOptions } from '@liwa/cordis-plugin-loader'
+import { parseEntryYaml } from '@liwa/cordis-plugin-include'
 import { expect, it, vi } from 'vitest'
 
 it.each(['darwin', 'win32', 'linux'])('loads the exported patch directly on %s and imports the native provider only on Darwin', async (platform) => {
@@ -11,7 +11,7 @@ it.each(['darwin', 'win32', 'linux'])('loads the exported patch directly on %s a
   await ctx.plugin(Loader)
   if (!ctx.loader.internal) throw new Error('Loader module importer is unavailable')
   const imported = vi.spyOn(ctx.loader.internal, 'import').mockImplementation(async (name: string) => {
-    if (platform !== 'darwin' && name === '@deepseek-ai/dsh-experimental-cua-macos') {
+    if (platform !== 'darwin' && name === '@liwa/experimental-cua-macos') {
       throw new Error('native provider is absent from this installation')
     }
     return { name, apply: () => {} }
@@ -22,9 +22,9 @@ it.each(['darwin', 'win32', 'linux'])('loads the exported patch directly on %s a
     }
     await ctx.loader.await()
     const imports = imported.mock.calls.map(call => call[0])
-    expect(imports).toContain('@deepseek-ai/dsh-cua')
-    expect(imports).toContain('@deepseek-ai/dsh-computer-use')
-    expect(imports.includes('@deepseek-ai/dsh-experimental-cua-macos')).toBe(platform === 'darwin')
+    expect(imports).toContain('@liwa/cua')
+    expect(imports).toContain('@liwa/computer-use')
+    expect(imports.includes('@liwa/experimental-cua-macos')).toBe(platform === 'darwin')
   } finally {
     await ctx.fiber.dispose()
     imported.mockRestore()

@@ -1,15 +1,15 @@
 ---
-description: "面向让进程外 SDK 客户端在 DeepSeek Harness 运行时中打开会话并驱动 agent 的部署的 stdio JSON-RPC 服务插件。"
+description: "面向让进程外 SDK 客户端在灵鲸运行时中打开会话并驱动 agent 的部署的 stdio JSON-RPC 服务插件。"
 kind: "package-reference"
 ---
 
-# @deepseek-ai/dsh-sdk-jsonrpc-server
+# @liwa/sdk-jsonrpc-server
 
 [English](README.md) | 中文
 
 ## 概述
 
-`dsh-sdk-jsonrpc-server` 通过 stdio 服务 SDK 协议格式（wire format），使进程外客户端能够驱动 harness agent（智能体）：它为每个 `sessionId` 打开一个会话、把用户提示词排入队列，并把每个会话事件与 agent 状态转换流式发回客户端。把它作为 `jsonrpc` 插件挂载到 Loader 组合中；外围插件树提供其余一切——agent、模型适配器、持久化与工具。Stdout 只承载 JSON-RPC 帧，因此部署不得组合 stdout logger。它通过 dispose（资源释放）根运行时并以 0 退出应答 `shutdown`；EOF 与信号退出归 app bin 负责。
+`liwa-sdk-jsonrpc-server` 通过 stdio 服务 SDK 协议格式（wire format），使进程外客户端能够驱动灵鲸 agent（智能体）：它为每个 `sessionId` 打开一个会话、把用户提示词排入队列，并把每个会话事件与 agent 状态转换流式发回客户端。把它作为 `jsonrpc` 插件挂载到 Loader 组合中；外围插件树提供其余一切——agent、模型适配器、持久化与工具。Stdout 只承载 JSON-RPC 帧，因此部署不得组合 stdout logger。它通过 dispose（资源释放）根运行时并以 0 退出应答 `shutdown`；EOF 与信号退出归 app bin 负责。
 
 ## 目录
 
@@ -45,7 +45,7 @@ kind: "package-reference"
 |---|---|---|
 | `maxTokensAsSuccess` | `false` | 把 max-token 轮次或 subagent 终止报告为成功的 SDK 结果 |
 
-profile 组合拥有每个根 agent 的工具。`input`、`output` 与 `exit` 是仅供测试的运行时传输钩子；生产环境使用进程 stdio 与 `process.exit`。生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-sdk-jsonrpc-server)是每个受支持字段的穷尽式真源。
+profile 组合拥有每个根 agent 的工具。`input`、`output` 与 `exit` 是仅供测试的运行时传输钩子；生产环境使用进程 stdio 与 `process.exit`。生成的[配置目录](../../../docs/config-catalog.zh.md#liwasdk-jsonrpc-server)是每个受支持字段的穷尽式真源。
 
 ### stdout 即协议
 
@@ -53,7 +53,7 @@ Stdout 只承载 JSON-RPC 帧，客户端可以逐字节解析；诊断信息应
 
 ### SDK 客户端可以做什么
 
-`initialize` 是运行时就绪边界：服务器由 Loader 组合挂载时，会等待当前插件树完成所有加载任务后再响应，因此首次提示词能够看到 MCP 初始工具发现等异步同级能力。握手返回协议稳定标识 `deepseek-harness-sdk-runtime`。服务器会通过所选适配器校验提供方／模型路由与可选的非空 `reasoningEffort`，再保存这些值；省略时不会保存推理强度，因此模型保留自身默认值。可选的正整数 `maxTokens` 会成为每个 SDK 创建的 agent 及其进程内后代的请求输出上限，省略时则应用所选适配器或提供方路由的默认值。JSON-RPC 请求可能并发分派，因此在一次 `initialize` 成功完成之前，`session/prompt` 会拒绝；客户端必须等待握手完成后再发送提示词。已接受的提示词会把一条带标识的用户消息排入队列，并立即返回 `{ messageId }`；服务器随后把每个持久事实作为 `session.event`、把整个 agent 生命周期的每次状态转换作为 `session.status` 流式发出。它不会把某条助手消息或 `turn/end` 归属于某个提示词，同一会话上的独立请求可以继续排入更多工作。持久化根目录与 persona 来自外围组合。
+`initialize` 是运行时就绪边界：服务器由 Loader 组合挂载时，会等待当前插件树完成所有加载任务后再响应，因此首次提示词能够看到 MCP 初始工具发现等异步同级能力。握手返回协议稳定标识 `liwa-sdk-runtime`。服务器会通过所选适配器校验提供方／模型路由与可选的非空 `reasoningEffort`，再保存这些值；省略时不会保存推理强度，因此模型保留自身默认值。可选的正整数 `maxTokens` 会成为每个 SDK 创建的 agent 及其进程内后代的请求输出上限，省略时则应用所选适配器或提供方路由的默认值。JSON-RPC 请求可能并发分派，因此在一次 `initialize` 成功完成之前，`session/prompt` 会拒绝；客户端必须等待握手完成后再发送提示词。已接受的提示词会把一条带标识的用户消息排入队列，并立即返回 `{ messageId }`；服务器随后把每个持久事实作为 `session.event`、把整个 agent 生命周期的每次状态转换作为 `session.status` 流式发出。它不会把某条助手消息或 `turn/end` 归属于某个提示词，同一会话上的独立请求可以继续排入更多工作。持久化根目录与 persona 来自外围组合。
 
 `session/wait` 观察已有 SDK 会话，直到受管理后代及其触发的根 Agent 后续轮次完成。它拒绝未知或已释放的根 Agent，不会创建会话，并在后代检查期间根 Agent 持续空闲后响应。收件箱消息处于停放状态的空闲子级继续驻留，但不延迟此响应；后续唤醒输入可使其继续运行。完成前发出的会话通知在 stdio 传输上先于响应到达。Agent 的运行时错误会保留在对应的确切会话中，直到后续提交的 `turn/end` 记录结果；否则等待请求会失败，即使错误发生在等待请求之前。终止事件已经记录的错误仍通过会话事件表达，后续成功的活动会清除较早的运行时错误。
 
@@ -78,7 +78,7 @@ Stdout 只承载 JSON-RPC 帧，客户端可以逐字节解析；诊断信息应
 
 ### 设计理念
 
-本插件是轻量的展示适配器：[`HarnessSdkJsonRpcServer`](src/server.ts) 负责协议方法与通知，传输与具名协议类型来自 `dsh-sdk-protocol`，与客户端 SDK 共享。它订阅会话、agent 与 subagent 生命周期事件，并把它们作为协议通知转发；只有当服务在生命周期建立快照时记录的 `local` 标志为 true 时才转发 subagent 完成事件——提供方名称、子级 id 与持久化谱系均不能证明本地性。 `subagent.started` 要求 `origin: subagent` 和直接创建者 ID；普通 fork（包括保留父 ID 的历史会话）不产生此通知。
+本插件是轻量的展示适配器：[`LiwaSdkJsonRpcServer`](src/server.ts) 负责协议方法与通知，传输与具名协议类型来自 `liwa-sdk-protocol`，与客户端 SDK 共享。它订阅会话、agent 与 subagent 生命周期事件，并把它们作为协议通知转发；只有当服务在生命周期建立快照时记录的 `local` 标志为 true 时才转发 subagent 完成事件——提供方名称、子级 id 与持久化谱系均不能证明本地性。 `subagent.started` 要求 `origin: subagent` 和直接创建者 ID；普通 fork（包括保留父 ID 的历史会话）不产生此通知。
 
 ### 源码地图
 
@@ -86,7 +86,7 @@ Stdout 只承载 JSON-RPC 帧，客户端可以逐字节解析；诊断信息应
 |---|---|
 | [`src/index.ts`](src/index.ts) | 插件入口：`Config` schema、stdio 接线、请求分发、共享关闭与退出任务 |
 | [`src/user-questions.ts`](src/user-questions.ts) | 原生问答适配器：宿主转发、答案校验、取消 |
-| [`src/server.ts`](src/server.ts) | `HarnessSdkJsonRpcServer`：协议方法、逐会话 agent 创建、生命周期订阅、清理 |
+| [`src/server.ts`](src/server.ts) | `LiwaSdkJsonRpcServer`：协议方法、逐会话 agent 创建、生命周期订阅、清理 |
 
 ### 请求流程
 
@@ -107,7 +107,7 @@ Stdout 只承载 JSON-RPC 帧，客户端可以逐字节解析；诊断信息应
 
 - [SDK 协议格式](../protocol/README.zh.md) — 本插件服务的协议方法与载荷结构。
 - [TypeScript SDK 客户端](../client/README.zh.md) — 驱动本插件的客户端。
-- [SDK 应用组合包](../../bundle/sdk-app/README.zh.md) — 启动本插件的 `dsh --profile sdk` 应用。
+- [SDK 应用组合包](../../bundle/sdk-app/README.zh.md) — 启动本插件的 `liwa --profile sdk` 应用。
 - [Python SDK](../../../python/README.zh.md) — 驱动同一服务器的 Python 客户端。
 - [SDK 运行时分发决策](../../../.agents/notes/implemented/architecture/2026-07-10-single-file-executable-sdk-runtime-distribution.zh.md) — 打包运行时为何服务封闭插件树。
 

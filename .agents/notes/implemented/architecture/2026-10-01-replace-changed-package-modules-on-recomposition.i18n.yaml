@@ -3,11 +3,11 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-10-01-replace-changed-package-modules-on-recomposition.md
 /agent-note-replace-plugins-whose-loaded-package-files-changed-during-profile-recomposition:
-  en: 72fe06d4e304418d
-  zh: bc3c96e957889bc1
+  en: dca38898dc33445f
+  zh: e648a02709e9bbe4
 /agent-note-replace-plugins-whose-loaded-package-files-changed-during-profile-recomposition/problem:
-  en: c43fb0d2df54b28f
-  zh: 6636548449663fc5
+  en: 4be85705b10afca3
+  zh: 5eb4b6d07e9b9164
 /agent-note-replace-plugins-whose-loaded-package-files-changed-during-profile-recomposition/decision:
   en: a15c7c13f167e5ac
   zh: a15c7c13f167e5ac
@@ -27,8 +27,8 @@
   en: a67d0c6bc4957060
   zh: 32e02ab45b8e71cc
 /agent-note-replace-plugins-whose-loaded-package-files-changed-during-profile-recomposition/consequences:
-  en: 2cb3f39c6a910685
-  zh: e14938c868390f39
+  en: 8947910929bdb101
+  zh: 253e17a8ac108e04
 /agent-note-replace-plugins-whose-loaded-package-files-changed-during-profile-recomposition/verification:
   en: d4750abb810faac2
   zh: 78c9c4d86d719b9b

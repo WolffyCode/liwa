@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/proposed/architecture/2026-07-27-session-projection-and-command-log.md
 /agent-note-session-projections-and-command-lifecycle-logging:
-  en: c4b22a24c549feb8
-  zh: 4e4921326e0cd13a
+  en: bcbe7a703ef06fe8
+  zh: 9cb5cc603ae5003b
 /agent-note-session-projections-and-command-lifecycle-logging/problem:
   en: 017166a86aa35cad
   zh: b6a2e826fbed2474
@@ -33,8 +33,8 @@
   en: 7b536bd8a51cc5dc
   zh: 1ead63f6358b3799
 /agent-note-session-projections-and-command-lifecycle-logging/proposal/command-lifecycle-in-the-log:
-  en: 41c7f98634d4762f
-  zh: 0f3b85f4c6fa06a3
+  en: 74e3167d85738435
+  zh: 22f3ab664fd93b9c
 /agent-note-session-projections-and-command-lifecycle-logging/delivery-plan:
   en: 64ad8d08a8ab44e0
   zh: fb0a0f7369d0bd23

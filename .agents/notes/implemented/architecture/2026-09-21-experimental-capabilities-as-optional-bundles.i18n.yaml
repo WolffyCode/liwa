@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-21-experimental-capabilities-as-optional-bundles.md
 /agent-note-ship-experimental-capabilities-as-optional-bundles:
-  en: 9ec3d64c70d601b6
-  zh: c85722cfc7bf70df
+  en: 574c47908815c960
+  zh: 24c4d39b39408aab
 /agent-note-ship-experimental-capabilities-as-optional-bundles/problem:
   en: 2ba6c43b20a3d347
   zh: 5647179ddaa38ad9
 /agent-note-ship-experimental-capabilities-as-optional-bundles/decision:
-  en: 191ca8bffb101db2
-  zh: 1365bef5cd830a5c
+  en: 1ce4ab878d6c3e8d
+  zh: a5e36a523eb4029f
 /agent-note-ship-experimental-capabilities-as-optional-bundles/alternatives-considered:
   en: d6f40bf02df37ab7
   zh: e5b85ce9d41e8754

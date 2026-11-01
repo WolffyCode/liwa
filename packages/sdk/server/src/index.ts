@@ -1,19 +1,19 @@
 /**
- * SDK-facing JSON-RPC plugin over stdio. The selected dsh profile decides
+ * SDK-facing JSON-RPC plugin over stdio. The selected liwa profile decides
  * whether to load it; see the single-launch Agent Note and package README.
  * Stdout is reserved for protocol frames, so the tree must not load a stdout logger.
  * This plugin answers `shutdown`, disposes the complete root runtime, and exits 0; the app bin
  * owns EOF and signal exits. Keep named plugin exports with no default export so
  * Loader `unwrapExports` preserves `name`, `inject`, `Config`, and `apply`.
  *
- * @module @deepseek-ai/dsh-sdk-jsonrpc-server
+ * @module @liwa/sdk-jsonrpc-server
  */
 
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@liwa/cordis'
 import type { Readable, Writable } from 'node:stream'
-import Schema from '@deepseek-ai/schemastery'
-import { JsonRpcLineTransport } from '@deepseek-ai/dsh-sdk-protocol'
-import { HarnessSdkJsonRpcServer } from './server.ts'
+import Schema from '@liwa/schemastery'
+import { JsonRpcLineTransport } from '@liwa/sdk-protocol'
+import { LiwaSdkJsonRpcServer } from './server.ts'
 
 export * from './server.ts'
 
@@ -56,7 +56,7 @@ export function apply(ctx: Context, config: JsonRpcConfig): void {
   const exit = config.exit ?? ((code: number): void => { process.exit(code) })
 
   const transport = new JsonRpcLineTransport(input, output)
-  const server = new HarnessSdkJsonRpcServer(ctx, transport, {
+  const server = new LiwaSdkJsonRpcServer(ctx, transport, {
     maxTokensAsSuccess: resolvedConfig.maxTokensAsSuccess,
   })
   // Compositions can order Schedule after its activation handler is installed.

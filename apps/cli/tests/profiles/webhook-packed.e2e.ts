@@ -10,8 +10,8 @@ import { expect, it } from 'vitest'
 import { assertInstalledTree, createPackedInstallation } from './packed-installation.ts'
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url))
-const adapter = '@deepseek-ai/dsh-webhook-github'
-const runtime = '@deepseek-ai/dsh-webhook'
+const adapter = '@liwa/webhook-github'
+const runtime = '@liwa/webhook'
 const built = existsSync(join(root, 'apps/cli/lib/bin.js'))
   && existsSync(join(root, 'packages/experimental/webhook-github/lib/index.js'))
 const secret = 'packed-webhook-test-secret'
@@ -22,13 +22,13 @@ it.skipIf(!built)('loads the packed GitHub example with its explicitly installed
   retry: 0,
 }, async () => {
   const { temporary, installation, home, profile, environment, tarballs, members, externalVersions, packageCommand }
-    = await createPackedInstallation('dsh-webhook-packed-', [runtime, adapter])
-  Object.assign(environment, { DSH_GITHUB_WEBHOOK_SECRET: secret, DSH_GITHUB_WEBHOOK_PORT: '0' })
+    = await createPackedInstallation('liwa-webhook-packed-', [runtime, adapter])
+  Object.assign(environment, { LIWA_GITHUB_WEBHOOK_SECRET: secret, LIWA_GITHUB_WEBHOOK_PORT: '0' })
   expect(existsSync(join(installation, 'node_modules', runtime))).toBe(false)
   expect(existsSync(join(installation, 'node_modules', adapter))).toBe(false)
   await writeFile(join(profile, 'package.json'), JSON.stringify({
     name: 'packed-webhook-profile', private: true, dependencies: {},
-    dsh: { profile: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'] } },
+    liwa: { profile: { bundles: ['@liwa/base', '@liwa/web-app'] } },
   }))
   const profileDependencies = new Set([runtime, adapter])
   for (const name of profileDependencies) {
@@ -69,7 +69,7 @@ export function apply(ctx) {
     { id: 'github-webhook-ingress', insert: [{ id: 'observe-packed-ingress', name: observer }] },
   ]))
   const child = execa(process.execPath, [
-    join(installation, 'node_modules/@deepseek-ai/dsh/lib/bin.js'), 'web', '--patch', example, '--patch', patch, '--no-open', '--port', '0',
+    join(installation, 'node_modules/@liwa/cli/lib/bin.js'), 'web', '--patch', example, '--patch', patch, '--no-open', '--port', '0',
   ], { cwd: temporary, env: environment, extendEnv: false, reject: false, timeout: 90_000 })
   try {
     const ready = new Promise<string>((resolveReady, rejectReady) => {
@@ -77,7 +77,7 @@ export function apply(ctx) {
       child.stdout?.on('data', (chunk: Buffer) => {
         output += chunk.toString()
         const origin = /PACKED_WEBHOOK_READY=(http:\/\/127\.0\.0\.1:\d+)/.exec(output)?.[1]
-        if (origin !== undefined && output.includes('dsh web: ')) resolveReady(origin)
+        if (origin !== undefined && output.includes('liwa web: ')) resolveReady(origin)
       })
       void child.then((result) => {
         rejectReady(new Error(`Web profile exited before readiness:\n${result.stdout}\n${result.stderr}`))
