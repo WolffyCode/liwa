@@ -18,24 +18,6 @@ vi.mock('../src/preload-windows.ts', () => ({ syncWindowsAppearance: vi.fn() }))
 beforeEach(() => { vi.stubGlobal('process', { ...process, isMainFrame: true }) })
 afterEach(() => { document.body.replaceChildren(); vi.unstubAllGlobals(); vi.restoreAllMocks(); vi.clearAllMocks(); vi.resetModules() })
 
-it('reads only native login API-key presence through the onboarding bridge', async () => {
-  vi.stubGlobal('location', new URL('liwa-app://app/'))
-  electron.ipcRenderer.invoke.mockResolvedValueOnce(true)
-  await import('../src/preload-app.ts')
-  const api = electron.contextBridge.exposeInMainWorld.mock.calls.find(([name]) => name === 'liwaOnboarding')?.[1] as { hasApiKey(): Promise<boolean> }
-  expect(await api.hasApiKey()).toBe(true)
-  expect(electron.ipcRenderer.invoke).toHaveBeenCalledWith(DESKTOP_IPC.onboardingApiKey)
-})
-
-it('exposes onboarding size activation to the application document', async () => {
-  vi.stubGlobal('location', new URL('liwa-app://app/'))
-  await import('../src/preload-app.ts')
-  const api = electron.contextBridge.exposeInMainWorld.mock.calls.find(([name]) => name === 'liwaOnboarding')?.[1] as { setActive(active: boolean): void }
-  api.setActive(true)
-  api.setActive(false)
-  expect(electron.ipcRenderer.send.mock.calls).toEqual([[DESKTOP_IPC.onboardingActive, true], [DESKTOP_IPC.onboardingActive, false]])
-})
-
 it('gives product documents no plugin, backend, or update operations', async () => {
   vi.stubGlobal('location', new URL('liwa-app://app/index.html'))
   await import('../src/preload-app.ts')
@@ -50,21 +32,6 @@ it.each(['liwa-app://shell/plugin-manager.html', 'liwa-app://other/index.html', 
   await import('../src/preload-app.ts')
   expect(electron.contextBridge.exposeInMainWorld).toHaveBeenCalledWith('liwaDesktop', { protocolVersion: 1 })
   expect(electron.ipcRenderer.on.mock.calls.some(([channel]) => channel === DESKTOP_IPC.browserOpenRequested)).toBe(false)
-})
-
-it('reads the local machine description only from the application main frame', async () => {
-  const description = 'platform=darwin; os=15.6; app_arch=arm64; cpu=Apple M4; memory_gib=32.0'
-  vi.stubGlobal('location', new URL('liwa-app://app/index.html'))
-  electron.ipcRenderer.invoke.mockResolvedValue(description)
-  await import('../src/preload-app.ts')
-  const api = electron.contextBridge.exposeInMainWorld.mock.calls.find(([name]) => name === 'liwaDesktop')?.[1] as LiwaDesktopProductApi
-  await expect(api.deviceInfo()).resolves.toBe(description)
-  expect(electron.ipcRenderer.invoke).toHaveBeenCalledExactlyOnceWith(DESKTOP_IPC.deviceInfo)
-  vi.resetModules()
-  electron.contextBridge.exposeInMainWorld.mockClear()
-  vi.stubGlobal('process', { ...process, isMainFrame: false })
-  await import('../src/preload-app.ts')
-  expect(electron.contextBridge.exposeInMainWorld).toHaveBeenCalledWith('liwaDesktop', { protocolVersion: 1 })
 })
 
 it('exposes asynchronous boot only to the local application document', async () => {

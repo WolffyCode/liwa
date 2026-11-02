@@ -29,7 +29,7 @@ Mount the package as a Cordis service. Call `resolve({ text, targetLanguage, sou
 
 | Config | Default | Meaning |
 |---|---|---|
-| `provider` | `bing` | `google`, `bing`, `deepseek-account`, or `deepseek-official` |
+| `provider` | `bing` | `google`, `bing`, or `deepseek-official` |
 | `googleEndpoint` | `https://translate.googleapis.com/translate_a/single` | Google-compatible anonymous endpoint |
 | `bingEndpoint` | `https://edge.microsoft.com/translate/translatetext` | Microsoft Edge browser translation endpoint |
 | `timeoutMs` | `10000` | Deadline for the request and complete response body |
@@ -44,7 +44,7 @@ Supply an existing `sessionId` to retain translation requests and successful res
 
 The GUI awaits the initial provider discovery before registering translation controls. If credential or model discovery stalls, this can delay anonymous controls for up to `deepseekTimeoutMs`; the service's discovery deadline returns the choices already discovered, including Bing and Google.
 
-A paid cache miss for nonempty text requires the actual `liwa-llm-deepseek-account` or `liwa-llm-deepseek-api-key` provider, its registered route, configured authentication, and the exact model id `deepseek-flash`. Displayed model names and version labels do not affect selection. `llm-pi-ai` does not qualify. Every fragment is a fresh query with thinking disabled, one user text, no conversation history, no tools, and no Agent turn.
+A paid cache miss for nonempty text requires the actual `liwa-llm-deepseek-api-key` provider, its registered route, configured authentication, and the exact model id `deepseek-flash`. Displayed model names and version labels do not affect selection. `llm-pi-ai` does not qualify. Every fragment is a fresh query with thinking disabled, one user text, no conversation history, no tools, and no Agent turn.
 
 The anonymous service maps `zh`, `zh-CN`, `zh-SG` and `zh-Hans` to Simplified Chinese, and `zh-TW`, `zh-HK`, `zh-MO` and `zh-Hant` to Traditional Chinese. Other tags pass through to the selected provider. Empty text returns an empty string without a network request.
 
@@ -64,7 +64,7 @@ Storage reads validate translation payloads and request/result references. Only 
 
 `TranslationError.code` distinguishes input limits, HTTP failures, response limits, invalid provider responses, transport failures, missing durable Sessions, storage failures, unavailable native routes, and the service's `TRANSLATION_TIMEOUT` deadline. `TRANSLATION_SESSION_INACTIVE` rejects an uncached inactive Session before any provider call. Diagnostics include no submitted text or provider error body. `translate()` always returns a Promise and rejects admission or provider failures. Caller cancellation and service disposal preserve their original abort reasons, including caller-owned timeout reasons. Queued cancellation rejects promptly; unloading aborts accepted requests and waits for their underlying storage and network work to settle. Input limits apply in both `resolve()` and `translate()`.
 
-`TRANSLATION_UNAVAILABLE` rejects a missing active built-in owner or registered route, unconfigured credentials, absent exact `deepseek-flash` catalog membership, an owner, model-configuration (Official `models` or Account `modelOverrides`), or Official credential-reference change before dispatch, provider withdrawal, or a prepared call whose reasoning effort is not `off`. Eligibility and thinking checks run before dispatch, with eligibility checked again after request durability. A native `finish` with reason `error` maps to `TRANSLATION_REQUEST_FAILED`; a missing or other non-`stop` finish maps to `TRANSLATION_INVALID_RESPONSE`.
+`TRANSLATION_UNAVAILABLE` rejects a missing active built-in owner or registered route, unconfigured credentials, absent exact `deepseek-flash` catalog membership, an owner, model-configuration (`models`), or credential-reference change before dispatch, provider withdrawal, or a prepared call whose reasoning effort is not `off`. Eligibility and thinking checks run before dispatch, with eligibility checked again after request durability. A native `finish` with reason `error` maps to `TRANSLATION_REQUEST_FAILED`; a missing or other non-`stop` finish maps to `TRANSLATION_INVALID_RESPONSE`.
 
 </details>
 

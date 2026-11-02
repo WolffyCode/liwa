@@ -108,11 +108,6 @@
     - id: authorization
       name: '@liwa/authorization'
 
-    - id: deepseek-account
-      name: '@liwa/deepseek-account-platform'
-      config:
-        desktopPlatform: !!js "ctx.get('profileContext')?.name === 'desktop' && ['darwin', 'win32'].includes(process.platform) ? process.platform : null"
-
     - id: credentials
       name: '@liwa/credentials-local'
 
@@ -482,6 +477,3 @@
     # choice.
     - id: llm-deepseek
       name: '@liwa/llm-deepseek-api-key'
-
-    - id: llm-deepseek-account
-      name: '@liwa/llm-deepseek-account'

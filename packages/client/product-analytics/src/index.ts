@@ -3,7 +3,6 @@ import { type Context, type Volatile } from '@liwa/cordis'
 import z from '@liwa/schemastery'
 import { Remote, TypertRemoteService } from '@liwa/typert-protocol'
 import type {} from '@liwa/host-product-telemetry-otel'
-import type {} from '@liwa/deepseek-account'
 import type {} from '@liwa/settings'
 import type {} from '@liwa/cordis-plugin-loader'
 import type {} from '@liwa/session'
@@ -29,9 +28,9 @@ declare module '@liwa/cordis' {
   }
 }
 
-/** Authenticated event intake; disabled instances do not inspect identity or accept new events. */
+/** Authenticated event intake; disabled instances do not sample the environment or accept new events. */
 export default class ProductAnalytics extends TypertRemoteService {
-  static inject = ['deepseekAccount', 'productTelemetry']
+  static inject = ['productTelemetry']
   static Config = z.object({
     enabled: z.boolean().default(true).volatile(), appVersion: z.string(),
     environmentQueryTimeoutMillis: z.number().step(1).min(1).max(2_147_483_647).default(5000),
@@ -90,9 +89,9 @@ export default class ProductAnalytics extends TypertRemoteService {
   }
 
   /**
-   * Submit selected Desktop fields with cached static environment and fresh identity.
+   * Submit selected Desktop fields with cached static environment.
    * The first intake waits for bounded environment queries; concurrent intakes share them.
-   * Missing identity is omitted; failed environment fields carry fixed reasons.
+   * Failed environment fields carry fixed reasons.
    * @param event - typed product event without message contents or credentials.
    * @returns after local submission; no delivery or warehouse acknowledgement.
    */
@@ -105,9 +104,7 @@ export default class ProductAnalytics extends TypertRemoteService {
         maxOutputBytes: this.config.environmentQueryMaxOutputBytes,
         signal: this.environmentLifetime.signal,
       })
-      const [environment, identity] = await Promise.all([
-        this.environment, this.ctx.deepseekAccount.getDeviceIdentity().catch(() => undefined),
-      ])
+      const environment = await this.environment
       if (!this.enabled()) return
       const { missing_fields: missingFields, ...metadata } = environment
       const missing = Object.entries(missingFields).sort(([a], [b]) => a.localeCompare(b))
@@ -118,8 +115,6 @@ export default class ProductAnalytics extends TypertRemoteService {
           ...event.attributes,
           ...metadata,
           ...missing === '' ? {} : { missing_fields: missing },
-          ...identity?.deviceId === undefined ? {} : { device_id: identity.deviceId },
-          ...identity?.userId === undefined ? {} : { user_id: identity.userId },
           ...this.config.appVersion === undefined ? {} : { app_version: this.config.appVersion },
         },
       })

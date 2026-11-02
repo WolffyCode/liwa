@@ -5,4 +5,4 @@ Liwa
 输入 API 密钥 [password]
 保存并继续 [disabled]
 稍后配置
-返回登录
+返回

@@ -15,8 +15,8 @@
   en: 74cf7411b94f9f38
   zh: 3059ac755ce75c3f
 /liwa-desktop/application-overview:
-  en: 25b190f00c983973
-  zh: 55385d46a83308d8
+  en: 6f67cbb235b39d1f
+  zh: aa53e074d9ae14a2
 /liwa-desktop/terminal-command:
   en: 5746510728e89f17
   zh: 2a0c800cab067cc8
@@ -33,8 +33,8 @@
   en: 18e8f4ea3c1bb4f1
   zh: b5456e6946201923
 /liwa-desktop/installation-ownership:
-  en: 03ef9de54bc8003b
-  zh: e35ed659f43f277d
+  en: 3127ed6fe016b668
+  zh: 2fc7fe9187204143
 /liwa-desktop/installation-ownership/runtime-and-plugin-activation:
   en: 3be6f4edc5b11934
   zh: 4b6a7f0d18c25ac8
@@ -45,11 +45,11 @@
   en: 07360b0514e5e96f
   zh: 20291cd48fa408d0
 /liwa-desktop/develop/startup-onboarding:
-  en: d3117121cbfadc4a
-  zh: 5eca377194254afe
+  en: c83fb2962632d294
+  zh: 8805ab3469f8a496
 /liwa-desktop/develop/welcome-window-appearance:
-  en: d4ffc23fe771df5a
-  zh: 8d68b87b807bea0a
+  en: fa9dc6669345bfdb
+  zh: 0bc57da274da888e
 /liwa-desktop/package:
   en: 25b5da67bf37e47e
   zh: e49f4a94c7c2be84
@@ -57,5 +57,5 @@
   en: 6aaea38532a4fa42
   zh: 33486dbbc75cd6df
 /liwa-desktop/known-limitations:
-  en: f089196c8b3d11e1
-  zh: bc1033f80636871e
+  en: 733db680081e9c14
+  zh: 2a116d4c1f8217e7

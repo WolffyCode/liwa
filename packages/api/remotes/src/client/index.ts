@@ -6,7 +6,6 @@ export type {} from '@liwa/client-product-analytics/remote'
 import agentPresetsRemote from '@liwa/agent-preset-registry/remote'
 import userQuestionsRemote from '@liwa/user-questions/remote'
 import commandsRemote from '@liwa/commands/remote'
-import accountRemote from '@liwa/api-account-controller/remote'
 import settingsControllerRemote from '@liwa/api-settings-controller/remote'
 import officeToPdfRemote from '@liwa/office-to-pdf/remote'
 import goalsRemote from '@liwa/goal/remote'
@@ -53,7 +52,6 @@ export type {} from '@liwa/agent-preset-registry/remote'
 export type {} from '@liwa/user-questions/remote'
 export type {} from '@liwa/commands/remote'
 export type {} from '@liwa/api-settings-controller/remote'
-export type {} from '@liwa/api-account-controller/remote'
 export type {} from '@liwa/goal/remote'
 export type {} from '@liwa/schedule/remote'
 export type {} from '@liwa/office-to-pdf/remote'
@@ -189,7 +187,7 @@ export async function apply(ctx: Context): Promise<() => Promise<void>> {
   const disposers: Array<() => Promise<void>> = []
   try {
     for (const contribution of [
-      productAnalyticsRemote, agentPresetsRemote, commandsRemote, settingsControllerRemote, accountRemote,
+      productAnalyticsRemote, agentPresetsRemote, commandsRemote, settingsControllerRemote,
       goalsRemote, llmRemote, dynamicRemote, scheduleRemote,
       pluginInventoryRemote, pluginManagerRemote, pluginMarketRemote, pluginRegistryProbeRemote, toolResultsRemote,
       messageFeedbackRemote, sessionFeedbackRemote,

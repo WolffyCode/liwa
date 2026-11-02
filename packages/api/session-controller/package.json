@@ -88,7 +88,6 @@
     "@liwa/client-connection": "workspace:*",
     "@liwa/client-file-upload": "workspace:*",
     "@liwa/commands": "workspace:*",
-    "@liwa/credentials": "workspace:*",
     "@liwa/file-reference": "workspace:*",
     "@liwa/fs": "workspace:*",
     "@liwa/llm": "workspace:*",
@@ -100,7 +99,6 @@
     "@liwa/session-projection-cache": "workspace:*",
     "@liwa/session-query": "workspace:*",
     "@liwa/session-title": "workspace:*",
-    "@liwa/settings": "workspace:*",
     "@liwa/skill": "workspace:*",
     "@liwa/subagent": "workspace:*",
     "@liwa/typert-protocol": "workspace:*",
@@ -116,9 +114,6 @@
       "optional": true
     },
     "@liwa/session-projection-cache": {
-      "optional": true
-    },
-    "@liwa/settings": {
       "optional": true
     }
   },
@@ -138,7 +133,6 @@
     "@liwa/client-store": "workspace:*",
     "@liwa/client-test-runtime": "workspace:*",
     "@liwa/commands": "workspace:*",
-    "@liwa/credentials": "workspace:*",
     "@liwa/file-reference": "workspace:*",
     "@liwa/fs": "workspace:*",
     "@liwa/fs-local": "workspace:*",
@@ -154,7 +148,6 @@
     "@liwa/session-projection-cache": "workspace:*",
     "@liwa/session-query": "workspace:*",
     "@liwa/session-title": "workspace:*",
-    "@liwa/settings": "workspace:*",
     "@liwa/skill": "workspace:*",
     "@liwa/storage": "workspace:*",
     "@liwa/storage-domain": "workspace:*",

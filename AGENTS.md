@@ -22,6 +22,7 @@
 
 - 品牌已改成灵鲸（决策 40）：包作用域 `@liwa/*`、命令 `liwa`、环境变量 `LIWA_*`、数据目录 `~/.liwa`、工作区约定目录 `.liwa/`。不许把上游的名字（DeepSeek Harness、DSH、`dsh`、`@deepseek-ai/dsh-*`）带回来，`pnpm run verify-brand-terms` 会拦（例外清单在 `scripts/verify-brand-terms.ts`）。DeepSeek 作为模型与 API 供应商的名字照常用。[LICENSE](LICENSE) 里上游的 MIT 版权行必须保留。
 - 默认组合只向 DeepSeek 发模型调用（决策 41）：不挂遥测、反馈上报、会话日志与插件清单字段，请求只以 `User-Agent: liwa/<版本>` 标明身份，`scripts/default-composition-reporting.spec.ts` 拦着这些插件回到默认组合；插件包本身暂留，等以后单独裁剪。
+- DeepSeek 模型只用 API key 接入：没有 DeepSeek 账号登录、余额与充值，网页和桌面端的引导都只提供“添加 API Key”。
 - 改造原则（决策 36）：继承来的插件能用就留；不能用就删，在原位置换成灵鲸的插件。继承来的 agent 要抽象成"大脑提供方"之一，Paseo 的 Claude Code、Codex 长会话是另外的实现。改 agent 循环、会话主干这类破坏性改动，按主人确认过的方案做，不顺手改。
 - 下面的命令继承自上游，改名后在本机验证过 build、lint、typecheck、test、test:snapshot、hygiene、doc-sync 与网页。
 - `.agents/notes/` 是上游的历史设计记录（正文保留上游当时的名字），只用来理解继承来的代码，不是灵鲸的决策依据；灵鲸的决策在 handoff。不新写这种风格的 Agent Note。

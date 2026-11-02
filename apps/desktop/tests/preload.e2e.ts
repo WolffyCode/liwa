@@ -69,10 +69,7 @@ describe.skipIf(!existsSync(preload('preload-app')))('built sandboxed Desktop pr
       exports: {},
     })
     if (name === 'preload-app') {
-      const product = exposed.get('liwaDesktop') as { deviceInfo(): Promise<string> }
-      invoke.mockResolvedValueOnce('platform=darwin; memory_gib=32.0')
-      await expect(product.deviceInfo()).resolves.toBe('platform=darwin; memory_gib=32.0')
-      expect(invoke).toHaveBeenCalledWith('liwa-desktop:device-info')
+      expect(exposed.has('liwaDesktop')).toBe(true)
       browser.loadTheme('dark')
       expect(send).toHaveBeenCalledWith('liwa-desktop:native-theme-set', 'dark')
       browser.changeTheme('light')
@@ -84,9 +81,9 @@ describe.skipIf(!existsSync(preload('preload-app')))('built sandboxed Desktop pr
       expect(send).toHaveBeenCalledWith('liwa-desktop:locale-changed', 'zh')
     } else {
       expect(exposed.has('liwaWelcome')).toBe(true)
-      const bridge = exposed.get('liwaWelcome') as { takeNotice(): Promise<unknown> }
-      void bridge.takeNotice()
-      expect(invoke).toHaveBeenCalledWith('liwa-welcome:take-notice')
+      const bridge = exposed.get('liwaWelcome') as { analyticsEnabled(): Promise<unknown> }
+      void bridge.analyticsEnabled()
+      expect(invoke).toHaveBeenCalledWith('liwa-welcome:analytics-enabled')
     }
   })
 })

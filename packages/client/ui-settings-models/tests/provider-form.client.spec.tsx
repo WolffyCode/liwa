@@ -159,9 +159,7 @@ const contexts = new WeakMap<object, PageContext>()
 function ctxWith(face: object): PageContext {
   const existing = contexts.get(face)
   if (existing !== undefined) return existing
-  const ctx = Object.assign(new Context(), { remote: { ...face,
-    session: { initializeDefaultModel: async () => ({ ok: true, value: undefined }) },
-  } })
+  const ctx = Object.assign(new Context(), { remote: face })
   contexts.set(face, ctx)
   return ctx
 }
@@ -975,9 +973,8 @@ describe('hand-declared providers', () => {
     return { ...scripted, onClose }
   }
 
-  it('creates a custom provider without changing the default model', async () => {
-    const { face, mutate, set, onClose } = mountCard()
-    const initialize = vi.spyOn(ctxWith(face).remote.session, 'initializeDefaultModel')
+  it('creates a custom provider', async () => {
+    const { mutate, set, onClose } = mountCard()
     fireEvent.change(screen.getByLabelText(en.customRoute), { target: { value: 'acme-gateway' } })
     fireEvent.change(screen.getByLabelText(en.baseUrl), { target: { value: 'https://gateway.example/v1' } })
     fireEvent.change(screen.getByLabelText(en.keyInput), { target: { value: 'test-key' } })
@@ -987,7 +984,6 @@ describe('hand-declared providers', () => {
     await waitFor(() => { expect(onClose).toHaveBeenCalledWith(true) })
     expect(mutate).toHaveBeenCalledOnce()
     expect(set).toHaveBeenCalledOnce()
-    expect(initialize).not.toHaveBeenCalled()
   })
 
   it('writes the whole profile and the key under the derived reference', async () => {

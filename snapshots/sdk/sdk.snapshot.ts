@@ -574,7 +574,6 @@ const legacySdkCompositions = new Set([
   'dynamic-tool-updates',
   'image',
   'ptc',
-  'sdk-account-provider-signout',
   'sdk-default',
   'sdk-liwa-sdk-diagnostic',
   'sdk-liwa-sdk-dynamic-route',

@@ -88,5 +88,3 @@ Host entry 为每条 Client 流独立注册一组 allowlist listener 和一个�
 无。
 
 </details>
-
-客户端组装包含 account 命名空间，用于登录操作和可重连的账号快照。

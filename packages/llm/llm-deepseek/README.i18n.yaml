@@ -9,8 +9,8 @@
   en: b2c81080eabdefd4
   zh: 9e622b985c16d675
 /liwa-llm-deepseek/summary:
-  en: e4356f34546a58bf
-  zh: 5f3bc281e50ba0df
+  en: e083910c3a246b1a
+  zh: 3135e4c3a9cb7706
 /liwa-llm-deepseek/table-of-contents:
   en: d152484eb41ac6b4
   zh: 09388d293f9be9cb
@@ -26,9 +26,9 @@
 /liwa-llm-deepseek/use-this-package/endpoint-and-wire-format:
   en: 522e74b770e9d4ca
   zh: a8b261b41677bfe7
-/liwa-llm-deepseek/use-this-package/account-credentials:
-  en: 770d08179c8c5e84
-  zh: 10a5cd16a840602a
+/liwa-llm-deepseek/use-this-package/credentials:
+  en: fe4b4f5022e6805f
+  zh: befe888d055ff183
 /liwa-llm-deepseek/use-this-package/streaming-with-thinking-and-images:
   en: fa9b9a0466aa2bf4
   zh: d22b9097a4593431
@@ -39,8 +39,8 @@
   en: f13f24b504dcfb50
   zh: 69b0ed9e2adf3394
 /liwa-llm-deepseek/use-this-package/failures-and-recovery:
-  en: 154e2aca66f3e251
-  zh: cc6b7e1200ab793c
+  en: 3a12e4414d35ee4e
+  zh: bf5914c98c85edab
 /liwa-llm-deepseek/understand-the-implementation:
   en: 1598ac8a8bb9b6bf
   zh: fdd089c5ae7722cd
@@ -87,5 +87,5 @@
   en: a99a50f27b17a946
   zh: 391a2621f50431a8
 /liwa-llm-deepseek/known-limitations-and-deferred-work/dev-note:
-  en: 4f332cf95d4d17fe
-  zh: 367eff30f706b157
+  en: e5d37627a854f886
+  zh: 89ae6cd6bbb6485e

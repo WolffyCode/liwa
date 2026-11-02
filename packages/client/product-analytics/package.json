@@ -60,7 +60,6 @@
     "@liwa/llm": "workspace:*",
     "@liwa/session": "workspace:*",
     "@liwa/host-product-telemetry-otel": "workspace:*",
-    "@liwa/deepseek-account": "workspace:*",
     "@liwa/host-webserver": "workspace:*",
     "@liwa/settings": "workspace:*",
     "@liwa/cordis-plugin-loader": "workspace:~",

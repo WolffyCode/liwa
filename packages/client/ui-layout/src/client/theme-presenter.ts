@@ -19,9 +19,8 @@ export const DARK_ATTRIBUTE = 'data-ds-dark-theme'
 /**
  * Root attribute publishing the theme source (`light`, `dark`, or `system`)
  * for host shells that mirror it into the native theme (the Electron preload
- * forwards it to `nativeTheme.themeSource`, so native chrome, renderer
- * `prefers-color-scheme` queries, and Platform login links follow the app
- * palette on every platform). `system` only when the preference is `system`;
+ * forwards it to `nativeTheme.themeSource`, so native chrome and renderer
+ * `prefers-color-scheme` queries follow the app palette on every platform). `system` only when the preference is `system`;
  * a fixed preference (including registered theme ids) publishes its resolved
  * scheme.
  */

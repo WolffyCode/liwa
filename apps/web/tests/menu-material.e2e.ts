@@ -1,4 +1,4 @@
-/** Account and Session menus share material and keep macOS backings aligned and scoped. */
+/** Menus and modal masks share palette materials and keep macOS menu backings aligned and scoped. */
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
@@ -28,8 +28,17 @@ it('shares menu transparency and blur across palettes and follows native menu bo
     Object.defineProperty(globalThis, 'liwaDesktop', { value: { protocolVersion: 1 } })
   })
   await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
-  const account = page.getByRole('button', { name: 'Account menu', exact: true })
-  await account.waitFor()
+  const ungrouped = page.getByText('Ungrouped', { exact: true })
+  const group = ungrouped.locator('xpath=ancestor::*[@aria-expanded][1]')
+  await group.waitFor()
+  if (await group.getAttribute('aria-expanded') !== 'true') await ungrouped.click()
+  const action = page.locator('button[aria-label^="Session actions for "]').first()
+  const menu = page.getByRole('menu').filter({ has: page.getByRole('menuitem', { name: 'Rename', exact: true }) })
+  const openSessionMenu = async (): Promise<void> => {
+    await action.locator('xpath=ancestor::*[@role="treeitem"][1]').hover()
+    await action.click()
+    await menu.waitFor()
+  }
 
   const results: Record<string, Awaited<ReturnType<typeof material>>> = {}
   const masks: Record<string, { fill: string; blur: string }> = {}
@@ -49,9 +58,7 @@ it('shares menu transparency and blur across palettes and follows native menu bo
       expect(overlayFill).toBe(platform === 'darwin'
         ? dark ? 'rgba(48, 49, 54, 0.94)' : 'rgba(248, 249, 250, 0.94)'
         : dark ? 'rgba(67, 69, 74, 0.45)' : 'rgba(248, 249, 250, 0.58)')
-      await account.click()
-      const menu = page.getByRole('menu').filter({ has: page.getByRole('menuitem', { name: 'Settings', exact: true }) })
-      await menu.waitFor()
+      await openSessionMenu()
       const appearance = await material(menu)
       expect(appearance).toMatchObject({
         fill: dark ? 'rgba(67, 69, 74, 0.45)' : 'rgba(248, 249, 250, 0.58)',
@@ -78,8 +85,7 @@ it('shares menu transparency and blur across palettes and follows native menu bo
       }
       await page.keyboard.press('Escape')
       await expect.poll(() => backing.count()).toBe(0)
-      await account.click()
-      await page.getByRole('menuitem', { name: 'Settings', exact: true }).click()
+      await page.getByRole('button', { name: 'Settings', exact: true }).click()
       const settings = page.getByRole('dialog', { name: 'Settings', exact: true })
       await settings.waitFor()
       const mask = await settings.locator('..').locator(':scope > [aria-hidden="true"]').evaluate((node) => {
@@ -95,16 +101,7 @@ it('shares menu transparency and blur across palettes and follows native menu bo
   await compareOrRefreshGolden(join(expected, 'materials.expected.json'), JSON.stringify(results, null, 2), webSnapshotMode())
   await compareOrRefreshGolden(join(expected, 'modal-masks.expected.json'), JSON.stringify(masks, null, 2), webSnapshotMode())
 
-  const ungrouped = page.getByText('Ungrouped', { exact: true })
-  const group = ungrouped.locator('xpath=ancestor::*[@aria-expanded][1]')
-  await group.waitFor()
-  if (await group.getAttribute('aria-expanded') !== 'true') await ungrouped.click()
-  const action = page.locator('button[aria-label^="Session actions for "]').first()
-  await action.locator('xpath=ancestor::*[@role="treeitem"][1]').hover()
-  await action.click()
-  const sessionMenu = page.getByRole('menu').filter({ has: page.getByRole('menuitem', { name: 'Rename', exact: true }) })
-  await sessionMenu.waitFor()
-  expect(await material(sessionMenu)).toEqual(results['darwin-dark'])
+  await openSessionMenu()
   await compareOrRefreshGolden(join(expected, 'session-menu.expected.md'),
     await captureStableAria(page, '[role="menu"]', scaffold.workspaceCwd), webSnapshotMode())
   await page.keyboard.press('Escape')

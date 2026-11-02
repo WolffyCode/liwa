@@ -24,7 +24,6 @@
     "@liwa/schedule": "workspace:*",
     "@liwa/tool-workspace-dependencies": "workspace:*",
     "@liwa/skill-office": "workspace:*",
-    "@liwa/deepseek-account": "workspace:*",
     "@liwa/workspace": "workspace:*",
     "@liwa/plugin-manager": "workspace:*"
   },

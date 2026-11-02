@@ -15,8 +15,6 @@ export const DESKTOP_IPC = {
   shortcutsRecording: 'liwa-desktop:shortcuts-recording',
   boot: 'liwa-desktop:boot',
   enterWorkspace: 'liwa-desktop:enter-workspace',
-  onboardingActive: 'liwa-desktop:onboarding-active',
-  onboardingApiKey: 'liwa-desktop:onboarding-api-key',
   bootFailed: 'liwa-desktop:boot-failed',
   browserAcquire: 'liwa-desktop:browser-acquire',
   browserRelease: 'liwa-desktop:browser-release',
@@ -26,7 +24,6 @@ export const DESKTOP_IPC = {
   fileDragCancel: 'liwa-desktop:file-drag-cancel',
   fileDragStart: 'liwa-desktop:file-drag-start',
   fileDragRelease: 'liwa-desktop:file-drag-release',
-  deviceInfo: 'liwa-desktop:device-info',
   localeBootstrap: 'liwa-desktop:locale-bootstrap',
   localeChanged: 'liwa-desktop:locale-changed',
   nativeThemeSet: 'liwa-desktop:native-theme-set',
@@ -42,11 +39,6 @@ export interface LiwaDesktopProductApi {
   readonly fileDrag: DesktopFileDrag
   readonly keyboard: DesktopKeyboardApi
   readonly shortcuts: DesktopShortcutsApi
-  /**
-   * Local machine description for the feedback questionnaire.
-   * @returns `name=value` fields separated by `; `, with no hostname, user name, or serial number.
-   */
-  deviceInfo(): Promise<string>
 }
 
 /** Scheme of Desktop-owned application documents. */

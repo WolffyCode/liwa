@@ -51,12 +51,8 @@ export const ALLOWED_SPANS: readonly BrandException[] = [
     pattern: /@deepseek-ai\/libreoffice-kit[\w.-]*|deepseek-ai\/dsh-libreoffice-kit|['"`]@deepseek-ai['"`],\s*['"`]libreoffice-kit/gu,
   },
   {
-    reason: 'Addresses of DeepSeek servers (account sign-in, telemetry, model API) are registered by DeepSeek.',
+    reason: 'Addresses of DeepSeek servers (telemetry, model API) are registered by DeepSeek.',
     pattern: /(?:https?:\/\/)?(?:[A-Za-z0-9-]+\.)*deepseek(?:svc)?\.(?:com|cn|test|invalid)\b(?::\d+)?(?:\/[^\s"'`<>)\]\\|,]*)?/gu,
-  },
-  {
-    reason: 'The DeepSeek account platform protocol: endpoint paths, the auth header, its mock token prefix, and its campaign ids.',
-    pattern: /\/auth-api\/v0\/dsh\/|\/dsh\/authorized?(?![\w-])|x-dsh-auth-token|dsh_mock_|dsh_login_bonus/giu,
   },
   {
     reason: 'DeepSeek model API wire extensions are defined by the DeepSeek API: the request-body fields under its '
@@ -73,11 +69,6 @@ export const ALLOWED_SPANS: readonly BrandException[] = [
       /client_(?:requirements|metadata)(?:\[\\?"|: \{ ')deepseek-harness/u,
       /client_(?:requirements|metadata)\\?\[\\?"deepseek-harness/u,
     ),
-  },
-  {
-    reason: 'DeepSeek Platform pages embedded in the desktop app read the account bridge as window.dsh.',
-    pattern: /exposeInMainWorld\('dsh'|bridges\.get\('dsh'\)|`window\.dsh`/gu,
-    files: /^apps\/desktop\/(?:src\/preload-platform-account\.ts|tests\/platform-preload\.e2e\.ts)$/u,
   },
   {
     reason: 'The DeepSeek telemetry collector routes product telemetry by its x-channel value.',

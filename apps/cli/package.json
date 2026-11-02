@@ -138,7 +138,6 @@
     "@liwa/llm": "workspace:*",
     "@liwa/llm-deepseek": "workspace:*",
     "@liwa/llm-deepseek-api-key": "workspace:*",
-    "@liwa/llm-deepseek-account": "workspace:*",
     "@liwa/llm-mock-server": "workspace:*",
     "@liwa/llm-pi-ai": "workspace:*",
     "@liwa/llm-replay": "workspace:*",

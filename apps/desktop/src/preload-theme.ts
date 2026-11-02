@@ -1,4 +1,4 @@
-/** Mirrors the Web UI's theme source into Electron's native theme so native chrome and Platform login pages follow the app palette. */
+/** Mirrors the Web UI's theme source into Electron's native theme so native chrome follows the app palette. */
 
 import { ipcRenderer } from 'electron'
 import { DESKTOP_IPC } from './ipc.ts'
@@ -12,8 +12,8 @@ const THEME_SOURCE_ATTRIBUTE = 'data-ds-theme-source'
  * `prefers-color-scheme` queries on every platform then follow the app's
  * theme preference instead of the OS appearance while `system` keeps
  * following the OS; the macOS sidebar vibrancy material is one such consumer.
- * The main process reads the same value back as `shouldUseDarkColors` when a
- * Platform login link needs the resolved palette.
+ * The main process reads the same value back as `shouldUseDarkColors` for the
+ * window background and Windows caption symbols.
  */
 export function syncNativeTheme(): void {
   let sent: string | undefined

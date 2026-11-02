@@ -613,9 +613,6 @@ importers:
       '@liwa/llm-deepseek':
         specifier: workspace:*
         version: link:../../packages/llm/llm-deepseek
-      '@liwa/llm-deepseek-account':
-        specifier: workspace:*
-        version: link:../../packages/llm/llm-deepseek-account
       '@liwa/llm-deepseek-api-key':
         specifier: workspace:*
         version: link:../../packages/llm/llm-deepseek-api-key
@@ -712,18 +709,12 @@ importers:
 
   apps/desktop:
     dependencies:
-      '@liwa/api-gateway':
-        specifier: workspace:*
-        version: link:../../packages/api/gateway
       '@liwa/cordis':
         specifier: workspace:~
         version: link:../../vendor/cordis
       semver:
         specifier: ^7.8.5
         version: 7.8.5
-      ws:
-        specifier: ^8.21.3
-        version: 8.21.3
     devDependencies:
       '@electron/get':
         specifier: ^5.1.0
@@ -740,9 +731,6 @@ importers:
       '@liwa/client-shortcuts':
         specifier: workspace:*
         version: link:../../packages/client/shortcuts
-      '@liwa/client-ui-primitives':
-        specifier: workspace:*
-        version: link:../../packages/client/ui-primitives
       '@liwa/client-ui-settings-general':
         specifier: workspace:*
         version: link:../../packages/client/ui-settings-general
@@ -752,9 +740,6 @@ importers:
       '@liwa/client-ui-theme':
         specifier: workspace:*
         version: link:../../packages/client/ui-theme
-      '@liwa/deepseek-account':
-        specifier: workspace:*
-        version: link:../../packages/credentials/deepseek-account
       '@liwa/home-paths':
         specifier: workspace:*
         version: link:../../packages/util/home-paths
@@ -779,9 +764,6 @@ importers:
       '@types/semver':
         specifier: ^7.8.0
         version: 7.8.0
-      '@types/ws':
-        specifier: ^8.18.1
-        version: 8.18.1
       app-builder-lib:
         specifier: 26.17.0
         version: 26.17.0(patch_hash=b70dc2a2a78ffabb80a4f14fafc7c103237f2b0a207e1f296fa1c1387ea29348)(dmg-builder@26.17.0)(electron-builder-squirrel-windows@26.17.0)(supports-color@9.4.0)
@@ -842,9 +824,6 @@ importers:
       '@liwa/cordis':
         specifier: workspace:~
         version: link:../../vendor/cordis
-      '@liwa/deepseek-account':
-        specifier: workspace:*
-        version: link:../../packages/credentials/deepseek-account
       '@liwa/home-paths':
         specifier: workspace:*
         version: link:../../packages/util/home-paths
@@ -1314,25 +1293,6 @@ importers:
         specifier: workspace:*
         version: link:../../interaction/user-approval
 
-  packages/api/account-controller:
-    dependencies:
-      zod:
-        specifier: 4.4.3
-        version: 4.4.3
-    devDependencies:
-      '@liwa/agent':
-        specifier: workspace:*
-        version: link:../../core/agent
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-      '@liwa/deepseek-account':
-        specifier: workspace:*
-        version: link:../../credentials/deepseek-account
-      '@liwa/typert-protocol':
-        specifier: workspace:*
-        version: link:../../typert/protocol
-
   packages/api/gateway:
     dependencies:
       '@liwa/deque':
@@ -1471,9 +1431,6 @@ importers:
       '@liwa/agent-preset-registry':
         specifier: workspace:*
         version: link:../../preset/agent-preset-registry
-      '@liwa/api-account-controller':
-        specifier: workspace:*
-        version: link:../account-controller
       '@liwa/api-gateway':
         specifier: workspace:*
         version: link:../gateway
@@ -1525,9 +1482,6 @@ importers:
       '@liwa/credentials':
         specifier: workspace:*
         version: link:../../credentials/credentials
-      '@liwa/deepseek-account':
-        specifier: workspace:*
-        version: link:../../credentials/deepseek-account
       '@liwa/file-reference':
         specifier: workspace:*
         version: link:../../context/file-reference
@@ -1652,9 +1606,6 @@ importers:
       '@liwa/cordis':
         specifier: workspace:~
         version: link:../../../vendor/cordis
-      '@liwa/credentials':
-        specifier: workspace:*
-        version: link:../../credentials/credentials
       '@liwa/file-reference':
         specifier: workspace:*
         version: link:../../context/file-reference
@@ -1700,9 +1651,6 @@ importers:
       '@liwa/session-title':
         specifier: workspace:*
         version: link:../../session/session-title
-      '@liwa/settings':
-        specifier: workspace:*
-        version: link:../../settings/settings
       '@liwa/skill':
         specifier: workspace:*
         version: link:../../skill/skill
@@ -2422,9 +2370,6 @@ importers:
       '@liwa/credentials-local':
         specifier: workspace:*
         version: link:../../credentials/credentials-local
-      '@liwa/deepseek-account-platform':
-        specifier: workspace:*
-        version: link:../../credentials/deepseek-account-platform
       '@liwa/fs-local':
         specifier: workspace:*
         version: link:../../fs/fs-local
@@ -2449,9 +2394,6 @@ importers:
       '@liwa/llm':
         specifier: workspace:*
         version: link:../../llm/llm
-      '@liwa/llm-deepseek-account':
-        specifier: workspace:*
-        version: link:../../llm/llm-deepseek-account
       '@liwa/llm-deepseek-api-key':
         specifier: workspace:*
         version: link:../../llm/llm-deepseek-api-key
@@ -2882,9 +2824,6 @@ importers:
       '@liwa/agent-preset-registry':
         specifier: workspace:*
         version: link:../../preset/agent-preset-registry
-      '@liwa/api-account-controller':
-        specifier: workspace:*
-        version: link:../../api/account-controller
       '@liwa/api-job-controller':
         specifier: workspace:*
         version: link:../../api/job-controller
@@ -3014,9 +2953,6 @@ importers:
       '@liwa/client-ui-settings':
         specifier: workspace:*
         version: link:../../client/ui-settings
-      '@liwa/client-ui-settings-account':
-        specifier: workspace:*
-        version: link:../../client/ui-settings-account
       '@liwa/client-ui-settings-agent-loop':
         specifier: workspace:*
         version: link:../../client/ui-settings-agent-loop
@@ -3488,9 +3424,6 @@ importers:
       '@liwa/cordis-plugin-loader':
         specifier: workspace:~
         version: link:../../../vendor/loader
-      '@liwa/deepseek-account':
-        specifier: workspace:*
-        version: link:../../credentials/deepseek-account
       '@liwa/host-product-telemetry-otel':
         specifier: workspace:*
         version: link:../../host/product-telemetry-otel
@@ -5345,82 +5278,6 @@ importers:
       react:
         specifier: ^18.2.0
         version: 18.3.1
-
-  packages/client/ui-settings-account:
-    dependencies:
-      '@liwa/schemastery':
-        specifier: link:../../../vendor/schemastery
-        version: link:../../../vendor/schemastery
-    devDependencies:
-      '@liwa/api-remote-access':
-        specifier: workspace:*
-        version: link:../../api/remote-access
-      '@liwa/api-remotes':
-        specifier: workspace:*
-        version: link:../../api/remotes
-      '@liwa/client-locale':
-        specifier: workspace:*
-        version: link:../locale
-      '@liwa/client-product-analytics':
-        specifier: workspace:*
-        version: link:../product-analytics
-      '@liwa/client-store':
-        specifier: workspace:*
-        version: link:../store
-      '@liwa/client-test-runtime':
-        specifier: workspace:*
-        version: link:../../test-support/client-runtime
-      '@liwa/client-ui-chat':
-        specifier: workspace:*
-        version: link:../ui-chat
-      '@liwa/client-ui-layout':
-        specifier: workspace:*
-        version: link:../ui-layout
-      '@liwa/client-ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
-      '@liwa/client-ui-renderer':
-        specifier: workspace:*
-        version: link:../ui-renderer
-      '@liwa/client-ui-settings':
-        specifier: workspace:*
-        version: link:../ui-settings
-      '@liwa/client-ui-settings-models':
-        specifier: workspace:*
-        version: link:../ui-settings-models
-      '@liwa/client-ui-slots':
-        specifier: workspace:*
-        version: link:../ui-slots
-      '@liwa/client-ui-theme':
-        specifier: workspace:*
-        version: link:../ui-theme
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-      '@liwa/deepseek-account':
-        specifier: workspace:*
-        version: link:../../credentials/deepseek-account
-      '@liwa/host-webserver':
-        specifier: workspace:*
-        version: link:../../host/webserver
-      '@liwa/settings':
-        specifier: workspace:*
-        version: link:../../settings/settings
-      '@testing-library/react':
-        specifier: ^16.3.3
-        version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@types/big.js':
-        specifier: ^6.2.2
-        version: 6.2.2
-      big.js:
-        specifier: ^7.0.1
-        version: 7.0.1
-      react:
-        specifier: ^18.2.0
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.3.1(react@18.3.1)
 
   packages/client/ui-settings-agent-loop:
     devDependencies:
@@ -7806,49 +7663,6 @@ importers:
       '@liwa/launch-environment':
         specifier: workspace:*
         version: link:../../util/launch-environment
-
-  packages/credentials/deepseek-account:
-    devDependencies:
-      '@liwa/agent':
-        specifier: workspace:*
-        version: link:../../core/agent
-      '@liwa/brand':
-        specifier: workspace:*
-        version: link:../../util/brand
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-      '@liwa/llm':
-        specifier: workspace:*
-        version: link:../../llm/llm
-      '@liwa/util-values':
-        specifier: workspace:*
-        version: link:../../util/values
-
-  packages/credentials/deepseek-account-platform:
-    dependencies:
-      '@liwa/schemastery':
-        specifier: link:../../../vendor/schemastery
-        version: link:../../../vendor/schemastery
-      zod:
-        specifier: 4.4.3
-        version: 4.4.3
-    devDependencies:
-      '@liwa/authorization':
-        specifier: workspace:*
-        version: link:../authorization
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-      '@liwa/credentials':
-        specifier: workspace:*
-        version: link:../credentials
-      '@liwa/deepseek-account':
-        specifier: workspace:*
-        version: link:../deepseek-account
-      '@liwa/host-webserver':
-        specifier: workspace:*
-        version: link:../../host/webserver
 
   packages/deliverables/deliverable-file-references:
     devDependencies:
@@ -11190,9 +11004,6 @@ importers:
       '@liwa/credentials':
         specifier: workspace:*
         version: link:../../credentials/credentials
-      '@liwa/deepseek-account':
-        specifier: workspace:*
-        version: link:../../credentials/deepseek-account
       '@liwa/launch-environment':
         specifier: workspace:*
         version: link:../../util/launch-environment
@@ -11202,9 +11013,6 @@ importers:
       '@liwa/llm-deepseek':
         specifier: workspace:*
         version: link:../../llm/llm-deepseek
-      '@liwa/llm-deepseek-account':
-        specifier: workspace:*
-        version: link:../../llm/llm-deepseek-account
       '@liwa/llm-deepseek-api-key':
         specifier: workspace:*
         version: link:../../llm/llm-deepseek-api-key
@@ -12831,9 +12639,6 @@ importers:
       '@liwa/credentials-local':
         specifier: workspace:*
         version: link:../../credentials/credentials-local
-      '@liwa/deepseek-account':
-        specifier: workspace:*
-        version: link:../../credentials/deepseek-account
       '@liwa/deepseek-llm-api-extensions':
         specifier: workspace:*
         version: link:../deepseek-llm-api-extensions
@@ -12852,9 +12657,6 @@ importers:
       '@liwa/llm':
         specifier: workspace:*
         version: link:../llm
-      '@liwa/llm-deepseek-account':
-        specifier: workspace:*
-        version: link:../llm-deepseek-account
       '@liwa/llm-deepseek-api-key':
         specifier: workspace:*
         version: link:../llm-deepseek-api-key
@@ -12891,40 +12693,6 @@ importers:
       '@types/semver':
         specifier: ^7.8.0
         version: 7.8.0
-
-  packages/llm/llm-deepseek-account:
-    dependencies:
-      '@liwa/cosmokit':
-        specifier: link:../../../vendor/cosmokit
-        version: link:../../../vendor/cosmokit
-      '@liwa/schemastery':
-        specifier: link:../../../vendor/schemastery
-        version: link:../../../vendor/schemastery
-    devDependencies:
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-      '@liwa/cordis-plugin-loader':
-        specifier: workspace:~
-        version: link:../../../vendor/loader
-      '@liwa/deepseek-account':
-        specifier: workspace:*
-        version: link:../../credentials/deepseek-account
-      '@liwa/launch-environment':
-        specifier: workspace:*
-        version: link:../../util/launch-environment
-      '@liwa/llm':
-        specifier: workspace:*
-        version: link:../llm
-      '@liwa/llm-deepseek':
-        specifier: workspace:*
-        version: link:../llm-deepseek
-      '@liwa/llm-deepseek-api-key':
-        specifier: workspace:*
-        version: link:../llm-deepseek-api-key
-      '@liwa/timeout':
-        specifier: workspace:*
-        version: link:../../util/timeout
 
   packages/llm/llm-deepseek-api-key:
     dependencies:
@@ -17259,9 +17027,6 @@ importers:
       '@liwa/credentials-local':
         specifier: workspace:*
         version: link:../../credentials/credentials-local
-      '@liwa/deepseek-account':
-        specifier: workspace:*
-        version: link:../../credentials/deepseek-account
       '@liwa/http-proxy':
         specifier: workspace:*
         version: link:../../util/http-proxy
@@ -17324,9 +17089,6 @@ importers:
       '@liwa/credentials-local':
         specifier: workspace:*
         version: link:../../credentials/credentials-local
-      '@liwa/deepseek-account':
-        specifier: workspace:*
-        version: link:../../credentials/deepseek-account
       '@liwa/http-proxy':
         specifier: workspace:*
         version: link:../../util/http-proxy
@@ -17686,9 +17448,6 @@ importers:
       '@liwa/credentials':
         specifier: workspace:*
         version: link:../../packages/credentials/credentials
-      '@liwa/deepseek-account':
-        specifier: workspace:*
-        version: link:../../packages/credentials/deepseek-account
       '@liwa/deepseek-llm-api-extensions':
         specifier: workspace:*
         version: link:../../packages/llm/deepseek-llm-api-extensions
@@ -17740,9 +17499,6 @@ importers:
       '@liwa/llm-deepseek':
         specifier: workspace:*
         version: link:../../packages/llm/llm-deepseek
-      '@liwa/llm-deepseek-account':
-        specifier: workspace:*
-        version: link:../../packages/llm/llm-deepseek-account
       '@liwa/llm-deepseek-api-key':
         specifier: workspace:*
         version: link:../../packages/llm/llm-deepseek-api-key
@@ -20999,9 +20755,6 @@ packages:
   '@types/babel__traverse@7.28.0':
     resolution: {integrity: sha512-8PvcXf70gTDZBgt9ptxJ8elBeBjcLOAcOtoO/mPJjtji1+CdGbHgm77om1GrsPxsiE+uXIpNSK64UYaIwQXd4Q==}
 
-  '@types/big.js@6.2.2':
-    resolution: {integrity: sha512-e2cOW9YlVzFY2iScnGBBkplKsrn2CsObHQ2Hiw4V1sSyiGbgWL8IyqE3zFi1Pt5o1pdAtYkDAIsF3KKUPjdzaA==}
-
   '@types/body-parser@1.19.6':
     resolution: {integrity: sha512-HLFeCYgz89uk22N5Qg3dvGvsv46B8GLvKKo1zKG4NybA8U2DiEO3w9lqGg29t/tfLRJpJ6iQxnVw4OnB7MoM9g==}
 
@@ -21797,9 +21550,6 @@ packages:
   big-integer@1.6.52:
     resolution: {integrity: sha512-QxD8cf2eVqJOOz63z6JIN9BzvVs/dlySa5HGSBH5xtR8dPteIRQnBxxKqkNTiT6jbDTF6jAfrd4oMcND9RGbQg==}
     engines: {node: '>=0.6'}
-
-  big.js@7.0.1:
-    resolution: {integrity: sha512-iFgV784tD8kq4ccF1xtNMZnXeZzVuXWWM+ERFzKQjv+A5G9HC8CY3DuV45vgzFFcW+u2tIvmF95+AzWgs6BjCg==}
 
   bignumber.js@9.3.1:
     resolution: {integrity: sha512-Ko0uX15oIUS7wJ3Rb30Fs6SkVbLmPBAKdlm7q9+ak9bbIeFf0MwuBsQV6z7+X768/cHsfg+WlysDWJcmthjsjQ==}
@@ -28272,8 +28022,6 @@ snapshots:
     dependencies:
       '@babel/types': 7.29.7
 
-  '@types/big.js@6.2.2': {}
-
   '@types/body-parser@1.19.6':
     dependencies:
       '@types/connect': 3.4.38
@@ -29189,8 +28937,6 @@ snapshots:
       require-from-string: 2.0.2
 
   big-integer@1.6.52: {}
-
-  big.js@7.0.1: {}
 
   bignumber.js@9.3.1: {}
 

@@ -96,8 +96,6 @@
     "@liwa/plugin-market": "workspace:*",
     "@liwa/client-ui-plugin-manager": "workspace:*",
     "@liwa/office-to-pdf": "workspace:*",
-    "@liwa/api-account-controller": "workspace:*",
-    "@liwa/deepseek-account": "workspace:*",
     "@liwa/client-product-analytics": "workspace:*",
     "@liwa/client-ui-trajectory": "workspace:*"
   }

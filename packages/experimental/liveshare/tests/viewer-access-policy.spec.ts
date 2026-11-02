@@ -400,7 +400,7 @@ describe('viewer page startup contract', () => {
 
   it('keeps the owner’s own surfaces refused and out of the reader’s snapshot', async () => {
     const { decide, grants } = await fixture()
-    const ownerOnly = ['account/watch', 'job/list', 'job/follow', 'settings/describe',
+    const ownerOnly = ['job/list', 'job/follow', 'settings/describe',
       'credentials/describe', 'pluginManager/listPlugins', 'schedule/list'] as const
     for (const action of ownerOnly) expect(decide(action, GLOBAL)).toEqual(deny('liveshare/read-only'))
     const granted = new Set(grants().flatMap(grant => [...grant.actions]))

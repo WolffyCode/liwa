@@ -112,7 +112,6 @@ describe('Chat apply wiring', () => {
     try {
       const host = b.runtime.slots.entries('shell.overlay').find(entry => entry.options.id === 'chat.quota-notice')
       expect(host).toBeDefined()
-      expect(b.runtime.slots.spec('shell.quota-notice')).toMatchObject({ kind: 'chain', scope: 'root' })
       const inject: ((...args: never[]) => Record<string, unknown>) | undefined = host?.inject
       if (inject === undefined) throw new Error('ui-chat did not register the quota notice host')
       const face = inject()

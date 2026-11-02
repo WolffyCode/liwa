@@ -48,8 +48,6 @@ flowchart LR
   cfg --> plugin_liwa_base_settings
   plugin_liwa_base_authorization["authorization<br/>@liwa/authorization"]
   cfg --> plugin_liwa_base_authorization
-  plugin_liwa_base_deepseek_account["deepseek-account<br/>@liwa/deepseek-account-platform"]
-  cfg --> plugin_liwa_base_deepseek_account
   plugin_liwa_base_credentials["credentials<br/>@liwa/credentials-local"]
   cfg --> plugin_liwa_base_credentials
   plugin_liwa_base_llm_pi_ai["llm-pi-ai<br/>@liwa/llm-pi-ai"]
@@ -188,8 +186,6 @@ flowchart LR
   cfg --> plugin_liwa_base_fs_sandbox
   plugin_liwa_base_llm_deepseek["llm-deepseek<br/>@liwa/llm-deepseek-api-key"]
   cfg --> plugin_liwa_base_llm_deepseek
-  plugin_liwa_base_llm_deepseek_account["llm-deepseek-account<br/>@liwa/llm-deepseek-account"]
-  cfg --> plugin_liwa_base_llm_deepseek_account
 ```
 
 | Plugin id | Package / module |
@@ -214,7 +210,6 @@ flowchart LR
 | `config-editor` | `@liwa/config-editor` |
 | `settings` | `@liwa/settings` |
 | `authorization` | `@liwa/authorization` |
-| `deepseek-account` | `@liwa/deepseek-account-platform` |
 | `credentials` | `@liwa/credentials-local` |
 | `llm-pi-ai` | `@liwa/llm-pi-ai` |
 | `session-persistence-jsonl` | `@liwa/session-persistence-jsonl` |
@@ -284,7 +279,6 @@ flowchart LR
 | `agent-loop` | `@liwa/agent-loop` |
 | `fs-sandbox` | `@liwa/fs-sandbox` |
 | `llm-deepseek` | `@liwa/llm-deepseek-api-key` |
-| `llm-deepseek-account` | `@liwa/llm-deepseek-account` |
 
 Source config: [`packages/bundle/base/cordis.patch.yml`](../../packages/bundle/base/cordis.patch.yml).
 

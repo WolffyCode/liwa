@@ -180,8 +180,6 @@
     "@liwa/schemastery": "workspace:~",
     "commander": "^15.0.0",
     "open": "^11.0.2",
-    "@liwa/api-account-controller": "workspace:*",
-    "@liwa/client-ui-settings-account": "workspace:*",
     "@liwa/client-shortcuts": "workspace:*",
     "@liwa/client-ui-shortcuts": "workspace:*",
     "@liwa/liwa-dev-context": "workspace:*",

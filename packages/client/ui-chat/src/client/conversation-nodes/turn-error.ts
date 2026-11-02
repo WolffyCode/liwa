@@ -30,22 +30,18 @@ function lastStep(context: ConversationNodeContext<TurnErrorState>): number {
 }
 
 /**
- * Failure shown for a turn ending: a recorded error, a sign-out cancellation,
- * or a turn that restart recovery closed because the Liwa process exited mid-turn.
+ * Failure shown for a turn ending: a recorded error, or a turn that restart
+ * recovery closed because the Liwa process exited mid-turn.
  */
 function endFailure(reason: TurnEndReason): { readonly message: string; readonly code?: string } | undefined {
   switch (reason.kind) {
     case 'error':
       return reason.error
-    case 'aborted':
-      // User and parent cancellations show only the stopped turn summary.
-      return reason.reason.kind === 'hook' && reason.reason.reason === 'deepseek-account/signed-out'
-        ? { message: 'Stopped because you signed out of DeepSeek.', code: 'ACCOUNT_SIGNED_OUT' }
-        : undefined
     case 'interrupted':
       return { message: 'The Liwa process exited before this turn finished.', code: 'INTERRUPTED' }
     default:
-      // Completed, blocked, max-tokens, forked, and plugin-merged endings have no failure row.
+      // Completed, aborted, blocked, max-tokens, forked, and plugin-merged endings have no failure row;
+      // cancellations show only the stopped turn summary.
       return undefined
   }
 }

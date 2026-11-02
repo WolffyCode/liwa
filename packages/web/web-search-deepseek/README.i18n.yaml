@@ -9,8 +9,8 @@
   en: 6561f282e8c3b742
   zh: 414082b85205195f
 /liwa-web-search-deepseek/summary:
-  en: 4ba66ed6b63c0561
-  zh: 7d9c3c109f54aec6
+  en: edcb79b5ad2413cd
+  zh: 760fd66588a46406
 /liwa-web-search-deepseek/table-of-contents:
   en: d152484eb41ac6b4
   zh: 09388d293f9be9cb
@@ -18,14 +18,14 @@
   en: e0d352d6402d9d3b
   zh: a449234557ef8bd6
 /liwa-web-search-deepseek/use-this-package/when-to-choose-it:
-  en: 0187c8af8d2d98c5
-  zh: 1c9607b3a662bcaa
+  en: 55619f2f6fcce871
+  zh: 69d9e2ad8299cc0b
 /liwa-web-search-deepseek/use-this-package/minimal-configuration:
-  en: 6a3334f2ff47b5e6
-  zh: 030c027a9b340ca9
+  en: 1b3c942bc84e0ad0
+  zh: a5954db93fa836bd
 /liwa-web-search-deepseek/use-this-package/authentication:
-  en: 8cb55dbc603d50af
-  zh: e77f360acd8e16c7
+  en: 6f45deadd09f02dd
+  zh: 4b958a624384f658
 /liwa-web-search-deepseek/use-this-package/what-a-search-returns:
   en: e30442c90365357b
   zh: 9c9e2f1182963a8a
@@ -39,14 +39,14 @@
   en: 9842c69ad3636bb3
   zh: 3cdc3f816cbdd0cb
 /liwa-web-search-deepseek/understand-the-implementation/design-philosophy:
-  en: 1b1760efbf4568c1
-  zh: fca06c959e51ce16
+  en: b8a700550c2f6698
+  zh: 00ebf7e09a49c2da
 /liwa-web-search-deepseek/understand-the-implementation/source-map:
   en: 6488e1c85646339f
   zh: 2b5ca1c6b5939a8c
 /liwa-web-search-deepseek/understand-the-implementation/request-flow:
-  en: d6c3f30b70a5f4b5
-  zh: ab7c5b7d6fc3cae6
+  en: 8711ed3995972e9d
+  zh: 200ba5e58a35924f
 /liwa-web-search-deepseek/further-exploration:
   en: 14cd94e12d95cecd
   zh: 4aa0a1c35df94b39
@@ -69,8 +69,8 @@
   en: 666f5753c99783ab
   zh: b44328e99bcc45c9
 /liwa-web-search-deepseek/model-experience/conversation-tool-result-indirectly/what-the-model-sees:
-  en: 6f48523bcfbc8950
-  zh: a78deb4d4bed0de0
+  en: d5fd90efaacce654
+  zh: 6a1dd006d74098a0
 /liwa-web-search-deepseek/model-experience/conversation-tool-result-indirectly/token-effect:
   en: 01ec43a9b616139d
   zh: 0a5b7c28fde34bcf

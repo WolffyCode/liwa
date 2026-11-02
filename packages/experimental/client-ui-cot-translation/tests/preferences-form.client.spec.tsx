@@ -98,7 +98,7 @@ it('offers both version-free paid routes only when eligible and keeps selection 
   scope.publish({ status: 'ready', value: { provider: 'bing', targetLanguage: 'auto' },
     base: { provider: 'bing', targetLanguage: 'auto' }, user: {}, writable: true, revision: 4 })
   const form = new TranslationPreferencesForm(scope.scope), { hooks, ...actions } = form.inject()
-  const availability = createSnapshotStore<readonly TranslationProvider[]>(['bing', 'google', 'deepseek-account', 'deepseek-official'])
+  const availability = createSnapshotStore<readonly TranslationProvider[]>(['bing', 'google', 'deepseek-official'])
   const refreshProviders = vi.fn(), t: TranslationSettingsProps['t'] = makeTranslate(en)
   const props = { view: 'page' as const, ...actions, useTranslationForm: bindSnapshotSelector(hooks.translationForm),
     useAvailableProviders: bindSnapshotSelector(availability), refreshProviders, t } as TranslationSettingsProps
@@ -106,12 +106,11 @@ it('offers both version-free paid routes only when eligible and keeps selection 
   try {
     expect(refreshProviders).toHaveBeenCalledOnce()
     expect(view.getByLabelText(en.provider)).toHaveProperty('value', 'bing')
-    expect(view.getByRole('option', { name: en.deepseekAccount })).toBeTruthy()
     expect(view.getByRole('option', { name: en.deepseekOfficial })).toBeTruthy()
-    expect(en.deepseekAccount).not.toMatch(/v?4\.1/)
+    expect(en.deepseekOfficial).not.toMatch(/v?4\.1/)
     expect(view.getByText(en.anonymousNotice)).toBeTruthy()
     expect(view.queryByText(en.paidNotice)).toBeNull()
-    fireEvent.change(view.getByLabelText(en.provider), { target: { value: 'deepseek-account' } })
+    fireEvent.change(view.getByLabelText(en.provider), { target: { value: 'deepseek-official' } })
     expect(view.getByText(en.paidNotice)).toBeTruthy()
     expect(en.paidNotice).toContain('Each uncached fragment sends a separate paid')
     expect(en.paidNotice).toContain('Reopening reasoning reuses saved results')
@@ -120,10 +119,8 @@ it('offers both version-free paid routes only when eligible and keeps selection 
     expect(view.queryByText(en.anonymousNotice)).toBeNull()
     expect(scope.mutate).not.toHaveBeenCalled()
     fireEvent.click(view.getByRole('button', { name: en.save }))
-    await vi.waitFor(() => { expect(scope.mutate).toHaveBeenCalledWith([{ op: 'set', path: ['provider'], value: 'deepseek-account' }], 4) })
-    fireEvent.change(view.getByLabelText(en.provider), { target: { value: 'deepseek-official' } })
+    await vi.waitFor(() => { expect(scope.mutate).toHaveBeenCalledWith([{ op: 'set', path: ['provider'], value: 'deepseek-official' }], 4) })
     expect(hooks.translationForm.getSnapshot().invalid).toBe(false)
-    expect(view.getByText(en.paidNotice)).toBeTruthy()
   } finally { view.unmount(); form.dispose() }
 })
 
@@ -141,7 +138,6 @@ it('keeps an unavailable paid choice disabled and offers repair or an explicit r
     expect(view.getByLabelText(en.provider)).toHaveProperty('value', 'deepseek-official')
     const selected = view.getByRole('option', { name: `${en.deepseekOfficial} — unavailable` })
     expect(selected).toHaveProperty('disabled', true)
-    expect(view.queryByRole('option', { name: en.deepseekAccount })).toBeNull()
     expect(view.getByText(en.providerUnavailable)).toBeTruthy()
     expect(view.getByText(en.paidNotice)).toBeTruthy()
     expect(scope.mutate).not.toHaveBeenCalled()

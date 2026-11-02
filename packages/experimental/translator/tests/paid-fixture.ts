@@ -6,8 +6,6 @@ import SessionStore, { SESSION_FORMAT_VERSION, SessionId, SessionSeq, type Sessi
 import * as JsonlPersistence from '@liwa/session-persistence-jsonl'
 import SqliteSessionQuery from '@liwa/session-query-sqlite'
 import * as Official from '@liwa/llm-deepseek-api-key'
-import * as Account from '@liwa/llm-deepseek-account'
-import type { DeepSeekAccount } from '@liwa/deepseek-account'
 import { createLaunchEnvironmentSnapshot } from '@liwa/launch-environment'
 import { once } from 'node:events'
 import { createServer, type ServerResponse } from 'node:http'
@@ -20,7 +18,6 @@ import Translator, { type Config } from '../src/index.ts'
 export interface NativeRequest {
   path: string
   body: Record<string, unknown>
-  accountAuth: boolean
   officialAuth: boolean
   audit: readonly SessionEvent[]
 }
@@ -46,15 +43,12 @@ export function sse(events: Record<string, unknown>[]): string {
 export interface FixtureOptions {
   translator?: Partial<Config>
   officialModels?: { id: string; name: string }[]
-  /** Entries of the account `GET /models` listing. */
-  accountModels?: { id: string; name: string }[]
   officialName?: string
   withCredentials?: boolean
   withSession?: boolean
   withSessionQuery?: boolean
   credentialConfigured?: boolean
   ambientConfigured?: boolean
-  signedIn?: boolean
   responseStatus?: number
   reply?: (response: ServerResponse, request: NativeRequest) => void | Promise<void>
 }
@@ -79,12 +73,6 @@ export async function paidFixture(cleanups: Array<() => Promise<void>>, options:
   let auditId = SessionId('paid-translation')
   const server = createServer((request, response) => {
     const work = (async () => {
-      if (request.method === 'GET' && request.url === '/models') {
-        const listed = options.accountModels ?? [{ id: 'deepseek-flash', name: 'Another arbitrary Flash version' }]
-        response.writeHead(200, { 'content-type': 'application/json' })
-        response.end(JSON.stringify({ object: 'list', data: listed.map(model => ({ ...model, api_capabilities: { anthropic_messages: {} } })) }))
-        return
-      }
       const chunks: Buffer[] = []
       for await (const chunk of request) {
         if (!(chunk instanceof Buffer)) throw new Error('Expected HTTP body bytes')
@@ -93,7 +81,7 @@ export async function paidFixture(cleanups: Array<() => Promise<void>>, options:
       const payload: unknown = JSON.parse(Buffer.concat(chunks).toString('utf8'))
       if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) throw new Error('Expected native Messages request object')
       const input: NativeRequest = { path: request.url ?? '', body: payload as Record<string, unknown>,
-        accountAuth: request.headers['x-dsh-auth-token'] !== undefined, officialAuth: request.headers['x-api-key'] !== undefined,
+        officialAuth: request.headers['x-api-key'] !== undefined,
         audit: await readEvents(auditId) }
       requests.push(input)
       response.writeHead(options.responseStatus ?? 200, { 'content-type': 'text/event-stream' })
@@ -117,7 +105,7 @@ export async function paidFixture(cleanups: Array<() => Promise<void>>, options:
   const address = server.address()
   if (address === null || typeof address === 'string') throw new Error('Expected allocated loopback listener')
   const baseURL = `http://127.0.0.1:${address.port}/anthropic`
-  let configured = options.credentialConfigured ?? true, signedIn = options.signedIn ?? true
+  let configured = options.credentialConfigured ?? true
   const configPath = join(root, 'cordis.yml'), storedRoot = join(root, 'sessions')
   let translator = options.translator ?? {}, withNativeOwners = true
   const rows = () => [
@@ -127,7 +115,6 @@ export async function paidFixture(cleanups: Array<() => Promise<void>>, options:
     { id: 'official-custom-id', name: options.officialName ?? '@liwa/llm-deepseek-api-key', disabled: !withNativeOwners, config: {
       baseURL, apiKeyEnv: 'PAID_TRANSLATION_FIXTURE_KEY', models: options.officialModels ?? [{ id: 'deepseek-flash', name: 'Flash version-independent name' }],
     } },
-    { id: 'account-custom-id', name: '@liwa/llm-deepseek-account', disabled: !withNativeOwners, config: { baseURL } },
     { id: 'translator', name: '@liwa/experimental-translator', config: translator },
     ...options.withSessionQuery === true ? [
       { id: 'query', name: '@liwa/session-query-sqlite', config: { path: join(root, 'query.sqlite'), openAt: 'never' } },
@@ -137,8 +124,7 @@ export async function paidFixture(cleanups: Array<() => Promise<void>>, options:
   const modules = new Map<string, unknown>([
     ['@liwa/llm', LlmRuntime], ['@liwa/session', SessionStore],
     ['@liwa/session-persistence-jsonl', JsonlPersistence], ['@liwa/session-query-sqlite', SqliteSessionQuery],
-    [options.officialName ?? '@liwa/llm-deepseek-api-key', Official],
-    ['@liwa/llm-deepseek-account', Account], ['@liwa/experimental-translator', Translator],
+    [options.officialName ?? '@liwa/llm-deepseek-api-key', Official], ['@liwa/experimental-translator', Translator],
   ])
   const start = () => boot('paid-translator-composition', configPath, [], (host) => {
     const sourceModules: ModuleLoaderV2 = {
@@ -159,9 +145,6 @@ export async function paidFixture(cleanups: Array<() => Promise<void>>, options:
       describe: async () => ({ configured, writable: true }),
       resolve: async () => configured ? { value: 'fixture-native-key', source: 'fixture' } : undefined,
     } as never)
-    host.provide('deepseekAccount', {
-      resolveToken: async (_baseURL: string): Promise<string | undefined> => signedIn ? 'fixture-account-token' : undefined,
-    } as DeepSeekAccount)
   })
   let ctx = await start(), session: Session | undefined
   cleanups.push(async () => { await ctx.fiber.dispose() })
@@ -175,7 +158,7 @@ export async function paidFixture(cleanups: Array<() => Promise<void>>, options:
     await ctx.sessionPersistence.create(session.header)
     await ctx.sessions.flush(session)
   }
-  const translate = (provider: 'deepseek-account' | 'deepseek-official', text = 'Original paragraph', signal?: AbortSignal) =>
+  const translate = (provider: 'deepseek-official', text = 'Original paragraph', signal?: AbortSignal) =>
     ctx.translator.translate(ctx.translator.resolve({ text, targetLanguage: 'zh', provider,
       ...session === undefined ? {} : { sessionId: session.id } }), signal)
   return { get ctx() { return ctx }, get session() { return session }, root, requests, errors, translate, readEvents,
@@ -209,5 +192,5 @@ export async function paidFixture(cleanups: Array<() => Promise<void>>, options:
       await writeFile(configPath, JSON.stringify(rows()))
       ctx = await start()
     },
-    setConfigured(value: boolean) { configured = value }, setSignedIn(value: boolean) { signedIn = value } }
+    setConfigured(value: boolean) { configured = value } }
 }

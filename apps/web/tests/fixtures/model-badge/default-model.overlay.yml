@@ -1,0 +1,5 @@
+# The replay catalog's official route starts as the selected default.
+- id: agent-default-model
+  config:
+    provider: deepseek-official
+    model: deepseek-flash

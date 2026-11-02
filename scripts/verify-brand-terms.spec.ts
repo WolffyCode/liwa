@@ -23,16 +23,15 @@ describe('brand terminology policy', () => {
     const lines = [
       'DEEPSEEK_API_KEY=sk-example DEEPSEEK_BASE_URL=https://api.deepseek.com',
       'import { createConverter } from \'@deepseek-ai/libreoffice-kit\'',
-      `open https://platform.deepseek.com/${abbreviation}/authorize`,
       'The handshake and the spreadsheet stay ordinary words.',
     ]
     expect(findBrandTermViolations('packages/example/src/provider.ts', lines.join('\n'))).toEqual([])
   })
 
   it('limits file-scoped exceptions to their files', () => {
-    const line = `contextBridge.exposeInMainWorld('${abbreviation}', bridge)`
-    expect(findBrandTermViolations('apps/desktop/src/preload-platform-account.ts', line)).toEqual([])
-    expect(findBrandTermViolations('packages/example/src/bridge.ts', line)).toHaveLength(1)
+    const line = `const SCHEMA_DOMAIN = '${abbreviation}-persistence-schema-v'`
+    expect(findBrandTermViolations('scripts/persistence-schema-model.ts', line)).toEqual([])
+    expect(findBrandTermViolations('packages/example/src/digest.ts', line)).toHaveLength(1)
   })
 
   it('skips whole files registered as historical records', () => {

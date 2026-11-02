@@ -14,7 +14,6 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 
 | Package | Config | Description |
 |---|---|---|
-| `@liwa/api-account-controller` | no | Expose safe account operations over authenticated Remote |
 | `@liwa/api-gateway` | yes | Typert Remote Host dispatcher and Client API endpoint |
 | `@liwa/api-job-controller` | yes | Job Remote observation stream and the reference-counted client job-output service |
 | `@liwa/api-remote-access` | no | Method-level Remote access control for non-owner Peers and the per-Peer access snapshot |
@@ -96,7 +95,6 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@liwa/client-ui-secret-mask` | no | Web display masking for recognized credentials in sent user text |
 | `@liwa/client-ui-session` | no | Session Controller adapter for React and session-scoped slots |
 | `@liwa/client-ui-settings` | no | Settings domain base plugin: shared configuration forms and the canonical settings slot-type contract |
-| `@liwa/client-ui-settings-account` | yes | Manage DeepSeek login and open Platform billing pages |
 | `@liwa/client-ui-settings-agent-loop` | no | Settings page of the agent loop on the liwa web client's Plugins page: the parallel tool-call cap of the agent-loop namespace |
 | `@liwa/client-ui-settings-general` | no | Settings ownerless-copy and product onboarding plugin: the General section, shell trigger/header chrome content, settings dictionaries, and the versioned welcome notice |
 | `@liwa/client-ui-settings-models` | yes | Models settings and shared product-onboarding dialogs over existing settings and credential joins |
@@ -168,7 +166,6 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 |---|---|---|
 | `@liwa/authorization` | no | Authorization seam (ctx.authorization): plugin-owned flows that obtain a credential through a conversation with the human |
 | `@liwa/credentials-local` | yes | File-backed credentials provider ($LIWA_HOME/.env under the live process environment) for Liwa |
-| `@liwa/deepseek-account-platform` | yes | Authorize DeepSeek accounts through browser PKCE |
 
 ## deliverables
 
@@ -314,7 +311,6 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 |---|---|---|
 | `@liwa/deepseek-llm-api-extensions` | no | Additive request-field registry for the official DeepSeek LLM API adapter |
 | `@liwa/llm` | no | Provider-neutral LLM service interface for Liwa |
-| `@liwa/llm-deepseek-account` | yes | DeepSeek account provider authentication and discovery |
 | `@liwa/llm-deepseek-api-key` | yes | DeepSeek api-key provider authentication and discovery |
 | `@liwa/llm-pi-ai` | yes | pi-ai-backed DeepSeek adapter for the Liwa LLM seam (design-verification twin of liwa-llm-deepseek) |
 | `@liwa/llm-retry` | yes | Provider-routed LLM request retry policy for Liwa |

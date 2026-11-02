@@ -1,6 +1,5 @@
 /** Operations available to the isolated native welcome renderer. */
 
-import type { AccountView, SignInAttemptId } from '@liwa/deepseek-account/types'
 import type { ProductEventMap } from '@liwa/client-product-analytics/types'
 import type { DesktopLocale } from './locale.ts'
 
@@ -10,18 +9,10 @@ export const WELCOME_IPC = {
   analytics: 'liwa-welcome:analytics',
   analyticsEnabled: 'liwa-welcome:analytics-enabled',
   skip: 'liwa-welcome:skip',
-  start: 'liwa-welcome:start',
-  cancel: 'liwa-welcome:cancel',
-  copyLink: 'liwa-welcome:copy-link',
-  state: 'liwa-welcome:state',
-  takeNotice: 'liwa-welcome:take-notice',
 } as const
 
 /** Credential writes return a safe outcome without exposing Host diagnostics. */
 export type WelcomeSaveResult = { readonly ok: true } | { readonly ok: false }
-
-/** One-time notification retained by the main process until Welcome receives it. */
-export type WelcomeNotice = 'session-expired'
 
 type WelcomeEventName = 'auth_page_view' | 'auth_page_click' | 'api_key_save_click'
 
@@ -31,14 +22,6 @@ export interface WelcomeOperations {
   analytics?<K extends WelcomeEventName>(eventName: K, attributes: ProductEventMap[K]): Promise<void>
   /** @returns the Host's current effective collection policy. */
   analyticsEnabled(): Promise<boolean>
-  /** @returns the pending notification, clearing it before another renderer can receive it. */
-  takeNotice(): Promise<WelcomeNotice | undefined>
-  /** @returns account state after starting a login attempt. */
-  startSignIn(): Promise<AccountView>
-  /** @param id - attempt to cancel. @returns the settled state. */
-  cancelSignIn(id: SignInAttemptId): Promise<AccountView>
-  /** @param id - current waiting attempt whose authorization URL is copied to the system clipboard. */
-  copySignInLink(id: SignInAttemptId): Promise<void>
 
   /**
    * Store the official provider's key before entering the workspace.
@@ -53,23 +36,5 @@ export interface WelcomeOperations {
   skip(): Promise<void>
 }
 
-/** The renderer receives localized copy, login operations, and safe account snapshots. */
-export type WelcomeApi = DesktopLocale & WelcomeOperations & {
-  /** @param listener - safe account snapshot recipient. @returns subscription disposer. */
-  onAccountState(listener: (state: AccountView) => void): () => void
-}
-
-/** Authentication facts supplied at cold start or after a completed sign-out. */
-export interface WelcomeAuthentication {
-  readonly loggedIn: boolean
-  readonly hasApiKey: boolean
-}
-
-/**
- * Decide whether a startup or sign-out requires the welcome entry.
- * @param authentication - current account and independently stored API-key facts.
- * @returns true only when neither authentication route is configured.
- */
-export function needsWelcome(authentication: WelcomeAuthentication): boolean {
-  return !authentication.loggedIn && !authentication.hasApiKey
-}
+/** The renderer receives localized copy and write-only credential operations. */
+export type WelcomeApi = DesktopLocale & WelcomeOperations

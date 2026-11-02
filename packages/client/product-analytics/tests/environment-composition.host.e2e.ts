@@ -36,7 +36,5 @@ it('adds real system metadata to the existing event through Loader and OTLP', as
   }
   if (platform() === 'win32') expect(fields.os_version_full?.stringValue).toMatch(/^\d+\.\d+\.\d+\.\d+$/)
   expect(fields.app_version).toEqual({ stringValue: 'synthetic-release' })
-  expect(fields).not.toHaveProperty('device_id')
-  expect(fields).not.toHaveProperty('user_id')
   expect(JSON.stringify(result.captures)).not.toMatch(/serial_number|hostname|device_uuid|environment_schema_version/)
 }, LOADER_SMOKE_TEST_TIMEOUT_MS)

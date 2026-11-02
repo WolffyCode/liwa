@@ -31,7 +31,6 @@
   "peerDependencies": {
     "@liwa/agent": "workspace:*",
     "@liwa/credentials": "workspace:*",
-    "@liwa/deepseek-account": "workspace:*",
     "@liwa/launch-environment": "workspace:*",
     "@liwa/session": "workspace:*",
     "@liwa/llm": "workspace:*",
@@ -45,7 +44,6 @@
     "@liwa/agent": "workspace:*",
     "@liwa/credentials": "workspace:*",
     "@liwa/credentials-local": "workspace:*",
-    "@liwa/deepseek-account": "workspace:*",
     "@liwa/launch-environment": "workspace:*",
     "@liwa/session": "workspace:*",
     "@liwa/session-projection": "workspace:*",
@@ -53,10 +51,5 @@
     "@liwa/web": "workspace:*",
     "@liwa/cordis": "workspace:~",
     "@liwa/http-proxy": "workspace:*"
-  },
-  "peerDependenciesMeta": {
-    "@liwa/deepseek-account": {
-      "optional": true
-    }
   }
 }

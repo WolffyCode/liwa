@@ -334,7 +334,7 @@ it('uses current configuration and stops following a disabled listing', async ()
   expect(loads).toHaveLength(1)
 })
 
-it('removes a signed-out listing and discovers a replacement credential automatically', async () => {
+it('removes a listing whose credential disappears and discovers a replacement credential automatically', async () => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
   const { catalog, loads, changed, flush, advance, credential } = harness()
   const first = catalog.view()

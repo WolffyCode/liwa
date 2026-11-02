@@ -48,7 +48,6 @@
   },
   "devDependencies": {
     "@liwa/llm-deepseek-api-key": "workspace:*",
-    "@liwa/llm-deepseek-account": "workspace:*",
     "@liwa/cordis": "workspace:~",
     "@liwa/agent": "workspace:*",
     "@liwa/atomic-write": "workspace:*",
@@ -75,7 +74,6 @@
     "@liwa/tools": "workspace:*",
     "@liwa/credentials-local": "workspace:*",
     "@liwa/settings": "workspace:*",
-    "@liwa/deepseek-account": "workspace:*",
     "@types/semver": "^7.8.0"
   },
   "peerDependenciesMeta": {

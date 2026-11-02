@@ -2,11 +2,9 @@
  * Register the DeepSeek Search and Fetch APIs in `ctx.web` as `deepseek-search-api`
  * and `deepseek-fetch-api`. Each operation is one direct API request without an
  * auxiliary model request; both providers read this section's credential and API
- * base. `web.searchProvider` and `web.fetchProvider` select them. A Session on the
- * DeepSeek account route authenticates with the account token when the account
- * service allows the endpoint; every other request uses the configured key. Both
- * providers report themselves not ready for a model request whose operation would
- * have no credential.
+ * base. `web.searchProvider` and `web.fetchProvider` select them. Every request
+ * authenticates with the configured API key; both providers report themselves not
+ * ready while no key is configured.
  * @module @liwa/web-deepseek-api
  */
 import type { Context, Volatile } from '@liwa/cordis'
@@ -68,16 +66,14 @@ function latestUserQuestion(session: Session | undefined): string | undefined {
 
 /**
  * Register the Search API and Fetch API providers over one live settings section. Each provider's
- * `ready()` answers whether an operation for a model request on the given route would have a
- * credential to send.
+ * `ready()` answers whether an operation would have an API key to send.
  * @param ctx - plugin context owning both registrations.
  * @param config - live settings, read once per operation.
  */
 export function apply(ctx: Context, config: Config): void {
   const keyConfig = () => ({ apiKey: config.apiKey.get(), apiKeyEnv: config.apiKeyEnv.get() })
   const auth = () => deepSeekWebAuth(ctx, keyConfig())
-  const ready = (llmProvider: string | undefined) =>
-    deepSeekWebCredentialReady(ctx, { ...keyConfig(), baseURL: config.baseURL.get() }, llmProvider)
+  const ready = () => deepSeekWebCredentialReady(ctx, keyConfig())
   const searchApi = new DeepSeekSearchApiProvider(() => ({
     ...auth(),
     baseURL: config.baseURL.get(),

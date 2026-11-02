@@ -4,8 +4,8 @@ import type { SessionId, SessionSeq } from '@liwa/session/types'
 /** Anonymous browser endpoint selected for one translation. */
 export type AnonymousTranslationProvider = 'google' | 'bing'
 
-/** Explicit native DeepSeek credential route selected for paid translation. */
-export type PaidTranslationProvider = 'deepseek-account' | 'deepseek-official'
+/** Explicit native DeepSeek API-key route selected for paid translation. */
+export type PaidTranslationProvider = 'deepseek-official'
 
 /** Explicit anonymous endpoint or native paid model route. */
 export type TranslationProvider = AnonymousTranslationProvider | PaidTranslationProvider

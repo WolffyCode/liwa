@@ -384,17 +384,3 @@ describe('DeepSeekFilesClient', () => {
     await expect(client.delete(DeepSeekFileId('file-api-one'))).rejects.toMatchObject({ code: 'INVALID_RESPONSE' })
   })
 })
-
-it('authenticates Files with the raw Liwa token', async () => {
-  const client = new DeepSeekFilesClient({
-    baseURL: 'https://api.deepseek.com', headers: { 'x-dsh-auth-token': 'account-token' },
-    fetch: (_url, init) => {
-      const headers = new Headers(init?.headers)
-      expect(headers.get('x-dsh-auth-token')).toBe('account-token')
-      expect(headers.has('authorization')).toBe(false)
-      expect(headers.has('x-api-key')).toBe(false)
-      return Promise.resolve(new Response(JSON.stringify({ object: 'list', data: [], has_more: false }), { status: 200 }))
-    },
-  })
-  await client.list()
-})

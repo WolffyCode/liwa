@@ -59,8 +59,8 @@ it('drops disabled events and has no backfill when enabled', async () => {
   b.ctx.productAnalytics.track('auth_page_view', {})
   expect(b.report).not.toHaveBeenCalled()
   await b.policy(true)
-  b.ctx.productAnalytics.track('auth_page_click', { button_name: 'sign_in' })
-  expect(b.report).toHaveBeenCalledExactlyOnceWith({ eventName: 'auth_page_click', timestamp: expect.any(Number) as number, attributes: { button_name: 'sign_in' } })
+  b.ctx.productAnalytics.track('auth_page_click', { button_name: 'api-key' })
+  expect(b.report).toHaveBeenCalledExactlyOnceWith({ eventName: 'auth_page_click', timestamp: expect.any(Number) as number, attributes: { button_name: 'api-key' } })
 })
 it('does not retry or propagate transport rejection', async () => {
   vi.stubGlobal('liwaDesktop', {})

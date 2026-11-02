@@ -7,7 +7,7 @@ import { deadline } from '@liwa/timeout'
 import { LISTING_CLIENT, LISTING_TIMEOUT, MAX_BADGE_TEXT_LENGTH, parseModelListing, requestModelListing } from '../src/listing.ts'
 import type { ListedCapabilities } from '../src/listing.ts'
 
-/** The listing the service returned to an account token on 2026-09-24. */
+/** The listing the service returned on 2026-09-24. */
 const LISTING = {
   object: 'list',
   data: [
@@ -215,11 +215,11 @@ describe('requestModelListing', () => {
       headers = request.headers
       response.end(JSON.stringify(LISTING))
     })
-    const listing = await requestModelListing(url, { 'x-dsh-auth-token': 'fixture-token' }, AbortSignal.timeout(5_000))
+    const listing = await requestModelListing(url, { 'x-api-key': 'fixture-key' }, AbortSignal.timeout(5_000))
     expect(listing.entries.map(entry => entry.id)).toEqual(['deepseek-flash', 'deepseek-v4-pro'])
     expect(headers).toMatchObject({
       'accept': 'application/json',
-      'x-dsh-auth-token': 'fixture-token',
+      'x-api-key': 'fixture-key',
       'user-agent': userAgent(),
     })
   })

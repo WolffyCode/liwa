@@ -511,16 +511,14 @@ describe('package payload constraints', () => {
     ])
   })
 
-  it.each(['ui-chat', 'ui-settings-account'])(
-    'accepts the published package assets for %s and rejects their omission', (name) => {
-      const dir = `packages/client/${name}`
-      const manifest = JSON.parse(readFileSync(new URL(`../${dir}/package.json`, import.meta.url), 'utf8')) as WorkspaceManifest['manifest']
-      expect(checkWorkspaceManifest({ dir, manifest })).toEqual([])
-      expect(checkWorkspaceManifest({ dir, manifest: {
-        ...manifest, files: manifest.files!.filter(file => file !== 'lib/assets'),
-      } })).toEqual([expect.stringContaining('package.json files must be')])
-    },
-  )
+  it('accepts the published package assets for ui-chat and rejects their omission', () => {
+    const dir = 'packages/client/ui-chat'
+    const manifest = JSON.parse(readFileSync(new URL(`../${dir}/package.json`, import.meta.url), 'utf8')) as WorkspaceManifest['manifest']
+    expect(checkWorkspaceManifest({ dir, manifest })).toEqual([])
+    expect(checkWorkspaceManifest({ dir, manifest: {
+      ...manifest, files: manifest.files!.filter(file => file !== 'lib/assets'),
+    } })).toEqual([expect.stringContaining('package.json files must be')])
+  })
 })
 
 it('publishes CLI runtime declarations and rejects a payload that omits them', () => {

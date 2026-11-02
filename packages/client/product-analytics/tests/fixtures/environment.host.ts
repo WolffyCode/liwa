@@ -25,9 +25,7 @@ try {
   const address = receiver.address()
   if (address === null || typeof address === 'string') throw new Error('environment collector has no port')
   process.env.LIWA_PRODUCT_TELEMETRY_TEST_ENDPOINT = `http://127.0.0.1:${address.port}/logs`
-  const ctx = await bootProductionProfile({ binName: 'environment-test', profile: 'headless', overlayPaths: [overlay],
-    prepare: (root) => { root.provide('deepseekAccount', { getDeviceIdentity: async () => undefined } as never) },
-  })
+  const ctx = await bootProductionProfile({ binName: 'environment-test', profile: 'headless', overlayPaths: [overlay] })
   try {
     const analytics = ctx.get('productAnalytics')
     if (analytics === undefined) throw new Error('environment analytics did not mount')

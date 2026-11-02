@@ -1,6 +1,5 @@
 import { parsePluginOperationRecord } from '@liwa/plugin-manager/diagnostic'
 import type { DesktopHostProcess } from '../src/host-process.ts'
-import type { AccountView } from '@liwa/deepseek-account/types'
 import { WINDOWS_TITLEBAR_HEIGHT } from '../src/windows-layout.ts'
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import type { IpcMainInvokeEvent } from 'electron'
@@ -51,12 +50,6 @@ const harness = await vi.hoisted(async () => {
   let dialogShown = deferred()
   let quitCompleted = deferred()
   let closeWindowsOnQuit = false
-  let platformDisposeDeferred: ReturnType<typeof deferred> | undefined
-  // The native Platform view owns persistent browser storage; Desktop startup tests replace it so
-  // each quit can control when that cleanup settles.
-  const platformDispose = vi.fn(() => platformDisposeDeferred?.promise ?? Promise.resolve())
-  let platformCloseDeferred: ReturnType<typeof deferred> | undefined
-  const platformCloseAndWait = vi.fn(() => platformCloseDeferred?.promise ?? Promise.resolve())
   const readLoginShell = async (base: NodeJS.ProcessEnv) => ({
     environment: { ...base, LIWA_TEST_LOGIN_SHELL: 'login' }, failures: [{ shell: '/account/shell', reason: 'timeout' }],
   })
@@ -155,8 +148,7 @@ const harness = await vi.hoisted(async () => {
       readonly inspectPort?: number, readonly environment?: NodeJS.ProcessEnv, readonly onFailure?: (error: Error) => void,
       readonly primaryRuntime?: string,
       readonly packageManager?: { pnpm: string; nodeBin: string },
-      readonly onPlatformSession?: ConstructorParameters<typeof DesktopHostProcess>[8],
-      readonly onPluginOperation?: ConstructorParameters<typeof DesktopHostProcess>[9],
+      readonly onPluginOperation?: ConstructorParameters<typeof DesktopHostProcess>[8],
     ) { hosts.push(this) }
   }
   const app = Object.assign(new EventEmitter(), {
@@ -184,9 +176,7 @@ const harness = await vi.hoisted(async () => {
       }
     }),
   })
-  let accountListener: ((state: AccountView) => void) | undefined
   let analyticsEnabled = true
-  let analyticsEnabledListener: ((enabled: boolean) => void) | undefined
   const analytics = vi.fn(async (_event: unknown) => {})
   const nativeTheme = { themeSource: 'system', shouldUseDarkColors: false }
   const trays: FakeTray[] = []
@@ -203,20 +193,9 @@ const harness = await vi.hoisted(async () => {
     windows, views, hosts, handlers, app, FakeWindow, FakeView, FakeHost, powerMonitor, nativeTheme, analytics,
     trays, FakeTray, backgroundNotice, shellDialog,
     menu, popup, socketHeaders: vi.fn(), loginShell, readLoginShell,
-    platformDispose,
-    platformCloseAndWait,
 
     get analyticsEnabled() { return analyticsEnabled },
-    set analyticsEnabled(value: boolean) { analyticsEnabled = value; analyticsEnabledListener?.(value) },
-    watchAccount: (
-      listener: (state: AccountView) => void, _failed: () => void, _expired: () => void,
-      onAnalyticsEnabledChanged?: (enabled: boolean) => void,
-    ) => {
-      analyticsEnabledListener = onAnalyticsEnabledChanged
-      accountListener = listener
-      return () => { accountListener = undefined; analyticsEnabledListener = undefined }
-    },
-    publishAccount(state: AccountView) { accountListener?.(state) },
+    set analyticsEnabled(value: boolean) { analyticsEnabled = value },
     ipcOn: vi.fn<(channel: string, listener: (event: { sender: unknown; senderFrame: unknown }, ...args: unknown[]) => void) => void>(),
     dialog: { showOpenDialog: vi.fn(), showErrorBox: vi.fn(), showMessageBox: vi.fn() },
     openExternal: vi.fn(async () => {}),
@@ -231,13 +210,10 @@ const harness = await vi.hoisted(async () => {
     get dialogShown() { return dialogShown }, get quitCompleted() { return quitCompleted },
     nextNavigation() { navigated = deferred(); return navigated.promise },
     nextHostStart() { hostStarted = deferred(); return hostStarted.promise },
-    deferPlatformDispose() { platformDisposeDeferred = deferred(); return platformDisposeDeferred },
-    deferPlatformClose() { platformCloseDeferred = deferred(); return platformCloseDeferred },
     get pluginsEnabled() { return pluginsEnabled },
     set pluginsEnabled(value: boolean) { pluginsEnabled = value },
     set closeWindowsOnQuit(value: boolean) { closeWindowsOnQuit = value },
     reset() {
-      accountListener = undefined
       windows.length = 0
       views.length = 0; hosts.length = 0; handlers.clear(); app.removeAllListeners()
       trays.length = 0
@@ -254,8 +230,6 @@ const harness = await vi.hoisted(async () => {
       navigated = deferred(); dialogShown = deferred(); quitCompleted = deferred()
       fileDrag.install.mockReset()
       fileDrag.dispose.mockReset().mockResolvedValue(undefined)
-      platformDisposeDeferred = undefined
-      platformCloseDeferred = undefined
     },
   }
 })
@@ -317,17 +291,6 @@ vi.mock('../src/update-dialog.ts', () => ({ DesktopUpdateDialog: class {
   readonly focus = harness.shellDialog.focus
   dispose() {}
 } }))
-vi.mock('../src/platform-view.ts', async importOriginal => ({
-  ...await importOriginal<typeof import('../src/platform-view.ts')>(),
-  DesktopPlatformView: class {
-    notifyLocaleChanged() {}
-    setSession() {}
-    setBounds() {}
-    close() {}
-    closeAndWait(): Promise<void> { return harness.platformCloseAndWait() }
-    dispose(): Promise<void> { return harness.platformDispose() }
-  },
-}))
 vi.mock('../src/welcome-backend.ts', () => ({
   connectDesktopWelcome: async () => ({
     analyticsEnabled: async () => harness.analyticsEnabled,
@@ -335,7 +298,6 @@ vi.mock('../src/welcome-backend.ts', () => ({
     readLocalePreference: async () => null,
     read: async (): Promise<unknown> => (await harness.hosts.at(-1)!.fetch()).json() as Promise<unknown>,
     save: async () => ({ ok: true }),
-    account: { watch: harness.watchAccount, state: async () => ({ status: 'signed-out', attempt: null }) },
   }),
 }))
 
@@ -521,17 +483,17 @@ describe('desktop main startup', () => {
   it('accepts product IPC only from the current application top frame in the owned main window', async () => {
     await readyBackend()
     const sender = harness.windows[0]!.webContents
-    for (const channel of [DESKTOP_IPC.deviceInfo]) {
+    for (const channel of [DESKTOP_IPC.browserRelease]) {
       const handler = harness.handlers.get(channel)!
-      expect(() => handler({ sender, senderFrame: sender.mainFrame })).not.toThrow()
+      await expect(handler({ sender, senderFrame: sender.mainFrame }, 'unknown-lease')).resolves.toBeUndefined()
       for (const event of [
         { sender: {}, senderFrame: sender.mainFrame },
         { sender, senderFrame: { url: sender.mainFrame.url } },
         { sender, senderFrame: { url: 'http://127.0.0.1:40000/' } },
-      ]) expect(() => handler(event)).toThrow('unowned renderer')
+      ]) expect(() => handler(event, 'unknown-lease')).toThrow('unowned renderer')
       const original = sender.mainFrame.url
       sender.mainFrame.url = 'http://127.0.0.1:40000/'
-      expect(() => handler({ sender, senderFrame: sender.mainFrame })).toThrow('unowned renderer')
+      expect(() => handler({ sender, senderFrame: sender.mainFrame }, 'unknown-lease')).toThrow('unowned renderer')
       sender.mainFrame.url = original
     }
   })
@@ -801,39 +763,6 @@ describe('desktop main startup', () => {
     expect(callback).toHaveBeenLastCalledWith({})
     handler({ ...details, url: `${socketProtocol === 'wss:' ? 'ws:' : 'wss:'}//127.0.0.1:3080/api/remote.mux` }, callback)
     expect(callback).toHaveBeenLastCalledWith({})
-  })
-
-  it('shares login key discovery with onboarding and rejects foreign renderers', async () => {
-    await readyBackend()
-    const window = harness.windows[0]!
-    const handler = harness.handlers.get(DESKTOP_IPC.onboardingApiKey)!
-    const event = { sender: window.webContents, senderFrame: window.webContents.mainFrame }
-    await vi.waitFor(async () => { expect(await handler(event)).toBe(true) })
-    harness.hosts.at(-1)!.fetch.mockResolvedValueOnce(Response.json({ hasApiKey: false }))
-    await expect(handler(event)).resolves.toBe(false)
-    await expect(handler({ ...event, sender: {} })).rejects.toThrow()
-  })
-
-  it('enlarges only an active onboarding window and keeps its size after completion', async () => {
-    await import('../src/main.ts')
-    await harness.preparing.promise
-    const window = harness.windows[0]!
-    const listener = harness.ipcOn.mock.calls.find(([channel]) => channel === DESKTOP_IPC.onboardingActive)![1]
-    const event = { sender: window.webContents, senderFrame: window.webContents.mainFrame }
-    expect(window.setMinimumSize).not.toHaveBeenCalled()
-    listener({ ...event, sender: {} }, true)
-    listener(event, 'true')
-    expect(window.setMinimumSize).not.toHaveBeenCalled()
-    listener(event, true)
-    expect(window.setMinimumSize).toHaveBeenLastCalledWith(960, 600)
-    expect(window.setSize).toHaveBeenLastCalledWith(960, 700)
-    window.setSize.mockClear()
-    window.getBounds.mockReturnValue({ x: 0, y: 0, width: 1200, height: 800 })
-    listener(event, true)
-    expect(window.setSize).not.toHaveBeenCalled()
-    listener(event, false)
-    expect(window.setMinimumSize).toHaveBeenLastCalledWith(520, 600)
-    expect(window.setSize).not.toHaveBeenCalled()
   })
 
   it('registers the window-owned directory picker during startup and rejects foreign callers', async () => {
@@ -1129,33 +1058,6 @@ describe('desktop main startup', () => {
     await harness.quitCompleted.promise
   })
 
-  it('waits for Platform view storage cleanup before an ordinary quit completes', async () => {
-    const host = await readyBackend()
-    const disposal = harness.deferPlatformDispose()
-    harness.app.quit()
-    await host.stopping.promise
-    expect(harness.platformDispose).toHaveBeenCalledOnce()
-    host.exited.resolve()
-    expect(harness.app.quit).toHaveBeenCalledOnce()
-    disposal.resolve()
-    await harness.quitCompleted.promise
-    expect(harness.app.quit).toHaveBeenCalledTimes(2)
-  })
-
-  it('reports a Platform cleanup failure without ending the Host shutdown early', async () => {
-    const host = await readyBackend()
-    const disposal = harness.deferPlatformDispose()
-    const failure = new Error('platform storage cleanup failed')
-    harness.app.quit()
-    await host.stopping.promise
-    disposal.reject(failure)
-    await vi.waitFor(() => { expect(console.error).toHaveBeenCalledWith(failure) })
-    expect(harness.app.quit).toHaveBeenCalledOnce()
-    host.exited.resolve()
-    await harness.quitCompleted.promise
-    expect(harness.app.quit).toHaveBeenCalledTimes(2)
-  })
-
   it('reports file cleanup failure without ending Host shutdown early', async () => {
     const host = await readyBackend()
     const failure = new Error('image cleanup failed')
@@ -1334,7 +1236,7 @@ describe('desktop main startup', () => {
   })
 
   it.each([{ rejectCleanup: false, stuck: false }, { rejectCleanup: true, stuck: false },
-    { rejectCleanup: true, stuck: true }])('waits for the diagnostic Worker (Platform cleanup rejects=$rejectCleanup, stuck=$stuck)', async ({ rejectCleanup, stuck }) => {
+    { rejectCleanup: true, stuck: true }])('waits for the diagnostic Worker (file cleanup rejects=$rejectCleanup, stuck=$stuck)', async ({ rejectCleanup, stuck }) => {
     let finishReport!: () => void
     let reportSignal: AbortSignal | undefined
     let workerExited = false
@@ -1345,9 +1247,10 @@ describe('desktop main startup', () => {
       reportSignal = signal
       return report
     })
-    const failure = new Error('Platform storage cleanup failed')
+    const failure = new Error('file cleanup failed')
     const host = await readyBackend()
-    const cleanup = harness.deferPlatformDispose()
+    const cleanup = Promise.withResolvers<undefined>()
+    fileDrag.dispose.mockReturnValueOnce(cleanup.promise)
     let quitCompleted = false
     void harness.quitCompleted.promise.then(() => { quitCompleted = true })
     try {
@@ -1359,11 +1262,11 @@ describe('desktop main startup', () => {
       window.emit('session-end', { reasons: ['shutdown'] })
       harness.app.quit()
       await vi.advanceTimersByTimeAsync(0)
-      expect(harness.platformDispose).toHaveBeenCalledOnce()
+      expect(fileDrag.dispose).toHaveBeenCalledOnce()
       expect(reportSignal?.aborted).toBe(true)
       expect(quitCompleted).toBe(false)
       if (rejectCleanup) cleanup.reject(failure)
-      else cleanup.resolve()
+      else cleanup.resolve(undefined)
       await vi.advanceTimersByTimeAsync(0)
       if (rejectCleanup) expect(console.error).toHaveBeenCalledWith(failure)
       expect(workerExited).toBe(false)
@@ -1380,7 +1283,7 @@ describe('desktop main startup', () => {
       }
       expect(quitCompleted).toBe(true)
     } finally {
-      cleanup.resolve()
+      cleanup.resolve(undefined)
       finishReport()
       host.exited.resolve()
       await vi.advanceTimersByTimeAsync(0)
@@ -1569,42 +1472,6 @@ describe('desktop main startup', () => {
     expect(window.urls).toEqual(['liwa-app://app/'])
     expect(harness.windows).toHaveLength(1)
   })
-})
-
-it.each(['failed', 'expired'] as const)('focuses Liwa once when browser authorization becomes %s', async (phase) => {
-  await import('../src/main.ts')
-  await harness.preparing.promise
-  harness.prepared.resolve()
-  await harness.hostStarted.promise
-  harness.hosts[0]!.ready.resolve()
-  await Promise.resolve(invoke(DESKTOP_IPC.boot))
-  const window = harness.windows[0]!
-  window.focus.mockClear()
-  const state: AccountView = {
-    status: 'signed-out', links: { usageUrl: 'https://platform.deepseek.com/usage', topUpUrl: 'https://platform.deepseek.com/top_up' },
-    attempt: { id: 'test-failed-attempt' as NonNullable<AccountView['attempt']>['id'], phase },
-  }
-  harness.publishAccount(state)
-  harness.publishAccount(state)
-  expect(window.focus).toHaveBeenCalledTimes(1)
-})
-
-it.each([['light', false], ['dark', true]] as const)('opens Platform authorization in the effective %s palette', async (theme, shouldUseDarkColors) => {
-  await import('../src/main.ts')
-  await harness.preparing.promise
-  harness.prepared.resolve()
-  await harness.hostStarted.promise
-  harness.hosts[0]!.ready.resolve()
-  await Promise.resolve(invoke(DESKTOP_IPC.boot))
-  harness.nativeTheme.shouldUseDarkColors = shouldUseDarkColors
-  const state: AccountView = {
-    status: 'signed-out', links: { usageUrl: 'https://platform.deepseek.com/usage', topUpUrl: 'https://platform.deepseek.com/top_up' },
-    attempt: { id: 'test-theme-attempt' as NonNullable<AccountView['attempt']>['id'], phase: 'waiting-browser',
-      authorizeUrl: 'https://platform.deepseek.com/dsh/authorize?state=state-1' },
-  }
-  harness.publishAccount(state)
-  harness.publishAccount(state)
-  expect(harness.openExternal).toHaveBeenCalledExactlyOnceWith(`https://platform.deepseek.com/dsh/authorize?state=state-1&theme=${theme}`)
 })
 
 it('disables native product events for a disabled Desktop launch', async () => {

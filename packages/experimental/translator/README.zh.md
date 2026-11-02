@@ -29,7 +29,7 @@ kind: "package-reference"
 
 | 配置 | 默认值 | 含义 |
 |---|---|---|
-| `provider` | `bing` | `google`、`bing`、`deepseek-account` 或 `deepseek-official` |
+| `provider` | `bing` | `google`、`bing` 或 `deepseek-official` |
 | `googleEndpoint` | `https://translate.googleapis.com/translate_a/single` | 兼容 Google 的匿名端点 |
 | `bingEndpoint` | `https://edge.microsoft.com/translate/translatetext` | Microsoft Edge 浏览器翻译端点 |
 | `timeoutMs` | `10000` | 请求及完整响应正文的截止时间 |
@@ -44,7 +44,7 @@ kind: "package-reference"
 
 GUI 等待首次提供方发现完成后才注册翻译控件。如果凭据或模型发现停滞，免登录翻译控件可能最多延迟 `deepseekTimeoutMs` 才出现；服务的发现截止时间会返回已经发现的选项，包括 Bing 和 Google。
 
-非空文本的付费缓存未命中时，要求实际的 `liwa-llm-deepseek-account` 或 `liwa-llm-deepseek-api-key` 提供方、已注册路由、配置好的认证，以及精确的模型 id `deepseek-flash`。显示名称和版本标签不影响选择，`llm-pi-ai` 不符合条件。每个片段都是全新的查询：关闭思考，仅含一条用户文本，没有对话历史、工具或 Agent 轮次。
+非空文本的付费缓存未命中时，要求实际的 `liwa-llm-deepseek-api-key` 提供方、已注册路由、配置好的认证，以及精确的模型 id `deepseek-flash`。显示名称和版本标签不影响选择，`llm-pi-ai` 不符合条件。每个片段都是全新的查询：关闭思考，仅含一条用户文本，没有对话历史、工具或 Agent 轮次。
 
 匿名服务将 `zh`、`zh-CN`、`zh-SG` 和 `zh-Hans` 映射为简体中文，将 `zh-TW`、`zh-HK`、`zh-MO` 和 `zh-Hant` 映射为繁体中文。其他标签原样传给所选提供者。空文本直接返回空字符串，不发送网络请求。
 
@@ -64,7 +64,7 @@ Google 接收使用 `gtx` 客户端的表单 POST 请求；Bing 通过 Microsoft
 
 `TranslationError.code` 区分输入限制、HTTP 失败、响应限制、无效提供方响应、传输失败、缺少持久 Session、存储失败、不可用的原生路由以及服务自身的 `TRANSLATION_TIMEOUT` 超时。未激活 Session 缓存未命中时，在调用任何提供方之前以 `TRANSLATION_SESSION_INACTIVE` 拒绝。诊断不包含提交的文本或提供者错误正文。`translate()` 始终返回 Promise，准入或提供者失败都会使其拒绝。调用者取消和服务卸载保留原始中止原因，包括调用者自身的超时原因。排队期间取消会立即返回拒绝；卸载会取消已接纳的请求，并等待底层存储和网络工作结束。`resolve()` 和 `translate()` 都执行输入限制。
 
-`TRANSLATION_UNAVAILABLE` 拒绝缺失的活跃内置所有者或已注册路由、未配置的凭据、目录中不存在精确的 `deepseek-flash`、派发前所有者、模型配置（官方路由的 `models` 或账号路由的 `modelOverrides`）或官方凭据引用变化、提供方卸载，以及准备后的调用推理强度不是 `off` 的情况。资格与思考检查在派发前执行，请求持久化之后会再次检查资格。原生 `finish` 的原因为 `error` 时映射为 `TRANSLATION_REQUEST_FAILED`；缺失 finish 或其他非 `stop` 原因映射为 `TRANSLATION_INVALID_RESPONSE`。
+`TRANSLATION_UNAVAILABLE` 拒绝缺失的活跃内置所有者或已注册路由、未配置的凭据、目录中不存在精确的 `deepseek-flash`、派发前所有者、模型配置（`models`）或凭据引用变化、提供方卸载，以及准备后的调用推理强度不是 `off` 的情况。资格与思考检查在派发前执行，请求持久化之后会再次检查资格。原生 `finish` 的原因为 `error` 时映射为 `TRANSLATION_REQUEST_FAILED`；缺失 finish 或其他非 `stop` 原因映射为 `TRANSLATION_INVALID_RESPONSE`。
 
 </details>
 

@@ -86,10 +86,6 @@ export const inject = [
 export function apply(ctx: Context): void {
   const quotaNotice = createSnapshotStore<QuotaNoticeState | null>(null)
   let quotaNoticeSeq = 0
-  // Each hold is its own token, so a release can only drop the hold it was
-  // issued for: one arriving after a dismissal or a later acquisition leaves
-  // that newer hold alone.
-  const quotaNoticeHolds = new Set<symbol>()
   const chatSources = new WeakMap<SessionBinding, ObservableSnapshot<ChatSnapshot>>()
   const quotaSubscriptions = new Set<() => Promise<void>>()
   ctx.effect(() => async () => {
@@ -107,9 +103,8 @@ export function apply(ctx: Context): void {
           if (change.kind !== 'append') return
           for (const { event } of change.entries) {
             if (event.type !== 'turn/end' || event.data.reason.kind !== 'error') continue
-            const { code } = event.data.reason.error
-            if (quotaNoticeHolds.size > 0 || (code !== 'QUOTA' && code !== 'ACCOUNT_QUOTA')) continue
-            quotaNotice.set({ code, seq: ++quotaNoticeSeq })
+            if (event.data.reason.error.code !== 'QUOTA') continue
+            quotaNotice.set({ seq: ++quotaNoticeSeq })
           }
         })
         return () => {
@@ -314,21 +309,12 @@ export function apply(ctx: Context): void {
   })
 
   // The quota notice host lives in the frame-wide layer so a notice outlives
-  // the Chat panel that reported it. Its chain child lets a package with a
-  // billing surface claim the one live notice without importing Chat.
+  // the Chat panel that reported it.
   ctx.slots.inject('shell.overlay', () => ctx.slots.register({
     name: 'shell.overlay', id: 'chat.quota-notice', locale: NS,
-    children: { 'shell.quota-notice': { kind: 'chain', scope: 'root' } },
     inject: (): QuotaNoticeInjected => ({
       hooks: { notice: quotaNotice },
-      dismissNotice: () => { quotaNoticeHolds.clear(); quotaNotice.set(null) },
-      keepNoticeOpen: () => {
-        // Nothing live to retain: later failures must still publish.
-        if (quotaNotice.getSnapshot() === null) return () => {}
-        const token = Symbol('ui-chat quota notice hold')
-        quotaNoticeHolds.add(token)
-        return () => { quotaNoticeHolds.delete(token) }
-      },
+      dismissNotice: () => { quotaNotice.set(null) },
     }),
   }, QuotaNoticeHost))
 
