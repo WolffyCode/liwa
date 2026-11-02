@@ -263,7 +263,7 @@ I1、I2、I3 可同时派；I4 与 I5 可同时派；之后 I6、I7 串行。每
 - **需要用户提供的信息**：备份加密的密钥放哪；她用的 Claude、Codex 账号是否和用户自己写代码共用、预留多少额度（overall.md §18.5）。
 - **后续版本前再定**：第二版接家人前，要不要让家人知道主人能看她们的私聊；第四版前，公开发言（B 站、抖音评论）的规则（`product.md` §12 第 14 条）。
 - **改名后留给主人定的**（决策 40）：正式 logo（应用内的"L"标记与图标的"方框 + 圆点"是两套占位）；标语"探索未至之境"；首次启动"预览版说明"的文案（还是 DSH 的宣传语）；对话中"正在运行"的鲸鱼动画；桌面版身份（bundle id、`dsh://`、自动更新地址，等灵鲸自己发桌面版时一起换）；主人在 DSH 官方客户端里的数据（`~/.dsh`）要不要搬进灵鲸。
-- **分发前要处理的打包遗留**（2026-11-02）：两条打包线（Python 运行时、SSH helper）已改为按锁文件部署、产物不带构建机路径（`dsh-base` 提交 `f4a3d12a`、`15ae8e46`）。还剩：Python 运行时包里 320 处构建机路径，来自前端插件构建产物 `lib/client*.js` 的 `//#region` 注释（`packages/client/tsdown.client.ts` 与 inspector 的 devtools 构建把绝对路径写进虚拟模块 id），要在源头改成相对路径，会牵动所有前端包产物；原生组件 `node-addon-require-builtin`（预编译要求 macOS 15）SSH helper 去掉了、Python 运行时还带着（加载失败会自动退回，不崩），两条线该统一；SSH 打包里 `node_modules/@liwa/node-addon-system-*` 的排除规则是相对路径，从未生效；`materializeStagedLinks` 只剩删 `.bin`，可简化。另有小尾巴：`release.yml`、`release-vendor.yml` 的注释与 `node-addon-system.yml` 的路径过滤还指向已删的发布工作流；`update-dialog`、`update-overlay` 两个文件现在承载通用外壳对话框，名不副实；`apps/desktop/package.json` 作者仍写 DeepSeek 公司；`sidebar.toggle.badge` 槽位已空。
+- **分发前要处理的打包遗留**（2026-11-02）：两条打包线（Python 运行时、SSH helper）已改为按锁文件部署、产物不带构建机路径（`dsh-base` 提交 `f4a3d12a`、`15ae8e46`）。还剩：Python 运行时包里 320 处构建机路径，来自前端插件构建产物 `lib/client*.js` 的 `//#region` 注释（`packages/client/tsdown.client.ts` 与 inspector 的 devtools 构建把绝对路径写进虚拟模块 id），要在源头改成相对路径，会牵动所有前端包产物；原生组件 `node-addon-require-builtin`（预编译要求 macOS 15）SSH helper 去掉了、Python 运行时还带着（加载失败会自动退回，不崩），两条线该统一；SSH 打包里 `node_modules/@liwa/node-addon-system-*` 的排除规则是相对路径，从未生效；`materializeStagedLinks` 只剩删 `.bin`，可简化。
 - **需要用户同意的操作**：提交推送 2026-10-29 的代码批次（见"仓库状态"）；06 成长系统草稿的四点（见"现状"）；转写小凌的讲解视频（要装 ffmpeg 和中文语音识别，不做也不影响架构）。提交推送逐次征得同意。
 
 ## 模块阶段的调研起点
