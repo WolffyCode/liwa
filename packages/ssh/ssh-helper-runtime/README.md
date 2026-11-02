@@ -27,7 +27,7 @@ Run the SSH helper on a remote machine without installing Node or npm packages. 
 
 ### Build and installation
 
-This private workspace produces release archives; it is not a profile plugin or an npm CLI. From a checkout with dependencies installed, build the current native platform:
+This private workspace produces local archives; it is not a profile plugin or an npm CLI. From a checkout with dependencies installed, build the current native platform:
 
 ```sh
 pnpm exec tsx scripts/build-exe-for-ssh-helper.ts
@@ -46,13 +46,13 @@ Outputs live under `dist-exe/ssh-helper/`. Each `liwa-ssh-helper-<version>-<plat
 
 Verify the archive checksum, then extract the whole directory into a versioned runtime location outside the project and replaced temporary mounts. Keep the native resources beside the executable. The installation can be read-only; the helper user needs a writable temporary/cache location. Configure [`liwa-ssh`](../ssh/README.md) with `launch: { kind: "executable" }`, the absolute `helper` path and the executable’s SHA-256 from the manifest. The client obtains the embedded PTC invocation through `ctx.ssh.ptcLaunch`.
 
-### Verification and publication
+### Verification
 
 The [artifact verifier](../../../scripts/verify-ssh-helper-artifact.ts) accepts `--archive` and an optional `--report` path. It validates and relocates the archive, makes installation files read-only, and runs two concurrent Loader compositions sharing a fresh native cache. Those compositions exercise files, processes, PTY, native flock and PTC through the SSH providers. macOS also runs a worker under a policy denying the checkout and host Node. `--sandbox=required` requires real confinement; Linux’s additional `--backend=landlock-run` check makes the bwrap probe unavailable and requires the packaged Landlock runner.
 
 The [OpenSSH verifier](../../../scripts/verify-ssh-helper-ssh.ts) accepts a Linux `--archive`. It creates a temporary glibc 2.28 SSH server with no Node installation, mounts only the release and a disposable public key, and exercises the production connection. Its portability lane makes no kernel-confinement claim; the native host lane owns that check. Test identities, host keys, ports and workspaces are private to the run.
 
-Ordinary PR and master CI run source and build-script checks without building SSH executables. For changes to helper startup, native dependencies or packaging, manually run the [native workflow](../../../.github/workflows/build-exe-for-ssh-helper.yml) before merging; it accepts selected targets and defaults to all four. `CI master` also exposes the manual `ssh-helper` suite. [Release (SSH helper)](../../../.github/workflows/publish-ssh-helper.yml) defaults to `publish=false`: it builds all four targets from the selected ref and validates complete same-commit evidence from clean builds. With `publish=true`, it requires the matching `liwa-v<version>` tag and attaches the tested archives and `SHA256SUMS` to that GitHub release; a missing release is created as a draft. Native validation remains mandatory before publication. Deployment-target inspection alone does not establish execution on the oldest macOS version.
+Ordinary PR and master CI run source and build-script checks without building SSH executables. For changes to helper startup, native dependencies or packaging, manually run the [native workflow](../../../.github/workflows/build-exe-for-ssh-helper.yml) before merging; it accepts selected targets and defaults to all four. `CI master` also exposes the manual `ssh-helper` suite. Archives stay local build outputs; nothing publishes them. Native validation remains mandatory before an archive is used. Deployment-target inspection alone does not establish execution on the oldest macOS version.
 
 -----
 
@@ -64,7 +64,7 @@ Ordinary PR and master CI run source and build-script checks without building SS
 
 The carrier embeds its closed dependency set with the repository’s patched `pkg --sea` pipeline. Its entry dispatches the SSH helper, managed subprocess runner or PTC worker. Shared [deployment helpers](../../../scripts/executable-packaging.ts) also serve the Python SDK builder. Production deploy installs exactly the versions in `pnpm-lock.yaml`, then drops pnpm’s install records and pins the manifest’s workspace dependencies to their installed versions, so deploy metadata carries no build-checkout path into the executable. Packaging ignores the checkout’s own dependencies and workspace sources, so module resolution from the staged payload cannot embed development packages.
 
-The operating system must execute the Landlock and PTY launchers from real files. A process-local resolution hook points the system package at its co-shipped native directory; node-pty uses its existing executable-relative spawn-helper convention. Binary inspection covers the embedded native modules before packaging and the external resources before publication.
+The operating system must execute the Landlock and PTY launchers from real files. A process-local resolution hook points the system package at its co-shipped native directory; node-pty uses its existing executable-relative spawn-helper convention. Binary inspection covers the embedded native modules before packaging and the external resources of the assembled archive.
 
 </details>
 

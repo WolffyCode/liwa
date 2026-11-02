@@ -90,7 +90,7 @@ it('exposes an absent Official bundle installation target without display metada
   const offered: BundleInfo = {
     name: '@liwa/subagent-codex', official: true, availability: 'missing',
     installed: false, enabled: false, optional: false, removable: false, updatable: false, rows: [], overrides: [],
-    installTarget: { spec: '@liwa/subagent-codex@1.2.3', version: '1.2.3' },
+    installTarget: { spec: 'link:/checkout/packages/subagent/subagent-codex', version: '1.2.3' },
     meta: { title: 'Codex subagent' },
   }
   manager.listBundles.mockResolvedValue([offered])
@@ -101,7 +101,7 @@ it('exposes an absent Official bundle installation target without display metada
           "availability": "missing",
           "enabled": false,
           "installTarget": {
-            "spec": "@liwa/subagent-codex@1.2.3",
+            "spec": "link:/checkout/packages/subagent/subagent-codex",
             "version": "1.2.3",
           },
           "installed": false,

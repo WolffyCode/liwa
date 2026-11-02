@@ -3,56 +3,32 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write apps/desktop/packaging/README.md
 /:
-  en: 9bc7767fc1bced33
-  zh: 4f6198337a573cf4
+  en: feb068064dfe138a
+  zh: d1e66ff1ae5ff33b
 /desktop-packaging:
   en: 0bc3f066c93ddf50
   zh: 794e0609683644fe
 /desktop-packaging/summary:
-  en: e98e516b9e1bd0f4
-  zh: 1a2abd7d89ef78a1
+  en: f64a4740878e5c08
+  zh: 5a48a16bafcd865c
 /desktop-packaging/table-of-contents:
-  en: a6203dc2e690c7e1
-  zh: 07b516549b8e3328
-/desktop-packaging/choose-a-build-path:
-  en: 810681f1de972ce7
-  zh: 478564aff1f35036
-/desktop-packaging/release-versions:
-  en: 127880b0949bcd99
-  zh: fb1ddc03139ecd54
-/desktop-packaging/configuration-and-local-builds:
-  en: fc7401d6942756e9
-  zh: 2c21cba6ec81099e
-/desktop-packaging/windows-actions-packaging:
-  en: f54c58dd6e630f28
-  zh: b22932ed422c2de1
-/desktop-packaging/macos-self-hosted-packaging:
-  en: ccbcef14f91bbabf
-  zh: bcac6ddfb63605a1
-/desktop-packaging/unsigned-windows-test-installer:
-  en: 889999411a2926df
-  zh: 5010d32ac2bb1660
-/desktop-packaging/local-macos-dmg-without-release-signing:
-  en: 488176ce4b432dee
-  zh: 13f35d6f02ba2001
-/desktop-packaging/macos-release-signing-and-diagnostics:
-  en: bb77296ea7f7ae6b
-  zh: d48e43758f62d37f
-/desktop-packaging/directory-builds-and-preparation:
-  en: e5f38b5d8d2e09c3
-  zh: 2965a0ac05becd52
-/desktop-packaging/local-official-bundles-from-a-loopback-registry:
-  en: 064a5e81ae3da2df
-  zh: 1fd26ad9110e0227
-/desktop-packaging/runtime-file-selection-and-installation-checks:
-  en: ce33e12daeeafeb9
-  zh: fc5c2cdfe4f2bb7a
+  en: 4d70fafd8fd66993
+  zh: f416f86ed25da8b9
+/desktop-packaging/packaging-commands:
+  en: cbc2535996da5971
+  zh: 42d1bdbcad18c126
+/desktop-packaging/signing-and-application-identity:
+  en: 881184cb4f72e940
+  zh: 055dfd28e2720d6f
+/desktop-packaging/package-sources:
+  en: 8d1b2f8b596180a6
+  zh: 1f59aca22d563c2a
+/desktop-packaging/runtime-file-selection:
+  en: db0cba91ed3aee1e
+  zh: 0a7b32fd8af1aed7
 /desktop-packaging/desktop-runtime-preparation:
-  en: 73cd67c18a5e61d4
-  zh: e6cd122e9f69469f
-/desktop-packaging/installation-and-release-verification:
-  en: 10d75e39563f2520
-  zh: 216c17df740b7d56
-/desktop-packaging/dev-note:
-  en: 691194744993dfaa
-  zh: e5798faf99546ff8
+  en: a50786df889184ab
+  zh: 84cc8889cd33f2ac
+/desktop-packaging/verification:
+  en: afa91d4d5aeff239
+  zh: d6834bd34ffc2764

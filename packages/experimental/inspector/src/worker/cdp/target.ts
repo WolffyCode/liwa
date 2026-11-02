@@ -24,9 +24,9 @@ export function handleScaffold(
   const frame = {
     id: 'liwa-inspector-host-frame',
     loaderId: 'liwa-inspector-loader',
-    url: 'dsh://host',
+    url: 'liwa://host',
     domainAndRegistry: '',
-    securityOrigin: 'dsh://host',
+    securityOrigin: 'liwa://host',
     mimeType: 'text/html',
     secureContextType: 'Secure',
     crossOriginIsolatedContextType: 'NotIsolated',

@@ -1,4 +1,7 @@
-/** Main-owned update confirmations; closing or replacing a dialog never grants installation permission. */
+/**
+ * Main-owned shell dialogs (About on Windows, command management, the Windows close notice); closing or
+ * replacing one never confirms its operation.
+ */
 import { ipcMain, type BrowserWindow, type IpcMainInvokeEvent, type MessageBoxOptions, type MessageBoxReturnValue } from 'electron'
 import type { DesktopLocale } from './locale.ts'
 import type { DesktopUpdateOverlays, DesktopUpdateOverlay } from './update-overlay.ts'
@@ -36,7 +39,7 @@ export interface UpdateDialogApi {
 // main.ts's protocol.handle shell route serves this document and its renderer assets; the modal requires that route.
 const page = 'liwa-app://shell/update-dialog.html'
 
-/** One fading backdrop with replaceable confirmation content; aborted checks and mandatory policy cancel ordinary prompts. */
+/** One fading backdrop with replaceable confirmation content; an aborted signal cancels the prompt. */
 export class DesktopUpdateDialog {
   private disposed = false
   private revision = 0

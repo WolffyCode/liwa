@@ -1,159 +1,78 @@
-import { describe, expect, it } from 'vitest'
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { desktopTargetBuildPaths } from '../scripts/desktop-build-paths.mjs'
 import {
+  adHocSigningEnvironment,
   desktopElectronBuilderArguments,
-  desktopElectronBuilderEnvironment,
+  packageTarget,
   parseDesktopPackageInvocation,
-  resolveDesktopPackageTarget,
-  withoutDesktopUploadCredentials,
-  withoutWindowsSigningEnvironment,
 } from '../scripts/package-target.ts'
 
+const directories: string[] = []
+afterEach(() => { for (const directory of directories.splice(0)) rmSync(directory, { recursive: true, force: true }) })
+
 describe('desktop package target', () => {
-  it('selects matching runtime and electron-builder architectures', () => {
-    expect(resolveDesktopPackageTarget('mac-arm64', 'darwin', 'arm64')).toMatchObject({
-      platform: 'darwin', arch: 'arm64', builderPlatform: '--mac', builderArch: '--arm64',
-    })
-    expect(resolveDesktopPackageTarget('mac-x64', 'darwin', 'x64')).toMatchObject({
-      platform: 'darwin', arch: 'x64', builderPlatform: '--mac', builderArch: '--x64',
-    })
-    expect(resolveDesktopPackageTarget('win-x64', 'win32', 'x64')).toMatchObject({
-      platform: 'win32', arch: 'x64', builderPlatform: '--win', builderArch: '--x64',
-    })
-  })
-
-  it('allows an Apple Silicon host to build the Intel target through Rosetta', () => {
-    expect(resolveDesktopPackageTarget('mac-x64', 'darwin', 'arm64').arch).toBe('x64')
-  })
-
-  it('rejects unsupported targets and hosts before building', () => {
-    expect(() => resolveDesktopPackageTarget('linux-x64', 'linux', 'x64')).toThrow(/unsupported target/u)
-    expect(() => resolveDesktopPackageTarget('win-x64', 'darwin', 'arm64')).toThrow(/Windows x64/u)
-    expect(() => resolveDesktopPackageTarget('mac-arm64', 'darwin', 'x64')).toThrow(/Apple Silicon/u)
-    expect(() => resolveDesktopPackageTarget('mac-arm64', 'linux', 'arm64')).toThrow(/macOS/u)
-    expect(() => resolveDesktopPackageTarget('mac-x64', 'darwin', 'ppc64')).toThrow(/Rosetta/u)
-  })
-
-  it('parses installer and unpacked-directory invocations', () => {
-    expect(parseDesktopPackageInvocation(['mac-arm64'], 'darwin', 'arm64').directory).toBe(false)
-    expect(parseDesktopPackageInvocation(['mac-arm64', '--dir'], 'darwin', 'arm64').directory).toBe(true)
-    expect(parseDesktopPackageInvocation([], 'darwin', 'arm64').target.name).toBe('mac-arm64')
-    expect(parseDesktopPackageInvocation(['--prepare-only'], 'darwin', 'arm64').prepareOnly).toBe(true)
+  it('parses application, directory, preparation and check invocations on an Apple Silicon Mac', () => {
+    expect(parseDesktopPackageInvocation([], 'darwin', 'arm64')).toEqual({ directory: false, prepareOnly: false, check: false })
+    expect(parseDesktopPackageInvocation(['--dir'], 'darwin', 'arm64').directory).toBe(true)
+    expect(parseDesktopPackageInvocation(['--', '--prepare-only'], 'darwin', 'arm64').prepareOnly).toBe(true)
     expect(parseDesktopPackageInvocation(['--check'], 'darwin', 'arm64').check).toBe(true)
-    expect(parseDesktopPackageInvocation(['win-x64', '--check', '--unsigned'], 'win32', 'x64')).toMatchObject({ check: true, unsigned: true })
-    expect(() => parseDesktopPackageInvocation(['mac-arm64', 'mac-x64'], 'darwin', 'arm64'))
-      .toThrow(/at most one target/u)
   })
 
-  it('parses a build version, including the separator a pnpm run script forwards', () => {
-    expect(parseDesktopPackageInvocation(['mac-arm64'], 'darwin', 'arm64').requestedBuildVersion).toBeUndefined()
-    expect(parseDesktopPackageInvocation(['mac-arm64', '--build-version', '0.1.6-alpha.2.20260921.1'], 'darwin', 'arm64')
-      .requestedBuildVersion).toBe('0.1.6-alpha.2.20260921.1')
-    expect(parseDesktopPackageInvocation(['mac-arm64', '--build-version', 'auto'], 'darwin', 'arm64')
-      .requestedBuildVersion).toBe('auto')
-    // A run script's preset arguments come first, so pnpm forwards the separator after the target.
-    expect(parseDesktopPackageInvocation(['mac-arm64', '--', '--build-version', 'auto'], 'darwin', 'arm64'))
-      .toMatchObject({ requestedBuildVersion: 'auto', target: { name: 'mac-arm64' } })
-    expect(parseDesktopPackageInvocation(['--', '--check'], 'darwin', 'arm64').check).toBe(true)
-    expect(() => parseDesktopPackageInvocation(['mac-arm64', '--build-version', '  '], 'darwin', 'arm64'))
-      .toThrow(/--build-version requires a value/u)
+  it.each([['darwin', 'x64'], ['win32', 'x64'], ['linux', 'x64']] as const)('refuses a %s %s host and every other target name', (platform, arch) => {
+    expect(() => parseDesktopPackageInvocation([], platform, arch)).toThrow(/only on an Apple Silicon Mac/u)
+    expect(() => parseDesktopPackageInvocation(['win-x64'], 'darwin', 'arm64')).toThrow()
+    expect(() => parseDesktopPackageInvocation(['--unsigned'], 'darwin', 'arm64')).toThrow()
   })
 
-  it('keeps electron-builder publishing disabled for the separate validated upload', () => {
-    const target = resolveDesktopPackageTarget('mac-arm64', 'darwin', 'arm64')
-    expect(desktopElectronBuilderArguments(target, false)).toEqual([
-      'exec',
-      'electron-builder',
-      '--config',
-      'electron-builder.config.mjs',
-      '--mac',
-      '--arm64',
-      '--publish',
-      'never',
+  it('keeps electron-builder on the Apple Silicon target and never publishing', () => {
+    expect(desktopElectronBuilderArguments(false)).toEqual([
+      'exec', 'electron-builder', '--config', 'electron-builder.config.mjs', '--mac', '--arm64', '--publish', 'never',
     ])
-    expect(desktopElectronBuilderArguments(target, true)).toContain('--dir')
+    expect(desktopElectronBuilderArguments(true).at(-1)).toBe('--dir')
   })
 
-  it('accepts unsigned supported targets and rejects preparation-only use', () => {
-    expect(parseDesktopPackageInvocation(['win-x64', '--unsigned'], 'win32', 'x64').unsigned).toBe(true)
-    expect(parseDesktopPackageInvocation(['win-x64'], 'win32', 'x64').unsigned).toBe(false)
-    expect(parseDesktopPackageInvocation(['--unsigned', '--dir'], 'win32', 'x64')).toMatchObject({
-      unsigned: true, directory: true,
-    })
-    for (const name of ['mac-arm64', 'mac-x64']) {
-      expect(parseDesktopPackageInvocation([name, '--unsigned'], 'darwin', 'arm64').unsigned).toBe(true)
-      expect(parseDesktopPackageInvocation([name, '--unsigned', '--dir'], 'darwin', 'arm64').directory).toBe(true)
-    }
-    expect(() => parseDesktopPackageInvocation(['--unsigned', '--prepare-only'], 'win32', 'x64'))
-      .toThrow(/cannot use --prepare-only/u)
+  it('removes inherited certificate and notarization inputs so only the ad-hoc signature applies', () => {
+    expect(adHocSigningEnvironment({
+      PATH: '/bin', CSC_LINK: '/certificate.p12', CSC_KEY_PASSWORD: 'secret', WIN_CSC_LINK: '/windows.pfx',
+      APPLE_ID: 'person@example.com', APPLE_API_KEY: '/key.p8', CSC_IDENTITY_AUTO_DISCOVERY: 'true',
+    })).toEqual({ PATH: '/bin', CSC_IDENTITY_AUTO_DISCOVERY: 'false' })
   })
 
-  it('removes ambient certificate inputs for unsigned builds and overrides an inherited signing mode', () => {
-    const environment = {
-      LIWA_DESKTOP_APP_ID: 'com.example.desktop',
-      LIWA_DESKTOP_WINDOWS_TOKEN_PIN: 'token-secret',
-      CSC_LINK: 'private.pfx',
-      CSC_KEY_PASSWORD: 'secret',
-      WIN_CSC_LINK: 'windows.pfx',
-      CSC_IDENTITY_AUTO_DISCOVERY: 'true',
-      APPLE_API_KEY: 'private.p8',
-      APPLE_APP_SPECIFIC_PASSWORD: 'apple-secret',
-      LIWA_DESKTOP_MACOS_SIGNING_IDENTITY: 'Example Company (TEAMID1234)',
-      LIWA_DESKTOP_MACOS_TEAM_ID: 'TEAMID1234',
-      LIWA_DESKTOP_MACOS_PACK_CONCURRENCY: '2',
-      LIWA_DESKTOP_UNSIGNED: '1',
-    }
-    expect(desktopElectronBuilderEnvironment(environment, true)).toEqual({
-      LIWA_DESKTOP_APP_ID: 'com.example.desktop',
-      LIWA_DESKTOP_MACOS_PACK_CONCURRENCY: '2',
-      CSC_IDENTITY_AUTO_DISCOVERY: 'false',
-      LIWA_DESKTOP_UNSIGNED: '1',
-    })
-    expect(desktopElectronBuilderEnvironment(environment, false)).toEqual({ ...environment, LIWA_DESKTOP_UNSIGNED: '0' })
+  it('builds the official profile, packs every workspace package locally, and prepares before assembling', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'liwa-package-target-'))
+    directories.push(directory)
+    const commands: string[] = []
+    const run = { directory, run: vi.fn(async (stage: string) => { commands.push(stage) }), finish: vi.fn() }
+    const paths = { ...desktopTargetBuildPaths('mac-arm64'), packedNative: join(directory, 'native') }
+    vi.stubEnv('npm_execpath', '/pnpm.cjs')
+    try {
+      await packageTarget({ directory: false, prepareOnly: false, check: false }, {}, run, paths)
+    } finally { vi.unstubAllEnvs() }
+    expect(commands[0]).toBe('run build --profile official')
+    expect(commands).toContain('run build:native-system')
+    expect(commands.filter(command => command.includes(' pack --pack-destination ')).map(command => command.split(' ')[1]))
+      .toEqual(['apps/desktop-host', 'native/system/packages/entry', 'native/system/packages/darwin-arm64'])
+    expect(commands.slice(-5)).toEqual([
+      'run prepare:runtime', 'run prepare:packages', 'run prepare:liwa',
+      desktopElectronBuilderArguments(false).join(' '), 'exec tsx scripts/smoke-packaged-runtime.ts',
+    ])
+    expect(commands.join('\n')).not.toMatch(/release:publish|upload|notar|sign:/u)
+    expect(readFileSync(join(directory, 'events.jsonl'), 'utf8')).toContain('"type":"artifacts"')
   })
 
-  it.each([false, true])('pins the Windows archive filter for the NSIS decoder (unsigned: %s)', (unsigned) => {
-    expect(desktopElectronBuilderEnvironment({
-      LIWA_DESKTOP_TARGET_PLATFORM: 'win32', ELECTRON_BUILDER_7Z_FILTER: 'ARM64',
-    }, unsigned).ELECTRON_BUILDER_7Z_FILTER).toBe('BCJ')
-    expect(desktopElectronBuilderEnvironment({
-      LIWA_DESKTOP_TARGET_PLATFORM: 'darwin', ELECTRON_BUILDER_7Z_FILTER: 'ARM',
-    }, unsigned).ELECTRON_BUILDER_7Z_FILTER).toBe('ARM')
+  it('stops after preparation without assembling the application', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'liwa-package-target-'))
+    directories.push(directory)
+    const commands: string[] = []
+    const run = { directory, run: vi.fn(async (stage: string) => { commands.push(stage) }), finish: vi.fn() }
+    vi.stubEnv('npm_execpath', '/pnpm.cjs')
+    try {
+      await packageTarget({ directory: false, prepareOnly: true, check: false }, {}, run,
+        { ...desktopTargetBuildPaths('mac-arm64'), packedNative: join(directory, 'native') })
+    } finally { vi.unstubAllEnvs() }
+    expect(commands.at(-1)).toBe('run prepare:liwa')
   })
-
-  it('keeps Windows signing fields out of build and runtime preparation subprocesses', () => {
-    expect(withoutWindowsSigningEnvironment({
-      LIWA_DESKTOP_WINDOWS_CER_FILE: 'C:\\release\\server.cer',
-      LIWA_DESKTOP_WINDOWS_TOKEN_PIN: 'token-secret',
-      LIWA_DESKTOP_WINDOWS_KEY_CONTAINER: 'container',
-      LIWA_DESKTOP_WINDOWS_SIGNTOOL: 'C:\\tools\\signtool.exe',
-      LIWA_DESKTOP_AUTO_UPDATE_ENV: 'production',
-    })).toEqual({ LIWA_DESKTOP_AUTO_UPDATE_ENV: 'production' })
-  })
-
-  it('keeps COS credentials out of every packaging subprocess', () => {
-    expect(withoutDesktopUploadCredentials({
-      DOWNLOAD_TEST_ORIGIN: 'https://desktop-updates.example.com',
-      DOWNLOAD_TEST_COS_BUCKET: 'test-download-bucket',
-      DOWNLOAD_TEST_COS_SECRET_ID: 'test-id',
-      DOWNLOAD_TEST_COS_SECRET_KEY: 'test-key',
-      DOWNLOAD_PROD_COS_BUCKET: 'production-download-bucket',
-      DOWNLOAD_PROD_COS_SECRET_ID: 'production-id',
-      DOWNLOAD_PROD_COS_SECRET_KEY: 'production-key',
-      LIWA_DESKTOP_AUTO_UPDATE_ENV: 'production',
-    })).toEqual({
-      DOWNLOAD_TEST_ORIGIN: 'https://desktop-updates.example.com',
-      DOWNLOAD_TEST_COS_BUCKET: 'test-download-bucket',
-      DOWNLOAD_PROD_COS_BUCKET: 'production-download-bucket',
-      LIWA_DESKTOP_AUTO_UPDATE_ENV: 'production',
-    })
-  })
-})
-
-it('allows skipping notarization only for signed macOS packages', () => {
-  expect(parseDesktopPackageInvocation(['mac-arm64'], 'darwin', 'arm64').skipNotarization).toBe(false)
-  expect(parseDesktopPackageInvocation(['mac-arm64', '--skip-notarization'], 'darwin', 'arm64').skipNotarization).toBe(true)
-  for (const flag of ['--unsigned', '--prepare-only']) {
-    expect(() => parseDesktopPackageInvocation(['mac-arm64', '--skip-notarization', flag], 'darwin', 'arm64')).toThrow(/requires a signed macOS build/u)
-  }
-  expect(() => parseDesktopPackageInvocation(['win-x64', '--skip-notarization'], 'win32', 'x64')).toThrow(/requires a signed macOS build/u)
 })

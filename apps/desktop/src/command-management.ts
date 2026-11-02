@@ -37,7 +37,6 @@ export interface CommandManagerOptions {
   readonly resources: string
   readonly isPackaged: boolean
   readonly isInstalledLocation: () => boolean
-  readonly isInstalling: () => boolean
   readonly isQuitting: () => boolean
   readonly messages: () => DesktopMessages
   readonly show: (options: UpdateDialogOptions) => Promise<MessageBoxReturnValue>
@@ -120,7 +119,7 @@ async function shellCommand(): Promise<{ activeCommand?: string; selectionUnknow
   return isAbsolute(value) && !/[\r\n]/u.test(value) ? { activeCommand: value } : { selectionUnknown: true }
 }
 
-/** One visible operation; updater preparation waits for its started worker to finish. */
+/** One visible operation; repeated menu requests join it. */
 export class DesktopCommandManager {
   private operation: Promise<void> | undefined
 
@@ -131,9 +130,6 @@ export class DesktopCommandManager {
   show(): Promise<void> {
     return this.operation ??= this.run().finally(() => { this.operation = undefined })
   }
-
-  /** Wait for a command operation already started by the user. */
-  async idle(): Promise<void> { await this.operation }
 
   private async worker(operation: string, expected?: string, elevated = false): Promise<CommandState> {
     const node = join(this.options.resources, 'runtime', 'primary-runtime', 'dependencies', 'node', 'bin', process.platform === 'win32' ? 'node.exe' : 'node')
@@ -184,10 +180,6 @@ export class DesktopCommandManager {
     const messages = this.options.messages()
     if (!this.options.isPackaged || !this.options.isInstalledLocation()) {
       await this.options.show({ type: 'info', title: messages.cliCommandTitle, message: messages.cliCommandInstallApp, buttons: [messages.cliCommandClose] })
-      return
-    }
-    if (this.options.isInstalling()) {
-      await this.options.show({ type: 'info', title: messages.cliCommandTitle, message: messages.cliCommandUpdating, buttons: [messages.cliCommandClose] })
       return
     }
     try {

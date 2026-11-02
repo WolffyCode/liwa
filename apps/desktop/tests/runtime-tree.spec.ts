@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, expect, it } from 'vitest'
 import { DESKTOP_HOST_PACKAGE, DESKTOP_HOST_RUNTIME_FILES } from '../src/core-package-set.ts'
-import { DESKTOP_RUNTIME_FILE, readDesktopRuntime, runtimePath, verifyDesktopRuntime, writeDesktopRuntime, writeDesktopRuntimeAsync } from '../src/runtime-tree.ts'
+import { DESKTOP_RUNTIME_FILE, readDesktopRuntime, runtimePath, verifyDesktopRuntime, writeDesktopRuntime } from '../src/runtime-tree.ts'
 import { runtimeFixture } from './runtime-fixture.ts'
 
 const roots: string[] = []
@@ -15,26 +15,23 @@ function fixture(): string {
 }
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })
 
-it('seals final file bytes identically with concurrent and synchronous inventory', async () => {
+it('verifies sealed final file bytes with concurrent inventory', async () => {
   const liwa = join(fixture(), 'liwa')
   const original = readDesktopRuntime(liwa)
   const names = original.sharedPackages.map(entry => entry.name)
   writeFileSync(join(liwa, 'extra.bin'), Buffer.from([0, 1, 255]))
   writeFileSync(join(liwa, 'package.json'), '{"type":"module","private":true}\n')
   const expected = writeDesktopRuntime(liwa, original.release, names)
-  const expectedBytes = readFileSync(join(liwa, DESKTOP_RUNTIME_FILE))
-  expect(await writeDesktopRuntimeAsync(liwa, original.release, names)).toEqual(expected)
-  expect(readFileSync(join(liwa, DESKTOP_RUNTIME_FILE))).toEqual(expectedBytes)
   expect(await verifyDesktopRuntime(liwa, original.release.version)).toEqual(expected)
 })
 
-it.each(['manifest', 'link'])('leaves the descriptor unchanged when concurrent sealing rejects a %s', async (failure) => {
+it.each(['manifest', 'link'])('leaves the descriptor unchanged when sealing rejects a %s', (failure) => {
   const liwa = join(fixture(), 'liwa')
   const original = readDesktopRuntime(liwa)
   const before = readFileSync(join(liwa, DESKTOP_RUNTIME_FILE))
   if (failure === 'manifest') writeFileSync(join(liwa, 'node_modules', DESKTOP_HOST_PACKAGE, 'package.json'), '{}')
   else symlinkSync(join(liwa, 'node_modules'), join(liwa, 'outside'), process.platform === 'win32' ? 'junction' : 'dir')
-  await expect(writeDesktopRuntimeAsync(liwa, original.release, original.sharedPackages.map(entry => entry.name))).rejects.toThrow()
+  expect(() => writeDesktopRuntime(liwa, original.release, original.sharedPackages.map(entry => entry.name))).toThrow()
   expect(readFileSync(join(liwa, DESKTOP_RUNTIME_FILE))).toEqual(before)
 })
 

@@ -9,7 +9,6 @@ import { MacPackager } from 'app-builder-lib/out/macPackager.js'
 import { PM } from 'app-builder-lib/out/node-module-collector/index.js'
 import type { PlatformPackager } from 'app-builder-lib/out/platformPackager.js'
 import type { ResolvedFileSet } from 'app-builder-lib/out/util/appFileCopier.js'
-import { WinPackager } from 'app-builder-lib/out/winPackager.js'
 import { expect, it, onTestFinished, vi } from 'vitest'
 import { createElectronBuilderConfig } from '../scripts/electron-builder-config.mjs'
 
@@ -26,9 +25,7 @@ const { AsarPackager } = require('app-builder-lib/out/asar/asarUtil.js') as {
   AsarPackager: new (packager: object, configuration: object) => { pack(files: ResolvedFileSet[]): Promise<void> }
 }
 
-it.each([
-  ['darwin', 'arm64'], ['darwin', 'x64'], ['win32', 'x64'],
-] as const)('omits shell build files from %s/%s ASAR while retaining runtime assets', async (platform, arch) => {
+it('omits shell build files from the macOS ASAR while retaining runtime assets', async () => {
   const root = await mkdtemp(join(tmpdir(), 'desktop-shell-files-'))
   onTestFinished(() => rm(root, { recursive: true, force: true }))
   const appDir = join(root, 'app')
@@ -60,17 +57,7 @@ it.each([
     }
   }
   await writeFile(join(appDir, 'package.json'), JSON.stringify(manifest))
-  const desktopConfig = createElectronBuilderConfig({
-    LIWA_DESKTOP_APP_ID: 'com.example.shell-files',
-    LIWA_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN: 'https://policy.example.com',
-    LIWA_DESKTOP_MANDATORY_UPDATE_CONFIG: JSON.stringify({ allowedAuthOrigins: ['https://login.example.com'] }),
-    LIWA_DESKTOP_UNSIGNED: platform === 'win32' ? '1' : '0',
-    LIWA_DESKTOP_MACOS_SIGNING_IDENTITY: 'Example Company (TEAMID1234)',
-    LIWA_DESKTOP_MACOS_TEAM_ID: 'TEAMID1234',
-    APPLE_KEYCHAIN_PROFILE: 'shell-files-test',
-    DOWNLOAD_TEST_ORIGIN: 'https://desktop-updates.example.com',
-    DOWNLOAD_TEST_RELEASE_ID: '0123456789abcdef0123456789abcdef',
-  }, platform, arch)
+  const desktopConfig = createElectronBuilderConfig({}, 'darwin', 'arm64')
   const config: Configuration = {
     files: desktopConfig.files.map(file => typeof file === 'string' ? file : { ...file, filter: [...file.filter] }),
   }
@@ -85,7 +72,7 @@ it.each([
   // Traverse the installed fixture without invoking a host package manager.
   vi.spyOn(info, 'getPackageManager').mockResolvedValue(PM.TRAVERSAL)
   vi.spyOn(info, 'getWorkspaceRoot').mockResolvedValue(appDir)
-  const packager = platform === 'darwin' ? new MacPackager(info) : new WinPackager(info)
+  const packager = new MacPackager(info)
   const matcher = getNodeModuleFileMatcher(appDir, destination, value => value, packager.platformSpecificBuildOptions, info)
   const fileSets = await computeNodeModuleFileSets(packager, matcher)
   expect(fileSets.map(set => relative(destination, set.destination).replaceAll('\\', '/')).sort())

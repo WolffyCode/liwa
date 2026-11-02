@@ -4,42 +4,41 @@ import { isAbsolute, join, resolve } from 'node:path'
 
 const APP_ROOT = resolve(import.meta.dirname, '..')
 const BUILD_ROOT = join(APP_ROOT, '.desktop-build')
-const SUPPORTED_TARGETS = new Set(['mac-arm64', 'mac-x64', 'win-x64'])
+
+/** The only Desktop target: an Apple Silicon Mac builds and runs it locally. */
+const DESKTOP_TARGET = 'mac-arm64'
 
 /**
- * Resolve the fixed build target selected by a packaging environment.
- * @param {NodeJS.ProcessEnv} env - Packaging environment.
- * @param {NodeJS.Platform} hostPlatform - Build-host platform used when no target override exists.
- * @param {string} hostArch - Build-host architecture used when no target override exists.
- * @returns {'mac-arm64' | 'mac-x64' | 'win-x64'} Supported Desktop target name.
+ * Resolve the Desktop target, refusing every host except an Apple Silicon Mac.
+ * @param {NodeJS.ProcessEnv} env - Packaging environment; npm platform overrides cannot select another target.
+ * @param {NodeJS.Platform} hostPlatform - Build-host platform used when no npm override exists.
+ * @param {string} hostArch - Build-host architecture used when no npm override exists.
+ * @returns {'mac-arm64'} The Desktop target name.
  */
 export function resolveDesktopBuildTarget(
   env = process.env,
   hostPlatform = process.platform,
   hostArch = process.arch,
 ) {
-  const platform = env.LIWA_DESKTOP_TARGET_PLATFORM ?? env.npm_config_platform ?? hostPlatform
-  const arch = env.LIWA_DESKTOP_TARGET_ARCH ?? env.npm_config_arch
-    ?? (platform === 'win32' || platform === 'win' ? 'x64' : hostArch)
-  const os = platform === 'darwin' ? 'mac' : platform === 'win32' || platform === 'win' ? 'win' : platform
-  const target = `${os}-${arch}`
-  if (!SUPPORTED_TARGETS.has(target)) {
-    throw new Error(`desktop build paths: unsupported target ${target}`)
+  const platform = env.npm_config_platform ?? hostPlatform
+  const arch = env.npm_config_arch ?? hostArch
+  if (platform !== 'darwin' || arch !== 'arm64') {
+    throw new Error(`desktop build paths: Desktop builds only on an Apple Silicon Mac, not ${platform}-${arch}`)
   }
-  return /** @type {'mac-arm64' | 'mac-x64' | 'win-x64'} */ (target)
+  return DESKTOP_TARGET
 }
 
 function assertSupportedTarget(target) {
-  if (!SUPPORTED_TARGETS.has(target)) {
+  if (target !== DESKTOP_TARGET) {
     throw new Error(`desktop build paths: unsupported target ${String(target)}`)
   }
 }
 
 /**
- * Return the mutable preparation and artifact directories owned by one release target.
- * @param {'mac-arm64' | 'mac-x64' | 'win-x64'} target - Supported Desktop target name.
+ * Return the mutable preparation and artifact directories owned by the Desktop target.
+ * @param {'mac-arm64'} target - Desktop target name.
  * @param {NodeJS.ProcessEnv} environment - Packaging environment with an optional absolute cache directory.
- * @returns {{ root: string, artifacts: string, unsignedArtifacts: string, unnotarizedArtifacts: string, runtime: string, packageSet: string, liwa: string, liwaPnpm: string, electron: string, packedLiwa: string, packedVendor: string, packedLandlock: string, downloads: string, pnpmStore: string }} Target paths plus shared download and package caches.
+ * @returns {{ root: string, artifacts: string, application: string, runtime: string, packageSet: string, liwa: string, liwaPnpm: string, electron: string, packedLiwa: string, packedVendor: string, packedNative: string, downloads: string, pnpmStore: string }} Target paths plus shared download and package caches.
  */
 export function desktopTargetBuildPaths(target, environment = process.env) {
   assertSupportedTarget(target)
@@ -49,11 +48,12 @@ export function desktopTargetBuildPaths(target, environment = process.env) {
   }
   const root = join(BUILD_ROOT, 'targets', target)
   const packed = join(root, 'packed')
+  const artifacts = join(root, 'artifacts')
   return {
     root,
-    artifacts: join(root, 'artifacts'),
-    unsignedArtifacts: join(root, 'unsigned-artifacts'),
-    unnotarizedArtifacts: join(root, 'unnotarized-artifacts'),
+    artifacts,
+    // electron-builder names the unpacked macOS directory after the architecture.
+    application: join(artifacts, 'mac-arm64', 'Liwa.app'),
     runtime: join(root, 'runtime'),
     packageSet: join(root, 'package-set'),
     liwa: join(root, 'liwa'),
@@ -61,34 +61,28 @@ export function desktopTargetBuildPaths(target, environment = process.env) {
     electron: join(root, 'electron'),
     packedLiwa: join(packed, 'liwa'),
     packedVendor: join(packed, 'vendor'),
-    packedLandlock: join(packed, 'landlock'),
+    packedNative: join(packed, 'native'),
     downloads: join(cacheRoot, 'downloads'),
     pnpmStore: join(cacheRoot, 'pnpm-store'),
   }
 }
 
 /**
- * Return the platform and architecture of the payload one release target prepares.
- * Windows is prepared as x64 only, so this differs from the build host on an arm64 Windows machine.
- * @param {'mac-arm64' | 'mac-x64' | 'win-x64'} target - Supported Desktop target name.
- * @returns {{ platform: 'darwin' | 'win32', arch: 'arm64' | 'x64' }} Platform and architecture of the prepared payload.
+ * Return the platform and architecture of the payload the Desktop target prepares.
+ * @param {'mac-arm64'} target - Desktop target name.
+ * @returns {{ platform: 'darwin', arch: 'arm64' }} Platform and architecture of the prepared payload.
  */
 export function desktopTargetPlatform(target) {
   assertSupportedTarget(target)
-  const targets = /** @type {const} */ ({
-    'mac-arm64': { platform: 'darwin', arch: 'arm64' },
-    'mac-x64': { platform: 'darwin', arch: 'x64' },
-    'win-x64': { platform: 'win32', arch: 'x64' },
-  })
-  return targets[target]
+  return { platform: 'darwin', arch: 'arm64' }
 }
 
 /**
- * Resolve the paths owned by the target selected in a packaging environment.
+ * Resolve the paths owned by the Desktop target on the current host.
  * @param {NodeJS.ProcessEnv} env - Packaging environment.
- * @param {NodeJS.Platform} hostPlatform - Build-host platform used when no target override exists.
- * @param {string} hostArch - Build-host architecture used when no target override exists.
- * @returns {ReturnType<typeof desktopTargetBuildPaths>} Selected target paths.
+ * @param {NodeJS.Platform} hostPlatform - Build-host platform used when no npm override exists.
+ * @param {string} hostArch - Build-host architecture used when no npm override exists.
+ * @returns {ReturnType<typeof desktopTargetBuildPaths>} Target paths.
  */
 export function resolveDesktopTargetBuildPaths(
   env = process.env,
@@ -100,12 +94,10 @@ export function resolveDesktopTargetBuildPaths(
 
 /**
  * Resolve the primary-runtime directory an unpackaged development launch uses.
- * The build target fixes Windows to x64, so the shell cannot derive this directory from
- * the architecture of the process that launched it.
  * @param {NodeJS.ProcessEnv} env - Packaging environment.
- * @param {NodeJS.Platform} hostPlatform - Build-host platform used when no target override exists.
- * @param {string} hostArch - Build-host architecture used when no target override exists.
- * @returns {string} Primary-runtime directory prepared for the selected target.
+ * @param {NodeJS.Platform} hostPlatform - Build-host platform used when no npm override exists.
+ * @param {string} hostArch - Build-host architecture used when no npm override exists.
+ * @returns {string} Primary-runtime directory prepared for the Desktop target.
  */
 export function developmentRuntimeDirectory(
   env = process.env,
@@ -113,16 +105,4 @@ export function developmentRuntimeDirectory(
   hostArch = process.arch,
 ) {
   return join(resolveDesktopTargetBuildPaths(env, hostPlatform, hostArch).runtime, 'primary-runtime')
-}
-
-/**
- * Select the output directory and filename suffix for one packaging mode.
- * @param {{ artifacts: string, unsignedArtifacts: string, unnotarizedArtifacts: string }} paths Target artifact directories.
- * @param {{ unsigned: boolean, skipNotarization: boolean }} mode Validated packaging mode.
- * @returns {{ directory: string, suffix: string }} Matching artifact destination and filename marker.
- */
-export function desktopArtifactOutput(paths, mode) {
-  if (mode.unsigned) return { directory: paths.unsignedArtifacts, suffix: '-unsigned' }
-  if (mode.skipNotarization) return { directory: paths.unnotarizedArtifacts, suffix: '-unnotarized' }
-  return { directory: paths.artifacts, suffix: '' }
 }

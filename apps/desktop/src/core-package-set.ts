@@ -158,26 +158,20 @@ export function verifyDesktopCorePackageSet(
   return packageSet
 }
 
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')
-}
+/** Lockfile package keys of the workspace scope, which Liwa never publishes: `  '@liwa/<name>@<specifier>`. */
+const WORKSPACE_PACKAGE_KEY = /^ {2}['"]?(@liwa\/[^@\s'"]+)@([^\s'"(:]+)/gmu
+
+/** Specifiers of local tarball and directory references. */
+const LOCAL_SPECIFIERS: ReadonlySet<string> = new Set(['file', 'link'])
 
 /**
- * Reject a lockfile that resolved any packaged core name through a registry version.
+ * Reject a lockfile that resolved any workspace-scoped package through a registry version. A registry copy is
+ * not built from this workspace, and anyone can claim the unpublished scope; the package set must supply it.
  * @param lockfile - Generated pnpm lockfile text.
- * @param packageSet - Verified local core package set.
  */
-export function verifyDesktopCoreLockfile(
-  lockfile: string,
-  packageSet: DesktopCorePackageSet,
-): void {
-  for (const record of packageSet.packages) {
-    const registryResolution = new RegExp(
-      `^  ['"]?${escapeRegExp(record.name)}@${escapeRegExp(record.version)}(?:\\([^\\r\\n]*\\))?['"]?:`,
-      'mu',
-    )
-    if (registryResolution.test(lockfile)) {
-      throw new Error(`desktop package set: lockfile resolved ${record.name}@${record.version} outside the local package set`)
-    }
+export function verifyDesktopCoreLockfile(lockfile: string): void {
+  for (const [, name, specifier] of lockfile.matchAll(WORKSPACE_PACKAGE_KEY)) {
+    if (specifier !== undefined && LOCAL_SPECIFIERS.has(specifier)) continue
+    throw new Error(`desktop package set: lockfile resolved ${String(name)}@${String(specifier)} from a registry instead of the local package set`)
   }
 }

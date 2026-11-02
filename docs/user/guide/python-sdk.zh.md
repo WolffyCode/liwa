@@ -26,7 +26,6 @@ git clone https://github.com/WolffyCode/liwa.git
 cd liwa
 python -m venv .venv
 . .venv/bin/activate
-python -m pip install liwa-sdk
 ```
 
 ```powershell [Windows PowerShell]
@@ -34,12 +33,11 @@ git clone https://github.com/WolffyCode/liwa.git
 Set-Location liwa
 py -3.10 -m venv .venv
 .venv\Scripts\Activate.ps1
-python -m pip install liwa-sdk
 ```
 
 :::
 
-安装内容包含匹配的原生运行时 wheel 与 `liwa` 命令。普通 SDK 运行不需要系统 Node.js。需要构建产物的仓库贡献者应使用 [Python 贡献者工作流](../../../python/development.zh.md)。
+灵鲸不把 `liwa-sdk` 发布到 PyPI。在该环境中，按 [Python 贡献者工作流](../../../python/development.zh.md)的“构建分发包”步骤构建并安装 SDK wheel 包和当前平台的原生运行时 wheel 包。运行时 wheel 包提供 `liwa` 命令；普通 SDK 运行不需要系统 Node.js。
 
 ## 运行检入示例
 

@@ -147,7 +147,7 @@ function renderTab(
     toggleUpdateOutput: vi.fn(),
     loadDetail: vi.fn(),
     retryDetail: vi.fn(),
-    detailImage: vi.fn((name: string, document: string, destination: string, _fromNpm: boolean) =>
+    detailImage: vi.fn((name: string, document: string, destination: string) =>
       `https://liwa.example/api/plugin-manager/detail-file?bundle=${name}&document=${document}&path=${destination}`),
   }
   const unusedStandardHook = (): never => { throw new Error('Plugin manager fixture does not provide global state') }
@@ -500,7 +500,7 @@ describe('PluginManagerPage', () => {
   it('shows a bundle\'s detail document first among its sections, and its failures with a retry', () => {
     const b = renderTab({ packages: [pkg()] })
     act(() => { b.navigation.actions.setView({ kind: 'package', name: 'liwa-better-sidebar' }) })
-    expect(b.actions.loadDetail).toHaveBeenCalledWith('liwa-better-sidebar', '0.16.0', 'en', false)
+    expect(b.actions.loadDetail).toHaveBeenCalledWith('liwa-better-sidebar', '0.16.0', 'en')
     expect(screen.getByRole('status', { name: en.detailLoading })).toBeTruthy()
     const key = bundleDetailKey('liwa-better-sidebar', '0.16.0', 'en')
     b.setDetails({ [key]: { status: 'ready', detail: { status: 'found', origin: 'locale', path: 'guide/DETAIL.md', markdown: '# Sidebar\n\n![shot](img/a.png)' } } })
@@ -517,12 +517,12 @@ describe('PluginManagerPage', () => {
       expect(screen.getByRole('alert').textContent).toBe(text)
     }
     fireEvent.click(screen.getByRole('button', { name: en.retry }))
-    expect(b.actions.retryDetail).toHaveBeenCalledWith('liwa-better-sidebar', '0.16.0', 'en', false)
+    expect(b.actions.retryDetail).toHaveBeenCalledWith('liwa-better-sidebar', '0.16.0', 'en')
     b.setDetails({ [key]: { status: 'ready', detail: { status: 'none' } } })
     expect(document.querySelector('[data-detail-document]')).toBeNull()
     // A read the controller forgot, after a profile change, starts again.
     b.setDetails({})
-    expect(b.actions.loadDetail).toHaveBeenLastCalledWith('liwa-better-sidebar', '0.16.0', 'en', false)
+    expect(b.actions.loadDetail).toHaveBeenLastCalledWith('liwa-better-sidebar', '0.16.0', 'en')
   })
 
   it('says where a bundle comes from: the spec that installs it, or built in, with its version', () => {
@@ -543,8 +543,8 @@ describe('PluginManagerPage', () => {
     expect(facts()).toEqual([en.sourceSpec, en.sourceBuiltIn])
     act(() => { b.navigation.actions.setView({ kind: 'package', name: 'liwa-missing' }) })
     expect(facts()).toEqual([en.sourceSpec, en.sourceNotInstalled])
-    // A bundle whose files are not installed is read from the npm file CDNs.
-    expect(b.actions.loadDetail).toHaveBeenLastCalledWith('liwa-missing', undefined, 'en', true)
+    // A bundle whose files are not installed is read from the workspace package the Host offers.
+    expect(b.actions.loadDetail).toHaveBeenLastCalledWith('liwa-missing', undefined, 'en')
   })
 
   it('preserves the requested bundle through StrictMode effect replay and page remounts', () => {

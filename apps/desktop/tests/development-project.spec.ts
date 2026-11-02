@@ -77,7 +77,7 @@ describe('desktop development project', () => {
       hostDir: host,
       dependencyDir: dependencies,
       release: release(),
-      target: 'win-x64',
+      target: 'mac-arm64',
     })
     expect(realpathSync(join(project, 'node_modules', '@liwa', 'cli'))).toBe(realpathSync(cli))
     expect(realpathSync(join(project, 'node_modules', '@liwa', 'desktop-host'))).toBe(realpathSync(host))
@@ -91,7 +91,7 @@ describe('desktop development project', () => {
     expect(manifest.dependencies['@liwa/cli']).toBe('1.2.3')
     expect(manifest.dependencies['@liwa/desktop-host']).toBe('1.2.3')
     const descriptor = JSON.parse(readFileSync(join(project, 'desktop-runtime.json'), 'utf8')) as { platform: string; arch: string }
-    expect(descriptor).toMatchObject({ platform: 'win32', arch: 'x64' })
+    expect(descriptor).toMatchObject({ platform: 'darwin', arch: 'arm64' })
     const manager = new DesktopProjectManager(resolveDesktopPaths(join(root, 'home')), {
       liwa: project,
     })
@@ -119,7 +119,7 @@ describe('desktop development project', () => {
       hostDir: host,
       dependencyDir: dependencies,
       release: release(),
-      target: 'mac-x64',
+      target: 'mac-arm64',
     })).toThrow(/must be @liwa\/cli@1\.2\.3/u)
   })
 })

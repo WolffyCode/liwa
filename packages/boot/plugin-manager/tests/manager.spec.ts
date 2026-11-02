@@ -28,6 +28,11 @@ import * as gitTransport from '../src/git-transport.ts'
 import { parse, parseDocument } from 'yaml'
 import { isolateGitCommandLineConfig } from './git-environment.ts'
 
+/** Whether a listed bundle is one of the offline Official catalog entries every listing carries. */
+function isOfficialCatalogEntry(name: string): boolean {
+  return OFFICIAL_ON_DEMAND_CATALOG.some(entry => entry.packageName === name)
+}
+
 // These cases install through real Git and pnpm, so the host's command-line configuration group must not reach their children.
 let restoreGitCommandLineConfig: () => void
 beforeAll(() => { restoreGitCommandLineConfig = isolateGitCommandLineConfig() })
@@ -378,7 +383,7 @@ it('lists bundle versions and current-profile plugin targets', async () => {
   const plugins = await manager.listPlugins()
   expect(plugins.find(row => row.entryId === 'include:managed')).toMatchObject({ patchId: 'managed', enabled: true })
   expect(plugins.find(row => row.entryId === 'include:manager')?.readOnlyReason).toBe('management-required')
-  expect((await manager.listBundles()).filter(bundle => bundle.installTarget === undefined)).toEqual([
+  expect((await manager.listBundles()).filter(bundle => !isOfficialCatalogEntry(bundle.name))).toEqual([
     {
       name: 'core', version: '1.0.0', enabled: true, installed: false, official: false, availability: 'profile', optional: false, removable: false, updatable: false, readOnlyReason: 'management-required',
       meta: { title: 'core' },
@@ -459,7 +464,7 @@ it('names where each installed bundle comes from as a spec pnpm installs', async
   // The installation's own copy of a bundle is the one that loads, so the profile's dependency on it names nothing.
   writeFileSync(profile.installAnchor, JSON.stringify({ name: 'installation', dependencies: { shadowed: '1.0.0' } }))
   expect(Object.fromEntries((await manager.listBundles())
-    .filter(row => row.installTarget === undefined).map(row => [row.name, row.source]))).toEqual({
+    .filter(row => !isOfficialCatalogEntry(row.name)).map(row => [row.name, row.source]))).toEqual({
     core: undefined, extra: 'extra@^1.0.0', tagged: 'tagged@latest', aliased: 'aliased@npm:@acme/aliased@2', jsr: 'jsr@jsr:@acme/jsr@^1',
     github: 'github:someone/liwa-plugin#v1', ssh: 'git@github.com:someone/liwa-plugin.git', deploy: 'deploy@git.corp:team/liwa-plugin.git',
     sshUrl: 'git+ssh://git@github.com/someone/liwa-plugin.git', email: 'git+http://git.example.com/repo.git',
@@ -954,10 +959,10 @@ it('reports a selected plain dependency as a problem, omits an unselected one, a
   writeFileSync(join(dir, 'node_modules', 'core', 'package.json'), '{"name":"core","liwa":{"bundle":{"patch":"./cordis.patch.yml"}}}')
   expect((await manager.listBundles())[0]?.version).toBeUndefined()
   writeFileSync(join(dir, 'package.json'), '{}')
-  expect((await manager.listBundles()).filter(bundle => bundle.installTarget === undefined)).toEqual([])
+  expect((await manager.listBundles()).filter(bundle => !isOfficialCatalogEntry(bundle.name))).toEqual([])
   expect(await manager.setBundleEnabled('unknown', false)).toMatchObject({ application: 'failed' })
   writeFileSync(profile.installAnchor, '{"dependencies":{"missing-builtin":"1"}}')
-  expect((await manager.listBundles()).filter(bundle => bundle.installTarget === undefined)).toEqual([])
+  expect((await manager.listBundles()).filter(bundle => !isOfficialCatalogEntry(bundle.name))).toEqual([])
 })
 
 it('refuses management bundle disablement and permits repeated bundle selections', async () => {
@@ -1766,7 +1771,7 @@ it.each([false, true])('rechecks installed bundle peers before accepting a disab
   expect(readProfileManifest('test', dir).liwa?.profile?.bundles).toEqual(['core', 'extra'])
 })
 
-it('lists absent Official entries offline without resolving their packages or consulting registries', async () => {
+it('lists absent Official entries offline without a registry target outside a source checkout', async () => {
   const { manager } = await fixture()
   const resolve = vi.spyOn(operations, 'bundleManifest')
   const registry = vi.spyOn(operations, 'viewProfilePackage')
@@ -1776,7 +1781,7 @@ it('lists absent Official entries offline without resolving their packages or co
     expect(bundles.filter(bundle => bundle.name === entry.packageName)).toEqual([{
       name: entry.packageName, official: true, availability: 'missing', enabled: false, installed: false, optional: false,
       removable: false, updatable: false, rows: [], overrides: [], meta: entry.meta,
-      installTarget: { spec: `${entry.packageName}@${getLiwaRuntimeVersion()}`, version: getLiwaRuntimeVersion() },
+      error: { code: 'operation-error', diagnostic: expect.stringContaining('never installs its own packages from a registry') as string },
     }])
     expect(resolve.mock.calls.some(([name]) => name === entry.packageName)).toBe(false)
   }
@@ -1892,8 +1897,9 @@ it('reports and removes a saved Official selection whose dependency is absent', 
   const manifest = readProfileManifest('test', dir)
   manifest.liwa!.profile!.bundles!.push(name)
   writeFileSync(join(dir, 'package.json'), JSON.stringify(manifest))
+  // Outside a source checkout the entry has no installation target, which is the problem it reports.
   expect((await manager.listBundles()).find(bundle => bundle.name === name)).toMatchObject({
-    official: true, installed: false, availability: 'missing', enabled: true, removable: true, error: { code: 'not-bundle' },
+    official: true, installed: false, availability: 'missing', enabled: true, removable: true, error: { code: 'operation-error' },
   })
   const pnpm = vi.spyOn(operations, 'runProfilePnpm')
   onTestFinished(() => { pnpm.mockRestore() })
@@ -1912,8 +1918,9 @@ it('keeps a broken installation-carried catalog entry visible with offline metad
   writeFileSync(join(broken, 'package.json'), '{')
   expect((await manager.listBundles()).find(bundle => bundle.name === entry.packageName)).toMatchObject({
     official: true, availability: 'missing', enabled: false, installed: false, optional: false, removable: false,
-    meta: entry.meta, installTarget: { version: getLiwaRuntimeVersion() }, error: { code: 'operation-error' },
+    meta: entry.meta, error: { code: 'operation-error' },
   })
+  expect((await manager.listBundles()).find(bundle => bundle.name === entry.packageName)?.installTarget).toBeUndefined()
 })
 
 

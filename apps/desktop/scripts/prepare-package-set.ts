@@ -35,6 +35,12 @@ const REPOSITORY_ROOT = resolve(APP_ROOT, '..', '..')
 const REQUIRED_DEPENDENCY_SECTIONS = ['dependencies', 'peerDependencies'] as const
 const OPTIONAL_DEPENDENCY_SECTION = 'optionalDependencies'
 
+/** Platform and architecture whose optional native packages a package set selects. */
+export interface DesktopPayloadPlatform {
+  readonly platform: NodeJS.Platform
+  readonly arch: string
+}
+
 /** Packed package information needed to form the local Desktop closure. */
 export interface PackedDesktopPackage {
   readonly tarball: string
@@ -70,7 +76,7 @@ function dependencyNames(manifest: Readonly<Record<string, unknown>>, section: s
  */
 export function selectDesktopPackageClosure(
   available: ReadonlyMap<string, PackedDesktopPackage>,
-  target: ReturnType<typeof desktopTargetPlatform>,
+  target: DesktopPayloadPlatform,
 ): PackedDesktopPackage[] {
   const workspace = yaml.load(readFileSync(join(REPOSITORY_ROOT, 'pnpm-workspace.yaml'), 'utf8')) as { packages: string[] }
   const workspaceNames = new Set(globSync(workspace.packages.map(pattern => `${pattern}/package.json`), { cwd: REPOSITORY_ROOT })
@@ -149,7 +155,7 @@ export function assertDesktopHostPackageFiles(files: readonly string[]): void {
  * @param target - Platform and architecture of the installer payload.
  */
 export function prepareDesktopPackageSet(
-  inputs: readonly string[], output: string, target: ReturnType<typeof desktopTargetPlatform>,
+  inputs: readonly string[], output: string, target: DesktopPayloadPlatform,
 ): void {
   const selected = selectDesktopPackageClosure(packedPackages(inputs), target)
   const host = selected.find(packed => packed.manifest.name === DESKTOP_HOST_PACKAGE)
@@ -185,7 +191,7 @@ function main(): void {
   const defaultInputs = [
     buildPaths.packedLiwa,
     buildPaths.packedVendor,
-    buildPaths.packedLandlock,
+    buildPaths.packedNative,
   ]
   const { values } = parseArgs({
     options: { from: { type: 'string', multiple: true }, out: { type: 'string' } },

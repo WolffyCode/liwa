@@ -116,43 +116,33 @@ it('serves images beside a bundle document without caching and refuses other pat
   expect([...connection.routes.keys()]).toEqual(['/api/plugin-manager/detail-file'])
 })
 
-it('reads an offered official bundle from the npm CDNs at its offered version, npmmirror first when asked', async () => {
+it('reads an offered official bundle from the workspace package its link target names, without the network', async () => {
   const name = OFFICIAL_ON_DEMAND_CATALOG[0]!.packageName
-  const version = getLiwaRuntimeVersion()
-  const fetch = vi.fn((url: string) => Promise.resolve(url === `https://registry.npmmirror.com/${name}/${version}/files/README.md`
-    ? new Response('# Official')
-    : url.includes('/files/') ? new Response('missing', { status: 404 }) : Promise.reject(new Error(`unexpected ${url}`))))
+  const workspace = mkdtempSync(join(tmpdir(), 'liwa-offered-'))
+  onTestFinished(() => { rmSync(workspace, { recursive: true, force: true }) })
+  writeFileSync(join(workspace, 'README.md'), '# Official\n')
+  writeFileSync(join(workspace, 'shot.svg'), '<svg xmlns="http://www.w3.org/2000/svg"/>')
+  const fetch = vi.fn(() => Promise.reject(new Error('no network')))
   vi.stubGlobal('fetch', fetch)
   const { manager, image } = await fixture()
-  expect(await manager.readBundleDetail(name, 'en', { npmFileSources: ['npmmirror'] })).toEqual({ status: 'found', origin: 'readme', path: 'README.md', markdown: '# Official' })
-  expect(fetch.mock.calls[0]?.[0]).toBe(`https://registry.npmmirror.com/${name}/${version}/files/locale/en.json`)
-  fetch.mockClear()
-  expect((await image(`bundle=${encodeURIComponent(name)}&document=README.md&path=a.png&sources=npmmirror`)).status).toBe(404)
-  expect(fetch.mock.calls[0]?.[0]).toBe(`https://registry.npmmirror.com/${name}/${version}/files/a.png`)
-  vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new Error('offline'))))
-  expect(await failureOf(manager.readBundleDetail(name, 'en'))).toMatchObject({ code: 'plugin-manager/detail-unavailable', details: { reason: 'network' } })
-  expect((await image(`bundle=${encodeURIComponent(name)}&document=README.md&path=a.png`)).status).toBe(502)
-})
-
-it.each([undefined, { npmFileSources: [] }])('asks the CDNs in configured order unless npmmirror is asked first (%o)', async (options) => {
-  const name = OFFICIAL_ON_DEMAND_CATALOG[0]!.packageName
-  const version = getLiwaRuntimeVersion()
-  const fetch = vi.fn(() => Promise.resolve(new Response('missing', { status: 404 })))
-  vi.stubGlobal('fetch', fetch)
-  const { manager } = await fixture({ detailNpmFileSources: ['unpkg', 'npmmirror'] })
-  expect(await manager.readBundleDetail(name, 'en', options)).toEqual({ status: 'none' })
-  expect(fetch.mock.calls[0]).toEqual([`https://unpkg.com/${name}@${version}/locale/en.json`, expect.anything()])
-})
-
-it('shows no document for an offered bundle without a published version', async () => {
-  const name = OFFICIAL_ON_DEMAND_CATALOG[0]!.packageName
-  const { manager } = await fixture()
   const list = manager.listBundles.bind(manager)
   vi.spyOn(manager, 'listBundles').mockImplementation(async () => (await list()).map(bundle => bundle.name === name
-    ? { ...bundle, installTarget: { spec: 'link:../x', version: 'link:../x' } }
+    ? { ...bundle, installTarget: { spec: `link:${workspace}`, version: getLiwaRuntimeVersion() } }
     : bundle))
+  expect(await manager.readBundleDetail(name, 'en')).toEqual({ status: 'found', origin: 'readme', path: 'README.md', markdown: '# Official\n' })
+  expect((await image(`bundle=${encodeURIComponent(name)}&document=README.md&path=shot.svg`)).status).toBe(200)
+  expect(fetch).not.toHaveBeenCalled()
+})
+
+it('shows no document for an offered bundle the installation cannot link', async () => {
+  const name = OFFICIAL_ON_DEMAND_CATALOG[0]!.packageName
+  const fetch = vi.fn(() => Promise.reject(new Error('no network')))
+  vi.stubGlobal('fetch', fetch)
+  const { manager, image } = await fixture()
+  expect((await manager.listBundles()).find(bundle => bundle.name === name)?.installTarget).toBeUndefined()
   expect(await manager.readBundleDetail(name, 'en')).toEqual({ status: 'none' })
-  expect((await failureOf(manager.readBundleDetail('documented', 'en')))).toBeUndefined()
+  expect((await image(`bundle=${encodeURIComponent(name)}&document=README.md&path=a.png`)).status).toBe(404)
+  expect(fetch).not.toHaveBeenCalled()
 })
 
 it('reports a listed bundle whose directory is gone, and keeps failures other than detail failures', async () => {

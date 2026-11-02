@@ -21,8 +21,8 @@ describe('desktop package-set selection', () => {
   })
 
   it('does not select a packaging target when imported as a library', async () => {
-    vi.stubEnv('LIWA_DESKTOP_TARGET_PLATFORM', 'linux')
-    vi.stubEnv('LIWA_DESKTOP_TARGET_ARCH', 'x64')
+    vi.stubEnv('npm_config_platform', 'linux')
+    vi.stubEnv('npm_config_arch', 'x64')
     vi.resetModules()
     await expect(import('../scripts/prepare-package-set.ts')).resolves.toHaveProperty('prepareDesktopPackageSet')
   })
@@ -137,7 +137,7 @@ it.each([{ os: 'darwin' }, { cpu: [42] }])('rejects malformed platform constrain
   expect(() => selectDesktopPackageClosure(packages, { platform: 'win32', arch: 'x64' })).toThrow(/has invalid/u)
 })
 
-it('copies no macOS tarball into the Windows package set', () => {
+it('copies no macOS tarball into a package set for another platform', () => {
   const root = mkdtempSync(join(tmpdir(), 'desktop-platform-packages-'))
   onTestFinished(() => { rmSync(root, { recursive: true, force: true }) })
   const inputs = join(root, 'inputs')

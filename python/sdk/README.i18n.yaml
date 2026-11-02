@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write python/sdk/README.md
 /liwa-python-sdk:
-  en: be788a83d28876f6
-  zh: cddeddb8558a3697
+  en: 072775fddf19e2dd
+  zh: c67128f77ee48b34
 /liwa-python-sdk/optional-office-operations:
   en: 36399df29c687808
   zh: 1449d77cbd8239a2

@@ -34,11 +34,6 @@ type DesktopHostEvent = ReadyEvent | FatalEvent | PlatformSessionEvent | {
   readonly resource: { readonly path: string; readonly sha256: string; readonly size: number } | null
   readonly error?: string
 } | {
-  readonly type: 'update-tasks'
-  readonly requestId: number
-  readonly active: boolean
-  readonly error?: string
-} | {
   readonly type: 'quit-inspection'
   readonly requestId: number
   readonly activeTasks: boolean
@@ -92,9 +87,6 @@ function isDesktopHostEvent(message: unknown): message is DesktopHostEvent {
     }
     case 'fatal':
       return typeof candidate.message === 'string' && (candidate.diagnostic === undefined || typeof candidate.diagnostic === 'string')
-    case 'update-tasks':
-      return Number.isSafeInteger(candidate.requestId) && typeof candidate.active === 'boolean'
-        && (candidate.error === undefined || typeof candidate.error === 'string')
     case 'file-drag-resource': {
       const resource = candidate.resource
       return Number.isSafeInteger(candidate.requestId) && (candidate.error === undefined || typeof candidate.error === 'string')
@@ -128,9 +120,6 @@ export interface DesktopHostReady {
   readonly url: string
   readonly injections?: readonly unknown[] | undefined
 }
-
-/** The child has exited, but task teardown did not finish successfully. */
-export class DesktopHostUncleanExitError extends Error {}
 
 /**
  * A Host failure reported over IPC before the process exited. `message` is what
@@ -168,7 +157,6 @@ export class DesktopHostProcess {
   private stderr = ''
   private failureReported = false
   private stopping = false
-  private shutdownCompleted = false
   private nextControlId = 1
   private readonly controlRequests = new Map<number, {
     resolve: (response: DesktopHostControlResponse) => void
@@ -247,8 +235,7 @@ export class DesktopHostProcess {
       else if (message.type === 'ready') this.readyResolve({ url: message.url, injections: message.injections })
       else if (message.type === 'platform-session') this.onPlatformSession?.(message.session)
       else if (message.type === 'shutdown-complete') {
-        if (this.stopping) this.shutdownCompleted = true
-        else this.fail(new Error('liwa desktop host acknowledged an unrequested shutdown'))
+        if (!this.stopping) this.fail(new Error('liwa desktop host acknowledged an unrequested shutdown'))
       }
       else if (message.type === 'fatal') this.fail(new DesktopHostFatalError(message.message, message.diagnostic))
       else {
@@ -267,18 +254,6 @@ export class DesktopHostProcess {
       })
     })
     return this.readyPromise
-  }
-
-  /**
-   * Inspect active work or lock request admission for update handoff.
-   * @param action - Read-only inspection, admission lock, or recovery unlock.
-   * @returns Whether live tasks would be affected. Locking drains admitted API requests before inspecting tasks;
-   * an unanswered drain fails at the control-request deadline without authorizing installation.
-   */
-  async updateTasks(action: 'inspect' | 'lock' | 'unlock'): Promise<boolean> {
-    const response = await this.control({ type: 'update-tasks', action }, 10_000, 'desktop update: task inspection timed out', 'desktop update')
-    if (response.type !== 'update-tasks') throw new Error('desktop update: Host answered with a different control response')
-    return response.active
   }
 
   /**
@@ -306,8 +281,7 @@ export class DesktopHostProcess {
   }
 
   private async control(
-    request: { readonly type: 'update-tasks'; readonly action: 'inspect' | 'lock' | 'unlock' } | { readonly type: 'quit-inspection' }
-      | { readonly type: 'file-drag-resource'; readonly address: string },
+    request: { readonly type: 'quit-inspection' } | { readonly type: 'file-drag-resource'; readonly address: string },
     deadlineMs: number, deadlineMessage: string, operation: string, signal?: AbortSignal,
   ): Promise<DesktopHostControlResponse> {
     const child = this.child
@@ -340,11 +314,9 @@ export class DesktopHostProcess {
 
   /**
    * Request teardown and await child exit, escalating termination when needed.
-   * @param requireGraceful - Reject update handoff after forced termination or unsuccessful child exit.
-   * @returns Completion of owned process teardown. DesktopHostUncleanExitError confirms exit but refuses installation;
-   * other failures do not confirm exit.
+   * @returns Completion of owned process teardown; a failure does not confirm exit.
    */
-  async stop(requireGraceful = false): Promise<void> {
+  async stop(): Promise<void> {
     const child = this.child
     if (child === undefined) return
     this.stopping = true
@@ -360,11 +332,8 @@ export class DesktopHostProcess {
       }
     }
     this.child = undefined
-    if (requireGraceful && (!graceful || child.exitCode !== 0 || !this.shutdownCompleted)) {
-      // This diagnostic reaches expandable UI; arbitrary plugin stderr can contain credentials.
-      throw new DesktopHostUncleanExitError(`desktop update: Host did not complete graceful task teardown (exit ${String(child.exitCode)}, signal ${String(child.signalCode)}, shutdown acknowledged ${String(this.shutdownCompleted)}, graceful deadline exceeded ${String(!graceful)})`)
-    }
   }
+
 
   private fail(error: Error): void {
     if (this.runId !== undefined) Object.assign(error, { hostRunId: this.runId })

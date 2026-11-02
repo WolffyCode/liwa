@@ -26,7 +26,6 @@ git clone https://github.com/WolffyCode/liwa.git
 cd liwa
 python -m venv .venv
 . .venv/bin/activate
-python -m pip install liwa-sdk
 ```
 
 ```powershell [Windows PowerShell]
@@ -34,12 +33,11 @@ git clone https://github.com/WolffyCode/liwa.git
 Set-Location liwa
 py -3.10 -m venv .venv
 .venv\Scripts\Activate.ps1
-python -m pip install liwa-sdk
 ```
 
 :::
 
-The installation includes a matching native runtime wheel and the `liwa` command. Normal SDK execution needs no system Node.js. Repository contributors who build the artifacts should use the [Python contributor workflow](../../../python/development.md).
+Liwa does not publish `liwa-sdk` to PyPI. In this environment, build and install the SDK wheel and the native runtime wheel for this platform with the Build distributions steps of the [Python contributor workflow](../../../python/development.md). The runtime wheel provides the `liwa` command; normal SDK execution needs no system Node.js.
 
 ## Run the checked-in example
 

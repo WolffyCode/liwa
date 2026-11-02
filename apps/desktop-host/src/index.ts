@@ -13,7 +13,6 @@ import { resolveLiwaHome } from '@liwa/home-paths'
 import * as desktopOffice from './office.ts'
 import { localDragResource } from './file-drag.ts'
 
-import { installDesktopUpdateTaskControl } from './update-tasks.ts'
 import { installDesktopQuitInspection } from './quit-inspection.ts'
 import { installPlatformSessionPublisher } from './platform-session.ts'
 import { installOfficeEngineResolution } from './office-engine.ts'
@@ -50,7 +49,6 @@ async function main(): Promise<void> {
   const dragReads = new Map<number, AbortController>()
   const dragTasks = new Set<Promise<void>>()
   const control: {
-    updateTasks?: ReturnType<typeof installDesktopUpdateTaskControl>
     quitInspection?: ReturnType<typeof installDesktopQuitInspection>
   } = {}
   const send = (message: object): Promise<void> => new Promise((resolve, reject) => {
@@ -111,25 +109,11 @@ async function main(): Promise<void> {
             error: error instanceof Error ? error.message : String(error) })
         }
       })().catch((error: unknown) => { console.error(error) })
-      return
     }
-    if (message.type !== 'update-tasks' || !('requestId' in message) || !Number.isSafeInteger(message.requestId)
-      || !('action' in message) || !['inspect', 'lock', 'unlock'].includes(String(message.action))) return
-    void (async () => {
-      try {
-        if (stopping !== undefined || control.updateTasks === undefined) throw new Error('desktop update: Host is unavailable')
-        const active = await control.updateTasks(message.action as 'inspect' | 'lock' | 'unlock')
-        await send({ type: 'update-tasks', requestId: message.requestId, active })
-      } catch (error) {
-        await send({ type: 'update-tasks', requestId: message.requestId, active: true,
-          error: error instanceof Error ? error.message : String(error) })
-      }
-    })().catch((error: unknown) => { console.error(error) })
   })
   process.once('disconnect', () => { void stop() })
   const { ctx } = await application
   installOperationDiagnostics(ctx, record => send({ type: 'plugin-operation', record }), 32, runId)
-  control.updateTasks = installDesktopUpdateTaskControl(ctx)
   control.quitInspection = installDesktopQuitInspection(ctx)
   await ctx.plugin(desktopOffice, {
     runtimeDir,

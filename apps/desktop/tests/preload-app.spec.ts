@@ -2,7 +2,6 @@
 import type { DesktopFileDrag, FileDragHandle, FileDragRequestId } from '@liwa/util-file-drag'
 import { JSDOM } from 'jsdom'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
-import { installMandatoryUpdateOverlay } from '../src/preload-mandatory-overlay.ts'
 import { syncWindowsAppearance } from '../src/preload-windows.ts'
 import { DESKTOP_IPC, type LiwaDesktopProductApi } from '../src/ipc.ts'
 
@@ -15,7 +14,6 @@ vi.mock('electron', () => electron)
 vi.mock('../src/preload-platform.ts', () => ({ markDocumentPlatform: vi.fn(), syncWindowFullscreen: vi.fn() }))
 vi.mock('../src/preload-theme.ts', () => ({ syncNativeTheme: vi.fn() }))
 vi.mock('../src/preload-windows.ts', () => ({ syncWindowsAppearance: vi.fn() }))
-vi.mock('../src/preload-mandatory-overlay.ts', () => ({ installMandatoryUpdateOverlay: vi.fn() }))
 
 beforeEach(() => { vi.stubGlobal('process', { ...process, isMainFrame: true }) })
 afterEach(() => { document.body.replaceChildren(); vi.unstubAllGlobals(); vi.restoreAllMocks(); vi.clearAllMocks(); vi.resetModules() })
@@ -38,24 +36,13 @@ it('exposes onboarding size activation to the application document', async () =>
   expect(electron.ipcRenderer.send.mock.calls).toEqual([[DESKTOP_IPC.onboardingActive, true], [DESKTOP_IPC.onboardingActive, false]])
 })
 
-it('limits product documents to update status and a native confirmation action', async () => {
+it('gives product documents no plugin, backend, or update operations', async () => {
   vi.stubGlobal('location', new URL('liwa-app://app/index.html'))
   await import('../src/preload-app.ts')
   const api = electron.contextBridge.exposeInMainWorld.mock.calls.find(([name]) => name === 'liwaDesktop')?.[1] as LiwaDesktopProductApi
-  await api.updates.status()
-  await api.updates.open()
-  expect(electron.ipcRenderer.invoke.mock.calls).toEqual([[DESKTOP_IPC.updatesStatus], [DESKTOP_IPC.updatesOpen]])
   expect(api).not.toHaveProperty('plugins')
   expect(api).not.toHaveProperty('backend')
-  expect(api.updates).not.toHaveProperty('install')
-  const listener = vi.fn()
-  const dispose = api.updates.subscribe(listener)
-  const handler = electron.ipcRenderer.on.mock.calls.find(([channel]) => channel === DESKTOP_IPC.updatesPresentation)?.[1] as
-    (event: unknown, state: unknown) => void
-  handler({}, { visible: false })
-  expect(listener).toHaveBeenCalledWith({ visible: false })
-  dispose()
-  expect(electron.ipcRenderer.off).toHaveBeenCalledWith(DESKTOP_IPC.updatesPresentation, handler)
+  expect(api).not.toHaveProperty('updates')
 })
 
 it.each(['liwa-app://shell/plugin-manager.html', 'liwa-app://other/index.html', 'https://shell/startup.html', 'http://example.com/'])('exposes only the carrier marker to %s', async (url) => {
@@ -154,17 +141,6 @@ it('moves welcome-entry focus to the document without changing keyboard tab orde
     enter()
     expect(dom.window.document.body.getAttribute('tabindex')).toBe('-1')
   } finally { dom.window.close() }
-})
-
-it.each(['win32', 'darwin'] as const)('installs the embedded mandatory UI only in the Windows app document (%s)', async (platform) => {
-  vi.stubGlobal('process', { ...process, platform })
-  for (const url of ['liwa-app://app/', 'liwa-app://shell/mandatory-update.html', 'https://example.com/']) {
-    vi.resetModules()
-    vi.mocked(installMandatoryUpdateOverlay).mockClear()
-    vi.stubGlobal('location', new URL(url))
-    await import('../src/preload-app.ts')
-    expect(installMandatoryUpdateOverlay).toHaveBeenCalledTimes(platform === 'win32' && url === 'liwa-app://app/' ? 1 : 0)
-  }
 })
 
 it('exposes constrained shortcut operations and releases configuration subscriptions', async () => {

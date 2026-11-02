@@ -51,7 +51,7 @@ export const ALLOWED_SPANS: readonly BrandException[] = [
     pattern: /@deepseek-ai\/libreoffice-kit[\w.-]*|deepseek-ai\/dsh-libreoffice-kit|['"`]@deepseek-ai['"`],\s*['"`]libreoffice-kit/gu,
   },
   {
-    reason: 'Addresses of DeepSeek servers (account sign-in, desktop updates, telemetry, model API) are registered by DeepSeek.',
+    reason: 'Addresses of DeepSeek servers (account sign-in, telemetry, model API) are registered by DeepSeek.',
     pattern: /(?:https?:\/\/)?(?:[A-Za-z0-9-]+\.)*deepseek(?:svc)?\.(?:com|cn|test|invalid)\b(?::\d+)?(?:\/[^\s"'`<>)\]\\|,]*)?/gu,
   },
   {
@@ -82,19 +82,6 @@ export const ALLOWED_SPANS: readonly BrandException[] = [
   {
     reason: 'The DeepSeek telemetry collector routes product telemetry by its x-channel value.',
     pattern: /dsh_otel_report/gu,
-  },
-  {
-    reason: 'The desktop download and update server layout on download.deepseek.com belongs to DeepSeek.',
-    pattern: /dsh-latest-[a-z0-9-]+\.(?:exe|dmg)|dsh-latest-\$\{|dsh-desk(?![a-zA-Z])/gu,
-  },
-  {
-    reason: 'macOS bundle ids and the OS URL scheme are externally registered; the owner decides when to move them.',
-    pattern: anySpan(
-      /com\.deepseek\.(?:harness|dsh)\b[\w.${}-]*/u,
-      /\bdsh:\/\//u,
-      /schemes: (?:readonly )?\[\s*'dsh'\s*\]/u,
-      /setAsDefaultProtocolClient\('dsh'\)/u,
-    ),
   },
   {
     reason: 'Upstream issues, pull requests, commits, forks and actions are cited at their upstream location.',

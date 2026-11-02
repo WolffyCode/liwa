@@ -1,6 +1,5 @@
 /** Materialize the complete production runtime before publishing Desktop resources. */
 
-import { resolveMacOSSignatureCacheDirectory } from './macos-signature-cache-directory.mjs'
 import { packagingStep } from './packaging-step.mjs'
 import { spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
@@ -23,15 +22,7 @@ import { smokePrimaryRuntime } from './prepare-primary-runtime.ts'
 import { smokePreparedRuntime } from './smoke-prepared-runtime.ts'
 import { prepareRuntimeManifests } from './prepare-runtime-manifests.ts'
 import { prepareRuntimePatches, verifyRuntimePatches } from './prepare-runtime-patches.ts'
-import { writeDesktopRuntime, writeDesktopRuntimeAsync, verifyDesktopRuntime } from '../src/runtime-tree.ts'
-import {
-  resolveDesktopAppId,
-  resolveMacOSSigningEnvironment,
-  resolveNpmRegistry,
-} from './desktop-release-environment.mjs'
-import {
-  signMacOSRuntime,
-} from './macos-runtime.ts'
+import { writeDesktopRuntime, verifyDesktopRuntime } from '../src/runtime-tree.ts'
 import { desktopTargetPlatform, resolveDesktopBuildTarget, resolveDesktopTargetBuildPaths } from './desktop-build-paths.mjs'
 import { desktopRuntimeFileExclusion } from './runtime-file-policy.ts'
 import { selectOfficeEngine } from '../../../scripts/libreoffice-packages.mjs'
@@ -44,8 +35,29 @@ const STORE_ROOT = BUILD_PATHS.pnpmStore
 const RUNTIME_ROOT = BUILD_PATHS.runtime
 const PNPM_BUILD_STATE = BUILD_PATHS.liwaPnpm
 const PACKAGE_SET_ROOT = BUILD_PATHS.packageSet
-const NODE = join(BUILD_PATHS.electron, process.platform === 'win32' ? 'electron.exe' : 'Electron.app/Contents/MacOS/Electron')
+const NODE = join(BUILD_PATHS.electron, 'Electron.app/Contents/MacOS/Electron')
 const PNPM = join(RUNTIME_ROOT, 'primary-runtime', 'dependencies', 'pnpm', 'bin', 'pnpm.mjs')
+/** Optional registry mirror for the third-party packages of the bundled runtime. */
+const NPM_REGISTRY_ENV = 'LIWA_DESKTOP_NPM_REGISTRY'
+const DEFAULT_NPM_REGISTRY = 'https://registry.npmjs.org/'
+
+/**
+ * Resolve the registry that supplies the runtime's third-party packages; workspace packages always come from local tarballs.
+ * @param env - Packaging environment.
+ * @returns Registry origin; the public registry unless a mirror is configured.
+ */
+function resolveNpmRegistry(env: NodeJS.ProcessEnv): string {
+  const configured = env[NPM_REGISTRY_ENV]?.trim() ?? ''
+  if (configured === '') return DEFAULT_NPM_REGISTRY
+  let url: URL
+  try { url = new URL(configured) }
+  catch { throw new Error(`desktop runtime: ${NPM_REGISTRY_ENV} must be an HTTPS origin`) }
+  if (url.protocol !== 'https:' || url.username !== '' || url.password !== '' || url.search !== '' || url.hash !== ''
+    || (url.pathname !== '/' && url.pathname !== '')) {
+    throw new Error(`desktop runtime: ${NPM_REGISTRY_ENV} must be an HTTPS origin without credentials, path, query, or fragment`)
+  }
+  return url.origin
+}
 
 function manifestVersion(path: string, subject: string): string {
   const manifest = JSON.parse(readFileSync(path, 'utf8')) as { version?: unknown }
@@ -133,10 +145,7 @@ async function main(): Promise<void> {
     verifyRuntimePatches(BUILD_ROOT, patches)
     const lockfile = readFileSync(join(BUILD_ROOT, 'pnpm-lock.yaml'), 'utf8')
     console.log(`desktop runtime: lockfile sha256 ${createHash('sha256').update(lockfile).digest('hex')}`)
-    verifyDesktopCoreLockfile(
-      lockfile,
-      readDesktopCorePackageSet(BUILD_ROOT, release.version),
-    )
+    verifyDesktopCoreLockfile(lockfile)
     await packagingStep(process.env.LIWA_DESKTOP_PACKAGING_RUN_DIR, 'runtime:install', () => runPnpm(['install', '--prod', '--frozen-lockfile', '--trust-lockfile']))
     const packageSet = readDesktopCorePackageSet(BUILD_ROOT, release.version)
     const targetName = resolveDesktopBuildTarget()
@@ -163,22 +172,14 @@ async function main(): Promise<void> {
     if (!existsSync(join(LIWA_OUTPUT_ROOT, 'node_modules', '@deepseek-ai', `libreoffice-kit-${officeEngine}`, 'prebuilds.json'))) {
       throw new Error(`desktop runtime: missing required LibreOffice engine ${officeEngine}`)
     }
-    if (process.platform === 'darwin' && process.env.LIWA_DESKTOP_UNSIGNED !== '1') {
-      const cacheDirectory = resolveMacOSSignatureCacheDirectory(process.env, BUILD_PATHS.root)
-      await packagingStep(process.env.LIWA_DESKTOP_PACKAGING_RUN_DIR, 'sign:liwa-native', () => signMacOSRuntime(LIWA_OUTPUT_ROOT, resolveDesktopAppId(process.env), resolveMacOSSigningEnvironment(process.env), target.arch, cacheDirectory))
-      await packagingStep(process.env.LIWA_DESKTOP_PACKAGING_RUN_DIR, 'sign:primary-native', () => signMacOSRuntime(join(RUNTIME_ROOT, 'primary-runtime'), resolveDesktopAppId(process.env), resolveMacOSSigningEnvironment(process.env), target.arch, cacheDirectory, 'primary'))
-    }
     await packagingStep(process.env.LIWA_DESKTOP_PACKAGING_RUN_DIR, 'runtime:manifests', () => prepareRuntimeManifests(LIWA_OUTPUT_ROOT))
     await packagingStep(process.env.LIWA_DESKTOP_PACKAGING_RUN_DIR, 'runtime:primary-smoke', async () => smokePrimaryRuntime(join(RUNTIME_ROOT, 'primary-runtime')))
     await packagingStep(process.env.LIWA_DESKTOP_PACKAGING_RUN_DIR, 'runtime:write-descriptor', async () => {
-      const writeRuntime = target.platform === 'win32' ? writeDesktopRuntimeAsync : writeDesktopRuntime
-      return writeRuntime(LIWA_OUTPUT_ROOT, release, packageSet.packages.map(entry => entry.name), target)
+      return writeDesktopRuntime(LIWA_OUTPUT_ROOT, release, packageSet.packages.map(entry => entry.name), target)
     })
     const descriptor = await packagingStep(process.env.LIWA_DESKTOP_PACKAGING_RUN_DIR, 'runtime:verify-before-smoke', () => verifyDesktopRuntime(LIWA_OUTPUT_ROOT, release.version, target))
-    if (!process.argv.includes('--defer-runtime-smoke')) {
-      await packagingStep(process.env.LIWA_DESKTOP_PACKAGING_RUN_DIR, 'runtime:smoke', () => smokePreparedRuntime(LIWA_OUTPUT_ROOT, NODE, RUNTIME_ROOT, descriptor))
-      await packagingStep(process.env.LIWA_DESKTOP_PACKAGING_RUN_DIR, 'runtime:verify-after-smoke', () => verifyDesktopRuntime(LIWA_OUTPUT_ROOT, release.version, target))
-    }
+    await packagingStep(process.env.LIWA_DESKTOP_PACKAGING_RUN_DIR, 'runtime:smoke', () => smokePreparedRuntime(LIWA_OUTPUT_ROOT, NODE, RUNTIME_ROOT, descriptor))
+    await packagingStep(process.env.LIWA_DESKTOP_PACKAGING_RUN_DIR, 'runtime:verify-after-smoke', () => verifyDesktopRuntime(LIWA_OUTPUT_ROOT, release.version, target))
   } catch (error) {
     rmSync(LIWA_OUTPUT_ROOT, { recursive: true, force: true })
     throw error

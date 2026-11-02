@@ -34,6 +34,8 @@ pnpm liwa web
 
 灵鲸的数据放在 `~/.liwa`；设置 `LIWA_HOME` 可改用其他目录。
 
+桌面应用只在 Apple Silicon Mac 上本地打包：`pnpm run package:desktop` 生成 `Liwa.app`，不签发布证书、不公证、也没有自动更新。详见 [Desktop 打包](apps/desktop/packaging/README.zh.md)。
+
 ## 参与贡献
 
 参见 [CONTRIBUTING.md](CONTRIBUTING.zh.md)。

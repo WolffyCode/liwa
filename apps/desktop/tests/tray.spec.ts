@@ -63,7 +63,7 @@ it('relabels the menu in the current locale and ignores relabel after disposal',
   const f = setup()
   f.setLocale('zh')
   f.tray.relabel()
-  expect(labels(native.menus[1]!)).toEqual(['打开灵鲸', 'separator', '退出灵鲸'])
+  expect(labels(native.menus[1]!)).toEqual(['打开 Liwa', 'separator', '退出 Liwa'])
   f.tray.dispose()
   f.tray.dispose()
   expect(f.native.destroy).toHaveBeenCalledOnce()

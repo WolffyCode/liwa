@@ -30,6 +30,8 @@ pnpm liwa web
 
 Liwa keeps its data under `~/.liwa`; set `LIWA_HOME` to use another directory.
 
+The desktop application is packaged locally on an Apple Silicon Mac only: `pnpm run package:desktop` produces `Liwa.app` without a release certificate, notarization, or automatic updates. See [Desktop packaging](apps/desktop/packaging/README.md).
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).

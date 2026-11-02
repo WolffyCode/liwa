@@ -24,16 +24,16 @@ function fixture() {
   return { root, anchor, directory }
 }
 
-it('offers an exact prerelease registry target for a packed installation inside a checkout', () => {
+it('offers no registry target for a packed installation, even inside a checkout', () => {
   const { anchor } = fixture()
   writeFileSync(anchor, JSON.stringify({ name: '@liwa/cli', version, dependencies: { '@liwa/app-boot': version } }))
-  expect(officialBundleInstallTarget(name, anchor, version)).toEqual({ spec: `${name}@${version}`, version })
+  expect(() => officialBundleInstallTarget(name, anchor, version)).toThrow('never installs its own packages from a registry')
 })
 
-it('keeps an installation without workspace dependencies on the registry path', () => {
+it('offers no registry target for an installation without workspace dependencies', () => {
   const { anchor } = fixture()
   writeFileSync(anchor, JSON.stringify({ name: '@liwa/cli', version }))
-  expect(officialBundleInstallTarget(name, anchor, version)).toEqual({ spec: `${name}@${version}`, version })
+  expect(() => officialBundleInstallTarget(name, anchor, version)).toThrow('available only when Liwa runs from its source checkout')
 })
 
 it('finds the package by manifest name rather than assuming its workspace directory', () => {

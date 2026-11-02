@@ -2,7 +2,6 @@
 import type { Context as ClientContext } from '@liwa/cordis'
 import { createSnapshotStore, type SnapshotStore } from '@liwa/client-store'
 import type { BundleDetail, RemoteFailure } from '@liwa/api-remotes/client'
-import { NPMMIRROR_REGISTRY } from '@liwa/plugin-manager/registry'
 
 /** Why a bundle detail read failed: the Host's `plugin-manager/detail-unavailable` reason, or `other`. */
 export type BundleDetailFailure = 'too-large' | 'network' | 'denied' | 'git-unavailable' | 'invalid' | 'other'
@@ -41,8 +40,6 @@ export class BundleDetailController {
   /** The latest read of each key, numbered across the controller's lifetime; an older read's answer is dropped. */
   private readonly reads = new Map<string, number>()
   private sequence = 0
-  /** npm file CDNs to ask first, from the Host's latest registry comparison: npmmirror when its registry answered fastest. */
-  private npmFileSources: 'npmmirror'[] = []
   private disposed = false
 
   /**
@@ -56,10 +53,9 @@ export class BundleDetailController {
    * @param name - the bundle's package name.
    * @param version - its installed or offered version.
    * @param language - the display language.
-   * @param fromNpm - whether the bundle's files are unavailable, so the Host reads its offered version from the npm file CDNs.
    */
-  load(name: string, version: string | undefined, language: string, fromNpm: boolean): void {
-    if (!this.reads.has(bundleDetailKey(name, version, language))) void this.read(name, version, language, fromNpm)
+  load(name: string, version: string | undefined, language: string): void {
+    if (!this.reads.has(bundleDetailKey(name, version, language))) void this.read(name, version, language)
   }
 
   /**
@@ -67,10 +63,9 @@ export class BundleDetailController {
    * @param name - the bundle's package name.
    * @param version - its installed or offered version.
    * @param language - the display language.
-   * @param fromNpm - whether the Host reads the bundle from the npm file CDNs.
    */
-  retry(name: string, version: string | undefined, language: string, fromNpm: boolean): void {
-    void this.read(name, version, language, fromNpm)
+  retry(name: string, version: string | undefined, language: string): void {
+    void this.read(name, version, language)
   }
 
   /**
@@ -78,13 +73,11 @@ export class BundleDetailController {
    * @param name - the bundle's package name.
    * @param document - the document's path inside the bundle.
    * @param destination - the image destination as the document writes it.
-   * @param fromNpm - whether the Host reads the bundle from the npm file CDNs.
    * @returns the authenticated Host URL, or undefined for an absolute, protocol-relative, or fragment destination.
    */
-  image(name: string, document: string, destination: string, fromNpm: boolean): string | undefined {
+  image(name: string, document: string, destination: string): string | undefined {
     if (/^(?:[a-z][a-z\d+.-]*:|\/\/|#)/iu.test(destination)) return undefined
-    const sources = fromNpm ? this.npmFileSources : []
-    const query = new URLSearchParams({ bundle: name, document, path: destination, ...sources.length > 0 ? { sources: sources.join(',') } : {} })
+    const query = new URLSearchParams({ bundle: name, document, path: destination })
     return new URL(`${DETAIL_FILE_ROUTE}?${query.toString()}`, this.base()).href
   }
 
@@ -99,22 +92,15 @@ export class BundleDetailController {
     this.disposed = true
   }
 
-  private async read(name: string, version: string | undefined, language: string, fromNpm: boolean): Promise<void> {
+  private async read(name: string, version: string | undefined, language: string): Promise<void> {
     const key = bundleDetailKey(name, version, language)
     const read = ++this.sequence
     this.reads.set(key, read)
     if (this.store.getSnapshot()[key]?.status !== 'ready') this.publish(key, { status: 'loading' })
-    // The remote is captured before any wait: the plugin's context may be disposed while the comparison runs.
+    // The remote is captured before the wait: the plugin's context may be disposed while the read runs.
     const { remote } = this.ctx
     const current = (): boolean => !this.disposed && this.reads.get(key) === read
-    // Only a bundle read from the CDNs waits for the registry comparison.
-    if (fromNpm) {
-      const fastest = await remote.pluginRegistryProbe.fastest()
-      // A retry or reset started while the comparison ran settles the key instead.
-      if (!current()) return
-      this.npmFileSources = fastest.ok && fastest.value === NPMMIRROR_REGISTRY ? ['npmmirror'] : []
-    }
-    const answer = await remote.pluginManager.readBundleDetail(name, language, { npmFileSources: fromNpm ? this.npmFileSources : [] })
+    const answer = await remote.pluginManager.readBundleDetail(name, language)
     if (current()) this.publish(key, answer.ok ? { status: 'ready', detail: answer.value } : { status: 'error', failure: failureOf(answer.error) })
   }
 

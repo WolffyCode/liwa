@@ -83,21 +83,19 @@ describe('desktop core package set', () => {
     expect(() => verifyDesktopCorePackageSet(root, '1.2.3')).toThrow(/does not match its descriptor/u)
   })
 
-  it('rejects registry resolutions for names supplied by the local package set', () => {
-    const liwa = record('@liwa/cli', 'liwa.tgz', Buffer.from('liwa'))
-    const host = record('@liwa/desktop-host', 'host.tgz', Buffer.from('host'))
-    const packageSet = parseDesktopCorePackageSet({ schemaVersion: 1, packages: [liwa, host] })
+  it('rejects registry resolutions for every workspace-scoped package', () => {
     expect(() => {
-      verifyDesktopCoreLockfile(
-        "packages:\n  '@liwa/cli@file:desktop-packages/liwa.tgz':\n    resolution: {}\n",
-        packageSet,
-      )
+      verifyDesktopCoreLockfile("packages:\n  '@liwa/cli@file:desktop-packages/liwa.tgz':\n    resolution: {}\n")
     }).not.toThrow()
     expect(() => {
-      verifyDesktopCoreLockfile(
-        "packages:\n  '@liwa/cli@1.2.3':\n    resolution: {integrity: sha512-registry}\n",
-        packageSet,
-      )
-    }).toThrow(/outside the local package set/u)
+      verifyDesktopCoreLockfile("packages:\n  '@liwa/cli@1.2.3':\n    resolution: {integrity: sha512-registry}\n")
+    }).toThrow(/from a registry instead of the local package set/u)
+    // A workspace package outside the packed set, such as a platform binding, is refused as well.
+    expect(() => {
+      verifyDesktopCoreLockfile("packages:\n  '@liwa/node-addon-system-darwin-arm64@0.1.2':\n    resolution: {integrity: sha512-registry}\n")
+    }).toThrow(/@liwa\/node-addon-system-darwin-arm64@0\.1\.2 from a registry/u)
+    expect(() => {
+      verifyDesktopCoreLockfile("overrides:\n  '@liwa/cli': file:./desktop-packages/liwa.tgz\nsnapshots:\n  zod@4.4.3: {}\n")
+    }).not.toThrow()
   })
 })

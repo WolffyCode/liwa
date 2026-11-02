@@ -109,7 +109,7 @@ describe.skipIf(!existsSync(builtHost))('built Desktop welcome flow', () => {
         },
         // This suite assembles a synthetic project on hosts that prepare no Desktop target, and
         // nothing it exercises compares the descriptor's platform/arch outside packaging.
-        target: 'mac-x64',
+        target: 'mac-arm64',
       })
       cpSync(join(repository, 'packages/skill/skill-office/assets'), join(root, 'runtime/office-skills'), { recursive: true })
       const nodeBin = join(root, 'runtime/primary-runtime/dependencies/node/bin')
@@ -183,11 +183,11 @@ describe.skipIf(!existsSync(builtHost))('built Desktop welcome flow', () => {
       await backend!.account.cancel(waiting.attempt!.id)
       expect((await fetch(late, { redirect: 'manual' })).status).not.toBe(302)
       expect(await status()).toMatchObject({ loggedIn: false })
-      // A handle left open after acknowledged teardown must not fail the update handoff.
+      // A handle left open after acknowledged teardown must not keep the Host alive.
       vi.stubEnv('NODE_OPTIONS', `--import=data:text/javascript,${encodeURIComponent(
         "process.on('message', message => { if (message?.type === 'shutdown') setInterval(() => {}, 1000) })")}`)
       await restart()
-      await host!.stop(true)
+      await host!.stop()
     } finally {
       await host?.stop()
       await platform.close()

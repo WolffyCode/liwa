@@ -102,7 +102,6 @@ vi.mock('electron', () => ({
 vi.mock('../src/tray.ts', () => ({ DesktopTray: class { relabel() {} dispose() {} } }))
 
 vi.mock('../src/paths.ts', () => ({ resolveDesktopPaths: () => ({ profile: '/profile' }) }))
-vi.mock('../src/settings.ts', () => ({ readDesktopSettings: () => ({ updates: { allowTestAuthPopupWindow: false } }) }))
 vi.mock('../src/login-shell-environment.ts', async importOriginal => ({
   ...await importOriginal<typeof import('../src/login-shell-environment.ts')>(),
   readDesktopLoginShellEnvironment: async (base: NodeJS.ProcessEnv) => ({ environment: base, failures: [] }),
@@ -141,18 +140,9 @@ vi.mock('../src/welcome-backend.ts', () => ({
     },
   }),
 }))
-vi.mock('node:fs/promises', async importOriginal => ({
-  ...await importOriginal<typeof import('node:fs/promises')>(),
-  readFile: vi.fn(async () => '{}'),
-}))
 vi.mock('../src/update-dialog.ts', () => ({ DesktopUpdateDialog: class {
   constructor(_preload: string, locale: () => DesktopLocale) { state.dialogLocale = locale }
   dispose() {}
-} }))
-vi.mock('../src/update-coordinator.ts', () => ({ DesktopUpdateCoordinator: class {
-  state = { phase: 'idle' }
-  check = vi.fn(async () => this.state)
-  dispose = vi.fn()
 } }))
 vi.mock('../src/welcome-window.ts', () => ({
   openWelcomeWindow: async (locale: DesktopLocale, operations: WelcomeOperations) => {
@@ -172,14 +162,13 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-it.each([false, true])('starts welcome onboarding without carrying update focus into login or skip (Windows update=%s)', async (updated) => {
+it('starts welcome onboarding and leaves login and skip to their own activation', async () => {
   vi.resetModules()
   vi.clearAllMocks()
   state.preference = 'zh'
   state.hasApiKey = false
   state.operations = undefined
   state.accountState.mockResolvedValue({ status: 'signed-out', attempt: null, links: { usageUrl: '', topUpUrl: '' } })
-  if (updated) vi.stubGlobal('process', { ...process, platform: 'win32', argv: ['desktop', '--updated'] })
   vi.useFakeTimers()
   vi.stubEnv('LIWA_CLIENT_VERSION', '1.2.3')
   vi.stubEnv('LIWA_DESKTOP_DEV_PROJECT_DIR', '/development-profile')
@@ -189,15 +178,13 @@ it.each([false, true])('starts welcome onboarding without carrying update focus 
   vi.stubEnv('LIWA_DESKTOP_PRIMARY_RUNTIME_DIR', '/runtime/primary-runtime')
   vi.stubEnv('LIWA_DESKTOP_HOST_INSPECT_PORT', undefined)
   vi.stubEnv('LIWA_DESKTOP_OPEN_DEVTOOLS', '0')
-  vi.stubEnv('LIWA_DESKTOP_MANDATORY_UPDATE_CONFIG', undefined)
-  vi.stubEnv('LIWA_DESKTOP_UPDATE_JOURNAL_DIR', undefined)
   const reading = Promise.withResolvers<undefined>()
   const loading = Promise.withResolvers<undefined>()
   state.beforeRead.mockReturnValueOnce(reading.promise)
   state.beforeWelcome.mockReturnValueOnce(loading.promise)
   const activate = () => {
     state.appListeners.get('second-instance')!()
-    state.appListeners.get('open-url')!({ preventDefault: vi.fn() }, 'dsh://open')
+    state.appListeners.get('open-url')!({ preventDefault: vi.fn() }, 'liwa://open')
   }
   await import('../src/main.ts')
   await vi.waitFor(() => { expect(state.beforeRead).toHaveBeenCalledOnce() })
@@ -295,7 +282,10 @@ it.each([false, true])('starts welcome onboarding without carrying update focus 
   expect(state.focusWorkspace).not.toHaveBeenCalled()
   expect(state.moveTopWorkspace).not.toHaveBeenCalled()
   expect(state.openDevTools).not.toHaveBeenCalled()
-  state.appListeners.get('open-url')!({ preventDefault: vi.fn() }, 'dsh://open')
+  // Another application's scheme is not this application's link and changes nothing.
+  state.appListeners.get('open-url')!({ preventDefault: vi.fn() }, 'example://open')
+  expect(state.showWorkspace).not.toHaveBeenCalled()
+  state.appListeners.get('open-url')!({ preventDefault: vi.fn() }, 'liwa://open')
   expect(state.showWorkspace).toHaveBeenCalledOnce()
   expect(state.focusWorkspace).toHaveBeenCalledOnce()
 

@@ -14,7 +14,7 @@
   },
   "darwin:zh-CN": {
     "menu": [
-      { "label": "关于灵鲸", "role": "about" },
+      { "label": "关于 Liwa", "role": "about" },
       { "type": "separator" }
     ],
     "options": {
@@ -27,7 +27,7 @@
   },
   "win32:zh-CN": {
     "menu": [
-      { "label": "关于灵鲸" },
+      { "label": "关于 Liwa" },
       { "type": "separator" }
     ],
     "options": {

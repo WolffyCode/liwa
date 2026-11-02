@@ -2,11 +2,7 @@
 
 English | [中文](README.zh.md)
 
-Python subprocess SDK for driving Liwa over newline-delimited JSON-RPC on stdio. Install `liwa-sdk`; it installs the exact same-version `liwa-runtime-bin` wheel for the current platform.
-
-```sh
-python -m pip install liwa-sdk
-```
+Python subprocess SDK for driving Liwa over newline-delimited JSON-RPC on stdio. Liwa does not publish `liwa-sdk` to PyPI. Build the SDK wheel and the `liwa-runtime-bin` wheel for the current platform from a checkout with the [Python contributor workflow](../development.md), then install both; the SDK pins the exact same-version runtime wheel.
 
 ## Optional Office operations
 

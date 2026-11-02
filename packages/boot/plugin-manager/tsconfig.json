@@ -72,9 +72,6 @@
       "path": "../../util/plugin-detail"
     },
     {
-      "path": "../../util/timeout"
-    },
-    {
       "path": "../../client/connection/tsconfig.host.json"
     }
   ]

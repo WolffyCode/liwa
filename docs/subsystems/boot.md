@@ -215,17 +215,15 @@ Manage profile files and apply their declared reload lifecycle.
 ```ts cordis-catalog
 /**
  * Read a bundle's long description: the Markdown file its locale `meta.detail` names in `language`, otherwise its
- * README. An installed bundle is read from its directory without network access; an official bundle the installation
- * offers before it is installed is read from the npm file CDNs at its offered version. Nothing is cached.
+ * README. An installed bundle is read from its directory, and an official bundle the installation offers before it is
+ * installed from the workspace package its link target names; neither read uses the network. Nothing is cached.
  * @param name - the bundle's package name, as `listBundles()` lists it.
  * @param language - the display language, such as `zh-CN`; documents fall back through its prefixes to English.
- * @param options - `npmFileSources` names npm file CDNs to ask first for an offered bundle, in order, such as the one
- *   a Client measured as fastest; configured CDNs it omits follow, and CDNs that are not configured are not asked.
  * @returns the document with its origin and path, or `none`.
  * @throws {RemoteError} `plugin-manager/unknown-bundle`, `plugin-manager/invalid-language`, or
  *   `plugin-manager/detail-unavailable`.
  */
-@Remote async readBundleDetail(name: string, language: string, options?: { npmFileSources?: NpmFileSource[] }): Promise<BundleDetail>
+@Remote async readBundleDetail(name: string, language: string): Promise<BundleDetail>
 
 /** Read exact plugin-version exemptions saved in this profile.
  * @returns Accepted package-name@version keys with the runtime versions they may run on, and any

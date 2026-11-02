@@ -74,7 +74,6 @@
     "zod": "4.4.3",
     "@liwa/util-values": "workspace:*",
     "@liwa/plugin-detail": "workspace:*",
-    "@liwa/timeout": "workspace:*",
     "hosted-git-info": "^9.0.3"
   },
   "peerDependencies": {

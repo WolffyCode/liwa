@@ -214,7 +214,7 @@ export class NetworkDomain {
     session.sendEvent('Network.requestWillBeSent', {
       requestId: event.requestId,
       loaderId: 'liwa-inspector-loader',
-      documentURL: 'dsh://host',
+      documentURL: 'liwa://host',
       request: {
         url: event.url,
         method: event.method,

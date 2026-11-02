@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write native/README.md
 /native:
-  en: 203b9eb002524c22
-  zh: b05e8ef9139f3c00
-/native/workspace-and-release-boundary:
-  en: 2b40617ba5bd5131
-  zh: f0a23c7b2a0440c0
+  en: 43b8245f47a8c5d2
+  zh: 3a7a3288906917c6
+/native/workspace-and-packaging-boundary:
+  en: 70d1597c7c28c718
+  zh: 119b283dee55f6da

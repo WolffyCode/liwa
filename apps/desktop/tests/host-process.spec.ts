@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
-import { DesktopHostFatalError, DesktopHostProcess, DesktopHostUncleanExitError, QUIT_INSPECTION_DEADLINE_MS } from '../src/host-process.ts'
+import { DesktopHostFatalError, DesktopHostProcess, QUIT_INSPECTION_DEADLINE_MS } from '../src/host-process.ts'
 import { OperationJournal } from '../src/operation-journal.ts'
 import { readOperationHistory } from '../src/operation-history.ts'
 import { renderCrashReport } from '../src/crash-report.ts'
@@ -46,10 +46,6 @@ process.on('message', message => {
     process.send({ type: 'file-drag-resource', requestId: message.requestId,
       resource: message.address === 'remote' ? null : { path: '/authorized/report.pdf', sha256: 'a'.repeat(64), size: 42 },
       ...(message.address === 'denied' ? { error: 'File read denied' } : {}) })
-    return
-  }
-  if (message.type === 'update-tasks') {
-    process.send({ type: 'update-tasks', requestId: message.requestId, active: message.action === 'lock' })
     return
   }
   if (message.type === 'quit-inspection') {
@@ -163,7 +159,7 @@ ${HTTP_HOST}`)
         failure, undefined, undefined, undefined, () => { throw new Error('sink unavailable') })
       hosts.push(second)
       await second.start()
-      expect(await second.updateTasks('inspect')).toBe(false)
+      expect(await second.inspectQuit()).toEqual({ activeTasks: false, scheduledTasks: true })
       await second.stop()
       expect(failure).not.toHaveBeenCalled()
       expect(warning).toHaveBeenCalledWith('desktop plugin operation diagnostic sink failed')
@@ -176,7 +172,7 @@ ${HTTP_HOST}`)
     expect(await Promise.all([host.resolveDragResource('local'), host.resolveDragResource('remote')]))
       .toEqual([{ path: '/authorized/report.pdf', sha256: 'a'.repeat(64), size: 42 }, null])
     await expect(host.resolveDragResource('denied')).rejects.toThrow('File read denied')
-    await host.stop(true)
+    await host.stop()
     await expect(host.resolveDragResource('local')).rejects.toThrow('file drag: Host is unavailable')
   })
 
@@ -196,47 +192,18 @@ ${HTTP_HOST}`)
     await host.start()
     await expect(host.resolveDragResource('invalid')).rejects.toThrow('invalid IPC event')
   })
-  it('correlates task inspections and admission changes over private IPC', async () => {
-    const host = hostProcess(projectWithHost())
-    await expect(host.updateTasks('inspect')).rejects.toThrow('Host is unavailable')
-    await host.start()
-    expect(await Promise.all([host.updateTasks('inspect'), host.updateTasks('lock'), host.updateTasks('unlock')]))
-      .toEqual([false, true, false])
-    await host.stop(true)
-    await expect(host.updateTasks('inspect')).rejects.toThrow('Host is unavailable')
-  })
-
-  it('correlates quit inspections with task requests and fails an unanswered one at its own deadline', async () => {
+  it('correlates concurrent quit inspections and fails an unanswered one at its own deadline', async () => {
     const host = hostProcess(projectWithHost())
     await expect(host.inspectQuit()).rejects.toThrow('desktop quit: Host is unavailable')
     await host.start()
-    // Request ids 1 and 2: the fixture answers by id parity, so both control kinds share one id space.
-    expect(await Promise.all([host.inspectQuit(), host.updateTasks('inspect')]))
-      .toEqual([{ activeTasks: false, scheduledTasks: true }, false])
+    // Request ids 1 and 2: the fixture answers by id parity.
+    expect(await Promise.all([host.inspectQuit(), host.inspectQuit()]))
+      .toEqual([{ activeTasks: false, scheduledTasks: true }, { activeTasks: false, scheduledTasks: false }])
     const started = Date.now()
     await expect(host.inspectQuit()).rejects.toThrow('desktop quit: inspection timed out')
     expect(Date.now() - started).toBeGreaterThanOrEqual(QUIT_INSPECTION_DEADLINE_MS - 50)
     expect(await host.inspectQuit()).toEqual({ activeTasks: false, scheduledTasks: false })
   }, 15_000)
-
-  it.each([
-    'process.exit(17)',
-    'process.exit(0)',
-  ])('refuses installation when exit lacks successful teardown acknowledgement: %s', async (exit) => {
-    const host = hostProcess(projectWithHost(`
-      process.send({ type: 'ready', url: 'http://127.0.0.1:3080/' })
-      process.on('message', message => {
-        if (message.type === 'shutdown') process.stderr.write('token=fixture-secret', () => { ${exit} })
-      })
-    `))
-    await host.start()
-    const error = await host.stop(true).then(() => undefined, (error: unknown) => error)
-    expect(error).toBeInstanceOf(DesktopHostUncleanExitError)
-    expect(String(error)).toContain('shutdown acknowledged false')
-    expect(String(error)).toContain('graceful deadline exceeded false')
-    expect(String(error)).not.toContain('fixture-secret')
-    await expect(host.stop()).resolves.toBeUndefined()
-  })
 
   it('returns the Web authentication URL and waits for graceful shutdown', async () => {
     const runtime = projectWithHost()

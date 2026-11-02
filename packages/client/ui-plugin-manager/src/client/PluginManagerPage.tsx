@@ -1780,7 +1780,7 @@ export function PluginManagerPage(props: PluginManagerPageProps): ReactNode {
               renderSlot={renderSlot}
               inMore={backToMore}
               detail={(
-                <BundleDetailSection name={openPkg.name} version={openPkg.version} fromNpm={openPkg.availability === 'missing'}
+                <BundleDetailSection name={openPkg.name} version={openPkg.version}
                   language={language} details={bundleDetails} t={t}
                   load={props.loadDetail} retry={props.retryDetail} image={props.detailImage} />
               )}

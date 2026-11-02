@@ -130,22 +130,6 @@ export function writeDesktopRuntime(
   })
 }
 
-/**
- * Seal a materialized runtime with bounded concurrent reads, draining readers before failure returns.
- * @param root - Runtime output directory.
- * @param release - Matching shell, liwa, Host, and executable versions.
- * @param sharedNames - Release-owned packages supplied to plugins.
- * @param target - Platform and architecture selected by runtime preparation.
- * @returns Descriptor written after every final file has been inventoried.
- */
-export async function writeDesktopRuntimeAsync(
-  root: string, release: DesktopRelease, sharedNames: readonly string[],
-  target: { platform: NodeJS.Platform; arch: string } = process,
-): Promise<DesktopRuntimeDescriptor> {
-  const metadata = runtimeMetadata(root, release, sharedNames, target)
-  return writeRuntimeDescriptor(root, { ...metadata, files: await inventoryRuntimeConcurrently(root) })
-}
-
 function runtimeMetadata(
   root: string, release: DesktopRelease, sharedNames: readonly string[],
   target: { platform: NodeJS.Platform; arch: string },

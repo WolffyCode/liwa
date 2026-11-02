@@ -27,6 +27,7 @@
 - `.agents/notes/` 是上游的历史设计记录（正文保留上游当时的名字），只用来理解继承来的代码，不是灵鲸的决策依据；灵鲸的决策在 handoff。不新写这种风格的 Agent Note。
 - `.agents/skills/` 里是上游团队的工作流技能（PR 描述、推送前检查、升级指南、官方图标、双语翻译等），都设成了只能手动调用，不会自动触发；它们描述的是上游的流程，对灵鲸不适用，只在主人明确要求时用。`agent-experience` 是 `packages/preset/agent-preset` 随产品发布的技能，保持原样。
 - 不要动 `snapshots/**/workspace/` 下的 `AGENTS.md`：它们是 agent 读取工作区规则的测试夹具，不是给你的规则。
+- 只本地打包、不发布：桌面应用只在 Apple Silicon Mac 上用 `pnpm run package:desktop` 打成带临时签名的 `Liwa.app`（bundle id `com.wolffycode.liwa`，链接协议 `liwa://`），没有签名证书、公证、自动更新和 Windows／Intel 安装包；npm、PyPI、GitHub Releases 的发布脚本与工作流都已删除，运行时也不从注册表安装或读取 `@liwa/*` 包。Python SDK 与 SSH helper 只保留本地打包。见 `apps/desktop/packaging/README.zh.md`。
 - 继承来的代码有自己的写法。修改时遵守主人的全局原则，但不要为了风格单独大面积重写；要重写先问主人。
 
 ## 命令

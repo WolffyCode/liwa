@@ -1,13 +1,10 @@
 [
   {
-    "label": "检查更新…"
-  },
-  {
     "label": "管理 liwa 命令…"
   },
   {
     "role": "hide",
-    "label": "隐藏灵鲸"
+    "label": "隐藏 Liwa"
   },
   {
     "role": "hideOthers",
@@ -19,6 +16,6 @@
   },
   {
     "role": "quit",
-    "label": "退出灵鲸"
+    "label": "退出 Liwa"
   }
 ]

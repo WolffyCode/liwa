@@ -238,7 +238,7 @@ export class InspectorEndpoint {
       type: 'page',
       title: 'Liwa Host',
       description: 'Experimental cross-realm Inspector target',
-      url: 'dsh://host',
+      url: 'liwa://host',
       webSocketDebuggerUrl: this.cdpUrl(),
       devtoolsFrontendUrl: `devtools://devtools/bundled/devtools_app.html?ws=${this.config.host}:${this.boundPort()}/devtools/page/${this.config.targetId}&panel=elements&noJavaScriptCompletion=true`,
     }

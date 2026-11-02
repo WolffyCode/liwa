@@ -1,4 +1,4 @@
-/** Exercise local Desktop packing and the official-release rejection through their real entry points. */
+/** Exercise local Desktop packing of the official-profile build and the release packing command through their real entry points. */
 
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -25,7 +25,7 @@ function write(root: string, path: string, text: string): void {
   writeFileSync(join(root, path), text)
 }
 
-function fixture(profile: 'local' | 'official' = 'local'): string {
+function fixture(profile: 'local' | 'official' = 'official'): string {
   const root = mkdtempSync(join(tmpdir(), 'liwa-local-desktop-pack-'))
   roots.push(root)
   write(root, 'package.json', JSON.stringify({ name: 'desktop-pack-fixture', version: '1.2.3', private: true }))
@@ -35,7 +35,7 @@ function fixture(profile: 'local' | 'official' = 'local'): string {
   }))
   write(root, 'packages/client/probe/lib/index.js', 'export const probe = true\n')
   write(root, 'packages/client/probe/lib/client.js', 'export const client = true\n')
-  write(root, 'apps/web/dist/index.html', '<title>Liwa Local Build</title>\n')
+  write(root, 'apps/web/dist/index.html', '<title>Liwa</title>\n')
   writeClientBuildRecord(root, resolveClientBuildEnvironment(metadata, profile))
   return root
 }
@@ -72,7 +72,7 @@ afterEach(async () => {
   for (const root of roots.splice(0)) removeFixtureSafely(root)
 }, testTimeout)
 
-it('packs local client artifacts without a release publication record', async () => {
+it('packs official-profile client artifacts without a release publication record', async () => {
   const root = fixture()
   const result = await pack(root)
   expect(result.code, result.output).toBe(0)
@@ -82,19 +82,19 @@ it('packs local client artifacts without a release publication record', async ()
   expect(existsSync(join(root, 'packed', PUBLISH_ORDER_FILE))).toBe(false)
 }, testTimeout)
 
-it.each(['official', 'stale', 'missing'] as const)('rejects %s client artifacts before replacing local packages', async (kind) => {
-  const root = fixture(kind === 'official' ? 'official' : 'local')
+it.each(['local', 'stale', 'missing'] as const)('rejects %s client artifacts before replacing local packages', async (kind) => {
+  const root = fixture(kind === 'local' ? 'local' : 'official')
   if (kind === 'stale') write(root, 'packages/client/probe/lib/client.js', 'export const changed = true\n')
   if (kind === 'missing') unlinkSync(join(root, '.liwa-build/client-build-environment.json'))
   write(root, 'packed/retained.txt', 'previous output\n')
   const result = await pack(root)
   expect(result.code).not.toBe(0)
-  expect(result.output).toMatch(kind === 'official' ? /LIWA_CLIENT_BUILD_PROFILE/ : kind === 'stale' ? /artifacts differ/ : /client build record/)
+  expect(result.output).toMatch(kind === 'local' ? /LIWA_CLIENT_BUILD_PROFILE/ : kind === 'stale' ? /artifacts differ/ : /client build record/)
   expect(readFileSync(join(root, 'packed/retained.txt'), 'utf8')).toBe('previous output\n')
 }, testTimeout)
 
 it('rejects local client artifacts in the release packing command', async () => {
-  const root = fixture()
+  const root = fixture('local')
   const result = await pack(root, true)
   expect(result.code).not.toBe(0)
   expect(result.output).toMatch(/LIWA_CLIENT_BUILD_PROFILE/)

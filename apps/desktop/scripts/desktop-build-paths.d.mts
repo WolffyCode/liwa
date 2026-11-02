@@ -1,11 +1,12 @@
-import type { DesktopAutoUpdateTarget } from './desktop-auto-update-environment.mjs'
+/** The only Desktop target name. */
+export type DesktopTarget = 'mac-arm64'
 
 /** Mutable target directories plus shared download and package caches. */
 export interface DesktopTargetBuildPaths {
   readonly root: string
   readonly artifacts: string
-  readonly unsignedArtifacts: string
-  readonly unnotarizedArtifacts: string
+  /** Unpacked application bundle electron-builder writes before the disk image. */
+  readonly application: string
   readonly runtime: string
   readonly packageSet: string
   readonly liwa: string
@@ -13,49 +14,48 @@ export interface DesktopTargetBuildPaths {
   readonly electron: string
   readonly packedLiwa: string
   readonly packedVendor: string
-  readonly packedLandlock: string
+  readonly packedNative: string
   readonly downloads: string
   readonly pnpmStore: string
 }
 
 /**
- * Resolve the fixed build target selected by a packaging environment.
- * @param env - Packaging environment.
- * @param hostPlatform - Build-host platform used when no target override exists.
- * @param hostArch - Build-host architecture used when no target override exists.
- * @returns Supported Desktop target name.
+ * Resolve the Desktop target, refusing every host except an Apple Silicon Mac.
+ * @param env - Packaging environment; npm platform overrides cannot select another target.
+ * @param hostPlatform - Build-host platform used when no npm override exists.
+ * @param hostArch - Build-host architecture used when no npm override exists.
+ * @returns The Desktop target name.
  */
 export function resolveDesktopBuildTarget(
   env?: NodeJS.ProcessEnv,
   hostPlatform?: NodeJS.Platform,
   hostArch?: string,
-): DesktopAutoUpdateTarget
+): DesktopTarget
 
 /**
- * Return the mutable preparation and artifact directories owned by one release target.
- * @param target - Supported Desktop target name.
+ * Return the mutable preparation and artifact directories owned by the Desktop target.
+ * @param target - Desktop target name.
  * @param environment - Packaging environment with an optional absolute cache directory.
  * @returns Target paths plus shared download and package caches.
  */
-export function desktopTargetBuildPaths(target: DesktopAutoUpdateTarget, environment?: NodeJS.ProcessEnv): DesktopTargetBuildPaths
+export function desktopTargetBuildPaths(target: DesktopTarget, environment?: NodeJS.ProcessEnv): DesktopTargetBuildPaths
 
 /**
- * Return the platform and architecture of the payload one release target prepares.
- * Windows is prepared as x64 only, so this differs from the build host on an arm64 Windows machine.
- * @param target - Supported Desktop target name.
+ * Return the platform and architecture of the payload the Desktop target prepares.
+ * @param target - Desktop target name.
  * @returns Platform and architecture of the prepared payload.
  */
-export function desktopTargetPlatform(target: DesktopAutoUpdateTarget): {
-  readonly platform: 'darwin' | 'win32'
-  readonly arch: 'arm64' | 'x64'
+export function desktopTargetPlatform(target: DesktopTarget): {
+  readonly platform: 'darwin'
+  readonly arch: 'arm64'
 }
 
 /**
- * Resolve the paths owned by the target selected in a packaging environment.
+ * Resolve the paths owned by the Desktop target on the current host.
  * @param env - Packaging environment.
- * @param hostPlatform - Build-host platform used when no target override exists.
- * @param hostArch - Build-host architecture used when no target override exists.
- * @returns Selected target paths.
+ * @param hostPlatform - Build-host platform used when no npm override exists.
+ * @param hostArch - Build-host architecture used when no npm override exists.
+ * @returns Target paths.
  */
 export function resolveDesktopTargetBuildPaths(
   env?: NodeJS.ProcessEnv,
@@ -66,23 +66,12 @@ export function resolveDesktopTargetBuildPaths(
 /**
  * Resolve the primary-runtime directory an unpackaged development launch uses.
  * @param env - Packaging environment.
- * @param hostPlatform - Build-host platform used when no target override exists.
- * @param hostArch - Build-host architecture used when no target override exists.
- * @returns Primary-runtime directory prepared for the selected target.
+ * @param hostPlatform - Build-host platform used when no npm override exists.
+ * @param hostArch - Build-host architecture used when no npm override exists.
+ * @returns Primary-runtime directory prepared for the Desktop target.
  */
 export function developmentRuntimeDirectory(
   env?: NodeJS.ProcessEnv,
   hostPlatform?: NodeJS.Platform,
   hostArch?: string,
 ): string
-
-/**
- * Select the output directory and filename suffix for one packaging mode.
- * @param paths Target artifact directories.
- * @param mode Validated packaging mode.
- * @returns Matching artifact destination and filename marker.
- */
-export function desktopArtifactOutput(
-  paths: Pick<DesktopTargetBuildPaths, 'artifacts' | 'unsignedArtifacts' | 'unnotarizedArtifacts'>,
-  mode: { unsigned: boolean, skipNotarization: boolean },
-): { directory: string, suffix: string }

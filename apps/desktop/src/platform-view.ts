@@ -76,11 +76,11 @@ export class DesktopPlatformView {
    * @param page - explicit supported Platform page.
    * @param bounds - owned renderer rectangle.
    * @returns when loading finishes, or without a document when superseded or the owner closes or navigates.
-   * @throws When a shell update prompt blocks admission, including after storage cleanup.
+   * @throws When a shell dialog blocks admission, including after storage cleanup.
    */
   async open(owner: PlatformOwner, page: 'usage' | 'top-up', bounds: PlatformBounds): Promise<void> {
     if (this.disposed) throw new Error('Platform view disposed')
-    if (this.blocked(owner)) throw new Error('Platform view blocked by update prompt')
+    if (this.blocked(owner)) throw new Error('Platform view blocked by shell dialog')
     this.close()
     const account = this.account
     if (account === null) throw new Error('Platform account unavailable')
@@ -107,7 +107,7 @@ export class DesktopPlatformView {
     // Sanitize persisted authentication even after an unclean previous process exit.
     const failure = await this.cleanStorage(browserSession)
     if (generation !== this.generation) return
-    if (this.blocked(owner)) { this.close(); throw new Error('Platform view blocked by update prompt') }
+    if (this.blocked(owner)) { this.close(); throw new Error('Platform view blocked by shell dialog') }
     if (failure !== null) {
       this.close()
       throw failure.error

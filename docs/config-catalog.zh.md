@@ -2610,8 +2610,7 @@ export interface PlanModeConfig {
 ## `@liwa/plugin-manager`
 
 - `inject`: `loader` · `profileContext`
-- `refs`: [`NpmFileSource`](subsystems/boot.zh.md)
-- `source`: [`packages/boot/plugin-manager/src/index.ts:54`](../packages/boot/plugin-manager/src/index.ts)
+- `source`: [`packages/boot/plugin-manager/src/index.ts:52`](../packages/boot/plugin-manager/src/index.ts)
 
 ```ts config-catalog
 /** The pnpm executable, registries, and limits for diagnostics, lookups and connection checks. */
@@ -2646,10 +2645,6 @@ export interface Config {
   detailMaxBytes?: number
   /** Largest image served beside a bundle detail document, in bytes. */
   detailImageMaxBytes?: number
-  /** Deadline of one npm file CDN request for an offered bundle's detail document. */
-  detailFetchTimeoutMs?: number
-  /** npm file CDNs that offered bundles are read from, in order; a read's `npmFileSources` moves the CDNs it names first. */
-  detailNpmFileSources?: NpmFileSource[]
 }
 ```
 <!-- END GENERATED config-catalog:@liwa/plugin-manager -->

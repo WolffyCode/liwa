@@ -16,9 +16,6 @@ export interface ProductEventMap {
   }
   onboarding_popup_view: { popup_name: 'skip_charge' | 'skip_setting' }
   onboarding_popup_click: { popup_name: 'skip_charge' | 'skip_setting'; button_name: 'charge' | 'know' | 'enter' | 'setting' | 'close' }
-  desktop_upgrade_click: Record<string, never>
-  desktop_upgrade_download_result: { is_success: boolean; error_reason?: string }
-  desktop_upgrade_install_restart_click: Record<string, never>
   send_button_click: {
     session_id?: SessionId
     model_name?: string

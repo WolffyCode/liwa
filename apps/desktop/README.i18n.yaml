@@ -3,77 +3,59 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write apps/desktop/README.md
 /:
-  en: b353d10b5552144f
-  zh: 2d0ce90bcbfa36bd
+  en: 15c2ae9bef6f3fc1
+  zh: 219a1fc94de5edbe
 /liwa-desktop:
   en: 1f5e51b77ca67384
   zh: c35f016860accad4
 /liwa-desktop/summary:
-  en: 9ef52b0d9bd66cd3
-  zh: 39147828cdb8445b
+  en: 263f0d3d8cffec50
+  zh: 6c8b2c9856c3aa7d
 /liwa-desktop/table-of-contents:
-  en: 8a0300e684747cdf
-  zh: 2839bd081d01ee04
+  en: 74cf7411b94f9f38
+  zh: 3059ac755ce75c3f
 /liwa-desktop/application-overview:
-  en: c60e26d5d5f665f5
-  zh: deead3112ddfd398
+  en: 25b190f00c983973
+  zh: 55385d46a83308d8
 /liwa-desktop/terminal-command:
-  en: 8ec768746facfebe
-  zh: b8ce763a4a75611d
+  en: 5746510728e89f17
+  zh: 2a0c800cab067cc8
 /liwa-desktop/closing-the-window-and-quitting:
-  en: c3fb2f81f5ad3f93
-  zh: 1d25e360629ceba0
+  en: d5e337285b18dc2a
+  zh: c93ac0e7f094da91
 /liwa-desktop/key-technical-decisions:
-  en: 8b34c47b839e5837
-  zh: 91fa44a2c1a07d38
+  en: 69cd95f8c1e5cce1
+  zh: aa260d9bf637f113
 /liwa-desktop/key-technical-decisions/bundled-workspace-dependencies:
-  en: 2b85ba6e1b6bfa98
-  zh: 203a9e0dc63aa8e7
+  en: d2bc9ba6bb214d9b
+  zh: e123c1e68d3b8ecc
 /liwa-desktop/bundled-command-runtime:
-  en: 0a3126c991141921
-  zh: 4b52f53f835762aa
+  en: 18e8f4ea3c1bb4f1
+  zh: b5456e6946201923
 /liwa-desktop/installation-ownership:
-  en: 71b8b6a9fe52cb21
-  zh: d893151aed97ce16
+  en: 03ef9de54bc8003b
+  zh: e35ed659f43f277d
 /liwa-desktop/installation-ownership/runtime-and-plugin-activation:
-  en: 8833749cf2e6d0c7
-  zh: 94f7fae1d9edcbc4
+  en: 3be6f4edc5b11934
+  zh: 4b6a7f0d18c25ac8
 /liwa-desktop/installation-ownership/host-environment:
   en: dbbf77d3eac445b4
   zh: 06290a9dbb11a7b9
 /liwa-desktop/develop:
-  en: 177381de673156fe
-  zh: 17899dca53604e1c
+  en: 07360b0514e5e96f
+  zh: 20291cd48fa408d0
 /liwa-desktop/develop/startup-onboarding:
-  en: 67dc7ef3e293236a
-  zh: 1b224db684a2d1d7
+  en: d3117121cbfadc4a
+  zh: 5eca377194254afe
 /liwa-desktop/develop/welcome-window-appearance:
   en: d4ffc23fe771df5a
   zh: 8d68b87b807bea0a
 /liwa-desktop/package:
-  en: 019accabe30647ae
-  zh: 67df450818c59ebe
-/liwa-desktop/windows-installer-interface:
-  en: 68d8240d6ff5e0e7
-  zh: 864c57ea9c33b52c
-/liwa-desktop/updates:
-  en: 839bfae8665f3c94
-  zh: 5c964148732ebf53
-/liwa-desktop/updates/local-desktop-settings:
-  en: 56e8e0390dcf5cbb
-  zh: 48bfea3c46dfbc26
-/liwa-desktop/updates/mandatory-update-policy:
-  en: 5103e9f840eef66a
-  zh: 9bda2ce809e02e81
-/liwa-desktop/updates/local-updater-qualification:
-  en: 088faf2ab199e9f7
-  zh: fb620decd224872b
+  en: 25b5da67bf37e47e
+  zh: e49f4a94c7c2be84
 /liwa-desktop/low-level-development-overrides:
-  en: 4a062afa89cd5003
-  zh: 59e6fed12ea23c17
+  en: 6aaea38532a4fa42
+  zh: 33486dbbc75cd6df
 /liwa-desktop/known-limitations:
-  en: 9067fb1a8123148b
-  zh: a952a5c3d1ed1da8
-/liwa-desktop/dev-note:
-  en: 3589cc2b946ef8f6
-  zh: 984406115e9be5d5
+  en: f089196c8b3d11e1
+  zh: bc1033f80636871e

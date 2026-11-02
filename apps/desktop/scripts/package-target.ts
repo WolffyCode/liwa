@@ -1,297 +1,97 @@
-/** Build one release target with matching Electron and liwa architecture. */
+/** Build the local Apple Silicon application with matching Electron and liwa architecture. */
 
 import { spawn } from 'node:child_process'
-import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { parseArgs } from 'node:util'
 import { join, resolve } from 'node:path'
-import {
-  desktopBuildRecordFilename,
-  resolveDesktopAutoUpdateConfig,
-} from './desktop-auto-update-environment.mjs'
-import { desktopArtifactOutput, desktopTargetBuildPaths } from './desktop-build-paths.mjs'
-import { packageMacOSArtifacts, type DesktopPrepackagedArtifact } from './package-macos.ts'
-import { loadDesktopPackageEnvironment, localMacOSPackageEnvironment, validateDesktopPackageEnvironment } from './desktop-package-environment.mjs'
+import { resolveDesktopBuildTarget, resolveDesktopTargetBuildPaths, type DesktopTargetBuildPaths } from './desktop-build-paths.mjs'
 import { createPackagingRun, recordPackagingEvent } from './packaging-run.mjs'
-import { withWindowsSigningStage } from './windows-signing-stage.mjs'
-import { prepareWindowsSignatureCacheDirectory, resolveWindowsSignatureCacheDirectory } from './windows-signature-cache-directory.mjs'
-import { withMacOSSigningKeychain } from './macos-signing-keychain.mjs'
-import { macOSDownloadEnvironment, resolveMacOSPackageSettings } from './macos-package-settings.mjs'
-import { resolveWindowsPackageSettings } from './windows-package-settings.mjs'
 import { packagingErrorDetails, packagingStep } from './packaging-step.mjs'
-import { notarizeMacOS } from './notarize-macos.mjs'
-import { resolveMacOSNotarizationEnvironment } from './desktop-release-environment.mjs'
-import { DESKTOP_BUILD_VERSION_ENV, resolveDesktopBuildVersion, validateDesktopBuildVersion } from './desktop-build-version.mjs'
-import { suggestDesktopBuildVersion } from './desktop-build-version-discovery.ts'
-import { desktopBuildCommitEnvironment, readDesktopBuildCommit, resolveDesktopBuildCommit } from './desktop-build-commit.mjs'
 import { requireDesktopToolchain } from './desktop-toolchain-preflight.ts'
-import { withMacOSNotarizationProxy } from './macos-notarization-proxy.ts'
 
 const APP_ROOT = resolve(import.meta.dirname, '..')
 const REPOSITORY_ROOT = resolve(APP_ROOT, '..', '..')
-const WINDOWS_SIGNING_ENV_PREFIX = 'LIWA_DESKTOP_WINDOWS_'
-const WINDOWS_SIGNING_ENV_NAMES = [
-  'LIWA_DESKTOP_WINDOWS_CER_FILE',
-  'LIWA_DESKTOP_WINDOWS_KEY_CONTAINER',
-  'LIWA_DESKTOP_WINDOWS_SIGNTOOL',
-  'LIWA_DESKTOP_WINDOWS_TOKEN_PIN',
-  'LIWA_DESKTOP_WINDOWS_SIGNATURE_CACHE_DIR',
-  'LIWA_DESKTOP_WINDOWS_SIGNATURE_CACHE_CONCURRENCY',
-] as const
-const DESKTOP_UPLOAD_CREDENTIAL_ENV_NAMES = new Set([
-  'DOWNLOAD_TEST_COS_SECRET_ID',
-  'DOWNLOAD_TEST_COS_SECRET_KEY',
-  'DOWNLOAD_PROD_COS_SECRET_ID',
-  'DOWNLOAD_PROD_COS_SECRET_KEY',
-])
 
-/** `--build-version` value that numbers a build after the ones already taken. */
-const AUTOMATIC_BUILD_VERSION = 'auto'
+/** Concurrent package packs while staging workspace tarballs. */
+const PACK_CONCURRENCY = 4
 
-/** Fixed platform and architecture identifiers exposed by package scripts. */
-export type DesktopPackageTargetName = 'mac-arm64' | 'mac-x64' | 'win-x64'
+/** Environment names whose values packaging logs redact. */
+const CREDENTIAL_NAME = /KEY|SECRET|TOKEN|PASSWORD/iu
 
-/** One supported release target and its electron-builder selectors. */
-export interface DesktopPackageTarget {
-  readonly name: DesktopPackageTargetName
-  readonly platform: 'darwin' | 'win32'
-  readonly arch: 'arm64' | 'x64'
-  readonly builderPlatform: '--mac' | '--win'
-  readonly builderArch: '--arm64' | '--x64'
-}
+/** Signing inputs electron-builder would otherwise discover; the local application carries only an ad-hoc signature. */
+const SIGNING_ENVIRONMENT = /^(?:(?:WIN_)?CSC_|APPLE_)/iu
 
-const TARGETS: Record<DesktopPackageTargetName, DesktopPackageTarget> = {
-  'mac-arm64': {
-    name: 'mac-arm64',
-    platform: 'darwin',
-    arch: 'arm64',
-    builderPlatform: '--mac',
-    builderArch: '--arm64',
-  },
-  'mac-x64': {
-    name: 'mac-x64',
-    platform: 'darwin',
-    arch: 'x64',
-    builderPlatform: '--mac',
-    builderArch: '--x64',
-  },
-  'win-x64': {
-    name: 'win-x64',
-    platform: 'win32',
-    arch: 'x64',
-    builderPlatform: '--win',
-    builderArch: '--x64',
-  },
-}
-
-/**
- * Remove Windows signing configuration from package preparation subprocesses.
- * @param environment - Packaging command environment.
- * @returns A copy without Windows signing fields.
- */
-export function withoutWindowsSigningEnvironment(environment: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
-  return Object.fromEntries(Object.entries(environment)
-    .filter(([name]) => !name.startsWith(WINDOWS_SIGNING_ENV_PREFIX)))
-}
-
-/**
- * Select signing mode and strip unsigned-build credentials for packaging subprocesses.
- * @param environment - Target packaging environment.
- * @param unsigned - Whether to create a local artifact without release signing or notarization.
- * @returns Packaging environment without certificate inputs for unsigned builds.
- */
-export function desktopElectronBuilderEnvironment(environment: NodeJS.ProcessEnv, unsigned: boolean): NodeJS.ProcessEnv {
-  const selected: NodeJS.ProcessEnv = { ...environment, LIWA_DESKTOP_UNSIGNED: unsigned ? '1' : '0' }
-  // The bundled NSIS decoder cannot extract 7-Zip's automatic ARM64-filtered entries.
-  if (environment.LIWA_DESKTOP_TARGET_PLATFORM === 'win32') selected.ELECTRON_BUILDER_7Z_FILTER = 'BCJ'
-  if (!unsigned) return selected
-  return {
-    ...Object.fromEntries(Object.entries(withoutWindowsSigningEnvironment(selected))
-      .filter(([name]) => !/^(?:(?:WIN_)?CSC_|APPLE_|LIWA_DESKTOP_MACOS_(?:SIGNING_|TEAM_ID$))/iu.test(name))),
-    CSC_IDENTITY_AUTO_DISCOVERY: 'false',
-    LIWA_DESKTOP_UNSIGNED: '1',
-  }
-}
-
-/**
- * Remove upload-only COS credentials from every packaging subprocess.
- * @param environment - Packaging command environment.
- * @returns A copy without Desktop upload credentials.
- */
-export function withoutDesktopUploadCredentials(environment: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
-  return Object.fromEntries(Object.entries(environment)
-    .filter(([name]) => !DESKTOP_UPLOAD_CREDENTIAL_ENV_NAMES.has(name)))
-}
-
-function isTargetName(value: string): value is DesktopPackageTargetName {
-  return Object.hasOwn(TARGETS, value)
-}
-
-function packageVersion(path: string, label: string): string {
-  const manifest = JSON.parse(readFileSync(path, 'utf8')) as { version?: unknown }
-  if (typeof manifest.version !== 'string' || manifest.version === '') {
-    throw new Error(`desktop package: ${label} has no version`)
-  }
-  return manifest.version
-}
-
-function writeReleaseRecord(
-  target: DesktopPackageTarget,
-  environment: NodeJS.ProcessEnv,
-  artifactsRoot: string,
-): void {
-  const desktopVersion = packageVersion(join(APP_ROOT, 'package.json'), 'desktop package')
-  const liwaVersion = packageVersion(join(REPOSITORY_ROOT, 'package.json'), 'liwa package')
-  if (desktopVersion !== liwaVersion) {
-    throw new Error(`desktop package: desktop version ${desktopVersion} does not match liwa version ${liwaVersion}`)
-  }
-  const buildVersion = resolveDesktopBuildVersion(environment, liwaVersion)
-  const packaged = resolveDesktopBuildCommit(environment)
-  const update = resolveDesktopAutoUpdateConfig(environment, target.platform, target.arch)
-  const recordPath = join(artifactsRoot, desktopBuildRecordFilename(target.name))
-  const temporaryPath = `${recordPath}.tmp`
-  writeFileSync(temporaryPath, `${JSON.stringify({
-    schemaVersion: 1,
-    target: target.name,
-    version: buildVersion,
-    environment: update.environment,
-    channel: update.channel,
-    publicUrl: update.publicUrl,
-    // Upload reads this to tag the commit a production release was packaged from.
-    ...packaged === undefined ? {} : { commit: packaged.commit, dirty: packaged.dirty },
-  }, null, 2)}\n`)
-  renameSync(temporaryPath, recordPath)
-}
-
-/**
- * Resolve a named release target and reject hosts that cannot execute its packaged runtime.
- * @param name - One of the fixed Desktop release target names.
- * @param hostPlatform - Build-host Node.js platform.
- * @param hostArch - Build-host Node.js architecture.
- * @returns The target selectors shared by runtime preparation and electron-builder.
- */
-export function resolveDesktopPackageTarget(
-  name: string,
-  hostPlatform: NodeJS.Platform = process.platform,
-  hostArch: string = process.arch,
-): DesktopPackageTarget {
-  if (!isTargetName(name)) {
-    throw new Error(`desktop package: unsupported target ${JSON.stringify(name)}; expected ${Object.keys(TARGETS).join(', ')}`)
-  }
-  const target = TARGETS[name]
-  if (target.platform === 'win32' && (hostPlatform !== 'win32' || hostArch !== 'x64')) {
-    throw new Error('desktop package: win-x64 requires a Windows x64 build host')
-  }
-  if (target.platform === 'darwin' && hostPlatform !== 'darwin') {
-    throw new Error(`desktop package: ${name} requires a macOS build host`)
-  }
-  if (name === 'mac-arm64' && hostArch !== 'arm64') {
-    throw new Error('desktop package: mac-arm64 requires an Apple Silicon build host')
-  }
-  if (name === 'mac-x64' && hostArch !== 'arm64' && hostArch !== 'x64') {
-    throw new Error('desktop package: mac-x64 requires an Intel Mac or Apple Silicon with Rosetta')
-  }
-  return target
-}
-
-interface DesktopPackageInvocation {
-  readonly target: DesktopPackageTarget
+/** Validated packaging request. */
+export interface DesktopPackageInvocation {
+  /** Stop at the unpacked application without a disk image. */
   readonly directory: boolean
+  /** Prepare the runtime and package set without running electron-builder. */
   readonly prepareOnly: boolean
-  readonly unsigned: boolean
-  readonly skipNotarization: boolean
+  /** Validate the host and toolchain without building. */
   readonly check: boolean
-  /** Build identifier to publish under, when this build does not publish the product version. */
-  readonly requestedBuildVersion: string | undefined
-}
-
-function hostTargetName(platform: NodeJS.Platform, arch: string): DesktopPackageTargetName {
-  const name = `${platform === 'darwin' ? 'mac' : platform === 'win32' ? 'win' : platform}-${arch}`
-  if (!isTargetName(name)) throw new Error(`desktop package: unsupported build host ${platform}-${arch}`)
-  return name
 }
 
 /**
- * Parse the fixed-target packaging command line.
+ * Parse the packaging command line and reject hosts that cannot run the packaged runtime.
  * @param argv - Arguments after the script entry point.
  * @param hostPlatform - Build-host Node.js platform.
  * @param hostArch - Build-host Node.js architecture.
- * @returns The validated target and whether to emit an unpacked directory.
+ * @returns The validated packaging mode.
  */
 export function parseDesktopPackageInvocation(
   argv: readonly string[],
   hostPlatform: NodeJS.Platform = process.platform,
   hostArch: string = process.arch,
 ): DesktopPackageInvocation {
-  const { values, positionals } = parseArgs({
-    // `pnpm run <script> -- --build-version x` forwards the separator itself, and the script's own
-    // preset arguments come first, so it can land anywhere; parseArgs would read the rest as targets.
+  const { values } = parseArgs({
+    // `pnpm run <script> -- --dir` forwards the separator itself.
     args: argv.filter(argument => argument !== '--'),
-    allowPositionals: true,
+    allowPositionals: false,
     options: {
       dir: { type: 'boolean', default: false },
       'prepare-only': { type: 'boolean', default: false },
-      unsigned: { type: 'boolean', default: false },
-      'skip-notarization': { type: 'boolean', default: false },
       check: { type: 'boolean', default: false },
-      'build-version': { type: 'string' },
     },
   })
-  if (positionals.length > 1) throw new Error('desktop package: expected at most one target')
-  const name = positionals[0] ?? hostTargetName(hostPlatform, hostArch)
-  if (values.unsigned && values['prepare-only']) throw new Error('desktop package: --unsigned cannot use --prepare-only')
-  if (values['skip-notarization'] && (name === 'win-x64' || values.unsigned || values['prepare-only'])) {
-    throw new Error('desktop package: --skip-notarization requires a signed macOS build, without --prepare-only')
-  }
-  const requestedBuildVersion = values['build-version']?.trim()
-  if (values['build-version'] !== undefined && (requestedBuildVersion === undefined || requestedBuildVersion === '')) {
-    throw new Error('desktop package: --build-version requires a value')
-  }
+  resolveDesktopBuildTarget({}, hostPlatform, hostArch)
+  return { directory: values.dir, prepareOnly: values['prepare-only'], check: values.check }
+}
+
+/**
+ * Replace inherited signing inputs so electron-builder applies only the configured ad-hoc signature.
+ * @param environment - Packaging command environment.
+ * @returns A copy without certificate or notarization inputs and with identity discovery disabled.
+ */
+export function adHocSigningEnvironment(environment: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   return {
-    target: resolveDesktopPackageTarget(name, hostPlatform, hostArch),
-    directory: values.dir,
-    prepareOnly: values['prepare-only'],
-    unsigned: values.unsigned,
-    skipNotarization: values['skip-notarization'],
-    check: values.check,
-    requestedBuildVersion,
+    ...Object.fromEntries(Object.entries(environment).filter(([name]) => !SIGNING_ENVIRONMENT.test(name))),
+    CSC_IDENTITY_AUTO_DISCOVERY: 'false',
   }
 }
 
 /**
- * Build the electron-builder command arguments for one validated target.
- * @param target - Supported release target.
+ * Build the electron-builder command arguments for the Desktop target.
  * @param directory - Whether to stop at an unpacked application directory.
- * @param artifact - Optional single artifact built from an existing signed application.
- * @returns Arguments that keep publishing under the separate validated upload command.
+ * @returns Arguments that never publish.
  */
-export function desktopElectronBuilderArguments(
-  target: DesktopPackageTarget,
-  directory: boolean,
-  artifact?: DesktopPrepackagedArtifact,
-): readonly string[] {
+export function desktopElectronBuilderArguments(directory: boolean): readonly string[] {
   return [
     'exec',
     'electron-builder',
     '--config',
     'electron-builder.config.mjs',
-    target.builderPlatform,
-    ...(artifact === undefined ? [] : [artifact.format]),
-    target.builderArch,
+    '--mac',
+    '--arm64',
     '--publish',
     'never',
     ...(directory ? ['--dir'] : []),
-    ...(artifact === undefined ? [] : [
-      ...(target.platform === 'darwin' ? ['--config.mac.notarize=false'] : []),
-      '--prepackaged', artifact.appPath,
-      '--config.directories.output', artifact.output,
-    ]),
   ]
 }
 
 function runPnpm(
   args: readonly string[],
-  env: NodeJS.ProcessEnv = process.env,
-  cwd: string = APP_ROOT,
+  env: NodeJS.ProcessEnv,
+  cwd: string,
   run?: ReturnType<typeof createPackagingRun>,
 ): Promise<void> {
   const pnpmEntry = process.env.npm_execpath
@@ -300,11 +100,7 @@ function runPnpm(
   }
   if (run !== undefined) return run.run(args.join(' '), process.execPath, [pnpmEntry, ...args], { cwd, env })
   return new Promise((resolvePromise, reject) => {
-    const child = spawn(process.execPath, [pnpmEntry, ...args], {
-      cwd,
-      env,
-      stdio: 'inherit',
-    })
+    const child = spawn(process.execPath, [pnpmEntry, ...args], { cwd, env, stdio: 'inherit' })
     child.once('error', reject)
     child.once('close', (code, signal) => {
       if (code === 0) resolvePromise()
@@ -313,82 +109,74 @@ function runPnpm(
   })
 }
 
+function productVersion(): string {
+  const manifest = JSON.parse(readFileSync(join(APP_ROOT, 'package.json'), 'utf8')) as { version?: unknown }
+  if (typeof manifest.version !== 'string' || manifest.version === '') {
+    throw new Error('desktop package: desktop package has no version')
+  }
+  return manifest.version
+}
+
 /**
- * Resolve the version one run publishes from what its command line asked for.
- * @param invocation - Validated packaging request.
- * @param productVersion - Version the manifests declare.
- * @param environment - Release settings, which name the bucket automatic numbering reads.
- * @returns The product version, the requested version, or the next free index for today.
+ * Prepare the runtime from the current workspace and assemble the application without publishing.
+ * @param invocation - Validated packaging mode.
+ * @param environment - Ad-hoc signing environment shared by every subprocess.
+ * @param run - Persistent stage supervisor.
+ * @param buildPaths - Target-owned directories; the host's Apple Silicon target by default.
+ * @returns Resolves after preparation or complete packaging; any failed stage stops the run.
  */
-async function resolveRequestedBuildVersion(
+export async function packageTarget(
   invocation: DesktopPackageInvocation,
-  productVersion: string,
   environment: NodeJS.ProcessEnv,
-): Promise<string> {
-  const requested = invocation.requestedBuildVersion
-  if (requested === undefined) return productVersion
-  if (requested !== AUTOMATIC_BUILD_VERSION) return validateDesktopBuildVersion(requested, productVersion)
-  const paths = desktopTargetBuildPaths(invocation.target.name, environment)
-  return suggestDesktopBuildVersion({
-    productVersion, target: invocation.target.name,
-    // Machine presets own packaging, not upload credentials; local auto numbering uses existing artifacts.
-    environment: environment.LIWA_PACKAGING_PRESET === undefined ? environment : {},
-    // Unsigned builds land beside the signed output, so numbering has to read the directory this run writes.
-    artifactsRoot: desktopArtifactOutput(paths, invocation).directory,
-  })
+  run: ReturnType<typeof createPackagingRun> | undefined,
+  buildPaths: DesktopTargetBuildPaths = resolveDesktopTargetBuildPaths(environment),
+): Promise<void> {
+  const atRepository = (args: readonly string[]) => runPnpm(args, environment, REPOSITORY_ROOT, run)
+  const atApplication = (args: readonly string[]) => runPnpm(args, environment, APP_ROOT, run)
+  const packArguments = ['--concurrency', String(PACK_CONCURRENCY)]
+  await atRepository(['run', 'build', '--profile', 'official'])
+  await atRepository(['exec', 'tsx', 'apps/desktop/scripts/pack-local-packages.ts', '--out', buildPaths.packedLiwa, ...packArguments])
+  await atRepository(['--dir', 'apps/desktop-host', 'pack', '--pack-destination', buildPaths.packedLiwa])
+  await atRepository(['run', 'release:pack', '--family', 'vendor', '--out', buildPaths.packedVendor, ...packArguments])
+  // The flock binding has no registry copy: build it on this Mac and stage its platform package beside the entry.
+  await atRepository(['run', 'build:native-system'])
+  await atRepository(['--dir', 'native/system', 'run', 'build:ts'])
+  rmSync(buildPaths.packedNative, { recursive: true, force: true })
+  mkdirSync(buildPaths.packedNative, { recursive: true })
+  for (const directory of ['native/system/packages/entry', 'native/system/packages/darwin-arm64']) {
+    await atRepository(['--dir', directory, 'pack', '--pack-destination', buildPaths.packedNative])
+  }
+  await atApplication(['run', 'prepare:runtime'])
+  await atApplication(['run', 'prepare:packages'])
+  await atApplication(['run', 'prepare:liwa'])
+  if (invocation.prepareOnly) return
+  await atApplication(desktopElectronBuilderArguments(invocation.directory))
+  await atApplication(['exec', 'tsx', 'scripts/smoke-packaged-runtime.ts'])
+  if (run !== undefined) recordPackagingEvent(run.directory, { type: 'artifacts', directory: buildPaths.artifacts })
 }
 
 async function main(): Promise<void> {
   const invocation = parseDesktopPackageInvocation(process.argv.slice(2))
-  const { target } = invocation
-  if (invocation.skipNotarization) {
-    process.stdout.write('desktop package: skipping notarization and stapling; internal debugging only, not qualified for distribution or update publishing\n')
-  }
-  const environment = target.platform === 'darwin' && invocation.unsigned
-    ? localMacOSPackageEnvironment()
-    : loadDesktopPackageEnvironment(target.platform, process.env, APP_ROOT, {
-      unsigned: invocation.unsigned, prepareOnly: invocation.prepareOnly,
-    })
-  const productVersion = packageVersion(join(APP_ROOT, 'package.json'), 'desktop package')
-  // Release settings come from the selected configuration files, so the version this run publishes is an
-  // argument; the environment variable below only carries it to the child processes that build.
-  const buildVersion = await resolveRequestedBuildVersion(invocation, productVersion, environment)
-  environment[DESKTOP_BUILD_VERSION_ENV] = buildVersion
+  const version = productVersion()
   if (invocation.check) {
-    validateDesktopPackageEnvironment(environment, target, invocation)
-    await requireDesktopToolchain(target.platform, environment)
-    process.stdout.write(`desktop package: ${target.name} would publish ${buildVersion}; local configuration and toolchain valid, signing and notarization were not attempted\n`)
+    await requireDesktopToolchain()
+    process.stdout.write(`desktop package: mac-arm64 ${version}; host and toolchain valid\n`)
     return
   }
-  process.stdout.write(`desktop package: ${target.name} publishes ${buildVersion}${buildVersion === productVersion ? '' : ` for product version ${productVersion}`}\n`)
-  const packaged = readDesktopBuildCommit(REPOSITORY_ROOT)
-  Object.assign(environment, desktopBuildCommitEnvironment(packaged))
-  const secrets = Object.entries(environment).filter(([name]) => /KEY|SECRET|TOKEN|PASSWORD|APPLE_ID/iu.test(name)).map(([, value]) => value ?? '')
+  const environment = adHocSigningEnvironment(process.env)
+  const secrets = Object.entries(environment).filter(([name]) => CREDENTIAL_NAME.test(name)).map(([, value]) => value ?? '')
   const run = createPackagingRun(join(APP_ROOT, '.desktop-build', 'packaging-runs'), {
-    target: target.name, unsigned: invocation.unsigned, skipNotarization: invocation.skipNotarization,
-    directory: invocation.directory, prepareOnly: invocation.prepareOnly,
-    version: buildVersion, productVersion, node: process.version,
-    commit: packaged.commit,
-    dirty: packaged.dirty,
+    target: 'mac-arm64', directory: invocation.directory, prepareOnly: invocation.prepareOnly,
+    version, node: process.version,
   }, { parallel: true, secrets })
   console.log(`DESKTOP_PACKAGING_RECORD ${run.directory}`)
   const previousDirectory = process.env.LIWA_DESKTOP_PACKAGING_RUN_DIR
   process.env.LIWA_DESKTOP_PACKAGING_RUN_DIR = run.directory
+  environment.LIWA_DESKTOP_PACKAGING_RUN_DIR = run.directory
   let success = false
   try {
-    await packagingStep(run.directory, 'configuration', async () => { validateDesktopPackageEnvironment(environment, target, invocation) }, secrets)
-    await packagingStep(run.directory, 'toolchain', () => requireDesktopToolchain(target.platform, environment), secrets)
-    if (target.platform === 'darwin') {
-      const settings = resolveMacOSPackageSettings(environment)
-      recordPackagingEvent(run.directory, { type: 'macos-settings', packConcurrency: settings.packConcurrency, zipCompressionLevel: settings.zipCompressionLevel,
-        downloadProxyConfigured: settings.downloadProxy !== undefined,
-        notarizationProxyConfigured: settings.notarizationProxy !== undefined })
-      await packagingStep(run.directory, 'macos-package', () => invocation.unsigned
-        ? packageTarget(invocation, environment, run)
-        : withMacOSSigningKeychain(environment, signingEnvironment => packageTarget(invocation, signingEnvironment, run)), secrets)
-    } else {
-      await packagingStep(run.directory, 'windows-package', () => packageTarget(invocation, environment, run), secrets)
-    }
+    await packagingStep(run.directory, 'toolchain', () => requireDesktopToolchain(), secrets)
+    await packagingStep(run.directory, 'macos-package', () => packageTarget(invocation, environment, run), secrets)
     success = true
   } catch (error) {
     process.stderr.write(`${packagingErrorDetails(error, secrets)}\n`)
@@ -399,172 +187,10 @@ async function main(): Promise<void> {
     else process.env.LIWA_DESKTOP_PACKAGING_RUN_DIR = previousDirectory
     run.finish(success)
   }
-  if (success && target.platform === 'darwin' && !invocation.directory && !invocation.prepareOnly) {
-    const paths = desktopTargetBuildPaths(target.name, environment)
-    const output = desktopArtifactOutput(paths, invocation)
-    const filename = `liwa-${buildVersion}-mac-${target.arch}${output.suffix}.dmg`
-    console.log(`DMG: ${join(output.directory, filename)}`)
-  }
-}
-
-/**
- * Prepare one release only after its signing preflight, without publishing from the builder.
- * @param invocation Validated host, target and packaging mode.
- * @param environment File-owned release configuration.
- * @param run Persistent stage supervisor; required for signed Windows packaging and enabled for all release commands.
- * @returns Resolves after preparation or complete packaging; any failed stage prevents a release record.
- */
-export async function packageTarget(
-  invocation: DesktopPackageInvocation,
-  environment: NodeJS.ProcessEnv,
-  run: ReturnType<typeof createPackagingRun> | undefined,
-): Promise<void> {
-  const { target } = invocation
-  const execute = (args: readonly string[], env: NodeJS.ProcessEnv, cwd: string = APP_ROOT) => runPnpm(args, env, cwd, run)
-  const journal = target.platform === 'darwin' ? process.env.LIWA_DESKTOP_PACKAGING_RUN_DIR : undefined
-  const proxyEvent = (status: string) => { if (journal) recordPackagingEvent(journal, { type: 'notarization-proxy', status }) }
-  const mac = target.platform === 'darwin' ? resolveMacOSPackageSettings(environment) : undefined
-  const packConcurrency = mac?.packConcurrency ?? resolveWindowsPackageSettings(environment).packConcurrency
-  const packArguments = ['--concurrency', String(packConcurrency)]
-  const buildPaths = desktopTargetBuildPaths(target.name, environment)
-  const releaseRecordPath = join(buildPaths.artifacts, desktopBuildRecordFilename(target.name))
-  if (!invocation.prepareOnly && !invocation.unsigned && !invocation.skipNotarization) {
-    rmSync(releaseRecordPath, { force: true })
-    rmSync(`${releaseRecordPath}.tmp`, { force: true })
-  }
-  const artifactsRoot = desktopArtifactOutput(buildPaths, invocation).directory
-  const buildEnv = withoutWindowsSigningEnvironment(withoutDesktopUploadCredentials(
-    desktopElectronBuilderEnvironment(environment, invocation.unsigned)))
-  const targetEnv: NodeJS.ProcessEnv = {
-    ...buildEnv,
-    LIWA_DESKTOP_MACOS_SKIP_NOTARIZATION: invocation.skipNotarization ? '1' : '0',
-    LIWA_DESKTOP_TARGET_PLATFORM: target.platform,
-    LIWA_DESKTOP_TARGET_ARCH: target.arch,
-  }
-  const downloadEnv = macOSDownloadEnvironment(targetEnv, mac?.downloadProxy)
-  const electronBuilderEnv = desktopElectronBuilderEnvironment(downloadEnv, invocation.unsigned)
-  if (target.platform === 'win32') {
-    electronBuilderEnv.ELECTRON_BUILDER_COMPRESSION_LEVEL = String(resolveWindowsPackageSettings(environment).compressionLevel)
-  }
-  for (const name of WINDOWS_SIGNING_ENV_NAMES) {
-    if (!invocation.unsigned && environment[name] !== undefined) electronBuilderEnv[name] = environment[name]
-  }
-  const signPrimaryRuntime = target.platform === 'win32' && !invocation.unsigned && !invocation.prepareOnly
-  const signedStage = async (stage: string, operation: () => Promise<void>): Promise<void> => {
-    if (!signPrimaryRuntime) return operation()
-    if (run === undefined) throw new Error('desktop package: signed Windows packaging requires a supervised run')
-    const controller = new AbortController()
-    const interrupted = (): void => controller.abort()
-    const detach = (): void => {
-      process.removeListener('SIGINT', interrupted)
-      process.removeListener('SIGTERM', interrupted)
-    }
-    process.once('SIGINT', interrupted)
-    process.once('SIGTERM', interrupted)
-    try {
-      const options = { stage, signal: controller.signal, record: (event: object): void => recordPackagingEvent(run.directory, event) }
-      await withWindowsSigningStage(options, async () => {
-        detach()
-        await operation()
-      })
-    } finally { detach() }
-  }
-  if (signPrimaryRuntime) {
-    if (run === undefined) throw new Error('desktop package: signed Windows packaging requires a supervised run')
-    await signedStage('preflight', async () => {
-      await prepareWindowsSignatureCacheDirectory(resolveWindowsSignatureCacheDirectory(environment))
-      await run.run('preflight:windows-signing', process.execPath,
-        ['--import', 'tsx/esm', join(APP_ROOT, 'scripts/windows-signing-preflight.ts')],
-        { cwd: APP_ROOT, env: electronBuilderEnv, timeoutMs: 60_000 })
-    })
-  }
-  await execute(invocation.unsigned ? ['run', 'build', '--profile', 'local'] : ['run', 'build:official'], buildEnv, REPOSITORY_ROOT)
-  let preparationFailure: { error: unknown } | undefined
-  const executePreparation = async (args: readonly string[], env: NodeJS.ProcessEnv, cwd?: string): Promise<void> => {
-    if (preparationFailure !== undefined) throw preparationFailure.error
-    try { await execute(args, env, cwd) }
-    catch (error) { preparationFailure ??= { error }; throw error }
-  }
-  const pack = async (): Promise<void> => {
-    await executePreparation([
-      ...(invocation.unsigned
-        ? ['exec', 'tsx', 'apps/desktop/scripts/pack-local-packages.ts']
-        : ['run', 'release:pack', '--family', 'liwa']),
-      '--out', buildPaths.packedLiwa, ...packArguments,
-    ], buildEnv, REPOSITORY_ROOT)
-    await executePreparation([
-      '--dir',
-      'apps/desktop-host',
-      'pack',
-      '--pack-destination',
-      buildPaths.packedLiwa,
-    ], buildEnv, REPOSITORY_ROOT)
-    await executePreparation(['run', 'release:pack', '--family', 'vendor', '--out', buildPaths.packedVendor, ...packArguments], buildEnv, REPOSITORY_ROOT)
-    rmSync(buildPaths.packedLandlock, { recursive: true, force: true })
-    mkdirSync(buildPaths.packedLandlock, { recursive: true })
-    await executePreparation(['--dir', 'native/system', 'run', 'build:ts'], buildEnv, REPOSITORY_ROOT)
-    await executePreparation([
-      '--dir',
-      'native/system/packages/entry',
-      'pack',
-      '--pack-destination',
-      buildPaths.packedLandlock,
-    ], buildEnv, REPOSITORY_ROOT)
-  }
-  const prepareRuntime = () => executePreparation(
-    ['run', 'prepare:runtime', ...(signPrimaryRuntime ? ['--defer-primary-runtime-smoke'] : [])], downloadEnv)
-  if (target.platform === 'win32') {
-    const results = await Promise.allSettled([pack(), prepareRuntime()])
-    for (const result of results) if (result.status === 'rejected') throw result.reason
-  } else {
-    await pack()
-    await prepareRuntime()
-  }
-  if (signPrimaryRuntime) await execute(['run', 'sign:primary-runtime'], electronBuilderEnv)
-  await execute(['run', 'prepare:packages'], targetEnv)
-  await execute(['run', 'prepare:liwa', ...(signPrimaryRuntime ? ['--defer-runtime-smoke'] : [])], downloadEnv)
-  if (signPrimaryRuntime) await execute(['run', 'sign:primary-runtime', '--liwa'], electronBuilderEnv)
-  if (invocation.prepareOnly) return
-  const buildMacArtifact = (artifact: DesktopPrepackagedArtifact) => execute(
-    desktopElectronBuilderArguments(target, false, artifact), artifact.format === 'zip'
-      ? { ...electronBuilderEnv, ELECTRON_BUILDER_COMPRESSION_LEVEL: String(mac?.zipCompressionLevel) }
-      : electronBuilderEnv)
-  if (target.platform === 'darwin' && !invocation.unsigned && !invocation.skipNotarization && !invocation.directory) {
-    await execute([
-      ...desktopElectronBuilderArguments(target, true),
-      '--config.mac.notarize=false',
-    ], electronBuilderEnv)
-    await execute(['exec', 'tsx', 'scripts/smoke-packaged-runtime.ts'], targetEnv)
-    await withMacOSNotarizationProxy(mac?.notarizationProxy, () => packageMacOSArtifacts({
-      arch: target.arch,
-      // electron-builder named these artifacts after the published version, so locating them uses the same identifier.
-      version: resolveDesktopBuildVersion(environment, packageVersion(join(APP_ROOT, 'package.json'), 'desktop package')),
-      artifactsRoot: buildPaths.artifacts,
-      environment: electronBuilderEnv,
-    }, buildMacArtifact), undefined, undefined, proxyEvent)
-  } else if (target.platform === 'darwin' && !invocation.unsigned && !invocation.skipNotarization) {
-    await execute([...desktopElectronBuilderArguments(target, true), '--config.mac.notarize=false'], electronBuilderEnv)
-    await execute(['exec', 'tsx', 'scripts/smoke-packaged-runtime.ts'], targetEnv)
-    const appPath = join(buildPaths.artifacts, target.arch === 'arm64' ? 'mac-arm64' : 'mac', 'Liwa.app')
-    await withMacOSNotarizationProxy(mac?.notarizationProxy,
-      () => notarizeMacOS({ appPath, ...resolveMacOSNotarizationEnvironment(environment) }), undefined, undefined, proxyEvent)
-  } else {
-    if (target.platform === 'darwin' && invocation.skipNotarization && !invocation.directory) {
-      await execute(desktopElectronBuilderArguments(target, true), electronBuilderEnv)
-      const appPath = join(artifactsRoot, target.arch === 'arm64' ? 'mac-arm64' : 'mac', 'Liwa.app')
-      for (const format of ['dmg', 'zip'] as const) {
-        await buildMacArtifact({ format, appPath, output: artifactsRoot })
-      }
-    } else {
-      await signedStage('artifacts', () => execute(desktopElectronBuilderArguments(target, invocation.directory), electronBuilderEnv))
-    }
-    await execute(['exec', 'tsx', 'scripts/smoke-packaged-runtime.ts',
-      ...(invocation.unsigned ? ['--unsigned'] : []), ...(invocation.skipNotarization ? ['--skip-notarization'] : [])], targetEnv)
-  }
-  if (!invocation.directory && !invocation.unsigned && !invocation.skipNotarization) {
-    writeReleaseRecord(target, electronBuilderEnv, buildPaths.artifacts)
-  }
-  if (journal) recordPackagingEvent(journal, { type: 'artifacts', directory: artifactsRoot })
+  if (!success || invocation.prepareOnly) return
+  const paths = resolveDesktopTargetBuildPaths()
+  console.log(`App: ${paths.application}`)
+  if (!invocation.directory) console.log(`DMG: ${join(paths.artifacts, `liwa-${version}-mac-arm64.dmg`)}`)
 }
 
 if (process.argv[1] !== undefined && import.meta.filename === resolve(process.argv[1])) await main()

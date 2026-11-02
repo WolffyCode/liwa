@@ -2,11 +2,7 @@
 
 [English](README.md) | 中文
 
-用于通过 stdio 上按行分隔的 JSON-RPC 驱动灵鲸的 Python 子进程 SDK。安装 `liwa-sdk` 时，会同时安装当前平台上版本完全相同的 `liwa-runtime-bin` wheel 包。
-
-```sh
-python -m pip install liwa-sdk
-```
+用于通过 stdio 上按行分隔的 JSON-RPC 驱动灵鲸的 Python 子进程 SDK。灵鲸不把 `liwa-sdk` 发布到 PyPI。在源码目录中按 [Python 贡献者工作流](../development.zh.md)构建 SDK wheel 包和当前平台的 `liwa-runtime-bin` wheel 包，再一起安装；SDK 固定依赖版本完全相同的运行时 wheel 包。
 
 ## 可选 Office 操作
 
