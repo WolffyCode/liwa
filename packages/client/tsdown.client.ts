@@ -103,6 +103,12 @@ const SKIP_WORKSPACE_BUILD: UserConfig = { entry: '' }
 
 const REPOSITORY_ROOT = fileURLToPath(new URL('../..', import.meta.url))
 
+/** Keep machine-specific filesystem roots out of bundled virtual module names. */
+function stylesheetVirtualId(prefix: string, fileId: string): string {
+  const repositoryPath = relative(REPOSITORY_ROOT, fileId).split(sep).join('/')
+  return prefix + repositoryPath + CSS_VIRTUAL_SUFFIX
+}
+
 /** Rebase a physical lib-relative source onto a browser URL that mirrors the repository directories. */
 function browserSourcePath(source: string, sourcemapPath: string): string {
   if (!source.startsWith('.')) return source
@@ -856,12 +862,12 @@ function clientConfig(
       name: 'liwa-css-modules-inline',
       resolveId(source: string, importer: string | undefined) {
         if (!source.endsWith('.module.css')) return null
-        const abs = importer !== undefined ? sourceAssetPath(source, importer) : source
-        return CSS_VIRTUAL_PREFIX + abs + CSS_VIRTUAL_SUFFIX
+        const fileId = importer !== undefined ? sourceAssetPath(source, importer) : source
+        return stylesheetVirtualId(CSS_VIRTUAL_PREFIX, fileId)
       },
       async load(virtualId: string) {
         if (!virtualId.startsWith(CSS_VIRTUAL_PREFIX)) return null
-        const fileId = virtualId.slice(CSS_VIRTUAL_PREFIX.length, -CSS_VIRTUAL_SUFFIX.length)
+        const fileId = clientInputFile(virtualId)
         // The virtual id otherwise hides the physical stylesheet from Rolldown's watch graph.
         this.addWatchFile(fileId)
         const source = await readFile(fileId)
@@ -884,12 +890,12 @@ function clientConfig(
       resolveId(source: string, importer: string | undefined) {
         if (!source.endsWith(`.css${INLINE_CSS_QUERY}`)) return null
         const stylesheet = source.slice(0, -INLINE_CSS_QUERY.length)
-        const abs = importer !== undefined ? sourceAssetPath(stylesheet, importer) : stylesheet
-        return INLINE_CSS_VIRTUAL_PREFIX + abs + CSS_VIRTUAL_SUFFIX
+        const fileId = importer !== undefined ? sourceAssetPath(stylesheet, importer) : stylesheet
+        return stylesheetVirtualId(INLINE_CSS_VIRTUAL_PREFIX, fileId)
       },
       async load(virtualId: string) {
         if (!virtualId.startsWith(INLINE_CSS_VIRTUAL_PREFIX)) return null
-        const fileId = virtualId.slice(INLINE_CSS_VIRTUAL_PREFIX.length, -CSS_VIRTUAL_SUFFIX.length)
+        const fileId = clientInputFile(virtualId)
         this.addWatchFile(fileId)
         const source = await readFile(fileId)
         const stylesheetAssets = assets.urlRewrite(this, fileId)
@@ -900,12 +906,12 @@ function clientConfig(
       name: 'liwa-css-global-inline',
       resolveId(source: string, importer: string | undefined) {
         if (!source.endsWith('.css') || source.endsWith('.module.css')) return null
-        const abs = importer !== undefined ? sourceAssetPath(source, importer) : source
-        return GLOBAL_CSS_VIRTUAL_PREFIX + abs + CSS_VIRTUAL_SUFFIX
+        const fileId = importer !== undefined ? sourceAssetPath(source, importer) : source
+        return stylesheetVirtualId(GLOBAL_CSS_VIRTUAL_PREFIX, fileId)
       },
       async load(virtualId: string) {
         if (!virtualId.startsWith(GLOBAL_CSS_VIRTUAL_PREFIX)) return null
-        const fileId = virtualId.slice(GLOBAL_CSS_VIRTUAL_PREFIX.length, -CSS_VIRTUAL_SUFFIX.length)
+        const fileId = clientInputFile(virtualId)
         this.addWatchFile(fileId)
         const source = await readFile(fileId)
         const stylesheetAssets = assets.urlRewrite(this, fileId)
@@ -985,11 +991,11 @@ function clientInputIsolation(id: string): {
   }
 }
 
-/** CSS loader ids append a JavaScript suffix to the physical stylesheet path. */
+/** Recover physical stylesheet ownership for loading, watch dependencies, and input isolation. */
 function clientInputFile(id: string): string {
   const prefix = [CSS_VIRTUAL_PREFIX, GLOBAL_CSS_VIRTUAL_PREFIX, INLINE_CSS_VIRTUAL_PREFIX]
     .find(prefix => id.startsWith(prefix))
-  return prefix === undefined ? id : id.slice(prefix.length, -CSS_VIRTUAL_SUFFIX.length)
+  return prefix === undefined ? id : resolvePath(REPOSITORY_ROOT, id.slice(prefix.length, -CSS_VIRTUAL_SUFFIX.length))
 }
 
 /** Chain tsc's emitted maps into any Client bundle that consumes `lib/types`. */

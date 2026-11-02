@@ -9,6 +9,8 @@ import { configureCodeMirrorBrowser, configureHostPerformanceSource, cssTextModu
 const assets = fileURLToPath(new URL('../../assets/devtools/', import.meta.url))
 const CONNECT = join(assets, 'connect.js')
 const VIRTUAL = '\0liwa-devtools:'
+const CSS_VIRTUAL_PREFIX = `${VIRTUAL}css:`
+const CSS_VIRTUAL_SUFFIX = '.mjs'
 const EMPTY = `${VIRTUAL}empty`
 const ENTRIES = ['devtools_app', 'device_mode_emulation_frame', 'formatter_worker', 'heap_snapshot_worker', 'wasmparser_worker', 'lighthouse_worker'] as const
 
@@ -36,7 +38,7 @@ export const LOCAL_FETCH_PATTERN = "data:application/json,{}", REMOTE_FETCH_PATT
       const sourcePath = relative(front, file).split('\\').join('/')
       if (generated.has(sourcePath)) return `${VIRTUAL}${sourcePath}`
       if (sourcePath === 'core/platform/node/node.js') return join(front, 'core/platform/browser/browser.ts')
-      if (file.endsWith('.css.js')) return `${VIRTUAL}css:${file.slice(0, -3)}.mjs`
+      if (file.endsWith('.css.js')) return CSS_VIRTUAL_PREFIX + sourcePath.slice(0, -3) + CSS_VIRTUAL_SUFFIX
       if (file.endsWith('.js')) {
         const tsFile = file.slice(0, -3) + '.ts'
         try { if ((await stat(tsFile)).isFile()) return tsFile } catch (error) {
@@ -47,8 +49,8 @@ export const LOCAL_FETCH_PATTERN = "data:application/json,{}", REMOTE_FETCH_PATT
     },
     async load(id) {
       if (id === EMPTY) return 'export {};'
-      if (id.startsWith(`${VIRTUAL}css:`)) {
-        const path = id.slice(`${VIRTUAL}css:`.length, -4)
+      if (id.startsWith(CSS_VIRTUAL_PREFIX)) {
+        const path = resolve(front, id.slice(CSS_VIRTUAL_PREFIX.length, -CSS_VIRTUAL_SUFFIX.length))
         this.addWatchFile(path)
         return cssTextModule(await readFile(path, 'utf8'))
       }

@@ -8,7 +8,7 @@ import { runInNewContext } from 'node:vm'
 import { existsSync } from 'node:fs'
 import { mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { dirname, join, relative, sep } from 'node:path'
 import { build, type TsdownBundle, type UserConfig } from 'tsdown'
 import { afterEach, describe, expect, it } from 'vitest'
 import { packageAssetRevision } from '../packages/client/modules/src/assets.ts'
@@ -148,6 +148,32 @@ function hooks(plugin: BundlePlugin): Required<Pick<BundlePlugin, 'resolveId' | 
   if (plugin.resolveId === undefined || plugin.load === undefined) throw new Error(`${plugin.name} hooks are incomplete`)
   return { resolveId: plugin.resolveId, load: plugin.load }
 }
+
+describe('client bundle CSS virtual paths', () => {
+  it.each([
+    ['liwa-css-modules-inline', 'View.module.css', '', '\0liwa-css:'],
+    ['liwa-css-global-inline', 'theme.css', '', '\0liwa-global-css:'],
+    ['liwa-css-text-inline', 'theme.css', '?inline', '\0liwa-inline-css:'],
+  ] as const)('keeps %s ids relative and loads the physical stylesheet', async (name, filename, query, prefix) => {
+    const root = await assetPackage({ [`src/client/${filename}`]: '.root { color: red; }\n' })
+    const stylesheet = join(root, 'src/client', filename)
+    const repositoryRoot = join(import.meta.dirname, '..')
+    const repositoryPath = relative(repositoryRoot, stylesheet).split(sep).join('/')
+    const { resolveId, load } = hooks(browserPlugins(root)(name))
+
+    for (const importer of ['src/client/index.ts', 'lib/types/client/index.js']) {
+      const virtualId = resolveId(`./${filename}${query}`, join(root, importer))
+      expect(virtualId).toBe(`${prefix}${repositoryPath}.mjs`)
+      if (virtualId === null) throw new Error('stylesheet import did not resolve')
+      expect(resolveId(`${stylesheet}${query}`)).toBe(virtualId)
+
+      const context = recordingContext()
+      const output = await load.call(context, virtualId)
+      expect(context.watched).toEqual([stylesheet])
+      expect(stylesheetText(output, reference => reference)).toContain('color:red')
+    }
+  })
+})
 
 /** Resolve and load one import through a plugin. */
 async function loadImport(plugin: BundlePlugin, context: PluginContext, source: string, importer: string): Promise<string | null> {
