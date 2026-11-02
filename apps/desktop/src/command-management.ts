@@ -6,7 +6,7 @@ import { userInfo } from 'node:os'
 import { promisify } from 'node:util'
 import type { MessageBoxOptions, MessageBoxReturnValue } from 'electron'
 import type { DesktopMessages } from './locale.ts'
-import type { UpdateDialogOptions } from './update-dialog.ts'
+import type { ShellDialogOptions } from './shell-dialog.ts'
 
 interface CommandState {
   fingerprint: string
@@ -39,7 +39,7 @@ export interface CommandManagerOptions {
   readonly isInstalledLocation: () => boolean
   readonly isQuitting: () => boolean
   readonly messages: () => DesktopMessages
-  readonly show: (options: UpdateDialogOptions) => Promise<MessageBoxReturnValue>
+  readonly show: (options: ShellDialogOptions) => Promise<MessageBoxReturnValue>
 }
 
 class CommandWorkerError extends Error {

@@ -62,13 +62,11 @@ export default defineConfig([
         plugins: [{
           name: 'desktop-shell-assets',
           async generateBundle() {
-            for (const name of ['design-platform.css', 'brand-font.css', 'montserrat-regular.woff2', 'montserrat-light.woff2', 'montserrat-medium.woff2', 'Montserrat-OFL.txt']) {
-              this.emitFile({
-                type: 'asset',
-                fileName: name,
-                source: await readFile(new URL(`../../packages/client/ui-theme/src/styles/${name}`, import.meta.url)),
-              })
-            }
+            this.emitFile({
+              type: 'asset',
+              fileName: 'design-platform.css',
+              source: await readFile(new URL('../../packages/client/ui-theme/src/styles/design-platform.css', import.meta.url)),
+            })
           },
         }],
         root: fileURLToPath(new URL('.', import.meta.url)),
@@ -96,7 +94,7 @@ export default defineConfig([
     clean: false,
     deps: { neverBundle: ['electron'] },
   },
-  ...(['preload-app', 'preload-welcome', 'preload-update-dialog'] as const).map(name => ({
+  ...(['preload-app', 'preload-welcome', 'preload-shell-dialog'] as const).map(name => ({
     // Sandboxed Electron preloads run as CommonJS even though the application package is ESM.
     entry: { [name]: `lib/types/${name}.js` },
     plugins: [packagedImportsPlugin(preloadImports)],

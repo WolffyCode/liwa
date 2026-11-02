@@ -69,7 +69,6 @@ export function apply(ctx: Context, config: Config): void {
     const catalog = resolveListedCatalog({
       listing: view.listing?.entries,
       supported: connection.models,
-      overrides: {},
       routeMaxTokens: connection.maxTokens,
       clientVersion: APP_IDENTITY.version,
     })

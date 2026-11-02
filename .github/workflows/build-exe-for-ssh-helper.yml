@@ -7,10 +7,6 @@ on:
         description: Comma-separated native Node 24 targets; empty builds all four.
         type: string
         default: ''
-      release:
-        description: Retain a complete release build when another run starts.
-        type: boolean
-        default: false
   workflow_dispatch:
     inputs:
       targets:
@@ -23,7 +19,7 @@ permissions:
 
 concurrency:
   group: ssh-helper-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ !inputs.release }}
+  cancel-in-progress: true
 
 env:
   LIWA_TELEMETRY_DISABLED: '1'

@@ -20,7 +20,7 @@
     "apps/desktop/src/keybindings.ts",
     "apps/desktop/src/browser-guests.ts",
     "apps/desktop/src/ipc.ts",
-    "apps/desktop/src/update-overlay.ts",
+    "apps/desktop/src/shell-overlay.ts",
     "apps/desktop/src/windows-layout.ts",
     "apps/desktop/tests/**/*.client.spec.tsx",
     // Source-subpath test imports can arrive through workspace links whose

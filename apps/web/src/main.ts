@@ -1,5 +1,4 @@
 /** Browser entry for the Web client. */
-import '@liwa/client-ui-theme/brand-font.css'
 import { AppWebEntry, applyIndexInjections } from '@liwa/client-web'
 
 interface DesktopBootGlobal {

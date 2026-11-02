@@ -1,8 +1,7 @@
-/** Catalog resolution: version gating, this build's model knowledge, and model overrides. */
+/** Catalog resolution: version gating, this build's model knowledge, and model knowledge. */
 import { describe, expect, it } from 'vitest'
 import { resolveAdapterOptions } from '../src/config.ts'
 import { resolveListedCatalog } from '../src/listed-catalog.ts'
-import type { ModelOverride } from '../src/listed-catalog.ts'
 import { parseModelListing } from '../src/listing.ts'
 import { DEFAULT_REQUEST_IMAGE_MAX_BYTES } from '../src/request-pricing.ts'
 
@@ -18,10 +17,9 @@ const PRO = {
 }
 const requires = (version: unknown) => ({ client_requirements: { 'deepseek-harness': { min_version: version } } })
 const shows = (badge: unknown) => ({ client_metadata: { 'deepseek-harness': { badge } } })
-const resolve = (rows: object[] | undefined, overrides: Record<string, ModelOverride> = {}) => resolveListedCatalog({
+const resolve = (rows: object[] | undefined) => resolveListedCatalog({
   listing: rows === undefined ? undefined : parseModelListing({ data: rows }).entries,
   supported: resolveAdapterOptions({}).models,
-  overrides,
   routeMaxTokens: 256_000,
   clientVersion: '0.2.0-rc.1',
 })
@@ -37,11 +35,7 @@ describe('without a listing', () => {
     expect(catalog.badges.size).toBe(0)
   })
 
-  it('applies overrides and does not judge override ids it cannot see', () => {
-    const catalog = resolve(undefined, { 'deepseek-flash': { contextWindow: 524_288 }, 'remote-only': { contextWindow: 1 } })
-    expect(catalog.offered[0]?.contextWindow).toBe(524_288)
-    expect(catalog.overrideErrors).toEqual([])
-  })
+
 })
 
 describe('with a listing', () => {
@@ -155,28 +149,11 @@ describe('with a listing', () => {
     ])
   })
 
-  it('keeps bundled knowledge, with overrides, for request resolution of models the listing does not offer', () => {
-    const catalog = resolve([PRO], { 'deepseek-flash': { contextWindow: 7 } })
+  it('keeps bundled knowledge for request resolution of models the listing does not offer', () => {
+    const catalog = resolve([PRO])
     expect(catalog.offered.map(model => model.id)).toEqual(['deepseek-v4-pro'])
-    expect(catalog.resolution.map(model => [model.id, model.contextWindow])).toEqual([['deepseek-v4-pro', 1_048_576], ['deepseek-flash', 7]])
-    expect(catalog.overrideErrors).toEqual([])
-  })
-
-  it('applies an override to a vouched model and drops image limits an override narrows away', () => {
-    const catalog = resolve([FLASH, { ...PRO, id: 'deepseek-v5', ...requires('0.1.0') }], {
-      'deepseek-flash': { inputModalities: ['text'] }, 'deepseek-v5': { contextWindow: 9 },
-    })
-    expect(catalog.offered[0]).not.toHaveProperty('imageMaxBytes')
-    expect(catalog.offered[1]?.contextWindow).toBe(9)
-    expect(catalog.overrideErrors).toEqual([])
-  })
-
-  it.each([{ imagePixelBudget: 'low' as const }, { imageMaxBytes: 1 }])('reports an override %j that does not apply and a stale override id', (limits) => {
-    const catalog = resolve([PRO], { 'deepseek-v4-pro': limits, 'retired': { contextWindow: 1 } })
-    expect(catalog.offered[0]).not.toHaveProperty('imageMaxBytes')
-    expect(catalog.overrideErrors).toEqual([
-      expect.stringMatching(/^modelOverrides\.deepseek-v4-pro does not apply \(.*cannot declare image request limits/),
-      'modelOverrides names "retired", which neither the model listing nor the built-in catalog describes',
+    expect(catalog.resolution.map(model => [model.id, model.contextWindow])).toEqual([
+      ['deepseek-v4-pro', 1_048_576], ['deepseek-flash', 1_048_576],
     ])
   })
 })

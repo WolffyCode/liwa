@@ -411,5 +411,5 @@ export function applyWebSearchTool(
     },
     presentCall: presentSearchCall,
     presentResult: (args, result) => presentSearchResult(args, result),
-  }), { when: ({ modelSelection }) => ctx.web.searchReady(modelSelection.provider) })
+  }), { when: () => ctx.web.searchReady() })
 }

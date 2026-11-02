@@ -513,5 +513,5 @@ export function applyWebFetchTool(ctx: Context, timeoutMs: number, maxOutputChar
     },
     presentCall: presentFetchCall,
     presentResult: (args, result) => presentFetchResult(args, result),
-  }), { when: ({ modelSelection }) => ctx.web.fetchReady(modelSelection.provider) })
+  }), { when: () => ctx.web.fetchReady() })
 }

@@ -1,11 +1,7 @@
 # Pack the vendored framework sequence: the nine rescoped Cordis packages under
-# vendor/, each on its own version line. This sequence releases independently of
-# liwa and of the native packages.
+# vendor/, each on its own version line.
 #
 # Pack runs without credentials on every pull request and master push.
-# Publication is a manual workflow_dispatch of release-vendor-publish.yml from a
-# vendor-* tag; a vendor release can carry several versions, so each package has
-# its own tag.
 name: Release (vendor)
 
 on:
@@ -86,13 +82,11 @@ jobs:
       - name: Verify release version
         run: pnpm run release:verify --family vendor
 
-      # The vendored packages publish their own sources and build outputs; the
+      # The vendored tarballs include their own sources and build outputs; the
       # host build produces what their manifests select.
       - name: Build
         run: ${{ github.event_name == 'pull_request' && 'pnpm exec tsx scripts/compile-referenced-projects.ts host-libraries' || 'pnpm run build:lib:host' }}
 
-      # Concurrency here is rehearsal-only: the credentialed publish workflows
-      # invoke release:pack without the flag and keep the strictly serial path.
       - name: Pack release tarballs
         run: pnpm run release:pack --family vendor --out dist/npm-vendor --concurrency 8
 

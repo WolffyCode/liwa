@@ -64,7 +64,7 @@ Access: the settings shell and the `settings.open` shortcut are registered only 
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
-The shell declares settings.launcher for a contributed sidebar launcher and renders the Settings button when none is registered. The launcher receives settingsOpen, whose false-to-true edge marks one Settings entry, so a registrant acts once per entry instead of on every re-render inside one open. Closing the dialog returns focus to the active launcher. In the expanded sidebar, the fallback uses the navigation rows' compact icon-label alignment and inset hover fill. Contributed launchers own their insets; the shell keeps its row full-width and its status indicator's trailing edge independent of launcher markup. The collapsed rail retains its centered 36 × 36 px control.
+The shell renders the Settings button in the sidebar. Closing the dialog returns focus to this trigger. In the expanded sidebar, the button uses the navigation rows' compact icon-label alignment and inset hover fill. The shell keeps its row full-width and its status indicator's trailing edge aligned. The collapsed rail retains its centered 36 × 36 px control.
 
 <details>
 <summary>Implementation internals — click to expand</summary>

@@ -80,12 +80,12 @@ const page = await ctx.web.fetch({ url: 'https://example.com' })
 <a id="search-readiness"></a>
 ### 搜索与抓取就绪
 
-`searchReady(llmProvider?)` 与 `fetchReady(llmProvider?)` 询问 `search()` 或 `fetch()` 会选中的提供方：为该对话路由上的模型请求发起的操作是否有可发送的凭据；[`liwa-tool-web`](../tool-web/README.zh.md#search-readiness) 据此决定每个模型步骤是否准入 `web_search` 与 `web_fetch`。提供方通过可选的 `ready(llmProvider)` 回答，它是只检查配置的判断，禁止发起网络调用；未实现它的提供方视为就绪。选择失败时就绪方法回答 true，因为对应操作会把该失败报告为结构化 `WebError`。就绪判断从不改变选中哪个提供方。
+`searchReady()` 与 `fetchReady()` 询问 `search()` 或 `fetch()` 会选中的提供方：操作是否有可发送的凭据；[`liwa-tool-web`](../tool-web/README.zh.md#search-readiness) 据此决定每个模型步骤是否准入 `web_search` 与 `web_fetch`。提供方通过可选的 `ready()` 回答，它是只检查配置的判断，禁止发起网络调用；未实现它的提供方视为就绪。选择失败时就绪方法回答 true，因为对应操作会把该失败报告为结构化 `WebError`。就绪判断从不改变选中哪个提供方。
 
 ```text
-// false only when the selected provider cannot authenticate this route's operations:
-const searchOffered = await ctx.web.searchReady('deepseek-official')
-const fetchOffered = await ctx.web.fetchReady('deepseek-official')
+// false only when the selected provider cannot authenticate its operations:
+const searchOffered = await ctx.web.searchReady()
+const fetchOffered = await ctx.web.fetchReady()
 ```
 
 ### 失败与恢复

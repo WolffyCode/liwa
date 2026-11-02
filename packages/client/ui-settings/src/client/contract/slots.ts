@@ -13,9 +13,6 @@ import type {} from '@liwa/client-ui-slots'
 
 declare module '@liwa/client-ui-slots' {
   interface SlotMap {
-    /** Optional sidebar account launcher; opens the shell-owned settings panel. */
-    'settings.launcher': { kind: 'single'; scope: 'root'; owner: SettingsLauncherOwnerProps }
-
     /**
      * The sidebar-foot trigger row content: icon + label, supplied as slot
      * content (the accessible name comes from the content — rail state
@@ -138,18 +135,4 @@ export interface SettingsOnboardingOwnerProps {
   complete: () => void
   /** Open the settings panel directly on one registered section. */
   openSection: (id: string) => void
-}
-
-/** Sidebar launcher geometry and settings navigation. */
-export interface SettingsLauncherOwnerProps {
-  /** Whether the sidebar shows labels. */
-  wide: boolean
-  /** Whether the settings dialog covers the sidebar; a launcher may treat a false-to-true edge as one Settings entry. */
-  settingsOpen: boolean
-  /** Effective Settings key labels and accessible combination; omitted when unbound. */
-  settingsShortcut?: { readonly keys: readonly string[]; readonly aria?: string | undefined }
-  /** Open the settings panel. */
-  openSettings: () => void
-  /** @param id - registered onboarding editor to open explicitly. */
-  openOnboarding: (id: string) => void
 }

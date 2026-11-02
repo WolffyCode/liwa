@@ -79,7 +79,7 @@ Tool registration follows product enablement, not backend availability: a tool s
 <a id="search-readiness"></a>
 ### Search and fetch readiness
 
-Each model step admits `web_search` and `web_fetch`, and so declares, describes, and dispatches them, only while `ctx.web.searchReady()` and `ctx.web.fetchReady()` answer true for the chat route of the step's model selection. The service asks only the provider that `search()` or `fetch()` would select; a provider that does not implement readiness counts as ready, and a selection failure also answers true, so the stable-registration errors above still reach the model. [`liwa-web-search-deepseek`](../web-search-deepseek/README.md#authentication) and [`liwa-web-deepseek-api`](../web-deepseek-api/README.md#authentication) are not ready when the step's operation has no credential. The shipped HTTP fetch provider needs no credential, so `web_fetch` stays admitted while it is selected. The check runs for every step, so a model switch or a newly stored key applies to the next step. A step that does not admit a tool also leaves it out of PTC program bindings, and a call to it fails as `UNKNOWN_TOOL`.
+Each model step admits `web_search` and `web_fetch`, and so declares, describes, and dispatches them, only while `ctx.web.searchReady()` and `ctx.web.fetchReady()` answer true. The service asks only the provider that `search()` or `fetch()` would select; a provider that does not implement readiness counts as ready, and a selection failure also answers true, so the stable-registration errors above still reach the model. [`liwa-web-search-deepseek`](../web-search-deepseek/README.md#authentication) and [`liwa-web-deepseek-api`](../web-deepseek-api/README.md#authentication) are not ready when the step's operation has no credential. The shipped HTTP fetch provider needs no credential, so `web_fetch` stays admitted while it is selected. The check runs for every step, so a newly stored key applies to the next step. A step that does not admit a tool also leaves it out of PTC program bindings, and a call to it fails as `UNKNOWN_TOOL`.
 
 ### Failures and recovery
 
@@ -116,7 +116,7 @@ The package is built on one separation and one registration rule:
 
 ### Readiness flow
 
-The `web_search` and `web_fetch` registrations carry activation conditions that ask `ctx.web.searchReady()` and `ctx.web.fetchReady()` about the route of the step's model selection. The agent loop resolves conditions before it assembles the step, so the declared tools, the `tool:web_search` and `tool:web_fetch` sections, PTC program bindings, and dispatch all read the same admitted set.
+The `web_search` and `web_fetch` registrations carry activation conditions that ask `ctx.web.searchReady()` and `ctx.web.fetchReady()` about credential readiness. The agent loop resolves conditions before it assembles the step, so the declared tools, the `tool:web_search` and `tool:web_fetch` sections, PTC program bindings, and dispatch all read the same admitted set.
 
 ### Fetch flow
 
@@ -199,7 +199,7 @@ Prefix-stable while definitions, resolved query cap, and visibility are unchange
 
 #### What the model sees
 
-A step whose selected search or fetch provider is not ready carries neither that tool's schema nor its prompt guidance, and its PTC programs cannot bind it; the other tools are unchanged. Without an admitted `web_fetch`, the `web_search` guidance uses its search-only text. A call to a withheld tool in such a step fails as `UNKNOWN_TOOL`, for example with `unknown tool "web_search"`. The agent loop records each difference from the previous request as a tool-registry update, so a route switch, or a key being stored or removed, appears as a tool addition or removal on the next request.
+A step whose selected search or fetch provider is not ready carries neither that tool's schema nor its prompt guidance, and its PTC programs cannot bind it; the other tools are unchanged. Without an admitted `web_fetch`, the `web_search` guidance uses its search-only text. A call to a withheld tool in such a step fails as `UNKNOWN_TOOL`, for example with `unknown tool "web_search"`. The agent loop records each difference from the previous request as a tool-registry update, so a key being stored or removed appears as a tool addition or removal on the next request.
 
 #### Token effect
 

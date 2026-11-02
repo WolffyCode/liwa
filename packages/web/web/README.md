@@ -80,12 +80,12 @@ A provider's availability is a cheap local check — for example whether its API
 <a id="search-readiness"></a>
 ### Search and fetch readiness
 
-`searchReady(llmProvider?)` and `fetchReady(llmProvider?)` ask the provider that `search()` or `fetch()` would select whether an operation made for a model request on that chat route has a credential to send; [`liwa-tool-web`](../tool-web/README.md#search-readiness) uses the answers to decide whether each model step admits `web_search` and `web_fetch`. A provider answers through its optional `ready(llmProvider)`, a configuration-only check that must not make network calls; a provider without it counts as ready. When selection fails, the readiness method answers true, because the operation reports that failure as a structured `WebError`. Readiness never changes which provider is selected.
+`searchReady()` and `fetchReady()` ask the provider that `search()` or `fetch()` would select whether an operation has a credential to send; [`liwa-tool-web`](../tool-web/README.md#search-readiness) uses the answers to decide whether each model step admits `web_search` and `web_fetch`. A provider answers through its optional `ready()`, a configuration-only check that must not make network calls; a provider without it counts as ready. When selection fails, the readiness method answers true, because the operation reports that failure as a structured `WebError`. Readiness never changes which provider is selected.
 
 ```text
-// false only when the selected provider cannot authenticate this route's operations:
-const searchOffered = await ctx.web.searchReady('deepseek-official')
-const fetchOffered = await ctx.web.fetchReady('deepseek-official')
+// false only when the selected provider cannot authenticate its operations:
+const searchOffered = await ctx.web.searchReady()
+const fetchOffered = await ctx.web.fetchReady()
 ```
 
 ### Failures and recovery
@@ -114,7 +114,7 @@ The package is built on one deliberate separation:
 
 | File | Role |
 |---|---|
-| [`src/index.ts`](src/index.ts) | Plugin entry: the `WebRuntime` service, both provider registries, execution-time selection, and per-route readiness |
+| [`src/index.ts`](src/index.ts) | Plugin entry: the `WebRuntime` service, both provider registries, execution-time selection, and credential readiness |
 | [`src/types.ts`](src/types.ts) | Vocabulary: request/result types, the closed `WebFetchBody` union, and the `WebError` taxonomy |
 
 ### Data model
@@ -140,7 +140,7 @@ Read these pages when the package-level contract is not enough. They move from t
 - [liwa-web-fetch-http](../web-fetch-http/README.md) — the shipped anonymous HTTP(S) fetch backend.
 - [Generated configuration catalog](../../../docs/config-catalog.md#liwaweb) — every accepted config field and its source declaration.
 - [Web capability seam decision](../../../.agents/notes/implemented/architecture/2026-06-24-web-capability-seam.md) — why search and fetch share one provider-selection service.
-- [Search readiness decision](../../../.agents/notes/implemented/architecture/2026-09-27-web-search-offered-by-provider-readiness.md) — why the seam answers per-route search and fetch readiness for `liwa-tool-web`.
+- [Search readiness decision](../../../.agents/notes/implemented/architecture/2026-09-27-web-search-offered-by-provider-readiness.md) — why the seam answers search and fetch credential readiness for `liwa-tool-web`.
 
 -----
 

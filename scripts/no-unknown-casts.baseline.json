@@ -36,7 +36,7 @@
   "apps/desktop/tests/preload-windows.client.spec.ts": {
     "fdbd843bccc38b95f572f49587aacc29b9b0c67390d922ab5404a5935c747487": 1
   },
-  "apps/desktop/tests/update-dialog.spec.ts": {
+  "apps/desktop/tests/shell-dialog.spec.ts": {
     "4000017f1f3dabd4bdf8eb91120cf4ff0dd09bad89d4683151f4785974d204a5": 1
   },
   "apps/web/tests/assembled-boot.ts": {

@@ -6,11 +6,11 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { app, BrowserWindow, ipcMain, nativeTheme, protocol } from 'electron'
 import { resolveDesktopLocale } from '../../lib/types/locale.js'
-import { UPDATE_DIALOG_IPC } from '../../lib/types/update-dialog.js'
+import { SHELL_DIALOG_IPC } from '../../lib/types/shell-dialog.js'
 
 const directory = fileURLToPath(new URL('../../.desktop-build/qualification/', import.meta.url))
 mkdirSync(directory, { recursive: true })
-const root = mkdtempSync(join(directory, 'update-theme-'))
+const root = mkdtempSync(join(directory, 'shell-theme-'))
 app.setPath('userData', root)
 protocol.registerSchemesAsPrivileged([{ scheme: 'liwa-app', privileges: { standard: true, secure: true, supportFetchAPI: true } }])
 app.on('window-all-closed', () => {})
@@ -29,13 +29,13 @@ async function main() {
       : name.endsWith('.svg') ? 'image/svg+xml' : 'text/html'
     return new Response(await readFile(file), { headers: { 'content-type': mime } })
   })
-  ipcMain.handle(UPDATE_DIALOG_IPC.status, () => ({ revision: 1, locale: locale.id,
-    title: 'Check for updates', message: 'Update ready', detail: 'Shell palette qualification',
+  ipcMain.handle(SHELL_DIALOG_IPC.status, () => ({ revision: 1, locale: locale.id,
+    title: 'About Liwa', message: 'Liwa desktop shell', detail: 'Shell palette qualification',
     buttons: ['Install', 'Later'], cancelId: 1, closeLabel: 'Close', technicalDetails: 'Details', technicalDetailsLabel: 'Details' }))
   try {
     assert.equal(await readFile(new URL('../../lib/welcome/design-platform.css', import.meta.url), 'utf8'),
       await readFile(new URL('../../../../packages/client/ui-theme/src/styles/design-platform.css', import.meta.url), 'utf8'))
-    for (const document of ['update-dialog']) {
+    for (const document of ['shell-dialog']) {
       for (const initial of ['light', 'dark']) {
         nativeTheme.themeSource = initial
         const window = new BrowserWindow({ show: true, width: 600, height: 650,
@@ -85,11 +85,11 @@ async function main() {
       }
     }
     await writeFile(join(root, 'result.json'), JSON.stringify(results, null, 2) + '\n')
-    console.log(`Update theme qualification passed (${results.length} cases): ${root}`)
+    console.log(`Shell theme qualification passed (${results.length} cases): ${root}`)
   } finally {
     clearTimeout(deadline)
     for (const window of windows) if (!window.isDestroyed()) window.destroy()
-    ipcMain.removeHandler(UPDATE_DIALOG_IPC.status)
+    ipcMain.removeHandler(SHELL_DIALOG_IPC.status)
     protocol.unhandle('liwa-app')
     nativeTheme.themeSource = original
   }

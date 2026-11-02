@@ -16,8 +16,6 @@ import type { ProductEventMap } from '@liwa/client-product-analytics/client'
 
 declare module '@liwa/client-ui-slots' {
   interface SlotMap {
-    /** Non-interactive notification inside the collapsed sidebar expand button. */
-    'sidebar.toggle.badge': { kind: 'single'; scope: 'root'; owner: Record<never, never> }
     /**
      * Brand mark rendered in the expanded brand row and collapsed rail.
      * Declared by this package's `sidebar` entry; deployments may replace
@@ -188,7 +186,6 @@ export type SidebarRootComponentProps =
   & PropsRenderSlots<
     | 'sidebar.brand.mark'
     | 'sidebar.brand.name'
-    | 'sidebar.toggle.badge'
     | 'sidebar.panellist'
     | 'sidebar.panellist.actions'
     | 'sidebar.workspaces'

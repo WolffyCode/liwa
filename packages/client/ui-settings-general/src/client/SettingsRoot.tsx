@@ -120,7 +120,6 @@ export function SettingsRoot(props: SettingsRootComponentProps) {
   const { open, activeId } = useStore(state => state)
   const shortcut = useShortcuts(rows => rows.find(row => row.id === 'settings.open'))
   const { close, openSection } = actions
-  const [requestedOnboarding, setRequestedOnboarding] = useState<string | undefined>()
   const [completedOnboarding, setCompletedOnboarding] = useState<ReadonlySet<string>>(() => new Set())
   const [showRecovery, setShowRecovery] = useState(false)
   const [holdConnecting, setHoldConnecting] = useState(false)
@@ -138,11 +137,9 @@ export function SettingsRoot(props: SettingsRootComponentProps) {
       .find(session => (session.retainedBy.mainView ?? 0) > 0)
     return state.phase === 'ready' && (main === undefined || main.blank)
   })
-  const onboardingStep = requestedOnboarding !== undefined
-    ? onboardingSteps.find(step => step.id === requestedOnboarding)
-    : onboardingActive
-      ? onboardingSteps.find(step => !completedOnboarding.has(step.id))
-      : undefined
+  const onboardingStep = onboardingActive
+    ? onboardingSteps.find(step => !completedOnboarding.has(step.id))
+    : undefined
 
   useEffect(() => {
     if (onboardingActive) return
@@ -197,7 +194,6 @@ export function SettingsRoot(props: SettingsRootComponentProps) {
   }, [connectionState])
 
   const completeOnboardingStep = useCallback((id: string) => {
-    setRequestedOnboarding(undefined)
     setCompletedOnboarding((previous) => {
       if (previous.has(id)) return previous
       return new Set([...previous, id])
@@ -216,11 +212,7 @@ export function SettingsRoot(props: SettingsRootComponentProps) {
   return (
     <>
       <div className={clsx(css.triggerRow, !wide && css.railRow)}>
-        {renderSlot('settings.launcher', {
-          wide, settingsOpen: open, openSettings: actions.open,
-          ...(shortcut?.keys.length ? { settingsShortcut: { keys: shortcut.keys, aria: shortcut.aria } } : {}),
-          openOnboarding: (id) => { close(); setRequestedOnboarding(id) },
-        }, { fallback: <Tooltip disabled={open} label={t('trigger')} shortcutKeys={shortcut?.keys}>
+        <Tooltip disabled={open} label={t('trigger')} shortcutKeys={shortcut?.keys}>
           <button
             type="button"
             className={clsx(css.trigger, !wide && css.rail)}
@@ -232,7 +224,7 @@ export function SettingsRoot(props: SettingsRootComponentProps) {
           >
             {renderSlot('settings.trigger', { wide })}
           </button>
-        </Tooltip> })}
+        </Tooltip>
         <ConnectionIndicator
           state={wide ? connectionIndicator : undefined}
           disconnectedLabel={t('connection.error')}
@@ -257,7 +249,6 @@ export function SettingsRoot(props: SettingsRootComponentProps) {
           renders null, so nothing paints or blocks while it decides. */}
       {onboardingStep !== undefined && renderSlot('settings.onboarding', {
         stepId: onboardingStep.id,
-        explicit: requestedOnboarding !== undefined,
         complete: () => { completeOnboardingStep(onboardingStep.id) },
         openSection,
       }, { only: onboardingStep.id })}

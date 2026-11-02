@@ -479,46 +479,10 @@ describe('SettingsPanel navigation', () => {
   })
 })
 
-it('explicitly reopens one onboarding editor during an existing session', () => {
-  const { renderSlot } = mount({ onboardingActive: false })
-  const launcher = renderSlot.mock.calls.find(call => call[0] === 'settings.launcher')
-  act(() => { (launcher?.[1] as { openOnboarding: (id: string) => void }).openOnboarding('credential') })
-  const call = renderSlot.mock.calls.filter(call => call[0] === 'settings.onboarding').at(-1)
-  expect(call?.[1]).toMatchObject({ stepId: 'credential', explicit: true })
-  act(() => { (call?.[1] as { complete: () => void }).complete() })
-  renderSlot.mockClear()
-  expect(screen.queryByTestId('onboarding')).toBeNull()
-})
-
-it('opens Models from the contributed sidebar launcher', () => {
-  const { renderSlot } = mount({ rows: [{ id: 'models', order: 10, label: 'Models' }] })
-  const launcher = renderSlot.mock.calls.find(call => call[0] === 'settings.launcher')!
-  expect(launcher[1]).toMatchObject({ settingsOpen: false })
-  act(() => { (launcher[1] as { openSettings: () => void }).openSettings() })
-  expect(screen.getByTestId('section-models')).toBeTruthy()
-  expect(screen.getByRole('button', { name: 'Models' }).querySelector('svg')).not.toBeNull()
-  expect(renderSlot.mock.calls.filter(call => call[0] === 'settings.launcher').at(-1)?.[1]).toMatchObject({ settingsOpen: true })
-  fireEvent.keyDown(document, { key: 'Escape' })
-  expect(renderSlot.mock.calls.filter(call => call[0] === 'settings.launcher').at(-1)?.[1]).toMatchObject({ settingsOpen: false })
-})
-
 it('shows the effective settings binding on focus and exposes it to assistive technology', () => {
   mount({ shortcuts: [{ id: 'settings.open' as ShortcutCommandId, label: 'Open settings', aliases: [], keys: ['⌘', ','], aria: 'Meta+,', binding: { code: 'Comma', modifiers: ['meta'] }, modified: false, conflicts: [], issue: null }] })
   const trigger = screen.getByRole('button', { name: 'Settings' })
   expect(trigger.getAttribute('aria-keyshortcuts')).toBe('Meta+,')
   fireEvent.focus(trigger)
   expect(screen.getByRole('tooltip').getAttribute('aria-label')).toBe('Settings ⌘ ,')
-})
-
-it('passes current Settings key labels to the launcher and removes them when unbound', () => {
-  const row: ShortcutCatalogEntry = { id: 'settings.open' as ShortcutCommandId, label: 'Open settings', aliases: [], keys: ['⌘', ','], aria: 'Meta+,', binding: { code: 'Comma', modifiers: ['meta'] }, modified: false, conflicts: [], issue: null }
-  const { renderSlot, setShortcuts } = mount({ shortcuts: [row] })
-  const launcher = () => renderSlot.mock.calls.filter(call => call[0] === 'settings.launcher').at(-1)?.[1]
-  expect(launcher()).toMatchObject({ settingsShortcut: { keys: ['⌘', ','], aria: 'Meta+,' } })
-
-  setShortcuts([{ ...row, keys: ['Ctrl', 'Shift', 'S'], aria: 'Control+Shift+S', binding: { code: 'KeyS', modifiers: ['control', 'shift'] }, modified: true }])
-  expect(launcher()).toMatchObject({ settingsShortcut: { keys: ['Ctrl', 'Shift', 'S'], aria: 'Control+Shift+S' } })
-
-  setShortcuts([{ ...row, keys: [], aria: undefined, binding: null, modified: true }])
-  expect(launcher()).not.toHaveProperty('settingsShortcut')
 })

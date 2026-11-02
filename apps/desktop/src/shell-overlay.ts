@@ -1,10 +1,10 @@
-/** Isolated update documents share their owner's native window and input lifetime. */
+/** Isolated shell documents share their owner's native window and input lifetime. */
 import { WebContentsView, type BrowserWindow, type WebContents, type View } from 'electron'
 import type { EventEmitter } from 'node:events'
 import { WINDOWS_TITLEBAR_HEIGHT } from './windows-layout.ts'
 
 /** Main-owned document with no independent native window or activation state. */
-export interface DesktopUpdateOverlay {
+export interface DesktopShellOverlay {
   readonly webContents: WebContents
   /** Focus the document only while its owner already has focus. */
   focus(): void
@@ -16,14 +16,14 @@ export interface DesktopUpdateOverlay {
   loadURL(url: string): Promise<void>
 }
 
-type UpdateOwner = Pick<BrowserWindow, 'getContentBounds' | 'isDestroyed' | 'isFocused'>
+type ShellOverlayOwner = Pick<BrowserWindow, 'getContentBounds' | 'isDestroyed' | 'isFocused'>
   & Pick<EventEmitter, 'on' | 'once' | 'off'> & {
     readonly webContents: Pick<EventEmitter, 'prependListener' | 'off'> & Pick<WebContents, 'focus'>
     readonly contentView: Pick<View, 'addChildView' | 'removeChildView'>
   }
 
-/** Tracks isolated update views and each owner's keyboard-blocking revision. */
-export class DesktopUpdateOverlays {
+/** Tracks isolated shell views and each owner's keyboard-blocking revision. */
+export class DesktopShellOverlays {
   private readonly inputs = new WeakMap<object, { revision: number; active: number; readonly blocked: boolean }>()
 
   /** @param parent - Product window. @returns Blocking state and attachment/release revision. */
@@ -37,7 +37,7 @@ export class DesktopUpdateOverlays {
    * @param preload - Isolated shell preload.
    * @returns Document attached inside the owner, without showing or activating a native window.
    */
-  create(parent: UpdateOwner, preload: string): DesktopUpdateOverlay {
+  create(parent: ShellOverlayOwner, preload: string): DesktopShellOverlay {
     const view = new WebContentsView({ webPreferences: {
       preload, contextIsolation: true, sandbox: true, nodeIntegration: false, webSecurity: true,
     } })

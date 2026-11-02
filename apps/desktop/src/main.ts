@@ -42,10 +42,10 @@ import { connectDesktopWelcome, type DesktopWelcomeBackend } from './welcome-bac
 import { readDesktopLoginShellEnvironment, resolveDesktopLoginShellConfig } from './login-shell-environment.ts'
 import { desktopClientVersion } from './client-metadata.ts'
 import { readDesktopLocaleCache, writeDesktopLocaleCache } from './locale-cache.ts'
-import { DesktopUpdateDialog, type UpdateDialogOptions } from './update-dialog.ts'
+import { DesktopShellDialog, type ShellDialogOptions } from './shell-dialog.ts'
 import { DesktopBrowserGuests } from './browser-guests.ts'
 import { installDesktopShortcuts } from './keyboard.ts'
-import { DesktopUpdateOverlays } from './update-overlay.ts'
+import { DesktopShellOverlays } from './shell-overlay.ts'
 import { DesktopQuitConfirmation } from './quit-confirmation.ts'
 import { DesktopTray } from './tray.ts'
 import { DesktopBackgroundNotice } from './background-notice.ts'
@@ -398,19 +398,19 @@ async function main(): Promise<void> {
   const isQuitting = (): boolean => quitting
   const currentMainWindow = (): BrowserWindow | undefined => mainWindow
   const currentDialogWindow = (): BrowserWindow | undefined => welcomeWindow ?? mainWindow
-  const updateOverlays = new DesktopUpdateOverlays()
-  const updateDialog = new DesktopUpdateDialog(fileURLToPath(new URL('./preload-update-dialog.cjs', import.meta.url)), () => locale, updateOverlays)
-  const ordinaryMessageBox = async (options: UpdateDialogOptions): Promise<Electron.MessageBoxReturnValue> => {
+  const shellOverlays = new DesktopShellOverlays()
+  const shellDialog = new DesktopShellDialog(fileURLToPath(new URL('./preload-shell-dialog.cjs', import.meta.url)), () => locale, shellOverlays)
+  const ordinaryMessageBox = async (options: ShellDialogOptions): Promise<Electron.MessageBoxReturnValue> => {
     const parent = currentDialogWindow()
     if (parent === undefined) return { response: options.cancelId ?? 0, checkboxChecked: false }
-    return updateDialog.show(parent, options)
+    return shellDialog.show(parent, options)
   }
   // Copy comes from the same locale as the shell dialog so its chrome and
   // content never mix languages.
   const showAbout = async (): Promise<void> => {
     await ordinaryMessageBox({ type: 'info', title: locale.messages.aboutMenu, message: locale.messages.aboutProduct,
       detail: formatDesktopMessage(locale.messages.aboutVersion, { version: app.getVersion() }),
-      buttons: [locale.messages.updateAcknowledge], cancelId: 0 })
+      buttons: [locale.messages.shellDialogAcknowledge], cancelId: 0 })
   }
   const commandManager = new DesktopCommandManager({
     resources: process.resourcesPath,
@@ -539,7 +539,7 @@ async function main(): Promise<void> {
   installDesktopDirectoryPicker(() => mainWindow)
   installMicrophonePermissions(session.defaultSession, () => mainWindow?.webContents)
   const shortcuts = installDesktopShortcuts(() => mainWindow, app.getPath('userData'),
-    process.platform === 'darwin' ? 'macos' : process.platform === 'win32' ? 'windows' : 'linux', () => { refreshApplicationMenu() }, window => updateOverlays.input(window))
+    process.platform === 'darwin' ? 'macos' : process.platform === 'win32' ? 'windows' : 'linux', () => { refreshApplicationMenu() }, window => shellOverlays.input(window))
   app.on('will-quit', () => { shortcuts.dispose() })
 
   ipcMain.handle(DESKTOP_IPC.boot, async (event) => {
@@ -672,7 +672,7 @@ async function main(): Promise<void> {
   }
   const backgroundNotice = process.platform === 'win32'
     ? new DesktopBackgroundNotice({ markerPath: join(app.getPath('userData'), 'background-close-confirmed'),
-      locale: () => locale, show: ordinaryMessageBox, focus: () => { updateDialog.focus() } })
+      locale: () => locale, show: ordinaryMessageBox, focus: () => { shellDialog.focus() } })
     : undefined
   const quitConfirmation = new DesktopQuitConfirmation({
     locale: () => locale,
@@ -750,7 +750,7 @@ async function main(): Promise<void> {
     window.on('close', (event) => {
       if (quitting || sessionEnding) return
       event.preventDefault()
-      if (updateDialog.isOpen) { updateDialog.focus(); return }
+      if (shellDialog.isOpen) { shellDialog.focus(); return }
       const hide = (): void => {
         if (!quitting && !sessionEnding && !window.isDestroyed()) hideMainWindow(window)
       }
@@ -891,7 +891,7 @@ async function main(): Promise<void> {
     tray?.dispose()
     if (welcomeWindow !== undefined && !welcomeWindow.isDestroyed()) welcomeWindow.hide()
     if (mainWindow !== undefined && !mainWindow.isDestroyed()) mainWindow.hide()
-    updateDialog.dispose()
+    shellDialog.dispose()
     void Promise.all([stopOperationReports(),
       backend.close().then(async () => { await operationJournal?.drain(500) }, async (error: unknown) => {
         await operationJournal?.drain(500)

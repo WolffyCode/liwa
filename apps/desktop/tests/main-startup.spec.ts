@@ -280,7 +280,7 @@ vi.mock('../src/project-manager.ts', () => ({
 vi.mock('../src/host-process.ts', async importOriginal => ({
   ...await importOriginal<typeof import('../src/host-process.ts')>(), DesktopHostProcess: harness.FakeHost,
 }))
-vi.mock('../src/update-dialog.ts', () => ({ DesktopUpdateDialog: class {
+vi.mock('../src/shell-dialog.ts', () => ({ DesktopShellDialog: class {
   get isOpen() { return harness.shellDialog.isOpen }
   input() { return { revision: 0, blocked: false } }
   show(owner: { options: { modal?: boolean } }, options: unknown) {
@@ -391,22 +391,22 @@ describe('desktop main startup', () => {
       const handler = vi.mocked(protocol).handle.mock.calls.at(-1)?.[1]
       if (handler === undefined) throw new Error('main did not register its protocol handler')
       for (const [name, mime] of [
-        ['update-dialog.html', 'text/html'], ['update-dialog.css', 'text/css'], ['update-dialog.js', 'text/javascript'],
-        ['update-close.svg', 'image/svg+xml'], ['shell-theme.js', 'text/javascript'],
+        ['shell-dialog.html', 'text/html'], ['shell-dialog.css', 'text/css'], ['shell-dialog.js', 'text/javascript'],
+        ['shell-close.svg', 'image/svg+xml'], ['shell-theme.js', 'text/javascript'],
       ] as const) {
         const response = await handler(new Request(`liwa-app://shell/${name}`))
         expect(response.status).toBe(200)
         expect(response.headers.get('content-type')).toContain(mime)
         expect(await response.text()).toBe(readFileSync(join(root, 'renderer', name), 'utf8'))
       }
-      const head = await handler(new Request('liwa-app://shell/update-dialog.html', { method: 'HEAD' }))
+      const head = await handler(new Request('liwa-app://shell/shell-dialog.html', { method: 'HEAD' }))
       expect(head.status).toBe(200)
       expect(await head.text()).toBe('')
-      expect((await handler(new Request('liwa-app://shell/update-dialog.html', { method: 'POST' }))).status).toBe(405)
+      expect((await handler(new Request('liwa-app://shell/shell-dialog.html', { method: 'POST' }))).status).toBe(405)
       expect((await handler(new Request('liwa-app://shell/%'))).status).toBe(400)
       expect((await handler(new Request('liwa-app://shell/%2e%2e%2fpackage.json'))).status).toBe(403)
       expect((await handler(new Request('liwa-app://shell/missing.html'))).status).toBe(404)
-      expect((await handler(new Request('liwa-app://other/update-dialog.html'))).status).toBe(404)
+      expect((await handler(new Request('liwa-app://other/shell-dialog.html'))).status).toBe(404)
     } finally {
       vi.mocked(web.serveWebDocument).mockReset()
     }
@@ -416,7 +416,7 @@ describe('desktop main startup', () => {
     await readyBackend()
     const { serveWebDocument, forwardWebRequest } = await import('../src/web-document.ts')
     const handler = harness.protocolHandle.mock.calls[0]![1]
-    for (const file of ['update-dialog.html', 'update-dialog.js', 'update-dialog.css', 'update-close.svg']) {
+    for (const file of ['shell-dialog.html', 'shell-dialog.js', 'shell-dialog.css', 'shell-close.svg']) {
       const request = new Request(`liwa-app://shell/${file}`)
       await handler(request)
       expect(serveWebDocument).toHaveBeenLastCalledWith(request, join('desktop-test-app', 'renderer'))
@@ -425,7 +425,7 @@ describe('desktop main startup', () => {
     await handler(tokens)
     expect(serveWebDocument).toHaveBeenLastCalledWith(tokens, join('desktop-test-app', 'lib/welcome'))
     expect(forwardWebRequest).not.toHaveBeenCalled()
-    expect((await handler(new Request('liwa-app://unknown/update-dialog.html'))).status).toBe(404)
+    expect((await handler(new Request('liwa-app://unknown/shell-dialog.html'))).status).toBe(404)
   })
 
   it('registers the liwa link scheme in a packaged application and leaves other schemes to their owners', async () => {
@@ -526,7 +526,7 @@ describe('desktop main startup', () => {
     await import('../src/main.ts')
     await harness.preparing.promise
     const handler = harness.protocolHandle.mock.calls[0]![1]
-    const request = new Request('liwa-app://shell/update-dialog.html')
+    const request = new Request('liwa-app://shell/shell-dialog.html')
     expect(await (await handler(request)).text()).toBe('shell document')
     expect(serveWebDocument).toHaveBeenCalledWith(request, join('desktop-test-app', 'renderer'))
     expect((await handler(new Request('liwa-app://foreign/index.html'))).status).toBe(404)

@@ -215,11 +215,11 @@ describe('CI workflow', () => {
     },
   )
 
-  it('cancels reusable CI builds without cancelling release-owned builds', () => {
+  it('cancels superseded reusable CI builds', () => {
     const workflow = loadWorkflow('.github/workflows/build-exe-for-python-sdk.yml')
     expect(workflow.concurrency).toEqual({
       group: 'build-single-exe-${{ github.workflow }}-${{ github.ref }}',
-      'cancel-in-progress': '${{ !inputs.release }}',
+      'cancel-in-progress': true,
     })
   })
 
@@ -961,36 +961,32 @@ describe('Runtime and LLM e2e Blacksmith routing', () => {
     }
   })
 
-  it('keeps native release and dispatch builders hosted while routing x64 CI by platform', () => {
+  it('keeps dispatch builders hosted while routing x64 CI by platform', () => {
     const workflow = loadWorkflow('.github/workflows/build-exe-for-python-sdk.yml')
     const build = workflowJob(workflow, 'build')
-    for (const [target, runner, variable, blacksmith, releaseRunner] of [
-      ['node24-linux-x64', 'ubuntu-latest', 'LIWA_CI_FAILOVER_LINUX', 'blacksmith-2vcpu-ubuntu-2404', 'ubuntu-latest'],
-      ['node24-win-x64', 'windows-2025', 'LIWA_CI_FAILOVER_WINDOWS', 'blacksmith-2vcpu-windows-2025', 'windows-2025'],
-      ['node24-linux-arm64', 'ubuntu-24.04-arm', 'LIWA_CI_FAILOVER_LINUX', 'ubuntu-24.04-arm', 'ubuntu-24.04-arm'],
-      ['node24-macos-arm64', 'macos-latest', 'LIWA_CI_FAILOVER_LINUX', 'macos-latest', 'macos-15-xlarge'],
-      ['node24-macos-x64', 'macos-15-intel', 'LIWA_CI_FAILOVER_LINUX', 'macos-15-intel', 'macos-15-large'],
+    for (const [target, runner, variable, blacksmith] of [
+      ['node24-linux-x64', 'ubuntu-latest', 'LIWA_CI_FAILOVER_LINUX', 'blacksmith-2vcpu-ubuntu-2404'],
+      ['node24-win-x64', 'windows-2025', 'LIWA_CI_FAILOVER_WINDOWS', 'blacksmith-2vcpu-windows-2025'],
+      ['node24-linux-arm64', 'ubuntu-24.04-arm', 'LIWA_CI_FAILOVER_LINUX', 'ubuntu-24.04-arm'],
+      ['node24-macos-arm64', 'macos-latest', 'LIWA_CI_FAILOVER_LINUX', 'macos-latest'],
+      ['node24-macos-x64', 'macos-15-intel', 'LIWA_CI_FAILOVER_LINUX', 'macos-15-intel'],
     ] as const) {
       for (const ci of [false, true]) {
-        for (const release of [false, true]) {
-          for (const mode of ['', 'selfhosted', 'unexpected', 'blacksmith']) {
-            const vars = { LIWA_CI_FAILOVER_LINUX: 'blacksmith', LIWA_CI_FAILOVER_WINDOWS: 'blacksmith', [variable]: mode }
-            expect(evaluateRunsOn(build['runs-on'], { inputs: { ci, release }, vars, matrix: { target, runner } }), `${target} ci=${ci} release=${release} mode=${mode}`)
-              .toBe(release ? releaseRunner : ci && mode === 'blacksmith' ? blacksmith : runner)
-          }
+        for (const mode of ['', 'selfhosted', 'unexpected', 'blacksmith']) {
+          const vars = { LIWA_CI_FAILOVER_LINUX: 'blacksmith', LIWA_CI_FAILOVER_WINDOWS: 'blacksmith', [variable]: mode }
+          expect(evaluateRunsOn(build['runs-on'], { inputs: { ci }, vars, matrix: { target, runner } }), `${target} ci=${ci} mode=${mode}`)
+            .toBe(ci && mode === 'blacksmith' ? blacksmith : runner)
         }
       }
     }
   })
 
-  it.each(['plan', 'sdk-wheel'])('routes runtime %s only for non-release CI', (name) => {
+  it.each(['plan', 'sdk-wheel'])('routes runtime %s only for CI', (name) => {
     const job = workflowJob(loadWorkflow('.github/workflows/build-exe-for-python-sdk.yml'), name)
     for (const ci of [false, true]) {
-      for (const release of [false, true]) {
-        for (const mode of ['', 'selfhosted', 'unexpected', 'blacksmith']) {
-          expect(evaluateRunsOn(job['runs-on'], { inputs: { ci, release }, vars: { LIWA_CI_FAILOVER_LINUX: mode } }))
-            .toBe(ci && !release && mode === 'blacksmith' ? 'blacksmith-4vcpu-ubuntu-2404' : 'ubuntu-latest')
-        }
+      for (const mode of ['', 'selfhosted', 'unexpected', 'blacksmith']) {
+        expect(evaluateRunsOn(job['runs-on'], { inputs: { ci }, vars: { LIWA_CI_FAILOVER_LINUX: mode } }))
+          .toBe(ci && mode === 'blacksmith' ? 'blacksmith-4vcpu-ubuntu-2404' : 'ubuntu-latest')
       }
     }
   })
@@ -1033,7 +1029,7 @@ describe('DeepSeek e2e workflow', () => {
 })
 
 describe('Python wheel builder workflow', () => {
-  it('exposes the native wheel builder to the release caller with normalized versions', () => {
+  it('exposes the native wheel builder to CI with normalized versions', () => {
     const workflow = loadWorkflow('.github/workflows/build-exe-for-python-sdk.yml')
     expect(Object.keys(workflow.on as Record<string, unknown>).sort()).toEqual(['workflow_call', 'workflow_dispatch'])
     const call = workflowEvent(workflow, 'workflow_call')
@@ -1065,7 +1061,6 @@ describe('Python wheel builder workflow', () => {
     expect(call.inputs).toHaveProperty('targets')
     expect(call.inputs).toMatchObject({
       ci: { type: 'boolean', default: false },
-      release: { type: 'boolean', default: false },
     })
     expect(call.secrets).toMatchObject({
       DEEPSEEK_API_KEY_EXTERNAL: { required: false },
@@ -1075,7 +1070,8 @@ describe('Python wheel builder workflow', () => {
     })
     expect(build.defaults).toBeUndefined()
     expect(plan.if).toContain('inputs.ci')
-    expect(plan.if).toContain('inputs.release')
+    expect(call.inputs).not.toHaveProperty('release')
+    expect(plan.if).toContain("github.event_name == 'workflow_dispatch'")
     expect(JSON.stringify(plan.steps)).toContain('pep440_version')
     const workflowJson = JSON.stringify(workflow)
     expect(workflowJson).toContain('macosx_14_0_arm64')

@@ -38,7 +38,7 @@ vi.mock('electron', () => ({ ipcMain: ipc, BrowserWindow: overlays.Window, WebCo
 }) } }))
 const { installDesktopShortcuts } = await import('../src/keyboard.ts')
 const { DesktopBrowserGuests } = await import('../src/browser-guests.ts')
-const { DesktopUpdateOverlays } = await import('../src/update-overlay.ts')
+const { DesktopShellOverlays } = await import('../src/shell-overlay.ts')
 afterEach(() => { vi.clearAllMocks() })
 
 type FrameFixture = { url: WebFrameMain['url']; name: WebFrameMain['name']; parent: FrameFixture | null }
@@ -92,8 +92,8 @@ async function fixture(platform: 'macos' | 'windows' | 'linux' = 'macos') {
     isFocused: vi.fn(() => true), isEnabled: vi.fn(() => true), close: vi.fn() })
   let current: WindowFixture | undefined = window
   const updateMenu = vi.fn()
-  const updateOverlays = new DesktopUpdateOverlays()
-  const keyboard = installFixture(() => current, root, platform, updateMenu, window => updateOverlays.input(window))
+  const shellOverlays = new DesktopShellOverlays()
+  const keyboard = installFixture(() => current, root, platform, updateMenu, window => shellOverlays.input(window))
   keyboard.attach(current)
   onTestFinished(() => { keyboard.dispose() })
   const handlers = new Map<string, (event: InvokeFixture, ...args: unknown[]) => unknown>(
@@ -103,11 +103,11 @@ async function fixture(platform: 'macos' | 'windows' | 'linux' = 'macos') {
   const definitions: readonly ShortcutDefinition[] = [
     { id: 'sidebar.left.toggle' as ShortcutCommandId, defaults: desktopDefaults({ code: 'KeyB', modifiers: ['primary'] }) },
   ]
-  return { keyboard, window, updateOverlays, contents, frame, event, handlers, call, definitions, updateMenu,
+  return { keyboard, window, shellOverlays, contents, frame, event, handlers, call, definitions, updateMenu,
     detach: () => { current = undefined } }
 }
 
-function updateOverlayFixture(f: Awaited<ReturnType<typeof fixture>>) {
+function shellOverlayFixture(f: Awaited<ReturnType<typeof fixture>>) {
   const platform = vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin')
   onTestFinished(() => { platform.mockRestore() })
   const parent: WindowFixture & Pick<BrowserWindow, 'getContentBounds'> = Object.assign(f.window, {
@@ -116,7 +116,7 @@ function updateOverlayFixture(f: Awaited<ReturnType<typeof fixture>>) {
   })
   Object.assign(f.contents, { insertCSS: vi.fn(async () => 'blur'), removeInsertedCSS: vi.fn(async () => {}) })
   return () => {
-    const overlay = f.updateOverlays.create(parent as BrowserWindow, 'test-overlay-preload')
+    const overlay = f.shellOverlays.create(parent as BrowserWindow, 'test-overlay-preload')
     onTestFinished(() => { if (!overlay.isDestroyed()) overlay.destroy() })
     return overlay
   }
@@ -146,7 +146,7 @@ it('mirrors only successful bindings, suppresses recording menus, and invalidate
 
 it('blocks macOS shortcuts while an update overlay loads and clears held and consumed keys before dismissal', async () => {
   const f = await fixture()
-  const open = updateOverlayFixture(f)
+  const open = shellOverlayFixture(f)
   const snapshot = await f.call<ShortcutConfigSnapshot>(DESKTOP_IPC.shortcutsGet, [
     { id: 'page.close', defaults: { 'desktop:macos': { code: 'KeyA', secondCode: 'KeyB', modifiers: [] } } },
     { id: 'sidebar.left.toggle', defaults: desktopDefaults({ code: 'KeyK', modifiers: ['primary'] }) },
@@ -197,7 +197,7 @@ it('blocks macOS shortcuts while an update overlay loads and clears held and con
 
 it.each([false, true])('blocks approved browser guest input across update overlays, including guests attached while blocked: %s', async (attachWhileBlocked) => {
   const f = await fixture()
-  const open = updateOverlayFixture(f)
+  const open = shellOverlayFixture(f)
   await f.call(DESKTOP_IPC.shortcutsGet, [
     { id: 'page.close', defaults: { 'desktop:macos': { code: 'KeyA', secondCode: 'KeyB', modifiers: [] } } },
     { id: 'sidebar.left.toggle', defaults: desktopDefaults({ code: 'KeyK', modifiers: ['primary'] }) },

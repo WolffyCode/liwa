@@ -1,11 +1,11 @@
 name: Build single-exe
 
-# Native builds for the release targets; see
+# Native builds for the supported targets; see
 # .agents/notes/implemented/architecture/2026-07-10-single-file-executable-sdk-runtime-distribution.md.
 # A full target run retains one SDK wheel and five runtime wheels; subset
 # dispatch retains the SDK wheel and selected runtime wheels. Bare executables
-# and source closures are test inputs. Run manually or call it from the Python
-# release workflow. There is no `pull_request` trigger: a label trigger would
+# and source closures are test inputs. Run manually or call it from CI.
+# There is no `pull_request` trigger: a label trigger would
 # list gray skipped checks on every unrelated PR label event. Checkout uses the
 # triggering ref, so dispatch needs no separate ref input.
 on:
@@ -16,11 +16,6 @@ on:
         type: string
         required: false
         default: ''
-      release:
-        description: Run as the native builder for the Python release workflow.
-        type: boolean
-        required: false
-        default: false
       ci:
         description: Run Python runtime CI validation for the selected targets.
         type: boolean
@@ -43,11 +38,9 @@ on:
 
 concurrency:
   # Keep the called workflow distinct from its caller's concurrency group;
-  # github.workflow identifies the caller inside a reusable workflow and keeps
-  # an ordinary CI run from cancelling a full release validation on the same ref.
+  # github.workflow identifies the caller inside a reusable workflow.
   group: build-single-exe-${{ github.workflow }}-${{ github.ref }}
-  # Release-owned builds are part of an intentional publication transaction.
-  cancel-in-progress: ${{ !inputs.release }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -62,9 +55,9 @@ jobs:
   # construct the matrix before the dependent jobs.
   plan:
     name: plan targets
-    if: inputs.ci || inputs.release || github.event_name == 'workflow_dispatch'
+    if: inputs.ci || github.event_name == 'workflow_dispatch'
     runs-on: >-
-      ${{ inputs.ci && !inputs.release && vars.LIWA_CI_FAILOVER_LINUX == 'blacksmith'
+      ${{ inputs.ci && vars.LIWA_CI_FAILOVER_LINUX == 'blacksmith'
           && 'blacksmith-4vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     timeout-minutes: 5
     outputs:
@@ -126,7 +119,7 @@ jobs:
     needs: plan
     name: liwa_sdk-${{ needs.plan.outputs.version }}-py3-none-any.whl
     runs-on: >-
-      ${{ inputs.ci && !inputs.release && vars.LIWA_CI_FAILOVER_LINUX == 'blacksmith'
+      ${{ inputs.ci && vars.LIWA_CI_FAILOVER_LINUX == 'blacksmith'
           && 'blacksmith-4vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     timeout-minutes: 5
     steps:
@@ -153,17 +146,13 @@ jobs:
           retention-days: 7
 
   # Blacksmith x64 CI builds use 2 vCPU for compilation, bundling, and wheel smokes.
-  # Release macOS builds use larger GitHub runners; ordinary CI and direct
-  # builder dispatches retain the standard native target matrix.
   build:
     needs: [plan, sdk-wheel]
     name: ${{ matrix.target }}
     runs-on: >-
-      ${{ inputs.release && matrix.target == 'node24-macos-x64' && 'macos-15-large'
-          || inputs.release && matrix.target == 'node24-macos-arm64' && 'macos-15-xlarge'
-          || inputs.ci && !inputs.release && matrix.target == 'node24-linux-x64'
+      ${{ inputs.ci && matrix.target == 'node24-linux-x64'
           && vars.LIWA_CI_FAILOVER_LINUX == 'blacksmith' && 'blacksmith-2vcpu-ubuntu-2404'
-          || inputs.ci && !inputs.release && matrix.target == 'node24-win-x64'
+          || inputs.ci && matrix.target == 'node24-win-x64'
           && vars.LIWA_CI_FAILOVER_WINDOWS == 'blacksmith' && 'blacksmith-2vcpu-windows-2025'
           || matrix.runner }}
     timeout-minutes: 45

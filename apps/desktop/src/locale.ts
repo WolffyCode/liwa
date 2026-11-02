@@ -89,9 +89,9 @@ export const en = {
   welcomeContinueFailed: 'Could not open the workspace. Please try again.',
   reloadPageMenu: 'Reload Page',
   restartAppHostMenu: 'Restart App and Host',
-  updateClose: 'Close',
-  updateAcknowledge: 'OK',
-  updateTechnicalDetails: 'View technical details',
+  shellDialogClose: 'Close',
+  shellDialogAcknowledge: 'OK',
+  shellDialogTechnicalDetails: 'View technical details',
   later: 'Later',
 } as const
 
@@ -187,9 +187,9 @@ export const zh = {
   welcomeContinueFailed: '无法打开工作区，请重试。',
   reloadPageMenu: '刷新页面',
   restartAppHostMenu: '重启应用与 Host',
-  updateClose: '关闭',
-  updateAcknowledge: '确定',
-  updateTechnicalDetails: '查看技术详情',
+  shellDialogClose: '关闭',
+  shellDialogAcknowledge: '确定',
+  shellDialogTechnicalDetails: '查看技术详情',
   later: '稍后',
 } as const satisfies DesktopMessages
 
@@ -283,9 +283,9 @@ export const ja = {
   welcomeContinueFailed: 'ワークスペースを開けませんでした。もう一度お試しください。',
   reloadPageMenu: 'ページを再読み込み',
   restartAppHostMenu: 'アプリとホストを再起動',
-  updateClose: '閉じる',
-  updateAcknowledge: 'OK',
-  updateTechnicalDetails: '技術的な詳細を表示',
+  shellDialogClose: '閉じる',
+  shellDialogAcknowledge: 'OK',
+  shellDialogTechnicalDetails: '技術的な詳細を表示',
   later: '後で',
 } satisfies Record<keyof typeof en, string>
 
@@ -379,9 +379,9 @@ export const es = {
   welcomeContinueFailed: 'No se pudo abrir el espacio de trabajo. Por favor inténtalo de nuevo.',
   reloadPageMenu: 'Recargar página',
   restartAppHostMenu: 'Reiniciar la aplicación y el host',
-  updateClose: 'Cerrar',
-  updateAcknowledge: 'OK',
-  updateTechnicalDetails: 'Ver detalles técnicos',
+  shellDialogClose: 'Cerrar',
+  shellDialogAcknowledge: 'OK',
+  shellDialogTechnicalDetails: 'Ver detalles técnicos',
   later: 'Más tarde',
 } satisfies DesktopMessages
 
@@ -475,9 +475,9 @@ export const fr = {
   welcomeContinueFailed: "Impossible d'ouvrir l'espace de travail. Veuillez réessayer.",
   reloadPageMenu: 'Recharger la page',
   restartAppHostMenu: "Redémarrez l'application et l'hôte",
-  updateClose: 'Fermer',
-  updateAcknowledge: 'OK',
-  updateTechnicalDetails: 'Voir les détails techniques',
+  shellDialogClose: 'Fermer',
+  shellDialogAcknowledge: 'OK',
+  shellDialogTechnicalDetails: 'Voir les détails techniques',
   later: 'Plus tard',
 } satisfies DesktopMessages
 
@@ -571,9 +571,9 @@ export const de = {
   welcomeContinueFailed: 'Der Arbeitsbereich konnte nicht geöffnet werden. Bitte versuchen Sie es erneut.',
   reloadPageMenu: 'Seite neu laden',
   restartAppHostMenu: 'Anwendung und Host neu starten',
-  updateClose: 'Schließen',
-  updateAcknowledge: 'OK',
-  updateTechnicalDetails: 'Technische Details anzeigen',
+  shellDialogClose: 'Schließen',
+  shellDialogAcknowledge: 'OK',
+  shellDialogTechnicalDetails: 'Technische Details anzeigen',
   later: 'Später',
 } satisfies DesktopMessages
 
@@ -667,9 +667,9 @@ export const ru = {
   welcomeContinueFailed: 'Не удалось открыть рабочую область. Пожалуйста, попробуйте еще раз.',
   reloadPageMenu: 'Обновить страницу',
   restartAppHostMenu: 'Перезапустите приложение и хост.',
-  updateClose: 'Закрыть',
-  updateAcknowledge: 'OK',
-  updateTechnicalDetails: 'Посмотреть технические подробности',
+  shellDialogClose: 'Закрыть',
+  shellDialogAcknowledge: 'OK',
+  shellDialogTechnicalDetails: 'Посмотреть технические подробности',
   later: 'Позже',
 } satisfies DesktopMessages
 
@@ -763,9 +763,9 @@ export const pt = {
   welcomeContinueFailed: 'Não foi possível abrir o espaço de trabalho. Por favor, tente novamente.',
   reloadPageMenu: 'Recarregar página',
   restartAppHostMenu: 'Reinicie o aplicativo e o host',
-  updateClose: 'Fechar',
-  updateAcknowledge: 'OK',
-  updateTechnicalDetails: 'Ver detalhes técnicos',
+  shellDialogClose: 'Fechar',
+  shellDialogAcknowledge: 'OK',
+  shellDialogTechnicalDetails: 'Ver detalhes técnicos',
   later: 'Mais tarde',
 } satisfies DesktopMessages
 

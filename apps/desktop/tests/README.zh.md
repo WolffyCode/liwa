@@ -33,10 +33,10 @@
 执行 `pnpm --dir apps/desktop run build` 后，在 macOS 上运行真实 Electron 配色夹具：
 
 ```sh
-apps/desktop/.desktop-build/targets/mac-arm64/electron/Electron.app/Contents/MacOS/Electron apps/desktop/tests/fixtures/update-theme.mjs
+apps/desktop/.desktop-build/targets/mac-arm64/electron/Electron.app/Contents/MacOS/Electron apps/desktop/tests/fixtures/shell-theme.mjs
 ```
 
-夹具创建独立 profile，加载生产壳 HTML、sandboxed preload、渲染脚本及打包的 design token，仅替换固定 IPC 状态响应。6 个用例覆盖壳弹窗文档的浅色／暗色初始状态、打开时切换及跟随系统。它检查文档背景透明、卡片／文字／按钮／遮罩配色、代码／地址表面、仅暗色显示的 1 CSS px 内描边及关闭图标，并将两张截图和 `result.json` 写入 `.desktop-build/qualification/update-theme-*`。它不启动 Host，也不验证 Windows 原生渲染。首次关闭提示共用该文档的 CSS 和主题脚本。
+夹具创建独立 profile，加载生产壳 HTML、sandboxed preload、渲染脚本及打包的 design token，仅替换固定 IPC 状态响应。6 个用例覆盖壳弹窗文档的浅色／暗色初始状态、打开时切换及跟随系统。它检查文档背景透明、卡片／文字／按钮／遮罩配色、代码／地址表面、仅暗色显示的 1 CSS px 内描边及关闭图标，并将两张截图和 `result.json` 写入 `.desktop-build/qualification/shell-theme-*`。它不启动 Host，也不验证 Windows 原生渲染。首次关闭提示共用该文档的 CSS 和主题脚本。
 
 <a id="verification-overlay"></a>
 
@@ -46,7 +46,7 @@ apps/desktop/.desktop-build/targets/mac-arm64/electron/Electron.app/Contents/Mac
 
 ```sh
 pnpm exec tsc -b apps/desktop/tsconfig.host.json
-apps/desktop/.desktop-build/targets/mac-arm64/electron/Electron.app/Contents/MacOS/Electron apps/desktop/tests/fixtures/update-overlay-visibility.mjs
+apps/desktop/.desktop-build/targets/mac-arm64/electron/Electron.app/Contents/MacOS/Electron apps/desktop/tests/fixtures/shell-overlay-visibility.mjs
 ```
 
-夹具使用独立 profile，在 `.desktop-build/qualification/update-overlay-*` 下写入 `result.json`。它检查可见和隐藏的父窗口、不创建原生子窗口、父窗口可见性通知后独立对照窗口仍保留焦点，以及销毁父窗口时的视图和输入清理。它不使用网络、产品登录或 liwa Host。这项验证覆盖窗内承载方式，不覆盖完整的首次登录或安装流程。
+夹具使用独立 profile，在 `.desktop-build/qualification/shell-overlay-*` 下写入 `result.json`。它检查可见和隐藏的父窗口、不创建原生子窗口、父窗口可见性通知后独立对照窗口仍保留焦点，以及销毁父窗口时的视图和输入清理。它不使用网络、产品登录或 liwa Host。这项验证覆盖窗内承载方式，不覆盖完整的首次登录或安装流程。

@@ -4,13 +4,13 @@
  */
 import { ipcMain, type BrowserWindow, type IpcMainInvokeEvent, type MessageBoxOptions, type MessageBoxReturnValue } from 'electron'
 import type { DesktopLocale } from './locale.ts'
-import type { DesktopUpdateOverlays, DesktopUpdateOverlay } from './update-overlay.ts'
+import type { DesktopShellOverlays, DesktopShellOverlay } from './shell-overlay.ts'
 
-/** Channels available only to the isolated update-dialog document. */
-export const UPDATE_DIALOG_IPC = { status: 'liwa-update-dialog:status', changed: 'liwa-update-dialog:changed', respond: 'liwa-update-dialog:respond' } as const
+/** Channels available only to the isolated shell-dialog document. */
+export const SHELL_DIALOG_IPC = { status: 'liwa-shell-dialog:status', changed: 'liwa-shell-dialog:changed', respond: 'liwa-shell-dialog:respond' } as const
 
 /** Text and choices supplied by the main process, never by product documents. */
-export interface UpdateDialogView {
+export interface ShellDialogView {
   /** Identifies the displayed choices; a response from an older prompt is rejected. */
   readonly revision: number
   readonly locale: string
@@ -25,28 +25,28 @@ export interface UpdateDialogView {
 }
 
 /** Electron message options with separately expandable, main-owned diagnostics. */
-export interface UpdateDialogOptions extends MessageBoxOptions {
+export interface ShellDialogOptions extends MessageBoxOptions {
   readonly technicalDetails?: string
 }
 
 /** The document can select only a displayed response index. */
-export interface UpdateDialogApi {
-  status(): Promise<UpdateDialogView | null>
+export interface ShellDialogApi {
+  status(): Promise<ShellDialogView | null>
   respond(revision: number, index: number): Promise<void>
-  subscribe(listener: (view: UpdateDialogView | null) => void): () => void
+  subscribe(listener: (view: ShellDialogView | null) => void): () => void
 }
 
 // main.ts's protocol.handle shell route serves this document and its renderer assets; the modal requires that route.
-const page = 'liwa-app://shell/update-dialog.html'
+const page = 'liwa-app://shell/shell-dialog.html'
 
 /** One fading backdrop with replaceable confirmation content; an aborted signal cancels the prompt. */
-export class DesktopUpdateDialog {
+export class DesktopShellDialog {
   private disposed = false
   private revision = 0
-  private view: DesktopUpdateOverlay | undefined
+  private view: DesktopShellOverlay | undefined
   private parent: BrowserWindow | undefined
   private closing: ReturnType<typeof setTimeout> | undefined
-  private active: { view: UpdateDialogView; finish: (index: number, retain?: boolean) => void } | undefined
+  private active: { view: ShellDialogView; finish: (index: number, retain?: boolean) => void } | undefined
 
   /** Focus the current explanation or confirmation without replacing it or granting permission. */
   focus(): void {
@@ -64,15 +64,15 @@ export class DesktopUpdateDialog {
    * @param overlays - Application-owned view creation and input tracking.
    */
   constructor(private readonly preload: string, private readonly locale: DesktopLocale | (() => DesktopLocale),
-    private readonly overlays: Pick<DesktopUpdateOverlays, 'create'>) {
-    ipcMain.handle(UPDATE_DIALOG_IPC.status, (event) => { this.owned(event); return this.active?.view ?? null })
-    ipcMain.handle(UPDATE_DIALOG_IPC.respond, (event, revision: unknown, index: unknown) => {
+    private readonly overlays: Pick<DesktopShellOverlays, 'create'>) {
+    ipcMain.handle(SHELL_DIALOG_IPC.status, (event) => { this.owned(event); return this.active?.view ?? null })
+    ipcMain.handle(SHELL_DIALOG_IPC.respond, (event, revision: unknown, index: unknown) => {
       this.owned(event)
       const active = this.active
-      if (active === undefined || revision !== active.view.revision) throw new Error('desktop update: stale dialog response')
+      if (active === undefined || revision !== active.view.revision) throw new Error('desktop shell dialog: stale dialog response')
       if (typeof index !== 'number' || !Number.isInteger(index)
         || (index !== active.view.cancelId && (index < 0 || index >= active.view.buttons.length))) {
-        throw new Error('desktop update: invalid dialog response')
+        throw new Error('desktop shell dialog: invalid dialog response')
       }
       active.finish(index)
     })
@@ -83,9 +83,9 @@ export class DesktopUpdateDialog {
    * @param options - Main-owned localized content, response choices, and optional cancellation signal.
    * @returns A displayed response, or cancellation on replacement, abort, close, or load failure; backdrop dismissal fades independently.
    */
-  show(parent: BrowserWindow, options: UpdateDialogOptions): Promise<MessageBoxReturnValue> {
+  show(parent: BrowserWindow, options: ShellDialogOptions): Promise<MessageBoxReturnValue> {
     const locale = typeof this.locale === 'function' ? this.locale() : this.locale
-    const buttons = options.buttons ?? [locale.messages.updateAcknowledge]
+    const buttons = options.buttons ?? [locale.messages.shellDialogAcknowledge]
     const cancelId = options.cancelId ?? buttons.length - 1
     if (this.disposed || options.signal?.aborted === true || parent.isDestroyed()) {
       return Promise.resolve({ response: cancelId, checkboxChecked: false })
@@ -98,9 +98,9 @@ export class DesktopUpdateDialog {
     const surface = existing ?? this.overlays.create(parent, this.preload)
     this.view = surface
     this.parent = parent
-    const view: UpdateDialogView = { revision: ++this.revision, locale: locale.id, title: options.title ?? '', message: options.message,
-      detail: options.detail ?? '', buttons, cancelId, closeLabel: locale.messages.updateClose,
-      technicalDetails: options.technicalDetails ?? '', technicalDetailsLabel: locale.messages.updateTechnicalDetails }
+    const view: ShellDialogView = { revision: ++this.revision, locale: locale.id, title: options.title ?? '', message: options.message,
+      detail: options.detail ?? '', buttons, cancelId, closeLabel: locale.messages.shellDialogClose,
+      technicalDetails: options.technicalDetails ?? '', technicalDetailsLabel: locale.messages.shellDialogTechnicalDetails }
     return new Promise((resolve) => {
       const abort = (): void => { finish(cancelId) }
       const finish = (response: number, retain = false): void => {
@@ -108,14 +108,14 @@ export class DesktopUpdateDialog {
         this.active = undefined
         options.signal?.removeEventListener('abort', abort)
         if (!retain && !surface.webContents.isDestroyed()) {
-          surface.webContents.send(UPDATE_DIALOG_IPC.changed, null)
+          surface.webContents.send(SHELL_DIALOG_IPC.changed, null)
           this.closing = setTimeout(() => { this.close() }, 150)
         }
         resolve({ response, checkboxChecked: false })
       }
       this.active = { view, finish }
       options.signal?.addEventListener('abort', abort, { once: true })
-      if (existing !== undefined) { surface.webContents.send(UPDATE_DIALOG_IPC.changed, view); return }
+      if (existing !== undefined) { surface.webContents.send(SHELL_DIALOG_IPC.changed, view); return }
       const failed = (): void => { if (this.view === surface) { this.cancel(); this.close() } }
       surface.webContents.once('destroyed', failed)
       surface.webContents.once('render-process-gone', failed)
@@ -136,8 +136,8 @@ export class DesktopUpdateDialog {
     this.disposed = true
     this.cancel()
     this.close()
-    ipcMain.removeHandler(UPDATE_DIALOG_IPC.status)
-    ipcMain.removeHandler(UPDATE_DIALOG_IPC.respond)
+    ipcMain.removeHandler(SHELL_DIALOG_IPC.status)
+    ipcMain.removeHandler(SHELL_DIALOG_IPC.respond)
   }
 
   private close(): void {
@@ -153,7 +153,7 @@ export class DesktopUpdateDialog {
     const surface = this.view
     if (surface === undefined || event.sender !== surface.webContents
       || event.senderFrame !== surface.webContents.mainFrame || event.senderFrame.url !== page) {
-      throw new Error('desktop update: rejected unowned dialog renderer')
+      throw new Error('desktop shell dialog: rejected unowned dialog renderer')
     }
   }
 }

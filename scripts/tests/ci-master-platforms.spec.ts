@@ -111,9 +111,7 @@ describe('master-only platform scheduling', () => {
     expect(runtime.needs).toBeUndefined()
     expect(runtime['continue-on-error']).toBeUndefined()
     const builder = workflow('build-exe-for-python-sdk.yml')
-    expect(builder.concurrency?.['cancel-in-progress']).toBe(
-      '${{ !inputs.release }}',
-    )
+    expect(builder.concurrency?.['cancel-in-progress']).toBe(true)
     const build = builder.jobs.build!
     const preflight = build.steps!.find(step => step.name === 'Preflight installed-wheel real API test (POSIX)')!
     expect(preflight.if).toContain('inputs.ci')

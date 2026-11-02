@@ -50,9 +50,9 @@ async function mount(setup: Setup): Promise<Context> {
   return ctx
 }
 
-/** Ask the seam whether `operation` is ready for a model request on `route`. */
-function ready(ctx: Context, operation: Operation, route: string | undefined): Promise<boolean> {
-  return operation === 'search' ? ctx.web.searchReady(route) : ctx.web.fetchReady(route)
+/** Ask the seam whether `operation` has a credential. */
+function ready(ctx: Context, operation: Operation): Promise<boolean> {
+  return operation === 'search' ? ctx.web.searchReady() : ctx.web.fetchReady()
 }
 
 /**
@@ -85,18 +85,17 @@ function stubApis(): () => (string | null)[] {
 describe.each(OPERATIONS)('%s readiness', (operation) => {
   it('is not ready without any credential', async () => {
     const ctx = await mount({})
-    expect(await ready(ctx, operation, 'deepseek-official')).toBe(false)
+    expect(await ready(ctx, operation)).toBe(false)
   })
 
   it('is ready with the DeepSeek chat key on the DeepSeek route and outside a model request', async () => {
     const ctx = await mount({ environment: { DEEPSEEK_API_KEY: 'chat-key' } })
-    expect(await ready(ctx, operation, 'deepseek-official')).toBe(true)
-    expect(await ready(ctx, operation, undefined)).toBe(true)
+    expect(await ready(ctx, operation)).toBe(true)
   })
 
   it('is ready with a literal key on a DeepSeek route', async () => {
     const ctx = await mount({ config: { apiKey: 'own-key' } })
-    expect(await ready(ctx, operation, 'deepseek-official')).toBe(true)
+    expect(await ready(ctx, operation)).toBe(true)
   })
 
   it.each<[string, Setup, boolean]>([
@@ -106,12 +105,12 @@ describe.each(OPERATIONS)('%s readiness', (operation) => {
     ['no key', {}, false],
   ])('answers on another provider\'s route, as on any route, when the APIs have %s', async (_label, setup, expected) => {
     const ctx = await mount(setup)
-    expect(await ready(ctx, operation, 'moonshotai')).toBe(expected)
+    expect(await ready(ctx, operation)).toBe(expected)
   })
 
   it('treats an empty environment value as no key', async () => {
     const ctx = await mount({ environment: { DEEPSEEK_API_KEY: '' } })
-    expect(await ready(ctx, operation, 'deepseek-official')).toBe(false)
+    expect(await ready(ctx, operation)).toBe(false)
   })
 
   it.each<[string, NonNullable<Setup['credentials']>, boolean]>([
@@ -120,7 +119,7 @@ describe.each(OPERATIONS)('%s readiness', (operation) => {
     ['cannot be read', { describe: () => Promise.reject(new Error('store locked')) }, false],
   ])('answers from the credential store when it %s', async (_label, credentials, expected) => {
     const ctx = await mount({ credentials, environment: { DEEPSEEK_API_KEY: 'ignored-env-key' } })
-    expect(await ready(ctx, operation, 'deepseek-official')).toBe(expected)
+    expect(await ready(ctx, operation)).toBe(expected)
   })
 })
 

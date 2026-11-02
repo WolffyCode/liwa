@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { afterEach, expect, it, vi } from 'vitest'
-import { DesktopUpdateOverlays } from '../src/update-overlay.ts'
+import { DesktopShellOverlays } from '../src/shell-overlay.ts'
 
 const native = vi.hoisted(() => ({ create: vi.fn<(options: object) => object>() }))
 vi.mock('electron', () => ({ WebContentsView: function (options: object) { return native.create(options) } }))
@@ -25,7 +25,7 @@ function fixture() {
       setBounds: vi.fn(), setBackgroundColor: vi.fn() }
   }
   native.create.mockImplementation(() => { const next = view(); views.push(next); return next })
-  const overlays = new DesktopUpdateOverlays()
+  const overlays = new DesktopShellOverlays()
   const owner = parent
   return { parent, owner, views, overlays, create: () => overlays.create(owner, 'isolated-preload') }
 }
@@ -69,7 +69,7 @@ it('keeps input blocked until every view is released and changes the shortcut re
   first.destroy(); expect(f.overlays.input(f.owner)).toEqual({ blocked: true, revision: 3 })
   first.destroy(); second.destroy()
   expect(f.overlays.input(f.owner)).toEqual({ blocked: false, revision: 4 })
-  expect(new DesktopUpdateOverlays().input(f.owner)).toEqual({ blocked: false, revision: 0 })
+  expect(new DesktopShellOverlays().input(f.owner)).toEqual({ blocked: false, revision: 0 })
 })
 
 it('closes the view after owner destruction without accessing destroyed native contents', () => {

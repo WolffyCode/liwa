@@ -124,7 +124,7 @@ vi.mock('../src/welcome-backend.ts', () => ({
     save: async () => ({ ok: true }),
   }),
 }))
-vi.mock('../src/update-dialog.ts', () => ({ DesktopUpdateDialog: class {
+vi.mock('../src/shell-dialog.ts', () => ({ DesktopShellDialog: class {
   constructor(_preload: string, locale: () => DesktopLocale) { state.dialogLocale = locale }
   dispose() {}
 } }))

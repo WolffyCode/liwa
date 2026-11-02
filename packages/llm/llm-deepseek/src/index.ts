@@ -1,5 +1,5 @@
 /** DeepSeek Messages transport, request configuration, and model capabilities. */
-export { catalogModelFields, deepSeekConfigFields, Config, isBuiltInCatalog, plainOptions, resolveAdapterOptions, PUBLIC_BASE_URL } from './config.ts'
+export { deepSeekConfigFields, Config, isBuiltInCatalog, plainOptions, resolveAdapterOptions, PUBLIC_BASE_URL } from './config.ts'
 export type { Options, ResolvedDeepSeekOptions } from './config.ts'
 export {
   DEFAULT_CONTEXT_WINDOW,
@@ -46,4 +46,4 @@ export type { ListingSettings, ListingTiming, ModelListingConfig, ModelListingOp
 export { ModelListingCache } from './listing-cache.ts'
 export type { ListingCacheDependencies, ListingView } from './listing-cache.ts'
 export { refuseListedModel, resolveListedCatalog } from './listed-catalog.ts'
-export type { CatalogRefusal, ListedCatalog, ListedCatalogInput, ModelOverride } from './listed-catalog.ts'
+export type { CatalogRefusal, ListedCatalog, ListedCatalogInput } from './listed-catalog.ts'

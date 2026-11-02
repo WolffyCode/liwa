@@ -6,10 +6,10 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { app, BrowserWindow } from 'electron'
-import { DesktopUpdateOverlays } from '../../lib/types/update-overlay.js'
+import { DesktopShellOverlays } from '../../lib/types/shell-overlay.js'
 const directory = fileURLToPath(new URL('../../.desktop-build/qualification/', import.meta.url))
 mkdirSync(directory, { recursive: true })
-const root = mkdtempSync(join(directory, 'update-overlay-'))
+const root = mkdtempSync(join(directory, 'shell-overlay-'))
 mkdirSync(join(root, 'profile'))
 app.setPath('userData', join(root, 'profile'))
 app.on('window-all-closed', () => {})
@@ -23,7 +23,7 @@ async function main() {
       const parent = new BrowserWindow({ show: initiallyVisible, width: 800, height: 600 })
       windows.push(parent)
       await parent.loadURL('data:text/html,<h1>Update owner</h1>')
-      const overlays = new DesktopUpdateOverlays()
+      const overlays = new DesktopShellOverlays()
       const overlay = overlays.create(parent, undefined)
       await overlay.loadURL('data:text/html,<h1>Isolated update</h1>')
       assert.equal(parent.getChildWindows().length, 0)
@@ -44,11 +44,11 @@ async function main() {
     }
     const parent = new BrowserWindow({ show: false })
     windows.push(parent)
-    const overlay = new DesktopUpdateOverlays().create(parent, undefined)
+    const overlay = new DesktopShellOverlays().create(parent, undefined)
     const destroyed = once(overlay.webContents, 'destroyed')
     parent.destroy(); await destroyed
     cases.push({ parentDestroyed: parent.isDestroyed(), overlayDestroyed: overlay.isDestroyed() })
-    assert.deepEqual(cases, JSON.parse(await readFile(new URL('../expected/update-overlay-visibility.json', import.meta.url), 'utf8')))
+    assert.deepEqual(cases, JSON.parse(await readFile(new URL('../expected/shell-overlay-visibility.json', import.meta.url), 'utf8')))
     await writeFile(join(root, 'result.json'), JSON.stringify(cases, null, 2) + '\n')
     console.log(`Update view qualification passed: ${root}`)
   } finally {

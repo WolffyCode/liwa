@@ -3,7 +3,6 @@ import type { GlobalStandardProps } from '@liwa/client-ui-slots'
 import type { ShortcutCatalogEntry, ShortcutCommandId } from '@liwa/client-shortcuts/client'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { Tooltip } from '@liwa/client-ui-primitives'
 import { allowAllAccess, makeTranslate } from '@liwa/client-test-runtime'
 import type { ReactNode } from 'react'
 import type {
@@ -66,7 +65,6 @@ function mountShell({ collapsed = false, width = 300, shortcuts = [] }: {
       ) => {
         if (key === 'sidebar.brand.mark') return brandMark
         if (key === 'sidebar.brand.name') return brandName
-        if (key === 'sidebar.toggle.badge') return null
         if (key === 'sidebar.settings') {
           settingsOwner = owner
           return <div data-testid="settings-seat" data-wide={owner.wide} />
@@ -341,35 +339,7 @@ describe('SidebarRoot shell', () => {
     expect(screen.getByRole('button', { name: 'Open sidebar' })).toBeTruthy()
   })
 
-  it('shows only the badge bubble while the rail badge is hovered inside the toggle', () => {
-    vi.useFakeTimers()
-    render(<SidebarRoot
-      collapsed width={56}
-      useSessions={neverHook} useSessionStatus={useSessionStatus} useSessionRetainInfo={neverHook}
-      usePanelInfo={usePanelInfo} selectPanel={() => {}} usePanels={selector => selector([])} useEntryPins={selector => selector([])}
-      useEntryActions={selector => selector(false)} setPinned={vi.fn()}
-      useShortcuts={selector => selector([])}
-      useResource={useResource} useWorkspaces={neverHook}
-      {...allowAllAccess}
-      startSession={vi.fn()} toggleSidebar={vi.fn()} trackEntryClick={vi.fn()} t={t}
-      renderSlot={((key: string) => key === 'sidebar.toggle.badge'
-        ? <Tooltip label="Update — V1.2.3"><span data-testid="badge" /></Tooltip>
-        : null) as SidebarRootComponentProps['renderSlot']}
-    />)
-    const toggle = screen.getByRole('button', { name: 'Open sidebar' })
-    fireEvent.pointerEnter(toggle)
-    act(() => { vi.advanceTimersByTime(500) })
-    expect(screen.getByRole('tooltip').textContent).toBe('Open sidebar')
-    // The badge's own bubble replaces the toggle's rather than stacking on it,
-    // even after the toggle's longer hover delay has elapsed.
-    fireEvent.pointerEnter(screen.getByTestId('badge'))
-    act(() => { vi.advanceTimersByTime(500) })
-    expect(screen.getAllByRole('tooltip').map(bubble => bubble.textContent)).toEqual(['Update — V1.2.3'])
-    fireEvent.pointerLeave(screen.getByTestId('badge'), { relatedTarget: toggle })
-    expect(screen.getByRole('tooltip').textContent).toBe('Open sidebar')
-    fireEvent.pointerLeave(toggle)
-    expect(screen.queryByRole('tooltip')).toBeNull()
-  })
+
 })
 
 it('keeps the macOS sidebar toggle in its top strip', () => {

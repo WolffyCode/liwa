@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest'
 import type { BrowserWindow } from 'electron'
-import { DesktopUpdateDialog, UPDATE_DIALOG_IPC, type UpdateDialogOptions } from '../src/update-dialog.ts'
-import { DesktopUpdateOverlays } from '../src/update-overlay.ts'
+import { DesktopShellDialog, SHELL_DIALOG_IPC, type ShellDialogOptions } from '../src/shell-dialog.ts'
+import { DesktopShellOverlays } from '../src/shell-overlay.ts'
 import { resolveDesktopLocale, type DesktopLocale } from '../src/locale.ts'
 
 const fixture = await vi.hoisted(async () => {
@@ -23,7 +23,7 @@ const fixture = await vi.hoisted(async () => {
     destroyed = false
     readonly webContents = Object.assign(new EventEmitter(), {
       send: vi.fn(), focus: vi.fn(),
-      mainFrame: { url: 'liwa-app://shell/update-dialog.html' },
+      mainFrame: { url: 'liwa-app://shell/shell-dialog.html' },
       setWindowOpenHandler: vi.fn<(handler: () => { action: 'deny' }) => void>(),
       isDestroyed: () => this.destroyed,
       loadURL: vi.fn(async () => { if (load.failure) throw new Error('load failed'); this.webContents.emit('did-finish-load') }),
@@ -40,7 +40,7 @@ vi.mock('electron', () => ({ WebContentsView: fixture.FakeView, ipcMain: {
   removeHandler: (name: string) => fixture.handlers.delete(name),
 } }))
 
-let dialogs: DesktopUpdateDialog | undefined
+let dialogs: DesktopShellDialog | undefined
 afterEach(() => {
   dialogs?.dispose()
   dialogs = undefined
@@ -54,16 +54,16 @@ afterEach(() => {
 function setup(locale: DesktopLocale | (() => DesktopLocale) = resolveDesktopLocale('zh-CN')) {
   const parent = new fixture.FakeParent()
   const owner = parent as unknown as BrowserWindow
-  const overlays = new DesktopUpdateOverlays()
-  dialogs = new DesktopUpdateDialog('preload-update-dialog.cjs', locale, overlays)
-  const show = (signal?: AbortSignal, options: Partial<UpdateDialogOptions> = {}) => dialogs!.show(owner, {
+  const overlays = new DesktopShellOverlays()
+  dialogs = new DesktopShellDialog('preload-shell-dialog.cjs', locale, overlays)
+  const show = (signal?: AbortSignal, options: Partial<ShellDialogOptions> = {}) => dialogs!.show(owner, {
     message: '下载完成', buttons: ['安装并重启'], cancelId: 1, ...options, ...(signal === undefined ? {} : { signal }),
   })
   const invoke = (channel: string, ...args: unknown[]) => {
     const view = fixture.views.at(-1)!
     const event = { sender: view.webContents, senderFrame: view.webContents.mainFrame }
-    const state = fixture.handlers.get(UPDATE_DIALOG_IPC.status)!(event) as { revision: number }
-    return fixture.handlers.get(channel)!(event, ...(channel === UPDATE_DIALOG_IPC.respond ? [state.revision, ...args] : args))
+    const state = fixture.handlers.get(SHELL_DIALOG_IPC.status)!(event) as { revision: number }
+    return fixture.handlers.get(channel)!(event, ...(channel === SHELL_DIALOG_IPC.respond ? [state.revision, ...args] : args))
   }
   return { parent, owner, show, invoke, overlays }
 }
@@ -73,12 +73,12 @@ it('accepts only a displayed choice from its isolated shell frame', async () => 
   const pending = f.show()
   const view = fixture.views[0]!
   expect(dialogs!.isOpen).toBe(true)
-  expect(f.invoke(UPDATE_DIALOG_IPC.status)).toMatchObject({ closeLabel: '关闭', buttons: ['安装并重启'], cancelId: 1 })
-  const respond = fixture.handlers.get(UPDATE_DIALOG_IPC.respond)!
+  expect(f.invoke(SHELL_DIALOG_IPC.status)).toMatchObject({ closeLabel: '关闭', buttons: ['安装并重启'], cancelId: 1 })
+  const respond = fixture.handlers.get(SHELL_DIALOG_IPC.respond)!
   expect(() => respond({ sender: f.parent.webContents, senderFrame: view.webContents.mainFrame }, 0)).toThrow(/unowned/)
   expect(() => respond({ sender: view.webContents, senderFrame: { ...view.webContents.mainFrame } }, 0)).toThrow(/unowned/)
-  for (const index of [-1, 2, '0', 0.5, NaN]) expect(() => f.invoke(UPDATE_DIALOG_IPC.respond, index)).toThrow(/invalid/)
-  f.invoke(UPDATE_DIALOG_IPC.respond, 1)
+  for (const index of [-1, 2, '0', 0.5, NaN]) expect(() => f.invoke(SHELL_DIALOG_IPC.respond, index)).toThrow(/invalid/)
+  f.invoke(SHELL_DIALOG_IPC.respond, 1)
   expect(await pending).toEqual({ response: 1, checkboxChecked: false })
   expect(dialogs!.isOpen).toBe(false)
 })
@@ -88,7 +88,7 @@ it('attaches within its owner and resizes below the Windows caption without a na
   const pending = f.show()
   const view = fixture.views[0]!
   expect(f.parent.contentView.addChildView).toHaveBeenCalledWith(view)
-  expect(view.options).toMatchObject({ webPreferences: { preload: 'preload-update-dialog.cjs', sandbox: true, contextIsolation: true } })
+  expect(view.options).toMatchObject({ webPreferences: { preload: 'preload-shell-dialog.cjs', sandbox: true, contextIsolation: true } })
   expect(view.setBackgroundColor).toHaveBeenCalledWith('#00000000')
   const top = process.platform === 'win32' ? 40 : 0
   expect(view.setBounds).toHaveBeenCalledWith({ x: 0, y: top, width: 900, height: 650 - top })
@@ -107,7 +107,7 @@ it('updates a background result in the same view without activating its owner', 
   const first = f.show()
   await Promise.resolve()
   const view = fixture.views[0]!
-  const old = f.invoke(UPDATE_DIALOG_IPC.status) as { revision: number }
+  const old = f.invoke(SHELL_DIALOG_IPC.status) as { revision: number }
   const next = f.show(undefined, { message: '已是最新版本' })
   expect((await first).response).toBe(1)
   expect(fixture.views).toHaveLength(1)
@@ -115,11 +115,11 @@ it('updates a background result in the same view without activating its owner', 
   expect(view.webContents.loadURL).toHaveBeenCalledOnce()
   expect(f.parent.focus).not.toHaveBeenCalled()
   expect(view.webContents.focus).not.toHaveBeenCalled()
-  expect(view.webContents.send).toHaveBeenLastCalledWith(UPDATE_DIALOG_IPC.changed, expect.objectContaining({ message: '已是最新版本' }))
-  expect(() => fixture.handlers.get(UPDATE_DIALOG_IPC.respond)!({
+  expect(view.webContents.send).toHaveBeenLastCalledWith(SHELL_DIALOG_IPC.changed, expect.objectContaining({ message: '已是最新版本' }))
+  expect(() => fixture.handlers.get(SHELL_DIALOG_IPC.respond)!({
     sender: view.webContents, senderFrame: view.webContents.mainFrame,
   }, old.revision, 0)).toThrow(/stale/)
-  f.invoke(UPDATE_DIALOG_IPC.respond, 0)
+  f.invoke(SHELL_DIALOG_IPC.respond, 0)
   expect((await next).response).toBe(0)
 })
 
@@ -132,7 +132,7 @@ it('releases keyboard blocking only after fade-out and retains it across replace
   expect(f.overlays.input(f.owner)).toEqual({ revision: 1, blocked: true })
   dialogs!.cancel()
   await first
-  expect(view.webContents.send).toHaveBeenLastCalledWith(UPDATE_DIALOG_IPC.changed, null)
+  expect(view.webContents.send).toHaveBeenLastCalledWith(SHELL_DIALOG_IPC.changed, null)
   const next = f.show()
   await vi.advanceTimersByTimeAsync(150)
   expect(view.destroyed).toBe(false)
@@ -193,7 +193,7 @@ it('denies foreign navigation, redirects, and new windows', async () => {
   const contents = fixture.views[0]!.webContents
   const event = { preventDefault: vi.fn() }
   contents.emit('will-navigate', event, 'https://example.com')
-  contents.emit('will-navigate', event, 'liwa-app://shell/update-dialog.html')
+  contents.emit('will-navigate', event, 'liwa-app://shell/shell-dialog.html')
   expect(event.preventDefault).toHaveBeenCalledOnce()
   contents.emit('will-redirect', event)
   expect(event.preventDefault).toHaveBeenCalledTimes(2)
@@ -208,8 +208,8 @@ it('reads the current locale and keeps technical diagnostics separate from ordin
   for (const language of ['zh-CN', 'en']) {
     locale = resolveDesktopLocale(language)
     const pending = f.show(undefined, { technicalDetails: 'exit 0; shutdown acknowledged false' })
-    expect(f.invoke(UPDATE_DIALOG_IPC.status)).toMatchObject({ locale: locale.id, closeLabel: locale.messages.updateClose,
-      detail: '', technicalDetails: 'exit 0; shutdown acknowledged false', technicalDetailsLabel: locale.messages.updateTechnicalDetails })
+    expect(f.invoke(SHELL_DIALOG_IPC.status)).toMatchObject({ locale: locale.id, closeLabel: locale.messages.shellDialogClose,
+      detail: '', technicalDetails: 'exit 0; shutdown acknowledged false', technicalDetailsLabel: locale.messages.shellDialogTechnicalDetails })
     dialogs!.cancel()
     await pending
   }

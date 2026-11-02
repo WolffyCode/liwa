@@ -203,7 +203,7 @@ Desktop checks configured model API-key references after the Host starts and bef
 
 The welcome window reads the shared `locale.preference` before it appears. An explicit supported language choice wins; otherwise Desktop picks the first supported OS language and falls back to English. The main UI reads the same preference and OS language order through its isolated preload before mounting. Language changes in Settings update the shell’s current dictionary and menu; automatic selection writes no preference. The welcome window has no language selector.
 
-Welcome text uses Montserrat Light with system fallbacks; large action buttons keep the system font, while text buttons use Montserrat Light. English introductory copy is 24px throughout. Chinese introductory copy is 24px with a 26px product name. Action buttons are 240px wide with 14px labels. The API-key page uses a 20px heading and a 14px back action, with 84px between the secondary button’s bottom edge and the window bottom.
+Welcome text uses Montserrat Light with system fallbacks; large action buttons keep the system font, while text buttons use Montserrat Light. English introductory copy is 24px throughout. Chinese introductory copy is 24px with a 26px product name. Action buttons are 240px wide with 14px labels. The API-key page uses a 20px heading and a 14px back action, with 84px between the secondary button’s bottom edge and the window bottom. The stylesheet, WOFF2 files and SIL Open Font License are owned and packaged by `renderer/`; only the welcome document loads them.
 
 ### Welcome window appearance
 

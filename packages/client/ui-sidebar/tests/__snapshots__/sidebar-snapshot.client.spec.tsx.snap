@@ -26,10 +26,6 @@ exports[`sidebar shell snapshots > renders Windows caption controls in expanded 
           height="16"
           width="16"
         />
-        <div
-          data-slot="sidebar.toggle.badge"
-          style="display: contents;"
-        />
       </button>
     </div>
     <button
@@ -271,10 +267,6 @@ exports[`sidebar shell snapshots > renders the collapsed rail after the crossfad
           data-icon="dsw-icon-panel-left-outline-regular"
           height="18"
           width="18"
-        />
-        <div
-          data-slot="sidebar.toggle.badge"
-          style="display: contents;"
         />
       </button>
     </div>

@@ -216,7 +216,6 @@ const packageFileExtras: Readonly<Record<string, readonly string[]>> = {
   '@liwa/client-ui-sidebar-documentpreview': ['lib/client.*.js'],
   '@liwa/client-ui-sidebar-terminal': ['lib/client.*.js'],
   '@liwa/client-web': ['lib/**/*.css', 'lib/apply-injections.js'],
-  '@liwa/client-ui-theme': ['lib/styles'],
   // The physical-key protocol is a public entry usable without the browser service.
   '@liwa/client-shortcuts': ['lib/protocol.js'],
   // The CPython side ships as source .py files, published as-is rather than built.

@@ -33,10 +33,10 @@ For resource checks, use large sparse history files, unrelated files, dense reco
 After `pnpm --dir apps/desktop run build`, run the real Electron palette fixture on macOS:
 
 ```sh
-apps/desktop/.desktop-build/targets/mac-arm64/electron/Electron.app/Contents/MacOS/Electron apps/desktop/tests/fixtures/update-theme.mjs
+apps/desktop/.desktop-build/targets/mac-arm64/electron/Electron.app/Contents/MacOS/Electron apps/desktop/tests/fixtures/shell-theme.mjs
 ```
 
-The fixture creates a private profile, loads the production shell HTML, sandboxed preloads, renderer scripts, and bundled design tokens, and substitutes only fixed IPC status responses. Its 6 cases cover the shell dialog document starting in light/dark mode, switching while open, and following system appearance. It checks transparent document backgrounds, surface/text/button/mask colors, the code/address surface, the dark-only 1 CSS px inset outline, and the close icon, then writes two screenshots and `result.json` to `.desktop-build/qualification/update-theme-*`. It does not start a Host or qualify Windows native rendering. The first-close notice shares that document's CSS and theme script.
+The fixture creates a private profile, loads the production shell HTML, sandboxed preloads, renderer scripts, and bundled design tokens, and substitutes only fixed IPC status responses. Its 6 cases cover the shell dialog document starting in light/dark mode, switching while open, and following system appearance. It checks transparent document backgrounds, surface/text/button/mask colors, the code/address surface, the dark-only 1 CSS px inset outline, and the close icon, then writes two screenshots and `result.json` to `.desktop-build/qualification/shell-theme-*`. It does not start a Host or qualify Windows native rendering. The first-close notice shares that document's CSS and theme script.
 
 <a id="verification-overlay"></a>
 
@@ -46,7 +46,7 @@ On macOS, reuse the cached Electron runtime after compiling the Desktop Host sou
 
 ```sh
 pnpm exec tsc -b apps/desktop/tsconfig.host.json
-apps/desktop/.desktop-build/targets/mac-arm64/electron/Electron.app/Contents/MacOS/Electron apps/desktop/tests/fixtures/update-overlay-visibility.mjs
+apps/desktop/.desktop-build/targets/mac-arm64/electron/Electron.app/Contents/MacOS/Electron apps/desktop/tests/fixtures/shell-overlay-visibility.mjs
 ```
 
-The fixture owns a unique profile and writes `result.json` under `.desktop-build/qualification/update-overlay-*`. It checks visible and hidden owners, absence of native child windows, retention of a separate control window’s focus after owner visibility notifications, and view/input cleanup including owner destruction. It uses no network, product login, or liwa Host. It qualifies the in-window carrier, not the full first-login or installation flow.
+The fixture owns a unique profile and writes `result.json` under `.desktop-build/qualification/shell-overlay-*`. It checks visible and hidden owners, absence of native child windows, retention of a separate control window’s focus after owner visibility notifications, and view/input cleanup including owner destruction. It uses no network, product login, or liwa Host. It qualifies the in-window carrier, not the full first-login or installation flow.

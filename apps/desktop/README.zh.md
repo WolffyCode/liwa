@@ -203,7 +203,7 @@ Desktop 在 Host 启动后、打开工作区前检查模型 API Key 引用是否
 
 欢迎窗口在显示前读取共享的 `locale.preference`。用户明确选择的受支持语言优先；否则 Desktop 按系统语言顺序匹配支持的语言，并以英文兜底。主界面在挂载前通过隔离 preload 读取同一偏好和系统语言顺序。在设置中切换语言会更新桌面壳的当前词典和菜单；自动选择不会写入偏好。欢迎窗口不提供语言切换入口。
 
-Welcome 文字使用 Montserrat Light 并回退到系统字体，底部大按钮保留系统字体，文字按钮使用 Montserrat Light。英文欢迎正文及产品名均为 24px，中文欢迎正文为 24px、产品名为 26px。操作按钮宽 240px，文字为 14px。API Key 页的标题为 20px，返回操作为 14px，次级按钮底边距窗口底部 84px。
+Welcome 文字使用 Montserrat Light 并回退到系统字体，底部大按钮保留系统字体，文字按钮使用 Montserrat Light。英文欢迎正文及产品名均为 24px，中文欢迎正文为 24px、产品名为 26px。操作按钮宽 240px，文字为 14px。API Key 页的标题为 20px，返回操作为 14px，次级按钮底边距窗口底部 84px。 样式表、WOFF2 文件和 SIL Open Font License 由 `renderer/` 持有并随该目录打包，仅由欢迎页加载。
 
 ### 欢迎窗口外观
 

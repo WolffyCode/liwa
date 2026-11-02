@@ -333,7 +333,6 @@
       "@liwa/client-ui-trajectory/types": ["./packages/client/ui-trajectory/src/types.ts"],
       "@liwa/client-ui-workspace": ["./packages/client/ui-workspace/src"],
       "@liwa/client-ui-theme": ["./packages/client/ui-theme/src"],
-      "@liwa/client-ui-theme/brand-font.css": ["./packages/client/ui-theme/src/styles/brand-font.css"],
       "@liwa/client-ui-settings": ["./packages/client/ui-settings/src"],
       "@liwa/client-ui-settings-general": ["./packages/client/ui-settings-general/src"],
       "@liwa/client-ui-settings-general/types": ["./packages/client/ui-settings-general/src/types.ts"],
