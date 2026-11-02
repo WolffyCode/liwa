@@ -6,6 +6,7 @@
  */
 
 import type { Context } from '@liwa/cordis'
+import { userAgent } from '@liwa/llm'
 import z from '@liwa/schemastery'
 import type {} from '@liwa/web'
 import { HttpFetchProvider } from './provider.ts'
@@ -18,9 +19,6 @@ export {
   HttpFetchProvider,
 } from './provider.ts'
 export type { HttpFetchLimits } from './provider.ts'
-
-/** Default `User-Agent`: an explicit product agent, never a browser disguise. */
-export const DEFAULT_USER_AGENT = 'liwa/0.0.1 (+https://github.com/WolffyCode/liwa)'
 
 /** Cordis plugin name used by loader diagnostics. */
 export const name = 'web-fetch-http'
@@ -47,7 +45,7 @@ export const Config: z<Config> = z.object({
   maxBodyChars: z.number().default(100_000),
   timeoutMs: z.number().default(30_000),
   maxRedirects: z.number().default(5),
-  userAgent: z.string().default(DEFAULT_USER_AGENT),
+  userAgent: z.string().default(userAgent()),
 })
 
 /** Complete config after schemastery applies every field default. */

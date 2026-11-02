@@ -30,6 +30,7 @@
   "license": "MIT",
   "peerDependencies": {
     "@liwa/launch-environment": "workspace:*",
+    "@liwa/llm": "workspace:*",
     "@liwa/web": "workspace:*",
     "@liwa/cordis": "workspace:~"
   },
@@ -38,6 +39,7 @@
   },
   "devDependencies": {
     "@liwa/launch-environment": "workspace:*",
+    "@liwa/llm": "workspace:*",
     "@liwa/web": "workspace:*",
     "@liwa/cordis": "workspace:~",
     "@liwa/http-proxy": "workspace:*"

@@ -6,6 +6,7 @@
  * @module @liwa/web-search-exa/provider
  */
 
+import { attributionHeaders } from '@liwa/llm'
 import { WebError } from '@liwa/web'
 import type {
   WebSearchProvider,
@@ -26,9 +27,6 @@ export const EXA_DEFAULT_SEARCH_TYPE = 'auto'
 
 /** Default number of highlight sentences requested per result. */
 export const EXA_DEFAULT_HIGHLIGHTS_PER_RESULT = 1
-
-/** Attribution header sent on every request. Bump with the package version. */
-const USER_AGENT = 'liwa/0.0.1'
 
 /** Resolved provider options (the plugin's `apply` supplies env-var and constant defaults). */
 export interface ExaSearchProviderOptions {
@@ -105,7 +103,7 @@ export class ExaSearchProvider implements WebSearchProvider {
           'authorization': `Bearer ${this.options.apiKey}`,
           'content-type': 'application/json',
           'accept': 'application/json',
-          'user-agent': USER_AGENT,
+          ...attributionHeaders(),
         },
         body: JSON.stringify({
           query: request.query,

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@liwa/cordis'
+import { attributionHeaders } from '@liwa/llm'
 import WebRuntime from '@liwa/web'
 import { ExaSearchProvider, EXA_PROVIDER_ID } from '@liwa/web-search-exa'
 import * as exaPlugin from '@liwa/web-search-exa'
@@ -96,7 +97,7 @@ describe('ExaSearchProvider request mapping', () => {
     expect(fetchMock).toHaveBeenCalledOnce()
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
     expect(url).toBe('https://api.exa.test/search')
-    expect(init).toMatchObject({ method: 'POST', redirect: 'error' })
+    expect(init).toMatchObject({ method: 'POST', redirect: 'error', headers: attributionHeaders() })
     expect((init.headers as Record<string, string>)['authorization']).toBe('Bearer exa-key')
     expect(JSON.parse(init.body as string)).toEqual({
       query: 'hello',

@@ -52,6 +52,8 @@ Load the web service and the provider; the API key falls back to `$PERPLEXITY_AP
 
 The generated [configuration catalog](../../../docs/config-catalog.md#liwaweb-search-perplexity) is the exhaustive source for every accepted field and its JSDoc.
 
+Every request sends the product `User-Agent` from `@liwa/llm` through `attributionHeaders()`, with the version read from that package’s manifest.
+
 ### What a search returns
 
 `content` carries Perplexity's generated answer. `sources[]` prefers the structured `search_results[]` (`url`, `title`, `snippet`, `publishedAt` from `date`) and falls back to the URL-only `citations[]` array only when `search_results` is absent — which is why `title`/`snippet`/`publishedAt` are optional on the service. Perplexity exposes no result-count control, so the service enforces `maxResults` by truncating and flagging.

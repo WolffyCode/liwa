@@ -21,6 +21,9 @@
       "path": "../../../vendor/schemastery"
     },
     {
+      "path": "../../llm/llm"
+    },
+    {
       "path": "../web"
     },
     {

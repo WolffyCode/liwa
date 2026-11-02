@@ -52,6 +52,8 @@ kind: "package-reference"
 
 生成的[配置目录](../../../docs/config-catalog.zh.md#liwaweb-search-exa)是每个受支持字段及其 JSDoc 的穷尽式真源。
 
+每次请求都通过 `attributionHeaders()` 发送 `@liwa/llm` 提供的产品 `User-Agent`，版本取自该包的清单。
+
 ### 搜索返回什么
 
 每项 Exa 结果映射为 `WebSearchSource`：`url`、`title`、以首个非空白高亮作为 `snippet`、`publishedDate` 作为 `publishedAt`；没有高亮的来源缺少可移植的 snippet，会被丢弃。请求的 `maxResults` 优先于已配置的默认 `numResults`，并作为成本与延迟优化发送给 Exa——最终上限由服务强制执行：截断并标记。Exa 不返回生成答案，因此结果不携带 `content`。

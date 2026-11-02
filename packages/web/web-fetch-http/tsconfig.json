@@ -21,6 +21,9 @@
       "path": "../../util/timeout"
     },
     {
+      "path": "../../llm/llm"
+    },
+    {
       "path": "../web"
     }
   ]

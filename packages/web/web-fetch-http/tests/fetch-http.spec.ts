@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
 import { AddressInfo } from 'node:net'
 import { Context } from '@liwa/cordis'
+import { userAgent } from '@liwa/llm'
 import WebRuntime from '@liwa/web'
 import { HttpFetchProvider, LOCAL_FETCH_PROVIDER_ID } from '@liwa/web-fetch-http'
 import type { HttpFetchLimits } from '@liwa/web-fetch-http'
@@ -495,11 +496,18 @@ describe('HttpFetchProvider body cancellation on error paths', () => {
 
 describe('web-fetch-http plugin registration', () => {
   it('registers the provider into ctx.web (HMR-safe)', async () => {
+    let seenUserAgent: string | undefined
+    handler = (req, res) => {
+      seenUserAgent = req.headers['user-agent']
+      res.writeHead(200, { 'content-type': 'text/plain' })
+      res.end('ok')
+    }
     const ctx = new Context()
     await ctx.plugin(WebRuntime, { fetchProvider: LOCAL_FETCH_PROVIDER_ID })
     const fiber = await ctx.plugin(fetchPlugin, {})
     await expect(ctx.web.fetch({ url: `${base}/` }))
       .resolves.toMatchObject({ statusCode: 200 })
+    expect(seenUserAgent).toBe(userAgent())
     await fiber.dispose()
     await expect(ctx.web.fetch({ url: `${base}/` }))
       .rejects.toThrow(expect.objectContaining({ code: 'WEB_PROVIDER_CONFIGURED_MISSING' }))

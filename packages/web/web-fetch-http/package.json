@@ -31,6 +31,7 @@
   "peerDependencies": {
     "@liwa/cordis": "workspace:~",
     "@liwa/timeout": "workspace:*",
+    "@liwa/llm": "workspace:*",
     "@liwa/web": "workspace:*"
   },
   "dependencies": {
@@ -40,6 +41,7 @@
   "devDependencies": {
     "@liwa/cordis": "workspace:~",
     "@liwa/timeout": "workspace:*",
+    "@liwa/llm": "workspace:*",
     "@liwa/web": "workspace:*",
     "@liwa/http-proxy": "workspace:*"
   }

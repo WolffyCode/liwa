@@ -17296,6 +17296,9 @@ importers:
       '@liwa/http-proxy':
         specifier: workspace:*
         version: link:../../util/http-proxy
+      '@liwa/llm':
+        specifier: workspace:*
+        version: link:../../llm/llm
       '@liwa/timeout':
         specifier: workspace:*
         version: link:../../util/timeout
@@ -17355,6 +17358,9 @@ importers:
       '@liwa/launch-environment':
         specifier: workspace:*
         version: link:../../util/launch-environment
+      '@liwa/llm':
+        specifier: workspace:*
+        version: link:../../llm/llm
       '@liwa/web':
         specifier: workspace:*
         version: link:../web
@@ -17374,6 +17380,9 @@ importers:
       '@liwa/launch-environment':
         specifier: workspace:*
         version: link:../../util/launch-environment
+      '@liwa/llm':
+        specifier: workspace:*
+        version: link:../../llm/llm
       '@liwa/web':
         specifier: workspace:*
         version: link:../web

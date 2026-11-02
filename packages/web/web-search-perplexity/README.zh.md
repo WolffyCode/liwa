@@ -52,6 +52,8 @@ kind: "package-reference"
 
 生成的[配置目录](../../../docs/config-catalog.zh.md#liwaweb-search-perplexity)是每个受支持字段及其 JSDoc 的穷尽式真源。
 
+每次请求都通过 `attributionHeaders()` 发送 `@liwa/llm` 提供的产品 `User-Agent`，版本取自该包的清单。
+
 ### 搜索返回什么
 
 `content` 携带 Perplexity 的生成答案。`sources[]` 优先使用结构化 `search_results[]`（`url`、`title`、`snippet`、`publishedAt` 取自 `date`），仅当 `search_results` 缺失时才回退到只含 URL 的 `citations[]` 数组——这正是服务上 `title`／`snippet`／`publishedAt` 为可选字段的原因。Perplexity 不公开结果数量控制，因此服务通过截断并标记来强制执行 `maxResults`。
