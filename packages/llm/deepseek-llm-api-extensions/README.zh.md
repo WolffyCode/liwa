@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-用于向 DeepSeek 官方 LLM（大语言模型）API 请求添加顶层字段的提供方特定注册表。`DeepSeekLlmApiExtensionRegistry` 注册 `ctx.deepseekLlmApiExtensions`；贡献插件分别认领一个经声明合并的字段，`liwa-llm-deepseek` 则在序列化基础请求后准备当前贡献。当插件必须添加经过验证的提供方特定字段且不能修改基础适配器时，请使用它。
+用于向 DeepSeek 官方 LLM（大语言模型）API 请求添加顶层字段的提供方特定注册表。`DeepSeekLlmApiExtensionRegistry` 注册 `ctx.deepseekLlmApiExtensions`；贡献插件分别认领一个经声明合并的字段，`liwa-llm-deepseek` 则在序列化基础请求后准备当前贡献。当插件必须添加经过验证的提供方特定字段且不能修改基础适配器时，请使用它。随附 profile 既不挂载注册表也不挂载贡献方，所以它们的请求不带扩展字段。
 
 ## 目录
 

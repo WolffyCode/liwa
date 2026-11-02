@@ -18,12 +18,8 @@ flowchart LR
   cfg --> plugin_liwa_base_hmr
   plugin_liwa_base_llm["llm<br/>@liwa/llm"]
   cfg --> plugin_liwa_base_llm
-  plugin_liwa_base_deepseek_llm_api_extensions["deepseek-llm-api-extensions<br/>@liwa/deepseek-llm-api-extensions"]
-  cfg --> plugin_liwa_base_deepseek_llm_api_extensions
   plugin_liwa_base_session["session<br/>@liwa/session"]
   cfg --> plugin_liwa_base_session
-  plugin_liwa_base_session_log_deepseek["session-log-deepseek<br/>@liwa/session-log-deepseek"]
-  cfg --> plugin_liwa_base_session_log_deepseek
   plugin_liwa_base_typert["typert<br/>@liwa/typert-registry"]
   cfg --> plugin_liwa_base_typert
   plugin_liwa_base_typert_loader["typert-loader<br/>@liwa/typert-loader"]
@@ -40,8 +36,6 @@ flowchart LR
   cfg --> plugin_liwa_base_user_questions
   plugin_liwa_base_agent["agent<br/>@liwa/agent"]
   cfg --> plugin_liwa_base_agent
-  plugin_liwa_base_plugin_package_inventory_deepseek["plugin-package-inventory-deepseek<br/>@liwa/plugin-package-inventory-deepseek"]
-  cfg --> plugin_liwa_base_plugin_package_inventory_deepseek
   plugin_liwa_base_agent_default_model["agent-default-model<br/>@liwa/agent-default-model"]
   cfg --> plugin_liwa_base_agent_default_model
   plugin_liwa_base_jobs["jobs<br/>@liwa/jobs-local"]
@@ -80,10 +74,6 @@ flowchart LR
   cfg --> plugin_liwa_base_storage_domain
   plugin_liwa_base_session_projection_cache["session-projection-cache<br/>@liwa/session-projection-cache"]
   cfg --> plugin_liwa_base_session_projection_cache
-  plugin_liwa_base_otel["otel<br/>@liwa/otel"]
-  cfg --> plugin_liwa_base_otel
-  plugin_liwa_base_session_telemetry_otel["session-telemetry-otel<br/>@liwa/session-telemetry-otel"]
-  cfg --> plugin_liwa_base_session_telemetry_otel
   plugin_liwa_base_subprocess["subprocess<br/>@liwa/subprocess-local"]
   cfg --> plugin_liwa_base_subprocess
   plugin_liwa_base_sandbox["sandbox<br/>@liwa/sandbox-local"]
@@ -122,8 +112,6 @@ flowchart LR
   cfg --> plugin_liwa_base_tool_skill
   plugin_liwa_base_commands["commands<br/>@liwa/commands"]
   cfg --> plugin_liwa_base_commands
-  plugin_liwa_base_command_feedback["command-feedback<br/>@liwa/command-feedback"]
-  cfg --> plugin_liwa_base_command_feedback
   plugin_liwa_base_goal["goal<br/>@liwa/goal"]
   cfg --> plugin_liwa_base_goal
   plugin_liwa_base_goal_round_driver["goal-round-driver<br/>@liwa/goal-round-driver"]
@@ -211,9 +199,7 @@ flowchart LR
 | `timer` | `@liwa/cordis-plugin-timer` |
 | `hmr` | `@liwa/hmr` |
 | `llm` | `@liwa/llm` |
-| `deepseek-llm-api-extensions` | `@liwa/deepseek-llm-api-extensions` |
 | `session` | `@liwa/session` |
-| `session-log-deepseek` | `@liwa/session-log-deepseek` |
 | `typert` | `@liwa/typert-registry` |
 | `typert-loader` | `@liwa/typert-loader` |
 | `typert-gateway` | `@liwa/api-gateway` |
@@ -222,7 +208,6 @@ flowchart LR
 | `session-title-llm` | `@liwa/session-title-first-prompt-llm` |
 | `user-questions` | `@liwa/user-questions` |
 | `agent` | `@liwa/agent` |
-| `plugin-package-inventory-deepseek` | `@liwa/plugin-package-inventory-deepseek` |
 | `agent-default-model` | `@liwa/agent-default-model` |
 | `jobs` | `@liwa/jobs-local` |
 | `llm-retry` | `@liwa/llm-retry` |
@@ -242,8 +227,6 @@ flowchart LR
 | `storage-json` | `@liwa/storage-json` |
 | `storage-domain` | `@liwa/storage-domain` |
 | `session-projection-cache` | `@liwa/session-projection-cache` |
-| `otel` | `@liwa/otel` |
-| `session-telemetry-otel` | `@liwa/session-telemetry-otel` |
 | `subprocess` | `@liwa/subprocess-local` |
 | `sandbox` | `@liwa/sandbox-local` |
 | `sandbox-policy` | `@liwa/sandbox-policy` |
@@ -263,7 +246,6 @@ flowchart LR
 | `skill-filesystem` | `@liwa/skill-filesystem` |
 | `tool-skill` | `@liwa/tool-skill` |
 | `commands` | `@liwa/commands` |
-| `command-feedback` | `@liwa/command-feedback` |
 | `goal` | `@liwa/goal` |
 | `goal-round-driver` | `@liwa/goal-round-driver` |
 | `command-goal` | `@liwa/command-goal` |

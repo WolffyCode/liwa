@@ -8,8 +8,6 @@ import SqliteSessionQuery from '@liwa/session-query-sqlite'
 import * as Official from '@liwa/llm-deepseek-api-key'
 import * as Account from '@liwa/llm-deepseek-account'
 import type { DeepSeekAccount } from '@liwa/deepseek-account'
-import DeepSeekLlmApiExtensionRegistry from '@liwa/deepseek-llm-api-extensions'
-import * as SessionLogDeepSeek from '@liwa/session-log-deepseek'
 import { createLaunchEnvironmentSnapshot } from '@liwa/launch-environment'
 import { once } from 'node:events'
 import { createServer, type ServerResponse } from 'node:http'
@@ -24,7 +22,6 @@ export interface NativeRequest {
   body: Record<string, unknown>
   accountAuth: boolean
   officialAuth: boolean
-  sessionHeader: boolean
   audit: readonly SessionEvent[]
 }
 
@@ -58,7 +55,6 @@ export interface FixtureOptions {
   credentialConfigured?: boolean
   ambientConfigured?: boolean
   signedIn?: boolean
-  withSessionLog?: boolean
   responseStatus?: number
   reply?: (response: ServerResponse, request: NativeRequest) => void | Promise<void>
 }
@@ -98,7 +94,6 @@ export async function paidFixture(cleanups: Array<() => Promise<void>>, options:
       if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) throw new Error('Expected native Messages request object')
       const input: NativeRequest = { path: request.url ?? '', body: payload as Record<string, unknown>,
         accountAuth: request.headers['x-dsh-auth-token'] !== undefined, officialAuth: request.headers['x-api-key'] !== undefined,
-        sessionHeader: request.headers['x-deepseek-harness-session-id'] !== undefined,
         audit: await readEvents(auditId) }
       requests.push(input)
       response.writeHead(options.responseStatus ?? 200, { 'content-type': 'text/event-stream' })
@@ -137,10 +132,6 @@ export async function paidFixture(cleanups: Array<() => Promise<void>>, options:
     ...options.withSessionQuery === true ? [
       { id: 'query', name: '@liwa/session-query-sqlite', config: { path: join(root, 'query.sqlite'), openAt: 'never' } },
     ] : [],
-    ...options.withSessionLog === true ? [
-      { id: 'deepseek-llm-api-extensions', name: '@liwa/deepseek-llm-api-extensions' },
-      { id: 'session-log-deepseek', name: '@liwa/session-log-deepseek' },
-    ] : [],
   ]
   await writeFile(configPath, JSON.stringify(rows()))
   const modules = new Map<string, unknown>([
@@ -148,8 +139,6 @@ export async function paidFixture(cleanups: Array<() => Promise<void>>, options:
     ['@liwa/session-persistence-jsonl', JsonlPersistence], ['@liwa/session-query-sqlite', SqliteSessionQuery],
     [options.officialName ?? '@liwa/llm-deepseek-api-key', Official],
     ['@liwa/llm-deepseek-account', Account], ['@liwa/experimental-translator', Translator],
-    ['@liwa/deepseek-llm-api-extensions', DeepSeekLlmApiExtensionRegistry],
-    ['@liwa/session-log-deepseek', SessionLogDeepSeek],
   ])
   const start = () => boot('paid-translator-composition', configPath, [], (host) => {
     const sourceModules: ModuleLoaderV2 = {

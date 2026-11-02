@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Provider-specific registry for additive top-level fields on official DeepSeek LLM API requests. `DeepSeekLlmApiExtensionRegistry` registers `ctx.deepseekLlmApiExtensions`; contributor plugins claim one declaration-merged field, and `liwa-llm-deepseek` prepares the current contributions after serializing its base request. Use it when a plugin must add a validated provider-specific field without changing the base adapter.
+Provider-specific registry for additive top-level fields on official DeepSeek LLM API requests. `DeepSeekLlmApiExtensionRegistry` registers `ctx.deepseekLlmApiExtensions`; contributor plugins claim one declaration-merged field, and `liwa-llm-deepseek` prepares the current contributions after serializing its base request. Use it when a plugin must add a validated provider-specific field without changing the base adapter. The shipped profiles mount neither the registry nor a contributor, so their requests carry no extension field.
 
 ## Table of Contents
 

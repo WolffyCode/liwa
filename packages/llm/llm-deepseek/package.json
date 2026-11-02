@@ -28,7 +28,6 @@
   "license": "MIT",
   "peerDependencies": {
     "@liwa/cordis": "workspace:~",
-    "@liwa/anonymous-user-id": "workspace:*",
     "@liwa/atomic-write": "workspace:*",
     "@liwa/attachment": "workspace:*",
     "@liwa/deepseek-llm-api-extensions": "workspace:*",
@@ -52,7 +51,6 @@
     "@liwa/llm-deepseek-account": "workspace:*",
     "@liwa/cordis": "workspace:~",
     "@liwa/agent": "workspace:*",
-    "@liwa/anonymous-user-id": "workspace:*",
     "@liwa/atomic-write": "workspace:*",
     "@liwa/attachment": "workspace:*",
     "@liwa/attachment-local": "workspace:*",

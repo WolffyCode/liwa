@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`liwa-command-feedback` lets a user tell Liwa what they think of a session. Typing `/feedback` plus a remark records it and acknowledges the session and anonymous user ids; the Web feedback dialog records a category and an optional description through the `sessionFeedback` Host Remote. Recording is immediate and never starts model work: the model neither sees the remark nor is interrupted by it. The package also owns the fixed category taxonomy every feedback surface files under. It ships with the standard `liwa` base and needs no configuration; headless, ACP, and JSON-RPC entry points provide no slash commands.
+`liwa-command-feedback` lets a user tell Liwa what they think of a session. Typing `/feedback` plus a remark records it and acknowledges the session and anonymous user ids; the Web feedback dialog records a category and an optional description through the `sessionFeedback` Host Remote. Recording is immediate and never starts model work: the model neither sees the remark nor is interrupted by it. The package also owns the fixed category taxonomy every feedback surface files under. The shipped profiles do not mount it; a composition that does needs no configuration, while headless, ACP, and JSON-RPC entry points provide no slash commands.
 
 ## Table of Contents
 
@@ -25,7 +25,7 @@ English | [中文](README.zh.md)
 <a id="use-this-package"></a>
 ## Use this package
 
-Users can record feedback from the Web client out of the box: the `/feedback` command ships with the standard `liwa` base, needs no configuration, and works in any conversation. A custom app gets the same command by mounting the Session store, command registry, and this plugin together.
+The shipped profiles do not mount this plugin, so `/feedback` is absent from them. A custom app gets the command, with no configuration, by mounting the Session store, command registry, and this plugin together; it then works in any conversation.
 
 ### The `/feedback` command
 
@@ -68,7 +68,7 @@ Feedback does not have to come from the slash command or the dialog: any UI, hoo
   name: '@liwa/command-feedback'
 ```
 
-The Web client ships the command. Headless mode, ACP automation, and JSON-RPC provide no slash commands, so `/feedback` is unavailable there.
+Headless mode, ACP automation, and JSON-RPC provide no slash commands, so `/feedback` is unavailable there even when the plugin is mounted.
 
 -----
 
@@ -140,7 +140,7 @@ These limits define where session feedback is a poor fit or behaves differently 
 - **No amend or withdraw** — the session log is append-only and this package adds no tombstone, so a mistaken entry stays recorded and can only be superseded by a later one.
 - **No explicit durability barrier** — the acknowledgement follows the append, not a flush, so an entry recorded immediately before a crash can be lost with any other unflushed tail. A consumer that needs a barrier awaits `ctx.sessions.flush(session)`.
 - **No visible acknowledgement on a fresh session** — the web transcript renders command rows only once a session is active, so a typed `/feedback <text>` on a still-blank session records the event but shows no acknowledgement row; the dialog's toast does not depend on the transcript.
-- **Web only among the shipped entry points** — headless mode, ACP automation, and JSON-RPC provide no command adapter, so `/feedback` is unavailable there.
+- **Web only among the entry points** — headless mode, ACP automation, and JSON-RPC provide no command adapter, so `/feedback` is unavailable there.
 
 <a id="dev-note"></a>
 ### Dev Note

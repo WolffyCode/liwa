@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-`liwa-command-feedback` 让用户告诉灵鲸他们对会话的看法。输入 `/feedback` 加一条评价，评价即被记录，并以会话 id 与匿名用户 id 确认；Web 反馈弹窗通过 `sessionFeedback` Host Remote 记录分类与可选描述。记录是即时的，绝不会启动模型工作：模型既看不到这条评价，也不会被打断。本包同时拥有所有反馈界面共用的固定分类表。它随标准 `liwa` 基础组合交付，无需任何配置；无头模式、ACP（Agent Client Protocol）与 JSON-RPC 入口不提供斜杠命令。
+`liwa-command-feedback` 让用户告诉灵鲸他们对会话的看法。输入 `/feedback` 加一条评价，评价即被记录，并以会话 id 与匿名用户 id 确认；Web 反馈弹窗通过 `sessionFeedback` Host Remote 记录分类与可选描述。记录是即时的，绝不会启动模型工作：模型既看不到这条评价，也不会被打断。本包同时拥有所有反馈界面共用的固定分类表。随附 profile 不挂载它；挂载它的组合无需任何配置，而无头模式、ACP（Agent Client Protocol）与 JSON-RPC 入口不提供斜杠命令。
 
 ## 目录
 
@@ -25,7 +25,7 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-用户可以直接在 Web 客户端中记录反馈：`/feedback` 命令随标准 `liwa` 基础组合交付，无需配置，可在任何对话中使用。自定义应用必须把 Session 服务、命令注册表与本插件组合在一起，才能提供同样的命令。
+随附 profile 不挂载本插件，因此其中没有 `/feedback`。自定义应用把 Session 服务、命令注册表与本插件组合在一起，即可获得该命令，无需配置；之后可在任何对话中使用。
 
 ### `/feedback` 命令
 
@@ -68,7 +68,7 @@ kind: "package-reference"
   name: '@liwa/command-feedback'
 ```
 
-Web 客户端随附该命令。无头模式、ACP 自动化和 JSON-RPC 不提供斜杠命令，因此 `/feedback` 在那里不可用。
+无头模式、ACP 自动化和 JSON-RPC 不提供斜杠命令，因此即使挂载了本插件，`/feedback` 在那里也不可用。
 
 -----
 
@@ -140,7 +140,7 @@ Web 客户端随附该命令。无头模式、ACP 自动化和 JSON-RPC 不提�
 - **不支持修改或撤回**——会话日志是仅追加的，本包也不新增 tombstone，因此错误的条目会一直保留在记录中，只能由后续条目取代。
 - **没有显式持久化屏障**——确认文本紧随追加而非 flush，因此紧临崩溃前记录的条目可能与其他未 flush 的尾部一同丢失。需要该保证的消费方可自行等待 `ctx.sessions.flush(session)`。
 - **新会话上没有可见的确认**——Web transcript（文本记录）只在会话激活后渲染命令行，因此在仍为空白的新会话上输入 `/feedback <text>` 会记录事件但不会显示确认行；弹窗的 toast 不依赖文本记录。
-- **随附的产品入口中只有 Web 使用此命令**——无头模式、ACP 自动化和 JSON-RPC 不提供命令适配器，因此 `/feedback` 在那里不可用。
+- **入口中只有 Web 使用此命令**——无头模式、ACP 自动化和 JSON-RPC 不提供命令适配器，因此 `/feedback` 在那里不可用。
 
 <a id="dev-note"></a>
 ### 开发备注

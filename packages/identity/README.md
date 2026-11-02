@@ -22,7 +22,7 @@ The identity group provides one anonymous id per Liwa home that the installation
 
 | Package | Role |
 |---|---|
-| [`anonymous-user-id`](anonymous-user-id/README.md) | Gives every Liwa home one anonymous id that telemetry, feedback, and DeepSeek requests attach to their records, so records from one installation can be recognized without identifying the user |
+| [`anonymous-user-id`](anonymous-user-id/README.md) | Gives every Liwa home one anonymous id that telemetry and feedback attach to their records, so records from one installation can be recognized without identifying the user |
 
 <a id="related-documentation"></a>
 ## Related documentation

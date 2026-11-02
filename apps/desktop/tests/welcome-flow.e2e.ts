@@ -95,7 +95,6 @@ describe.skipIf(!existsSync(builtHost))('built Desktop welcome flow', () => {
       const home = join(root, 'home')
       mkdirSync(home)
       vi.stubEnv('LIWA_HOME', home)
-      vi.stubEnv('LIWA_TELEMETRY_MODE', 'DISABLED')
       const project = prepareDevelopmentProject({
         projectDir: join(root, 'project'),
         cliDir: join(repository, 'apps/cli'),

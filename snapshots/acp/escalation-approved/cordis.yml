@@ -79,7 +79,3 @@
       name: '@liwa/hooks-codex'
       config:
         configPath: ./codex-hooks.json
-
-- id: session-log-deepseek
-  config:
-    enabled: false

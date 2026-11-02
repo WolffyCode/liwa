@@ -63,8 +63,6 @@
     "@liwa/llm-deepseek-api-key": "workspace:*",
     "@liwa/llm-deepseek-account": "workspace:*",
     "@liwa/deepseek-account": "workspace:*",
-    "@liwa/deepseek-llm-api-extensions": "workspace:*",
-    "@liwa/session-log-deepseek": "workspace:*",
     "@liwa/session-query-sqlite": "workspace:*"
   }
 }

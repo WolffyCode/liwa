@@ -638,12 +638,7 @@ it('assembles the shipped Web transport, catalog, guidance, and defaults', async
     agentOptions: { provider: 'deepseek-official', model: 'deepseek-v4-flash' },
   })
   try {
-    expect(scaffold.ctx.commands.list(commandHandle.agent)).toContainEqual({
-      definitionId: '@liwa/command-feedback',
-      name: 'feedback',
-      description: 'Record feedback about this session',
-      input: { hint: '<text>' },
-    })
+    expect(scaffold.ctx.commands.list(commandHandle.agent).map(command => command.name)).not.toContain('feedback')
   } finally {
     await commandHandle.dispose()
   }

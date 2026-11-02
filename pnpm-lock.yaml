@@ -631,9 +631,6 @@ importers:
       '@liwa/loader-smoke':
         specifier: workspace:*
         version: link:../../packages/test-support/loader-smoke
-      '@liwa/plugin-package-inventory-deepseek':
-        specifier: workspace:*
-        version: link:../../packages/llm/plugin-package-inventory-deepseek
       '@liwa/sandbox-local':
         specifier: workspace:*
         version: link:../../packages/sandbox/sandbox-local
@@ -649,9 +646,6 @@ importers:
       '@liwa/session-checkpoint-policy':
         specifier: workspace:*
         version: link:../../packages/session/session-checkpoint-policy
-      '@liwa/session-log-deepseek':
-        specifier: workspace:*
-        version: link:../../packages/session/session-log-deepseek
       '@liwa/session-persistence-jsonl':
         specifier: workspace:*
         version: link:../../packages/session/session-persistence-jsonl
@@ -2419,9 +2413,6 @@ importers:
       '@liwa/command-compact':
         specifier: workspace:*
         version: link:../../compaction/command-compact
-      '@liwa/command-feedback':
-        specifier: workspace:*
-        version: link:../../feedback/command-feedback
       '@liwa/command-goal':
         specifier: workspace:*
         version: link:../../goal/command-goal
@@ -2449,9 +2440,6 @@ importers:
       '@liwa/deepseek-account-platform':
         specifier: workspace:*
         version: link:../../credentials/deepseek-account-platform
-      '@liwa/deepseek-llm-api-extensions':
-        specifier: workspace:*
-        version: link:../../llm/deepseek-llm-api-extensions
       '@liwa/fs-local':
         specifier: workspace:*
         version: link:../../fs/fs-local
@@ -2491,9 +2479,6 @@ importers:
       '@liwa/mcp-resources':
         specifier: workspace:*
         version: link:../../mcp/mcp-resources
-      '@liwa/otel':
-        specifier: workspace:*
-        version: link:../../telemetry/otel
       '@liwa/permission-presets':
         specifier: workspace:*
         version: link:../../interaction/permission-presets
@@ -2503,9 +2488,6 @@ importers:
       '@liwa/plugin-manager':
         specifier: workspace:*
         version: link:../../boot/plugin-manager
-      '@liwa/plugin-package-inventory-deepseek':
-        specifier: workspace:*
-        version: link:../../llm/plugin-package-inventory-deepseek
       '@liwa/ptc-runtime-node':
         specifier: workspace:*
         version: link:../../ptc-runtime/ptc-runtime-node
@@ -2527,9 +2509,6 @@ importers:
       '@liwa/session-checkpoint-policy':
         specifier: workspace:*
         version: link:../../session/session-checkpoint-policy
-      '@liwa/session-log-deepseek':
-        specifier: workspace:*
-        version: link:../../session/session-log-deepseek
       '@liwa/session-persistence-jsonl':
         specifier: workspace:*
         version: link:../../session/session-persistence-jsonl
@@ -2542,9 +2521,6 @@ importers:
       '@liwa/session-query-sqlite':
         specifier: workspace:*
         version: link:../../session-query/session-query-sqlite
-      '@liwa/session-telemetry-otel':
-        specifier: workspace:*
-        version: link:../../session/session-telemetry-otel
       '@liwa/session-title':
         specifier: workspace:*
         version: link:../../session/session-title
@@ -2824,9 +2800,6 @@ importers:
       '@liwa/cordis-plugin-timer':
         specifier: workspace:~
         version: link:../../../vendor/timer
-      '@liwa/deepseek-llm-api-extensions':
-        specifier: workspace:*
-        version: link:../../llm/deepseek-llm-api-extensions
       '@liwa/fs-local':
         specifier: workspace:*
         version: link:../../fs/fs-local
@@ -2845,9 +2818,6 @@ importers:
       '@liwa/mcp-resources':
         specifier: workspace:*
         version: link:../../mcp/mcp-resources
-      '@liwa/plugin-package-inventory-deepseek':
-        specifier: workspace:*
-        version: link:../../llm/plugin-package-inventory-deepseek
       '@liwa/sandbox-local':
         specifier: workspace:*
         version: link:../../sandbox/sandbox-local
@@ -2866,9 +2836,6 @@ importers:
       '@liwa/session-checkpoint-policy':
         specifier: workspace:*
         version: link:../../session/session-checkpoint-policy
-      '@liwa/session-log-deepseek':
-        specifier: workspace:*
-        version: link:../../session/session-log-deepseek
       '@liwa/session-persistence-jsonl':
         specifier: workspace:*
         version: link:../../session/session-persistence-jsonl
@@ -2972,9 +2939,6 @@ importers:
       '@liwa/client-modules':
         specifier: workspace:*
         version: link:../../client/modules
-      '@liwa/client-product-analytics':
-        specifier: workspace:*
-        version: link:../../client/product-analytics
       '@liwa/client-resources':
         specifier: workspace:*
         version: link:../../client/resources
@@ -3032,9 +2996,6 @@ importers:
       '@liwa/client-ui-layout':
         specifier: workspace:*
         version: link:../../client/ui-layout
-      '@liwa/client-ui-message-feedback':
-        specifier: workspace:*
-        version: link:../../client/ui-message-feedback
       '@liwa/client-ui-model-selection':
         specifier: workspace:*
         version: link:../../client/ui-model-selection
@@ -3086,9 +3047,6 @@ importers:
       '@liwa/client-ui-settings-plugins':
         specifier: workspace:*
         version: link:../../client/ui-settings-plugins
-      '@liwa/client-ui-settings-session-log':
-        specifier: workspace:*
-        version: link:../../client/ui-settings-session-log
       '@liwa/client-ui-settings-shell':
         specifier: workspace:*
         version: link:../../client/ui-settings-shell
@@ -3191,9 +3149,6 @@ importers:
       '@liwa/host-plugin-inventory':
         specifier: workspace:*
         version: link:../../host/plugin-inventory
-      '@liwa/host-product-telemetry-otel':
-        specifier: workspace:*
-        version: link:../../host/product-telemetry-otel
       '@liwa/host-webserver':
         specifier: workspace:*
         version: link:../../host/webserver
@@ -3203,9 +3158,6 @@ importers:
       '@liwa/liwa-dev-context':
         specifier: workspace:*
         version: link:../../context/liwa-dev-context
-      '@liwa/message-feedback':
-        specifier: workspace:*
-        version: link:../../feedback/message-feedback
       '@liwa/message-quotes':
         specifier: workspace:*
         version: link:../../session/message-quotes
@@ -3351,9 +3303,6 @@ importers:
       '@liwa/fs-local':
         specifier: workspace:*
         version: link:../../fs/fs-local
-      '@liwa/otel':
-        specifier: workspace:*
-        version: link:../../telemetry/otel
       '@liwa/sandbox-policy':
         specifier: workspace:*
         version: link:../../sandbox/sandbox-policy
@@ -11259,9 +11208,6 @@ importers:
       '@liwa/deepseek-account':
         specifier: workspace:*
         version: link:../../credentials/deepseek-account
-      '@liwa/deepseek-llm-api-extensions':
-        specifier: workspace:*
-        version: link:../../llm/deepseek-llm-api-extensions
       '@liwa/launch-environment':
         specifier: workspace:*
         version: link:../../util/launch-environment
@@ -11280,9 +11226,6 @@ importers:
       '@liwa/session':
         specifier: workspace:*
         version: link:../../core/session
-      '@liwa/session-log-deepseek':
-        specifier: workspace:*
-        version: link:../../session/session-log-deepseek
       '@liwa/session-persistence':
         specifier: workspace:*
         version: link:../../session/session-persistence
@@ -12879,9 +12822,6 @@ importers:
       '@liwa/agent-loop':
         specifier: workspace:*
         version: link:../../core/agent-loop
-      '@liwa/anonymous-user-id':
-        specifier: workspace:*
-        version: link:../../identity/anonymous-user-id
       '@liwa/atomic-write':
         specifier: workspace:*
         version: link:../../util/atomic-write
@@ -17343,6 +17283,9 @@ importers:
       '@liwa/launch-environment':
         specifier: workspace:*
         version: link:../../util/launch-environment
+      '@liwa/llm':
+        specifier: workspace:*
+        version: link:../../llm/llm
       '@liwa/session':
         specifier: workspace:*
         version: link:../../core/session
@@ -17402,6 +17345,9 @@ importers:
       '@liwa/launch-environment':
         specifier: workspace:*
         version: link:../../util/launch-environment
+      '@liwa/llm':
+        specifier: workspace:*
+        version: link:../../llm/llm
       '@liwa/session':
         specifier: workspace:*
         version: link:../../core/session

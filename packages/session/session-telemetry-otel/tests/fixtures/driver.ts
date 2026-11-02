@@ -34,8 +34,6 @@ await once(server, 'listening')
 const address = server.address()
 if (address === null || typeof address === 'string') throw new Error('collector has no port')
 process.env.LIWA_TELEMETRY_E2E_URL = `http://127.0.0.1:${address.port}/v1/logs`
-process.env.LIWA_TELEMETRY_OTLP_URL = process.env.LIWA_TELEMETRY_E2E_URL
-process.env.LIWA_TELEMETRY_MODE = process.env.LIWA_TELEMETRY_E2E_MODE ?? 'FEEDBACK_ONLY'
 
 try {
   const ctx = await bootProductionProfile({

@@ -1,4 +1,4 @@
-# SDK snapshot-record composition without provider-specific upload metadata.
+# SDK snapshot-record composition.
 
 - id: skill-filesystem
   name: '@liwa/skill-filesystem'
@@ -23,7 +23,3 @@
     provider: spawn
     toolName: subagent
     maxDepth: 1
-
-- id: session-log-deepseek
-  config:
-    enabled: false

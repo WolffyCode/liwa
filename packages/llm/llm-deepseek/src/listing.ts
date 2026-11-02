@@ -1,5 +1,5 @@
 /** DeepSeek `GET /models` listing: one authenticated request and per-entry decoding. */
-import { APP_IDENTITY, attributionHeaders, LlmError } from '@liwa/llm'
+import { attributionHeaders, LlmError } from '@liwa/llm'
 import type { LlmModelBadge, LlmModelBadgeTone, ModelModality } from '@liwa/llm'
 import { timeoutOf } from '@liwa/timeout'
 
@@ -9,6 +9,13 @@ const LANGUAGE_ID = /^[a-z]{2,8}(?:-[a-z0-9]{1,8})*$/u
 const UNREADABLE_BADGE_CHARACTER = /[\p{Cc}\p{Zl}\p{Zp}\p{Bidi_Control}]/u
 const VISIBLE_BADGE_CHARACTER = /[^\p{White_Space}\p{Default_Ignorable_Code_Point}]/u
 const GRAPHEMES = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+
+/**
+ * The client name under which DeepSeek's model listing declares per-client requirements and metadata. It is
+ * the listing protocol's name for the upstream client this code base forked from, owned by DeepSeek and
+ * independent of the `User-Agent` product token, so renaming the app must not change it.
+ */
+export const LISTING_CLIENT = 'deepseek-harness'
 
 /** Longest badge text this build displays, in user-perceived characters, for every translation. */
 export const MAX_BADGE_TEXT_LENGTH = 12
@@ -25,7 +32,7 @@ export function modelListingURL(baseURL: string): string {
   return new URL('/models', new URL(baseURL).origin).href
 }
 
-/** The requirement one listing entry declares under this client's product token. */
+/** The requirement one listing entry declares under {@link LISTING_CLIENT}. */
 export type ClientRequirement =
   | { readonly kind: 'none' }
   | { readonly kind: 'min-version'; readonly version: string }
@@ -61,12 +68,12 @@ export interface ListingEntry {
   readonly id: string
   /** Display name, when the entry declares a non-empty one. */
   readonly name?: string
-  /** Requirement declared under `client_requirements[APP_IDENTITY.product]`. */
+  /** Requirement declared under `client_requirements[LISTING_CLIENT]`. */
   readonly requirement: ClientRequirement
   /** Declared capabilities. */
   readonly capabilities: ListedCapabilities
   /**
-   * Selector badge declared under `client_metadata[APP_IDENTITY.product].badge`; absent when the
+   * Selector badge declared under `client_metadata[LISTING_CLIENT].badge`; absent when the
    * entry declares none, and never a reason to hide the entry.
    */
   readonly badge?: ListedBadge
@@ -104,7 +111,7 @@ function requirementOf(entry: Fields): ClientRequirement {
   if (entry.client_requirements === undefined) return { kind: 'none' }
   const requirements = fieldsOf(entry.client_requirements)
   if (requirements === undefined) return { kind: 'invalid' }
-  const declared = requirements[APP_IDENTITY.product]
+  const declared = requirements[LISTING_CLIENT]
   if (declared === undefined) return { kind: 'none' }
   const own = fieldsOf(declared)
   if (own === undefined) return { kind: 'invalid' }
@@ -140,7 +147,7 @@ function localizedBadgeText(value: unknown): LlmModelBadge['text'] | undefined {
 }
 
 /** This client's entry in a listing entry's `client_metadata`, as diagnostics name it. */
-const OWN_METADATA = `client_metadata["${APP_IDENTITY.product}"]`
+const OWN_METADATA = `client_metadata["${LISTING_CLIENT}"]`
 
 /** An optional object field: `undefined` when absent or `null`, `false` when it is not an object. */
 function optionalFields(value: unknown): Fields | undefined | false {
@@ -151,7 +158,7 @@ function badgeOf(entry: Fields): ListedBadge | undefined {
   // `null` at any level declares no badge, like an absent field; this build ships none to fall back on.
   const metadata = optionalFields(entry.client_metadata)
   if (metadata === false) return { kind: 'invalid', reason: 'client_metadata is not an object' }
-  const own = optionalFields(metadata?.[APP_IDENTITY.product])
+  const own = optionalFields(metadata?.[LISTING_CLIENT])
   if (own === false) return { kind: 'invalid', reason: `${OWN_METADATA} is not an object` }
   const declared = optionalFields(own?.badge)
   if (declared === false) return { kind: 'invalid', reason: `${OWN_METADATA}.badge is not an object` }

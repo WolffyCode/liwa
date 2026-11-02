@@ -5,9 +5,6 @@
   name: '@liwa/llm-deepseek-api-key'
   disabled: true
 
-- id: plugin-package-inventory-deepseek
-  disabled: true
-
 - id: session-title-llm
   disabled: true
 

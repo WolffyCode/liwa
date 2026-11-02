@@ -34,6 +34,7 @@
     "@liwa/deepseek-account": "workspace:*",
     "@liwa/launch-environment": "workspace:*",
     "@liwa/session": "workspace:*",
+    "@liwa/llm": "workspace:*",
     "@liwa/web": "workspace:*",
     "@liwa/cordis": "workspace:~"
   },
@@ -48,6 +49,7 @@
     "@liwa/launch-environment": "workspace:*",
     "@liwa/session": "workspace:*",
     "@liwa/session-projection": "workspace:*",
+    "@liwa/llm": "workspace:*",
     "@liwa/web": "workspace:*",
     "@liwa/cordis": "workspace:~",
     "@liwa/http-proxy": "workspace:*"

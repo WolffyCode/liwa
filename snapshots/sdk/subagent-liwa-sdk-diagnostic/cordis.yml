@@ -17,11 +17,6 @@
     root: !!js liwaHomePath('sessions')
     compression: !!js "process.env.LIWA_SNAPSHOT === undefined ? 'zstd' : 'none'"
 
-- id: session-log-deepseek
-  name: '@liwa/session-log-deepseek'
-  config:
-    enabled: true
-
 - insert:
     - id: subagent-liwa-sdk-diagnostic
       name: '@liwa/subagent-liwa-sdk'

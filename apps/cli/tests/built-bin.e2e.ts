@@ -1248,9 +1248,6 @@ describe.skipIf(!existsSync(liwaBin))('liwa BUILT bin (node lib/bin.js, no tsx)'
       expect(rows.map(row => [row.id, row.name])).toEqual([
         ['sdk-app-startup', '@liwa/sdk-app'],
         ['sdk-jsonrpc-server', '@liwa/sdk-jsonrpc-server'],
-        ['deepseek-llm-api-extensions', '@liwa/deepseek-llm-api-extensions'],
-        ['session-log-deepseek', '@liwa/session-log-deepseek'],
-        ['plugin-package-inventory-deepseek', '@liwa/plugin-package-inventory-deepseek'],
         ['llm-deepseek', '@liwa/llm-deepseek-api-key'],
         ['sandbox', '@liwa/sandbox-local'],
         ['filesystem', '@liwa/fs-local'],

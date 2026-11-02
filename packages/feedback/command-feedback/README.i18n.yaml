@@ -9,14 +9,14 @@
   en: 0627529015be07c4
   zh: 800b19f503bc9a13
 /liwa-command-feedback/summary:
-  en: fa7501e07e96859b
-  zh: 51fcbf1d4adf0faa
+  en: 1c8e29503afe5770
+  zh: 9b25c7f3ffbe63ce
 /liwa-command-feedback/table-of-contents:
   en: d152484eb41ac6b4
   zh: 09388d293f9be9cb
 /liwa-command-feedback/use-this-package:
-  en: f72eb9317c149117
-  zh: 0cf6a62d55385627
+  en: 23b039fa2005ebe7
+  zh: d804645dbf3b156f
 /liwa-command-feedback/use-this-package/the-feedback-command:
   en: 645ee72ee1af491d
   zh: 32b86c39307093e3
@@ -24,8 +24,8 @@
   en: 21fae542942446d2
   zh: 34d83535891dabee
 /liwa-command-feedback/use-this-package/recording-feedback-from-your-own-ui:
-  en: c6ee98ae5229d76f
-  zh: e058dae4cb5dd254
+  en: ca991650491c2c66
+  zh: 71ef924b3d2e98cc
 /liwa-command-feedback/understand-the-implementation:
   en: 42b15ac6321706aa
   zh: 4ed0861911abaf5d
@@ -57,8 +57,8 @@
   en: c72e7dfee7b0957a
   zh: b122fce5efccfafa
 /liwa-command-feedback/known-limitations-and-deferred-work:
-  en: b45e656a009e37b7
-  zh: 4949bd712564ee54
+  en: 63ed471329d816d2
+  zh: 1f95924f2acf9d61
 /liwa-command-feedback/known-limitations-and-deferred-work/dev-note:
   en: b4bf58d55f599bc2
   zh: fea7a6b69b0266e1

@@ -85,9 +85,11 @@ describe.skipIf(!process.env.DEEPSEEK_API_KEY)('SDK native tool updates with rea
         retryPolicy: { mode: 'normal', maxRetries: 0 } satisfies RetryPolicyConfig,
         models: [{ id: 'deepseek-flash', systemPromptUpdate: 'in-history', toolUpdate: 'addition-only' }],
       } },
-      { id: 'session-log-deepseek', disabled: true },
-      { id: 'plugin-package-inventory-deepseek', disabled: true },
-      { insert: [{ id: 'sdk-dynamic-tool-cache-fixture', name: fixturePath, config: { evidencePath, callsPath, sampleLabel, updatePrompt } }] },
+      // The fixture observes each request through the extension registry, which the shipped profile does not mount.
+      { insert: [
+        { id: 'deepseek-llm-api-extensions', name: '@liwa/deepseek-llm-api-extensions' },
+        { id: 'sdk-dynamic-tool-cache-fixture', name: fixturePath, config: { evidencePath, callsPath, sampleLabel, updatePrompt } },
+      ] },
     ]))
     const harness = new Liwa({
       liwaBin, profile: 'sdk', patches: [patch], liwaHome: join(root, 'home'),

@@ -28,14 +28,14 @@ kind: "package-reference"
 |---|---:|---|
 | `enabled` | `true` | 注册 `dsh_plugin_packages` 贡献。将其设为 `false` 可省略包元数据。 |
 
-随附 profile 使用该默认值，因此只要准备成功，每个 DeepSeek 官方请求都会携带包清单。
+随附 profile 不挂载该插件，所以它们的 DeepSeek 请求不带包清单。在以默认值挂载它的组合里，只要准备成功，每个 DeepSeek 官方请求都会携带包清单。
 
 <a id="collection"></a>
 ## 收集
 
 每次请求都会重读宿主 Loader 树中的活跃非 group 配置项。存在可选 `ctx.agentPresets` 且 `sessionId` 解析到已加入 standing preset 的存活 Agent 时，该 preset 的独立 Loader 树也会加入同一次收集；未挂载该服务的部署只报告宿主树。只有根 fiber 处于 `ACTIVE` 且 Loader 有效状态为启用的配置项才会纳入。
 
-插件在激活时读取一次可选的 `ctx.pluginPackages` 服务。随附 app boot 会在 profile Loader 配置项之前挂载该服务，因此裸包和包子路径的身份使用与其 import 相同的权威 runtime resolution，包括它未命中的情况，并且无需包导出 `./package.json`。若该服务不存在，插件会在整个生命周期中保留 Node 原生包搜索，之后再挂载 resolver 也不会切换既有清单。因此，希望使用 runtime resolution 身份的底层嵌入方必须先挂载 `PluginPackages`，再挂载 Loader 配置项和本插件。
+插件在激活时读取一次可选的 `ctx.pluginPackages` 服务。app boot 会在 profile Loader 配置项之前挂载该服务，因此裸包和包子路径的身份使用与其 import 相同的权威 runtime resolution，包括它未命中的情况，并且无需包导出 `./package.json`。若该服务不存在，插件会在整个生命周期中保留 Node 原生包搜索，之后再挂载 resolver 也不会切换既有清单。因此，希望使用 runtime resolution 身份的底层嵌入方必须先挂载 `PluginPackages`，再挂载 Loader 配置项和本插件。
 
 每个普通配置项使用其所属 Loader 树的基址。standing preset 的根配置项使用宿主基址，与 preset Loader 对裸包的显式覆写保持一致；嵌套 include 仍使用自身基址。相对与绝对模块会向上查找最近的 manifest（元数据清单）；`name` 不是非空白字符串的 manifest 会被省略。`version` 缺失或无效时，只上报名称，不受 `private` 影响。拥有自身 manifest 的嵌套目录不会继承父包的身份。包解析、manifest 读取或 JSON 解析失败时，系统只省略对应配置项，并对每个模块只记录一次警告；清单元数据不会阻塞模型请求。系统按名称和可选版本去重，并使用与 locale 无关的比较排序；只有名称的配置项排在同名且有版本的配置项之前，不同版本仍分开保留。
 

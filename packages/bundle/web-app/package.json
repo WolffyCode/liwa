@@ -89,7 +89,6 @@
     "@liwa/client-ui-input-trigger": "workspace:*",
     "@liwa/client-ui-jobs": "workspace:*",
     "@liwa/client-ui-layout": "workspace:*",
-    "@liwa/client-ui-message-feedback": "workspace:*",
     "@liwa/client-ui-model-selection": "workspace:*",
     "@liwa/client-ui-open-in-app": "workspace:*",
     "@liwa/client-ui-permission-presets": "workspace:*",
@@ -140,7 +139,6 @@
     "@liwa/host-plugin-inventory": "workspace:*",
     "@liwa/host-webserver": "workspace:*",
     "@liwa/launch-environment": "workspace:*",
-    "@liwa/message-feedback": "workspace:*",
     "@liwa/office-to-pdf": "workspace:*",
     "@liwa/persona": "workspace:*",
     "@liwa/plan-mode": "workspace:*",
@@ -186,9 +184,6 @@
     "@liwa/client-ui-settings-account": "workspace:*",
     "@liwa/client-shortcuts": "workspace:*",
     "@liwa/client-ui-shortcuts": "workspace:*",
-    "@liwa/client-product-analytics": "workspace:*",
-    "@liwa/host-product-telemetry-otel": "workspace:*",
-    "@liwa/client-ui-settings-session-log": "workspace:*",
     "@liwa/liwa-dev-context": "workspace:*",
     "@liwa/deliverable-file-references": "workspace:*",
     "@liwa/client-ui-file-drag": "workspace:*"
@@ -209,7 +204,6 @@
     "@liwa/session-projection": "workspace:*",
     "@liwa/shell-env": "workspace:*",
     "@liwa/typert-registry": "workspace:*",
-    "@deepseek-ai/libreoffice-kit": "^0.1.5",
-    "@liwa/otel": "workspace:*"
+    "@deepseek-ai/libreoffice-kit": "^0.1.5"
   }
 }

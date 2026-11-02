@@ -1,7 +1,7 @@
 # SDK composition for the steered background wait: the shipped profile plus the
 # scenario-owned barrier. Quiet completion delivery keeps the settlement in the
 # next-step inbox, where the fixture checks the single notice the released read
-# withheld; no provider title or durable session-log mirror may add records.
+# withheld; no provider title may add records.
 - id: skill-filesystem
   name: '@liwa/skill-filesystem'
   config:
@@ -12,10 +12,6 @@
   config:
     root: !!js liwaHomePath('sessions')
     compression: none
-
-- id: session-log-deepseek
-  config:
-    enabled: false
 
 - id: session-title-llm
   disabled: true

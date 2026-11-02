@@ -14,15 +14,6 @@
       config:
         maxTokensAsSuccess: false
 
-    - id: deepseek-llm-api-extensions
-      name: '@liwa/deepseek-llm-api-extensions'
-
-    - id: session-log-deepseek
-      name: '@liwa/session-log-deepseek'
-
-    - id: plugin-package-inventory-deepseek
-      name: '@liwa/plugin-package-inventory-deepseek'
-
     - id: llm-deepseek
       name: '@liwa/llm-deepseek-api-key'
       config:

@@ -30,9 +30,9 @@ describe('brand terminology policy', () => {
   })
 
   it('limits file-scoped exceptions to their files', () => {
-    const line = 'product: \'deepseek-harness\','
-    expect(findBrandTermViolations('packages/llm/llm/src/attribution.ts', line)).toEqual([])
-    expect(findBrandTermViolations('packages/example/src/identity.ts', line)).toHaveLength(1)
+    const line = `contextBridge.exposeInMainWorld('${abbreviation}', bridge)`
+    expect(findBrandTermViolations('apps/desktop/src/preload-platform-account.ts', line)).toEqual([])
+    expect(findBrandTermViolations('packages/example/src/bridge.ts', line)).toHaveLength(1)
   })
 
   it('skips whole files registered as historical records', () => {

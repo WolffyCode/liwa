@@ -7,10 +7,6 @@ kind: "package-bundle"
 
 [English](README.md) | 中文
 
-桌面埋点遵循[产品采集策略](../../client/product-analytics/README.zh.md)及其动态应用配置，不包含 Web 使用情况。
-
-桌面埋点每 30 秒调度未满批次，exporter 超时为 15 秒，processor 超时为 20 秒。退出时允许 2 秒排空，随后取消待完成的请求和重试等待，避免埋点阻止 Host 退出。尚未发送完成的事件可能丢失。
-
 ## 概述
 
 运行 `liwa --profile web`，获得浏览器内的聊天、模型与设置管理以及会话历史，并与其他 liwa 表层共用同一套模型访问、工具与安全默认值。启动时会打印带 token 的 URL，通常还会在默认浏览器中打开；SSH 会话和 `--no-open` 需要手动打开。你可以更改端口、允许额外 authority、绑定一个具体的本机 IP，并用自己提供的证书直接提供 HTTPS；通配地址会被拒绝。跨机访问使用剥离前缀代理后公告的 HTTP(S) URL、监听器 TLS，或非 loopback 绑定上的明文 HTTP。一次性的命令行任务应使用 headless 配置。
@@ -98,7 +94,7 @@ liwa --profile web --no-open --host "$(hostname -i | awk '{print $1}')" --public
 <details>
 <summary>实现细节——点击展开</summary>
 
-此 bundle 由一层五个文件的补丁和一个运行时胶水插件组成：`cordis.patch.yml` 承载宿主行和 preset 注册表，每个 `presets/<id>.patch.yml` 插入一条随发行版交付的 preset 声明，按 `liwa.bundle.patch` 列出的顺序应用。存储栈与投影缓存来自 `liwa-base`；Web 叠加层的工作区和消息反馈条目消费共享的 `storageDomain` 服务。补丁重述 base 有意省略的界面专用值，插入 Web 专用宿主条目和浏览器插件列表，再将 Agent 层移到预设后面。胶水插件负责 dist 服务、公告应用 URL、明文 HTTP 暴露警告、bash 变量和就绪通知。`office-to-pdf` 条目为宿主消费者挂载一个延迟创建引擎的 [Office 转换提供方](../../document/office-to-pdf/README.zh.md)，使用此 bundle 的 Desktop 组合也共享该提供方。 转换服务的 Remote 方法负责预览读取授权，Document Preview 负责 Office 查看器和客户端缓存。
+此 bundle 由一层五个文件的补丁和一个运行时胶水插件组成：`cordis.patch.yml` 承载宿主行和 preset 注册表，每个 `presets/<id>.patch.yml` 插入一条随发行版交付的 preset 声明，按 `liwa.bundle.patch` 列出的顺序应用。存储栈与投影缓存来自 `liwa-base`；Web 叠加层的工作区条目消费共享的 `storageDomain` 服务。补丁重述 base 有意省略的界面专用值，插入 Web 专用宿主条目和浏览器插件列表，再将 Agent 层移到预设后面。胶水插件负责 dist 服务、公告应用 URL、明文 HTTP 暴露警告、bash 变量和就绪通知。`office-to-pdf` 条目为宿主消费者挂载一个延迟创建引擎的 [Office 转换提供方](../../document/office-to-pdf/README.zh.md)，使用此 bundle 的 Desktop 组合也共享该提供方。 转换服务的 Remote 方法负责预览读取授权，Document Preview 负责 Office 查看器和客户端缓存。
 
 ### patch 语义
 

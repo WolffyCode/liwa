@@ -1,5 +1,5 @@
 ---
-description: "面向用户与维护者的按灵鲸 home 划分的匿名身份说明，用于追踪遥测、反馈确认与 DeepSeek 提供方请求如何关联记录。"
+description: "面向用户与维护者的按灵鲸 home 划分的匿名身份说明，用于追踪遥测与反馈确认如何关联记录。"
 kind: "package-library"
 ---
 
@@ -9,7 +9,7 @@ kind: "package-library"
 
 ## 概述
 
-灵鲸为每个灵鲸 home 使用一个匿名标识符，以关联同一套安装产生的遥测、反馈与 DeepSeek 请求，同时不识别用户身份。该随机 UUID 存储在 `$LIWA_HOME/.anonymous-user-id`（`$LIWA_HOME` 默认为 `~/.liwa`）中，可跨重启保留，并在你删除文件后重新生成。不同灵鲸 home 使用不同的标识符，且该值不包含机器或账户数据。内置功能会自动创建并附加该值；包消费方可以复用同一个值进行安装范围的关联，但无法跨 home 关联记录。
+遥测与反馈插件为每个灵鲸 home 使用一个匿名标识符，以关联同一套安装产生的记录，同时不识别用户身份。随附 profile 不挂载这两类插件，模型请求也从不携带该标识符，所以默认安装不会创建它。该随机 UUID 存储在 `$LIWA_HOME/.anonymous-user-id`（`$LIWA_HOME` 默认为 `~/.liwa`）中，可跨重启保留，并在你删除文件后重新生成。不同灵鲸 home 使用不同的标识符，且该值不包含机器或账户数据。包消费方可以复用该值进行安装范围的关联，但无法跨 home 关联记录。
 
 ## 目录
 
@@ -25,15 +25,14 @@ kind: "package-library"
 <a id="use-this-package"></a>
 ## 使用本包
 
-当你希望本机安装外发的记录能被识别为来自同一个灵鲸 home——遥测、反馈与 DeepSeek 请求都携带同一个共享 id——本包就是提供它的地方。无需安装或配置任何东西：id 会自动出现，已随附的反馈、遥测与 DeepSeek 功能已经在使用它。不要用它来识别用户，也不要用它关联不同 home 之间的记录；它是匿名的且限定于单个 home。
+当你希望某个组合外发的记录能被识别为来自同一个灵鲸 home——遥测与反馈携带同一个共享 id——本包就是提供它的地方。无需安装或配置任何东西：已挂载的遥测或反馈插件首次请求时，id 就会出现。不要用它来识别用户，也不要用它关联不同 home 之间的记录；它是匿名的且限定于单个 home。
 
 ### 该 id 能为你做什么
 
-你的安装外发的三类内容携带同一个 id，因此记录在它们之间可以相互对应：
+组合挂载以下两类插件时，它们携带同一个 id，因此记录可以相互对应：
 
-- **会话遥测**——你的遥测导出会以 `user.id` Resource 属性携带该 id，采集器因此可以按安装分组记录。
+- **会话遥测**——遥测导出会以 `user.id` Resource 属性携带该 id，采集器因此可以按安装分组记录。
 - **反馈**——每条反馈确认都会标明记录该反馈的匿名安装。
-- **DeepSeek 请求**——每次提供方请求都会携带 `x-deepseek-harness-user-id` 标头，因此可以按安装归因用量。
 
 ### 查看与重置 id
 
@@ -41,7 +40,7 @@ kind: "package-library"
 
 ### 在自己的包中使用
 
-当你构建的功能需要共享该安装的匿名 id 时，导入一次并复用该值即可——遥测、反馈与 DeepSeek 已经在使用同一个 id，因此你的记录能与它们相互对应：
+当你构建的功能需要共享该安装的匿名 id 时，导入一次并复用该值即可——遥测与反馈使用同一个 id，因此你的记录能与它们相互对应：
 
 ```ts
 import { getOrCreateAnonymousUserId } from '@liwa/anonymous-user-id'
@@ -96,7 +95,6 @@ const userId = getOrCreateAnonymousUserId() // stable for the process lifetime
 - [liwa-home-paths](../../util/home-paths/README.zh.md)——负责 `$LIWA_HOME` 与 `~/.liwa` 的解析。
 - [liwa-session-telemetry-otel](../../session/session-telemetry-otel/README.zh.md)——将该 id 作为 OTel Resource `user.id` 上报。
 - [liwa-command-feedback](../../feedback/command-feedback/README.zh.md)——将 id 嵌入反馈确认。
-- [liwa-llm-deepseek](../../llm/llm-deepseek/README.zh.md)——在提供方请求中发送 `x-deepseek-harness-user-id`。
 - [会话遥测子系统](../../../docs/subsystems/session-telemetry.zh.md)——遥测 seam 及其后端约定。
 
 -----
@@ -104,11 +102,11 @@ const userId = getOrCreateAnonymousUserId() // stable for the process lifetime
 <a id="model-experience"></a>
 ## 模型体验
 
-无，因为该共享标识符只会作为模型不可见的 HTTP 元数据发送给 DeepSeek，且不注册任何面向模型的内容。
+无，因为该共享标识符只标记遥测与反馈记录，且不注册任何面向模型的内容。
 
 #### KV Cache 影响
 
-无；该传输标头既不会改变 token，也不会改变模型可见前缀。
+无；模型请求从不携带该标识符。
 
 ## 已知限制与延期工作
 
@@ -120,7 +118,6 @@ const userId = getOrCreateAnonymousUserId() // stable for the process lifetime
 - **删除后无法恢复**——文件丢失后会按设计生成新的匿名身份；恢复需要稳定的派生材料，这会削弱匿名性。
 - **Best-effort 并发**——如果读取方恰好落在并发进程完成独占创建但尚未写完的狭窄时间窗内，本次运行可能使用不同的内存 UUID；后续启动会收敛到已持久化的值。
 - **没有跨 home 身份**——不同 `$LIWA_HOME` 值之间无法关联。
-- **已配置的 DeepSeek 网关会收到该 id**——`liwa-llm-deepseek` 会把稳定标头发送至解析后的 `baseURL`（包括部署覆盖），且不受遥测共享模式影响。
 - **删除文件不会重置当前进程**——记忆化会让本次运行的 id 一直保留到下次启动。
 
 <a id="dev-note"></a>

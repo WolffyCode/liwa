@@ -44,11 +44,6 @@ function anySpan(...alternatives: readonly RegExp[]): RegExp {
   return new RegExp(alternatives.map(alternative => alternative.source).join('|'), 'gu')
 }
 
-/** One stateless path pattern matching any alternative; `files` is tested, so it must not carry the global flag. */
-function anyPath(...alternatives: readonly RegExp[]): RegExp {
-  return new RegExp(alternatives.map(alternative => alternative.source).join('|'), 'u')
-}
-
 /** Old-name spans that stay, grouped by owner; every entry names its reason. */
 export const ALLOWED_SPANS: readonly BrandException[] = [
   {
@@ -64,42 +59,19 @@ export const ALLOWED_SPANS: readonly BrandException[] = [
     pattern: /\/auth-api\/v0\/dsh\/|\/dsh\/authorized?(?![\w-])|x-dsh-auth-token|dsh_mock_|dsh_login_bonus/giu,
   },
   {
-    reason: 'DeepSeek model API wire extensions are defined by the DeepSeek API: the x-deepseek-harness-* headers and the '
-      + 'request-body fields under its reserved dsh_ prefix (and their heading anchors).',
+    reason: 'DeepSeek model API wire extensions are defined by the DeepSeek API: the request-body fields under its '
+      + 'reserved dsh_ prefix (and their heading anchors).',
     pattern: anySpan(
-      /x-deepseek-harness-[a-z-]+/u,
       /\bdsh[_-](?:session[_-]log|plugin[_-]packages)\b/u,
       /reserved `dsh_` prefix|保留 `dsh_` 前缀/u,
     ),
   },
   {
-    reason: 'The DeepSeek model listing keys client requirements and metadata by the product token deepseek-harness.',
+    reason: 'The DeepSeek model listing keys client requirements and metadata by the client name deepseek-harness.',
     pattern: anySpan(
+      /export const LISTING_CLIENT = 'deepseek-harness'/u,
       /client_(?:requirements|metadata)(?:\[\\?"|: \{ ')deepseek-harness/u,
       /client_(?:requirements|metadata)\\?\[\\?"deepseek-harness/u,
-    ),
-  },
-  {
-    reason: 'The provider User-Agent product token and the telemetry service name DeepSeek servers receive; '
-      + 'changing them changes what DeepSeek sees and is left to the owner.',
-    pattern: anySpan(
-      /product: 'deepseek-harness'/u,
-      /url: 'https:\/\/github\.com\/deepseek-ai\/deepseek-harness'/u,
-      /deepseek-harness\/\$\{manifest\.version\} \(\+https:\/\/github\.com\/deepseek-ai\/deepseek-harness\)/u,
-      /stringValue: 'deepseek-harness'/u,
-      /'deepseek-harness\/0\.0\.1'/u,
-      /`deepseek-harness`/u,
-      /\/\^deepseek-harness\\\/\//u,
-      /stringContaining\('deepseek-harness\/'\)/u,
-    ),
-    files: anyPath(
-      /^packages\/llm\/llm\/(?:src\/attribution|tests\/attribution\.spec)\.ts$/u,
-      /^packages\/session\/session-telemetry-otel\/tests\/otel\.spec\.ts$/u,
-      /^packages\/web\/web-deepseek-api\/src\/transport\.ts$/u,
-      /^packages\/web\/web-search-deepseek\/src\/provider\.ts$/u,
-      /^packages\/llm\/llm-deepseek-account\/tests\/provider\.spec\.ts$/u,
-      /^packages\/llm\/llm-deepseek\/tests\/adapter\.spec\.ts$/u,
-      /^docs\/deepseek-llm-api-wire-extensions(?:\.zh)?\.md$/u,
     ),
   },
   {

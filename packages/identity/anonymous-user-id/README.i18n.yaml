@@ -3,29 +3,29 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/identity/anonymous-user-id/README.md
 /:
-  en: e3afaee7589a1403
-  zh: e1c123dae44288e0
+  en: 36e4ca4f52a1caa5
+  zh: f3597a517b85abf4
 /liwa-anonymous-user-id:
   en: c788a5ef1643ce57
   zh: c6cb792ab34a8cd8
 /liwa-anonymous-user-id/summary:
-  en: e16f87d98016fc29
-  zh: 8ac225e8b50384a3
+  en: 34edee528dc2b3fb
+  zh: 4286e2ee81c742a5
 /liwa-anonymous-user-id/table-of-contents:
   en: d152484eb41ac6b4
   zh: 09388d293f9be9cb
 /liwa-anonymous-user-id/use-this-package:
-  en: 0ff410b5cd260f24
-  zh: 2f7786961dad33d8
+  en: 6c0b28f3b3e27b2c
+  zh: 18ea6621006b3c77
 /liwa-anonymous-user-id/use-this-package/what-the-id-does-for-you:
-  en: 0b9b81be195a834e
-  zh: 67338c5efaadae4d
+  en: ef41b11e2cf2e135
+  zh: 0817319f802c5ca1
 /liwa-anonymous-user-id/use-this-package/observing-and-resetting-the-id:
   en: e52224dee6a499c1
   zh: 724f90a17a554def
 /liwa-anonymous-user-id/use-this-package/using-it-in-your-own-package:
-  en: 4318cb0c4a2b41ed
-  zh: 6dfae5dc73bcb232
+  en: 529b3c270b5b0a2c
+  zh: bd9f5def45c387f6
 /liwa-anonymous-user-id/understand-the-implementation:
   en: 16370ef642feec6a
   zh: a546774827234300
@@ -42,17 +42,17 @@
   en: 7a5ab3467012c0c2
   zh: 4b297e0fba2fe78b
 /liwa-anonymous-user-id/further-exploration:
-  en: ee660d0bc8b8ee85
-  zh: f840a9042a773ec7
+  en: b48c21ce1656c834
+  zh: eb403d386dcd7ca6
 /liwa-anonymous-user-id/model-experience:
-  en: 6d953a2296ccc992
-  zh: dea7f2642a39d9b5
+  en: 81ff098fa5f60a52
+  zh: ffe970e818dd0edd
 /liwa-anonymous-user-id/model-experience/kv-cache-effect:
-  en: d34ef1e86eb2635d
-  zh: 0d88f82c5f062249
+  en: 168675364c06e3f5
+  zh: e2dec9e58407ceb2
 /liwa-anonymous-user-id/known-limitations-and-deferred-work:
-  en: 3f19d3ebf01b8a49
-  zh: 1cec3f384f13dd9b
+  en: add392467a02943e
+  zh: b408defa669754ce
 /liwa-anonymous-user-id/known-limitations-and-deferred-work/dev-note:
   en: 124d523659df72f1
   zh: 50c25ecb9268109f

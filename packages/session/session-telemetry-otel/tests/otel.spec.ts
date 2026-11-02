@@ -17,7 +17,7 @@ import { Context } from '@liwa/cordis'
 import { getOrCreateAnonymousUserId } from '@liwa/anonymous-user-id'
 import Loader from '@liwa/cordis-plugin-loader'
 import { recordFeedback } from '@liwa/command-feedback'
-import { createAssistantMessage } from '@liwa/llm'
+import { APP_IDENTITY, createAssistantMessage } from '@liwa/llm'
 import SessionStore, { SESSION_FORMAT_VERSION, Session, SessionId, SessionLogOffset, SessionSeq } from '@liwa/session'
 import MessageFeedbackService from '@liwa/message-feedback'
 import * as JsonlPersistence from '@liwa/session-persistence-jsonl'
@@ -167,7 +167,7 @@ describe('OpenTelemetrySessionBackend wire', () => {
     expect(authorization).toBe('Bearer test-token')
 
     const resource = first.body.resourceLogs[0]!.resource.attributes
-    expect(resource).toContainEqual({ key: 'service.name', value: { stringValue: 'deepseek-harness' } })
+    expect(resource).toContainEqual({ key: 'service.name', value: { stringValue: APP_IDENTITY.product } })
     expect(resource).toContainEqual({ key: 'user.id', value: { stringValue: getOrCreateAnonymousUserId() } })
 
     const records = allRecords(captures)

@@ -78,7 +78,7 @@ None; feedback mutations leave the model-visible history unchanged.
 
 These limits define the current feedback surface. They are current package constraints, not a general rating comparison or a task backlog.
 
-- **Note size is a Host policy** — the deployment configures `maxNoteBytes` (8192 in the Web bundle) and the Host rejects an oversized note with `note-too-large`. The dialog does not pre-check the limit, so an oversized description for a message fails on submit rather than while typing; a Session remark has no bound.
+- **Note size is a Host policy** — the deployment configures `maxNoteBytes`  and the Host rejects an oversized note with `note-too-large`. The dialog does not pre-check the limit, so an oversized description for a message fails on submit rather than while typing; a Session remark has no bound.
 - **No cross-tab push** — a second tab's rating becomes visible on reconnect or on the next conflict reply, not immediately; the controller does not consume feedback log events.
 - **Chat view only** — the trajectory and waterfall views render no feedback controls even though their assistant nodes carry the same `messageId`.
 

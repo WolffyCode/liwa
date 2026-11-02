@@ -21,7 +21,7 @@ import { assemble } from './assemble.ts'
 const contexts: Context[] = []
 let testHome: string
 
-// Each model request resolves the anonymous user id inside $LIWA_HOME; a temp home keeps the suite off the person's ~/.liwa.
+// Provider plugins resolve their stores under $LIWA_HOME; a temp home keeps the suite off the person's ~/.liwa.
 beforeEach(() => {
   testHome = mkdtempSync(join(tmpdir(), 'liwa-account-routing-'))
   vi.stubEnv('LIWA_HOME', testHome)

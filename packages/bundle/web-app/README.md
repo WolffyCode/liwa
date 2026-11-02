@@ -7,10 +7,6 @@ kind: "package-bundle"
 
 English | [中文](README.zh.md)
 
-Desktop analytics follows the [product collection policy](../../client/product-analytics/README.md), including its live application setting. Web usage is excluded.
-
-Desktop analytics schedules partial batches every 30 seconds, with a 15-second exporter timeout and a 20-second processor timeout. Shutdown allows 2 seconds to drain, then cancels pending requests and retry waits so telemetry does not keep the Host alive. Pending events may be lost on exit.
-
 ## Summary
 
 Run `liwa --profile web` for browser chat, model and settings management, and session history, with the same model access, tools, and safety defaults as other liwa surfaces. Startup prints a tokenized URL and normally opens the default browser; SSH sessions and `--no-open` require manual opening. You can change the port, allow extra authorities, bind one concrete local IP, and serve HTTPS from a certificate you supply; wildcard addresses are rejected. Remote access uses an advertised HTTP(S) URL behind a prefix-stripping proxy, listener TLS, or plain HTTP on a non-loopback bind. Use the headless profile for one-shot command-line tasks.
@@ -98,7 +94,7 @@ Each browser session selects a shipped preset (`standard` by default). The Agent
 <details>
 <summary>Implementation internals — click to expand</summary>
 
-The bundle is one patch layer of five files plus one runtime glue plugin: `cordis.patch.yml` carries the host rows and the preset registry, and each `presets/<id>.patch.yml` inserts one shipped preset declaration, applied in the order `liwa.bundle.patch` lists them. The storage stack and projection cache come from `liwa-base`; the web overlay's workspace and message-feedback rows consume that shared `storageDomain` service. The patch restates the surface-specific values the base deliberately omits, inserts the web-only host rows and browser roster, then moves the agent plane behind presets. The glue plugin owns dist serving, the advertised application URL, the plain-HTTP exposure warning, the bash variable, and the readiness announcements. The `office-to-pdf` row mounts one lazy [Office conversion provider](../../document/office-to-pdf/README.md) for Host consumers, including Desktop compositions using this bundle. The conversion service's Remote methods authorize preview reads, while Document Preview owns the Office viewer and Client cache.
+The bundle is one patch layer of five files plus one runtime glue plugin: `cordis.patch.yml` carries the host rows and the preset registry, and each `presets/<id>.patch.yml` inserts one shipped preset declaration, applied in the order `liwa.bundle.patch` lists them. The storage stack and projection cache come from `liwa-base`; the web overlay's workspace row consumes that shared `storageDomain` service. The patch restates the surface-specific values the base deliberately omits, inserts the web-only host rows and browser roster, then moves the agent plane behind presets. The glue plugin owns dist serving, the advertised application URL, the plain-HTTP exposure warning, the bash variable, and the readiness announcements. The `office-to-pdf` row mounts one lazy [Office conversion provider](../../document/office-to-pdf/README.md) for Host consumers, including Desktop compositions using this bundle. The conversion service's Remote methods authorize preview reads, while Document Preview owns the Office viewer and Client cache.
 
 ### Patch semantics
 

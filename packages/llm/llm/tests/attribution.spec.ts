@@ -19,9 +19,9 @@ describe('APP_IDENTITY', () => {
 
   it('carries only static public product facts', () => {
     expect(APP_IDENTITY).toEqual({
-      product: 'deepseek-harness',
+      product: 'liwa',
       version: manifest.version,
-      url: 'https://github.com/deepseek-ai/deepseek-harness',
+      url: 'https://github.com/WolffyCode/liwa',
     })
   })
 })
@@ -29,7 +29,7 @@ describe('APP_IDENTITY', () => {
 describe('userAgent', () => {
   it('renders product/version with the +url comment', () => {
     expect(userAgent()).toBe(
-      `deepseek-harness/${manifest.version} (+https://github.com/deepseek-ai/deepseek-harness)`,
+      `liwa/${manifest.version} (+https://github.com/WolffyCode/liwa)`,
     )
   })
 

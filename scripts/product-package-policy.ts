@@ -11,6 +11,12 @@ export interface ProductPackagePolicy {
   readonly category: ProductPackageCategory
 }
 
+/** Reason shared by the plugins that send DeepSeek data beyond the model call. */
+const DEEPSEEK_REPORTER_REASON = 'Sends DeepSeek data beyond the model call; out of the shipped profiles (Liwa decision 41) and kept only until package pruning.'
+
+/** Reason shared by the packages that exist only to support those reporting plugins. */
+const REPORTING_SUPPORT_REASON = 'Serves only the reporting plugins the shipped profiles no longer mount (Liwa decision 41); kept only until package pruning.'
+
 /**
  * Exceptions to default runtime reachability, keyed by repository-relative package directory.
  * Optional integrations may be reached by an optional bundle without becoming default capabilities.
@@ -36,6 +42,16 @@ export const PRODUCT_PACKAGE_POLICY: Readonly<Record<string, ProductPackagePolic
   'packages/web/web-search-perplexity': { category: 'optional', reason: 'Alternative search provider requiring its own API credentials.' },
   'packages/context/tmux-context': { category: 'optional', reason: 'Context contribution requiring a tmux pane.' },
   'packages/fs/tool-str-replace-editor': { category: 'optional', reason: 'Explicit alternative to the default filesystem editing tools.' },
+  'packages/llm/deepseek-llm-api-extensions': { category: 'optional', reason: REPORTING_SUPPORT_REASON },
+  'packages/llm/plugin-package-inventory-deepseek': { category: 'optional', reason: DEEPSEEK_REPORTER_REASON },
+  'packages/session/session-log-deepseek': { category: 'optional', reason: DEEPSEEK_REPORTER_REASON },
+  'packages/client/ui-settings-session-log': { category: 'optional', reason: REPORTING_SUPPORT_REASON },
+  'packages/session/session-telemetry': { category: 'optional', reason: REPORTING_SUPPORT_REASON },
+  'packages/session/session-telemetry-otel': { category: 'optional', reason: DEEPSEEK_REPORTER_REASON },
+  'packages/telemetry/otel': { category: 'optional', reason: REPORTING_SUPPORT_REASON },
+  'packages/host/product-telemetry-otel': { category: 'optional', reason: DEEPSEEK_REPORTER_REASON },
+  'packages/client/ui-message-feedback': { category: 'optional', reason: REPORTING_SUPPORT_REASON },
+  'packages/identity/anonymous-user-id': { category: 'optional', reason: REPORTING_SUPPORT_REASON },
   'packages/sdk/client': { category: 'sdk', reason: 'Published TypeScript embedding client runs in the consumer process.' },
   'packages/typert/generator': { category: 'build', reason: 'Build-time generation of type metadata.' },
   'packages/test-support/agent-loop-testkit': { category: 'test', reason: 'Published agent-loop test harness.' },

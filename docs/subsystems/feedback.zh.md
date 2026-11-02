@@ -286,11 +286,11 @@ fork 种子可以包含父 Session 的反馈事件，但 payload 保留父级 `s
 
 ## 持久化与 Remote 约定
 
-成功的消息反馈变更会等待权威持久化完成：live 操作通过所属 Session 追加，并要求有 `ctx.sessions.flush` 监听器参与；cold 操作通过写句柄追加并 flush。持久化故障会原样传播，不会报告成功。`maxNoteBytes` 为必填项，按 UTF-8 字节限制备注文本；Web Host 组合将其设为 `8192`。该包通过 `TypertRemoteService` 与 `@Remote` 发布 Host `messageFeedback.list`、`messageFeedback.put` 和 `messageFeedback.delete` 一元 Remote 约定；`command-feedback` 以同样方式发布面向 live Session 的 Session 级备注 `sessionFeedback.record`。下方生成的 Cordis API 是方法级权威。
+成功的消息反馈变更会等待权威持久化完成：live 操作通过所属 Session 追加，并要求有 `ctx.sessions.flush` 监听器参与；cold 操作通过写句柄追加并 flush。持久化故障会原样传播，不会报告成功。`maxNoteBytes` 为必填项，按 UTF-8 字节限制备注文本。该包通过 `TypertRemoteService` 与 `@Remote` 发布 Host `messageFeedback.list`、`messageFeedback.put` 和 `messageFeedback.delete` 一元 Remote 约定；`command-feedback` 以同样方式发布面向 live Session 的 Session 级备注 `sessionFeedback.record`。下方生成的 Cordis API 是方法级权威。
 
 插件释放会关闭操作接纳，并排空已进入各 Session 队列的工作。
 
-默认情况下，[`session-log-deepseek`](../../packages/session/session-log-deepseek/README.zh.md) 会在后续符合条件的 DeepSeek 请求中，把反馈作为普通 `dsh_session_log` 后缀的一部分传送；组合可用 `enabled: false` 禁用它。记录反馈不会触发 LLM 请求，也不会单独上传 `liwa_feedback`。对于非 DeepSeek 路由，[OTel 后端](../../packages/session/session-telemetry-otel/README.zh.md)可以将权威日志前缀释放至已记录的反馈。命令确认文本确认记录并标识 Session 与匿名用户，不报告遥测策略或投递结果。
+随附 profile 不挂载任何反馈包。在挂载了 [`session-log-deepseek`](../../packages/session/session-log-deepseek/README.zh.md) 的组合里，它会在后续符合条件的 DeepSeek 请求中，把反馈作为普通 `dsh_session_log` 后缀的一部分传送；`enabled: false` 可禁用它。记录反馈不会触发 LLM 请求，也不会单独上传 `liwa_feedback`。对于非 DeepSeek 路由，[OTel 后端](../../packages/session/session-telemetry-otel/README.zh.md)可以将权威日志前缀释放至已记录的反馈。命令确认文本确认记录并标识 Session 与匿名用户，不报告遥测策略或投递结果。
 
 ## Web 界面
 

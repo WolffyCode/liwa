@@ -2,9 +2,6 @@
   name: '@liwa/llm-deepseek-api-key'
   disabled: true
 
-- id: plugin-package-inventory-deepseek
-  disabled: true
-
 - id: agent-default-model
   name: '@liwa/agent-default-model'
   config:

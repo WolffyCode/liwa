@@ -137,7 +137,6 @@ describe('common paid translation persistence', () => {
         system: wire.body.system, messages: wire.body.messages } } } })
     expect(wire.body.messages).toEqual([{ role: 'user', content: [{ type: 'text', text: 'Original paragraph' }] }])
     expect(wire.body.thinking).toEqual({ type: 'disabled' })
-    expect(wire.sessionHeader).toBe(false)
     expect(JSON.stringify(wire.body)).not.toContain('Private main conversation')
     const committed = await b.readEvents(id)
     expect(committed.slice(0, resumed.length)).toEqual(resumed)

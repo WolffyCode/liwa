@@ -9,7 +9,7 @@ kind: "package-bundle"
 
 ## 概述
 
-当 SDK 客户端需要小型、显式的 coding agent 运行时时，请使用 `liwa --profile sdk-minimal`。该 profile 默认公布按平台选择的持久 shell、`read_image` 和 `working_directory`，把会话持久化为未压缩 JSONL，并从 SDK 初始化请求选择模型。它提供完整 Cordis 配置树，并排除 `liwa-base`、Web、settings、托管凭据、遥测、文本文件工具、workspace 指令、skill（技能）、jobs 与 subagent。其 danger-full-access 策略允许 shell 修改进程可访问的任何路径，因此只能配合隔离 workspace 使用。
+当 SDK 客户端需要小型、显式的 coding agent 运行时时，请使用 `liwa --profile sdk-minimal`。该 profile 默认公布按平台选择的持久 shell、`read_image` 和 `working_directory`，把会话持久化为未压缩 JSONL，并从 SDK 初始化请求选择模型。它提供完整 Cordis 配置树，并排除 `liwa-base`、Web、settings、托管凭据、文本文件工具、workspace 指令、skill（技能）、jobs 与 subagent。其 danger-full-access 策略允许 shell 修改进程可访问的任何路径，因此只能配合隔离 workspace 使用。
 
 ## 目录
 
@@ -94,7 +94,7 @@ liwa --profile sdk-minimal
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **该组合刻意省略共享产品服务** — 需要 settings、托管凭据、策略预设、遥测、Web 工具或完整默认工具清单时，请选择 `liwa --profile sdk`。
+- **该组合刻意省略共享产品服务** — 需要 settings、托管凭据、策略预设、Web 工具或完整默认工具清单时，请选择 `liwa --profile sdk`。
 - **图片读取需要支持图片输入的模型** — 选择适配器声明支持图片输入的路由；纯文本路由会返回工具错误。图片存储在 `$LIWA_HOME/attachments/v1` 下。
 - **压缩由系统自动执行** — 通过 profile patch 配置 [compaction-basic](../../compaction/compaction-basic/README.zh.md)。SDK 提示词文本不会执行 `/compact` 或其他斜杠命令。
 - **用户 patch 可以扩展配置树并破坏 stdout** — profile 自定义属于受信任的应用组合；向 stdout 写入普通文本的插件会破坏 JSON-RPC 分帧。

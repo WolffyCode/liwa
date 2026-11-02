@@ -3,7 +3,7 @@ import { createServer } from 'node:http'
 import type { IncomingMessage, Server, ServerResponse } from 'node:http'
 import { afterEach, expect, it, vi } from 'vitest'
 import { Context } from '@liwa/cordis'
-import LlmRuntime, { ReasoningEffortId } from '@liwa/llm'
+import LlmRuntime, { ReasoningEffortId, userAgent } from '@liwa/llm'
 import type { DeepSeekAccount } from '@liwa/deepseek-account'
 import * as ApiKey from '@liwa/llm-deepseek-api-key'
 import * as Account from '../src/index.ts'
@@ -95,7 +95,7 @@ it('resolves listed capabilities with this build\'s model knowledge', async () =
   })
   await expect(ctx.llm.resolveModelInfo('deepseek-account', 'deepseek-v4-pro')).resolves.not.toHaveProperty('systemPromptUpdate')
   expect(server.requests).toHaveLength(1)
-  expect(server.requests[0]?.headers['user-agent']).toMatch(/^deepseek-harness\//)
+  expect(server.requests[0]?.headers['user-agent']).toBe(userAgent())
 })
 
 it('advertises the badges its listing declares', async () => {

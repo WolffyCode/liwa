@@ -12,10 +12,10 @@ import type {} from '@liwa/agent'
 import { credentialRef, type CredentialRef } from '@liwa/credentials'
 import type {} from '@liwa/deepseek-account'
 import { launchEnvironmentOf } from '@liwa/launch-environment'
+import { attributionHeaders } from '@liwa/llm'
 import { WebError } from '@liwa/web'
 
 const ACCOUNT_PROVIDER = 'deepseek-account'
-const USER_AGENT = 'deepseek-harness/0.0.1'
 
 /** Authentication and endpoint values resolved once for an operation. */
 export interface DeepSeekWebAuth {
@@ -183,7 +183,7 @@ export async function dispatchDeepSeekWeb<T>(
         ...request.headers,
         'content-type': 'application/json',
         'accept': 'application/json',
-        'user-agent': USER_AGENT,
+        ...attributionHeaders(),
       },
       body: JSON.stringify(body),
       ...signal !== undefined ? { signal } : {},
