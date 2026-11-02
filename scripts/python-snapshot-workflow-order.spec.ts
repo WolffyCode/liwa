@@ -1,7 +1,7 @@
 import { getEventListeners } from 'node:events'
 import { Context } from '@liwa/cordis'
 import { agentEvents, type Agent, type PreStepDecision } from '@liwa/agent'
-import { createToolResultMessage, createUserMessage, ToolCallId } from '@liwa/llm'
+import { createToolResultMessage, createUserMessage, LlmAttemptId, ToolCallId } from '@liwa/llm'
 import SessionStore, { SessionId } from '@liwa/session'
 import { WorkflowRunId } from '@liwa/workflow'
 import AgentLoop from '@liwa/agent-loop'
@@ -10,7 +10,6 @@ import SubagentRuntime from '@liwa/subagent'
 import * as spawn from '@liwa/subagent-spawn-in-process'
 import { MockAdapter, textResponse } from '../packages/core/agent-loop/tests/mock-adapter.ts'
 import type {} from '@liwa/tool-workflow/types'
-import type {} from '@liwa/session-log-deepseek'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 // @ts-expect-error Scenario plugins are runtime JavaScript without declaration artifacts.
 import * as fixtureModule from './fixtures/python-snapshot-workflow-order.mjs'
@@ -110,23 +109,30 @@ describe('advanced Python snapshot workflow ordering', () => {
     expect(getEventListeners(h.controller.signal, 'abort')).toHaveLength(0)
   })
 
-  it('waits for the parent to consume the direct start and acknowledge its request log', async () => {
+  it('waits for the parent to freeze the request that follows the direct handoff', async () => {
     const h = await harness(true)
     const pending = h.step()
+    // The dispatcher needs only the subject identity; the fixture reads its Session.
+    const parentAgent = { id: h.parent.id, session: h.parent } as Agent
+    const streamStart = (subject: Agent, step: number): void => {
+      agentEvents(h.ctx, subject).emit('agent/assistant-stream', {
+        frame: { type: 'start', attemptId: LlmAttemptId(`${subject.id}-${step}`), revision: step, turn: 1, step },
+      })
+    }
     h.parent.append('turn/start', { turn: 1 })
     h.parent.append('step/start', { turn: 1, step: 1 })
+    streamStart(parentAgent, 1)
     const callId = ToolCallId('direct-child')
     h.parent.append('tool/call', { turn: 1, step: 1, callId, name: 'subagent', arguments: '{}' })
-    const result = h.parent.append('tool/result', {
+    h.parent.append('tool/result', {
       turn: 1, step: 1,
       message: createToolResultMessage({ callId, content: [{ type: 'text', text: 'started subagent child' }], isError: false }),
     }, { surfaceOp: 'append' })
     h.parent.append('step/start', { turn: 1, step: 2 })
+    streamStart(h.agent, 1)
     await Promise.resolve()
     expect(h.next).not.toHaveBeenCalled()
-    h.parent.append('session-log-deepseek/delivery-accepted', {
-      sessionId: h.parent.id, sessionFormatVersion: h.parent.header.version, throughSeq: result.seq,
-    })
+    streamStart(parentAgent, 2)
     expect(await pending).toBe(h.decision)
     expect(h.next).toHaveBeenCalledOnce()
   })

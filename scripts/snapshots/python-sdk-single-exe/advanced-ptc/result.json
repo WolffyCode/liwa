@@ -134,7 +134,7 @@
         "content": [
           {
             "type": "text",
-            "text": "Current runtime context. This snapshot supersedes earlier runtime-context snapshots.\n\nCurrent working directory: \"{{cwd}}\".\n\nCurrent DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations.\n\nApproval prompts are disabled in this session: actions that require approval are rejected automatically — do not request sandbox escalation (do not set `sandbox_permissions`)."
+            "text": "Current runtime context. This snapshot supersedes earlier runtime-context snapshots.\n\nCurrent working directory: \"{{cwd}}\".\n\nCurrent Liwa file policy: danger-full-access. The Liwa file sandbox does not restrict file modifications by available operations.\n\nApproval prompts are disabled in this session: actions that require approval are rejected automatically — do not request sandbox escalation (do not set `sandbox_permissions`)."
           }
         ],
         "source": {
@@ -147,7 +147,7 @@
             },
             {
               "name": "sandbox:policy",
-              "text": "Current DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations."
+              "text": "Current Liwa file policy: danger-full-access. The Liwa file sandbox does not restrict file modifications by available operations."
             },
             {
               "name": "approval:policy",
@@ -297,18 +297,8 @@
       }
     },
     {
-      "type": "session-log-deepseek/delivery-accepted",
-      "seq": 20,
-      "time": 0,
-      "data": {
-        "sessionId": "{{parent}}",
-        "sessionFormatVersion": 4,
-        "throughSeq": 19
-      }
-    },
-    {
       "type": "assistant/message",
-      "seq": 21,
+      "seq": 20,
       "time": 0,
       "data": {
         "turn": 1,
@@ -432,7 +422,7 @@
     },
     {
       "type": "tool/call",
-      "seq": 22,
+      "seq": 21,
       "time": 0,
       "data": {
         "turn": 1,
@@ -444,7 +434,7 @@
     },
     {
       "type": "tool/ptc-dispatch-start",
-      "seq": 23,
+      "seq": 22,
       "time": 0,
       "data": {
         "rootCallId": "advanced-code",
@@ -458,7 +448,7 @@
     },
     {
       "type": "job/registered",
-      "seq": 24,
+      "seq": 23,
       "time": 0,
       "data": {
         "jobId": "{{id:1}}",
@@ -474,7 +464,7 @@
     },
     {
       "type": "job/settled",
-      "seq": 25,
+      "seq": 24,
       "time": 0,
       "data": {
         "jobId": "{{id:1}}",
@@ -494,7 +484,7 @@
     },
     {
       "type": "tool/ptc-dispatch",
-      "seq": 26,
+      "seq": 25,
       "time": 0,
       "data": {
         "rootCallId": "advanced-code",
@@ -515,7 +505,7 @@
     },
     {
       "type": "tool/result",
-      "seq": 27,
+      "seq": 26,
       "time": 0,
       "data": {
         "turn": 1,
@@ -538,13 +528,13 @@
         }
       },
       "sourceEventSeqs": [
-        22
+        21
       ],
       "surfaceOp": "append"
     },
     {
       "type": "step/end",
-      "seq": 28,
+      "seq": 27,
       "time": 0,
       "data": {
         "turn": 1,
@@ -553,7 +543,7 @@
     },
     {
       "type": "step/start",
-      "seq": 29,
+      "seq": 28,
       "time": 0,
       "data": {
         "turn": 1,
@@ -561,18 +551,8 @@
       }
     },
     {
-      "type": "session-log-deepseek/delivery-accepted",
-      "seq": 30,
-      "time": 0,
-      "data": {
-        "sessionId": "{{parent}}",
-        "sessionFormatVersion": 4,
-        "throughSeq": 29
-      }
-    },
-    {
       "type": "assistant/message",
-      "seq": 31,
+      "seq": 29,
       "time": 0,
       "data": {
         "turn": 1,
@@ -696,7 +676,7 @@
     },
     {
       "type": "tool/call",
-      "seq": 32,
+      "seq": 30,
       "time": 0,
       "data": {
         "turn": 1,
@@ -708,7 +688,7 @@
     },
     {
       "type": "tool/ptc-dispatch-start",
-      "seq": 33,
+      "seq": 31,
       "time": 0,
       "data": {
         "rootCallId": "advanced-denied-ptc",
@@ -722,7 +702,7 @@
     },
     {
       "type": "tool/ptc-dispatch",
-      "seq": 34,
+      "seq": 32,
       "time": 0,
       "data": {
         "rootCallId": "advanced-denied-ptc",
@@ -748,7 +728,7 @@
     },
     {
       "type": "tool/result",
-      "seq": 35,
+      "seq": 33,
       "time": 0,
       "data": {
         "turn": 1,
@@ -771,13 +751,13 @@
         }
       },
       "sourceEventSeqs": [
-        32
+        30
       ],
       "surfaceOp": "append"
     },
     {
       "type": "step/end",
-      "seq": 36,
+      "seq": 34,
       "time": 0,
       "data": {
         "turn": 1,
@@ -786,7 +766,7 @@
     },
     {
       "type": "step/start",
-      "seq": 37,
+      "seq": 35,
       "time": 0,
       "data": {
         "turn": 1,
@@ -794,18 +774,8 @@
       }
     },
     {
-      "type": "session-log-deepseek/delivery-accepted",
-      "seq": 38,
-      "time": 0,
-      "data": {
-        "sessionId": "{{parent}}",
-        "sessionFormatVersion": 4,
-        "throughSeq": 37
-      }
-    },
-    {
       "type": "assistant/message",
-      "seq": 39,
+      "seq": 36,
       "time": 0,
       "data": {
         "turn": 1,
@@ -835,7 +805,7 @@
               ]
             }
           },
-          "id": "{{message:1}}"
+          "id": "{{messageId}}"
         },
         "usage": {
           "inputTokens": 3,
@@ -913,7 +883,7 @@
     },
     {
       "type": "step/end",
-      "seq": 40,
+      "seq": 37,
       "time": 0,
       "data": {
         "turn": 1,
@@ -921,88 +891,8 @@
       }
     },
     {
-      "type": "command/run",
-      "seq": 41,
-      "time": 0,
-      "data": {
-        "commandId": "{{command:1}}",
-        "name": "feedback",
-        "source": {
-          "kind": "user"
-        }
-      }
-    },
-    {
-      "type": "feedback/record",
-      "seq": 42,
-      "time": 0,
-      "data": {
-        "text": "The session needs a clearer explanation."
-      }
-    },
-    {
-      "type": "command/done",
-      "seq": 43,
-      "time": 0,
-      "data": {
-        "commandId": "{{command:1}}",
-        "kind": "success",
-        "text": "Feedback recorded for session {{parent}}\nAnonymous user: {{anonymous-user}}."
-      }
-    },
-    {
-      "type": "feedback/record",
-      "seq": 44,
-      "time": 0,
-      "data": {
-        "category": "other"
-      }
-    },
-    {
-      "type": "feedback/message-put",
-      "seq": 45,
-      "time": 0,
-      "data": {
-        "sessionId": "{{parent}}",
-        "item": {
-          "messageId": "{{message:1}}",
-          "rating": "negative",
-          "note": "Explain the result.",
-          "category": "task-result",
-          "version": "{{feedback-version:1}}",
-          "createdAt": 0,
-          "updatedAt": 0
-        }
-      }
-    },
-    {
-      "type": "feedback/message-put",
-      "seq": 46,
-      "time": 0,
-      "data": {
-        "sessionId": "{{parent}}",
-        "item": {
-          "messageId": "{{message:1}}",
-          "rating": "positive",
-          "note": "The explanation is clear now.",
-          "version": "{{feedback-version:2}}",
-          "createdAt": 0,
-          "updatedAt": 0
-        }
-      }
-    },
-    {
-      "type": "feedback/message-delete",
-      "seq": 47,
-      "time": 0,
-      "data": {
-        "sessionId": "{{parent}}",
-        "messageId": "{{message:1}}"
-      }
-    },
-    {
       "type": "turn/end",
-      "seq": 48,
+      "seq": 38,
       "time": 0,
       "data": {
         "turn": 1,
@@ -1204,7 +1094,7 @@
             "content": [
               {
                 "type": "text",
-                "text": "Current runtime context. This snapshot supersedes earlier runtime-context snapshots.\n\nCurrent working directory: \"{{cwd}}\".\n\nCurrent DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations.\n\nApproval prompts are disabled in this session: actions that require approval are rejected automatically — do not request sandbox escalation (do not set `sandbox_permissions`)."
+                "text": "Current runtime context. This snapshot supersedes earlier runtime-context snapshots.\n\nCurrent working directory: \"{{cwd}}\".\n\nCurrent Liwa file policy: danger-full-access. The Liwa file sandbox does not restrict file modifications by available operations.\n\nApproval prompts are disabled in this session: actions that require approval are rejected automatically — do not request sandbox escalation (do not set `sandbox_permissions`)."
               }
             ],
             "source": {
@@ -1217,7 +1107,7 @@
                 },
                 {
                   "name": "sandbox:policy",
-                  "text": "Current DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations."
+                  "text": "Current Liwa file policy: danger-full-access. The Liwa file sandbox does not restrict file modifications by available operations."
                 },
                 {
                   "name": "approval:policy",
@@ -1415,24 +1305,8 @@
       "payload": {
         "sessionId": "{{parent}}",
         "event": {
-          "type": "session-log-deepseek/delivery-accepted",
-          "seq": 20,
-          "time": 0,
-          "data": {
-            "sessionId": "{{parent}}",
-            "sessionFormatVersion": 4,
-            "throughSeq": 19
-          }
-        }
-      }
-    },
-    {
-      "method": "session.event",
-      "payload": {
-        "sessionId": "{{parent}}",
-        "event": {
           "type": "assistant/message",
-          "seq": 21,
+          "seq": 20,
           "time": 0,
           "data": {
             "turn": 1,
@@ -1562,7 +1436,7 @@
         "sessionId": "{{parent}}",
         "event": {
           "type": "tool/call",
-          "seq": 22,
+          "seq": 21,
           "time": 0,
           "data": {
             "turn": 1,
@@ -1580,7 +1454,7 @@
         "sessionId": "{{parent}}",
         "event": {
           "type": "tool/ptc-dispatch-start",
-          "seq": 23,
+          "seq": 22,
           "time": 0,
           "data": {
             "rootCallId": "advanced-code",
@@ -1600,7 +1474,7 @@
         "sessionId": "{{parent}}",
         "event": {
           "type": "job/registered",
-          "seq": 24,
+          "seq": 23,
           "time": 0,
           "data": {
             "jobId": "{{id:1}}",
@@ -1622,7 +1496,7 @@
         "sessionId": "{{parent}}",
         "event": {
           "type": "job/settled",
-          "seq": 25,
+          "seq": 24,
           "time": 0,
           "data": {
             "jobId": "{{id:1}}",
@@ -1648,7 +1522,7 @@
         "sessionId": "{{parent}}",
         "event": {
           "type": "tool/ptc-dispatch",
-          "seq": 26,
+          "seq": 25,
           "time": 0,
           "data": {
             "rootCallId": "advanced-code",
@@ -1675,7 +1549,7 @@
         "sessionId": "{{parent}}",
         "event": {
           "type": "tool/result",
-          "seq": 27,
+          "seq": 26,
           "time": 0,
           "data": {
             "turn": 1,
@@ -1698,7 +1572,7 @@
             }
           },
           "sourceEventSeqs": [
-            22
+            21
           ],
           "surfaceOp": "append"
         }
@@ -1710,7 +1584,7 @@
         "sessionId": "{{parent}}",
         "event": {
           "type": "step/end",
-          "seq": 28,
+          "seq": 27,
           "time": 0,
           "data": {
             "turn": 1,
@@ -1725,7 +1599,7 @@
         "sessionId": "{{parent}}",
         "event": {
           "type": "step/start",
-          "seq": 29,
+          "seq": 28,
           "time": 0,
           "data": {
             "turn": 1,
@@ -1739,24 +1613,8 @@
       "payload": {
         "sessionId": "{{parent}}",
         "event": {
-          "type": "session-log-deepseek/delivery-accepted",
-          "seq": 30,
-          "time": 0,
-          "data": {
-            "sessionId": "{{parent}}",
-            "sessionFormatVersion": 4,
-            "throughSeq": 29
-          }
-        }
-      }
-    },
-    {
-      "method": "session.event",
-      "payload": {
-        "sessionId": "{{parent}}",
-        "event": {
           "type": "assistant/message",
-          "seq": 31,
+          "seq": 29,
           "time": 0,
           "data": {
             "turn": 1,
@@ -1886,7 +1744,7 @@
         "sessionId": "{{parent}}",
         "event": {
           "type": "tool/call",
-          "seq": 32,
+          "seq": 30,
           "time": 0,
           "data": {
             "turn": 1,
@@ -1904,7 +1762,7 @@
         "sessionId": "{{parent}}",
         "event": {
           "type": "tool/ptc-dispatch-start",
-          "seq": 33,
+          "seq": 31,
           "time": 0,
           "data": {
             "rootCallId": "advanced-denied-ptc",
@@ -1924,7 +1782,7 @@
         "sessionId": "{{parent}}",
         "event": {
           "type": "tool/ptc-dispatch",
-          "seq": 34,
+          "seq": 32,
           "time": 0,
           "data": {
             "rootCallId": "advanced-denied-ptc",
@@ -1956,7 +1814,7 @@
         "sessionId": "{{parent}}",
         "event": {
           "type": "tool/result",
-          "seq": 35,
+          "seq": 33,
           "time": 0,
           "data": {
             "turn": 1,
@@ -1979,7 +1837,7 @@
             }
           },
           "sourceEventSeqs": [
-            32
+            30
           ],
           "surfaceOp": "append"
         }
@@ -1991,7 +1849,7 @@
         "sessionId": "{{parent}}",
         "event": {
           "type": "step/end",
-          "seq": 36,
+          "seq": 34,
           "time": 0,
           "data": {
             "turn": 1,
@@ -2006,7 +1864,7 @@
         "sessionId": "{{parent}}",
         "event": {
           "type": "step/start",
-          "seq": 37,
+          "seq": 35,
           "time": 0,
           "data": {
             "turn": 1,
@@ -2020,24 +1878,8 @@
       "payload": {
         "sessionId": "{{parent}}",
         "event": {
-          "type": "session-log-deepseek/delivery-accepted",
-          "seq": 38,
-          "time": 0,
-          "data": {
-            "sessionId": "{{parent}}",
-            "sessionFormatVersion": 4,
-            "throughSeq": 37
-          }
-        }
-      }
-    },
-    {
-      "method": "session.event",
-      "payload": {
-        "sessionId": "{{parent}}",
-        "event": {
           "type": "assistant/message",
-          "seq": 39,
+          "seq": 36,
           "time": 0,
           "data": {
             "turn": 1,
@@ -2067,7 +1909,7 @@
                   ]
                 }
               },
-              "id": "{{message:1}}"
+              "id": "{{messageId}}"
             },
             "usage": {
               "inputTokens": 3,
@@ -2151,7 +1993,7 @@
         "sessionId": "{{parent}}",
         "event": {
           "type": "step/end",
-          "seq": 40,
+          "seq": 37,
           "time": 0,
           "data": {
             "turn": 1,
@@ -2165,130 +2007,8 @@
       "payload": {
         "sessionId": "{{parent}}",
         "event": {
-          "type": "command/run",
-          "seq": 41,
-          "time": 0,
-          "data": {
-            "commandId": "{{command:1}}",
-            "name": "feedback",
-            "source": {
-              "kind": "user"
-            }
-          }
-        }
-      }
-    },
-    {
-      "method": "session.event",
-      "payload": {
-        "sessionId": "{{parent}}",
-        "event": {
-          "type": "feedback/record",
-          "seq": 42,
-          "time": 0,
-          "data": {
-            "text": "The session needs a clearer explanation."
-          }
-        }
-      }
-    },
-    {
-      "method": "session.event",
-      "payload": {
-        "sessionId": "{{parent}}",
-        "event": {
-          "type": "command/done",
-          "seq": 43,
-          "time": 0,
-          "data": {
-            "commandId": "{{command:1}}",
-            "kind": "success",
-            "text": "Feedback recorded for session {{parent}}\nAnonymous user: {{anonymous-user}}."
-          }
-        }
-      }
-    },
-    {
-      "method": "session.event",
-      "payload": {
-        "sessionId": "{{parent}}",
-        "event": {
-          "type": "feedback/record",
-          "seq": 44,
-          "time": 0,
-          "data": {
-            "category": "other"
-          }
-        }
-      }
-    },
-    {
-      "method": "session.event",
-      "payload": {
-        "sessionId": "{{parent}}",
-        "event": {
-          "type": "feedback/message-put",
-          "seq": 45,
-          "time": 0,
-          "data": {
-            "sessionId": "{{parent}}",
-            "item": {
-              "messageId": "{{message:1}}",
-              "rating": "negative",
-              "note": "Explain the result.",
-              "category": "task-result",
-              "version": "{{feedback-version:1}}",
-              "createdAt": 0,
-              "updatedAt": 0
-            }
-          }
-        }
-      }
-    },
-    {
-      "method": "session.event",
-      "payload": {
-        "sessionId": "{{parent}}",
-        "event": {
-          "type": "feedback/message-put",
-          "seq": 46,
-          "time": 0,
-          "data": {
-            "sessionId": "{{parent}}",
-            "item": {
-              "messageId": "{{message:1}}",
-              "rating": "positive",
-              "note": "The explanation is clear now.",
-              "version": "{{feedback-version:2}}",
-              "createdAt": 0,
-              "updatedAt": 0
-            }
-          }
-        }
-      }
-    },
-    {
-      "method": "session.event",
-      "payload": {
-        "sessionId": "{{parent}}",
-        "event": {
-          "type": "feedback/message-delete",
-          "seq": 47,
-          "time": 0,
-          "data": {
-            "sessionId": "{{parent}}",
-            "messageId": "{{message:1}}"
-          }
-        }
-      }
-    },
-    {
-      "method": "session.event",
-      "payload": {
-        "sessionId": "{{parent}}",
-        "event": {
           "type": "turn/end",
-          "seq": 48,
+          "seq": 38,
           "time": 0,
           "data": {
             "turn": 1,

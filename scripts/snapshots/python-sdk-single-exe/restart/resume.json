@@ -9,7 +9,6 @@
     "user/message",
     "request/header",
     "request/context",
-    "session-log-deepseek/delivery-accepted",
     "assistant/message",
     "step/end",
     "turn/end"

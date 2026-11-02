@@ -17605,9 +17605,6 @@ importers:
       '@liwa/agent-tool-presentation':
         specifier: workspace:*
         version: link:../../packages/core/agent-tool-presentation
-      '@liwa/anonymous-user-id':
-        specifier: workspace:*
-        version: link:../../packages/identity/anonymous-user-id
       '@liwa/api-gateway':
         specifier: workspace:*
         version: link:../../packages/api/gateway
@@ -17650,9 +17647,6 @@ importers:
       '@liwa/command-compact':
         specifier: workspace:*
         version: link:../../packages/compaction/command-compact
-      '@liwa/command-feedback':
-        specifier: workspace:*
-        version: link:../../packages/feedback/command-feedback
       '@liwa/command-goal':
         specifier: workspace:*
         version: link:../../packages/goal/command-goal
@@ -17767,15 +17761,9 @@ importers:
       '@liwa/mcp-client':
         specifier: workspace:*
         version: link:../../packages/mcp/mcp-client
-      '@liwa/message-feedback':
-        specifier: workspace:*
-        version: link:../../packages/feedback/message-feedback
       '@liwa/native-command':
         specifier: workspace:*
         version: link:../../packages/util/native-command
-      '@liwa/otel':
-        specifier: workspace:*
-        version: link:../../packages/telemetry/otel
       '@liwa/output-retention':
         specifier: workspace:*
         version: link:../../packages/util/output-retention
@@ -17794,9 +17782,6 @@ importers:
       '@liwa/plugin-market':
         specifier: workspace:*
         version: link:../../packages/boot/plugin-market
-      '@liwa/plugin-package-inventory-deepseek':
-        specifier: workspace:*
-        version: link:../../packages/llm/plugin-package-inventory-deepseek
       '@liwa/ptc-runtime':
         specifier: workspace:*
         version: link:../../packages/ptc-runtime/ptc-runtime
@@ -17839,9 +17824,6 @@ importers:
       '@liwa/session-checkpoint-policy':
         specifier: workspace:*
         version: link:../../packages/session/session-checkpoint-policy
-      '@liwa/session-log-deepseek':
-        specifier: workspace:*
-        version: link:../../packages/session/session-log-deepseek
       '@liwa/session-persistence':
         specifier: workspace:*
         version: link:../../packages/session/session-persistence
@@ -17860,9 +17842,6 @@ importers:
       '@liwa/session-reference':
         specifier: workspace:*
         version: link:../../packages/context/session-reference
-      '@liwa/session-telemetry':
-        specifier: workspace:*
-        version: link:../../packages/session/session-telemetry
       '@liwa/session-title':
         specifier: workspace:*
         version: link:../../packages/session/session-title

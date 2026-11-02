@@ -9,9 +9,8 @@ export function apply(ctx, config) {
   const started = new Set()
   const pending = new Map()
   let disposed = false
-  let directResultSeq
-  let directStep = false
-  let directDelivered = false
+  let directResultRecorded = false
+  let parentRequestFrozen = false
 
   ctx.effect(() => async () => {
     disposed = true
@@ -27,15 +26,16 @@ export function apply(ctx, config) {
       pending.get(event.data.childId)?.resolve()
     }
     if (config.direct === undefined) return
-    if (event.type === 'tool/result' && event.data.message.source.callId === config.direct.callId) directResultSeq = event.seq
-    if (directResultSeq === undefined) return
-    if (event.type === 'step/start') directStep = true
-    if (event.type === 'session-log-deepseek/delivery-accepted' && event.data.throughSeq >= directResultSeq) {
-      directDelivered = true
-    }
-    if (directStep && directDelivered) {
-      for (const wait of pending.values()) if (wait.direct) wait.resolve()
-    }
+    if (event.type === 'tool/result' && event.data.message.source.callId === config.direct.callId) directResultRecorded = true
+  })
+  // The loop emits a stream `start` frame only after `buildRequest` has logged and frozen the step's request,
+  // and it claimed that step's inbox before `step/start`; releasing the direct child here keeps its completion
+  // notice after every parent record of the request that follows the handoff and inside the step after it.
+  ctx.on('agent/assistant-stream', ({ agent, frame }) => {
+    if (disposed || parentRequestFrozen || !directResultRecorded) return
+    if (agent.session.id !== config.parentSessionId || frame.type !== 'start') return
+    parentRequestFrozen = true
+    for (const wait of pending.values()) if (wait.direct) wait.resolve()
   })
   ctx.on('agent/pre-step', async ({ agent, messages, turn, step, signal }, next) => {
     const hasPrompt = prompt => messages.some(message => message.content.some(block => block.type === 'text' && block.text === prompt))
@@ -46,7 +46,7 @@ export function apply(ctx, config) {
     }
     signal.throwIfAborted()
     if (disposed) throw new Error('workflow snapshot barrier disposed')
-    if (direct ? !directStep || !directDelivered : !started.has(agent.id)) {
+    if (direct ? !parentRequestFrozen : !started.has(agent.id)) {
       const wait = { ...Promise.withResolvers(), direct }
       const abort = () => { wait.reject(signal.reason) }
       signal.addEventListener('abort', abort, { once: true })

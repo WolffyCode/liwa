@@ -247,7 +247,6 @@ def write_profile_patch(
             "id": "session-persistence-jsonl",
             "config": {"root": str(sessions), "compression": "none"},
         },
-        {"id": "session-telemetry-otel", "disabled": True},
         *patches,
     ], indent=2))
     return path
@@ -266,7 +265,6 @@ def write_advanced_profile_patch(
                 "persona": "You are a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.",
             },
         },
-        {"id": "session-log-deepseek", "config": {"enabled": True}},
         *({"id": row_id, "disabled": True} for row_id in LEGACY_CUSTOM_DISABLED_ROWS),
         {"id": "tool-bash", "disabled": True},
         {"id": "tool-pwsh", "disabled": True},
@@ -1010,7 +1008,7 @@ def smoke_sdk_office(executable: Path) -> None:
         expected_backend = "wasm" if selected == "wasm" else "native"
         engines = [
             json.loads(manifest.read_text())["engine"]["kind"]
-            for manifest in (office / "node_modules/@liwa").glob("libreoffice-kit-*/prebuilds.json")
+            for manifest in (office / "node_modules/@deepseek-ai").glob("libreoffice-kit-*/prebuilds.json")
         ]
         if engines != [expected_backend]:
             raise AssertionError(f"Office sidecar must contain only {expected_backend}: {engines}")
@@ -1397,8 +1395,6 @@ def smoke_sdk_dynamic_tools(base_url: str, executable: Path, update_snapshots: b
             {"id": "tool-bash", "disabled": True},
             {"id": "tool-pwsh", "disabled": True},
             {"id": "session-title-llm", "disabled": True},
-            # Export acknowledgements can change the request header sequence numbers.
-            {"id": "session-log-deepseek", "config": {"enabled": False}},
             {"insert": [{
                 "id": "dynamic-tools",
                 "name": (Path(__file__).resolve().parent / "fixtures/python-sdk-dynamic-tools.mjs").as_uri(),
@@ -1632,7 +1628,7 @@ def smoke_sdk_snapshot_mode(
         liwa_home = root / "home"
         sessions = liwa_home / "sessions"
         patch = write_advanced_profile_patch(root, "snapshot.patch.yml", sessions, mode)
-        feedback_patch = write_profile_patch(root, "feedback.patch.yml", sessions, [{"insert": [
+        fixture_patch = write_profile_patch(root, "snapshot-fixtures.patch.yml", sessions, [{"insert": [
             {"id": "snapshot-tool", "name": (
                 Path(__file__).resolve().parent / "fixtures/python-snapshot-tool.mjs"
             ).as_uri()},
@@ -1645,11 +1641,6 @@ def smoke_sdk_snapshot_mode(
                 "parentSessionId": SNAPSHOT_SESSION_ID, "prompt": SNAPSHOT_WORKFLOW_CHILD_PROMPT,
                 "direct": {"prompt": SNAPSHOT_DIRECT_CHILD_PROMPT, "callId": "advanced-direct-child"},
             }},
-            {"id": "snapshot-message-feedback", "name": "@liwa/message-feedback",
-             "config": {"maxNoteBytes": 1024}},
-            {"id": "snapshot-feedback-producer", "name": (
-                Path(__file__).resolve().parent.parent / "snapshots/sdk/text-turn/feedback-producer.mjs"
-            ).as_uri()},
         ]}])
         creation_patch = write_profile_patch(root, "creation.patch.yml", sessions, [
             {"insert": [{
@@ -1663,7 +1654,7 @@ def smoke_sdk_snapshot_mode(
             cwd=str(root),
             liwa_bin=str(executable),
             liwa_home=str(liwa_home),
-            patches=(str(patch), str(feedback_patch), str(creation_patch)),
+            patches=(str(patch), str(fixture_patch), str(creation_patch)),
             env={
                 "LIWA_PERMISSION_MODE": "danger-full-access",
                 "LIWA_TELEMETRY_DISABLED": "1",
@@ -1703,10 +1694,6 @@ def smoke_sdk_snapshot_mode(
         targets = offloads[0]["data"]["targets"]
         if len(targets) != 1 or targets[0]["imageIndexes"] != [0]:
             raise AssertionError(f"advanced snapshot selected unexpected image occurrences: {targets}")
-        feedback_types = [event.get("type") for event in result.events
-                          if str(event.get("type")).startswith("feedback/")]
-        if feedback_types != ["feedback/record", "feedback/record", "feedback/message-put", "feedback/message-put", "feedback/message-delete"]:
-            raise AssertionError(f"advanced snapshot did not exercise all feedback mutations: {feedback_types}")
         methods = [notification.method for notification in result.notifications]
         expected_children = 2 if mode == "native" else 0
         if methods.count("subagent.started") != expected_children or methods.count("subagent.finished") != expected_children:
@@ -1747,7 +1734,6 @@ def smoke_sdk_snapshot_mode(
         compare_snapshot_files(
             files, update_snapshots, ADVANCED_SNAPSHOT_DIRECTORY if mode == "native" else ADVANCED_SNAPSHOT_ROOT / "advanced-ptc",
             ADVANCED_SNAPSHOT_FILENAMES if mode == "native" else ("result.json", "session.v4.jsonl"),
-            native_writer_output=True,
         )
 
 
@@ -1871,7 +1857,6 @@ def smoke_sdk_restart_snapshot(base_url: str, executable: Path, update_snapshots
         }, indent=2, ensure_ascii=False) + "\n"
         compare_snapshot_files(
             files, update_snapshots, RESTART_SNAPSHOT_DIRECTORY, RESTART_SNAPSHOT_FILENAMES,
-            native_writer_output=True,
         )
 
 
@@ -1888,7 +1873,6 @@ def smoke_sdk_scheduler_recovery(base_url: str, executable: Path, update_snapsho
         patch = write_profile_patch(root, "recovery.patch.yml", sessions, [
             {"id": "tool-todo", "disabled": False},
             {"id": "session-title-llm", "disabled": True},
-            {"id": "session-log-deepseek", "config": {"enabled": False}},
             {"insert": [{
                 "id": "scheduler-failure-fixture",
                 "name": (
@@ -2567,30 +2551,6 @@ def build_snapshot_files(
         replacements.append((child_id, f"{{{{child-{index}}}}}"))
         agent_id = snapshot_agent_id(result, child_id)
         replacements.append((agent_id, f"{{{{agent-{index}}}}}"))
-    command_index = 0
-    for record in logs[SNAPSHOT_SESSION_ID]:
-        data = record.get("data")
-        if record.get("type") == "command/run" and isinstance(data, dict):
-            command_index += 1
-            replacements.append((data["commandId"], f"{{{{command:{command_index}}}}}"))
-        if record.get("type") == "command/done" and isinstance(data, dict):
-            anonymous = re.search(r"Anonymous user: ([0-9a-f-]{36})", str(data.get("text")))
-            if anonymous is not None:
-                replacements.append((anonymous.group(1), "{{anonymous-user}}"))
-    feedback_targets = dict.fromkeys(
-        record["data"]["item"]["messageId"]
-        for record in logs[SNAPSHOT_SESSION_ID]
-        if record.get("type") == "feedback/message-put"
-    )
-    for index, message_id in enumerate(feedback_targets, start=1):
-        replacements.append((message_id, f"{{{{message:{index}}}}}"))
-    feedback_versions = dict.fromkeys(
-        record["data"]["item"]["version"]
-        for record in logs[SNAPSHOT_SESSION_ID]
-        if record.get("type") == "feedback/message-put"
-    )
-    for index, version in enumerate(feedback_versions, start=1):
-        replacements.append((version, f"{{{{feedback-version:{index}}}}}"))
     replacements.sort(key=lambda pair: len(pair[0]), reverse=True)
 
     result_value = {
@@ -2799,16 +2759,8 @@ def normalize_snapshot_value(
             repair_prefix is not None and normalized["id"].startswith(repair_prefix)
             and normalized["id"][len(repair_prefix):].isdigit()
         )
-        if not normalized["id"].startswith("{{message:") and not repair_id:
+        if not repair_id:
             normalized["id"] = "{{messageId}}"
-    if normalized.get("type") in ("feedback/message-put", "feedback/message-delete"):
-        data = normalized.get("data")
-        if isinstance(data, dict):
-            item = data.get("item") if normalized["type"] == "feedback/message-put" else data
-            if isinstance(item, dict):
-                if normalized["type"] == "feedback/message-put":
-                    item["createdAt"] = 0
-                    item["updatedAt"] = 0
     scrub_snapshot_header(normalized)
     scrub_snapshot_system_message(normalized)
     return normalized
@@ -2863,7 +2815,6 @@ def project_session_snapshot(records: list[dict[str, object]]) -> list[dict[str,
 
 
 SESSION_FORMAT_TOKEN = "{{sessionFormatVersion}}"
-NATIVE_DELIVERY_FORMAT_TOKEN = "{{sourceSessionFormatVersion}}"
 
 
 def expand_snapshot_stream_member(member: object) -> list[dict[str, object]]:
@@ -2986,31 +2937,7 @@ def normalize_session_format_comparison(
     return normalized
 
 
-def normalize_native_delivery_record(value: object, source_version: int) -> object:
-    """Tokenize a native delivery qualifier in one Session event or SDK notification."""
-    if not isinstance(value, dict):
-        return value
-    if value.get("method") == "session.event":
-        for key in ("payload", "params"):
-            wrapper = value.get(key)
-            if isinstance(wrapper, dict) and "event" in wrapper:
-                return {**value, key: {
-                    **wrapper,
-                    "event": normalize_native_delivery_record(wrapper["event"], source_version),
-                }}
-    data = value.get("data")
-    if value.get("type") != "session-log-deepseek/delivery-accepted" or not isinstance(data, dict):
-        return value
-    if data.get("sessionFormatVersion") != source_version:
-        return value
-    return {**value, "data": {**data, "sessionFormatVersion": NATIVE_DELIVERY_FORMAT_TOKEN}}
-
-
-def normalize_snapshot_comparison_text(
-    name: str,
-    content: str,
-    native_writer_version: int | None = None,
-) -> str:
+def normalize_snapshot_comparison_text(name: str, content: str) -> str:
     """Normalize Session generation metadata only while comparing committed expected outputs."""
     if name.startswith("session") and name.endswith(".jsonl"):
         parsed = [json.loads(line) for line in content.splitlines() if line]
@@ -3018,8 +2945,6 @@ def normalize_snapshot_comparison_text(
         source_version = header.get("version") if isinstance(header, dict) else None
         if not isinstance(source_version, int):
             raise AssertionError(f"{name}: snapshot Session header has no integer format version")
-        if native_writer_version is not None:
-            parsed = [normalize_native_delivery_record(record, native_writer_version) for record in parsed]
         records = [
             normalize_session_format_comparison(expanded, source_version)
             for record in parsed
@@ -3028,15 +2953,6 @@ def normalize_snapshot_comparison_text(
         return render_jsonl(records)
     if name.endswith(".json"):
         value = json.loads(content)
-        if name == "result.json" and native_writer_version is not None and isinstance(value, dict):
-            value = {
-                **value,
-                **{
-                    key: [normalize_native_delivery_record(record, native_writer_version) for record in value[key]]
-                    for key in ("events", "notifications")
-                    if isinstance(value.get(key), list)
-                },
-            }
         return json.dumps(
             normalize_session_format_comparison(value),
             indent=2,
@@ -3050,10 +2966,8 @@ def compare_snapshot_files(
     update: bool,
     directory: Path,
     filenames: tuple[str, ...],
-    *,
-    native_writer_output: bool = False,
 ) -> None:
-    """Compare artifact roles and content, optionally matching each side's native delivery generation."""
+    """Compare artifact roles and content across Session format generations."""
     scenario = directory.name
 
     def role_name(name: str) -> str:
@@ -3105,24 +3019,12 @@ def compare_snapshot_files(
             f"{scenario} snapshot Session roles differ: "
             f"expected={sorted(selected_expected)}, actual={sorted(actual_sessions)}",
         )
-    actual_native_version = expected_native_version = None
-    if native_writer_output:
-        def common_generation(contents: list[tuple[str, str]]) -> int:
-            versions = {session_header_version(content, name) for name, content in contents}
-            if len(versions) != 1:
-                raise AssertionError(f"{scenario}: native writer comparison requires one Session generation across all roles")
-            return versions.pop()
-
-        actual_native_version = common_generation(list(actual_sessions.values()))
-        expected_native_version = common_generation([
-            (path.name, path.read_text(encoding="utf-8")) for path in selected_expected.values()
-        ])
     for name, actual in files.items():
         parsed = parse_snapshot_session_filename(name)
         expected_path = directory / name if parsed is None else selected_expected[parsed[0]]
         expected_text = expected_path.read_text(encoding="utf-8")
-        compared_actual = normalize_snapshot_comparison_text(name, actual, actual_native_version)
-        compared_expected = normalize_snapshot_comparison_text(expected_path.name, expected_text, expected_native_version)
+        compared_actual = normalize_snapshot_comparison_text(name, actual)
+        compared_expected = normalize_snapshot_comparison_text(expected_path.name, expected_text)
         if compared_actual == compared_expected:
             continue
         diff = "".join(difflib.unified_diff(
