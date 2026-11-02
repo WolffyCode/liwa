@@ -44,9 +44,6 @@ allowBuilds:
   # optional prebuilts are omitted. Upgrade all consumers together after the
   # replacement passes that build and the release packed-install check.
   koffi: true
-  # The SSH helper's legacy deploy includes the reviewed workspace postinstall
-  # that restores the executable bit on node-pty's macOS spawn helper.
-  '@liwa/subprocess-local@file:packages/subprocess/subprocess-local': true
   # electron-builder pulls in the optional Squirrel.Windows helper, whose
   # install script only selects its bundled 7-Zip executable. Desktop ships
   # Windows through NSIS, so that mutation is not part of our build.

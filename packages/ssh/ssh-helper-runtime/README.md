@@ -62,7 +62,7 @@ Ordinary PR and master CI run source and build-script checks without building SS
 <details>
 <summary>Implementation internals — click to expand</summary>
 
-The carrier embeds its closed dependency set with the repository’s patched `pkg --sea` pipeline. Its entry dispatches the SSH helper, managed subprocess runner or PTC worker. Shared [deployment helpers](../../../scripts/executable-packaging.ts) also serve the Python SDK builder. Production deploy restores development installation state before invoking build tools, so pnpm’s automatic dependency check cannot prune them.
+The carrier embeds its closed dependency set with the repository’s patched `pkg --sea` pipeline. Its entry dispatches the SSH helper, managed subprocess runner or PTC worker. Shared [deployment helpers](../../../scripts/executable-packaging.ts) also serve the Python SDK builder. Production deploy installs exactly the versions in `pnpm-lock.yaml`, then drops pnpm’s install records and pins the manifest’s workspace dependencies to their installed versions, so deploy metadata carries no build-checkout path into the executable. Packaging ignores the checkout’s own dependencies and workspace sources, so module resolution from the staged payload cannot embed development packages.
 
 The operating system must execute the Landlock and PTY launchers from real files. A process-local resolution hook points the system package at its co-shipped native directory; node-pty uses its existing executable-relative spawn-helper convention. Binary inspection covers the embedded native modules before packaging and the external resources before publication.
 

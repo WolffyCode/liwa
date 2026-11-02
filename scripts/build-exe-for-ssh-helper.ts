@@ -7,8 +7,11 @@ import { parseArgs } from 'node:util'
 import { build } from 'tsdown'
 import { create as createTar } from 'tar'
 import { verifyRuntimeClosure } from './verify-runtime-closure.ts'
-import { pnpmInvocation, restoreLegacyHoists } from './executable-packaging.ts'
-import { materializeStagedLinks, deduplicateStagedWorkspacePackages } from './build-exe-for-python-sdk-staging.ts'
+import {
+  PKG_CONFIG_FILE, pinStagedDependencyVersions, pkgConfigExcludingCheckout, pnpmInvocation,
+  productionDeployArguments, removePackageManagerRecords,
+} from './executable-packaging.ts'
+import { materializeStagedLinks } from './build-exe-for-python-sdk-staging.ts'
 import { resolveLinuxNodePtyAddon } from './executable-native-pty.ts'
 import { artifactManifestSchema, fileDigest, payloadFiles, SSH_HELPER_TARGETS, verifyPayload, type SshHelperTarget } from './ssh-helper/artifact.ts'
 import { probeHelper } from './ssh-helper/probe.ts'
@@ -18,6 +21,12 @@ const root = resolve(import.meta.dirname, '..')
 const closureDirectory = 'packages/ssh/ssh-helper-runtime'
 const closureName = '@liwa/ssh-helper-runtime'
 const assets = ['package.json', 'lib/**/*.js', ...['js', 'cjs', 'mjs', 'json', 'node', 'so', 'so.*', 'dylib', 'wasm', 'sh', 'bash'].map(extension => `node_modules/**/*.${extension}`)]
+/**
+ * Optional peers the lockfile installs because workspace installs auto-install peers, which the helper never
+ * loads: Cordis's loader falls back to its no-internals path without the builtin-access addon, whose macOS
+ * prebuild requires macOS 15, above the helper's macOS 14 baseline. Each name covers its platform packages.
+ */
+const omittedOptionalPeers = ['node-addon-require-builtin']
 
 interface Manifest { name: string; version: string; license?: string; dependencies?: Record<string, string> }
 
@@ -129,22 +138,21 @@ export async function buildSshHelper(argv: string[]): Promise<void> {
     const staging = join(temporary, 'staging')
     const product = join(temporary, 'liwa-ssh-helper')
     await mkdir(product)
-    try {
-      await pnpm('--filter', closureName, 'deploy', '--legacy', '--prod', '--config.allow-unused-patches=true', '--config.node-linker=hoisted', '--config.auto-install-peers=false', '--config.link-workspace-packages=true', '--config.hoist-workspace-packages=false', staging)
-    } finally {
-      // Legacy deploy records production-only workspace state; pnpm's next exec otherwise prunes build tools.
-      await pnpm('install', '--offline', '--frozen-lockfile', '--prod=false', '--ignore-scripts')
-    }
-    await restoreLegacyHoists(staging, join(root, closureDirectory, 'node_modules'))
+    await pnpm(...productionDeployArguments(closureName, staging))
     await materializeStagedLinks(staging)
-    await deduplicateStagedWorkspacePackages(staging, root)
+    await removePackageManagerRecords(staging)
+    await pinStagedDependencyVersions(staging)
+    for (const peer of globSync(omittedOptionalPeers.flatMap(name => [name, `${name}-*`]), { cwd: join(staging, 'node_modules') })) {
+      await rm(join(staging, 'node_modules', peer), { recursive: true, force: true })
+    }
     await prepareNative(staging, product, process.platform, process.arch as 'x64' | 'arm64')
     await verifyNativePayload(join(staging, 'node_modules'), target)
     const stagedManifest = await manifest(join(staging, 'package.json'))
     await writeFile(join(staging, 'runtime-bootstrap.mjs'), 'import { runSshHelperRuntime } from "./lib/index.js";\nawait runSshHelperRuntime();\n')
-    await writeFile(join(staging, 'package.json'), `${JSON.stringify({ ...stagedManifest,
-      bin: 'runtime-bootstrap.mjs', pkg: { assets, ignore: ['node_modules/@liwa/node-addon-system-*/**/*'] },
-    }, null, 2)}\n`)
+    await writeFile(join(staging, 'package.json'), `${JSON.stringify({ ...stagedManifest, bin: 'runtime-bootstrap.mjs' }, null, 2)}\n`)
+    // The staging sits inside the checkout; the temporary directory takes this checkout-naming config with it.
+    const pkgConfig = pkgConfigExcludingCheckout(root, assets, ['node_modules/@liwa/node-addon-system-*/**/*'])
+    await writeFile(join(staging, PKG_CONFIG_FILE), `${JSON.stringify(pkgConfig, null, 2)}\n`)
     const executable = join(product, 'liwa-ssh-helper')
     await pnpm('exec', 'pkg', staging, '--sea', '--targets', target, '--output', executable)
     await chmod(executable, 0o755)

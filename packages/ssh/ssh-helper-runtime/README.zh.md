@@ -62,7 +62,7 @@ pnpm exec tsx scripts/build-exe-for-ssh-helper.ts
 <details>
 <summary>实现细节 — 点击展开</summary>
 
-载体通过仓库带补丁的 `pkg --sea` 流程内嵌完整依赖集合。入口分派 SSH helper、托管子进程启动器或 PTC worker。共享的[部署函数](../../../scripts/executable-packaging.ts) 也用于 Python SDK 构建器。生产部署会在调用构建工具前恢复开发依赖安装状态，避免 pnpm 的自动依赖检查将它们删除。
+载体通过仓库带补丁的 `pkg --sea` 流程内嵌完整依赖集合。入口分派 SSH helper、托管子进程启动器或 PTC worker。共享的[部署函数](../../../scripts/executable-packaging.ts) 也用于 Python SDK 构建器。生产部署严格安装 `pnpm-lock.yaml` 锁定的版本，随后删除 pnpm 的安装记录，并把清单中的工作区依赖固定为已安装的版本，部署元数据因此不会把构建检出目录的路径带进可执行文件。打包时排除检出目录自身的依赖和工作区源码，暂存载荷的模块解析因此不会把开发包嵌入可执行文件。
 
 操作系统必须从真实文件执行 Landlock 和 PTY 启动器。进程内的解析钩子将 system 包指向随包分发的原生目录；node-pty 使用其既有的相对可执行文件定位 spawn-helper 的约定。二进制检查在打包前覆盖内嵌原生模块，并在发布前覆盖外部资源。
 

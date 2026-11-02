@@ -9,7 +9,10 @@
 import { createHash } from 'node:crypto'
 import { build as bundle } from 'tsdown'
 import { spawn } from 'node:child_process'
-import { pnpmInvocation } from './executable-packaging.ts'
+import {
+  PKG_CONFIG_FILE, pinStagedDependencyVersions, pkgConfigExcludingCheckout, pnpmInvocation,
+  productionDeployArguments, removePackageManagerRecords,
+} from './executable-packaging.ts'
 import { existsSync, statSync } from 'node:fs'
 import { chmod, copyFile, cp, glob, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { basename, dirname, join, resolve, sep } from 'node:path'
@@ -302,21 +305,10 @@ class SingleExeBuild {
     }
     if (this.cli.dryRun) console.log(`build-exe-for-python-sdk: [dry-run] rm -rf ${this.staging}`)
     else await rm(this.staging, { recursive: true, force: true })
-    // The lockfile deploy installs exactly the versions in pnpm-lock.yaml, which the Office download lock
-    // also reads. `--legacy` under the hoisted linker ignores the lockfile and re-resolves from the registry.
-    await this.runPnpm('deploy', [
-      '--filter',
-      DEPLOY_ROOT_PACKAGE,
-      'deploy',
-      '--prod',
-      '--config.node-linker=hoisted',
-      // Deploy names workspace packages by absolute file URLs, which allowBuilds cannot list. Their only
-      // install script restores node-pty's spawn-helper mode, which prepareNativePty and pack() already
-      // own; third-party builds keep the workspace's reviewed allowBuilds decisions.
-      '--config.strict-dep-builds=false',
-      this.staging,
-    ])
+    // The Office download lock reads pnpm-lock.yaml, so the staged versions must be the locked ones.
+    await this.runPnpm('deploy', productionDeployArguments(DEPLOY_ROOT_PACKAGE, this.staging))
     await this.materializeStagedLinks()
+    await this.detachFromCheckout()
     if (this.cli.dryRun) {
       for (const name of DEPLOY_ONLY_DOCS) console.log(`build-exe-for-python-sdk: [dry-run] rm -f ${join(this.staging, name)}`)
     } else {
@@ -336,16 +328,19 @@ class SingleExeBuild {
     await materializeStagedLinks(this.staging)
   }
 
-  /** Add the executable entry and pkg assets to the staged manifest. */
-  async injectPkgConfig(): Promise<void> {
-    const sourceModules = join(root, 'node_modules').replaceAll('\\', '/')
-    const patch = { bin: ENTRY_BIN, pkg: { assets: ASSET_GLOBS, ignore: [
-      ...OFFICE_ASSET_IGNORES,
-      `${sourceModules}/**`, `${sourceModules}/.pnpm/**`,
-      ...['packages', 'apps', 'vendor', 'native', 'scripts'].map(directory => `${join(root, directory).replaceAll('\\', '/')}/**`),
-      `${root.replaceAll('\\', '/')}/tsconfig*.json`,
-      '**/*.map', '**/*.d.ts', '**/*.d.mts', '**/*.d.cts',
-    ] } }
+  /** Drop what the deploy records about the build checkout: pnpm's install records and the manifest's local specifiers. */
+  private async detachFromCheckout(): Promise<void> {
+    if (this.cli.dryRun) {
+      console.log('build-exe-for-python-sdk: [dry-run] remove pnpm install records and pin staged dependency versions')
+      return
+    }
+    await removePackageManagerRecords(this.staging)
+    await pinStagedDependencyVersions(this.staging)
+  }
+
+  /** Add the executable entry to the staged manifest and bundle the resource-download helpers beside it. */
+  async injectEntry(): Promise<void> {
+    const patch = { bin: ENTRY_BIN }
     const manifestPath = join(this.staging, 'package.json')
     if (this.cli.dryRun) {
       console.log(`build-exe-for-python-sdk: [dry-run] patch ${manifestPath} with ${JSON.stringify(patch)}`)
@@ -379,7 +374,7 @@ class SingleExeBuild {
     await writeFile(manifestPath, `${JSON.stringify({ ...manifest, ...patch }, null, 2)}\n`)
     await this.run('resource helper imports', process.execPath, ['--input-type=module', '--eval',
       ['primary-runtime.mjs', 'office-sidecar.mjs'].map(file => `await import(${JSON.stringify(pathToFileURL(join(this.staging, file)).href)})`).join('\n')])
-    console.log(`build-exe-for-python-sdk: injected pkg config into ${manifestPath}`)
+    console.log(`build-exe-for-python-sdk: injected executable entry into ${manifestPath}`)
   }
 
   /**
@@ -393,18 +388,23 @@ class SingleExeBuild {
     await this.prepareNativePty(target)
     const platform = target.platform === 'macos' ? 'darwin' : target.platform === 'win' ? 'win32' : target.platform
     if (!this.cli.dryRun) await mkdir(this.outDir, { recursive: true })
-    await this.runPnpm(`pkg ${target.spec}`, [
-      'exec',
-      'pkg',
-      this.staging,
-      '--sea',
-      '--compress',
-      this.cli.compress,
-      '--targets',
-      target.spec,
-      '--output',
-      product,
-    ])
+    await this.writePkgConfig()
+    try {
+      await this.runPnpm(`pkg ${target.spec}`, [
+        'exec',
+        'pkg',
+        this.staging,
+        '--sea',
+        '--compress',
+        this.cli.compress,
+        '--targets',
+        target.spec,
+        '--output',
+        product,
+      ])
+    } finally {
+      if (!this.cli.dryRun) await rm(join(this.staging, PKG_CONFIG_FILE), { force: true })
+    }
     if (!this.cli.dryRun && !existsSync(product)) {
       throw new Error(`build-exe-for-python-sdk: product ${product} is missing after the pkg run; inspect ${this.outDir}.`)
     }
@@ -433,6 +433,17 @@ class SingleExeBuild {
       await chmod(spawnHelper, 0o755)
     }
     return [product, ripgrep, spawnHelper, resources]
+  }
+
+  /** Write pkg's configuration beside the staged manifest; pack() deletes it once pkg has read it. */
+  private async writePkgConfig(): Promise<void> {
+    const config = pkgConfigExcludingCheckout(root, ASSET_GLOBS, [...OFFICE_ASSET_IGNORES, '**/*.map', '**/*.d.ts', '**/*.d.mts', '**/*.d.cts'])
+    const path = join(this.staging, PKG_CONFIG_FILE)
+    if (this.cli.dryRun) {
+      console.log(`build-exe-for-python-sdk: [dry-run] write ${path} with ${JSON.stringify(config)}`)
+      return
+    }
+    await writeFile(path, `${JSON.stringify(config, null, 2)}\n`)
   }
 
   /** Copy the target ripgrep binary beside the executable so Node can spawn it outside pkg's virtual filesystem. */
@@ -613,7 +624,7 @@ async function main(): Promise<void> {
   await pipeline.verifyClosure()
   await pipeline.build()
   await pipeline.deployStaging()
-  await pipeline.injectPkgConfig()
+  await pipeline.injectEntry()
   const products: string[] = []
   for (const target of cli.targets) products.push(...await pipeline.pack(target))
   pipeline.printProducts(products)

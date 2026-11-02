@@ -1,4 +1,5 @@
 /** Desktop-only omissions from already installed production npm packages. */
+import { PACKAGE_MANAGER_RECORDS } from '../../../scripts/executable-packaging.ts'
 
 /**
  * Identify build, diagnostic and other-platform files omitted from the immutable Desktop runtime.
@@ -13,7 +14,7 @@ export function desktopRuntimeFileExclusion(
   path: string, target: { platform: NodeJS.Platform; arch: string }, officeEngine: string,
 ): string | undefined {
   const parts = path.split(/[\\/]/u)
-  if (parts.some(part => ['.bin', '.pnpm', '.modules.yaml', '.pnpm-workspace-state-v1.json'].includes(part))) {
+  if (parts.some(part => PACKAGE_MANAGER_RECORDS.includes(part))) {
     return 'package-manager metadata'
   }
   const file = parts.at(-1)!

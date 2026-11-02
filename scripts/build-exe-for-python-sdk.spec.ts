@@ -143,6 +143,23 @@ describe('Python runtime executable builder CLI', () => {
     expect(result.stdout).not.toMatch(/pnpm\.cmd/i)
   })
 
+  it('keeps checkout paths in the transient pkg config instead of the embedded manifest', () => {
+    const result = run(
+      { npm_execpath: 'C:\\tools\\pnpm.cjs' },
+      '--skip-build',
+      '--dry-run',
+      '--targets=node24-macos-arm64',
+    )
+
+    expect(result.status, result.stderr).toBe(0)
+    const lines = result.stdout.split('\n')
+    const manifestPatch = lines.find(line => line.includes('[dry-run] patch '))
+    const pkgConfig = lines.find(line => line.includes('[dry-run] write ') && line.includes('.pkgrc.json'))
+    expect(lines.some(line => line.includes('remove pnpm install records and pin staged dependency versions'))).toBe(true)
+    expect(manifestPatch?.split(' with ')[1]).toBe('{"bin":"runtime-bootstrap.mjs"}')
+    expect(pkgConfig).toContain(`"${root.replaceAll('\\', '/')}/node_modules/**"`)
+  })
+
   it('resolves the pnpm package behind a Windows command shim', () => {
     const setup = mkdtempSync(join(tmpdir(), 'liwa-pnpm-home-'))
     temporaryDirectories.push(setup)
