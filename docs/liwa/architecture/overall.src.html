@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>灵鲸 · 整体架构图</title>
+<style>
+:root {
+  --bg: #f7f6f2; --panel: #ffffff; --text: #1f2328; --muted: #5f6670; --line: #e3e1da; --accent: #2563eb;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #15171a; --panel: #1d2024; --text: #e6e7e9; --muted: #9aa1aa; --line: #2e3238; --accent: #60a5fa; }
+}
+:root[data-theme="dark"] { --bg: #15171a; --panel: #1d2024; --text: #e6e7e9; --muted: #9aa1aa; --line: #2e3238; --accent: #60a5fa; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 80px; display: grid; grid-template-columns: 220px 1fr; gap: 28px; }
+nav { position: sticky; top: 16px; align-self: start; max-height: calc(100vh - 32px); overflow: auto; font-size: 13px; }
+nav a { display: block; color: var(--muted); text-decoration: none; padding: 2px 0; }
+nav a:hover { color: var(--accent); }
+nav .grp { margin-top: 12px; font-weight: 600; color: var(--text); }
+main { min-width: 0; }
+h1 { font-size: 26px; margin: 0 0 4px; }
+h2 { font-size: 20px; margin: 40px 0 12px; padding-top: 8px; border-top: 1px solid var(--line); }
+h3 { font-size: 16px; margin: 0; }
+.sub { color: var(--muted); margin: 0 0 18px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; margin: 14px 0; }
+.card .head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.id { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--muted); }
+.one { margin: 2px 0 10px; color: var(--muted); }
+.pts { margin: 10px 0 0; padding-left: 18px; color: var(--muted); font-size: 14px; }
+.diagram { overflow-x: auto; }
+.diagram pre.mermaid { background: #ffffff; border-radius: 8px; padding: 8px; }
+pre.mermaid { margin: 0; background: transparent; font-size: 12px; white-space: pre; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { border: 1px solid var(--line); padding: 6px 8px; vertical-align: top; text-align: left; }
+th { background: color-mix(in srgb, var(--panel) 85%, var(--line)); }
+@media (max-width: 860px) { .wrap { grid-template-columns: 1fr; } nav { position: static; max-height: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <div class="grp">总图</div>
+  <a href="#A1">A1 总图</a>
+  <a href="#A2">A2 进程</a>
+  <a href="#A3">A3 分层与依赖</a>
+  <a href="#A4">A4 实例会话与四种活</a>
+  <div class="grp">循环</div>
+  <a href="#B1">B1 身的每分钟一跳</a>
+  <a href="#B2">B2 进哪个实例</a>
+  <a href="#B3">B3 经历流与投影</a>
+  <div class="grp">链路</div>
+  <a href="#C1">C1 主人问"在干嘛"</a>
+  <a href="#C2">C2 她自己的事</a>
+  <a href="#C3">C3 想找主人</a>
+  <a href="#C4">C4 夜里整理</a>
+  <div class="grp">其他</div>
+  <a href="#open">已定与待补</a>
+</nav>
+<main>
+<h1>灵鲸 · 整体架构图</h1>
+<p class="sub">配合 <code>docs/liwa/architecture/overall.md</code> 和 <code>four-layers.md</code> 看。图已预先渲染，不联网也能看。2026-11-02。</p>
+
+<h2 id="overview">总图</h2>
+
+<div class="card" id="A1">
+  <div class="head"><span class="id">A1</span><h3>总图：四层，一个她，多个实例</h3></div>
+  <p class="one">本体是她的身体和神经系统，不是脑子；思考全部经第四层开会话：第二层的实例会话和第三层的四种活。代码不读懂话的意思，也不替她做选择。</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart TB
+  W["第一层 对外适配层（平台只是通道，不划实例，只报事实）&lt;br/&gt;主控台 / 终端 / 网页（gateway）· 微信 V2、QQ 以后（形态适配器子进程）· 世界源 · 时钟&lt;br/&gt;感 senses：归一 · 认人 · 算受众 · 先写经历流 ｜ 嘴 outbox：核对引用编号 · 家规 · 清洗 · 投递"]
+  subgraph L2["第二层 成员层（每个成员一份）"]
+    DV["投递器 minds：每个实例一条持久的待投递队列&lt;br/&gt;按人物档案和对象定进哪个实例 · 合批 · 排序 · 去重 · 三种送达"]
+    INS["实例：稳定编号 + 一个实例会话（可换代）+ 它派出去的活&lt;br/&gt;主人（常驻）· 独处（按需）· 某个人 V2 · 某个群 V2 · 陌生对话 V2"]
+    SH["共用层（单写者，经账本 API，每个账本带版本号）&lt;br/&gt;身 body：每分钟一跳，只算数 · 念 attention：焦点栈 · 心事 · 注意容量 · 路由&lt;br/&gt;意 will：承诺 · 打算 · 心愿 · 方针 · 长期决定队列 · 冲动 · 时钟 scheduler&lt;br/&gt;账本：self · memory · people · skills · roster"]
+  end
+  L3["第三层 干活层：tasks + workspace + 活会话&lt;br/&gt;干活 · 想事（立场 / 出主意）· 她自己的事 · 整理"]
+  L4["第四层 agent CLI 集成层：brains（底座自带 agent 默认 · Claude Code · Codex · 通用 ACP）· procs"]
+  X["横向：守护 guard（暂停 · 总闸 · 名额与预算 · 家规）· 行动管线 actions · 能力 abilities · 经历流 journal"]
+  W <-->|"标准消息 ／ 要投递的话"| DV
+  DV <-->|"三种送达 ／ reply · say"| INS
+  INS <-->|"读写，只经账本 API"| SH
+  INS <-->|"dispatch · ponder · do ／ 汇报 · 回问 · 结论（事件）"| L3
+  INS -->|"开会话"| L4
+  L3 -->|"开会话"| L4
+  L4 ~~~ X
+  </pre></div>
+  <ul class="pts">
+    <li>所有事件进同一条经历流；所有动作走同一条管线（准入 → 记将要做 → 执行 → 记结果）。</li>
+    <li>身每分钟一跳几毫秒，是共用层里唯一一直在跑的东西；只有一个身体。</li>
+    <li>实例之间不直连，只经共用账本；第二层和第三层之间只走事件；第二层和第三层都用第四层。</li>
+  </ul>
+</div>
+
+<div class="card" id="A2">
+  <div class="head"><span class="id">A2</span><h3>进程：一个本体加一群子进程</h3></div>
+  <p class="one">崩溃隔离在子进程里；写只在主线程。</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart LR
+  LD["launchd"] --> CORE["本体：一个 Node 24 进程&lt;br/&gt;主线程：事件循环 · SQLite 唯一写入者 · 作业定时器（身的每分钟一跳是其中一个）&lt;br/&gt;worker_threads：只读的重查询&lt;br/&gt;底座自带 agent：进程内的 agent-loop + 预设（默认提供方）"]
+  CORE --> C1["CLI 子进程 ×N&lt;br/&gt;每个选了外部 CLI 提供方的会话一个（实例会话或活会话）&lt;br/&gt;Claude Code · Codex app-server · 通用 ACP"]
+  CORE --> C2["形态适配器子进程 ×N：微信【V2】、QQ【以后】"]
+  CORE --> C3["本地能力服务（按需）"]
+  CORE --> DB["liwa.db · derived.db · blobs/ · sessions/（底座会话日志）· workspaces/ · backups/"]
+  UI["命令行 liwa / 浏览器 / Mac 客户端 / 桌宠【V5】/ 手机"] -->|HTTPS · WebSocket| CORE
+  </pre></div>
+</div>
+
+<div class="card" id="A3">
+  <div class="head"><span class="id">A3</span><h3>分层与依赖方向</h3></div>
+  <p class="one">两种切法：四层按「谁在做什么」分，代码依赖按「谁能调谁」分。调用只能向下；同层只调公开 API；守护横切。</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart TB
+  L1["接入层：gateway（客户端）· toolport（内核工具端点，给实例会话和活会话用）"] --> L2["编排层：senses 感 · attention 念（含路由）· will 意 · scheduler 时钟 · tasks 活 · outbox 嘴"]
+  L2 --> L3["运行层：minds（实例与活会话、投递器）· context · actions"]
+  L3 --> L4["账本层：body · self · memory · people · skills · roster"]
+  L3 --> L5["插件宿主 plugins：记忆引擎 · 成长引擎 · 关系模型（第一版内置）"]
+  L5 --> L4
+  L4 --> L6["资源层：brains · procs · formhost · abilities · workspace · notify"]
+  L3 --> L6
+  L6 --> L8["基础层：journal"]
+  L4 --> L8
+  G["守护 guard：每次用脑、每个动作之前"] -.-> L2
+  G -.-> L3
+  G -.-> L6
+  </pre></div>
+  <table style="margin-top:12px">
+    <tr><th>四层</th><th>模块</th></tr>
+    <tr><td>第一层 对外适配层</td><td>gateway（主控台、终端、网页）、formhost 与形态适配器【V2】、世界源、senses 入站归一、outbox 出站投递</td></tr>
+    <tr><td>第二层 成员层</td><td>共用层：self、body、memory、people、skills、roster、will、attention（含路由）、scheduler；实例：minds 的实例部分（登记、代次、待投递队列与投递器）、context、toolport</td></tr>
+    <tr><td>第三层 干活层</td><td>tasks、workspace、minds 的活会话部分</td></tr>
+    <tr><td>第四层 agent CLI 集成层</td><td>brains（底座自带 agent、Claude Code、Codex、通用 ACP）、procs</td></tr>
+    <tr><td>横向</td><td>guard、actions、abilities、journal、plugins</td></tr>
+  </table>
+</div>
+
+<div class="card" id="A4">
+  <div class="head"><span class="id">A4</span><h3>实例会话与四种活</h3></div>
+  <table>
+    <tr><th></th><th>实例会话</th><th>干活</th><th>想事（立场 / 出主意）</th><th>她自己的事</th><th>整理</th></tr>
+    <tr><td>数量</td><td>每个实例 1 个会话（可换代）</td><td>每件 1 个，可有子会话</td><td>每件 1 个，每次新开；立场类成员级排队</td><td>每件 1 个</td><td>每次作业 1 个，成员级</td></tr>
+    <tr><td>什么时候</td><td>路由表把东西送进这个实例：这个人说话；对象是他的冲动、心事、承诺到期；<code>remind</code> 到点；活的汇报、回问、结论；独处实例另管没有对象的身体过线、作息边界</td><td>归属实例 <code>dispatch</code></td><td>实例 <code>ponder</code></td><td>实例 <code>do</code>，一律归独处实例</td><td>空闲满条件；夜里</td></tr>
+    <tr><td>大脑（任选提供方）</td><td>快而便宜，配备用；默认底座自带 agent</td><td>Claude Code / Codex 等</td><td>强</td><td>便宜</td><td>便宜，夜里可换强</td></tr>
+    <tr><td>能读的记忆</td><td>本实例受众能知道的（独处：主人可知 + 公开）</td><td>按归属实例受众召回的 + <code>recall</code></td><td>快照 + <code>recall</code>，受众 = 派它的实例的</td><td>同独处实例</td><td>全部受众</td></tr>
+    <tr><td>能做的事</td><td><code>reply</code> / <code>no_reply</code> / <code>say</code>、<code>inner</code>、<code>commit</code>、<code>dispatch</code> / <code>ponder</code>、<code>do</code> / <code>manage</code>、<code>remind</code>、<code>answer</code>、<code>recall</code>、<code>look</code>；按实例种类 × 触发消息的发送者角色裁</td><td>CLI 原生工具（限本 worktree）、<code>ack</code>、<code>report</code>、<code>ask</code>、<code>spawn</code>、<code>inner</code>、<code>recall</code></td><td>立场类：<code>decide</code>、<code>pursue</code>、关系与花钱类、<code>dispatch</code>、<code>conclude</code>；出主意类：只读 + <code>conclude</code></td><td>只读 + 草稿目录 + <code>inner</code> + <code>report</code></td><td>只有 <code>submit</code></td></tr>
+    <tr><td>不能做的事</td><td>改文件、跑命令、上网（只能派活）；定方针、改关系、花钱（只能 <code>ponder</code>）；自报受众</td><td>对外说话、对人许诺、问主人、直接写账本</td><td>同左；没有 <code>commit</code>，结论里带「建议承诺」</td><td>同左；没有 shell</td><td>任何对外动作</td></tr>
+    <tr><td>生命周期</td><td>主人实例常驻；独处按需；别人的实例闲置 1 小时回收（群更短）</td><td>跟随活</td><td>结论交回即结束</td><td>终止条件到，或她停下</td><td>用完即弃</td></tr>
+  </table>
+</div>
+
+<h2 id="loops">循环</h2>
+
+<div class="card" id="B1">
+  <div class="head"><span class="id">B1</span><h3>身的每分钟一跳</h3></div>
+  <p class="one">确定性：只依赖注入的时钟、带种子的随机和按成员算的情境快照，所以能回放。只有一个身体，所有实例共用。</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart TD
+  T["每分钟 tick：注入的时钟 + 带种子的随机 + 情境快照"] --> U1["精力：两过程 + 昼夜 + 用脑负荷"]
+  U1 --> U2["需求：联结（每个在乎的人）· 认可 · 新知 · 胜任 · 自主"]
+  U2 --> U3["情绪事件按类型半衰期衰减；被提起就再点燃"]
+  U3 --> U4["心情两维：向基线回弹 + 扰动 + 情绪推动；睡着冻结"]
+  U4 --> U5["无聊：闲着涨、做着没意义也涨；有真人的对话没了结就不算闲着&lt;br/&gt;耐受按天回落；冲动衰减、线索再点燃；她选过的冲动按算术消退"]
+  U5 --> MOD["调节器（算出来不存）：唤醒 · 细致度 · 专注 · 查看频率 · 心情词"]
+  MOD --> TH{"需求过线？&lt;br/&gt;概率随超出程度上升"}
+  TH -->|命中| IMP["生成或加强冲动（带来源、带对象）→ 交给念按对象路由"]
+  TH -->|没命中| ENDN["结束，几毫秒"]
+  IMP --> SAMP["过线 / 档位变化 / 整点：记一条 body.sampled"]
+  ENDN -.整点.-> SAMP
+  </pre></div>
+</div>
+
+<div class="card" id="B2">
+  <div class="head"><span class="id">B2</span><h3>进哪个实例</h3></div>
+  <p class="one">代码按结构查路由表，送进对应的实例，由她在那里判断；确定性的事代码直接办；其余只记或进每轮前缀。代码不读内容。</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart LR
+  IN["到了念的东西：事件或冲动"] --> KIND{"是什么？按结构查，不读内容"}
+  KIND -->|"主人在任何地方说话"| P1["主人实例：空闲立即起回合；不占注意容量，不排在可让出的后台回合后面"]
+  KIND -->|"已绑定的人私聊 V2"| P2["那个人的实例；注意容量满了先等几秒，由她决定先说「等我一下」"]
+  KIND -->|"群消息 V2"| G{"第一道门&lt;br/&gt;@ 她 · 点名 · 回复她 · 主人说话"}
+  G -->|"过了"| P3["群实例下一回合"]
+  G -->|"没过"| P3B["只记；她隔一阵抬头看一眼：便宜的只读回合，每群日预算"]
+  KIND -->|"没绑定的账号 V2"| P4["那个对话的陌生实例"]
+  KIND -->|"有对象的冲动"| HR{"家规 · 主动开口回合的日预算"}
+  HR -->|"命中"| HOLD["不起回合，冲动留在身体里"]
+  HR -->|"允许"| P5["对象的实例：没在聊就起独立回合，前缀是事实包；正在聊就进下一回合的前缀"]
+  KIND -->|"没对象的冲动"| SOLO{"有真人的对话焦点没了结？&lt;br/&gt;主人实例刚来往过？"}
+  SOLO -->|"是"| HOLD
+  SOLO -->|"否"| P6["独处实例：[能做的] 只摆事实，不排序"]
+  KIND -->|"心事条件满足 · 承诺到期 · remind 到点"| P7["对象的实例 / 定时的实例；心事先按那里的受众过滤"]
+  KIND -->|"活的汇报、回问、想事的结论"| P8["归属实例下一回合（合批）；替主人的活归主人实例"]
+  KIND -->|"作息到早晨"| P9["主人实例起一轮，说不说由她；勿扰命中不起"]
+  KIND -->|"确定性的事：权限、冲突、到期、核验、投递"| CODE["代码直接办"]
+  KIND -->|"联想、世界事件、别处简讯"| PRE["只进下一次用脑的每轮前缀，按受众裁"]
+  </pre></div>
+</div>
+
+<div class="card" id="B3">
+  <div class="head"><span class="id">B3</span><h3>经历流与投影</h3></div>
+  <p class="one">事件信封不改，正文是可删的载荷；一切状态都是投影，能删掉重算。权威是经历流加本体的待投递队列，提供方自己记的对话只是缓存。</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart LR
+  subgraph W["写入方，只经 append"]
+    S1["senses"]
+    A1["actions / outbox"]
+    B1["body 采样"]
+    M1["实例与活的回合"]
+    T1["tasks"]
+    L1["账本变更"]
+  end
+  J["经历流 journal&lt;br/&gt;成员流 · 实例流 · 地方流 · 活流 · 系统流&lt;br/&gt;事件信封（不改）+ 载荷（可删）+ 大对象"]
+  subgraph IN["内联投影，同事务"]
+    P1["她现在"]
+    P2["手上的事"]
+    P3["她在意的"]
+    P4["花费 · 用量"]
+  end
+  subgraph AS["异步投影，derived.db，可重建"]
+    Q1["记忆 · 印象摘要"]
+    Q2["全文与向量索引"]
+    Q3["日记 · 成长 · 自我"]
+    Q4["验收指标"]
+  end
+  S1 --> J
+  A1 --> J
+  B1 --> J
+  M1 --> J
+  T1 --> J
+  L1 --> J
+  J --> IN
+  J --> AS
+  IN --> V["窗：主控台 / 桌宠 / 手机"]
+  AS --> V
+  AS --> R["回放与验收脚本"]
+  </pre></div>
+</div>
+
+<h2 id="chains">链路</h2>
+
+<div class="card" id="C1">
+  <div class="head"><span class="id">C1</span><h3>链路一：主人在微信问"在干嘛"（第一版是主控台，微信是第二版）</h3></div>
+  <p class="one">没有想事活出场；心事由代码按结构注入；妈妈的实例没动；她自己的事的活没停，放不放下由她定。</p>
+  <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant O as 主人（微信）
+  participant AD as 微信适配层
+  participant S as senses / people
+  participant J as 经历流
+  participant AT as attention
+  participant DV as 投递器 minds
+  participant CX as context
+  participant P as 主人实例会话（第四层提供方）
+  participant TP as toolport / outbox
+  O->>AD: 在干嘛
+  AD->>S: 标准消息：地方、账号、在场者、说给她的、内容
+  S->>J: message.received，来源人 主人，受众 主人
+  S->>AT: 事件
+  AT->>AT: 路由：主人的账号 → 主人实例；心事按结构匹配（对象是主人：告诉爸爸妈妈手术的事）
+  AT->>DV: 进主人实例的队列
+  DV->>CX: 主人实例空闲 → 收 0.5–2 秒内的连发，合成一轮
+  CX->>P: 每轮前缀（按主人实例的受众裁）+ 爸爸说
+  Note over CX,P: [状态] [正在做 看榫卯视频] [心事] [记得] [刚才想起] [别处 上午和妈妈聊了几句]
+  P->>TP: 同一批：reply（事件号、内容、感受）· inner（心事已了结）
+  TP->>J: effect.intended → effect.completed
+  TP->>AD: 投递到那条消息所在的地方
+  AD->>O: 回复
+  Note over J,AT: 写回：评价进身 · 心事了结 · 用量记账 · 投影更新
+  </pre></div>
+</div>
+
+<div class="card" id="C2">
+  <div class="head"><span class="id">C2</span><h3>链路二：她自己冒出念头（第四版的活动，机制第一版就有）</h3></div>
+  <p class="one">代码只摆事实不排序，她在独处实例里选；连续的小选择由她，硬币只定隔几个问她一次；腻和冲突作为事实摆给她。</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart TD
+  T["身：无聊过线，概率命中 → 冲动：换点事（没有对象）"] --> A1["念：没有对象 → 独处实例&lt;br/&gt;主人实例最近没来往、没有真人的对话没了结 → 起回合（没有就按需建）"]
+  A1 --> TB["意 will.table()：只摆事实，进独处实例的 [能做的]&lt;br/&gt;冲动表里的事 ∪ 能做 ∩ 会做，每件附一句身体感受：榫卯视频没看完，挺想 · 整理笔记，有点腻&lt;br/&gt;不排序、不给数值权重"]
+  TB --> SL["独处实例（便宜大脑；受众 = 主人可知 + 公开）&lt;br/&gt;do(看手工视频, 理由, 终止条件: 看腻了或到三点)；拿不准可以 ponder，也可以什么都不做"]
+  SL --> H["tasks 开一件她自己的事的活，归独处实例：活动的事实公开 · 花费单独算 · 不进看板"]
+  H --> LOOP["活里的她每看一条：inner(感受: 有意思 · 学到；念头: 分享给爸爸)"]
+  LOOP --> COIN{"再看一个？&lt;br/&gt;由她接着选&lt;br/&gt;硬币只定隔几个问她一次"}
+  COIN -->|继续| LOOP
+  COIN -->|"腻了 / 累了 / 和打算冲突 / 成瘾样信号，作为事实摆给她"| SL2["她说「再看一个就去改首页」：最后一回合 report(结束, 下一件: 改首页那件活)"]
+  SL2 --> N["改首页是替主人的活，归主人实例：代码按活号把事实送过去，她在那里 manage(继续)&lt;br/&gt;夜里：日记 · 习惯增长 · 偏好更新 · 成长提案"]
+  </pre></div>
+</div>
+
+<div class="card" id="C3">
+  <div class="head"><span class="id">C3</span><h3>链路三：想找主人（判断归她，边界归你）</h3></div>
+  <p class="one">代码不发消息、不按阈值放行；它只让想念涨落、在她选择后让冲动按算术消退、拼事实包、查家规。说不说由她。</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart TD
+  B["身：对主人的联结涨到 0.7，过线概率命中 → 冲动：想爸爸（对象：主人）"] --> R["念：有对象 → 主人实例"]
+  R --> HR{"主人的边界&lt;br/&gt;勿扰时段 · 别烦我&lt;br/&gt;今日条数 · 主动开口的日预算"}
+  HR -->|命中| HOLD["不起回合；冲动留在身体里"]
+  HR -->|没设或没命中| BUSY{"主人正在聊？"}
+  BUSY -->|是| NEXT["不另起回合，进下一回合的前缀"]
+  BUSY -->|否| FP["意 拼事实包（不带紧急度）：上次找他 10:00 没回 · 昨晚聊得热 · 现在 14:30 工作日 · 15:00 有会 · 今天已主动 1 次 · 手里有榫卯视频和妈妈的事"]
+  FP --> P["主人实例起一个独立回合：[想找他] + 事实包 + 教养底线 → 她三选一，各附理由"]
+  P -->|说| W["say → outbox：家规与平台限频再查一次 → 目标 = 主人最近活动的地方 → 投递 → 记 proactive.sent（理由）"]
+  P -->|留成心事| KM["inner(心事)：等他开完会说榫卯的事"]
+  P -->|不说| Q["no_reply"]
+  W --> REL["身：她的选择让这股冲动按算术消退&lt;br/&gt;说了 → 部分释放，对方回了再消，没回就无果退避 · 留成心事 → 转成心事，不再独立过线 · 不说 → 降一档并冷却"]
+  KM --> REL
+  Q --> REL
+  REL --> FB["反馈：回了 / 没回 / 点开没回 / 别烦 → 经历流 → 当天进心情；夜里进印象（爸爸上班时不爱聊天）和习惯"]
+  </pre></div>
+</div>
+
+<div class="card" id="C4">
+  <div class="head"><span class="id">C4</span><h3>链路四：夜里整理</h3></div>
+  <p class="one">一件整理活，十件事按顺序交提案，账本校验后写入。</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart LR
+  C["到了睡觉时间且主人实例空闲&lt;br/&gt;主人还在聊就推迟；过了 02:00 先做巩固和日记"] --> SL["整理活（成员级、便宜大脑、受众全部）&lt;br/&gt;只处理检查点之前的经历流"]
+  SL --> S1["① 巩固记忆"] --> S2["② 关系与印象摘要"] --> S3["③ 重算牵挂"] --> S4["④ 遗忘"] --> S5["⑤ 反思与成长提案"]
+  S5 --> S6["⑥ 日记 + 明天的打算"] --> S7["⑦ 自查：口头承诺 · 回执号 · 漏记 · 补评"] --> S8["⑧ 近况与余波"] --> S9["⑨ 自我模型"] --> S10["⑩ 抽查感受 · 自问自答"]
+  S10 --> OUT["账本校验后写入 · 成长有变 → 所有活着的实例排空闲换新 · 主人实例每夜至少换新一次 · 候选账号提醒"]
+  </pre></div>
+</div>
+
+<h2 id="open">已定与待补</h2>
+<div class="card">
+  <p class="one"><code>overall.md</code> §18 的选择已确认；四层骨架与实例模型已确认（决策 42、43，<code>four-layers.md</code>）。仍需主人提供：备份加密的密钥放哪；她用的 Claude、Codex 账号是否和主人共用、预留多少额度。第二版前再定：别人的实例默认能让她做什么、陌生实例怎么回收与并入、要不要让家人知道主人能看她们的私聊。第四版前再定：公开发言的规则。待核实：Claude 订阅账号经 pi-ai 登录在灵鲸里用合不合条款，核实前不依赖。</p>
+</div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+(function () {
+  function uniqueMarkers() {
+    document.querySelectorAll('pre.mermaid svg').forEach(function (svg, n) {
+      var prefix = 'd' + n + '-';
+      var map = {};
+      svg.querySelectorAll('marker[id]').forEach(function (m) { map[m.id] = prefix + m.id; m.id = prefix + m.id; });
+      if (!Object.keys(map).length) return;
+      svg.querySelectorAll('*').forEach(function (el) {
+        ['marker-start', 'marker-end', 'marker-mid'].forEach(function (a) {
+          var v = el.getAttribute(a);
+          if (!v) return;
+          var m = v.match(/url\(#([^)]+)\)/);
+          if (m && map[m[1]]) el.setAttribute(a, 'url(#' + map[m[1]] + ')');
+        });
+      });
+    });
+  }
+  if (window.mermaid) {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'default',
+      themeVariables: { fontFamily: '-apple-system, "PingFang SC", "Microsoft YaHei", sans-serif' },
+      sequence: { mirrorActors: false, wrap: false, messageFontSize: 13, noteFontSize: 12, actorFontSize: 13 },
+      flowchart: { htmlLabels: true, curve: 'basis' }
+    });
+    mermaid.run({ querySelector: 'pre.mermaid', suppressErrors: true }).then(uniqueMarkers, uniqueMarkers);
+  }
+})();
+</script>
+</body>
+</html>

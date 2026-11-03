@@ -80,6 +80,7 @@ const SCOPE_PATTERNS = [
   '.agents/notes/**/*.i18n.yaml',
 ]
 
+// The manifest excludes docs/liwa/: Chinese-only product designs and research are a separate corpus.
 const manifestContent = readRepositoryFile('scripts/translation-pairing.manifest.json')
 if (manifestContent === undefined) {
   throw new Error('scripts/translation-pairing.manifest.json is missing from the selected content plane')

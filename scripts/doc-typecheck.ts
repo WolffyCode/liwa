@@ -207,7 +207,8 @@ const markdownGlobs = ['README.md', '.agents/notes/**/*.md', 'docs/**/*.md', 'pa
 const files: string[] = []
 for (const pattern of markdownGlobs) {
   for (const match of globSync(pattern, { cwd: root })) {
-    if (!isArchivedAgentNotePath(match)) files.push(resolve(root, match))
+    // Liwa design documents contain proposed interfaces and pseudocode, not shipped API examples.
+    if (!isArchivedAgentNotePath(match) && !match.startsWith('docs/liwa/')) files.push(resolve(root, match))
   }
 }
 files.sort()

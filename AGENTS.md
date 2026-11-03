@@ -5,7 +5,7 @@
 ## 先读
 
 1. 主人的全局原则 `~/.claude/CLAUDE.md`：改在根上、编程风格、模块之间只走 API、每样东西唯一归属。Claude Code 会自动加载它；Codex 和其他 agent 开工前必须先读。
-2. 灵鲸的交接文档 `~/Desktop/coding/person/liwa/docs/handoff.md`：进度、已定决策、协作分工（"怎么协作"）、文档约定、主人偏好。灵鲸的产品与架构文档还在 `main` 分支的 `docs/` 里，没有合进 `dsh-base`；本分支的 `docs/` 是继承自上游的文档，只描述继承来的代码。路径以 MacBook 为准，mac mini 上的路径见 handoff 的"仓库状态"。
+2. 灵鲸的交接文档 `docs/liwa/handoff.md`：进度、已定决策、协作分工（"怎么协作"）、文档约定、主人偏好。`dsh-base` 是主分支；灵鲸的产品与架构设计在 `docs/liwa/`，底座自带文档在 `docs/` 其余位置。`main` 已不再使用，旧的自研内核代码留在 `main` 的历史里。
 3. 改 `packages/` 之前读 [docs/architecture.md](docs/architecture.md)，弄清继承来的代码怎么组织。
 
 ## 协作规则

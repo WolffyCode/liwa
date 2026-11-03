@@ -120,6 +120,7 @@ export const ALLOWED_SPANS: readonly BrandException[] = [
 
 /** Whole files that keep the upstream names, and why. */
 export const EXCLUDED_PATHS: readonly { readonly reason: string; readonly pattern: RegExp }[] = [
+  { reason: 'Liwa design and research documents cite the upstream product and its original names as evidence.', pattern: /^docs\/liwa\//u },
   { reason: 'Upstream design history; only links broken by the rename are repaired.', pattern: /^\.agents\/notes\//u },
   { reason: 'MIT copyright and upstream attribution must be retained.', pattern: /^(?:LICENSE|THIRD_PARTY_NOTICES\.md)$/u },
   { reason: 'Recorded sessions keep the model output and user input they were recorded with until re-recorded.', pattern: /^snapshots\/.*(?:\.jsonl|\.expected\.[a-z]+)$/u },
