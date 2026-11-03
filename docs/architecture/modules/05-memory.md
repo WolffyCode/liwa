@@ -1,6 +1,6 @@
-# 05 记忆系统：memory、people、自我模型、睡眠用脑的记忆部分
+# 05 记忆系统：memory、people、自我模型、整理活的记忆部分
 
-状态：**已确认**（2026-10-28）。边界以 `../overall.md` 为准（§2.3 所有权、§3.3 模块清单、§5.1 注入、§5.8 受众、§6 持久化、§9.2 接缝、§16.1 范围）；产品要求见 `../../product.md` §3.3、§3.6、§3.8、§6.1、§10。调研依据是 `../../research/2026-10-28-memory-mechanisms.md`（下文简称"记忆调研"）及其三份子调研，和 `../../research/2026-10-28-memory-landscape.md`（GitHub 全景，下文简称"全景调研"）。本稿是记忆系统的实现 spec；`overall.md` §16.1 已按本稿同步（§9.4）。
+状态：**已确认**（2026-10-28；2026-11-02 按决策 42、43 同步）。边界以 `../overall.md` 为准（§2.3 所有权、§3.3 模块清单、§5.1 注入、§5.8 受众、§6 持久化、§9.2 接缝、§16.1 范围）；第二层的实例模型、受众盖章与各种用脑的受众以 `../four-layers.md` 为准（决策 42、43）；产品要求见 `../../product.md` §3.3、§3.6、§3.8、§6.1、§10。调研依据是 `../../research/2026-10-28-memory-mechanisms.md`（下文简称"记忆调研"）及其三份子调研，和 `../../research/2026-10-28-memory-landscape.md`（GitHub 全景，下文简称"全景调研"）。本稿是记忆系统的实现 spec；`overall.md` §16.1 已按本稿同步（§9.4）。
 
 标注：〔一手〕读过源码或论文正文；〔二手〕转述；〔实测〕本机跑出来的；〔推理〕没有直接来源的设计判断。依据按节号写在 §11。
 
@@ -10,9 +10,9 @@
 
 **不做"神经元图谱"。** 网上说的"神经元记忆"是"概念节点 + 一起出现就连边 + 多跳扩散"。证据是：它只在多跳问题上有稳定收益，"记住一件事"不比好的全文 + 向量检索强（HippoRAG 2 对强嵌入基线平均只多 2.8 F1，涨幅全在多跳题；NeuralMemory 自己的评测输给朴素基线；麦麦的"海马体"已被它自己放弃）；它要对每段原文调模型抽节点，和"便宜模型只在对话里顺手交一次、夜里分批整理"冲突；节点内容被整合覆盖后丢来源、丢受众，扩散还会穿过当前受众看不见的条目把隐私"联想"出来。所以做到**"激活数值 + 线索一跳联想"**为止：激活按 ACT-R 公式在代码里读时算；联想走"线索倒排"（人、地方、话题、日期、情绪）一跳，按线索独特度加权，先裁受众再扩散。这正是产品定义 §3.3 写的"新近 + 频率 + 线索独特度 + 情绪残留 + 关切命中 + 噪声"，几乎免费、可回放、可审计。真要多跳，将来可以在投影上加，不用现在背成本。
 
-**四条管线，模型只管四件事。** (1) 对话里顺手交事实（`inner` 的事实字段，零额外调用，当场写成"暂定"条目，下一轮就能召回）；(2) 她自己的经历由代码从手上的事流直接生成，不经模型；(3) 空闲增量（某在场冷 10 分钟且新增 ≥20 条，或一件活做完）由便宜模型补漏；(4) 夜里分批：代码分组 → 模型判"重复 / 更新 / 矛盾 / 无关" → 代码落版本链 → 模型写印象摘要（每行带证据） → 代码遗忘 → 模型提反思与自我候选 → 代码晋升。合并、去重、版本、受众交集、遗忘、墓碑、晋升、激活全是代码。
+**四条管线，模型只管四件事。** (1) 对话里顺手交事实（`inner` 的事实字段，零额外调用，当场写成"暂定"条目，下一轮就能召回）；(2) 她自己的经历由代码从手上的事流直接生成，不经模型；(3) 空闲增量（某实例冷 10 分钟且新增 ≥20 条，或一件活做完）由便宜模型补漏；(4) 夜里分批：代码分组 → 模型判"重复 / 更新 / 矛盾 / 无关" → 代码落版本链 → 模型写印象摘要（每行带证据） → 代码遗忘 → 模型提反思与自我候选 → 代码晋升。合并、去重、版本、受众交集、遗忘、墓碑、晋升、激活全是代码。
 
-**召回。** 每轮先按受众裁剪，再五路取候选（线索命中、全文、向量、关切、新近；V1.1 加联想），RRF 融合后按 0.45 相关 + 0.20 激活 + 0.20 重要 + 0.15 新近打分，过清晰度门，MMR 去重，在场最多 5 条 500 字，另加在场者的印象摘要 150 字；条目通道都没命中时从原文补 1 条"原话"。全文用 SQLite FTS5 的 trigram（实测中文下 unicode61 一条都查不到，jieba 漏单字）；向量用 sqlite-vec（实测 10 万条 1024 维 118 ms，要放 worker 线程），嵌入默认本地 Qwen3-Embedding-0.6B，原文不出机器；线索词典带别名和同义词，加确定性的中文相对时间解析，这两样零调用就能覆盖一部分"换个说法"和时间题。全文 + 向量混合是 GitHub 上有真实用户的记忆实现的共同做法（全景调研 ⑤：47 个专门记忆项目里混合检索占星数 76%）。
+**召回。** 每轮先按受众裁剪（受众语义：条目的受众包含当前实例的在场者才可见；认不出地方就只用公开条目），再五路取候选（线索命中、全文、向量、关切、新近；V1.1 加联想），RRF 融合后按 0.45 相关 + 0.20 激活 + 0.20 重要 + 0.15 新近打分，过清晰度门，MMR 去重，实例会话最多 5 条 500 字，另加在场者的印象摘要 150 字；条目通道都没命中时从原文补 1 条"原话"。全文用 SQLite FTS5 的 trigram（实测中文下 unicode61 一条都查不到，jieba 漏单字）；向量用 sqlite-vec（实测 10 万条 1024 维 118 ms，要放 worker 线程），嵌入默认本地 Qwen3-Embedding-0.6B，原文不出机器；线索词典带别名和同义词，加确定性的中文相对时间解析，这两样零调用就能覆盖一部分"换个说法"和时间题。全文 + 向量混合是 GitHub 上有真实用户的记忆实现的共同做法（全景调研 ⑤：47 个专门记忆项目里混合检索占星数 76%）。
 
 **遗忘。** 清晰度 R = 2^(−经过时间 / 半衰期)，读时算，不写"每天衰减一次"的事件。**被用到才加强**（说出口、被主人提起、被采用），只是被召回进上下文不算；间隔 24 小时以上再被用到，半衰期 ×1.8。R ≥0.5 清楚；0.2–0.5 只给概要并标"好像"，人设里规定带"好像"的不许补细节；<0.2 沉睡，`recall` 能搜到但不自动注入；沉睡 30 天且不重要的转墓碑，墓碑挡住"从同一批原始事件再抽一遍"，不挡新证据。事实和偏好只版本化、不进墓碑；钉住的、承诺相关的、领域【V3】不衰减。
 
@@ -44,7 +44,7 @@
 - memory 账本：四类记忆（情景、事实、关系、领域【V3】）的条目、证据、线索、受众引用、激活字段；印象摘要；她对每个人的信任与亲近（`relation_state`）；召回；联想候选打分；"被用到"记账；更正、钉住、删除与级联；原文全文索引（`raw_fts`）；向量索引与嵌入缓存。
 - people 账本：人、账号（已确认 / 候选）、人物合并与拆分、地方、在场者快照、受众集合与可见性计算、地方合并配置、主人的首选地方。
 - self 账本里的自我模型：四层的候选、条目、版本、采纳规则、回滚（出生设定、成长版本、性格参数、日记在 06）。
-- 睡眠用脑的记忆部分：空闲增量和每晚链里属于记忆、印象、关系、遗忘、反思、自我候选的阶段；它们的输入打包、提案载荷、校验规则、检查点。
+- 整理活的记忆部分：空闲增量和每晚链里属于记忆、印象、关系、遗忘、反思、自我候选的阶段；它们的输入打包、提案载荷、校验规则、检查点。
 - 记忆引擎接缝 `ingest`、`consolidate`、`rank`、`forget` 的接口，内置实现，以及 V1.1 替换演练用的极简第二引擎的要求。
 
 **不管什么**
@@ -62,14 +62,14 @@
 | --- | --- | --- |
 | journal（03） | `append`、`read`、`subscribe`、投影检查点、`erasePayload` 的级联回调 | 记忆事件、投影注册、级联清单 |
 | context（02） | 每轮调用 `recall` 和 `impressionFor`，带用脑上下文（受众、可见事件范围） | 结构化召回结果（已按清晰度和受众渲染）、印象摘要段 |
-| toolport / minds（02） | `inner(事实)`、`recall(查询)`、睡眠的 `submit` 的载荷；回合结束时回复正文或"用到的记忆号" | 校验结果、`memory.used` |
+| toolport / minds（02） | `inner(事实)`、`recall(查询)`、整理活的 `submit` 的载荷；回合结束时回复正文或"用到的记忆号"；每次用脑的 `MindContext`（instance = 本实例受众；think = 派它实例的受众；work = 归属实例受众；own = 独处实例的"主人可知 + 公开"；tidy = 全部） | 校验结果、`memory.used` |
 | attention（04） | 情境线索（在场者、地方、话题词、日期、主导情绪、未了结关切）；注入了哪条联想 | 带分的候选（V1.1） |
 | will（04） | 未了结的心事、牵挂、今天的承诺（召回的关切路） | — |
 | tasks（02） | 手上的事流的结果事件 | 她自己的经历条目（代码生成） |
-| people（本稿） | 受众、在场、主体解析 | 候选账号（经睡眠提案） |
+| people（本稿） | 受众、在场、主体解析 | 候选账号（经整理活提案） |
 | self（本稿 / 06） | 成长速率（信任涨跌、遗忘不调） | 自我候选 |
 | scheduler（04） | 空闲增量、每日链的作业触发 | 引擎声明的作业清单 |
-| guard（03） | `admit`（睡眠用脑的日预算） | 用量 |
+| guard（03） | `admit`（整理活的日预算） | 用量 |
 | abilities（09） | `embed(文本[])`，默认本地 Qwen3-Embedding-0.6B | — |
 | gateway（07） | 主人接口：查看、搜索、更正、删除、钉住、确认候选账号、合并与撤销 | 查询结果、变更事件 |
 
@@ -96,7 +96,7 @@
 | `memory.accepted` | memory（夜里判完或代码直接确认） | id | — |
 | `memory.merged` | memory | into、from[]、并入的证据、保留的措辞 | — |
 | `memory.superseded` | memory | old、new、invalid_at（= new.valid_from）、原因（update / correction） | — |
-| `memory.conflict` | memory | a、b、来源不同、待慢想或主人 | — |
+| `memory.conflict` | memory | a、b、来源不同、待整理活或主人择一 | — |
 | `memory.used` | memory（回合结束时由 minds 交回复正文或"用到的记忆号"后记） | ids、方式（说出口 / 被提起 / 自发 / 工具）、会话号、回合号 | — |
 | `memory.surfaced` | attention（联想冒头并注入时） | id、线索、分数、TTL | — |
 | `memory.promoted` | memory（夜里晋升） | id、importance 从 → 到、依据（用到次数、天数、场合数） | — |
@@ -156,7 +156,7 @@
 | `account` | platform、account_id、person_id（可空）、status（confirmed / candidate / rejected）、evidence[]、confirmed_by、events | 未绑定的账号各自是一个陌生人主体 `account:平台:号` |
 | `person_merge` | from_person、into_person、merge_event、undo_event（可空） | 并查集的边；撤销只是去掉这条边，记忆不用改写 |
 | `place` | id、adapter、place_ref、is_group、limits（能发什么、限频）、registered_event | 地方键只由 people 算：hash(adapter, place_ref) |
-| `place_group` | id、member_id、place_ids[]、label（"你的日常聊天"）、updated_event | 地方合并配置【V1.1】；默认：主人在主控台、QQ、微信的私聊合成一个在场 |
+| `place_group` | id、member_id、place_ids[]、label（"你的日常聊天"）、updated_event | 地方合并配置【V1.1】：一个人的几个地方归到他的实例；默认主人在主控台、终端、网页、微信【V2】的私聊合成主人实例（QQ 以后） |
 | `presence_snapshot` | id、place_id、accounts[]、taken_at、valid_until、confidence（high / low） | 适配层上报；主控台的快照恒为 {主人}、high |
 | `preferred_place` | person_id、place_id、set_event | 主人设的首选地方【V1.1】 |
 
@@ -173,7 +173,7 @@
 ### 2.7 条目号、版本链与状态
 
 - 新事实和旧事实是"更新"：旧条目 `invalid_at = 新.valid_from`、`superseded_by = 新`、status=superseded；新条目 `supersedes = 旧`、`chain_root` 同旧、version+1。召回只注入链上当前版本；`recall` 带时间范围时可以取到当时有效的版本。
-- 矛盾且来源不同：两条都留 active，写 `memory.conflict`，渲染时并列并标"两种说法"，交慢想（或主人）择一；慢想的决定作为新的更新。
+- 矛盾且来源不同：两条都留 active，写 `memory.conflict`，渲染时并列并标"两种说法"，交整理活里的她（或主人）择一；她的决定作为新的更新。代码只核对来源家族不同，哪种说法对是读懂话的事，不由代码判。
 - 主人更正 = 主人来源的新版本（trust 1.0，受众不变），旧条目 superseded，原因 correction。
 - 主人删除：条目 status=deleted，投影里不再出现，重建也不出现；要彻底抹的走 §8.3 级联。
 - 墓碑只用于情景条目；事实、偏好、关系不进墓碑（§4.6）。
@@ -194,19 +194,21 @@ type MemId = EventId;             // 条目号 = 创建事件号
 type Principal = 'owner' | `member:${string}` | `person:${string}` | `account:${string}:${string}`;
 type Subject = 'self' | 'owner' | 'world' | `person:${string}` | `place:${string}` | `account:${string}:${string}`;
 
-/** 由 minds / context 组装，模型碰不到；受众和可见范围都来自 people 和会话登记，不信调用方自报 */
+/** 由 minds / context 组装，模型碰不到；受众和可见范围都来自 people 和实例登记，不信调用方自报 */
 interface MindContext {
   member: string;
-  mindKind: 'presence' | 'slow' | 'hand' | 'sleep';
+  mindKind: MindKind;               // 00-contracts 的 MindKind：'instance' 实例会话 / 'work' 干活 / 'think' 想事 / 'own' 她自己的事 / 'tidy' 整理
+  instanceId?: string;              // instance：本实例；work、think：归属实例；own：独处实例；tidy：无
   sessionId: string; turn: number;
-  presence: Principal[];            // 此刻在场的主体（她自己不算）
-  visibleAudienceIds: number[];     // people.audienceOf 算出：在场者全部都在其中的受众集合 + public
+  presence: Principal[];            // 此刻在场的主体（她自己不算）；work、think 取归属实例的在场者；own 与独处实例为空
+  visibleAudienceIds: number[];     // people.audienceOf 算出：在场者全部都在其中的受众集合 + public；
+                                    // 独处实例 = 含 owner 的集合 + public（"主人可知 + 公开"）；整理活 = 全部集合
   strictAudience: boolean;          // 快照过期或可信度低 → 只能用 public
   canSeeEvent(id: EventId): boolean;// 本次用脑看得见的事件范围（绑定的地方流 + 注入过的编号）
   now: string;                      // ISO 8601；MindContext 是 required 之间的进程内类型，不是槽位契约
 }
 
-interface FactInput {               // inner(事实[]) 的每一项；睡眠提案里的事实也用它
+interface FactInput {               // inner(事实[]) 的每一项；整理活提案里的事实也用它；没有受众字段，受众由代码从 evidence 盖章
   about: Subject;
   text: string;                     // ≤120 字；超长拒绝，不截断
   evidence: EventId[];              // ≥1 条，必须 canSeeEvent
@@ -223,7 +225,7 @@ interface RecallQuery {
   concerns?: { kind: 'worry' | 'care' | 'promise'; refs: string[] }[];            // will 给的未了结关切
   timeRange?: [string, string];     // 只有 recall 工具会带
   about?: Subject;
-  includeDim?: boolean;             // 是否包含沉睡条目（recall 工具可开；在场每轮不开）
+  includeDim?: boolean;             // 是否包含沉睡条目（recall 工具可开；实例会话每轮不开）
 }
 interface RecallLimits { maxItems: number; maxChars: number; }
 interface RecallHit {
@@ -247,7 +249,7 @@ interface MemoryLedger {
   item(ctx: MindContext, id: MemId): Promise<ItemView | null>;           // 受众不允许返回 null，不报"存在但不可见"
   // 写（用脑经 toolport）
   remember(ctx: MindContext, facts: FactInput[]): Promise<{ accepted: MemId[]; rejected: { index: number; reason: string }[] }>;
-  propose(ctx: MindContext, batch: SleepProposal): Promise<ProposalReceipt>;                 // 睡眠 submit 的记忆部分，§3.2
+  propose(ctx: MindContext, batch: SleepProposal): Promise<ProposalReceipt>;                 // 整理活 submit 的记忆部分，§3.2
   markUsed(ctx: MindContext, ids: MemId[], mode: 'spoken' | 'mentioned' | 'spontaneous' | 'tool'): Promise<void>;
   // 代码规则
   recordSelfExperience(member: string, taskEvent: EventId): Promise<MemId | null>;           // 从手上的事流生成她自己的经历
@@ -270,9 +272,9 @@ interface MemoryLedger {
 
 | 工具 | 本稿定的部分 | 校验（代码，§4.2） |
 | --- | --- | --- |
-| `inner(…, 事实[], …)` | 事实 = `FactInput[]`，每回合 ≤8 条 | 依据事件号可见；subject 在封闭集合；text ≤120 字；来源、受众、trust、taint 从依据事件的信封取；陌生人 / 网络 / 污染回合 → subtype 强制 claim；通过的立刻写 `memory.proposed`（provisional） |
-| `recall(查询)` | 查询 = `RecallQuery` 的 text、timeRange?、about?；返回 ≤8 条、≤1200 字，只给编号和片段，原文按编号经 `get_report` 取 | 受众同本次用脑；在场不开 includeDim |
-| `submit('memory', …)`（睡眠） | `SleepProposal`，见下 | 每种提案的规则在 §4.2–§4.9 |
+| `inner(…, 事实[], …)` | 事实 = `FactInput[]`，每回合 ≤8 条；每条只带对象（about）与依据事件号，没有受众字段 | 依据事件号可见；subject 在封闭集合；text ≤120 字；来源、受众、trust、taint 一律从依据事件的信封取（受众由代码按来源盖章，她不能自报，模型输出里即使写了也忽略）；陌生人 / 网络 / 污染回合 → subtype 强制 claim；通过的立刻写 `memory.proposed`（provisional） |
+| `recall(查询)` | 查询 = `RecallQuery` 的 text、timeRange?、about?；返回 ≤8 条、≤1200 字，只给编号和片段，原文按编号经 `get_report` 取 | 受众同本次用脑的 `MindContext`（instance = 本实例；think = 派它的实例；work = 归属实例；own 与独处实例 = 主人可知 + 公开；tidy = 全部）；实例会话不开 includeDim |
+| `submit('memory', …)`（整理活） | `SleepProposal`，见下 | 每种提案的规则在 §4.2–§4.9 |
 
 ```ts
 interface SleepProposal {
@@ -299,7 +301,7 @@ interface People {
   audienceIdFor(principals: Principal[] | 'public'): number;           // 取或建 audience_set
   intersect(audienceIds: number[]): number;                            // 派生条目的受众
   preferredPlace(personId: string): string | null;
-  presenceGroup(placeId: string): string;                              // 地方合并配置 → 在场编号【V1.1】
+  presenceGroup(placeId: string): string;                              // 地方合并配置 → 实例编号【V1.1】；V1.0 主人的地方恒为主人实例
   // 只有主人
   createPerson(p: PersonDraft): Promise<string>;
   bind(platform: string, accountId: string, personId: string, basis: EventId): Promise<void>;
@@ -343,7 +345,7 @@ interface MemoryEngine {
 // 引擎声明的作业（JobDecl[]）写在 manifest 的 provides['memory.engine'].meta 里，scheduler 按它拼夜间链
 ```
 
-模型调用由睡眠作业的编排（minds 开睡眠用脑）代问：账本先按受众裁好输入，调 `prepare*` 拿到"要问什么"，minds 问完把回答交给 `interpret*`，账本再逐条校验提案（证据、来源、受众、成员都由账本复核，引擎返回的编号再核一次）。引擎不依赖 minds，也拿不到经历流。替换演练用的极简第二引擎：`ingest` 只把 `inner` 事实原样转提案、`consolidate` 只认规范化文本相同为 duplicate、`rank` 只按新近、`forget` 恒清楚；换上它之后账本与已接受的记忆不变、所有测试里"受众零泄漏"仍通过，就算演练成功。
+模型调用由整理活的编排代问（minds 经第四层提供方开整理活的会话，成员级、无实例、只有 `submit`，提供方和模型按 roster 配置）：账本先按受众裁好输入（整理活的受众是全部，但每条提案的受众仍按证据交集由账本盖章），调 `prepare*` 拿到"要问什么"，minds 问完把回答交给 `interpret*`，账本再逐条校验提案（证据、来源、受众、成员都由账本复核，引擎返回的编号再核一次）。引擎不依赖 minds，也拿不到经历流，更拿不到任何写 API。替换演练用的极简第二引擎：`ingest` 只把 `inner` 事实原样转提案、`consolidate` 只认规范化文本相同为 duplicate、`rank` 只按新近、`forget` 恒清楚；换上它之后账本与已接受的记忆不变、所有测试里"受众零泄漏"仍通过，就算演练成功。
 
 ### 3.6 推给界面的订阅
 
@@ -358,25 +360,25 @@ interface MemoryEngine {
 | source_account、place_id、presence_snapshot_id、taint | 从**第一条依据事件**的信封取；多条依据来自不同地方时取受众交集最小的那条作主来源 |
 | source_kind | 来源账号 → people.resolveSender：owner / bound_human / stranger；系统事件 → system；污染回合或 `look` 的摘要 → web；手上的事流的结果事件 → self_experience；她自己在对话里说的 → member |
 | trust | owner 1.0；member 0.9；bound_human 0.7；stranger 0.3；web 0.2；system 1.0；主人更正 1.0 |
-| audience_id | 对话来源 → 那个地方当时的在场者集合（people.audienceOf.defaultAudienceId）；她自己的事 → 活动事实 public，内容和原因取来源受众交集；替主人干的活 → {owner}；多条依据 → 交集；没有明确受众 → {owner} |
+| audience_id | **永远由代码从依据事件继承**：对话来源 → 那个地方当时的在场者集合（people.audienceOf.defaultAudienceId）；多条依据 → 交集；她自己的事 → 活动事实 public，内容和原因取引用的记忆号与来源受众的交集（独处实例写入的事实默认 {owner}）；替主人干的活 → {owner}；想事活的结论与决策点记录 → 派它的实例的受众；没有明确受众 → {owner} |
 | subtype 降格 | source_kind ∈ {stranger, web} 或 taint=1 → 强制 claim；claim 要升为 statement 须主人确认，或 ≥2 个不同 source_family 且都不带 taint |
 | event_time | 模型给的优先（精度随之），没给用依据事件时间，精度 minute |
 
-受众、来源、trust、taint 存独立列，模型的输出里即使写了也忽略（OpenClaw 的来源类别列、Audience-Bound 的做法）。
+受众、来源、trust、taint 存独立列，模型的输出里即使写了也忽略（OpenClaw 的来源类别列、Audience-Bound 的做法）。`inner` 只带对象（about）与依据事件号，没有受众字段：她不能自报受众，想事活也不能凭判断放宽；放宽只走 `widen`（主人规则或代码核对过发送者身份的原话，§4.10）。代码盖的是"谁能知道"，不读这条事实的意思（决策 43）。
 
 ### 4.2 写入管线
 
 | 步骤 | 触发 | 谁做 | 模型调用 | 校验与落库 |
 | --- | --- | --- | --- | --- |
-| 1 对话里交事实 | 在场、慢想、手的 `inner(事实[])` | 用脑顺手 | 0 | §3.2 的校验；去掉控制 token 和没解析的工具调用；本轮注入过的召回内容带结构标记、不接受"把注入的记忆再记一遍"（文本和已有条目规范化相同即拒绝）；通过的立刻写 `memory.proposed`（provisional），`remember` 等投影追到该事件再返回 |
+| 1 对话里交事实 | 实例会话、想事活、干活与自己的事的 `inner(事实[])`（只带对象与依据号，受众由代码从依据事件盖章） | 用脑顺手 | 0 | §3.2 的校验；去掉控制 token 和没解析的工具调用；本轮注入过的召回内容带结构标记、不接受"把注入的记忆再记一遍"（文本和已有条目规范化相同即拒绝）；通过的立刻写 `memory.proposed`（provisional），`remember` 等投影追到该事件再返回 |
 | 2 她自己的经历 | `task.*` 的结果事件（看了什么、写了什么、做成没有、看了几分钟） | 代码规则 `recordSelfExperience` | 0 | subject=self、subtype=self_activity、source_kind=self_experience、audience 按 §4.1；text 由模板生成（"看了 12 分钟榫卯视频，摘了 3 条笔记"），不经模型；杜绝"我刚看完一个视频"式编造 |
-| 3 空闲增量 | scheduler：某在场冷 10 分钟且新增 ≥20 条；或一件活做完 | 睡眠用脑（便宜） | 每批 1 次 | 输入：检查点之后的原文（保留角色类型的序列化，不压平成"用户：……"；注入过的召回内容带标记、不再抽）+ 涉及者的已有条目摘要（用组内整数编号代替真实 id）；输出 `SleepProposal` 的 facts / topics / widenCandidates / accountCandidates；逐条过步骤 1 的校验；字面相同（规范化文本 + subject + audience）直接并证据；同 subject 同 kind 二元组 Jaccard ≥0.85 自动并；0.6–0.85 留夜里 |
+| 3 空闲增量 | scheduler：某实例冷 10 分钟且新增 ≥20 条；或一件活做完 | 整理活（便宜） | 每批 1 次 | 输入：检查点之后的原文（保留角色类型的序列化，不压平成"用户：……"；注入过的召回内容带标记、不再抽）+ 涉及者的已有条目摘要（用组内整数编号代替真实 id）；输出 `SleepProposal` 的 facts / topics / widenCandidates / accountCandidates；逐条过步骤 1 的校验；字面相同（规范化文本 + subject + audience）直接并证据；同 subject 同 kind 二元组 Jaccard ≥0.85 自动并；0.6–0.85 留夜里 |
 | 4a 分组 | 每晚 | 代码 | 0 | 当天的 provisional 条目和受影响的旧条目按 subject 分，再按共享线索或 Jaccard ≥0.3 连通分组（V1.1 加向量近邻）；每组 ≤20 条（超了按时间切），附同 subject 共享线索的旧 active 条目 ≤15 条 |
-| 4b 判关系 | 每晚 | 睡眠用脑 | 每组 1 次（小组合并到 ≤40 条一次调用） | 输出 verdicts，只能引用组内编号；规矩写进提示："只有新事实明确让旧事实为假才算矛盾，不能只凭更新"（Graphiti） |
+| 4b 判关系 | 每晚 | 整理活 | 每组 1 次（小组合并到 ≤40 条一次调用） | 输出 verdicts，只能引用组内编号；规矩写进提示："只有新事实明确让旧事实为假才算矛盾，不能只凭更新"（Graphiti） |
 | 4c 落版本 | 每晚 | 代码 | 0 | duplicate：并证据、留更新的措辞、受众取交集（交集变小就不合并，两条都留）；update：版本链（§2.7）；contradiction 且来源家族不同：`memory.conflict`；unrelated：各自 accepted；同一 source_family 不算独立佐证；不许改组外条目；判不出的留 provisional，最多留 3 晚后按 accepted 处理 |
-| 4d 印象与关系 | 每晚，只对当天有相处事件的人 | 睡眠用脑 + 代码 | 每人 1 次 | 见 §4.8 |
+| 4d 印象与关系 | 每晚，只对当天有相处事件的人 | 整理活 + 代码 | 每人 1 次 | 见 §4.8 |
 | 4e 遗忘 | 每晚 | 代码 | 0 | 见 §4.6；快忘的同一人条目先在 4d 里蒸馏成一句印象，再转墓碑 |
-| 4f 反思与自我候选 | 每晚 | 睡眠用脑 + 代码 | 1–2 次 | 反思 2–3 条，每条证据 ≥2 个事件，作为 subtype=reflection 的条目（importance 0.6，受众取交集）；自我候选交 `applySelfModel`（§4.9） |
+| 4f 反思与自我候选 | 每晚 | 整理活 + 代码 | 1–2 次 | 反思 2–3 条，每条证据 ≥2 个事件，作为 subtype=reflection 的条目（importance 0.6，受众取交集）；自我候选交 `applySelfModel`（§4.9） |
 | 4g 晋升 | 每晚 | 代码 | 0 | 情景条目 use_count ≥3、分散在 ≥3 个不同日期、来自 ≥2 个不同地方 → importance +0.2（封顶 1，只升一次），写 `memory.promoted` |
 | 5 主人操作 | 主控台 | gateway → memory | 0 | 更正 = 主人来源的新版本；钉住 = protected；删除见 §8.3；放宽见 §4.10 |
 
@@ -401,7 +403,11 @@ contradiction 的前提：a、b 的 source_family 不同；相同家族的后说
 输入：ctx（受众、可见范围）、q（本轮输入文本、已知线索、关切）、limits
 1 受众：WHERE member_id=? AND status IN ('provisional','active') AND audience_id IN (ctx.visibleAudienceIds)
       （includeDim 时再加 'dormant'；provisional 也能召回，才有"刚记的下一轮就能用"）
-      （strictAudience 时只有 public 那个 id）
+      受众语义：条目的受众包含当前实例的全部在场者才可见。一个人在群里说过的话（来源受众含群里每个人、也含他本人）
+      在对他的私聊里可召回；群的内容只在受众包含该群在场者全体的地方可召回（product §6.4 "群里群外同一个她"）
+      想事活用派它的实例的 visibleAudienceIds；干活用归属实例的；独处实例 = 含 owner 的集合 + public；整理活 = 全部
+      fail-closed：strictAudience（快照过期、可信度低、people 没登记这个地方、认不出地方种类）时只有 public 那个 id；
+      受众算不出宁可不召回；召回超时不挡回复（§6）
 2 候选，每路取前 20：
    a 线索：q.cues ∪ Aho-Corasick 在 q.text 里匹配线索词典（人名、地方、已有话题词，以及它们的别名与同义词；命中别名同时查本名）∪ 在场者本人
      确定性的中文相对时间解析（"上周三""去年今天"）得到时间窗，作为各路的过滤条件
@@ -426,9 +432,11 @@ contradiction 的前提：a、b 的 source_family 不同；相同家族的后说
    [编号] 相对时间（"上周六"/"去年 3 月"/"大概上个月"按精度）+ 确定度词（清楚：无；模糊："好像"）
    + 正文（模糊只给 gist）+ 来源提示（"妈妈私下说的"只在受众允许该来源出现的地方渲染）
    + 两种说法并列时标"（另一说：…）"
-6 上限：按 score 裁到 limits（在场 5 条 / 500 字；慢想 12 / 1500；手 5 / 500；recall 工具 8 / 1200），不按时间裁
+6 上限：按 score 裁到 limits（实例会话 5 条 / 500 字；想事活 12 / 1500；干活与自己的事 5 / 500；整理活按批给原文与条目摘要、不走每轮召回；recall 工具 8 / 1200），不按时间裁
 7 印象摘要单独一段：impressionFor(在场者)，每人 ≤150 字（主人 ≤250 字），只渲染受众允许的行
 ```
+
+想事活的快照里的召回条目号（派活那一刻按派它实例的受众跑一次本流程，12 / 1500），和它开工后自己 `recall` 的，受众相同。换新、换代、回收后重建的 [记得] 也按目标实例的受众重新跑本流程，不从旧会话搬。
 
 `recall(查询)` 工具用同一套打分，多一路原文（`raw_fts` + `raw_vec`），支持 timeRange（时间推理题靠它）和 about；分三步：第一步只回编号和一句话，第二步按锚点看前后几轮，第三步按编号取详情（claude-mem 的渐进披露）。V1.1 在这里做重排 A/B：Qwen3-Reranker-0.6B 或便宜模型打分，按名次混合（RRF 前 3 名保留 75% 原分），回放题库上不涨就不开。
 
@@ -488,14 +496,14 @@ A_i = B_i                                   # B_i = ln Σ_k t_k^(−0.5)，t_k �
 ### 4.9 反思与自我模型
 
 - 代码先算本周统计：时间花在哪（手上的事流按活动类型汇总）、分享与回应（主动开口与反馈事件）、心情均值与波动（`body.sampled`）、成败（任务核验结果）。
-- 睡眠用脑读统计 + 本周日记 + 反思条目，提"我好像……"候选，每条附证据事件号，并对照已有候选列表（整数编号）选"附到第几条"或"新建"。证据只能是经历事件（相处、手上的事、她自己说过的话）；日记和反思的正文不算证据，diary_reflection 这个来源种类指"夜里反思时从经历里提出来的"，附的仍是经历事件号（06：日记不是晋升来源）。
+- 整理活里的她读统计 + 本周日记 + 反思条目，提"我好像……"候选，每条附证据事件号，并对照已有候选列表（整数编号）选"附到第几条"或"新建"。证据只能是经历事件（相处、手上的事、她自己说过的话）；日记和反思的正文不算证据，diary_reflection 这个来源种类指"夜里反思时从经历里提出来的"，附的仍是经历事件号（06：日记不是晋升来源）。
 - `applySelfModel` 的规则（代码）：
   - 采纳：同一候选在 14 天内出现在 ≥3 个不同日期、来源种类 ≥2；只有 other_feedback 的不能单独促成；layer 1 的兴趣类必须有 ≥1 条 source_kind=self_experience 的证据（E3）。
   - 和成长版本的约束（06 §9.4）：layer 1 里关于兴趣、习惯的条目必须挂到一条已采纳的成长条目，或一条有 ≥2 个不同来源的偏好记录上，挂不上的不采纳（先有行为，再有自我认识）；反过来，成长系统采纳的兴趣、习惯、专长自动生成一条来源种类为 behavior_stats 的自我候选，它只算一种来源，仍要按本条规则攒够才采纳。
-  - 底色冲突：候选先过一个结构化判断（睡眠用脑输出 `conflicts_with_birth: true/false + 哪一条`），代码只认这个字段；冲突的不采纳，写一条"她最近表现得不像平时的自己"的注意力事件给主人。
+  - 底色冲突：候选先过一个结构化判断（整理活输出 `conflicts_with_birth: true/false + 哪一条`），代码只认这个字段；冲突的不采纳，写一条"她最近表现得不像平时的自己"的注意力事件给主人。
   - 上限：每层每周 ≤2 条变化；layer 1 特质 ≤10、角色 ≤5；超了要先 retire 一条（由模型在候选里提议 retire，同样要证据：连续 30 天没有支持证据）。
   - 每次变化一个 `self_version`，写明改了什么、因为哪些事件、哪天；回滚是新版本。
-- 生效：第一层简版进稳定前缀（价值观由 06 从出生设定渲染，不在这里重复），**只在换新会话时生效**（夜里有变更就把主人的在场换新，overall §4.9）；慢想按需 `recall` 全部四层；注入是第一人称，给主人看是带证据的数据。
+- 生效：第一层简版进稳定前缀（价值观由 06 从出生设定渲染，不在这里重复），**只在换新会话时生效**（夜里有变更就是人设版本变了，所有活着的实例排一次空闲换新，最大陈旧 24 小时〔推理〕，06 §4.4）；想事活与整理活按需 `recall` 全部四层；注入是第一人称，给主人看是带证据的数据。
 
 ### 4.10 人物档案与受众计算
 
@@ -505,7 +513,7 @@ A_i = B_i                                   # B_i = ln Σ_k t_k^(−0.5)，t_k �
   主人绑定的账号 → owner
   其余 → account:<平台>:<账号>（陌生人主体，role=stranger）
 地方键：placeKey = hash(adapter, place_ref)；私聊 / 群只是事实字段
-在场：presenceOf(地方) = 最新 presence_snapshot；valid_until 已过或 confidence=low → stale
+在场者：presenceOf(地方) = 最新 presence_snapshot；valid_until 已过或 confidence=low → stale
 受众：audienceOf(地方)
   presence = 快照里每个账号 → 主体
   defaultAudienceId = audienceIdFor(presence)                 # 这个地方新产生的经历默认受众
@@ -535,7 +543,7 @@ V1.0 只有主人和她：presence 恒为 {owner}，audience_set 只有 {owner} 
 | 联想权重 | person 1.0、topic 1.0、date 0.8、place 0.6、emotion 0.5；情绪 0.8、关切 0.7、心情一致 0.3；一跳 ≤50 条；单线索展开 ≤200 | 〔推理〕；关切约 2 倍来自 Klinger〔一手〕 |
 | 反刍降权 | 同一负面条目一天 >3 次 → ×0.3 | 产品 §3.3 |
 | 召回权重 | rel 0.45、act 0.20、imp 0.20、rec 0.15；RRF k=60；MMR λ=0.7 | 〔推理〕RRF 60 是 A_Memorix、Graphiti 的常用值；形状参照 GA 三项等权、livingmemory 0.5/0.25/0.25 |
-| 注入上限 | 在场 5 条 / 500 字 + 印象 150 字（主人 250）；慢想 12 / 1500；手 5 / 500；recall 8 / 1200 | 〔推理〕LongMemEval 小读者超过 3k token 陡降；OpenClaw 每轮 ≤3 条〔二手〕 |
+| 注入上限 | 实例会话 5 条 / 500 字 + 印象 150 字（主人 250）；想事活 12 / 1500（快照与 `recall` 同受众）；干活与自己的事 5 / 500；整理活按批（§4.2）；recall 8 / 1200 | 〔推理〕LongMemEval 小读者超过 3k token 陡降；OpenClaw 每轮 ≤3 条〔二手〕 |
 | 去重 | norm 相同直接并；Jaccard ≥0.85 自动并；0.60–0.85 夜里判 | 〔推理〕Graphiti MinHash 0.9、OpenClaw 二元组 Jaccard |
 | "被用到"的文本判定 | 二元组重合 ≥0.35 | 〔推理，待实测〕 |
 | 空闲增量 | 冷 10 分钟且新增 ≥20 条；或一件活做完 | 产品 §3.8 |
@@ -548,29 +556,29 @@ V1.0 只有主人和她：presence 恒为 {owner}，audience_set 只有 {owner} 
 | 原文补位阈值 | 条目通道最高分 <0.35 时补 1 条 | 〔推理，待实测〕 |
 | 重排 | V1.0 无；V1.1 `recall` 工具 A/B，按名次混合 75% / 60% / 40% | 第三方：对话记忆上现成交叉编码器 −6.9；qmd 的按名次混合 |
 | 全文 | trigram；≥3 字 MATCH 取 20；1–2 字 LIKE 限 50 | 〔实测〕 |
-| 召回时限 | 目标 <30 ms（不含嵌入）；硬时限 150 ms 后降级 | 〔推理〕在场回复 ≤2 秒的预算里留给记忆的份额 |
+| 召回时限 | 目标 <30 ms（不含嵌入）；硬时限 150 ms 后降级 | 〔推理〕实例会话回复 ≤2 秒的预算里留给记忆的份额 |
 
 ## 5 交互时序
 
 **5.1 主人说一句话（V1.0）**
 
 ```
-senses 写 place 事件 → attention 起在场回合 → context.forTurn：
-  people.audienceOf(地方) → MindContext
+senses 写 place 事件 → 按人物档案路由进主人实例 → 投递器起回合 → context.forTurn：
+  people.audienceOf(地方) → MindContext（instance，本实例受众）
   memory.recall(ctx, {text, cues(在场者), concerns(will 给)}, {5, 500})  ‖  memory.impressionFor(ctx, [owner], 250)   （worker 内，≤150 ms）
   → [记得] 数据块
-在场回合：reply(...) 与 inner(事实[...]) 同批
+实例会话回合：reply(...) 与 inner(事实[...]) 同批
   toolport → memory.remember(ctx, facts)：校验 → journal.append(memory.proposed) → 等投影追上 → 返回编号
 回合结束：minds 把回复正文（或 reply 带的"用到的记忆号"）交 memory.markUsed → memory.used
 ```
 
-**5.2 空闲增量**：scheduler 触发 → guard.admit（睡眠类日预算）→ minds 开睡眠用脑 → engine.ingest 打包（检查点之后的原文 + 已有条目摘要）→ `submit('memory', SleepProposal{batchId})` → memory.propose 逐条校验落库 → 写检查点。同一 batchId 重复提交整批忽略。
+**5.2 空闲增量**：scheduler 触发 → guard.admit（整理类日预算）→ minds 经第四层开整理活 → engine.ingest 打包（检查点之后的原文 + 已有条目摘要）→ `submit('memory', SleepProposal{batchId})` → memory.propose 逐条校验落库 → 写检查点。同一 batchId 重复提交整批忽略。
 
-**5.3 夜里（memory 声明的作业，scheduler 按 overall §4.9 的顺序拼）**：`nightly.group`（代码）→ `nightly.judge`（每组一次 consolidate）→ `nightly.apply`（代码）→ `nightly.impression`（每人一次）→ `nightly.forget`（代码）→ `nightly.reflect`（1–2 次）→ `nightly.promote`（代码）→ 自我候选交 self.applySelfModel → 有自我或成长变更 → minds 把主人的在场换新。每个阶段写 `mem_checkpoint`，崩溃后从阶段检查点续跑；每批的 batchId = hash(日期, 阶段, 组内容)，重跑不重写。
+**5.3 夜里（memory 声明的作业，scheduler 按 overall §4.9 的顺序拼）**：`nightly.group`（代码）→ `nightly.judge`（每组一次 consolidate）→ `nightly.apply`（代码）→ `nightly.impression`（每人一次）→ `nightly.forget`（代码）→ `nightly.reflect`（1–2 次）→ `nightly.promote`（代码）→ 自我候选交 self.applySelfModel → 有自我或成长变更 → 人设版本变，所有活着的实例排空闲换新。整理活的启动条件是"主人实例空闲且到了作息"，只处理检查点之前的事件，之后的新写入留下一批。每个阶段写 `mem_checkpoint`，崩溃后从阶段检查点续跑；每批的 batchId = hash(日期, 阶段, 组内容)，重跑不重写。
 
 **5.4 主人更正 / 钉住 / 删除**：gateway 主人接口 → memory.correct（新版本）/ pin / delete；delete(erasePayload=true) 走 §8.3，返回 `EraseReport`（动了哪些条目、印象行、索引、缓存；提醒"旧备份里还有这段"）。
 
-**5.5 换新会话、换大脑、重启**：都不碰记忆表；新会话的 [记得] 由 context 重新 recall；重启后投影从检查点追上，`remember` 的"等投影追上"保证不会出现"刚记的下一轮找不到"。
+**5.5 换新会话、换代重建、换大脑、重启**：都不碰记忆表；新会话的 [记得] 由 context 按目标实例的受众重新 recall，不从旧会话搬（换新后不串实例，T13）；重启后投影从检查点追上，`remember` 的"等投影追上"保证不会出现"刚记的下一轮找不到"。
 
 **5.6 联想冒头（V1.1）**：attention 在不费神时刻调 candidatesFor(ctx, situ, rng) → 取顶、过 τ → 写 `memory.surfaced`，注入下次用脑的 [刚才想起]；随后被说出口才算 `memory.used{方式: 自发}`。
 
@@ -583,7 +591,7 @@ senses 写 place 事件 → attention 起在场回合 → context.forTurn：
 | 投影落后 | remember 等不到追上 | 等待上限 500 ms，超了仍返回编号并记日志；下一轮可能漏召回这一条（可接受，夜里补） |
 | 模型输出坏 JSON、编号越界、证据不可见 | propose 校验失败 | 整条拒绝、记原因；一批里坏的超过一半 → 这批作废、下次再来；不重试模型（预算） |
 | 夜里中途崩溃 | 阶段做了一半 | 按 `mem_checkpoint` 从阶段续跑；batchId 幂等，不会双写；过了 02:00 还没做完就只做到 apply 和 forget，其余明天补（overall §4.9） |
-| 空闲增量与夜里撞车 | 两个睡眠作业 | guard 的"同一时刻一个睡眠用脑"；夜里链启动先把未完成的空闲增量批次作废 |
+| 空闲增量与夜里撞车 | 两个整理作业 | guard 的"同一时刻一个整理活"；夜里链启动先把未完成的空闲增量批次作废 |
 | FTS 查询异常（非法 MATCH 语法） | 用户输入含引号、星号 | 查询词全部按字面量转义（每个词加双引号、内部双引号加倍）；失败退化到 LIKE |
 | sqlite-vec 加载失败 | 扩展不兼容 | 向量路关闭，其余照跑；启动自检报告 |
 | 嵌入不可用（本地模型进程挂了或线上超时） | 超时 | 写入侧进队列、稍后补嵌；召回侧跳过向量路；嵌入若是子进程，挂在 procs 的监管下防孤儿（claude-mem 的 Chroma 子进程事故） |
@@ -593,7 +601,7 @@ senses 写 place 事件 → attention 起在场回合 → context.forTurn：
 
 ## 7 成本与性能
 
-**模型调用（便宜大脑；每次推理算一次，进 guard 的"睡眠用脑"日预算：空闲增量 ≤24 次、每日链 1 次）**〔推理，待实测〕
+**模型调用（便宜大脑；每次推理算一次，进 guard 的"整理活"日预算：空闲增量 ≤24 次、每日链 1 次）**〔推理，待实测〕
 
 | 环节 | 次数 / 天 | 单次输入量级 |
 | --- | --- | --- |
@@ -606,7 +614,7 @@ senses 写 place 事件 → attention 起在场回合 → context.forTurn：
 
 **延迟（实测基线，M4）**：trigram 全文 100 万行 7–21 ms；线索倒排两跳 10 万条 29 ms（一跳更少）；读时衰减排序 10 万条 5.7 ms（SQL 内置数学函数）；向量 10 万 × 1024 维 118 ms、512 维 57 ms、二值粗排 16 ms；V1.0 几千条时暴力检索约 6 ms〔推理，按 2 万条 24 ms 线性推算〕；本地嵌入一句的延迟待测（§10）。每轮召回目标 <30 ms（不含嵌入），硬时限 150 ms。
 
-**线程**：`node:sqlite` 是同步接口，一次 100 ms 的查询会卡住所有在场的回合，所以**写只在主线程（投影器单写者）、读在 worker**：worker 持 derived.db 的只读连接（WAL 允许多读者），FTS、KNN、候选生成都在那里；引擎的 `rank` 是纯函数，在拿到候选的线程里跑（几十到一百条，亚毫秒）；主线程只做校验与追加。people 和 self 的查询小而频繁，留在主线程。
+**线程**：`node:sqlite` 是同步接口，一次 100 ms 的查询会卡住所有实例的回合，所以**写只在主线程（投影器单写者）、读在 worker**：worker 持 derived.db 的只读连接（WAL 允许多读者），FTS、KNN、候选生成都在那里；引擎的 `rank` 是纯函数，在拿到候选的线程里跑（几十到一百条，亚毫秒）；主线程只做校验与追加。people 和 self 的查询小而频繁，留在主线程。
 
 **存储**：§2.8。
 
@@ -616,9 +624,10 @@ senses 写 place 事件 → attention 起在场回合 → context.forTurn：
 
 - 一切读接口先 `audience_id IN (visibleAudienceIds)`，联想扩散也只在这个集合里走；受众由 people 算、由 minds 放进 `MindContext`，模型和插件改不了。
 - 派生条目受众取交集；合并不跨受众（交集变小就不合并）；印象每行各自带受众。
-- 放宽只经针对具体条目的授权事件，代码核对依据，可撤销；慢想不能凭判断放宽（M6）。
+- 放宽只经针对具体条目的授权事件，代码核对依据，可撤销；她不能自报受众，想事活也不能凭判断放宽，用脑没有放宽工具（M6；决策 43）。
+- 想事活只看派它的实例的受众；"全部受众"只有整理活；独处实例是"主人可知 + 公开"（决策 43）。全部模型可见输入（召回、别处简讯、心事、冲动的理由、活的名字与进度、想事的结论）进任何实例或活之前都按目标受众过滤。
 - 来源提示只在受众允许的地方渲染（"妈妈私下说的"不会出现在群的 [记得] 里）。
-- "主人可见"（主控台 `search`、全部投影）和"主人在场的受众"（她和主人说话时只能用受众含主人的条目）是两套接口，前者不经用脑。
+- "主人可见"（主控台 `search`、全部投影）和"主人实例的受众"（她和主人说话时只能用受众含主人的条目）是两套接口，前者不经用脑。
 
 ### 8.2 防投毒
 
@@ -713,7 +722,7 @@ V2：多受众真正生效、账号与合并、群的在场者快照、`flag`；
 | 11 | 投影追赶延迟（remember 等待的 P99） | 500 ms 上限 | 压测 |
 | 12 | A1 判官的可靠度 | 编造率可不可信 | 用"相关但错"的答案校准 |
 
-**测试（T，进仓库，V1.0 完成标准）**：T1 受众：任意在场、任意条目，不可见的永不出现（含联想、印象行、来源提示）；T2 版本链：更新后只注入当前版本，带时间范围能取到旧版本；T3 矛盾：不同来源家族并列、同家族后覆盖先；T4 去重三档；T5 清晰度公式与分档、加强与冷却、钉住；T6 墓碑挡"同一批证据再抽"、不挡新证据；T7 删除级联覆盖条目、印象行、自我条目、FTS、向量、缓存，重建后仍不出现；T8 投毒：陌生人声称只成 claim、压平文本的回合不被当作主人事实、注入过的召回不被再记；T9 她自己的经历只来自手上的事流；T10 重放等价：删 derived.db 重建后与增量状态逐表一致；T11 夜里幂等：同一批重跑不双写、崩溃续跑结果一致；T12 `candidatesFor` 纯函数：同输入同 rng 同输出【V1.1】。回放题库（LongMemEval / LoCoMo 题型改成灵鲸版）在 10 回放与验收里落地。
+**测试（T，进仓库，V1.0 完成标准）**：T1 受众：任意实例、任意条目，不可见的永不出现（含联想、印象行、来源提示）；T13 换新、换代重建后 [记得] 按目标实例受众重新召回、不串实例；想事活的快照召回与派它实例的受众一致；独处实例召不到任何不含 owner 的私密条目；T2 版本链：更新后只注入当前版本，带时间范围能取到旧版本；T3 矛盾：不同来源家族并列、同家族后覆盖先；T4 去重三档；T5 清晰度公式与分档、加强与冷却、钉住；T6 墓碑挡"同一批证据再抽"、不挡新证据；T7 删除级联覆盖条目、印象行、自我条目、FTS、向量、缓存，重建后仍不出现；T8 投毒：陌生人声称只成 claim、压平文本的回合不被当作主人事实、注入过的召回不被再记；T9 她自己的经历只来自手上的事流；T10 重放等价：删 derived.db 重建后与增量状态逐表一致；T11 夜里幂等：同一批重跑不双写、崩溃续跑结果一致；T12 `candidatesFor` 纯函数：同输入同 rng 同输出【V1.1】。回放题库（LongMemEval / LoCoMo 题型改成灵鲸版）在 10 回放与验收里落地。
 
 ## 11 依据
 

@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>灵鲸第四层设计</title>
+<meta name="description" content="灵鲸第四层 agent CLI 集成层的接入设计流程图：四层总览、第四层结构、三个提供方、关键时序、子 agent、Paseo 迁移、包与进程、第一版范围与要主人定的点。">
+<style>
+:root{
+  --bg:#f6f4ef; --fg:#1f2328; --muted:#5b6470; --card:#ffffff; --line:#d9d4c7; --accent:#1f6f8b; --accent-2:#b4532a; --nav-bg:#ebe7dd; --code-bg:#efece4; --th-bg:#efece4; --warn:#8a5a00;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15181c; --fg:#e6e3dc; --muted:#a3a89f; --card:#1e2227; --line:#3a4048; --accent:#7cc1d8; --accent-2:#e8966e; --nav-bg:#1a1e23; --code-bg:#262b31; --th-bg:#262b31; --warn:#e3b35c;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15181c; --fg:#e6e3dc; --muted:#a3a89f; --card:#1e2227; --line:#3a4048; --accent:#7cc1d8; --accent-2:#e8966e; --nav-bg:#1a1e23; --code-bg:#262b31; --th-bg:#262b31; --warn:#e3b35c;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;font-size:16px;line-height:1.7}
+a{color:var(--accent)}
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:100vh}
+nav{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;background:var(--nav-bg);border-right:1px solid var(--line);padding:20px 16px}
+nav h1{font-size:18px;margin:0 0 4px}
+nav .sub{font-size:12px;color:var(--muted);margin:0 0 16px}
+nav ol{list-style:none;margin:0;padding:0}
+nav li{margin:0 0 6px}
+nav a{text-decoration:none;color:var(--fg);display:block;padding:4px 8px;border-radius:6px;font-size:14px}
+nav a:hover{background:var(--card)}
+nav .legend{margin-top:20px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+main{padding:28px 32px 80px;max-width:none}
+section{margin:0 0 56px}
+h2{font-size:26px;margin:0 0 6px;padding-top:8px;border-bottom:2px solid var(--accent);padding-bottom:6px}
+h3{font-size:19px;margin:28px 0 8px;color:var(--accent)}
+p.lead{color:var(--muted);margin:4px 0 16px}
+.figure{background:#ffffff;border:1px solid var(--line);border-radius:10px;padding:18px 20px 10px;margin:14px 0 20px;overflow-x:auto}
+.figure .cap{font-size:13px;color:#4a5560;margin:6px 0 0;font-family:inherit}
+.figure svg{display:block;max-width:100%;height:auto}
+pre.mermaid{margin:0;background:transparent;color:#1f2328}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:10px 0 18px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:8px 10px;vertical-align:top;text-align:left}
+th{background:var(--th-bg)}
+code{background:var(--code-bg);padding:1px 5px;border-radius:4px;font-size:.92em;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card h4{margin:0 0 6px;font-size:16px}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin-left:6px}
+.note{border-left:4px solid var(--accent-2);padding:8px 14px;background:var(--card);border-radius:0 8px 8px 0;margin:12px 0}
+.warn{color:var(--warn)}
+footer{color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:12px}
+@media (max-width:1100px){
+  .layout{grid-template-columns:1fr}
+  nav{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}
+  nav ol{display:flex;flex-wrap:wrap;gap:4px 12px}
+  main{padding:20px 16px 60px}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <h1>灵鲸第四层</h1>
+  <p class="sub">agent CLI 集成层 · 接入设计流程图 · 2026-11-02 确认稿</p>
+  <ol>
+    <li><a href="#s1">1 四层总览</a></li>
+    <li><a href="#s2">2 第四层内部结构</a></li>
+    <li><a href="#s3">3 三个提供方的接法</a></li>
+    <li><a href="#s4">4 关键时序</a></li>
+    <li><a href="#s5">5 第二层、第三层怎么开会话</a></li>
+    <li><a href="#s6">6 Paseo 迁移地图</a></li>
+    <li><a href="#s7">7 包划分与进程模型</a></li>
+    <li><a href="#s8">8 第一版范围与验收</a></li>
+    <li><a href="#s9">9 已定的点与新待定</a></li>
+  </ol>
+  <div class="legend">配套文档：<code>docs/architecture/modules/01-agent-cli.md</code><br>底座 <code>dsh-base ad4e3c50</code> · Paseo <code>8018231a</code>（0.15.0-beta.1）</div>
+</nav>
+<main>
+
+<section id="s1">
+<h2>1 四层总览：第四层在哪</h2>
+<p class="lead">她按"在和谁相处"分成几个实例（第二层），每件活一个会话加一个目录（第三层），两层都不直接碰任何 agent 程序：开会话、送达、取消、权限、用量全经第四层。第四层对外只有一个 <code>ctx.brains</code> 服务和一份 <code>brain.provider</code> 契约；四个提供方都是独立进程的 CLI，每个会话一个进程。自建默认 agent 的提供方叫 <code>deepseek</code>（它是底座自带 agent 下沉成的 CLI），和 <code>claude</code>、<code>codex</code>、<code>acp</code> 并列。</p>
+<div class="figure">
+<pre class="mermaid">
+flowchart TB
+  subgraph L1["第一层 对外适配层"]
+    direction LR
+    G["gateway<br/>主控台 / 终端 / 网页"]
+    S["senses 入站归一"]
+    O["outbox 出站投递"]
+  end
+  subgraph L2["第二层 成员层（一个成员 = 一份人设）"]
+    direction LR
+    C["共用层：人设 · 记忆 · 身体 · 意 · 念 · 档案 · 本事 · 经历流"]
+    I1["实例「主人」常驻会话"]
+    I2["实例「独处」按需会话"]
+  end
+  subgraph L3["第三层 干活层（每件活 = 一个会话 + 一个工作目录）"]
+    direction LR
+    T1["干活"]
+    T2["想事"]
+    T3["自己的事"]
+    T4["整理"]
+    TS["tasks 状态机 · 交接包 · 核验 · 子活"]
+  end
+  subgraph L4["第四层 agent CLI 集成层"]
+    direction LR
+    B["ctx.brains 服务<br/>登记 · 解析 · 看门狗 · 用量 · 进程 · 配置目录"]
+    P1["brain-deepseek<br/>自建默认 agent CLI"]
+    P2["brain-claude<br/>Claude Code"]
+    P3["brain-codex<br/>Codex"]
+    P4["brain-acp<br/>别家 ACP CLI"]
+  end
+  subgraph PR["独立进程（每个都经 ctx.subprocess 拉起、登记、清理）"]
+    direction LR
+    X1["liwa --profile deepseek<br/>每会话一个"]
+    X2["claude<br/>每会话一个"]
+    X3["codex app-server<br/>每会话一个"]
+    X4["其他 ACP agent"]
+  end
+  G ~~~ C
+  S --> I1
+  I1 -->|"dispatch / ponder / do"| TS
+  TS --> T1 & T2 & T3 & T4
+  I1 & I2 -->|"createSession · deliver · cancel"| B
+  T1 & T2 & T3 & T4 -->|"同一份契约"| B
+  B --> P1 & P2 & P3 & P4
+  P1 -->|"ACP v1 + _liwa/*"| X1
+  P2 -->|"Claude Agent SDK"| X2
+  P3 -->|"app-server JSON-RPC"| X3
+  P4 -->|"ACP v1"| X4
+  I1 -->|"reply / say"| O
+  classDef l4 fill:#e3f1f6,stroke:#1f6f8b,stroke-width:2px,color:#10303c;
+  classDef pr fill:#fbefe6,stroke:#b4532a,color:#4a2210;
+  class B,P1,P2,P3,P4 l4;
+  class X1,X2,X3,X4 pr;
+</pre>
+<p class="cap">图 1　四层骨架。蓝色是第四层（本体进程里的客户端），橙色是它拉起的独立进程。第二层和第三层都只用 <code>ctx.brains</code>，谁都不直接碰 agent 程序。</p>
+</div>
+<div class="note">三条层间规则（<code>four-layers.md</code> §1）：第二层和第三层都用第四层；回合生命周期的统一不在"一套代码"，而在契约——每家提供方把自己的回合映射到同一份契约；第二层与第三层之间只走事件。</div>
+</section>
+
+<section id="s2">
+<h2>2 第四层内部结构</h2>
+<p class="lead">本体进程里：<code>minds</code> 决定什么时候开会话，<code>brains</code> 负责开和管，提供方插件是各家 CLI 的客户端，<code>toolport</code> 把内核工具做成一个带会话令牌的 MCP 端点，<code>guard</code> 管准入与预算，<code>subprocess</code> 管进程。进程外：三种 CLI。内核工具不管走哪家 CLI，最后都回到 <code>toolport.invoke(令牌, 工具, 参数)</code>。</p>
+<div class="figure">
+<pre class="mermaid">
+flowchart TB
+  subgraph ORCH["本体进程 · 调度与守护"]
+    direction LR
+    TK["tasks<br/>活 · 子活 · 交接包 · 核验"]
+    M["minds<br/>实例与活的登记 · 投递队列 · 回合预算"]
+    GD["guard<br/>准入 · 名额 · 总闸 · 日预算"]
+  end
+  subgraph BRN["本体进程 · @liwa/brain"]
+    direction LR
+    BS["ctx.brains<br/>register · probe · prepareConfigDir · children<br/>createSession · resumeSession · openChildTask · onUsage"]
+    W["会话句柄包装<br/>看门狗计时 · 用量汇总 · 事件落流"]
+  end
+  subgraph PL["本体进程 · 提供方插件（都是客户端）"]
+    direction LR
+    PLI["brain-deepseek<br/>brain-acp + _liwa 扩展<br/>+ 会话 patch 生成"]
+    PC["brain-claude<br/>Claude Agent SDK 封装"]
+    PX["brain-codex<br/>app-server 客户端"]
+    PA["brain-acp<br/>通用 ACP 客户端（SDK 1.4）"]
+  end
+  subgraph SIDE["本体进程 · 基础服务"]
+    direction LR
+    SP["@liwa/subprocess<br/>spawn · 进程组 · 环境剥离 · terminate"]
+    TP["toolport<br/>工具目录 · 令牌 · MCP 端点（HTTP）"]
+    JN["journal 经历流"]
+  end
+  subgraph OUT["子进程（每会话一个，都在成员的配置目录下，先登记再拉起）"]
+    direction LR
+    LW["liwa --profile deepseek<br/>base + @liwa/acp + 灵鲸扩展 + 预设<br/>内含该会话与它的子会话"]
+    CL["claude<br/>SDK 拉起"]
+    CX["codex app-server"]
+    OA["其他 ACP agent"]
+  end
+  TK -->|"spawn 子活"| M
+  GD -.->|"admit 在 startTurn 之前"| M
+  M -->|"openTask / 重建 / 续接"| BS
+  BS --> W
+  W --> PLI & PC & PX & PA
+  W -->|"brain.session / process / child 事件落流<br/>brain.usage 由 guard 订阅"| JN
+  PLI <-->|"ACP stdio + _liwa/*"| LW
+  PC <-->|"SDK 流式输入 / 输出"| CL
+  PX <-->|"JSON-RPC stdio"| CX
+  PA <-->|"ACP stdio"| OA
+  SP -->|"拉起 · 登记 · 清理"| OUT
+  OUT -.->|"内核工具：MCP（HTTP + 会话令牌）→ toolport.invoke → minds"| TP
+  classDef l4 fill:#e3f1f6,stroke:#1f6f8b,color:#10303c;
+  classDef pr fill:#fbefe6,stroke:#b4532a,color:#4a2210;
+  classDef body fill:#f3f1ea,stroke:#8a8f98,color:#1f2328;
+  class BS,W,PA,PLI,PC,PX l4;
+  class LW,CL,CX,OA pr;
+  class M,TK,TP,GD,SP,JN body;
+</pre>
+<p class="cap">图 2　第四层的内部结构。实线是控制与会话流，虚线是内核工具的回程（MCP）。brains 不读账本、不读懂内容，只开会话、管进程、报事实与用量。</p>
+</div>
+</section>
+
+<section id="s3">
+<h2>3 三个提供方各自的接法</h2>
+<p class="lead">三家在形态上完全一致：每会话一个独立进程、本体只有客户端、同一份契约、同一枚令牌、同一个成员配置目录。差别只在协议、人设注入字段和各家能力。</p>
+
+<h3>3.1 自建默认 agent：提供方 <code>deepseek</code>，进程 <code>liwa --profile deepseek</code></h3>
+<div class="figure">
+<pre class="mermaid">
+flowchart TB
+  subgraph HOST["本体"]
+    direction LR
+    BL["brain-deepseek<br/>brain-acp 的子类"]
+    MP["会话 patch（brains 生成）<br/>llm 路由 · personaPrefix = 人设十段<br/>includeLiwaIdentity: false · 该会话种类的预设"]
+    CD["会话目录 …/brains/deepseek/‹sessionId›<br/>= 该进程的 LIWA_HOME<br/>sessions/ · profiles/deepseek/ · 会话 patch"]
+  end
+  subgraph PROC["liwa --profile deepseek（每会话一个进程）"]
+    direction TB
+    ACP["@liwa/acp ACP v1 服务器<br/>这条连接上只有这一个会话"]
+    EXT["灵鲸扩展处理器<br/>_liwa/steer · _liwa/usage · _liwa/children<br/>_meta.liwa 于 session/new · update · prompt 返回"]
+    PRE["五个预设<br/>deepseek-instance · -work · -think · -own · -tidy"]
+    subgraph AG["底座 agent（本会话）"]
+      direction TB
+      A1["setup：会话说明段 · pre-step 预算<br/>concludesTurn 包装 · 选模型 · 按 childPolicy 装 subagent 工具"]
+      A2["agent-loop：followup / steer / cancel / whenIdle"]
+      A3["subagent 子会话（spawn / fork，同进程，继承人设）<br/>只在干活与查资料的活里有"]
+    end
+    LLM["llm 路由：deepseek-official / pi-ai"]
+  end
+  BL -->|"spawn liwa --profile deepseek --patch 会话.yml<br/>env LIWA_HOME = 会话目录"| ACP
+  MP -.->|"启动时加载"| ACP
+  CD -.->|"LIWA_HOME"| ACP
+  BL <-->|"ACP stdio"| ACP
+  ACP --> EXT --> PRE --> A1 --> A2 --> A3
+  A2 --> LLM
+  A3 -.->|"结果作为父的下一步"| A2
+  classDef l4 fill:#e3f1f6,stroke:#1f6f8b,color:#10303c;
+  classDef pr fill:#fbefe6,stroke:#b4532a,color:#4a2210;
+  class BL,MP,CD l4;
+  class ACP,EXT,PRE,A1,A2,A3,LLM pr;
+</pre>
+<p class="cap">图 3　自建默认 agent 的接法。每个会话一个进程（主人定），协议是 ACP v1 加三个 <code>_liwa/*</code> 扩展方法；人设十段作为该进程的 <code>personaPrefix</code> 注入一次，进程里的子会话自动继承；会话说明、每轮前缀按会话给。名字跟提供方走：bundle <code>deepseek-app</code>、profile <code>deepseek</code>，和模型适配器 <code>llm-deepseek</code> 是两层东西。</p>
+</div>
+<table>
+<tr><th style="width:140px">契约动作</th><th>ACP 落点（都是我们自己的两端）</th></tr>
+<tr><td>createSession</td><td>brains 生成会话目录与 patch → <code>ctx.subprocess.spawn</code> → <code>initialize</code>（30 秒）→ <code>session/new{ cwd, mcpServers:[toolport HTTP 端点 + 令牌], _meta.liwa{ mindKind, owner, notes, version, limits, concludeOn, model, childPolicy } }</code> → 服务端 <code>setup</code> 选预设、注册会话说明段、挂 <code>agent/pre-step</code>、包 <code>concludesTurn</code></td></tr>
+<tr><td>startTurn / deliver(next_turn)</td><td><code>session/prompt</code>（一会话一次一个，阻塞到回合结束，返回里带 <code>_meta.liwa.usage</code>）；流式经 <code>session/update</code></td></tr>
+<tr><td>deliver(next_step)</td><td>扩展方法 <code>_liwa/steer{ sessionId, prompt }</code> → 底座 <code>agent.steer</code>；没有在途提示词时回 <code>unavailable</code>，本体退化为下一回合</td></tr>
+<tr><td>cancel</td><td><code>session/cancel</code>（<code>_meta.liwa.keepQueue</code> 为 true 时服务端用 <code>agent.cancel(cause, { keepInbox: true })</code>），连带子会话</td></tr>
+<tr><td>权限 / 续接 / 换模型 / 关闭</td><td>标准 <code>session/request_permission</code>（子会话的带 <code>_meta.liwa.childId</code>）/ 回收 = 关进程保留目录，续接 = 同一目录重拉进程 + <code>session/resume</code> / <code>session/set_config_option(model)</code> / <code>session/close</code>（释放后代）→ 进程退出</td></tr>
+</table>
+
+
+<div class="figure">
+<pre class="mermaid">
+flowchart LR
+  subgraph HOST["本体"]
+    BC["brain-claude<br/>Paseo providers/claude 照搬 + 原地改"]
+    CDC["成员配置目录 …/brains/claude<br/>CLAUDE.md 规矩 · settings.json · skills/ · projects/ 转录"]
+  end
+  subgraph Q["query(options)"]
+    direction TB
+    O1["systemPrompt：实例/想事/整理 = custom 整块人设<br/>干活 = preset claude_code + append"]
+    O2["settingSources: ['user']，干活与查资料加 'project'（仓库 CLAUDE.md，灵鲸规矩优先）<br/>env CLAUDE_CONFIG_DIR = 配置目录"]
+    O3["mcpServers: 只有 toolport 端点<br/>tools: [] （实例类）/ 限 worktree（干活）"]
+    O4["permissionMode 显式 · canUseTool → permission.request<br/>干活的活不禁用 Agent 工具：原生子 agent 放开，只观察（task_* 消息 → child.*）"]
+    O5["maxTurns = 每回合推理上限<br/>PostToolBatch 命中 concludeOn → continue:false"]
+    O6["spawnClaudeCodeProcess → ctx.subprocess.spawn"]
+  end
+  CLP["claude 子进程（每会话一个）"]
+  BC --> Q
+  CDC --- O2
+  Q --> CLP
+  CLP -.->|"MCP"| TPX["toolport"]
+  classDef l4 fill:#e3f1f6,stroke:#1f6f8b,color:#10303c;
+  classDef pr fill:#fbefe6,stroke:#b4532a,color:#4a2210;
+  class BC,CDC,O1,O2,O3,O4,O5,O6 l4;
+  class CLP pr;
+</pre>
+<p class="cap">图 4　Claude Code 的接法。Paseo 原值 <code>settingSources: ['user','project','local']</code> 必须改；"user" 层就是灵鲸生成的配置目录，主人的 <code>~/.claude</code> 不读。原生子 agent 在干活的活里放开：灵鲸只从 SDK 的任务协议观察，用量记在父活上，取消时逐个 <code>stopTask</code>。</p>
+</div>
+
+<h3>3.3 Codex：app-server</h3>
+<div class="figure">
+<pre class="mermaid">
+flowchart TB
+  subgraph HOST["本体"]
+    direction LR
+    BX["brain-codex<br/>Paseo codex-app-server-agent 照搬 + 原地改"]
+    CDX["成员配置目录 …/brains/codex = CODEX_HOME<br/>config.toml：模型提供方 · mcp_servers.liwa · 沙箱 · 项目文档开关<br/>AGENTS.md 规矩 · skills/ · sessions/ 转录"]
+  end
+  subgraph RPC["JSON-RPC over stdio"]
+    direction TB
+    R1["thread/start{ model, cwd, developerInstructions = 人设 + 说明,<br/>approvalPolicy on-request, sandbox workspace-write, config.mcp_servers }"]
+    R2["turn/start · turn/steer{ expectedTurnId } · turn/interrupt<br/>协作子 agent 放开：collabAgentToolCall / subAgentActivity → child.*"]
+    R3["item/*/requestApproval → permission.request<br/>{ accept, acceptForSession, decline, cancel }"]
+    R4["thread/tokenUsage/updated · account/rateLimits/updated → usage"]
+    R5["thread/resume 再带 developerInstructions · ephemeral 给一次性活"]
+  end
+  CXP["codex app-server 子进程（每会话一个，不 detached）"]
+  TPY["toolport"]
+  BX --> R1
+  CDX -.->|"CODEX_HOME"| CXP
+  R1 --> R2 --> R3 --> R4 --> R5
+  R5 --> CXP
+  CXP -.->|"MCP"| TPY
+  classDef l4 fill:#e3f1f6,stroke:#1f6f8b,color:#10303c;
+  classDef pr fill:#fbefe6,stroke:#b4532a,color:#4a2210;
+  class BX,CDX,R1,R2,R3,R4,R5 l4;
+  class CXP pr;
+</pre>
+<p class="cap">图 5　Codex 的接法。V1 只给干活与查资料的活：<code>read-only</code> 沙箱仍能读文件、跑只读命令，实例会话收不干净原生工具。干活与查资料按默认读仓库 <code>AGENTS.md</code>，其余会话 <code>project_doc_max_bytes = 0</code>。</p>
+</div>
+
+<h3>3.4 配置隔离：CLI 只读灵鲸管理的那一份</h3>
+<div class="figure">
+<pre class="mermaid">
+flowchart TB
+  subgraph SRC["来源（账本）"]
+    direction LR
+    SELF["self<br/>规矩 · 汇报格式<br/>本交接优先于通用指令"]
+    SK["skills<br/>本事 → SKILL.md"]
+    RO["roster<br/>提供方 · 模型 · 子 agent 策略"]
+  end
+  BR["brains.prepareConfigDir<br/>每次开会话前覆盖生成；CLI 只读"]
+  subgraph DIR["成员数据目录/brains/"]
+    direction LR
+    D1["claude/<br/>CLAUDE.md · settings.json<br/>skills/ · projects/"]
+    D2["codex/<br/>config.toml · AGENTS.md<br/>skills/ · sessions/"]
+    D3["deepseek/‹sessionId›/<br/>会话 patch · profiles/deepseek<br/>sessions/"]
+  end
+  C1["claude"]
+  C2["codex app-server"]
+  C3["liwa --profile deepseek"]
+  subgraph NO["一律不读"]
+    direction LR
+    N1["~/.claude · ~/.codex · ~/.liwa"]
+    N2["项目 .claude/ · .mcp.json<br/>别处的 MCP 与钩子"]
+  end
+  N3["被干活仓库的 CLAUDE.md / AGENTS.md（已定）<br/>只在干活与查资料的活里读，灵鲸规矩优先"]
+  SELF & SK & RO --> BR
+  BR --> D1 & D2 & D3
+  D1 -->|"CLAUDE_CONFIG_DIR + settingSources ['user']"| C1
+  D2 -->|"CODEX_HOME"| C2
+  D3 -->|"LIWA_HOME"| C3
+  C1 -.->|"干活 / 查资料：settingSources 加 project"| N3
+  C2 -.->|"干活 / 查资料：默认项目文档上限"| N3
+  C2 ~~~ N2
+  classDef l4 fill:#e3f1f6,stroke:#1f6f8b,color:#10303c;
+  classDef pr fill:#fbefe6,stroke:#b4532a,color:#4a2210;
+  classDef no fill:#f4f4f4,stroke:#9a9a9a,color:#555,stroke-dasharray:4 3;
+  class BR,SELF,SK,RO l4;
+  class C1,C2,C3,D1,D2,D3 pr;
+  class N1,N2 no;
+  class N3 body;
+  classDef body fill:#f3f1ea,stroke:#8a8f98,color:#1f2328;
+</pre>
+<p class="cap">图 6　配置隔离。三个 CLI 的 home 变量都指进成员目录；子进程环境先由 <code>@liwa/subprocess</code> 剥掉凭据与 <code>LIWA_*</code>，再显式注入该 CLI 需要的变量名。</p>
+</div>
+</section>
+
+<section id="s4">
+<h2>4 关键时序</h2>
+<p class="lead">九条链路。参与者统一：minds（02）、brains（01）、提供方插件、CLI 子进程、toolport、guard、gateway / 主人。</p>
+
+<h3>4.1 开会话</h3>
+<div class="figure">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant MI as minds
+  participant GD as guard
+  participant BR as ctx.brains
+  participant SP as subprocess
+  participant PV as 提供方插件
+  participant CLI as CLI 子进程
+  MI->>GD: admit（名额 · 总闸 · 暂停）
+  GD-->>MI: 放行
+  MI->>BR: createSession({ impl, cfg: owner · mindKind · persona · cwd · kernelTools · limits · concludeOn · childPolicy · projectDocs })
+  BR->>BR: 核对 compaction / nativeToolPolicy / childPolicy 与 Meta
+  BR->>BR: prepareConfigDir（规矩 · 本事 · 设置 → 成员配置目录）
+  BR->>BR: 登记 brain_process（先登记再拉起）
+  alt deepseek
+    BR->>SP: spawn liwa --profile deepseek --patch 会话.yml（LIWA_HOME = 会话目录）
+    SP-->>BR: 句柄
+    BR->>PV: initialize（30 秒握手）
+    PV->>CLI: session/new{ cwd, mcpServers, _meta.liwa }
+  else claude
+    BR->>SP: spawn claude（经 SDK 的 spawnClaudeCodeProcess<br/>CLAUDE_CONFIG_DIR = 配置目录）
+    PV->>CLI: query(options)
+  else codex
+    BR->>SP: spawn codex app-server（CODEX_HOME = 配置目录）
+    PV->>CLI: initialize → thread/start{ developerInstructions }
+  end
+  CLI-->>PV: 会话 id
+  PV-->>BR: 句柄 + 事件流
+  BR->>BR: 记 brain.session.opened · brain.process.spawned
+  BR-->>MI: BrainSession（startTurn · deliver · cancel · respondToPermission · persistence · close）
+</pre>
+<p class="cap">图 7　开会话。三家同一条链：先登记进程再拉起，握手有时限；配置目录每次开会话前覆盖生成；每个会话一个进程。</p>
+</div>
+
+<h3>4.2 一个回合：送达、流式事件、工具经 MCP、收尾</h3>
+<div class="figure">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant MI as minds 投递器
+  participant BR as brains 句柄包装
+  participant CLI as CLI 子进程
+  participant TP as toolport
+  participant OB as outbox
+  MI->>BR: deliver(next_turn, wake) 一批合好的输入 + 每轮前缀块
+  BR->>BR: 看门狗 60 秒 / 硬线 120 秒 开始计时
+  BR->>CLI: deepseek: session/prompt ｜ claude: push SDKUserMessage ｜ codex: turn/start
+  CLI-->>BR: turn.started
+  CLI-->>BR: item.message / item.reasoning 增量（流式）
+  CLI->>TP: MCP 调用 reply(事件号, 内容)（同批还有 inner）
+  TP->>TP: 校验令牌 · 代次 · 本回合允许集 · 触发事件号
+  TP->>OB: reply 投递回那条消息来的地方
+  TP-->>CLI: 工具结果（deepseek：带 concludesTurn；claude：PostToolBatch 命中 → continue:false；codex：brains 随后 turn/interrupt）
+  CLI-->>BR: turn.completed{ usage 必填, inferences }
+  BR->>BR: 停看门狗 · 写 brain_usage · onUsage → guard
+  BR-->>MI: turn.completed{ concludedBy: reply }
+  MI->>MI: delivery.settled · 换新检查 · 取下一批
+</pre>
+<p class="cap">图 8　一个回合。回复是工具调用（R1），收尾靠契约的 <code>concludeOn</code>；每家的落点不同但 minds 看到的是同一个 <code>turn.completed</code>。</p>
+</div>
+
+<h3>4.3 中途插话：steer（下一步可见）</h3>
+<div class="figure">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant OW as 主人
+  participant MI as minds 投递器
+  participant BR as brains
+  participant CLI as CLI 子进程
+  OW->>MI: 主人在自己发起的回合里追加一句
+  MI->>MI: 校验 turn.initiator == 主人
+  MI->>BR: deliver(next_step, expectedTurnId)
+  alt deepseek
+    BR->>CLI: _liwa/steer{ sessionId, prompt }
+    CLI->>CLI: agent.steer → 下一个步骤边界消费
+    CLI-->>BR: accepted
+  else claude
+    BR->>CLI: SDK 流式输入 push（priority: next）
+    CLI-->>BR: accepted
+  else codex
+    BR->>CLI: turn/steer{ threadId, expectedTurnId, input }
+    CLI-->>BR: 回执 turnId 一致
+  else 别家 ACP CLI
+    BR-->>MI: unsupported
+    MI->>MI: 退化为下一回合（队列里排在最前）
+  end
+  BR-->>MI: accepted
+  Note over CLI: 正在跑的回合在下一步看到这句话，不打断
+</pre>
+<p class="cap">图 9　steer。只有发起者对自己发起的回合能"下一步可见"；提供方不支持的由本体队列在回合边界补上。</p>
+</div>
+
+<h3>4.4 取消与看门狗</h3>
+<div class="figure">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant MI as minds
+  participant BR as brains
+  participant PV as 提供方插件
+  participant CLI as CLI 子进程
+  alt 看门狗 60 秒无事件 / 硬线 120 秒
+    BR->>MI: 超时信号
+    MI->>BR: cancel(watchdog | hard_limit, keepQueue: false)
+  else 主人消息抢占无副作用的系统回合
+    MI->>BR: cancel(preempt, keepQueue: true)
+  else 暂停 / drain
+    MI->>BR: cancel(pause | drain)
+  end
+  BR->>PV: cancel
+  PV->>PV: 先撤回提供方还没读走的 next_step 输入
+  PV->>CLI: deepseek: session/cancel（_meta.liwa.keepQueue）｜ claude: 先 stopTask 子 agent 再 query.interrupt()（主回合在途时）｜ codex: turn/interrupt
+  CLI-->>PV: 中断确认 / 已空闲
+  PV-->>BR: turn.interrupted
+  BR-->>MI: 完成；minds 把 handed 的队列项放回 pending
+  Note over PV,CLI: 中断幂等；被拒或超时 → 标"停止中"、不再接新回合 → minds 换代
+</pre>
+<p class="cap">图 10　取消。原则来自 Paseo：中断幂等、停不干净就失败即关闭；"撤回未读走的 steer"是适配器自己的义务。</p>
+</div>
+
+<h3>4.5 权限请求：一路到主人再返回</h3>
+<div class="figure">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant CLI as CLI 子进程
+  participant PV as 提供方插件
+  participant MI as minds
+  participant TK as tasks
+  participant GW as gateway
+  participant OW as 主人（主控台）
+  CLI->>PV: 原生请求（子 agent 的也走这里）<br/>claude canUseTool ｜ codex item/*/requestApproval<br/>deepseek session/request_permission
+  PV->>PV: 翻成 permission.request<br/>{ requestId, category, tool, args, detail, options[] }
+  PV-->>MI: permission.request
+  MI->>TK: 写 task.permission 事件（task 流）
+  TK->>GW: 直推主人（不进归属实例的回合，不让父活代批）
+  GW-->>OW: 卡片：本次允许 / 本会话允许 / 拒绝 / 取消
+  OW->>GW: 选一项
+  GW->>MI: respondToPermission(requestId, optionId)
+  MI->>PV: respondToPermission
+  PV->>CLI: claude allow / deny<br/>codex accept / acceptForSession / decline / cancel<br/>deepseek selected optionId
+  Note over CLI: decline → 回合继续；cancel → 回合中断
+  CLI-->>PV: 继续或中断
+</pre>
+<p class="cap">图 11　权限。第一版主人可见的选项是 allow_once / allow_session / deny_once / cancel；子 agent 的请求同样直推主人。</p>
+</div>
+
+<h3>4.6 子 agent 路 ①：提供方自己的子 agent（默认；只在干活与查资料的活里）</h3>
+<div class="figure">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant PA as 父活（任一提供方的会话）
+  participant CLI as CLI 自己的子 agent 机制
+  participant CH as 子 agent
+  participant PV as 提供方插件
+  participant BR as brains
+  participant OW as 主人
+  PA->>CLI: deepseek: 工具 subagent{ prompt, description } ｜ claude: Agent 工具 ｜ codex: 协作 agent 工具
+  CLI->>CH: 按 CLI 自己的规则开子 agent（deepseek 继承进程级人设；claude / codex 不带她的人设）
+  CLI-->>PV: deepseek: _meta.liwa child.started ｜ claude: task_started ｜ codex: subAgentActivity started
+  PV-->>BR: child.started{ childId, label, provider, parentChildId? }
+  BR->>BR: 登记 brain_child{ native-child } · 写 brain.child.opened
+  CH->>PV: 子 agent 的权限请求（同一条路，带 childId）
+  PV-->>OW: 直推主人（父活不能代批）
+  OW-->>CH: 允许 / 拒绝
+  CH-->>CLI: 结束（completed / aborted / error）
+  CLI-->>PA: 结果回到父（deepseek: 下一步输入 ｜ claude: task_notification ｜ codex: wait）
+  CLI-->>PV: child.ended ｜ task_notification ｜ subAgentActivity completed
+  PV-->>BR: child.ended{ stopReason, usage? }
+  BR->>BR: 用量记在父活的回合上 · brain.child.ended
+  Note over PA,BR: 父会话 cancel(pause / drain / owner) 先停子 agent 再停主回合；close 杀进程组；未收到 ended 的补记 aborted
+</pre>
+<p class="cap">图 12　路①。CLI 自己开、自己调度、自己回报，灵鲸不干预，只观察（三家都翻成 <code>child.started / ended</code>）、记录（<code>brain_child</code>、<code>task:&lt;id&gt;</code> 流）、计入父活预算；权限一律直推主人；子 agent 不登记成第三层的活。</p>
+</div>
+
+
+<div class="figure">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant PA as 父活（任一提供方）
+  participant TP as toolport
+  participant TK as tasks
+  participant MI as minds
+  participant BR as brains
+  participant CX as codex（子活会话）
+  PA->>TP: 工具 spawn(执行者: codex, 交接包)
+  TP->>TK: tasks.open{ 父活, 种类, 执行者, 交接包 }（归属实例 = 父活的）
+  TK->>MI: openTask{ owner: 父活 }
+  MI->>BR: openChildTask{ parentTask, impl: codex, cfg }
+  BR->>BR: 登记 brain_child{ cross-cli-task } · 配置目录 · 拉进程
+  BR->>CX: thread/start{ developerInstructions = 人设 + 说明 }
+  TP-->>PA: 子活号（立即返回，不等待）
+  CX->>TP: MCP report / ask
+  TP->>TK: task.report / task.ask 事件
+  TK->>MI: deliver(next_turn) 给父活（合批）
+  MI-->>PA: 事件到达父活的下一回合
+  PA->>TP: answer(子活号, 答复) / look(子活号)
+  CX->>TP: report{结束}
+  TK->>MI: closeTask → BR close → toolport.revoke
+  Note over TK: 父活结束 → tasks 级联 manage(stop) 子活；子活权限直推主人
+</pre>
+<p class="cap">图 13　跨 CLI 子活。这是 Paseo <code>create_agent</code> + <code>notifyOnFinish</code> 的形状，但把"agent 管 agent"换成"活管子活"：有归属实例、受众、交接包与核验。</p>
+</div>
+
+<h3>4.8 崩溃后续接与换代</h3>
+<div class="figure">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant CLI as CLI 子进程
+  participant PV as 提供方插件
+  participant BR as brains
+  participant MI as minds
+  participant SP as subprocess
+  CLI--xPV: 两回合之间进程退出
+  PV-->>BR: session.exited{ process_exit }（只影响这一个会话）
+  BR->>BR: brain.process.exited · 会话标 closed{error}
+  BR-->>MI: session.exited
+  MI->>MI: 该实例 rebuilding；有 pending 时触发
+  alt 先试续接（代次不变且 stableVersion 未变）
+    MI->>BR: resumeSession({ resume: 句柄, cfg })
+    BR->>SP: 重拉进程（deepseek：同一会话目录）
+    BR->>PV: deepseek: session/resume ｜ claude: resume ｜ codex: thread/resume
+    PV-->>MI: 句柄
+    MI->>BR: 身份探针（下一回合）
+    alt 探针答对
+      MI->>MI: 继续，按消费游标补投
+    else 答不对 / 续接失败
+      MI->>MI: 换代
+    end
+  end
+  opt 换代
+    MI->>MI: gen + 1，context.forSession 从账本重建（人设 · 最近 N 轮 · 前缀）
+    MI->>BR: createSession（同一 impl 或 fallback）
+    MI->>MI: 补投 pending<br/>重建不读旧转录
+  end
+  Note over BR,SP: 本体重启：open 会话全部标 closed{restart}，live 进程交 03 清孤儿（只清对得上指纹的）
+</pre>
+<p class="cap">图 14　崩溃与续接。权威是经历流 + 本体队列，提供方转录只是缓存；续接省缓存，重建保正确。</p>
+</div>
+
+<h3>4.9 实例从 deepseek 换到 claude</h3>
+<div class="figure">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant OW as 主人
+  participant RO as roster
+  participant MI as minds
+  participant BR as brains
+  participant L as liwa --profile deepseek
+  participant C as claude
+  OW->>RO: 主人实例的提供方 deepseek → claude
+  RO-->>MI: 大脑配置变更事件
+  MI->>MI: stableVersion 变 → 排一次空闲换新<br/>（主人 2 分钟内有消息则推迟）
+  MI->>BR: 回收：停派送 · 等回合结束 · 结算在途工具 · close
+  BR->>L: session/close → 进程退出
+  MI->>MI: gen + 1；context.forSession 从账本重建
+  MI->>BR: createSession({ impl: claude, cfg: 自定义 systemPrompt · settingSources ['user'] · tools [] · compaction off })
+  BR->>BR: prepareConfigDir(claude) · 登记进程
+  BR->>C: query(options)（CLAUDE_CONFIG_DIR = 成员目录）
+  MI->>BR: 身份探针回合
+  C-->>MI: 探针答对 → 投递器补投 pending
+  Note over MI: 她下一轮说"我今天脑子有点不一样"（overall §12.3）
+</pre>
+<p class="cap">图 15　换提供方。人设、工具、队列都在本体，换代只换 <code>impl</code>；改回来走同一条路。</p>
+</div>
+</section>
+
+<section id="s5">
+<h2>5 第二层的实例与第三层的活怎么经第四层开会话</h2>
+<p class="lead">两边走同一条链：minds 从 roster 取绑定 → toolport 发令牌 → brains 开会话。差别在 <code>SessionConfig</code> 的取值。</p>
+<div class="figure">
+<pre class="mermaid">
+flowchart TB
+  subgraph TOP[" "]
+    direction LR
+    subgraph L2["第二层 实例会话"]
+      direction TB
+      I0["attention 路由到实例<br/>→ minds 重建 / 续接"]
+      I1["cfg：mindKind instance · owner{instanceId, gen}<br/>nativeToolPolicy none · compaction off<br/>concludeOn [reply, no_reply, say]<br/>默认 impl deepseek"]
+    end
+    subgraph L3["第三层 活会话"]
+      direction TB
+      T0["实例 dispatch / ponder / do<br/>→ tasks.open → minds.openTask"]
+      T1["cfg：mindKind work / think / own / tidy · owner{taskId, gen}<br/>cwd = worktree · 工具档按种类 × 发起人裁<br/>干活 compaction provider · 其余 off<br/>concludeOn [report{结束}, conclude, submit]<br/>干活默认 claude / codex"]
+      T2["活里 CLI 自己的子 agent → 路 ①（只观察）<br/>活里 spawn → 路 ②（tasks.open 子活）"]
+    end
+  end
+  RO["roster：成员 × 会话种类 → { impl, model, fallback[] }"]
+  TP["toolport.issue → 令牌（按代次）"]
+  BR["brains.createSession / resumeSession / openChildTask"]
+  EV["事件回路：turn.* · tool.called · permission.request<br/>→ minds / tasks → 归属实例的下一回合"]
+  I0 --> I1
+  T0 --> T1 --> T2
+  I1 & T1 --> RO --> TP --> BR --> EV
+  EV -.->|"汇报与结论"| T0
+  EV -.->|"回合事件"| I0
+  classDef l4 fill:#e3f1f6,stroke:#1f6f8b,color:#10303c;
+  classDef body fill:#f3f1ea,stroke:#8a8f98,color:#1f2328;
+  class BR,TP l4;
+  class I0,I1,T0,T1,T2,RO,EV body;
+</pre>
+<p class="cap">图 16　两层共用一条链。活的汇报不经第四层：它们是 toolport 的工具调用，变成 <code>task:&lt;id&gt;</code> 流的事件再投回归属实例。</p>
+</div>
+</section>
+
+<section id="s6">
+<h2>6 Paseo 迁移地图</h2>
+<p class="lead">固定提交 <code>8018231a</code>；按文件原样拷进各包 <code>src/paseo/</code>，原地改、改动记进包内 <code>NOTICE</code>（Apache-2.0）。默认迁；不迁的只有两类：和灵鲸设计冲突，或底座已有更好实现。完整盘点在文档附录 A。</p>
+<div class="figure">
+<pre class="mermaid">
+flowchart LR
+  subgraph PS["Paseo packages/server/src/server（8018231a）"]
+    direction TB
+    P1["agent/agent-sdk-types.ts 830"]
+    P2["providers/claude/* ≈ 8 600<br/>+ 子 agent 观测 ≈ 1 110"]
+    P3["providers/codex-app-server-agent.ts + codex/* ≈ 10 000"]
+    P4["providers/acp-agent · generic-acp · jsonl-rpc ≈ 5 060<br/>+ 五个厂商 shim ≈ 580"]
+    P5["共享提供方工具 ≈ 2 900<br/>protocol 小文件 ≈ 990"]
+    P6["agent-response-loop + structured-generation 789"]
+    P7["timeline-projection · stream-coalescer · activity-curator"]
+    P8["schedule/cron.ts · worktree 命令 · .worktreeinclude<br/>checkout diff · file-observer"]
+    P9["speech/ + dictation/ ≈ 6 900"]
+    P10["finish-subscriptions · idle-runtime-cleanup · restart-recovery<br/>create-agent · mcp-server + paseo-tools"]
+    PX["不迁：agent-manager 5 794 · provider-registry · agent-storage(JSON)<br/>agent-messages · managed-processes · terminal · browser-tools<br/>plugins 平台 · hub / relay / connected-hosts · session(WebSocket)<br/>opencode / pi / omp 适配器 · 客户端与 App"]
+  end
+  subgraph LW["灵鲸"]
+    direction TB
+    Q1["brain-shared/src/paseo/（契约类型 · 共享工具 · protocol）"]
+    Q2["brain-claude/src/paseo/"]
+    Q3["brain-codex/src/paseo/"]
+    Q4["brain-acp/src/paseo/（SDK 0.17 → 1.4；brain-deepseek 的底子）"]
+    Q5["brain/structured.ts（整理活 · 查资料活）"]
+    Q6["gateway 07（时间线投影）"]
+    Q7["job-trigger-time · workspace · console 08"]
+    Q8["ability-speech-local 09（V1.1）"]
+    Q9["迁规则：写进 02 / 03 / tasks / toolport 的文档<br/>至少一次 · 先记意图 · 1 小时回收<br/>running→closed · 幂等键 · 按提供方过滤工具"]
+    QX["理由：以 CLI 转录为真相 · agent 自管 agent<br/>JSON 文件 · 多主机<br/>或底座已有：cordis 插件 · tool-terminal<br/>browser-use · @liwa/subprocess"]
+  end
+  P1 & P5 --> Q1
+  P2 --> Q2
+  P3 --> Q3
+  P4 --> Q4
+  P6 --> Q5
+  P7 --> Q6
+  P8 --> Q7
+  P9 --> Q8
+  P10 --> Q9
+  PX -.-> QX
+  classDef mv fill:#e3f1f6,stroke:#1f6f8b,color:#10303c;
+  classDef no fill:#f4f4f4,stroke:#9a9a9a,color:#555,stroke-dasharray:4 3;
+  classDef src fill:#fbefe6,stroke:#b4532a,color:#4a2210;
+  class P1,P2,P3,P4,P5,P6,P7,P8,P9,P10 src;
+  class Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8,Q9 mv;
+  class PX,QX no;
+</pre>
+<p class="cap">图 17　迁移地图。行数是非测试代码的 <code>wc -l</code>。依赖映射：<code>utils/spawn</code> → <code>ctx.subprocess.spawn</code>、<code>tree-kill</code> → <code>terminate()</code>、pino → cordis logger、<code>@getpaseo/protocol</code> 五件拷进 brain-shared。</p>
+</div>
+</section>
+
+<section id="s7">
+<h2>7 包划分与进程模型</h2>
+<div class="figure">
+<pre class="mermaid">
+flowchart TB
+  subgraph PK["packages/brain/（本体进程里）"]
+    direction LR
+    K1["brain<br/>契约 · ctx.brains · 句柄包装<br/>配置目录生成 · 子 agent 登记 · structured.ts<br/>命令 brain list / probe / sessions / children"]
+    K2["brain-shared<br/>src/paseo/ 共享 + protocol + 子 agent 存储<br/>liwa-block 渲染 · spawn 投影"]
+    K3["brain-acp<br/>Paseo ACP 客户端（SDK 1.4）<br/>adapter + 厂商 shim 配置"]
+  end
+  subgraph PK2["packages/brain/（续）与 packages/bundle/"]
+    direction LR
+    K4["brain-deepseek<br/>brain-acp 子类 + _liwa 三方法<br/>会话 patch 生成"]
+    K5["brain-claude<br/>src/paseo + adapter + NOTICE<br/>含子 agent 观测"]
+    K6["brain-codex<br/>src/paseo + adapter + NOTICE"]
+    K7["bundle/deepseek-app → liwa --profile deepseek<br/>@liwa/acp + _liwa 扩展处理器<br/>五个预设 + 人设行 + subagent 系列"]
+  end
+  subgraph PROCS["运行时进程（都是每会话一个）"]
+    direction LR
+    R0["本体 ×1<br/>装着 packages/brain/*"]
+    R1["liwa --profile deepseek<br/>× 会话数（实例 / 想事 / 整理 / 自己的事）"]
+    R2["claude<br/>× 活会话数"]
+    R3["codex app-server<br/>× 活会话数"]
+    R4["其他 ACP agent<br/>× 会话数"]
+  end
+  K1 --> K4 & K5 & K6
+  K2 --> K3 & K5 & K6
+  K3 --> K4
+  K4 -->|"spawn"| R1
+  K5 -->|"spawn"| R2
+  K6 -->|"spawn"| R3
+  K3 -->|"spawn"| R4
+  K7 -.->|"被加载"| R1
+  classDef l4 fill:#e3f1f6,stroke:#1f6f8b,color:#10303c;
+  classDef pr fill:#fbefe6,stroke:#b4532a,color:#4a2210;
+  class K1,K2,K3,K4,K5,K6,K7 l4;
+  class R0,R1,R2,R3,R4 pr;
+</pre>
+<p class="cap">图 18　包与进程。四种子进程都是每会话一个，全部经 <code>ctx.subprocess.spawn</code>：进程组一起杀、环境剥凭据、宽限期内先礼后兵；拉起前写 <code>brain_process</code>，握手 30 秒；孤儿只清"已登记、父进程已不在、指纹对得上"的。</p>
+</div>
+</section>
+
+<section id="s8">
+<h2>8 第一版范围与验收</h2>
+<div class="cols">
+  <div class="card"><h4>m0</h4><code>@liwa/brain</code> + <code>brain-acp</code>（SDK 1.4）+ <code>brain-deepseek</code> + <code>deepseek-app</code>；实例预设与 <code>reply / no_reply / inner</code>；<code>_liwa/steer</code>；契约测试与回环编解码；<code>liwa brain list|probe</code>。</div>
+  <div class="card"><h4>V1.0</h4><code>brain-claude</code> 全验证（实例、想事、整理、干活）；<code>brain-codex</code> 干活与查资料；五个预设；子 agent 路①（三家的观察）与路②；配置目录生成；备用提供方切换；Paseo 代码与 NOTICE 进仓。</div>
+  <div class="card"><h4>V1.1</h4>Codex 当实例会话；<code>dynamicTools</code>；Claude 订阅额度窗口；预热空闲 <code>deepseek</code> 进程；离线预审；别家 ACP CLI 验证；主控台的子 agent 面板。</div>
+</div>
+<table>
+<tr><th style="width:60px">#</th><th>怎么算接通（真实 CLI，密钥从钥匙串读）</th></tr>
+<tr><td>A1</td><td><b>brain-deepseek</b>：本体为主人实例拉起真 <code>liwa --profile deepseek</code>（<code>LIWA_HOME</code> 在该会话目录、<code>~/.liwa</code> 无新文件）→ <code>liwa chat</code> 一句话 → <code>session/new</code> 带 <code>_meta.liwa</code> → 事件 <code>brain.session.opened → turn.started → tool.called(reply, inner 同批) → turn.completed{concludedBy: reply, usage 非空, inferences = 1}</code>；第 4 步被 <code>agent/pre-step</code> 拒；主人追加一句经 <code>_liwa/steer</code> 在下一步可见；杀本体重启 → 清孤儿 → 同一目录重拉 → <code>session/resume</code> 成功、身份探针答对。</td></tr>
+<tr><td>A2</td><td><b>brain-claude</b>：真 <code>claude</code>（≥ 2.1.292）开一件想事活（自定义 systemPrompt、<code>settingSources ['user']</code>、<code>CLAUDE_CONFIG_DIR</code> 在成员目录、<code>tools []</code>），<code>conclude</code> 经 MCP 到 toolport；<code>maxTurns=3</code> 第 4 次推理不发生；<code>~/.claude/projects</code> 无新文件；<code>kill -9</code> 本体后 <code>claude</code> 进程被下次启动清掉；steer 在下一步可见。</td></tr>
+<tr><td>A3</td><td><b>brain-codex</b>：真 <code>codex app-server</code> 开一件干活活（<code>developerInstructions</code>、<code>CODEX_HOME</code> 在成员目录、<code>workspace-write</code> 限 worktree、读到仓库 <code>AGENTS.md</code>）；<code>report</code> 经 MCP 到 toolport；写 worktree 外触发 <code>requestApproval</code> → <code>permission.request</code> → 拒绝后回合继续；<code>turn/steer</code> 次步可见；<code>tokenUsage</code> 进 <code>brain_usage</code>。</td></tr>
+<tr><td>A4</td><td><b>子 agent</b>：<code>deepseek</code> 上的干活活调 <code>subagent</code> 开子会话、子结束结果回到父的下一步、<code>brain_child</code> 与用量归父；Claude 上的干活活用 <code>Agent</code> 工具开一个子 agent → <code>child.started / ended</code> 出现在 <code>task:&lt;id&gt;</code> 流、用量记在父活、<code>cancel(owner)</code> 时子 agent 被 <code>stopTask</code>；同一活调 <code>spawn(codex, 交接包)</code> 开子活、子活 <code>report</code> 回到父活、父活结束级联停掉子活；子 agent 的一次权限请求直推主人而不是父。</td></tr>
+<tr><td>A5</td><td><b>切换</b>：roster 把主人实例从 <code>deepseek</code> 改成 <code>claude</code> → 空闲换代 → 上下文从账本重建 → 身份探针通过 → 再改回。</td></tr>
+<tr><td>A6</td><td><b>契约</b>：四个提供方过同一套契约测试（假 CLI 回放）与回环编解码；<code>Meta</code> 声明为 false 的语义恒回 <code>unsupported</code>。</td></tr>
+</table>
+<div class="note">先派一个探针任务实测（已定；文档 §10 的十一项）：<code>_liwa/steer</code> 的透传与延迟；<code>session/prompt</code> 阻塞期间 <code>session/cancel</code> 的时序；SDK <code>PostToolBatch</code> 能否收尾；Claude 自动压缩的开关；Codex <code>project_doc_max_bytes</code>、<code>dynamicTools</code>、自动压缩；<code>turn/interrupt</code> 作收尾时 Codex 的状态；<code>agent/pre-step</code> 拒步后 <code>turn/end</code> 是否正常落；每会话一个 <code>deepseek</code> 进程的内存、启动时间与想事活的延迟；子会话权限是否经父会话上报；Claude 原生子 agent 的用量口径；Codex 子线程的用量通知是否经同一连接到达。</div>
+</section>
+
+<section id="s9">
+<h2>9 已定的点与新待定</h2>
+<table>
+<tr><th style="width:40px">#</th><th style="width:240px">点</th><th>定了什么（主人 2026-11-02 两次答复）</th></tr>
+<tr><td>1</td><td>自建默认 agent 的形态</td><td>第一版就是独立进程的 CLI，<code>liwa --profile deepseek</code>，和 Claude Code、Codex 同形</td></tr>
+<tr><td>2</td><td>进程粒度</td><td><b>每个会话一个进程</b></td></tr>
+<tr><td>3</td><td>提供方名</td><td>自建默认 agent 叫 <code>deepseek</code>（包 <code>brain-deepseek</code>、bundle <code>deepseek-app</code>、profile <code>deepseek</code>）；<code>claude</code>、<code>codex</code> 不变；通用 ACP 叫 <code>acp</code></td></tr>
+<tr><td>4</td><td>ACP 扩展</td><td>三个 <code>_liwa/*</code> 方法（steer、usage、children）+ <code>_meta.liwa</code> 字段</td></tr>
+<tr><td>5</td><td>子任务</td><td>走 Paseo 的方式：默认用提供方自己的子 agent 机制，需要时经 <code>spawn</code> 子活调别家 CLI；不开放 CLI 路</td></tr>
+<tr><td>6</td><td>Claude / Codex 的原生子 agent</td><td>干活与查资料的活里放开；灵鲸只观察、记录、计入父活预算；不带她的人设</td></tr>
+<tr><td>7</td><td>底座 <code>subagent</code> 系列</td><td>留 seam + 进程内 spawn / fork + 两个工具；删四个外部委派与 OAR</td></tr>
+<tr><td>8</td><td>外部 CLI 的配置</td><td>全局一律不读；每成员一份灵鲸生成、CLI 只读的目录</td></tr>
+<tr><td>9</td><td>被干活仓库的 <code>CLAUDE.md</code> / <code>AGENTS.md</code></td><td>干活与查资料的活读，灵鲸规矩优先；其余会话不读</td></tr>
+<tr><td>10</td><td>Codex 二进制</td><td>PATH 上的 <code>codex</code>；底座随包的 0.153.4 随 <code>subagent-codex</code> 删</td></tr>
+<tr><td>11</td><td>Paseo 代码的改法</td><td>原地改 + 每包 <code>NOTICE</code> 改动清单</td></tr>
+<tr><td>12</td><td><code>brain-acp</code></td><td>V1 做，迁时升到 SDK 1.4</td></tr>
+<tr><td>13</td><td>内核工具到 CLI</td><td>V1 toolport HTTP MCP，三家一个端点</td></tr>
+<tr><td>14</td><td>待实测项</td><td>先派一个探针任务跑完十一项，结果决定 <code>Meta</code> 的真值</td></tr>
+</table>
+<div class="note"><b>新冒出来的待定点</b>（主人过目即可，设计里先按建议写）：① profile 名随提供方叫 <code>deepseek</code>，和模型适配器 <code>llm-deepseek</code> 同名异物，觉得会混就改回 <code>brain</code>；② 想事·立场类的活要不要也放开子 agent（本稿只给干活与查资料的活）；③ 原生子 agent 不带她的人设，是决策 5"执行者只能是她"的一个边界例外，建议记进 handoff 的决策表；④ 每会话一个 <code>deepseek</code> 进程给想事活带来的启动延迟，探针测出数字后再定要不要 V1.1 的预热。</div>
+<footer>本页由设计 agent 生成，内联 SVG、无外部资源；源文件是同目录的 <code>01-agent-cli.src.html</code>，用 <code>docs/scenarios/build.py</code> 生成；图的名词与 <code>four-layers.md</code>、<code>overall.md</code>、<code>02-minds.md</code> 一致。</footer>
+</section>
+
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+(function () {
+  // 多张图的箭头 marker 同名，生成后逐图改成唯一 id，免得都指向第一张图的定义
+  function uniqueMarkers() {
+    document.querySelectorAll('pre.mermaid svg').forEach(function (svg, n) {
+      var prefix = 'd' + n + '-';
+      var map = {};
+      svg.querySelectorAll('marker[id]').forEach(function (m) { map[m.id] = prefix + m.id; m.id = prefix + m.id; });
+      if (!Object.keys(map).length) return;
+      svg.querySelectorAll('*').forEach(function (el) {
+        ['marker-start', 'marker-end', 'marker-mid'].forEach(function (a) {
+          var v = el.getAttribute(a);
+          if (!v) return;
+          var m = v.match(/url\(#([^)]+)\)/);
+          if (m && map[m[1]]) el.setAttribute(a, 'url(#' + map[m[1]] + ')');
+        });
+      });
+    });
+  }
+  if (!window.mermaid) return;
+  mermaid.initialize({
+  startOnLoad: false,
+  securityLevel: 'loose',
+  theme: 'base',
+  themeVariables: {
+    fontFamily: '-apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+    fontSize: '15px',
+    primaryColor: '#f3f1ea', primaryTextColor: '#1f2328', primaryBorderColor: '#8a8f98',
+    lineColor: '#4a5560', secondaryColor: '#e3f1f6', tertiaryColor: '#fbefe6',
+    clusterBkg: '#fafaf7', clusterBorder: '#c8c3b6',
+    actorBkg: '#e3f1f6', actorBorder: '#1f6f8b', actorTextColor: '#10303c',
+    signalColor: '#1f2328', signalTextColor: '#1f2328',
+    noteBkgColor: '#fff6e5', noteBorderColor: '#d9a441', noteTextColor: '#3d2e00',
+    activationBkgColor: '#e3f1f6', activationBorderColor: '#1f6f8b',
+    labelBoxBkgColor: '#efece4', labelBoxBorderColor: '#8a8f98', labelTextColor: '#1f2328', loopTextColor: '#1f2328',
+    edgeLabelBackground: '#ffffff'
+  },
+  flowchart: { htmlLabels: true, useMaxWidth: false, curve: 'basis', nodeSpacing: 34, rankSpacing: 46, padding: 12, subGraphTitleMargin: { top: 8, bottom: 12 } },
+  sequence: { useMaxWidth: false, mirrorActors: false, actorMargin: 36, messageMargin: 30, boxMargin: 10, noteMargin: 10, width: 170, height: 48, wrap: true, actorFontSize: 15, messageFontSize: 14, noteFontSize: 14 }
+  });
+  mermaid.run({ querySelector: 'pre.mermaid', suppressErrors: true }).then(uniqueMarkers, uniqueMarkers);
+})();
+</script>
+</body>
+</html>

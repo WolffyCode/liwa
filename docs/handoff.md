@@ -1,17 +1,17 @@
 # 交接文档
 
-更新：2026-11-01。给接手的主对话（新会话）用：读完这份就能接着安排活，不必翻原对话。接手顺序：先读"怎么协作"与"现状"，再读"下一步的活"，其余按需。
+更新：2026-11-02。给接手的主对话（新会话）用：读完这份就能接着安排活，不必翻原对话。接手顺序：先读"怎么协作"与"现状"，再读"下一步的活"，在 mac mini 上开工前照"仓库状态"把三个分支检出、装好依赖，其余按需。
 
 ## 整体结论速览
 
 - **产品**：灵鲸（LingWhale / Liwa）是一个"家"，住着主人创造的数字生命。主角是主人的闺女：有性格、有身体状态、有记忆、有自己想做的事，会陪主人聊天、替主人干活，没人找她时也在过自己的日子；会学新本事，会慢慢变，主人看得见她为什么变。完整定义见 `docs/product.md`（已确认），人物画像见 `docs/portrait.md`（已确认）。
 - **她的抽象**：一个生命的九个部分：身、感、念、思、意、忆、行、长、能；两个运行时概念：在场（她在某个地方的出现）、手上的事。原则：判断归她，边界归你，身体归代码；规则打底，模型定调；行为来自意愿，每件事带理由。
-- **方案**：新仓库自研；TypeScript + Node 24 本体，React 前端，Electron 薄壳，SQLite；所有用脑都走各家 CLI（Claude Code、Codex、ACP），统一用灵鲸自己的 agent 契约；Paseo 和 OpenClaw 只作参考和模块来源。
-- **整体架构**：`docs/architecture/overall.md`（18 节）加图页 `docs/architecture/overall.html`。本体是她的身体和神经系统，不是脑子：账本（self、body、memory、people、skills、roster）+ 感 senses、念 attention、意 will、时钟 scheduler、手上的事 tasks、嘴 outbox + 四种用脑 minds（在场、慢想、手、睡眠）+ 行动管线 actions + 守护 guard + 经历流 journal。慢想按需醒、每次新开、靠心事交接；身每分钟一跳、不调模型、确定性可回放。
-- **进度**：产品定义、人物画像、整体架构、05 记忆系统、00 插件机制底座、00 协议规范、工程约定、路线图都已确认；06 成长系统草稿已写、待主人确认；代码上 `contracts` 与 `kernel`（插件机制底座）已写完并通过测试，内核服务与插件还都是空壳。
-- **接着做什么**：路线图 1.7 的 m0 终端能跑（见"下一步的活"），按"设计 agent 出方案 → 主人确认 → 实现 agent 写代码"推进；其余模块文档按 `docs/architecture/README.md` 的顺序出轻量版（01 → 02 → 03 → 04 → 07 → 08 → 10 → 09）。
+- **方案**：以 DeepSeek Harness（DSH）源码为底座，fork 后独立、破坏性重写（决策 36），代码在同一仓库的 `dsh-base` 分支；技术栈随底座（TypeScript + Node 24、cordis 插件、React 网页、Electron 桌面）；所有用脑都走第四层的 agent CLI（自建默认 agent `deepseek`、Claude Code、Codex、通用 ACP），统一用灵鲸自己的契约（决策 46）；Paseo 的大脑适配器与编排能力尽量迁过来，OpenClaw 只作参考。
+- **整体架构**：`docs/architecture/overall.md`（18 节）加图页 `docs/architecture/overall.html`；第二层设计在 `docs/architecture/four-layers.md`（决策 42、43）。四层骨架：对外适配层 / 成员层 / 干活层 / agent CLI 集成层，第二层和第三层都经第四层开会话。本体是她的身体和神经系统，不是脑子：共用层（self、body、memory、people、skills、roster、will、attention、journal、guard）+ 按人分的实例（主人一个常驻；独处按需；V2 起每人、每群各一个），每个实例一个实例会话加它自己的第三层；四种活：干活、想事、她自己的事、整理。代码不读懂话、不替她选择；身每分钟一跳、不调模型、确定性可回放。
+- **进度**：产品定义、人物画像、整体架构、05 记忆系统、00 插件机制底座、00 协议规范、工程约定、路线图、**01 agent CLI 接入（第四层）**都已确认；四层设计稿 `four-layers.md` 已过三份评审；06 成长系统草稿待主人确认。代码上，DSH 底座的基础改造已做完（改名、不额外上报、Mac 本机打包、删账号登录、构建产物去本机路径），第一批裁剪在 `liwa-prune` 分支待验完合并；灵鲸自己的能力还没开始写。
+- **接着做什么**：第四层 V1（见"下一步的活"）：先在 mac mini 上收尾第一批裁剪，再派探针用真 CLI 实测 01 §10 的九项，然后按 01 拆实现任务；按"设计 agent 出方案 → 主人确认 → 实现 agent 写代码"推进。
 - **对话记录**：`docs/conversations/` 是文字版；原始 jsonl（含子任务日志）在 mac mini 的 `/Volumes/Aether/Users/wolffycode/Desktop/liwa-conversation-logs/`，不进仓库（仓库公开）。
-- **开发工作区**：mac mini 的 `/Volumes/Aether/Users/wolffycode/Developer/person/liwa`。所有确定的需求、架构都必须写进仓库文档。
+- **开发工作区**：mac mini 的 `/Volumes/Aether/Users/wolffycode/Developer/person/liwa`（`main`），代码底座用 git worktree 检出在旁边（见"仓库状态"）。主人 2026-11-02 定从 MacBook 转回 mac mini 开发。所有确定的需求、架构都必须写进仓库文档。
 
 ## 阅读顺序
 
@@ -19,7 +19,7 @@
 2. `docs/portrait.md`：她的人物画像（已确认，示例性格），是产品定义合成一个人的读法。
 3. `docs/architecture/overall.md`：整体架构（已确认）；`overall.html` 是配套的 10 张图（源文件 `overall.src.html`，用 `python3 -I docs/scenarios/build.py docs/architecture/overall.src.html` 重新生成）；`docs/architecture/README.md`：架构文档索引与十份模块设计的计划（范围、要定的东西、关键问题、依据、顺序、写法）；模块文档写在 `docs/architecture/modules/`。
 4. 本文：决策、待定、调研清单、环境、协作约定。
-5. `docs/scenarios/index.html`：27 个真实场景的时序图和 6 张调度规则图（源文件 `index.src.html`，`build.py` 生成；名词与 overall.md 一致）。
+5. `docs/scenarios/index.html`：30 个真实场景的时序图和调度规则图（源文件 `index.src.html`，`build.py` 生成；名词与 overall.md 一致）。
 6. `docs/research/`：调研与评审报告，是依据不是方案。
    - 整体架构四步调研：`2026-10-28-openclaw-architecture.md`、`-paseo-architecture.md`、`-companion-architectures.md`（麦麦、AIRI、Letta、elizaOS）、`-papers-architecture.md`（CoALA、Generative Agents、全局工作空间、AIOS、sleep-time compute、Anthropic 多 agent 实践、主动性研究、人设漂移）。
    - `2026-10-28-structure-validation.md`：在场 + 中枢慢想结构的验证（Talker-Reasoner、SOFAI、SwiftSage、Chat-Supervisor、黑板、Erlang/Orleans、Anthropic 长任务、ConfAIde/MuPPET/Audience-Bound、CaMeL、来源监控、会话保证）；修正建议 M1–M16。
@@ -61,47 +61,28 @@
 交回：<设计：文档路径 + 一页结论 + 关键取舍表 + 要主人定的点 ｜ 实现：改动文件清单 + 测试与 CI 原文 + 没做的事 + 风险>。
 ```
 
-## 现状（2026-10-29）
+## 现状（2026-11-02）
 
-- **已确认的文档**：`product.md`、`portrait.md`、`architecture/overall.md`、`architecture/modules/05-memory.md`、`00-plugin-kernel.md`、`00-contracts.md`、`engineering.md`、`roadmap.md`；状态表在 `architecture/README.md`。怎么走到这里的（调研、评审、决策）都在"已定的决策"与"评审意见的处理"，不必翻对话。
-- **待主人确认**：`architecture/modules/06-growth.md` 草稿（787 行，依据齐全，与 05 的接口名全部对得上）。要点头的四点：① `growth.engine` 在 `00-contracts.md` §5.3 之外多三对方法（日记、做法提取、"今天注意"）；② `renderPersona` 标 `pure`；③ self 账本把自我第一层条目以结构化形式交给引擎；④ `persona.rendered.v1` 草稿写进 `mind:<id>` 流，按单写者原则建议改写进 `member:<id>` 流并带会话号。确认后要同步 `00-contracts.md` §5.3、`overall.md` §4.9 与 §13（§9.2、§18.2 U5 已按决策 33 改）。
-- **代码（全部未提交）**：脚手架（pnpm workspace 与 catalog 钉版、tsconfig、eslint 与 dependency-cruiser 规则、vitest projects、`tools/ci.sh`）；`packages/contracts` 机制层 887 行、17 项测试；`packages/kernel` 五阶段 loader 1876 行、29 项测试（覆盖 `00-plugin-kernel.md` §12 的反例）；`apps/liwa` 只有装配入口（required 清单、启动参数、`dumpAssembly`），`pnpm dump-config --profile m0-terminal` 走真实 loader，目前准确报出 m0 阶段集合缺的 12 个服务；`packages/core`、8 个插件包、`cli`、`console`、`replay`、`testkit`、`lib/brain-shared` 都是 2 行空壳。本机 CI 全绿：lint、依赖规则、逐包类型检查、22 个测试文件 61 项。
-- **kernel-0 里留到 1.7 一起做的**：回环编解码测试（等第一个真槽位实现）、安全模式页与启动失败计数 `boot.json`（组合根进程入口）、连续崩溃自动禁用与 `AsyncLocalStorage` 标插件 id、`@liwa/testkit` 独立包（测试内核现在在 kernel 的 `testing.ts`）。
-- **实现中在已确认设计之内定下的细节**（已写进 `00-plugin-kernel.md` §3.2、§5、§11、§14，主人过目即可）：组合根只做 Node 的包解析根、仓库根另算；插件 Config 由 kernel 用 zod `safeParse` 同步校验、错误成为禁用原因；注册阶段先挂 required 等全部就绪，再逐个挂 builtin 并等落定，失败只禁用自己并写明原因；关闭每一步受全局截止约束，因为 cordis 不能打断在途的 `apply`；同一层 patch 对同一插件只能有一条；`data` 插件可放 builtin 或 external 的位置。
-- 用户要求的架构文档结构：一、整体架构（整体逻辑怎么设计）；二、模块架构（按 overall.md §0.4 的七份：生命内核；记忆系统；成长系统；用脑与大脑，即她怎么调用 agent CLI；能力插件；客户端界面，以及第一版要不要客户端；前后端）。之后再讲兜底与出错、测试、第一版里程碑。
-- 推进方式：先把整体架构定明白，再挨个模块做细节架构。设计必须有调研依据，每个设计点带依据。经用户逐段确认后，`docs/architecture/` 里的文件就是设计 spec；实现按"怎么协作"派给实现 agent。
+- **工作转回 mac mini**：主人原话："工作我不想在这个电脑上工作，我想在macmini上弄，所以需要将代码上传，设计上传，交接文档发过去"。MacBook 上的代码、设计、本文都已推送；mac mini 上照"仓库状态"一节接手。
+- **代码底座 `dsh-base`**（决策 36）：HEAD `cef138ef`，已推送。基础改造做完：品牌彻底改为灵鲸（决策 40）；不向 DeepSeek 额外上报（决策 41）；Apple 芯片 Mac 本机打包、App 身份 Liwa、删掉 DeepSeek 账号登录只留 API Key（决策 44）；可执行文件打包线按锁文件部署、前端与打包产物不带构建机路径。跑网页：在 worktree 里 `pnpm run build` 后 `pnpm run start:web --port <端口> --no-open`，首次引导里填 DeepSeek API Key 就能对话。
+- **第一批裁剪在 `liwa-prune` 分支**（`c26bda23`，决策 45），还没合进 `dsh-base`：删全部 GitHub 工作流、Python SDK、决策 41 留下的上报包及接线，SSH 打包的排除规则改为真正生效。已过：build、lint、typecheck、hygiene；全量 test 在 MacBook 上因负载大面积超时，失败文件单独重跑只剩改动前就有的 4 个（plugin-market 缓存、ui-schedule 时区 ×2、spawn-runner 的 Windows 路径）；test:snapshot 重跑全过。**没跑完**：网页快照组（`pnpm run test:web:built`，基线 14 失败 / 809 通过，全是本机缺 WebKit、Chrome for Testing 等环境原因）；doc-sync（上次在 doc graphs 一步超时）；SSH helper 的 macOS arm64 构建与 `verify-ssh-helper-artifact.ts --sandbox=required`；桌面 `pnpm run package:desktop:dir` 加真机启动（带 key 用 flash 对话一次，启动前后 `dsh` 协议处理程序都要还是 `com.deepseek.dsh`）。它基于 `ad4e3c50`，合并前先 rebase 到 `dsh-base`（中间只隔一个改 3 个文件的提交，不重叠）。
+- **主人叫停的清理**：Windows / Linux 运行代码的删除（含 SSH helper 的 Linux 版）、闲置包的删除都不做了（决策 45）。闲置包清单留作设计迁移的参考：`research/2026-11-02-dsh-idle-packages.md`。
+- **第四层设计已确认**（决策 46）：`architecture/modules/01-agent-cli.md`，图页 `01-agent-cli.html`（源文件与构建脚本在 `01-agent-cli.src/`）。它牵动的其他文档还没同步，清单在 01 §14。
+- **四层设计**（决策 42、43）：`architecture/four-layers.md`，三份独立评审已处理；它 §8 列的、要改 `overall.md` 等文档的地方，和 01 §14 的同步一起做。改完之前，第二层的写法以 `four-layers.md` 为准，第四层以 01 为准。
+- **已确认的文档**：`product.md`、`portrait.md`、`architecture/overall.md`、`architecture/modules/05-memory.md`、`00-plugin-kernel.md`、`00-contracts.md`、`01-agent-cli.md`、`engineering.md`、`roadmap.md`；状态表在 `architecture/README.md`。怎么走到这里的都在"已定的决策"与"评审意见的处理"。`00-plugin-kernel.md`、`00-contracts.md` 写于自研内核时期，决策 36 起契约意图保留、落地改到 DSH 底座上。
+- **待主人确认**：`architecture/modules/06-growth.md` 草稿（787 行）。要点头的四点：① `growth.engine` 在 `00-contracts.md` §5.3 之外多三对方法（日记、做法提取、"今天注意"）；② `renderPersona` 标 `pure`；③ self 账本把自我第一层条目以结构化形式交给引擎；④ `persona.rendered.v1` 草稿写进 `mind:<id>` 流，按单写者原则建议改写进 `member:<id>` 流并带会话号。
+- **`main` 上的旧代码**：`packages/kernel`、`contracts` 等是决策 36 之前自研内核的代码，已被 DSH 底座取代，按决策 36 等新底座跑起来后删；新代码一律写在 `dsh-base`。
+- 推进方式不变：设计必须有调研依据，每个设计点带依据；经主人逐段确认后 `docs/architecture/` 里的文件就是设计 spec；实现按"怎么协作"派给实现 agent。
 
-## 下一步的活（路线图 1.7：m0 终端能跑）
+## 下一步的活（第四层 V1：接通三个 agent CLI）
 
-目标：`liwa start` 起本体，`liwa chat` 在终端里和她说上话（Claude Code 外壳 + DeepSeek V4.1 Flash），`liwa status / doctor / dump-config / tail` 可用；探针（路线图 1.3）跑在它上面。m0 阶段集合要在装的 12 个服务：journal、guard、procs、brains、minds、context、actions、senses、attention、outbox、toolport、gateway（`contracts` 的 `STAGE_SETS.m0`）。模块落在哪个包见 `engineering.md` §4.7。
+目标：照 `01-agent-cli.md` §9 的第一版范围与验收，在 `dsh-base` 上把第四层做出来——`@liwa/brain`（契约与 `ctx.brains`）加四个提供方插件：`brain-deepseek`（自建默认 agent，独立进程 `liwa --profile brain`，每会话一个进程，ACP v1 + `_liwa/*` 扩展）、`brain-claude`（Claude Agent SDK）、`brain-codex`（app-server）、`brain-acp`（通用 ACP，迁时升 SDK 1.4）；第二层的实例会话和第三层的活都经它开会话。按顺序：
 
-**第一波：设计**（四个设计 agent 可并行；每份轻量版 150–300 行，写法按 `architecture/README.md`；只写 m0 需要的最小版，V1 其余放"以后"一节）
-
-| # | 文档 | 要定的 | 先读 |
-| --- | --- | --- | --- |
-| D1 | `modules/01-agent-cli.md` agent CLI 接入 | brains 服务（提供方登记、开会话、用量上报）；`brain.provider` 的 Claude 实现从 Paseo 最新上游剥离（固定提交号、`src/paseo/` 原样 + NOTICE、`adapter.ts` 映射层、进程经 `procs.spawn`、`settingSources` 为空、每成员独立数据目录）；人设注入两种方式（自定义 systemPrompt 与预设 + append）；Codex、ACP 的落位只列不做 | `overall.md` §3.4、§9.2、§12.3、§16.1、§17；`00-contracts.md` §5.1；`engineering.md` §4.8；`research/2026-10-28-paseo-architecture.md`、`research/2026-10-28-subagent-notes/cli-claude-sdk-codex-app-server.md`；决策 1、2、4、6、28、33 |
-| D2 | `modules/02-minds.md` 用脑调度 | minds（在场会话登记、回合生命周期、steer、换新与闲置回收的最小版）；context（稳定前缀 = 静态人设文件 + 在场说明，每轮前缀 = 状态行最小版）；toolport（会话令牌、m0 只开 `reply` 与 `inner`、批结束钩子）；主人消息抢占 | `overall.md` §2.4、§3.3、§5.1–§5.4、§8、§11.6；`00-contracts.md` §2、§4、§6；`06-growth.md` §4.3（草稿，人设块十段）；决策 5、12、13 |
-| D3 | `modules/03-foundation.md` 基础与守护 | journal（`node:sqlite`、追加协议 `AppendRequest` / `CommittedEvent`、投影注册、载荷与删除、WAL 检查点）与 `core/db`；procs（进程组、看门狗、清孤儿、`spawn` / `kill`）；actions（先记后做、副作用协议、幂等键）；guard 最小版（`admit` 放行 / 拒绝、`pause`、日预算骨架） | `overall.md` §6、§11.7–§11.9、§12.1、§13；`00-contracts.md` §6、§7；`engineering.md` §6、§7；`research/2026-10-28-event-log-supplement.md` |
-| D4 | `modules/07-protocol-gateway.md` 前后端协议与网关 | gateway（HTTP + WebSocket、`hello`、主人令牌 `OwnerToken` 签发、`liwa` 六个命令的端点）；senses / attention / outbox 的 m0 最小路由（终端是一个"地方"：消息进 → 主人的在场 → 回复投递回终端）；`packages/cli` 的 `liwa` 命令（`--json`、退出码 0 / 1 / 2 / 3） | `overall.md` §3.1、§7、§10、§11.6；`00-contracts.md` §8（客户端协议）；`engineering.md` §12；决策 19、33；`research/2026-10-28-client-backend.md` |
-
-每份交回后：主对话复核依据与范围，给主人一页结论和要定的点；主人确认后在 `architecture/README.md` 标"已确认"，再进第二波。
-
-**第二波：实现**（Opus 5.5；"依赖"列是前置条件，同一组可并行）
-
-| # | 包 | 内容 | 验收 | 依赖 |
-| --- | --- | --- | --- | --- |
-| I1 | `packages/core/src/db`、`journal`、`ledgers` 骨架 | `defineService('journal')`；`append` / `read` / `subscribe` / `putPayload`；投影注册；`kernel.started.v1` 落库 | 单元测试 + 经真实 loader 的装配测试；重启后读得回 | D3 |
-| I2 | `packages/core/src/procs` | 进程组 spawn / kill、看门狗、启动时清孤儿（允许真定时器的两处之一） | 杀进程树与孤儿清理的测试 | D3 |
-| I3 | `packages/lib/brain-shared`、`packages/plugins/brain-claude` | 从 Paseo 剥 Claude 适配器 + 映射层；`provide('brain.provider', 'claude')`；经 `procs.spawn` | 契约测试 + 回环编解码；用假 procs 可测 | D1 |
-| I4 | `core/src/brains`、`minds`、`context`、`toolport` | 大脑登记与开会话；在场会话与回合；静态人设 + 稳定前缀；`reply` / `inner` 与令牌 | 用假大脑跑完一回合，事件齐全 | D1、D2、I1 |
-| I5 | `core/src/guard`、`actions`、`senses`、`attention`、`outbox` | 最小版：放行 / 暂停；先记后做；终端消息进出 | 一条消息从进到出的集成测试 | D3、D4、I1 |
-| I6 | `core/src/gateway`、`packages/cli` | HTTP + WS、`hello`、OwnerToken；`liwa start / status / doctor / dump-config / chat / tail` | `liwa status --json` 与退出码正确；`chat` 收到回复 | D4、I4、I5 |
-| I7 | `apps/liwa`、`profiles/m0-terminal.yml` | 进程入口（自检、`startKernel`、信号、`boot.json`、安全模式页）；profile 填入 `brain-claude`；端到端 | `liwa start` 后 `liwa chat` 与真 Claude Code 外壳说上话；CI 全绿 | I1–I6 |
-| I8 | 探针（路线图 1.3） | 20 个场景、指标、对比臂，跑在 m0 上 | 报告进 `docs/research/` | I7 |
-
-I1、I2、I3 可同时派；I4 与 I5 可同时派；之后 I6、I7 串行。每个实现 agent 的交回必须附 `pnpm run ci` 原文；主对话抽查范围与测试是否真跑。
-
-**同时要主人定的**：提交 2026-10-29 这批代码与文档（见"仓库状态"）；06 草稿的四点（见"现状"）；备份密钥位置；账号共用与额度（见"待定事项"）。
+1. **收尾第一批裁剪**：在 mac mini 上把 `liwa-prune` rebase 到 `dsh-base`，跑完"现状"里没跑完的四项验证；通过后经主人同意合进 `dsh-base` 并推送。
+2. **探针**：派一个任务，用真 CLI 实测 01 §10 列的九项（例如 Claude SDK 的 `PostToolBatch` 能否收尾一回合、自动压缩能否关、Codex 用 `turn/interrupt` 收尾时报 `interrupted` 还是 `completed`），结论写进 `docs/research/`，影响设计的回改 01 并请主人过目。mac mini 上要先装好并登录 `claude`、`codex` 两个 CLI。
+3. **同步文档**：按 01 §14 和 `four-layers.md` §8 改 `overall.md`、`00-contracts.md`、`02-minds.md`、`engineering.md`、`architecture/README.md`、`roadmap.md` 等；交设计 agent 做，主人过目后提交。
+4. **实现**：按 01 §4.7 的包划分拆任务。先做 `@liwa/brain` 契约与服务、Paseo 共享部分的迁移（固定 `getpaseo/paseo@8018231a`，原地改加 NOTICE）；再三个提供方并行；最后接 minds 与 tasks。验收按 01 §9，用真 CLI。跨模块的派 Opus，范围小、改法明确的经 Paseo 派 Codex 或 GLM。
+5. **之后**：第三层（tasks）、第二层（成员与实例）怎么落到底座上，按决策 36 的顺序先出迁移方案、主人确认后再写代码。
 
 ## 文档约定
 
@@ -154,7 +135,11 @@ I1、I2、I3 可同时派；I4 与 I5 可同时派；之后 I6、I7 串行。每
 | 39 | vendored cordis 现在就升到 rc.12 这一批正式发布（2026-10-29） | 主人："我想现在升级，然后跑全量测试，因为我们后边改造更难处理这个问题了，现在改要是出了问题，我们本来就要重写，只要不出现严重没问题，都能接受"。主对话先说明过：不能直接替换（rc.7→rc.12 上游 70 个提交，配置模型与 Loader 生命周期都变，DSH vendor 外 659 个文件引用 cordis），24 处补丁约 7 处可删、5 处部分删、其余要留（易变配置上游没有，DSH 有 40 个文件依赖它），DSH 自己的 rc.11 升级计划拆成 8 个 PR 还停在提议。目标：上游 `01b3962`（2026-10-21 同批发布：core 4.0.0-rc.12、loader 1.0.0-rc.9、include 1.2.0、hmr 1.1.2、timer 1.1.4、group 1.0.0；npm 上的最新正式版），不跟之后未发布的提交。结果（主人对三个拍板点说"这三个按照建议"）：7 个 cordis 包换成 `01b3962` 源码，本地修改留 V1–V7、V10、V11、V15–V17、V20、V22–V24 中仍需要的部分，退役 V8、V9、V12–V14、V18、V19、V21，新增 V25（Include 经 `HmrWatch` 用热重载）、V26（条目重新初始化前等旧 fiber 结算）、V27（保留 `events.dispatch`，去掉上游没给替代的弃用标记），清单与理由在 `vendor/README.md`；bash-startup-timeout 快照按新行为刷新（关停时如实多记一条 `job/settled`）；Loader rc.9 不许条目 id 带冒号，生成插件改用连字符，不做迁移。对比 rc.7 基线：单元测试一致（50 688 过、6 项环境相关失败），lint、快照、hygiene 全过且 hygiene 比基线好。升级在临时分支做完后并入 `dsh-base`（`187cfd4e`），临时分支、DSH 参考克隆与 rc.7 中间产物已清理。**补丁没有清干净**：vendor 里仍有 21 处对上游的改动（8 处是源码放进仓库带来的工程适配，4 处只改文档与显示文字，9 处改行为：易变配置 V15/V20/V22、热重载 V23/V25、防竞态 V6/V26/解析器缓存键、装配与配置工具 V11），上游任何版本都替不掉，只能靠剪掉对应功能来减。**升级后网页客户端曾报"Failed to load plugins"**（71 个条目没激活，主人截图）：rc.12 的 Loader 在 `config/tree.ts` 的 `import()` 里新加了 `process.platform === 'win32'` 的盘符判断（上游 #212），浏览器里没有 `process`，每个插件导入都抛错，又被记进浏览器里没接上的日志。已在 `apps/web/vite.config.ts` 的浏览器替换表里补 `process.platform: "browser"` 修复（`dsh-base` 提交 `549ee2ce`，不改 vendor），无头 Chrome 复查页面完整、控制台零报错。教训：7 项检查和"首页返回 200"的冒烟都验不到浏览器里插件是否激活，以后网页相关改动要用真浏览器看一次（Playwright 驱动本机 Chrome，`channel: 'chrome'`）。**rc.12 对灵鲸的实际价值**（逐个看了 rc.7→rc.12 的 55 个提交〔一手，`cordiverse/cordis` `56b3d4f..01b3962`〕）：没有需要的新特性——新功能里只有配置文件报错能定位到文件和行（#210、#239）是新的，热重载三段式与 `watch()`、`disabled` 表达式、每次激活重解析配置，DSH 已靠补丁或自己的 dsh-hmr 有了；性能只有一处事件派发的小优化（#38），可忽略；有用的是约 11 处 DSH 没补过的 core 生命周期与隔离修复（提供方等依赖方卸完才释放 #196、已释放 fiber 置 DISPOSED #133、隔离边界停止服务查找 #209、隔离移动后注销服务 #191、热重载代际 #189、`internal/update` 钩子随 fiber 释放防泄漏 #56、失败后不重入生命周期 #98、瀑布延续保护 #44 等），对长期运行、运行中启停插件的本体有用，但目前没有已知故障依赖它们；另有十来处只关 Windows 路径，对 Mac 无意义 |
 | 40 | 彻底改名为灵鲸（2026-10-29） | 主人跳过"先真正用一次"（"我用的很多"），原话："直接2，改名，改名要彻底，所有的存储路径，名称等一些列的全部要从deepseek dsh 缩写改成中文名灵鲸，英文名liwa，改名完毕后，你测试一下页面能不能用，功能正常不"。对照：产品品牌 DeepSeek Harness / DSH → 中文"灵鲸"、英文"Liwa"；包作用域 `@deepseek-ai/dsh-*` 与 vendor 的 `@deepseek-ai/*` → `@liwa/*`；命令 `dsh` → `liwa`；`DSH_*` 环境变量 → `LIWA_*`；数据目录 `~/.dsh` → `~/.liwa`；代码标识符 `dsh` / `Dsh` / `DSH` → `liwa` / `Liwa` / `LIWA`；文件与目录名同改。不改的：DeepSeek 作为**模型与 API 供应商**的名字（`llm-deepseek`、`DEEPSEEK_API_KEY`、DeepSeek 账号登录、api.deepseek.com、模型 id）；DeepSeek 服务端定义或外部注册的标识，改了对方就认不出（请求体字段 `dsh_*`、模型列表里的客户端键 `deepseek-harness`、账号平台接口、遥测地址、桌面 bundle id、`dsh://` 协议、自动更新地址、platform 页面调用的 `window.dsh`）；MIT 要求保留的 DeepSeek 版权行（LICENSE 另加一行灵鲸的）；npm 上 DeepSeek 发布的第三方包（`@deepseek-ai/libreoffice-kit` 一族）；引用 DSH 上游 issue、PR、提交的链接；`.agents/notes/` 里 DSH 的历史设计记录（只修其中会断的链接）；已落盘格式要求逐字相同的旧名。`pnpm run verify-brand-terms`（已接进 doc-sync）拦上游名字回流，例外登记在 `scripts/verify-brand-terms.ts`。图形换成中性占位，等正式 logo。已完成并推送：`dsh-base` 提交 `65fa0fc8`；全量检查与网页快照的失败和改名前一致（本机环境原因），真 Chrome 与 headless 用 `deepseek-flash` 对话正常 |
 | 41 | 灵鲸不向 DeepSeek 额外上报（2026-11-01） | 继承来的默认组合会把遥测发到 DeepSeek 的收集端（`dsh-otel-collector.deepseeksvc.com`），每次模型请求附带会话日志与插件清单（`session-log-deepseek`、`plugin-package-inventory-deepseek`），UA 自称 `deepseek-harness`。主人选"关掉，只留模型调用"。落实：默认组合（web／桌面、headless、sdk、acp、sdk-minimal）直接删掉遥测（`otel`、`session-telemetry-otel`、桌面的 `product-telemetry`、`product-analytics`）、反馈（点赞点踩、`/feedback`、反馈菜单，查明它只为把会话日志传给 DeepSeek 而存在）、两个附带字段及其设置开关；模型请求去掉 `x-deepseek-harness-user-id`／`session-id`／`compact` 三个请求头（DSH 设计记录写明只供 DeepSeek 排查用，不影响缓存与计费；实测缓存照常命中），不再生成匿名用户 ID；UA 改为 `liwa/<版本> (+https://github.com/WolffyCode/liwa)`。`scripts/default-composition-reporting.spec.ts` 拦这些插件回到默认组合；插件包本身登记在 `scripts/product-package-policy.ts`，等裁剪时删。已推送：`dsh-base` 提交 `2205f090`；本机代理记录真实请求只剩模型字段，进程没有连收集端。Python SDK 单文件运行时测试线已适配（提交 `93c7b9f6`）：子会话排序改等父会话下一次模型请求发出；本机 macOS arm64 能跑的场景全过，Office 写作场景要从 GitHub 下载 Python，本机代理拦了没跑，等 CI。`LIWA_TELEMETRY_DISABLED` 开关现在关的是不存在的插件，留到裁剪时清 |
+| 42 | 四层骨架与第二层实例模型（2026-11-01） | 主人读了 DeepSeek Super-agent 原型（`research/2026-11-01-dsh-superagent.md`）后提出四层："第一层对外适配层，第二层就是他的常驻一个会话，掌握全局；只聊天、判断、派活、统一回复，第三层就是 worker 各自独立的会话 + 独立工作目录，第四层就是多 agent cli 集成层……我们的第二层是多个，并且每个第二层都是一个人设……成长系统和记忆系统等，贯穿 2 3 4"；又纠正"第三层是设计，第四层是第三层的具体实现，根本就不存在跳过第三层直接到第四层"。看了外部调研（`research/2026-11-01-layer2-landscape.md`，四份子笔记在 `research/2026-11-01-layer2-notes/`）和草稿后又定：代码不读懂话的意思，也不替她做选择（"他放不放弃打游戏，不是程序决定是他的人设决定""代码怎么解析全对话的内容……这个不对"）；第二层抽象成实例（"同一个人设应该有三个第二层的实例，然后每个都有自己的第三层，但是他们记忆成长系统等都应该是共用的"），三种切法里选"按人"，单开独处实例；人设全场景一致（"同一个人他应该就一个人设呀，只是他针对不同事情的态度不一样"）。对草稿 §10 的推荐说"确定"，并要求核实合理性。落实（设计在 `architecture/four-layers.md`，草稿，评审中）：① 四层 = 对外适配层（平台只是通道，不划实例）/ 成员层 / 干活层 / agent CLI 集成层；地基是底座的会话运行时，不属于任何一层；只有第三层用第四层；② 成员一份（人设与成长、记忆、身体、意、念、人物档案、本事、经历流共用，单写者经账本 API）；实例按人切、跨平台合并：主人一个（常驻），V2 起每个人、每个群各一个，没绑定的账号按对话各一个；每个实例 = 一个常驻的实例会话 + 它自己的第三层；独处实例按需起，管没有对象的身体过线和她自己的事；实例之间只经共用账本；③ 代码只做不需要理解内容的事（收发记录、计时、身体算数、摆事实、主人的边界、资源、机器核对、投递与路由），要读懂话、要做选择的都归她；④ 即时的在实例里当场定（放下或继续手头的事、说不说、记承诺、派活），长期的（方针、心愿、关系、放宽受众、花钱、自我认知）派想事活、成员级串行、留决策点记录；`ponder` 时代码把人设 + 最近 N 轮原文 + 召回整份抄给想事活；⑤ 要不要找主人由实例判，事实摆给她，硬限制只留家规与日预算，不应期不再是闸；身体过线一律经过她；⑥ 叫伙伴经伙伴的群实例；订阅直通 V1.1 引入；外部看门狗 V1 不做；注意容量满了起短回合由她说"等我一下"；独处实例按需起；叫法 门 / 她 / 手 / 脑，"总会话"叫实例会话。待议：实例会话要不要套外壳（§10 第 3 条）、群实例的第二道门（第 10 条）；V2 前定：别人的实例默认权限、陌生实例并入（第 13、14 条）。本条取代决策 11 的"每个对话一个在场；慢想只当中枢……"、决策 12 的四种用脑划分（三条规则保留）、决策 13 与 15 里关于在场与慢想的条款；`overall.md`、`product.md` 措辞、02 / 05 / 06、路线图、图页按 `four-layers.md` §8 的清单改，等评审处理完再动 |
+| 43 | 四层设计评审后的主人决定（2026-11-01） | 三份独立评审（Codex 26 条、Fable 40 条、Opus 35 条，`research/2026-11-01-review-four-layers-*.md`）结论一致：骨架立得住，问题在细节没闭合。主人定："你在微信、QQ 上的权限要不要分级 这个不做分级，不考虑被盗"；"我们都说了全部使用各方的agent cli里边具体用哪个模型，我们自己配置，并不一定是claude 的官方的"，追问后选"实例会话和第三层一样可任选一家"；其余"听你的"。落实（`four-layers.md` 第四稿）：① 实例会话和第三层的活都经第四层开会话，可任选提供方（底座自带 agent 默认，Claude Code、Codex、ACP 可选），模型自己配；第四层契约补送达语义（下一步可见 / 只在下一回合可见 / 取消）、能力声明、回合预算，提供方不支持的语义由本体的持久待投递队列在回合边界补；分层规则改为"第二层和第三层都用第四层"，取代决策 42 的"只有第三层用第四层"，也取代决策 6 里"在场 = Claude Code 外壳 + DeepSeek"的默认（实例会话默认底座自带 agent，经配置接 DeepSeek）；② 主人实例在任何平台都是完整权限，推翻 `overall.md` §11.2 与决策 25 M2 的外部渠道身份分级，接受"主人账号被盗等于主人本人"的风险（仍受总闸与单次限额）；③ 想事活只看派它的实例的受众，全部受众只留夜里整理，独处实例按"主人可知 + 公开"召回；"谁能知道"由代码按来源盖章，受众核对不符就拒绝投递、交回她重写；④ 选择后冲动消退取代不应期（选了不说就冷却一阵，留成心事就转成心事不再催；数值待 M4 调）；⑤ 出站内容检查删掉后的残余风险接受，用结构兜（说动作事实要引用完成回执号、答应的事要有承诺号、夜里自查）；⑥ 群实例不用代码比对内容，改为她自己隔一阵抬头看一眼，每群日预算；⑦ 代码替她说的固定文案只留"大脑不可用""漏回复兜底"两处例外。评审里其余问题按设计内修复落进第四稿（稳定的实例编号与会话代次、回收前持久化未处理消息、查冲突与写入一步完成、长期决定成员级排队、权限按触发事件的真实发送者推出、替主人的活一律归主人实例、早晨给主人实例起一轮、她给自己定时的 `remind`、召回改回受众语义并保留 `product.md` §6.4、底座会话日志由灵鲸管理并随删除一起删等），逐条处理见 `research/2026-11-01-review-four-layers-handling.md` |
 | 44 | 打包与发布改为 Apple 芯片 Mac 本机打包（2026-11-02） | 主人选：平台只要 Apple 芯片的 Mac（MacBook M1 Pro、mac mini M4）；本机打包、不发布，不签名公证、不自动更新、不发 npm；App 名称不分语言统一叫 Liwa，bundle id `com.wolffycode.liwa`，链接协议 `liwa://`（不再和主人在用的 DeepSeek Harness 官方客户端抢 `dsh://`）；Python SDK 与 SSH helper 先保留，只删它们的发布部分，留不留等裁剪时定；打出的 Liwa.app 先不装进 /Applications。落实：删掉 Intel Mac 与 Windows 打包、签名、安装器，公证、自动更新（含界面入口）、各类上传与 npm 发布，以及 11 个打包发布类工作流（检查类保留）；官方插件详情不再按 `@liwa` 名字从 npm CDN 拉取，改读本机工作区（`@liwa` 在 npm 上无人注册，防抢注）；Perplexity、Exa、HTTP 抓取的 UA 统一取自 `@liwa/llm`。已推送：`dsh-base` 提交 `541054f8`、`169918f3`；实机打包 Liwa.app、flash 对话正常，前后 `dsh://` 仍归 `com.deepseek.dsh`、官方客户端数据未动。DeepSeek 账号登录：主人定"那就直接把登录相关的删除吧"（软件暂时不需要登录能力），账号服务、平台对接、账号模型路由、账号接口、账号设置页整包删除，联网搜索、模型选择、聊天错误提示里的账号分支一并删掉，桌面内嵌登录页与 `window.dsh` 桥删除，首次引导与桌面欢迎页只剩"添加 API Key"，侧栏底部账号菜单换成"设置"按钮；旧配置里指向已删插件的条目加载时跳过。已推送：`dsh-base` 提交 `939cd4c0`；网页与打包 App 实测 API Key 对话正常、无登录入口 |
+| 45 | 裁剪到第一批为止（2026-11-02） | 主人选：GitHub 工作流全删、只靠本机检查；只留 macOS 代码；删 Python SDK，SSH helper 只留 macOS 版；闲置包先列清单再挑。第一批做完：删全部工作流与只为它们存在的脚本和测试、删 Python SDK、整包删决策 41 留下的上报包及接线（`LIWA_TELEMETRY_DISABLED`、埋点调用、反馈菜单、扩展字段接口），SSH 打包的排除规则改为生效；在 `liwa-prune` 分支 `c26bda23`，验证未完（见"现状"），主人定"先推到单独分支，到 mac mini 上验完再合"。之后主人说"不要再继续清理了，就保持现在这样吧，提交代码，然后要开始我们的正轨了"：Windows / Linux 代码删除、闲置包删除都不做；闲置包清单（`research/2026-11-02-dsh-idle-packages.md`：闭包外 114 个，建议删 40、留 16、待定 49）留给设计迁移时参考。前端构建产物去构建机路径另已合入（`dsh-base` `cef138ef`） |
+| 46 | 第四层 agent CLI 集成层确认（2026-11-02） | 主人原话："设计当前代码和第四层的代码接入，第一版本直接入claude cli和codex cli同时将deepseek默认的这个agent下沉成自建默认agent cli,然后设计第三层和第四层的接入方案和第四层的设计方案，应该怎么走paseo中迁移，迁移范围，和迁移过来后的设计方案"。设计 `architecture/modules/01-agent-cli.md`（已确认，图页 `01-agent-cli.html`），两稿后主人定：自建默认 agent"第一版就做成独立的 CLI"（`liwa --profile brain`，ACP v1 + `_liwa/*` 扩展方法补上 steer）、"每个会话一个"进程、提供方"应该叫deepseek"（另两个 `claude`、`codex`，通用 `acp` V1 也做）；子任务"所有的子任务，也走paseo的方式，默认走自己的agent子机制，然后通过paseo可以调用其他cli的子agent"（默认走自建 agent 的子会话，跨 CLI 经 `spawn` 开第三层子活）；Claude / Codex 原生子 agent "干活的活里放开，只观察"；外部 CLI "接入我们这里的什么都读取，完全遵守我们这里的规则，不读取全局的那些配置"（每成员一份灵鲸生成的配置目录，被干活仓库的 CLAUDE.md / AGENTS.md 在干活、查资料时读、灵鲸规矩优先）；"paseo的能力尽量迁移过来"（固定 `getpaseo/paseo@8018231a`，原地改 + NOTICE，逐项盘点见 01 附录 A）；底座的四个外部一次性委派删、进程内子会话留；写代码前先派探针实测 01 §10 九项。本条细化决策 28、33 的第四层落法 |
 
 ## 评审意见的处理
 
@@ -258,13 +243,21 @@ I1、I2、I3 可同时派；I4 与 I5 可同时派；之后 I6、I7 串行。每
 | brain.provider 声明为只能进程内以免做句柄 | opus ⑥6 | 不采纳：句柄形状现在定（代价小），运行时推迟 |
 | 信任模型的总调整 | 用户 2026-10-29 | 决策 32：插件全部可信（一方代码、开源、本机自用）；上面采纳的"视图白名单""伪造 required 测试""未审阅插件不装"收窄为工程纪律与配置错误检查；隐私只管上下文与出口 |
 
+### 四层设计的评审（2026-11-01，三份：Codex 26 条、Fable 40 条、Opus 35 条）
+
+- 结论一致：骨架立得住，底座能在一个进程里跑多个常驻实例；问题集中在细节没闭合：隐私（想事与独处看全部记忆、结论回流不核受众、受众靠她自报）、回收丢消息（底座 dispose 清 inbox）、共用账本并发写（先查后写的竞态、长期决定只按议题去重）、群里的权限、`inject` 的送达语义（早安发不出、落进主人回合中途）、删不应期后缺"选择后冲动消退"、代码仍在读话（议题去重、方针冲突、心事关键词）、与 `product.md` §6.4 冲突、几处依据数字与底座事实写错。
+- 主人的决定见决策 43；其余按设计内修复落进 `four-layers.md` 第四稿；逐条处理见 `research/2026-11-01-review-four-layers-handling.md`（没有整条不改的；Codex 18 的被盗部分按主人决定不考虑；Fable 38 不保留本体侧前缀快照，重建从账本现取）。
+- 留给 M4 实测：冲动消退数值、人设陈旧上限、各 CLI 当实例会话的能力声明、跨实例前缀缓存命中。
+
 ## 待定事项
 
+- **四层设计剩下的**（决策 42、43）：图页重画时发现四个小缺口，记在 `four-layers.md` §10 第 21–24 条（承诺的对象算不算能公开的事实、跨实例带话、群里派的活结果怎么回群、放宽受众走不走想事活）；V2 前定：别人的实例默认能让她做什么、陌生实例并入；Claude 订阅账号经 pi-ai 登录合不合条款未核实，核实前不依赖；冲动消退的数值、人设陈旧上限、Claude Code / Codex / ACP 当实例会话的能力、跨实例前缀缓存命中，要在 M4 实测。
 - **需要用户提供的信息**：备份加密的密钥放哪；她用的 Claude、Codex 账号是否和用户自己写代码共用、预留多少额度（overall.md §18.5）。
 - **后续版本前再定**：第二版接家人前，要不要让家人知道主人能看她们的私聊；第四版前，公开发言（B 站、抖音评论）的规则（`product.md` §12 第 14 条）。
 - **改名后留给主人定的**（决策 40）：正式 logo（应用内的"L"标记与图标的"方框 + 圆点"是两套占位）；标语"探索未至之境"；首次启动"预览版说明"的文案（还是 DSH 的宣传语）；对话中"正在运行"的鲸鱼动画；桌面版身份（bundle id、`dsh://`、自动更新地址，等灵鲸自己发桌面版时一起换）；主人在 DSH 官方客户端里的数据（`~/.dsh`）要不要搬进灵鲸。
-- **分发前要处理的打包遗留**（2026-11-02）：两条打包线（Python 运行时、SSH helper）已改为按锁文件部署、产物不带构建机路径（`dsh-base` 提交 `f4a3d12a`、`15ae8e46`）。还剩：Python 运行时包里 320 处构建机路径，来自前端插件构建产物 `lib/client*.js` 的 `//#region` 注释（`packages/client/tsdown.client.ts` 与 inspector 的 devtools 构建把绝对路径写进虚拟模块 id），要在源头改成相对路径，会牵动所有前端包产物；原生组件 `node-addon-require-builtin`（预编译要求 macOS 15）SSH helper 去掉了、Python 运行时还带着（加载失败会自动退回，不崩），两条线该统一；SSH 打包里 `node_modules/@liwa/node-addon-system-*` 的排除规则是相对路径，从未生效；`materializeStagedLinks` 只剩删 `.bin`，可简化。
-- **需要用户同意的操作**：提交推送 2026-10-29 的代码批次（见"仓库状态"）；06 成长系统草稿的四点（见"现状"）；转写小凌的讲解视频（要装 ffmpeg 和中文语音识别，不做也不影响架构）。提交推送逐次征得同意。
+- **分发前要处理的打包遗留**（2026-11-02）：前端构建产物与 SSH helper 产物已不带构建机路径（`dsh-base` `cef138ef`、`15ae8e46`）；Python 运行时整条线随 Python SDK 删除（`liwa-prune`）；SSH 打包的排除规则已改为生效（`liwa-prune`）。还剩：刚打好的 Liwa.app 头一两次启动时欢迎页偶发自己关掉或没弹出，原因未查明。
+- **第四层新冒出的待定点**（`01-agent-cli.md` §12 末尾，找主人过目）：profile 名 `deepseek` 会不会和模型适配器 `llm-deepseek` 混；想事活要不要也放开原生子 agent；原生子 agent 不带人设，算不算决策 5 的例外；每会话一个 `liwa` 进程的启动延迟能不能接受（探针时实测）。
+- **需要主人同意的操作**：`liwa-prune` 验完后合进 `dsh-base`；06 成长系统草稿的四点（见"现状"）；转写小凌的讲解视频（要装 ffmpeg 和中文语音识别，不做也不影响架构）。提交推送逐次征得同意。
 
 ## 模块阶段的调研起点
 
@@ -289,7 +282,7 @@ I1、I2、I3 可同时派；I4 与 I5 可同时派；之后 I6、I7 串行。每
 - 论文：`curl -sS 'https://export.arxiv.org/api/query?search_query=all:<terms>&max_results=5'`。
 - macOS 没有 `timeout` 命令。zsh 里不要用小写 `path` 当变量名。
 - 本机 CI 是 `pnpm run ci`（`pnpm ci` 是 pnpm 内置的干净安装）；非交互 shell 先 `export PATH="$HOME/.local/share/fnm/aliases/default/bin:$PATH"`，或 `fnm exec --using=.node-version -- pnpm run ci`。单跑一个包的测试：`pnpm vitest run --project @liwa/kernel`；类型检查：`pnpm exec tsc --noEmit -p packages/kernel/tsconfig.json`。**不要在包目录里 `npx tsc`**：找不到工作区的 TypeScript 时它会去装 npm 上同名的 `tsc` 包并等交互确认，表现为卡住不动。
-- 图页：`docs/scenarios/build.py` 用 Google Chrome 无头模式把 Mermaid 预渲染成 SVG（需要能访问 cdn.jsdelivr.net）；改图只改 `.src.html`。
+- 图页：`docs/scenarios/build.py` 用 Google Chrome 无头模式把 Mermaid 预渲染成 SVG（下载 mermaid 先试 cdn.jsdelivr.net，连不上自动改用 unpkg.com）；改图只改 `.src.html`。
 - 仓库提交身份：仓库级 `user.name=WolffyCode`，邮箱沿用全局 noreply。
 
 ## 用户偏好与协作方式
@@ -305,11 +298,22 @@ I1、I2、I3 可同时派；I4 与 I5 可同时派；之后 I6、I7 串行。每
 - 外部灵感来源（如抖音小凌）只作参照，设计依据以开源代码和论文为主；游戏机制只借身体层，不当标准。
 - 在意 token 开销；2026-10-29 起同意调研与实现 agent 并行跑（总 token 不变，只省等待）；重要稿子请独立评审（整体架构请了 Fable 5.1 和 Opus 5.5；插件底座请了 Codex astra、Codex terra、Fable 5.1、Opus 5.5）。 2026-10-29 起分工改为：主对话只对话与派活，设计走 Fable 5.1 或 Opus 5.5 的 agent，实现走 Opus 5.5 的 agent（决策 34，见"怎么协作"）。
 - 名字、人设内容是用户自己的事：软件名已定（灵鲸 / LingWhale / Liwa）；人设名由用户在出生设定里起。
+- 长任务在跑时，主人要每 5 分钟听一次进展（2026-11-02 起）：用定时任务，结论先行、说清在哪一步、还剩什么；发现卡住（几十分钟无动静、下载断了）要主动查、主动处理，不要干等。
+- 讲设计时主人要看完整的流程图：做成本地单文件 HTML（离线能开），放在主人桌面；要进仓库的另放一份到 `docs/` 里。
+- 能并行就并行，主人在意速度；互相会改同一批文件的任务另开 worktree 再并行。
 
 ## 仓库状态
 
-- 远端：`git@github.com:WolffyCode/liwa.git`，**公开仓库**，分支 `main`，最后一次提交 `ccf2f47`（02 用脑方式草稿；脚手架、contracts、kernel、06 草稿在 `4525f42`）。不要把原始对话日志、本机配置、凭据提交进来。
-- 本地副本：mac mini `/Volumes/Aether/Users/wolffycode/Developer/person/liwa` 是开发工作区；MacBook 上的 `~/Desktop/coding/person/liwa` 可能落后，用之前先拉取。
-- DSH 底座（决策 36）：同一个仓库的 `dsh-base` 分支，与 `main` 历史互不相干。第一个提交 `982347c` 是 DSH `f3803c96` 的原样快照（树哈希与上游一致，不含上游历史），之后是灵鲸的改造提交。MacBook 上用 git worktree 检出在 `~/Desktop/coding/person/liwa-dsh`（`git worktree list` 可见），`~/Desktop/coding/person/liwa` 仍停在 `main`。两个分支重叠的根文件（`docs/`、`README`、`package.json`、`pnpm-workspace.yaml`、tsconfig 与 vitest 配置、`THIRD_PARTY_NOTICES.md` 等）先不合并，灵鲸的内容从 `main` 读，按主人的顺序挨个替换；给 AI 看的规则已换（决策 37）；vendored cordis 已升到 rc.12（决策 39，提交 `187cfd4e`）。要看 DSH 原样代码用 `git show 982347c:<路径>`，不另留参考克隆。在 `liwa-dsh` 里装依赖（`pnpm install`，经代理约 2.5 分钟，`node_modules` 2.1 GB）时，安装后脚本会给这个工作目录设独立的钩子目录（`.git/worktrees/<名>/liwa-hooks`，lefthook，提交前跑 lint、空白、双语配对等检查，推送前跑类型检查），有时也往共用的 `.git/hooks` 写三个 lefthook 钩子（`LEFTHOOK=0` 拦不住）；`main` 没有 lefthook 配置，装完要检查共用目录，有 `pre-commit`、`pre-merge-commit`、`pre-push` 就删掉。本机跑灵鲸用默认数据目录 `~/.liwa`（`LIWA_HOME` 可改）；`~/.dsh` 是主人在用的 DSH 官方客户端的数据，不碰；`~/.liwa-dsh-home` 是改名前测试留下的数据目录，配置里写着旧包名，新代码读不了，可删。
-- 2026-10-29 已把下列改动提交并推送到 `main`（用户同意）：产品定义、人物画像、整体架构与图页、场景页、三份"像生命"调研、结构验证与插件化调研、事件日志补充、子调研存档、两份评审报告、模块设计计划（`architecture/README.md`）、记忆调研报告、记忆全景调研报告、成长调研报告、05 记忆模块文档、00 插件机制底座与协议规范两份设计、四份插件底座评审报告、路线图（`docs/roadmap.md`）、工程约定（`docs/engineering.md`）、本文。
-- 2026-10-29 工作区里**未提交**的改动：四份核实报告（`research/2026-10-29-verify-*.md`）、命令机制 `modules/00-commands.md`、决策 35 的收尾工作（kernel、contracts、目录与文档）。提交前要主人同意。
+- 远端：`git@github.com:WolffyCode/liwa.git`，**公开仓库**。不要把原始对话日志、本机配置、凭据、本机绝对路径提交进来。三个分支：
+  - `main`：灵鲸的文档（产品、架构、模块设计、调研、本文），还有决策 36 之前自研内核的旧代码（待删）。
+  - `dsh-base`：代码底座，与 `main` 历史互不相干。第一个提交 `982347c` 是 DSH `f3803c96` 的原样快照，之后是灵鲸的改造提交；HEAD `cef138ef`。要看 DSH 原样代码用 `git show 982347c:<路径>`。
+  - `liwa-prune`：第一批裁剪 `c26bda23`，基于 `ad4e3c50`，待验完后 rebase 合进 `dsh-base`。
+- **mac mini 上接手**（开发工作区 `/Volumes/Aether/Users/wolffycode/Developer/person/liwa`）：
+  1. 在 `main` 的目录里 `git pull`。
+  2. 检出底座：`git fetch origin && git worktree add ../liwa-dsh dsh-base`；第一批裁剪：`git worktree add ../liwa-prune liwa-prune`（已有就各自 `git pull`）。
+  3. 在每个 worktree 里 `pnpm install`（经代理约 2.5 分钟，`node_modules` 约 2 GB）。安装后脚本会给这个 worktree 设独立的钩子目录（`.git/worktrees/<名>/liwa-hooks`，lefthook：提交前跑 lint、空白、双语配对、vendor 清单等，推送前跑类型检查），有时也往共用的 `.git/hooks` 写三个钩子（`LEFTHOOK=0` 拦不住）；`main` 没有 lefthook，装完检查共用目录，有 `pre-commit`、`pre-merge-commit`、`pre-push` 就删掉。
+  4. 验证一项改动要跑齐：7 项检查（`build`、`lint`、`typecheck`、`test`、`test:snapshot`、`hygiene`、`doc-sync`，用 `pnpm run <名>`）、网页快照组 `pnpm run test:web:built`（先装 Playwright 的浏览器：`node node_modules/.pnpm/playwright@1.61.1/node_modules/playwright/cli.js install chromium-headless-shell`）、真 Chrome 或真 App 实测。只跑 7 项会漏网页问题。跑检查和测试时不要带下载用的代理变量，否则本机 HTTP 测试会误报。
+  5. 实测要真实调用模型时，DeepSeek API Key 只经环境变量 `DEEPSEEK_API_KEY` 交给进程，不落盘、不进日志和截图；测试用临时 `LIWA_HOME`。MacBook 上 key 取自 `~/.paseo/config.json` 的 `agents.providers.deepseek.env.ANTHROPIC_AUTH_TOKEN`，mac mini 上看那边的 Paseo 配置或问主人。
+- 数据目录：默认 `~/.liwa`（`LIWA_HOME` 可改）。`~/.dsh` 是主人在用的 DSH 官方客户端的数据（MacBook 上装着官方客户端，bundle id `com.deepseek.dsh`），任何测试都不许碰；打出来的 Liwa.app 身份是 `com.wolffycode.liwa` / `liwa://`，实测后用 `lsregister -u` 注销。
+- 两个分支重叠的根文件（`docs/`、`README`、`package.json` 等）先不合并：灵鲸的文档从 `main` 读，代码从 `dsh-base` 读；给 AI 看的规则已换成灵鲸的（决策 37），vendored cordis 已升到 rc.12（决策 39）。`dsh-base` 取代 `main`、文档合并留到以后单独做。
+- MacBook 上的副本（`~/Desktop/coding/person/liwa`、`liwa-dsh`、`liwa-prune`）停在 2026-11-02 推送时的状态，以后以 mac mini 为准。

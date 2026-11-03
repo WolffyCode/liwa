@@ -5,7 +5,7 @@
 三个文件：
 
 - `index.src.html`：可编辑的源文件，图是 Mermaid 源码。**改场景只改这个文件。**
-- `build.py`：把源文件里的图渲染好，生成 `index.html`。运行：`python3 -I docs/scenarios/build.py`（需要 macOS 上的 Google Chrome，命令行能访问 cdn.jsdelivr.net）。也能渲染别的页面：`python3 -I docs/scenarios/build.py docs/architecture/overall.src.html`。
+- `build.py`：把源文件里的图渲染好，生成 `index.html`。运行：`python3 -I docs/scenarios/build.py`（需要 macOS 上的 Google Chrome，命令行能访问 cdn.jsdelivr.net）。也能渲染别的页面：`python3 -I docs/scenarios/build.py docs/architecture/overall.src.html`。加 `--shots 某个目录` 会另外给整页和每张图各截浅色、深色一张，用来自查有没有重叠、裁切。
 - `index.html`：生成的结果，不要直接改。
 
 状态：2026-10-28，名词与 `docs/architecture/overall.md` 一致（在场、慢想、手、睡眠用脑）；调度规则以 overall.md §4.3 的去向表为准，场景本身是真实场景需求。带 ★ 的地方是绘制时待定、现已随整体架构定下来的选择，见页面末尾。

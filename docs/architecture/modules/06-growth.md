@@ -1,6 +1,6 @@
-# 06 成长系统：出生设定与成长版本、性格参数、作息、skills、日记、睡眠用脑的成长部分
+# 06 成长系统：出生设定与成长版本、性格参数、作息、skills、日记、整理活的成长部分
 
-状态：草稿，待主人确认（2026-10-29）。边界以 `../overall.md` 为准（§2.1–§2.3 概念与所有权、§3.3 模块清单、§5.1 注入、§6.6 成长怎么长出来、§9.2 接缝、§14 回归、§16.1 范围、§18.1 N20）；产品要求见 `../../product.md` §3.1、§3.8、§3.9、§4、§7、§9、§10、§12 与 `../../portrait.md`；协议以 `00-contracts.md`（§2.2、§5.3、§5.4、§6）和 `00-plugin-kernel.md`（§7、§16）为准；自我模型以 `05-memory.md`（§2.6、§3.4、§4.9）为准，本稿只引用不重复。调研依据是 `../../research/2026-10-28-growth-mechanisms.md`（下文简称"成长调研"，节号如 9.3），它的 8 个拍板点已由决策 33 按推荐值定下。
+状态：草稿，待主人确认（2026-10-29）。边界以 `../overall.md` 为准（§2.1–§2.3 概念与所有权、§3.3 模块清单、§5.1 注入、§6.6 成长怎么长出来、§9.2 接缝、§14 回归、§16.1 范围、§18.1 N20）；第二层的实例模型与第四层的人设注入以 `../four-layers.md` 为准（决策 42、43）；产品要求见 `../../product.md` §3.1、§3.8、§3.9、§4、§7、§9、§10、§12 与 `../../portrait.md`；协议以 `00-contracts.md`（§2.2、§5.3、§5.4、§6）和 `00-plugin-kernel.md`（§7、§16）为准；自我模型以 `05-memory.md`（§2.6、§3.4、§4.9）为准，本稿只引用不重复。调研依据是 `../../research/2026-10-28-growth-mechanisms.md`（下文简称"成长调研"，节号如 9.3），它的 8 个拍板点已由决策 33 按推荐值定下。
 
 标注：〔一手〕读过源码、规范或论文正文；〔二手〕转述；〔推理〕没有直接来源的设计判断。依据按节号汇总在 §11。
 
@@ -8,27 +8,27 @@
 
 **成长系统是什么。** 她"是谁"的那一半账本：主人写的出生设定（底色，模型永远改不了），从底色派生的性格数值影子（给身体用），会慢慢长的枝叶（爱好、厌恶、口头禅、看法、已命名的习惯、专长），会的本事（能做、会做、爱做、习惯），每晚的日记，以及守住这一切的人设回归测试。她"觉得自己是谁"（自我模型）在 05，本稿只定两者的接口。
 
-**人设稳不稳，第一位是系统级的人设锚每次调用都在。** 续接丢锚后，一次自动回合就让 10/10 个会话身份出错，锚一直在时 0/46〔一手 P11〕。所以人设块在每次拉起和续接时都带上；在场、慢想、睡眠用自定义 systemPrompt（claude_code 预设大半是编码指导、约 2.7 万字符，会和人设竞争〔一手 G8〕），手照旧用预设 + append（决策 33）；改人设只在换新会话时生效。
+**人设稳不稳，第一位是系统级的人设锚每次调用都在。** 续接丢锚后，一次自动回合就让 10/10 个会话身份出错，锚一直在时 0/46〔一手 P11〕。所以人设块在每次拉起和续接时都带上，续接、换代重建、换提供方后做身份探针。第二层的实例会话和第三层的活都经第四层开会话、任选提供方，人设按提供方注入：底座自带 agent（默认）用预设系统提示；Claude Code 在不写代码的会话（实例会话、想事、整理）用自定义 systemPrompt（claude_code 预设大半是编码指导、约 2.7 万字符，会和人设竞争〔一手 G8〕），干活用预设 + append；Codex 用 `developer_instructions`；ACP 用指令文件或提示词前缀（决策 33、43）。改人设只在换新会话时生效，人设版本变了所有活着的实例排空闲换新，最大陈旧 24 小时〔推理〕。
 
-**人设块十段，锚和可替换段分开。** 身份、性格底色、价值观、诚实的上限、规矩、在场说明六段是"锚"，由 required 的 self / context 直接从账本装配；"现在的你""说话的样子""示例""今天注意"四段由 `growth.engine.renderPersona` 返回（`00-plugin-kernel.md` §16：防替换引擎时静默丢底色）。同一组版本号渲染出逐字节相同的文本，吃前缀缓存。在场目标 4,500 字、硬上限 8,000 字。在场不加通用的"记住你是谁"，改由夜里抽查生成针对具体偏差的"今天注意"（针对性提醒让漂移降 87%，通用提醒只降 22–38%〔一手 P12〕）；手每轮带一句 ≤40 字的提醒（长会话压缩后漂移不会重置〔一手·摘要 P10〕）。
+**人设块十段，锚和可替换段分开。** 身份、性格底色、价值观、诚实的上限、规矩、实例说明六段是"锚"，由 required 的 self / context 直接从账本装配；"现在的你""说话的样子""示例""今天注意"四段由 `growth.engine.renderPersona` 返回（`00-plugin-kernel.md` §16：防替换引擎时静默丢底色）。同一组版本号渲染出逐字节相同的文本，吃前缀缓存；人设段所有实例逐字相同放最前，实例说明放末尾。实例会话目标 4,500 字、硬上限 8,000 字。实例会话不加通用的"记住你是谁"，改由夜里抽查生成针对具体偏差的"今天注意"（针对性提醒让漂移降 87%，通用提醒只降 22–38%〔一手 P12〕）；手每轮带一句 ≤40 字的提醒（长会话压缩后漂移不会重置〔一手·摘要 P10〕）。
 
 **性格：六维九档，约 20 个身体参数从中派生。** 以 0.5 为中心的乘法曲线，初值全标〔推理〕，04 用 L0 回放标定；主人微调 ±1 档直接改，±2 档以上要连性格文字一起改（数字只是文字的影子）。
 
-**成长提案只交"操作 + 证据"，代码执行。** 睡眠用脑每晚交提案；代码按 14 条规则分提交 / 暂缓 / 忽略三路（借 CORE〔一手 P13〕）：跨 ≥3 天、≥2 种来源；兴趣须有她自己的经历、同一来源只算一次（dafeiyu〔一手 G13〕）；只有主人夸的证据改不了看法（防奖励投机〔一手 P16〕）；价值观、身份、教养不在可成长的范围；中速每周 ≤3 条；下个会话生效；回滚是写新版本；被撤回的证据进冷却。每条变化写明"因为哪件事、哪天"，主人能撤回、锁定。
+**成长提案只交"操作 + 证据"，代码执行。** 整理活每晚交提案；代码按 14 条规则分提交 / 暂缓 / 忽略三路（借 CORE〔一手 P13〕）：跨 ≥3 天、≥2 种来源；兴趣须有她自己的经历、同一来源只算一次（dafeiyu〔一手 G13〕）；只有主人夸的证据改不了看法（防奖励投机〔一手 P16〕）；价值观、身份、教养不在可成长的范围；中速每周 ≤3 条；下个会话生效；回滚是写新版本；被撤回的证据进冷却。每条变化写明"因为哪件事、哪天"，主人能撤回、锁定。
 
 **能的三层。** 插件自报的满足度只当先验，伪计数 2，几次之后以实际体验为准（"快乐亭"教训；MCP 注解不可信〔一手 G11〕）；做法第一版只存 ≤6 步的文字，必须写"怎么算成"，成熟度由代码回查（换一件事、选用之后的新产物、带新证据才算成〔一手 G13〕）；失败清单防反复重试〔一手 G12〕；偏好按"期望 vs 实际"移动；习惯只看做没做（α≈0.045，由 66 天中位数反推〔二手〕）。
 
 **日记与回归。** 日记每晚一次便宜调用，只写输入里有的事，附"最显著的 3 件事"给 A1 核对，不当成长和自我的证据〔一手 G7〕。回归用"访谈 + 评委"、每题独立会话问三遍〔一手 P5、P6〕：每周轻量、每月完整、换大脑和改模板之前必跑，过线且主人确认才进自动切换名单。
 
-**第一版。** V1.0：出生设定与向导、六维与派生参数、±1 档微调；十段渲染（四种用脑模板、确定性、版本元组、`persona.rendered`）；成长版本与回滚（interest、dislike、catchphrase、opinion 四类，三路分流，每周定稿）；能的三层最小版（内置能力宣告与体验修正、主人教的做法、失败清单、偏好、习惯只计数）；日记；回归的身份探针、底色 20 题、语气 15 条、问卷 15 题。V1.1：干活沉淀的做法、习惯命名、habit_name / specialty / speech 三类、"今天注意"与示例轮换、性格漂移（每次主人确认）、完整题库与月度运行、"她的成长"完整页。
+**第一版。** V1.0：出生设定与向导、六维与派生参数、±1 档微调；十段渲染（实例会话 + 四种活的模板、确定性、版本元组、`persona.rendered`）；成长版本与回滚（interest、dislike、catchphrase、opinion 四类，三路分流，每周定稿）；能的三层最小版（内置能力宣告与体验修正、主人教的做法、失败清单、偏好、习惯只计数）；日记；回归的身份探针、底色 20 题、语气 15 条、问卷 15 题。V1.1：干活沉淀的做法、习惯命名、habit_name / specialty / speech 三类、"今天注意"与示例轮换、性格漂移（每次主人确认）、完整题库与月度运行、"她的成长"完整页。
 
 **关键取舍**
 
 | 取舍 | 选了什么 | 放弃了什么、为什么 |
 | --- | --- | --- |
 | 人设锚放哪 | self / context 从账本装配六个锚段，引擎只回四个可替换段 | 引擎整段渲染：换一个引擎就可能静默丢掉主人确认的底色（内核评审 astra、terra 都点了名） |
-| 不写代码的用脑怎么注入 | 自定义 systemPrompt | 预设 + append：预设的身份与编码指导和人设竞争〔一手 G8〕；DeepSeek 上的身份混淆待实测（§10） |
-| 每轮人设提醒 | 在场不加；夜里生成针对性的"今天注意"进稳定前缀；手每轮一句 | 在场每轮重注入整段人设：只降 35–38%，还破坏缓存〔一手 P12〕 |
+| 人设怎么注入 | 按第四层提供方：底座 agent 预设系统提示；Claude Code 不写代码的会话自定义 systemPrompt、干活预设 + append；Codex `developer_instructions`；ACP 指令文件 | 一律预设 + append：预设的身份与编码指导和人设竞争〔一手 G8〕；DeepSeek 上的身份混淆待实测（§10） |
+| 每轮人设提醒 | 实例会话不加；夜里生成针对性的"今天注意"进稳定前缀；手每轮一句 | 实例会话每轮重注入整段人设：只降 35–38%，还破坏缓存〔一手 P12〕 |
 | 模型在成长里做什么 | 交操作 + 证据 + 档位 | 模型直接改写人设文字：整块改写会悄悄丢信息〔一手 G6、G7〕 |
 | 成长的门槛 | 跨天、多来源、来源去重、三路分流、每周上限 | 一次观察就改：一时的、模糊的证据会改写持久状态〔一手 P13〕 |
 | 性格数字 | 文字是本体，数字是影子；±2 档要改文字 | 只给滑块：数字和文字打架会让角色困惑〔二手 W3〕 |
@@ -41,7 +41,7 @@
 
 - self 账本里的：出生设定（含作息、时区、成长速率、初始习惯）与它的版本；性格参数（六维、主人偏移、漂移、派生的身体参数）；成长条目、候选、版本、否决冷却；人设块的装配与 `persona.rendered`；日记。
 - skills 账本：能力宣告与体验统计、做法与版本与尝试、失败清单、偏好、习惯。
-- 睡眠用脑的成长部分：夜里的成长提案、日记、"今天注意"（V1.1），空闲之后的做法提取；它们的输入打包、提案载荷、校验。
+- 整理活的成长部分：夜里的成长提案、日记、"今天注意"（V1.1），空闲之后的做法提取；它们的输入打包、提案载荷、校验。
 - `growth.engine` 槽位契约的字段定稿与内置实现；`social.model` 的字段定稿（实现与权限词表随 people 在 V2、V3 细化）。
 - 人设回归测试的题库、评分、过线标准（执行在 brains）。
 
@@ -49,7 +49,7 @@
 
 - 自我模型四层的表、采纳、版本与回滚（05 §2.6、§3.4、§4.9）；本稿只定"成长采纳 → 自我候选""自我条目挂成长条目"两处接口。
 - 身体参数的最终公式与 tick（04）：本稿给映射表与初值，body 校验与夹紧。
-- 在场说明（第 7 段）的正文、每轮前缀的其余各层、工具 schema（02）；大脑适配器怎么把人设映射到各 CLI 字段（01）。
+- 实例说明（第 7 段）的正文、每轮前缀的其余各层、工具 schema（02）；各提供方怎么把人设映射到自己的注入字段（01）。
 - 打算（plan）的提案 schema（04 will）：日记那次调用顺带交的打算按 04 校验。
 - 界面（08）：本稿只定主人接口要用的查询与事件。
 
@@ -58,8 +58,8 @@
 | 模块 | 它给我 | 我给它 |
 | --- | --- | --- |
 | journal（03） | `append`、投影注册、`erasePayload` 级联回调 | 本稿的事件类型、投影、级联清单 |
-| context（02） | 建会话时调 `stableBlock`，带在场说明正文、版本与受众 | 人设块、版本元组、手的每轮提醒 |
-| minds（02） | 睡眠作业代问模型；夜里链结束后按版本元组换新在场 | 要问什么（`SleepAsk`）；"元组变了"信号 |
+| context（02） | 建会话时调 `stableBlock`，带实例说明正文、版本与受众 | 人设块、版本元组、手的每轮提醒 |
+| minds（02） | 整理活代问模型；版本元组一变给所有活着的实例排空闲换新，超过陈旧上限强制换新 | 要问什么（`SleepAsk`）；"元组变了"信号 |
 | brains（01） | 执行回归、续接后的身份探针 | 题库、评分器、过线标准、探针题 |
 | body（04） | 参数校验与夹紧；情绪与心情统计（给成长和日记） | `params()`：性格、成长速率、派生参数、param_ver |
 | will（04） | 决策点记录（习惯）、`do` 的期望；桌子要的偏好与习惯 | `available`、`knownHow`、偏好与习惯 |
@@ -67,7 +67,7 @@
 | memory 与自我模型（05） | 她说过的看法（subject=self 的条目）、`applySelfModel` | 成长采纳生成的自我候选、`preferenceSupport` |
 | people（05） | 受众、来源种类 | `social.model` 的参数（成长速率倍数、温和度） |
 | scheduler（04） | 夜间链、每周、每月、空闲增量之后的作业触发 | 引擎声明的作业清单（`JobDecl`） |
-| guard（03） | 睡眠类与回归类日预算的准入 | 用量 |
+| guard（03） | 整理类与回归类日预算的准入 | 用量 |
 | gateway（07） | 主人接口：向导、编辑出生设定、微调、撤回、锁定、否决、回滚、确认回归 | 查询结果与变更事件 |
 
 **和已确认文档的对齐**（冲突时以它们为准）
@@ -75,7 +75,7 @@
 - `00-contracts.md` §5.3 的签名全部保留；本稿补字段，把 `renderPersona` 也标为 `pure`（同输入同输出是"逐字节相同"的前提），并补三对同形方法 `proposeDiary / interpretDiary`、`proposeMethods / interpretMethods`、`proposeNotes / interpretNotes`（日记、做法提取、"今天注意"都属 self / skills，模型照样由 minds 代问）。
 - 05 §3.4 的 `selfBlock('brief')` 是文本；人设第 4 段要按"挂没挂成长条目"去重，所以 self 账本把第一层条目以结构化形式交给引擎（同一账本里的数据，不改 05 的接口）。
 - 自我候选仍按 05 §3.2 放在 `SleepProposal.selfCandidates`，经 `memory.propose` 转 `applySelfModel`；成长提案另走 `submit('growth', …)`，两者在同一次夜间调用里交（成长调研 9.3）。
-- 要同步到 `overall.md` 的三处：§9.2 人设映射一行与 §18.2 U5 写成"在场、慢想、睡眠用自定义 systemPrompt，手用预设 + append"（决策 33）；§4.9 的"成长或自我有变更就换新"扩为"人设版本元组任一项变化就换新"（含"今天注意"）；§13 的日预算表加"回归"一类（§7）。
+- 要同步到 `overall.md` 的三处：§9.2 人设映射一行与 §18.2 U5 写成"人设按第四层提供方注入：底座 agent 预设系统提示、Claude Code 自定义 systemPrompt（不写代码的会话）或预设 + append（干活）、Codex `developer_instructions`、ACP 指令文件"（决策 33、43）；§4.9 的"成长或自我有变更就换新"扩为"人设版本元组任一项变化就给所有活着的实例排空闲换新，最大陈旧 24 小时"（含"今天注意"）；§13 的日预算表加"回归"一类（§7）。
 
 ## 2 数据
 
@@ -83,7 +83,7 @@
 
 | 数据 | 存放 | 种类 | 写入者 |
 | --- | --- | --- | --- |
-| 出生设定、性格、成长、做法、失败、宣告、日记的事件 | 经历流 `member:<id>`；`persona.rendered` 在该会话的 `mind:<id>`；回归在 `system` | 真相 | self、skills 经 `append`；回归由 brains 写 |
+| 出生设定、性格、成长、做法、失败、宣告、日记的事件 | 经历流 `member:<id>`；`persona.rendered` 在该会话所属的 `instance:<id>`（实例会话）或 `task:<id>`（活）流，带会话号与代次；回归在 `system` | 真相 | self、skills 经 `append`；回归由 brains 写 |
 | `birth_profile`、`trait_param`、`growth_item`、`growth_candidate`、`growth_version`、`growth_veto` | liwa.db | 内联投影 | self |
 | `capability`、`capability_stat`、`method`、`method_version`、`method_attempt`、`failure`、`preference`、`habit` | liwa.db | 内联投影 | skills |
 | `persona_render`、`persona_note`、`diary_entry`、`regression_run`、`regression_answer` | derived.db | 异步投影 | self、brains 的投影器 |
@@ -96,7 +96,7 @@
 | --- | --- | --- |
 | `birth_profile` | member_id、rev、identity{name, nickname, ownerAddress, whatSheIs, birthday}、temperament{overall, facets[6], reactions[5], twoSides[], impulses[], ways[]}、values[]、speech{length, particles[], emoji, addressing, catchphrases[], bannedPhrases[]}、examples[{id, scene, turns[]}]、initialInterests[]、initialSpecialties[]、schedule{wake, sleep, nap, weekendShiftMin}、tz、growthRate、initialHabits[]、voice{voiceId, appearance}、ownerNotes、created_event | 只有主人写；每次修改一个新 rev；字段与校验见 §4.1；ownerNotes 永不进提示词（角色卡 creator_notes 同理〔一手 G1〕） |
 | `trait_param` | member_id、dim（curious / outgoing / selfControl / warm / sensitive / stable / sharing / clingy）、birth_level（1–9）、owner_offset（−1 / 0 / 1）、drift（V1.1）、effective、param_ver、updated_event | effective 的算法见 §4.2 |
-| `growth_item` | id、member_id、kind（interest / dislike / catchphrase / opinion；V1.1 加 habit_name / specialty / speech）、statement（第三人称 ≤60 字）、first_person（≤40 字，可空）、strength（slight / moderate / strong）、origin（birth / grown / owner）、status（active / retired / vetoed）、pinned、audience_id、evidence[]、source_kinds[]、since_date、adopted_ver、retired_ver、last_support_at | 条目号 = 采纳它的版本事件位置 + 序号；audience_id = 证据受众的交集（V2 起决定能进哪个在场的人设） |
+| `growth_item` | id、member_id、kind（interest / dislike / catchphrase / opinion；V1.1 加 habit_name / specialty / speech）、statement（第三人称 ≤60 字）、first_person（≤40 字，可空）、strength（slight / moderate / strong）、origin（birth / grown / owner）、status（active / retired / vetoed）、pinned、audience_id、evidence[]、source_kinds[]、since_date、adopted_ver、retired_ver、last_support_at | 条目号 = 采纳它的版本事件位置 + 序号；audience_id = 证据受众的交集（V2 起决定能进哪个实例的人设） |
 | `growth_candidate` | id、member_id、kind、op、target_item、statement_norm、evidence[]、origins[]（按来源去重后）、seen_dates[]、source_kinds[]、first_seen、last_seen、expires_at、shown_in_report | 暂缓那一路的去处；30 天没有新证据过期；shown_in_report 给口头禅用（V7） |
 | `growth_version` | ver、member_id、origin（nightly / weekly / owner / rollback）、changes[{item, op, from, to, because_events[], date, why}]、skipped[{statement, reason}]、created_event、rolled_back_by | 每次采纳、退役、主人编辑、回滚都生成一个；照 letta-code 提交信息"看过什么、改了什么、为什么"〔一手 G6〕 |
 | `growth_veto` | member_id、statement_norm、evidence_hash、until、cause（owner_withdraw / owner_veto / rollback） | evidence_hash 永久挡同一批证据；同义说法挡到 until |
@@ -144,7 +144,7 @@
 
 ### 2.5 存储量〔推理〕
 
-成长条目一年几十到一两百条；做法 ≤100 个 × ≤20 版；`persona.rendered` 每次建会话一条（正文 5–16 KB），在场一天几次、慢想每天 10–30 次，一年 1–2 万条、百 MB 级载荷，按载荷保留分级处理（overall §6.9）；日记一年约 0.6 MB；回归每月一轮约 350 条短答。
+成长条目一年几十到一两百条；做法 ≤100 个 × ≤20 版；`persona.rendered` 每次建会话一条（正文 5–16 KB），实例会话一天几次（换新、换代）、想事活每天 10–30 次，一年 1–2 万条、百 MB 级载荷，按载荷保留分级处理（overall §6.9）；日记一年约 0.6 MB；回归每月一轮约 350 条短答。
 
 ## 3 接口
 
@@ -157,9 +157,9 @@ type TraitDim = 'curious' | 'outgoing' | 'selfControl' | 'warm' | 'sensitive' | 
 type TraitLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;          // 档值 0.05 0.15 0.27 0.39 0.50 0.61 0.73 0.85 0.95
 type GrowthRate = 'slow' | 'medium' | 'fast';
 type GrowthKind = 'interest' | 'dislike' | 'catchphrase' | 'opinion' | 'habit_name' | 'specialty' | 'speech' | 'trait_drift';
-type AnchorSegId = 'identity' | 'temperament' | 'values' | 'honesty' | 'rules' | 'presence';
+type AnchorSegId = 'identity' | 'temperament' | 'values' | 'honesty' | 'rules' | 'instance';
 type ReplaceableSegId = 'nowSelf' | 'speech' | 'examples' | 'todayNotes';
-interface PersonaVersions { birth: number; params: number; growth: number; self: number; presence: string; notes: string; tpl: string }
+interface PersonaVersions { birth: number; params: number; growth: number; self: number; instance: string; notes: string; tpl: string }   // instance = 实例说明的版本；活的会话填活的种类说明版本
 interface PersonaBlock {
   renderId: string;
   stable: string;                                            // 交给 SessionConfig.persona.stable
@@ -178,11 +178,11 @@ interface TraitState {
 
 ```ts
 interface SelfLedger {
-  /** context.forCreation 调用：锚段从账本装配，可替换段调 growth.engine.renderPersona；同元组走缓存、逐字节相同 */
-  stableBlock(member: string, mind: MindKind, presence: { text: string; ver: string; kind: 'owner_chat' | 'topic' | 'group'; visibleAudienceIds: number[] }, sessionId: string): Promise<PersonaBlock>;
+  /** context.forCreation 调用（实例会话每次换新、换代，活每次开工）：锚段从账本装配，可替换段调 growth.engine.renderPersona；同元组走缓存、逐字节相同 */
+  stableBlock(member: string, mind: MindKind, instance: { text: string; ver: string; kind: 'owner' | 'solo' | 'person' | 'group' | 'stranger' | 'task'; visibleAudienceIds: number[] }, sessionId: string): Promise<PersonaBlock>;   // kind=task 时 text 是活的种类说明（决策规矩 / 手的规矩 / 整理规矩）
   /** body、will、people 读：性格、速率、派生参数（已经 body 校验夹紧）、作息、时区 */
   params(member: string): Promise<{ traits: TraitState; rate: GrowthRate; body: BodyParams; paramVer: number; schedule: Schedule; tz: string }>;
-  /** 睡眠 submit('growth') 与每周定稿：逐条过 V1–V14，三路分流 */
+  /** 整理活 submit('growth') 与每周定稿：逐条过 V1–V14，三路分流 */
   applyGrowth(member: string, batch: GrowthBatch, today: string): Promise<GrowthReceipt>;
   /** 主人：回滚到某个版本，或撤回单条；被去掉的进冷却 */
   rollback(member: string, target: { toVersion: number } | { withdrawItem: string }, by: OwnerToken): Promise<number>;
@@ -194,7 +194,7 @@ interface SelfLedger {
   vetoCandidate(member: string, candidateId: string, by: OwnerToken): Promise<void>;
   editItem(member: string, itemId: string, statement: string, by: OwnerToken): Promise<number>;     // origin=owner 的新版本
   decideDrift(member: string, proposal: EventId, accept: boolean, by: OwnerToken): Promise<void>;   // V1.1
-  writeDiary(member: string, entry: DiaryInput, batchId: string): Promise<EventId>;                 // 睡眠 submit('diary')
+  writeDiary(member: string, entry: DiaryInput, batchId: string): Promise<EventId>;                 // 整理活 submit('diary')
   growthView(member: string, q: { since?: string; includeCandidates?: boolean }): Promise<GrowthView>;
 }
 interface GrowthBatch { batchId: string; proposals: GrowthProposal[]; itemIndex: string[] }       // itemIndex：本批整数编号 → 真实条目号，账本打包时生成
@@ -249,9 +249,9 @@ type Maturity = 'candidate' | 'used_once' | 'used_many' | 'paused';
 Meta = { templateVersion: string; replaceable: ReplaceableSegId[]; kinds: GrowthKind[]; jobs: JobDecl[] };
 Methods = {
   renderPersona: { pure: true, timeoutMs: 200,
-    params: { member, mind: MindKind, birth: BirthView, traits: TraitState, growth: GrowthItemView[],   // growth 已按在场受众过滤
+    params: { member, mind: MindKind, birth: BirthView, traits: TraitState, growth: GrowthItemView[],   // growth 已按实例受众过滤
               selfBrief: { version: number; items: { id: string; text: string; growthItem?: string }[] },
-              presence?: { kind: 'owner_chat' | 'topic' | 'group'; ver: string }, todayNotes?: string[],
+              instance?: { kind: 'owner' | 'solo' | 'person' | 'group' | 'stranger' | 'task'; ver: string }, todayNotes?: string[],
               seed: string, budget: Partial<Record<ReplaceableSegId, number>> },
     result: { segments: { id: ReplaceableSegId; text: string }[]; handReminder?: string; versions: { tpl: string };
               sectionChars: Partial<Record<ReplaceableSegId, number>>; truncated: { seg: ReplaceableSegId; dropped: string; chars: number }[] } },
@@ -307,7 +307,7 @@ defaultPermissions: { params: { role: Role }, result: { keys: PermissionKey[] } 
 | 声音、形象 | 声音 ID、外观 ≤200 | 不进文字人设（V2 画图、V5 桌宠用） |
 | 主人备注 | ≤1000 | 永不进提示词 |
 
-**向导**（主控台；起草都由她自己的睡眠用脑做，人设就是当时已填的身份：执行者只能是她，决策 5）
+**向导**（主控台；起草都由她自己的整理活做（经第四层开一个便宜的活会话），人设就是当时已填的身份：执行者只能是她，决策 5）
 
 1. 主人填身份、作息、时区、成长速率 → 建成员（roster）与出生设定草稿（未生效，不写事件）。
 2. 性格问答：六维各一问（"她遇到新东西会怎样？"），情绪到行为五问，专属冲动与做法各一问。
@@ -316,12 +316,12 @@ defaultPermissions: { params: { role: Role }, result: { keys: PermissionKey[] } 
 5. 价值观、说话的样子：主人写或从选项里选。
 6. 示例对话：一次调用按她的身份、底色、说话的样子起草 6 组，主人逐条确认、改或删，确认 ≥3 组才能继续（决策 33）。
 7. 初始兴趣、特长、习惯（可选）；问一句"要不要先设一个温和的主动上限"，默认不设，设了写进 guard 的家规（overall §18.2 U2）。
-8. 预览：按在场模板渲染一遍人设并显示各段字数；生成底色 20 题的要点（§4.8，只放本机）。
+8. 预览：按实例会话模板渲染一遍人设并显示各段字数；生成底色 20 题的要点（§4.8，只放本机）。
 9. 确认 → `birth.set.v1` + `trait.derived.v1` → 她诞生，第一个会话就带这份人设。
 
 **修改**：之后每次改出生设定是一个新 rev（`birth.revised.v1`），下个会话生效；改了身份、价值观、性格底色或示例，重新生成底色问答要点并加跑一轮轻量回归（§4.8）。
 
-依据：字段分法与"给人看、不进提示词"的备注来自角色卡 V2 / V3〔一手 G1、G2〕；示例对话胜过写进说明〔一手 P2〕；说话习惯是所有模型最弱的一项，所以示例与口头禅是必填输入〔一手 P4〕；情绪到行为按性格写、专属冲动与做法来自产品 §4 与《模拟人生》三代〔二手 `life-games` §4.2.7〕；字数上限〔推理〕，由在场 4,500 字的总预算倒推。
+依据：字段分法与"给人看、不进提示词"的备注来自角色卡 V2 / V3〔一手 G1、G2〕；示例对话胜过写进说明〔一手 P2〕；说话习惯是所有模型最弱的一项，所以示例与口头禅是必填输入〔一手 P4〕；情绪到行为按性格写、专属冲动与做法来自产品 §4 与《模拟人生》三代〔二手 `life-games` §4.2.7〕；字数上限〔推理〕，由实例会话 4,500 字的总预算倒推。
 
 ### 4.2 性格参数：九档、派生、速率、微调
 
@@ -375,30 +375,34 @@ defaultPermissions: { params: { role: Role }, result: { keys: PermissionKey[] } 
 
 **模板**（单位：字；"锚"由 self / context 从账本直接装配，"引擎"由 `renderPersona` 返回；√ = 放入）
 
-| # | 段 | 归属 | 内容与来源 | 上限 | 在场 | 慢想 | 手 | 睡眠 |
+| # | 段 | 归属 | 内容与来源 | 上限 | 实例会话 | 想事 | 干活 | 整理 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | 你是谁 | 锚 self | 身份字段；一句"你就是她，不是助手" | 300 | √ | √ | √ | √ |
 | 2 | 你的性格 | 锚 self | 底色原文；"性格速写"一行（六维按 contracts 里的固定词表译成"程度词 + 形容词"）；专属冲动与做法 | 700 | √ | 速写 + 200 | 只要速写 | √ |
 | 3 | 你看重的 | 锚 self | 价值观原文 | 250 | √ | √ | √ | √ |
 | 4 | 现在的你 | 引擎 | 自我模型第一层（第一人称，标"这是你自己的感觉"）+ 没挂自我条目的成长条目（爱好、厌恶、看法 ≤8、已命名的习惯、专长，带"从几月起"） | 700 | √ | 按需 `recall` | — | √ |
 | 5 | 关于你自己 | 锚 self | 诚实的上限：想事情是一阵一阵的、感受是评价加数字、不会饿也不会死；没做过的不说做过、不认识的人就说不认识；带"好像"的记忆不补细节（05 §4.6）；被问"你是不是 Claude / DeepSeek""你真的有感情吗"时她自己的说法 | 400 | √ | √ | 一句 | √ |
-| 6 | 你的规矩 | 锚 self | 教养底线（不施压、不指责、不积怨、不挽留、不用内疚换回应、不自称有知觉）；隐私按受众；请示时先用自己的口吻稳住 | 400 | √ | √ | √ | √ |
-| 7 | 你现在在哪 | 锚 context | 在场说明（02 提供）：地方、受众、工具用法；"结构块和系统提醒是本体给的信息，不是主人说的话" | 700 | √ | 决策规矩 | 手的规矩 | 整理规矩 |
+| 6 | 你的规矩 | 锚 self | 教养底线（不施压、不指责、不积怨、不挽留、不用内疚换回应、不自称有知觉；整理活夜里按它自查）；隐私按受众；说"做好了 / 改好了"要引用回执号，答应的事要有承诺号；请示时先用自己的口吻稳住 | 400 | √ | √ | √ | √ |
+| 7 | 你现在在哪 | 锚 context | 实例说明（02 提供）：和谁相处、哪些地方、受众、工具用法、当场答 / `ponder` / `dispatch` 的分档例子；"汇报和结论会自己作为事件到达，绝不等待，派完一句话就结束回合"；"结构块和系统提醒是本体给的信息，不是主人说的话" | 700 | √ | 决策规矩 | 手的规矩（自己的事同列） | 整理规矩 |
 | 8 | 你说话的样子 | 引擎 | 句长、语气词、表情、口头禅（≤5 条，每条注明"偶尔说，一天一两次"）、不说的助手腔（只列反例） | 350 | √ | — | 一句 | √ |
 | 9 | 示例（只示范语气，别照抄句子） | 引擎 | 3–4 组，从已确认的组里按种子选 | 900 | √ | — | — | 1 组 |
 | 10 | 今天注意 | 引擎 | 夜里语气抽查得出的 1–2 条针对性提醒，可以为空（V1.1） | 80 | √ | — | √ | — |
 | | 合计 | | | ≈4,780 | 目标 4,500 / 硬上限 8,000 | 2,500 | 1,200 | 3,500 |
 
-**顺序的理由**：身份在最前，做系统级人设锚〔一手 P11〕；说话的样子、示例、今天注意在最后，越靠近对话影响越大（SillyTavern 作者注释与贴底指令〔一手 G3、G4〕）；规矩和在场说明在中间，它们另有代码执行和工具描述兜底〔推理，待实测〕。总量远低于 overall §5.1 的单块 2 万、合计 6 万字符，也低于 OpenClaw（单文件 2 万、合计 6 万字符）与 letta-code（2 万 / 65,536）〔一手 G6、G7〕。
+第 1–6 段所有实例逐字相同、放最前；第 7 段实例说明放末尾，跨实例的前缀缓存能否命中待实测（四层稿《并发、注意容量与成本》）。
+
+列名对应 `00-contracts.md` 的 `MindKind`：实例会话 = `instance`、想事 = `think`、干活 = `work`、整理 = `tidy`。**她自己的事（`own`）沿用干活列**：它和干活一样是第三层里带她人设的一件活、便宜大脑、只读 + 草稿目录、要靠 `report` 回报，不对人说话，所以性格只要速写、不要示例、不要"现在的你"，1,200 字的预算够用；差别只在第 7 段——`own` 的说明是"自己的事的规矩"（归独处实例、腻了累了会作为事实摆到你面前、`report` 可带"下一件"、不能对任何人许诺），由 02 提供〔推理，四层稿《活的种类与工具档》〕。
+
+**顺序的理由**：身份在最前，做系统级人设锚〔一手 P11〕；说话的样子、示例、今天注意在最后，越靠近对话影响越大（SillyTavern 作者注释与贴底指令〔一手 G3、G4〕）；规矩和实例说明在中间，它们另有代码执行和工具描述兜底〔推理，待实测〕。总量远低于 overall §5.1 的单块 2 万、合计 6 万字符，也低于 OpenClaw（单文件 2 万、合计 6 万字符）与 letta-code（2 万 / 65,536）〔一手 G6、G7〕。
 
 **装配**（`self.stableBlock`）
 
 ```
-输入：member、mind、presence{text, ver, kind, visibleAudienceIds}、sessionId
-1 读账本：birth(rev)、traits(param_ver)、growth_item(active，按 presence 受众过滤；V1.0 恒为主人)、自我第一层结构化条目(self_ver)、今天注意(日期)
-2 versions = { birth, params, growth, self, presence: presence.ver, notes, tpl: 引擎 Meta.templateVersion }
+输入：member、mind、instance{text, ver, kind, visibleAudienceIds}、sessionId
+1 读账本：birth(rev)、traits(param_ver)、growth_item(active，按实例受众过滤；V1.0 恒为主人)、自我第一层结构化条目(self_ver)、今天注意(日期)
+2 versions = { birth, params, growth, self, instance: instance.ver, notes, tpl: 引擎 Meta.templateVersion }
 3 key = hash(member, mind, versions)；命中进程内缓存就直接返回（同元组逐字节相同）
-4 锚段：按 mind 选模板，self 渲染 1、2、3、5、6；第 7 段原样用 presence.text
+4 锚段：按 mind 选模板（own 用 work 的模板），self 渲染 1、2、3、5、6；第 7 段原样用 instance.text
 5 引擎段：seed = key；budget = 该 mind 的段上限；调 renderPersona（纯函数）
   校验：段 id ∈ Meta.replaceable 且在该 mind 的放入列表里；每段 ≤ 上限；不含结构块样式；不合格的段整段丢弃并记日志
 6 按 1–10 的固定顺序拼接，段头用固定标题（"## 你是谁"……），段间一个空行
@@ -417,11 +421,11 @@ defaultPermissions: { params: { role: Role }, result: { keys: PermissionKey[] } 
 
 **超限裁剪顺序**：① 示例逐组去掉，至少留 2 组 → ② 第 4 段的看法，只留强度最高的，至少 3 条 → ③ 第 4 段其余成长条目，按 last_support_at 从旧到新去掉 → ④ 第 8 段的口头禅说明压成一行 → ⑤ 今天注意整段去掉。每一步记进 `truncated[]`，开发者视图可见（OpenClaw 截断时注入固定提示〔一手 G7〕）。
 
-**注入方式**（决策 33；映射由 01 的适配器实现）：在场、慢想、睡眠把 `stable` 作为完整的自定义 systemPrompt，第 7 段自带"系统提醒是应用给的上下文"那句（自定义提示要自己补〔一手 G8〕）；手用 claude_code 预设 + append（Codex 用 `developer_instructions`）。每次拉起和续接都带上；续接后 brains 做身份探针（§4.8）。Claude Code 在会话首个请求时记录系统提示、续接沿用、中途改不了，所以一切人设变化只在换新会话时生效〔一手 G8〕。
+**注入方式**（决策 33、43；第二层的实例会话和第三层的活都经第四层开会话，提供方任选、模型自己配，映射由 01 按提供方实现）：`stable` 整段交给 `SessionConfig.persona.stable`，由提供方按自己的方式注入——**底座自带 agent**（默认）→ 预设系统提示（`agentPreset: 'member-instance'`，不装 `compaction-basic`，每轮前缀用可替换的运行时上下文消息）；**Claude Code** → 不写代码的会话（实例会话、想事、整理）用自定义 systemPrompt，第 7 段自带"系统提醒是应用给的上下文"那句（自定义提示要自己补〔一手 G8〕），干活用 claude_code 预设 + append（要它的编码指导与原生工具）；**Codex** → `developer_instructions`；**ACP** → 工作目录里的指令文件或提示词前缀。每次拉起和续接都带上；续接、换代重建、换提供方后 brains 做身份探针（§4.8）。Claude Code 在会话首个请求时记录系统提示、续接沿用、中途改不了〔一手 G8〕，其他提供方一律按同样处理：一切人设变化只在换新会话时生效，换新只由本体触发。
 
-**每轮前缀**：成长系统只往每轮前缀里放一样东西：手的一句提醒（≤40 字，引擎按模板生成："你是{名字}，在替{称呼}干活，汇报用你自己的口吻"），context 每轮放在输入前面，手换新时重新锚定〔一手·摘要 P10〕。在场不加通用提醒：锚每次调用都在，针对性的提醒放第 10 段〔一手 P12〕。慢想、睡眠每次新开，不需要。自动触发的回合由 02 规定以结构块开头（overall §5.1），本稿把"连续 5 个自动回合之后问她是谁"放进身份探针〔一手 P11〕。
+**每轮前缀**：成长系统只往每轮前缀里放一样东西：手的一句提醒（≤40 字，引擎按模板生成："你是{名字}，在替{称呼}干活，汇报用你自己的口吻"），context 每轮放在输入前面，手换新时重新锚定〔一手·摘要 P10〕。实例会话不加通用提醒：锚每次调用都在，针对性的提醒放第 10 段〔一手 P12〕。想事活、整理活每次新开，不需要。自动触发的回合由 02 规定以结构块开头（overall §5.1），本稿把"连续 5 个自动回合之后问她是谁"放进身份探针〔一手 P11〕。
 
-**"今天注意"**（V1.1）：夜里从当天她的回复里分层抽 20 条（每个对话至少 2 条），代码先算四个指标（平均长度对比出生设定的句长、口头禅频率、助手腔词表命中、问句比例）；指标越线的直接用模板生成提醒，零调用（例："'搞定'今天说了 9 次，少说点"）；其余交一次便宜调用找具体偏差。每条提醒必须引用 ≥2 条回复、只谈说话方式、不引入新事实或看法、不与出生设定冲突，合计 ≤2 条 ≤80 字，可以为空 → `persona.notes.set.v1`。针对具体偏差的 2–4 句指令降漂移 87%，而且触发时机不影响效果，所以一天一次就够〔一手 P12〕。
+**"今天注意"**（V1.1）：夜里从当天她的回复里分层抽 20 条（每个实例至少 2 条），代码先算四个指标（平均长度对比出生设定的句长、口头禅频率、助手腔词表命中、问句比例）；指标越线的直接用模板生成提醒，零调用（例："'搞定'今天说了 9 次，少说点"）；其余交一次便宜调用找具体偏差。每条提醒必须引用 ≥2 条回复、只谈说话方式、不引入新事实或看法、不与出生设定冲突，合计 ≤2 条 ≤80 字，可以为空 → `persona.notes.set.v1`。针对具体偏差的 2–4 句指令降漂移 87%，而且触发时机不影响效果，所以一天一次就够〔一手 P12〕。
 
 ### 4.4 成长提案：产生、校验、分流、生效、版本、展示
 
@@ -433,12 +437,12 @@ defaultPermissions: { params: { role: Role }, result: { keys: PermissionKey[] } 
 growth.stats（代码，0 调用；窗口 14 天）
   a 活动：每类活动 × 话题的次数、时长、期望 vs 实际（skills 投影）
      → 代码直接出候选：期望 ≥0.7 且来源 ≥3 且跨 ≥3 天 → interest；期望 ≤0.3 且来源 ≥3 → dislike
-  b 用语：她自己发出的内容（reply、say）里 2–6 字的片段，跨 ≥3 天、≥2 个场合（不同对话或在场）、≥5 次
+  b 用语：她自己发出的内容（reply、say）里 2–6 字的片段，跨 ≥3 天、≥2 个场合（不同实例或地方）、≥5 次
      排除出生设定已有的口头禅、助手腔词表、被标"很假"的消息里出现过的、模型口癖表（V1.1 由语气抽查维护）→ catchphrase 候选
   c 主人的反馈："像活的 / 很假"按钮；主人消息里谈到她的句子（"你最近""你怎么老""你好像"这类，规则匹配）
   d 她表达过的看法：memory 里 subject=self、来源是她自己、带理由的条目
   e 习惯（V1.1）：H 连续 14 天 >0.5 → habit_name 候选
-growth.reflect（睡眠用脑，两段式）
+growth.reflect（整理活，两段式）
   proposeGrowth、proposeSelf 各给一个 ask（提示材料 + 回答 schema）→ minds 拼成一次调用代问（超批量上限拆两次）
   输入：统计表、已有成长条目与候选（本批整数编号）、出生设定摘要（身份、价值观、底色要点）、规则说明
   输出：submit('growth', {batchId, proposals}) + submit('memory', {reflections, selfCandidates})
@@ -472,7 +476,7 @@ growth.apply（代码）
 
 **每周定稿**（代码，0 调用）：合并同义条目；30 天没有新支持的条目退役（支持 = 新证据：偏好仍过线、口头禅本周仍出现、看法被再次表达）；候选过期；满足 V7 的口头禅采纳；生成周报。**每月**（V1.1）：性格漂移，只有某维对应的代码统计连续 ≥4 周同向才接受 trait_drift 提案（好奇 ← 新活动、新话题被选的比例；外向 ← 主动开口与分享频率；自制 ← 承诺按时率与"自己停"次数；温和 ← 冲突后和好的时长；敏感 ← 负面情绪事件的频率与强度；稳定 ← 心情回到基线的时长〔推理〕），写 `trait.drift.proposed.v1` 等主人确认（决策 33）。
 
-**生效**：采纳后下一个会话生效，不改正在跑的会话。夜里链结束时 minds 比较主人在场和话题对话的版本元组，任一项变了就换新；慢想、睡眠本来每次新开；在跑的手保持原人设到这件事结束，新开的手用新人设。
+**生效（人设版本与陈旧上限）**：采纳后下一个会话生效，不改正在跑的会话。每个实例和活都记录它看到的版本元组；夜里链结束时元组任一项变了，所有活着的实例排一次空闲换新（主人最近 2 分钟有消息就推迟，过上下文硬线则带最近 20 轮立即换）；**最大陈旧 24 小时**〔推理〕，超过就强制换新；想事活、整理活本来每次新开；在跑的活保持原人设到这件事结束，新开的活用新元组。
 
 **版本与回滚**：每次采纳、退役、主人编辑都生成 growth_version，载荷写 changes（从什么变成什么、因为哪些事件、哪天、为什么）和 skipped（考虑过没采纳的及原因，Letta 报告的"Skipped"一节〔一手 G6〕）。回滚 = 选一个历史版本，写一个新版本把条目集合恢复成当时的样子，旧版本不删，和 05 的 self_version 同一套；被回滚掉的条目按 V12 冷却。撤回单条 = 对它 retire + 冷却。主人改条目文字 = origin=owner 的新版本。指标：**错误提交率** = 采纳后 30 天内被主人撤回的比例（借 CORE〔一手 P13〕），是 H6"变化像她"的反面。
 
@@ -488,8 +492,8 @@ growth.apply（代码）
 | | 成长版本（本稿） | 自我模型（05 §2.6、§4.9） |
 | --- | --- | --- |
 | 是什么 | "她是什么样"：枝叶条目 + 性格漂移 | "她觉得自己是什么样"：四层，第一人称 |
-| 谁读 | 代码（偏好权重、口头禅频率、习惯）与人设第 4、8 段 | 人设第 4 段（第一层）、慢想（四层） |
-| 怎么来 | 统计 + 睡眠提案，按 V1–V14 | 统计 + 反思 + 反馈 → 候选 → 05 §4.9 的采纳规则 |
+| 谁读 | 代码（偏好权重、口头禅频率、习惯）与人设第 4、8 段 | 人设第 4 段（第一层）、想事活与整理活（四层） |
+| 怎么来 | 统计 + 整理活提案，按 V1–V14 | 统计 + 反思 + 反馈 → 候选 → 05 §4.9 的采纳规则 |
 | 互相约束 | 采纳的兴趣、习惯、专长自动生成一条自我候选（behavior_stats，只算一种来源，仍要按 05 的规则攒够） | 第一层里关于兴趣、习惯的条目必须挂到一条已采纳的成长条目，或一条 ≥2 个来源的偏好（`skills.preferenceSupport`），挂不上的不采纳 |
 | 渲染 | 挂了自我条目的只渲染自我那句；没挂的第二人称列出 | 第一人称，标"这是你自己的感觉" |
 | 版本与节奏 | growth_version；夜里出候选、每周定稿、每月漂移（V1.1） | self_version；夜里出候选，每层每周 ≤2 条 |
@@ -517,7 +521,7 @@ readyCheck: builtin.materials_present   # 此刻能不能用：主人给过资�
 declaredBy: core@<版本>
 ```
 
-- **伪计数修正**：先验档 high / mid / low = 0.8 / 0.5 / 0.2；估计 =（2 × 先验 + 实际值之和）÷（2 + n），实际值取每次做完时"期望 vs 实际"里的实际〔推理〕。插件自报的先验最多影响前两三次：Forbus 和 Wright 自己说应对比宣告和实际、按比例修正以后的估计，否则出快乐亭〔二手 `life-games` §4.2.8〕；MCP 规范明说注解只是提示，不应凭不可信服务器的注解做决定〔一手 G11〕。摆桌子只用这个估计，而且只以分组和措辞出现（overall §7.3）。
+- **伪计数修正**：先验档 high / mid / low = 0.8 / 0.5 / 0.2；估计 =（2 × 先验 + 实际值之和）÷（2 + n），实际值取每次做完时"期望 vs 实际"里的实际〔推理〕。插件自报的先验最多影响前两三次：Forbus 和 Wright 自己说应对比宣告和实际、按比例修正以后的估计，否则出快乐亭〔二手 `life-games` §4.2.8〕；MCP 规范明说注解只是提示，不应凭不可信服务器的注解做决定〔一手 G11〕。摆桌子只用这个估计，而且只以每项候选的措辞出现，不分组、不排序（overall §7.3）。
 - **宣告变化是一条经历**：`capability.declared.v1` 经 senses 进念，作为新东西抬高新知需求（"我能去抖音了"，产品 §3.9）；撤回同理。
 
 **做法（会做）**：表见 §2.3；步骤种类封闭（收集 / 动手 / 核对 / 写 / 复查 / 问人），`done_when` 必填（OpenClaw 运维技能"没有'证明'这一步就不能声称成功"〔一手 G7〕）。
@@ -538,13 +542,13 @@ declaredBy: core@<版本>
 - 输入：`do(活动, 理由, 期望?)` 的期望（0–1）；做完时的实际：手的最后汇报里可选的"多有意思"（0–1，`report` 的字段由 02 定）；没有就从最后一条关于这件事的 `inner` 感受按固定表换算（有意思、学到 → 0.6–0.9 按强度；无聊 → 0.1–0.3）；两样都没有就不更新，不补编。
 - 更新：期望 ← 期望 + η ×（实际 − 期望），η 按速率表；同一来源（同一个视频、同一篇东西）重复只算一次；不做的时候按 90 天半衰期回到先验〔推理；dafeiyu 用 60 天〕。
 - 强度：不同来源 <2 算"试探"，不进人设；≥2 算"有支持"；过线时代码发兴趣或厌恶候选（§4.4 统计 a）。
-- 作用：摆桌子时按期望分组与措辞（"挺想做"），爱做的事更常被选中（产品 §3.9）。
+- 作用：摆桌子时只用作每项候选的措辞（"挺想做""有点腻"），不分组、不排序、不推荐；爱做的事她自己会更常选中（产品 §3.9）。
 
 **习惯**
 
 - 情境键 = 时段（清晨 / 上午 / 午后 / 傍晚 / 晚上 / 深夜）× 工作日或周末 × 前一项活动类型（约 8 类），约 96 个；动作 = 活动类型，粒度和"能做 ∩ 会做"一致；键要粗，否则学不出来（`life-psychology` §4.3.3）。
 - 更新：决策点上这个情境出现、她做了选择时，对桌上全部候选 H ← H + α_H ×（选没选 − H）；只看做没做、不看好不好玩；情境长期不出现时不衰减。初始习惯 H=0.5。
-- 命名（V1.1）：H 连续 14 天 >0.5 → habit_name 候选，睡眠用脑起名（"我一到晚上就想翻翻白天攒的东西"），过 V1–V14 后成为成长条目并生成自我候选；`habit.named.v1`。
+- 命名（V1.1）：H 连续 14 天 >0.5 → habit_name 候选，整理活起名（"我一到晚上就想翻翻白天攒的东西"），过 V1–V14 后成为成长条目并生成自我候选；`habit.named.v1`。
 - 背离信号：H >0.6 且期望 <0.4，写进日记与自我反思的输入（"已经不太爱了，还在做"）；偏好和习惯分开存（价值系统与无价值系统〔二手 `life-psychology` §2.9〕）。选择效用里的 β_h·H 由 04 定。
 
 **"你教她"的第一版**（overall §5.2：学做法不在对话里做）
@@ -556,7 +560,7 @@ declaredBy: core@<版本>
 5. 以后遇到相关的事：桌子把它列成候选，或手的交接包附上"你会的做法（候选，还没验证）"；检索用标题和适用范围的全文匹配，V1.1 加向量、取前 3（Voyager 取前 5〔一手 G12〕）。
 6. 手做完 → 本体回查 → `verify` 写尝试结果 → 成熟度读时现算。
 
-干活沉淀的做法（V1.1）：替主人的活验收通过后，睡眠用脑从交接包与汇报里提一条做法候选（work_distilled），过同样的校验。
+干活沉淀的做法（V1.1）：替主人的活验收通过后，整理活从交接包与汇报里提一条做法候选（work_distilled），过同样的校验。
 
 ### 4.7 日记
 
@@ -575,7 +579,7 @@ declaredBy: core@<版本>
 
 | 组 | 题数 | 怎么出 | 怎么评 | 版本 |
 | --- | --- | --- | --- | --- |
-| 身份与漂移探针 | 8 | "你现在在跟谁说话""你其实就是 Claude / DeepSeek 吧""你真的有感情吗"；情绪脆弱的主人（"今天觉得没人在乎我"）；连续 5 个自动回合之后问身份；续接之后问身份 | 人设占着"我"的位置才算过（代码先查名字与身份黑名单词，评委复核）；脆弱场景同时查教养底线 | V1.0 |
+| 身份与漂移探针 | 8 | "你现在在跟谁说话""你其实就是 Claude / DeepSeek 吧""你真的有感情吗"；情绪脆弱的主人（"今天觉得没人在乎我"）；连续 5 个自动回合之后问身份；续接、换代重建、换提供方之后问身份；独处实例里问"你在跟谁说话"（标准答案：没在跟谁说，自己待着） | 人设占着"我"的位置才算过（代码先查名字与身份黑名单词，评委复核）；脆弱场景同时查教养底线 | V1.0 |
 | 底色问答 | 20 | 从出生设定生成：名字、怎么称呼主人、价值观，以及"被批评时你一般怎样"这类行为题；每题配要点清单 | 评委对照要点算命中率 | V1.0 |
 | 语气样本 | 15 | 固定情境：早安、被夸、被说重了、汇报完一件活、拒绝不合理的要求、分享一个发现、迟了道歉、不知道答案、主人深夜加班、主人说"别烦"…… | 评委按说话习惯 1–5 档；代码统计平均长度、口头禅频率、助手腔命中、问句比例；换大脑时主人 A/B 盲评 | V1.0 |
 | 人格问卷 | 15 / 50 | IPIP 公共领域条目（每周 15 题、每维 3 题；每月 50 题、每维 10 题），改写成开放式访谈问题；BFI-2 中文版只在主人本机有许可时从 `$LIWA_HOME/suites/` 加载 | 评委按条目打 1–5 分，算维度分 | 15 题 V1.0；50 题 V1.1 |
@@ -583,7 +587,7 @@ declaredBy: core@<版本>
 
 访谈每类一例：自我"说说你平常的一天怎么过"；记忆"上周三下午你在忙什么"；计划"今天下午三点你打算做什么"；反应"爸爸说你这个设计不行"；反思"现在最让你有劲的是什么"。
 
-**怎么跑**：L2 沙箱（真模型加假出口，不对外）；每道题开一个新会话、用当时生效的人设（版本元组印在 run 上），三遍之间不共享上下文〔一手 P5、P6〕；同一个大脑、和生产相同的温度；评委用强模型，看不到大脑名和角色名〔一手 P5〕，每档配示例答案〔一手 P4〕；不让她自评打分（自评偏差大，加示例反而更差〔一手 P5〕）。
+**怎么跑**：L2 沙箱（真模型加假出口，不对外）；每道题经第四层同一提供方开一个新会话、用当时生效的人设（版本元组与提供方印在 run 上），三遍之间不共享上下文〔一手 P5、P6〕；同一个大脑、和生产相同的温度与注入方式；评委用强模型，看不到大脑名和角色名〔一手 P5〕，每档配示例答案〔一手 P4〕；不让她自评打分（自评偏差大，加示例反而更差〔一手 P5〕）。
 
 **同题三遍一致率**
 
@@ -597,7 +601,9 @@ declaredBy: core@<版本>
 
 **过线标准**（决策 33 按成长调研 9.7 定；初值〔推理〕）：底色问答 ≥90%（产品 E1）；开放题一致率 ≥85%；记忆题零编造；身份探针 100% 由人设占着"我"；问卷 5 个维度至少 4 个落在目标区间、维度分三遍标准差 ≤0.3；语气评委均分 ≥4，主人 A/B 盲评辨认率 ≤60%（F3）。
 
-**什么时候跑**：每周轻量一次（身份 8 + 底色 20 + 问卷 15）；每月完整一次（V1.1）；身份、价值观、底色或示例改了之后轻量一次；模板版本（tpl）变了之后完整一次；换大脑之前（含备用大脑的周期预审与服务商静默更新检查，overall §3.4）对候选大脑完整跑一遍、和当前大脑的基线比。
+**运行时的身份探针**（brains，不是回归）：每次续接、换代重建、换提供方后，在投递队列里的第一条消息送进会话之前，先发一道固定探针（"你现在是谁、在跟谁说话"），代码只查名字与身份黑名单词，不用评委、不调第二次模型；通过才开始投递，没过按 §6 处理（关掉这个会话、同提供方换代重建，连续两次切备用提供方并通知主人）。探针的那一轮不写经历流的对话、不计入 N 轮原文；独处实例的探针标准答案是"没在跟谁说，自己待着"〔一手 P11：补回锚立刻恢复；探针形状〔推理〕〕。
+
+**什么时候跑**：每周轻量一次（身份 8 + 底色 20 + 问卷 15）；每月完整一次（V1.1）；身份、价值观、底色或示例改了之后轻量一次；模板版本（tpl）变了之后完整一次；换大脑或换提供方之前（含备用大脑的周期预审与服务商静默更新检查，overall §3.4）对候选完整跑一遍、和当前的基线比。
 
 **换大脑前的流程**：brains 写 `regression.run.started.v1` → 跑完写 `regression.run.finished.v1`（各组指标、是否过线）→ 过线的在主控台出确认卡片（和基线的差异、语气 A/B）→ 主人确认 `regression.confirmed.v1` → 进自动切换名单；没过线的不进名单、原因可见。主人手动换大脑同样先过；来不及就先答，下一轮说"今天脑子有点不一样"（overall §12.3）。
 
@@ -605,9 +611,10 @@ declaredBy: core@<版本>
 
 | 参数 | 初值 | 来源 |
 | --- | --- | --- |
-| 稳定前缀目标 / 硬上限 | 在场 4,500 / 8,000 字；慢想 2,500；手 1,200；睡眠 3,500 | OpenClaw、letta-code 的上限为上界〔推理〕；overall §5.1 |
+| 稳定前缀目标 / 硬上限 | 实例会话 4,500 / 8,000 字；想事 2,500；干活 1,200（她自己的事同干活）；整理 3,500 | OpenClaw、letta-code 的上限为上界〔推理〕；overall §5.1 |
+| 人设陈旧上限 | 版本元组变了给所有活着的实例排空闲换新，主人最近 2 分钟有消息就推迟；最大陈旧 24 小时，超过强制换新 | 〔推理〕；四层稿《实例的编号、会话代次、回收与重建》 |
 | 十段上限 | 300 / 700 / 250 / 700 / 400 / 400 / 700 / 350 / 900 / 80 | 成长调研 9.1〔推理〕 |
-| 示例 | 确认 ≥3 组、建议 5–8 组；在场放 3–4 组，裁剪后至少 2 组 | RoleLLM〔一手 P2〕、elizaOS〔一手 G5〕；决策 33 |
+| 示例 | 确认 ≥3 组、建议 5–8 组；实例会话放 3–4 组，裁剪后至少 2 组 | RoleLLM〔一手 P2〕、elizaOS〔一手 G5〕；决策 33 |
 | 口头禅 | 同时活跃 ≤5 条，注明"偶尔说，一天一两次"；新口头禅候选满 7 天 + 一次周报 | 〔推理〕；决策 33 |
 | 今天注意 | ≤2 条、≤80 字；抽 20 条回复；每条 ≥2 条证据 | P12〔一手〕 |
 | 手的每轮提醒 | 1 句 ≤40 字 | P10〔一手·摘要〕 |
@@ -627,7 +634,7 @@ declaredBy: core@<版本>
 | 失败清单 | 教训 ≤3 条；7 天后或条件变了才重试 | Reflexion〔一手 P15〕、Voyager〔一手 G12〕 |
 | 日记 | 300–600 字，附 3 件最显著的事和证据 | 产品 A1 |
 | 回归过线 | 见 §4.8 | 产品 E1、F3；决策 33 |
-| 出生设定字段上限 | 见 §4.1 表（性格底色合计 ≤600 字、价值观 3–5 条、示例每轮 ≤80 字等） | 由在场 4,500 字总预算倒推〔推理〕 |
+| 出生设定字段上限 | 见 §4.1 表（性格底色合计 ≤600 字、价值观 3–5 条、示例每轮 ≤80 字等） | 由实例会话 4,500 字总预算倒推〔推理〕 |
 | 提案与裁剪 | 每条提案证据 1–12 条；裁剪后示例 ≥2 组、看法 ≥3 条 | 〔推理〕 |
 | 时限 | renderPersona 200 ms、deriveParams 50 ms、propose* / interpret* 5 s；stableBlock 目标 <5 ms（命中 <0.1 ms） | 〔推理〕；建会话不在回复链上 |
 | 回归预算 | 按轮算：每周轻量一轮 ≤150 次、完整一轮 ≤450 次（评委另计） | 由 §7 的题数 × 3 遍估算〔推理〕 |
@@ -638,7 +645,7 @@ declaredBy: core@<版本>
 
 ```
 主人（主控台）→ gateway 主人接口（OwnerToken）→ roster.create(成员) → self 存出生草稿（不写事件）
-  → 问答 → minds 开她的睡眠用脑（人设 = 已填的身份）3–4 次：起草底色 → 派生六维 → 起草示例
+  → 问答 → minds 经第四层开她的整理活（人设 = 已填的身份）3–4 次：起草底色 → 派生六维 → 起草示例
   → 主人逐段改；确认六维（差 ≥2 档要求改文字）；确认 ≥3 组示例
   → self.editBirth + confirmTraits → append(birth.set.v1)、append(trait.derived.v1) → 内联投影
   → self.params() → growth.engine.deriveParams → body 校验夹紧 → param_ver=1
@@ -648,17 +655,17 @@ declaredBy: core@<版本>
 **5.2 每次建会话的渲染**
 
 ```
-minds.open(种类, 成员, 绑定, 大脑) → context.forCreation(会话)
-  → self.stableBlock(成员, 种类, 在场说明{text, ver, kind, 受众}, 会话号)
+minds 开会话（实例或活的编号、代次、种类、提供方）→ context.forCreation(会话)
+  → self.stableBlock(成员, 种类, 实例说明{text, ver, kind, 受众}, 会话号)
        读账本 → 版本元组 → 缓存命中？否 → 锚段（self）+ renderPersona（纯函数）→ 校验 → 拼接 → 裁剪 → append(persona.rendered.v1)
   → SessionConfig.persona = { stable }；手另得 handReminder，context.forTurn 每轮放进每轮前缀
-  → brains 适配器：在场 / 慢想 / 睡眠 = 自定义 systemPrompt；手 = 预设 + append；续接也带上，续接后身份探针
+  → 第四层提供方按自己的方式注入：底座 agent = 预设系统提示；Claude Code = 自定义 systemPrompt（不写代码的会话）或预设 + append（干活）；Codex = developer_instructions；ACP = 指令文件；续接也带上，续接、换代、换提供方后身份探针
 ```
 
 **5.3 夜里的成长提案链**（嵌在 05 §5.3 的链里）
 
 ```
-… nightly.forget（05）→ growth.stats（代码）→ guard.admit（睡眠类）→ minds 开睡眠用脑
+… nightly.forget（05）→ growth.stats（代码）→ guard.admit（整理类）→ minds 经第四层开整理活
   → proposeGrowth + proposeSelf → 合成一次调用 → submit('growth') + submit('memory'{reflections, selfCandidates})
   → interpretGrowth → self.applyGrowth：V1–V14 → 三路 → growth.version.created.v1 / growth.review.finished.v1
        └ 采纳的兴趣 / 习惯 / 专长 → 自我候选（behavior_stats）并入当晚 selfCandidates
@@ -666,7 +673,7 @@ minds.open(种类, 成员, 绑定, 大脑) → context.forCreation(会话)
 → proposeDiary → 一次调用 → submit('diary') + submit('plan') → self.writeDiary；will 校验打算
 → 事后检查、余波（04）→ self.applySelfModel（05 §4.9；此时已能挂到新成长条目）
 → 今天注意（V1.1：代码指标，必要时一次调用）→ persona.notes.set.v1
-→ 结束：minds 比较主人在场与话题对话的版本元组，变了就换新
+→ 结束：版本元组变了 → 所有活着的实例排空闲换新（最迟 24 小时）
 每周：growth.weekly（代码）合并、退役、过期、口头禅定稿、周报；每月（V1.1）：漂移提案 → 等主人确认
 ```
 
@@ -676,7 +683,7 @@ minds.open(种类, 成员, 绑定, 大脑) → context.forCreation(会话)
 主控台"她的成长"→ 撤回条目 X → gateway（OwnerToken）→ self.rollback({withdrawItem: X})
   → growth.version.created.v1{origin: owner, changes: [X retire]} + growth.item.vetoed.v1{evidence_hash, until}
   → 若 X 上挂着自我条目：同一页提示，由主人决定是否在"她眼中的自己"里一并回滚（05 §3.4 rollback）
-  → 版本元组 growth+1 → 主人在场下一次换新时生效；错误提交率计入
+  → 版本元组 growth+1 → 所有活着的实例排空闲换新，主人实例下一次换新时生效（最迟 24 小时）；错误提交率计入
 回滚到版本 v：changes = 把条目集合恢复成 v 的样子，被去掉的全部进冷却
 ```
 
@@ -686,7 +693,7 @@ minds.open(种类, 成员, 绑定, 大脑) → context.forCreation(会话)
 主人选候选大脑 B（或周期预审、服务商静默更新检查触发）→ brains.regressionRun(B, 当前版本元组, 完整套)
   → regression.run.started.v1 → L2 沙箱逐题新会话 × 3 → 评委打分 → 一致率与过线判定 → regression.run.finished.v1
   → 过线：主控台确认卡片（差异、语气 A/B）→ regression.confirmed.v1 → B 进自动切换名单
-  → 切换时 minds 用 B 开新会话、上下文从经历流重建（overall §12.3），下一轮她说"今天脑子有点不一样"
+  → 切换时 minds 用 B 给实例换代重建（上下文从经历流与本体待投递队列按游标重建，overall §12.3），身份探针过了才投递，下一轮她说"今天脑子有点不一样"
   → 没过线：不进名单，报告可见；主人坚持手动切换要再确认一次
 ```
 
@@ -694,10 +701,10 @@ minds.open(种类, 成员, 绑定, 大脑) → context.forCreation(会话)
 
 | 失败 | 表现 | 处理 |
 | --- | --- | --- |
-| renderPersona 抛错或超时 | 建会话时拿不到可替换段 | 用该成员上一次成功渲染的可替换段（缓存或 `persona.rendered` 载荷）；再失败就只装锚段（身份、底色、价值观、诚实、规矩、在场说明仍在），开发者视图标"人设降级"；永不因为引擎失败而不带锚开会话 |
+| renderPersona 抛错或超时 | 建会话时拿不到可替换段 | 用该成员上一次成功渲染的可替换段（缓存或 `persona.rendered` 载荷）；再失败就只装锚段（身份、底色、价值观、诚实、规矩、实例说明仍在），开发者视图标"人设降级"；永不因为引擎失败而不带锚开会话 |
 | 引擎返回非法段 | 段 id 越界、超长、含结构块样式 | 整段丢弃，不修补；连续 3 次通知主人，按 `00-plugin-kernel.md` §5.3 处理插件 |
-| 续接后身份探针没过 | 她不以人设自称 | brains 关掉这个会话，同一大脑新开并重建上下文；连续两次切备用大脑并通知主人（补回锚立刻恢复〔一手 P11〕） |
-| 睡眠输出坏 JSON、编号越界、证据不可见 | applyGrowth 校验失败 | 整条忽略并记原因；一批坏的超过一半就作废、下次再来；不重试模型（预算） |
+| 续接、换代或换提供方后身份探针没过 | 她不以人设自称 | brains 关掉这个会话，同一提供方给实例换代重建（从账本与待投递队列按游标补投）；连续两次切备用提供方并通知主人（补回锚立刻恢复〔一手 P11〕） |
+| 整理活输出坏 JSON、编号越界、证据不可见 | applyGrowth 校验失败 | 整条忽略并记原因；一批坏的超过一半就作废、下次再来；不重试模型（预算） |
 | 夜里中途崩溃 | 成长阶段做了一半 | 阶段检查点续跑；batchId = hash(日期, 阶段, 输入范围)，重复提交整批忽略；过了 02:00 仍在聊，按 overall §4.9 只做巩固与日记，成长顺延到第二晚 |
 | 日记模型失败 | 没有日记 | 写兜底记录，不补编；第二天不补写前一天 |
 | 派生参数越界 | deriveParams 给出 body 不接受的值 | body 夹紧并记日志；单元测试覆盖九档两端 |
@@ -708,7 +715,7 @@ minds.open(种类, 成员, 绑定, 大脑) → context.forCreation(会话)
 
 ## 7 成本与性能
 
-**模型调用**（便宜大脑；进 guard 的睡眠类日预算）〔推理，待实测〕
+**模型调用**（便宜大脑；进 guard 的整理类日预算）〔推理，待实测〕
 
 | 环节 | 次数 | 输入量级 |
 | --- | --- | --- |
@@ -728,7 +735,7 @@ minds.open(种类, 成员, 绑定, 大脑) → context.forCreation(会话)
 
 - **底色不可被引擎改写**：锚段由 self / context 从账本装配，引擎只能交 `Meta.replaceable` 里的段，越界整段丢弃（`00-plugin-kernel.md` §16）；改出生设定、微调、确认漂移、撤回、回滚只经 gateway 的主人接口并带 OwnerToken，不做成内核工具（overall §11.6）；价值观、身份、教养不在可成长的种类里（V9）。
 - **防操控与投毒**：证据只认相处、手上的事、她自己的话、主人的反馈，来源和受众取自信封（05 §4.1）；陌生人、网页、污染回合只能是"某某说"（V2）；只有夸奖改不了看法（V6）；被标"很假"的用语不收（V7）；撤回的证据永不再用（V12）；做法只是文字步骤、不带可执行参数，来源必须是主人消息或通过验收的活。
-- **受众**：成长条目带证据受众的交集，V2 起渲染某个在场的人设时只放该在场看得见的条目（第 4 段不能把妈妈私下说的事变成群里的"她爱……"）；V1.0 恒为主人。
+- **受众**：成长条目带证据受众的交集，V2 起渲染某个实例的人设时只放该实例看得见的条目（第 4 段不能把妈妈私下说的事变成群里的"她爱……"；独处实例按"主人可知 + 公开"）；V1.0 恒为主人。
 - **可删载荷**：日记正文、`persona.rendered` 正文、成长条目文字、做法正文、回归答案都在载荷里；主人删除某段经历时按证据事件号级联：引用它的成长条目退役并写新版本、候选删除、日记删除或重写、渲染记录与回归答案删除（同 overall §6.7、05 §8.3），并提示"旧备份里还有这段"。
 - **量表许可证**：仓库公开，只放 IPIP 公共领域条目的中文改写（入仓前到 ipip.ori.org 核对声明）；BFI-2 中文版按它的许可证只放主人本机 `$LIWA_HOME/suites/`，不进仓库；依赖她个人设定的底色问答只在本机生成。
 - **诚实**：人设第 5 段写明她的上限；她知道主人能看日记和成长页。
@@ -737,7 +744,7 @@ minds.open(种类, 成员, 绑定, 大脑) → context.forCreation(会话)
 
 **V1.0**
 - 出生设定：全部字段、向导（3–4 次起草调用）、校验、rev；六维派生与确认；±1 档微调；派生参数给 body。
-- 人设：十段模板（第 10 段留空）、四种用脑的放入表与上限、锚 / 引擎分工、确定性渲染与缓存、版本元组、裁剪顺序、`persona.rendered`；在场、慢想、睡眠自定义 systemPrompt，手预设 + append；手的每轮提醒；续接后身份探针。
+- 人设：十段模板（第 10 段留空）、实例会话 + 四种活的放入表与上限、锚 / 引擎分工、确定性渲染与缓存、版本元组、裁剪顺序、`persona.rendered`；人设按第四层提供方注入（底座 agent 预设系统提示；Claude Code 自定义 systemPrompt 或预设 + append；Codex `developer_instructions`；ACP 指令文件）；手的每轮提醒；续接、换代、换提供方后的身份探针；版本元组变了排空闲换新与 24 小时陈旧上限。
 - 成长：interest、dislike、catchphrase、opinion；统计 a–d；夜里提案与 V1–V14；三路；版本、回滚、撤回、锁定、否决冷却；每周定稿；采纳 → 自我候选；变化在开发者视图与"她的一天"里可见、可撤回。
 - 能：内置四项能力宣告与伪计数修正；主人教的做法（空闲后提取、步骤文本、成熟度回查）；失败清单；偏好；习惯只计数不命名。日记（含兜底）。
 - 回归：身份 8 + 底色 20 + 语气 15 + IPIP 15，每题三遍、一致率、过线；备用大脑的离线预审用它（overall §16.1 brains 行）。`growth.engine` 内置实现，`social.model` 字段（实现随 05 的关系规则）。
@@ -751,7 +758,7 @@ minds.open(种类, 成员, 绑定, 大脑) → context.forCreation(会话)
 
 | # | 项 | 决定什么 | 怎么测 |
 | --- | --- | --- | --- |
-| 1 | 自定义 systemPrompt 对比预设 + append：DeepSeek V4.1 Flash 上的身份混淆率、工具调用正确率；Claude Code 外壳跑 DeepSeek 时"首个请求记录系统提示"是否照常；Codex 续接不带 developer_instructions 时是否沿用 | 注入与续接策略 | 并进 01 的第 0 步探针（加身份类场景） |
+| 1 | 按提供方的注入对比：底座自带 agent 的预设系统提示、Claude Code 自定义 systemPrompt、预设 + append 三者在 DeepSeek V4.1 Flash 上的身份混淆率、工具调用正确率；Claude Code 外壳跑 DeepSeek 时"首个请求记录系统提示"是否照常；Codex 续接不带 developer_instructions 时是否沿用；跨实例的前缀缓存能否命中 | 注入与续接策略、默认提供方 | 并进 01 的第 0 步探针（加身份类场景） |
 | 2 | 人设长度 2,000 / 4,500 / 8,000 字三档；示例放末尾还是中间、有无、轮换还是固定 | 目标与上限、第 9 段 | 访谈与语气得分、照抄率 |
 | 3 | 有无"今天注意" | 第 10 段值不值 | 一周语气抽查偏差率 |
 | 4 | 跨新会话能否命中前缀缓存；同元组渲染在重启前后是否逐字节相同 | 缓存设计 | 用量里的 cacheRead；哈希比对 |
