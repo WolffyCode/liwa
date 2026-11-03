@@ -778,10 +778,15 @@ describe('web e2e: resident question composer round trip', () => {
         expect(await descriptionOf('Keep the default edge').evaluate(readCopy))
           .toEqual({ lines: 1, clipped: false, overflows: false, toggle: undefined })
         for (const copy of await composer.locator('[data-option-description]').all()) {
-          const drawn = await copy.evaluate(readCopy)
-          expect(drawn.clipped).toBe(drawn.overflows)
-          expect(drawn.toggle).toBe(drawn.clipped ? 'expand' : undefined)
-          expect(drawn.lines).toBeLessThanOrEqual(drawn.clipped ? 1 : 2)
+          // Each description's scroll timeline settles independently after reflow.
+          await expect.poll(async () => {
+            const drawn = await copy.evaluate(readCopy)
+            return {
+              clippingMatchesOverflow: drawn.clipped === drawn.overflows,
+              toggleMatchesClipping: drawn.toggle === (drawn.clipped ? 'expand' : undefined),
+              linesWithinBudget: drawn.lines <= (drawn.clipped ? 1 : 2),
+            }
+          }).toEqual({ clippingMatchesOverflow: true, toggleMatchesClipping: true, linesWithinBudget: true })
         }
         if (viewport.width === 512) {
           expect(await descriptionOf('Move the package').evaluate(readCopy))
