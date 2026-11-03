@@ -248,7 +248,7 @@ export function testProfileResolution(mode: ExampleMode): void {
         mode, sourceImport: 'tsx/esm', tsconfigPath: join(repoRoot, 'tsconfig.json'),
         configArgs: ['--profile', 'headless'],
         env: {
-          LIWA_HOME: home, LIWA_AGENTS_HOME: join(root, 'agents'), LIWA_TELEMETRY_DISABLED: '1',
+          LIWA_HOME: home, LIWA_AGENTS_HOME: join(root, 'agents'),
           NODE_OPTIONS: undefined, TSX_TSCONFIG_PATH: undefined,
         },
       })

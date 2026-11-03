@@ -18,12 +18,11 @@ import { prunePrimaryRuntimePythonTests } from './prune-python-tests.ts'
 /**
  * Download or reuse an archive only when its bytes match the release lock.
  * @param url - Locked archive URL.
- * @param sha256 - Expected hexadecimal digest for the selected algorithm.
+ * @param sha256 - Expected hexadecimal SHA-256 digest.
  * @param cache - Download cache directory.
- * @param algorithm - Digest algorithm; npm archives use SHA-512.
  * @returns Verified local archive path.
  */
-export async function downloadPrimaryRuntimeAsset(url: string, sha256: string, cache: string, algorithm: 'sha256' | 'sha512' = 'sha256'): Promise<string> {
+export async function downloadPrimaryRuntimeAsset(url: string, sha256: string, cache: string): Promise<string> {
   mkdirSync(cache, { recursive: true })
   const destination = join(cache, sha256)
   let bytes: Buffer
@@ -37,7 +36,7 @@ export async function downloadPrimaryRuntimeAsset(url: string, sha256: string, c
     if (!response.ok) throw new Error(`primary runtime download: ${String(response.status)} ${url}`)
     bytes = Buffer.from(await response.arrayBuffer())
   }
-  if (createHash(algorithm).update(bytes).digest('hex') !== sha256) {
+  if (createHash('sha256').update(bytes).digest('hex') !== sha256) {
     rmSync(destination, { force: true })
     throw new Error(`primary runtime download: checksum mismatch for ${url}`)
   }
@@ -52,35 +51,6 @@ export async function downloadPrimaryRuntimeAsset(url: string, sha256: string, c
   return destination
 }
 
-/** Pinned npm tarball, without dependency resolution or lifecycle scripts. */
-export interface RuntimeNpmArchive {
-  /** Exact published package name. */
-  readonly name: string
-  /** Exact published version. */
-  readonly version: string
-  /** Registry tarball URL. */
-  readonly url: string
-  /** npm SHA-512 integrity. */
-  readonly integrity: string
-}
-
-/**
- * Download and unpack one locked npm package without running its scripts.
- * @param artifact - Published tarball identity and integrity.
- * @param destination - Empty package directory.
- * @param cache - Verified archive cache.
- * @returns Resolves after package identity validation.
- */
-export async function downloadRuntimeNpmPackage(artifact: RuntimeNpmArchive, destination: string, cache: string): Promise<void> {
-  if (!/^sha512-[A-Za-z0-9+/]+={0,2}$/u.test(artifact.integrity)) throw new Error(`runtime download: invalid integrity for ${artifact.name}`)
-  const checksum = Buffer.from(artifact.integrity.slice(7), 'base64').toString('hex')
-  const archive = await downloadPrimaryRuntimeAsset(artifact.url, checksum, cache, 'sha512')
-  mkdirSync(destination, { recursive: true })
-  await extractTar({ file: archive, cwd: destination, strip: 1 })
-  const installed = JSON.parse(readFileSync(join(destination, 'package.json'), 'utf8')) as { name?: string; version?: string }
-  if (installed.name !== artifact.name || installed.version !== artifact.version) throw new Error(`runtime download: package identity mismatch for ${artifact.name}`)
-}
-
 /**
  * Prepare the locked standalone Node independently of Python and pnpm.
  * @param target - Target interpreter platform.
@@ -88,7 +58,7 @@ export async function downloadRuntimeNpmPackage(artifact: RuntimeNpmArchive, des
  * @param cache - Verified archive cache.
  * @returns Resolves after extracting the interpreter.
  */
-export async function downloadNodeRuntime(target: PrimaryRuntimeTarget, destination: string, cache: string): Promise<void> {
+async function downloadNodeRuntime(target: PrimaryRuntimeTarget, destination: string, cache: string): Promise<void> {
   const artifact = lock.targets[target]
   const filename = `node-v${lock.nodeVersion}-${artifact.nodeArchive}`
   const archive = await downloadPrimaryRuntimeAsset(`https://nodejs.org/dist/v${lock.nodeVersion}/${filename}`, artifact.nodeSha256, cache)
@@ -120,13 +90,13 @@ async function pythonArchive(target: keyof typeof lock.targets, cache: string): 
  * @returns SHA-256 payload identity for installation reuse.
  */
 export function primaryRuntimePayloadDigest(
-  target: keyof typeof lock.targets, runtimeLock: typeof lock, pnpmVersion: string | undefined,
+  target: keyof typeof lock.targets, runtimeLock: typeof lock, pnpmVersion: string,
 ): string {
   const { pythonVersion, pythonRelease, nodeVersion, wheels, pythonPackages } = runtimeLock
   // Identity preserves key order within the selected target, wheel records and distribution map, plus wheel-entry order.
   // Bump format when extraction or assembly changes payload bytes without changing locked inputs.
   return createHash('sha256').update(JSON.stringify({
-    format: 8, target, pythonVersion, pythonRelease, nodeVersion: pnpmVersion === undefined ? undefined : nodeVersion,
+    format: 8, target, pythonVersion, pythonRelease, nodeVersion,
     artifact: runtimeLock.targets[target], wheels, pythonPackages, pnpm: pnpmVersion,
   })).digest('hex')
 }
@@ -186,7 +156,7 @@ export async function prepareOfficeSkillAssets(source: string, destination: stri
 /** A locked interpreter and wheel target. */
 export type PrimaryRuntimeTarget = keyof typeof lock.targets
 
-/** Resource preparation inputs shared by builds and explicit SDK downloads. */
+/** Resource preparation inputs for one build-host target. */
 export interface PreparePrimaryRuntimeOptions {
   /** Target whose archives and wheels are downloaded. */
   readonly target: PrimaryRuntimeTarget
@@ -196,12 +166,6 @@ export interface PreparePrimaryRuntimeOptions {
   readonly cache: string
   /** Carrier release recorded in the legacy desktopVersion manifest field. */
   readonly version: string
-  /** Locked npm pnpm tarball for installed carriers; build hosts otherwise copy their installed pnpm. */
-  readonly pnpmArchive?: RuntimeNpmArchive
-  /** Ordinary filesystem Office assets; build hosts otherwise resolve the workspace package. */
-  readonly skillSource?: string
-  /** Omit Node.js and pnpm for carriers providing only Python. */
-  readonly pythonOnly?: boolean
 }
 
 /**
@@ -221,22 +185,14 @@ export async function preparePrimaryRuntime(options: PreparePrimaryRuntimeOption
     mkdirSync(dependencies, { recursive: true })
     const platform = target === 'win-x64' ? 'win32' : target.startsWith('linux-') ? 'linux' : 'darwin'
     const arch = target.endsWith('-arm64') ? 'arm64' : 'x64'
-    let pnpmVersion: string | undefined
-    if (!options.pythonOnly) {
-      const node = join(dependencies, 'node')
-      await downloadNodeRuntime(target, node, paths.downloads)
-      mkdirSync(join(node, 'node_modules'))
-      writeFileSync(join(node, 'node_modules', 'README.txt'), 'Reserved for bundled Node packages. pnpm uses its default installation directories.\n')
-      if (options.pnpmArchive !== undefined) {
-        pnpmVersion = options.pnpmArchive.version
-        await downloadRuntimeNpmPackage(options.pnpmArchive, join(dependencies, 'pnpm'), paths.downloads)
-      } else {
-        const pnpmManifest = createRequire(import.meta.url).resolve('pnpm')
-        pnpmVersion = (JSON.parse(readFileSync(pnpmManifest, 'utf8')) as { version: string }).version
-        await cp(dirname(pnpmManifest), join(dependencies, 'pnpm'), { recursive: true, dereference: true })
-      }
-      prunePnpmForeignNativePackages(join(dependencies, 'pnpm'), platform, arch)
-    }
+    const node = join(dependencies, 'node')
+    await downloadNodeRuntime(target, node, paths.downloads)
+    mkdirSync(join(node, 'node_modules'))
+    writeFileSync(join(node, 'node_modules', 'README.txt'), 'Reserved for bundled Node packages. pnpm uses its default installation directories.\n')
+    const pnpmManifest = createRequire(import.meta.url).resolve('pnpm')
+    const pnpmVersion = (JSON.parse(readFileSync(pnpmManifest, 'utf8')) as { version: string }).version
+    await cp(dirname(pnpmManifest), join(dependencies, 'pnpm'), { recursive: true, dereference: true })
+    prunePnpmForeignNativePackages(join(dependencies, 'pnpm'), platform, arch)
     await extractTar({ file: await pythonArchive(target, paths.downloads), cwd: dependencies })
     const manifest: PrimaryRuntimeManifest = {
       desktopVersion: options.version,
@@ -244,7 +200,8 @@ export async function preparePrimaryRuntime(options: PreparePrimaryRuntimeOption
       arch,
       payloadDigest: primaryRuntimePayloadDigest(target, lock, pnpmVersion),
       python: lock.pythonVersion,
-      ...(pnpmVersion === undefined ? {} : { node: lock.nodeVersion, pnpm: pnpmVersion }),
+      node: lock.nodeVersion,
+      pnpm: pnpmVersion,
       pythonPackages: lock.pythonPackages,
     }
     const entries = workspaceDependencyPaths(output, manifest)
@@ -259,7 +216,7 @@ export async function preparePrimaryRuntime(options: PreparePrimaryRuntimeOption
   } finally {
     rmSync(staging, { recursive: true, force: true })
   }
-  const assets = options.skillSource ?? join(dirname(createRequire(import.meta.url).resolve('@liwa/skill-office/package.json')), 'assets')
+  const assets = join(dirname(createRequire(import.meta.url).resolve('@liwa/skill-office/package.json')), 'assets')
   await prepareOfficeSkillAssets(assets,
     join(paths.runtime, 'office-skills'))
 }
@@ -298,17 +255,15 @@ export function smokePrimaryRuntime(root: string, environment: NodeJS.ProcessEnv
 if (import.meta.main) {
   const { values } = parseArgs({ options: {
     target: { type: 'string' }, output: { type: 'string' }, cache: { type: 'string' },
-    'python-only': { type: 'boolean', default: false },
   } })
   if (!values.target || !Object.hasOwn(lock.targets, values.target) || !values.output) {
-    throw new Error(`Usage: pnpm run prepare:primary-runtime --target <${Object.keys(lock.targets).join('|')}> --output <directory> [--cache <directory>] [--python-only]`)
+    throw new Error(`Usage: pnpm run prepare:primary-runtime --target <${Object.keys(lock.targets).join('|')}> --output <directory> [--cache <directory>]`)
   }
   const { version } = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')) as { version: string }
   const output = resolve(values.output)
   await preparePrimaryRuntime({
     target: values.target as PrimaryRuntimeTarget, output,
     cache: values.cache ?? join(tmpdir(), 'liwa-primary-runtime-downloads'), version,
-    pythonOnly: values['python-only'],
   })
   smokePrimaryRuntime(join(output, 'primary-runtime'))
 }

@@ -56,7 +56,6 @@
     "@liwa/api-session-controller": "workspace:*",
     "@liwa/client-connection": "workspace:*",
     "@liwa/client-locale": "workspace:*",
-    "@liwa/client-product-analytics": "workspace:*",
     "@liwa/client-store": "workspace:*",
     "@liwa/client-test-runtime": "workspace:*",
     "@liwa/client-ui-conversation": "workspace:*",

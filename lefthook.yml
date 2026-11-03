@@ -1,5 +1,5 @@
-# Git hooks (lefthook). Keep these local checkpoints fast; CI owns the full
-# repository-wide gate matrix.
+# Git hooks (lefthook). Keep these local checkpoints fast; the full gates
+# (build, lint, typecheck, test, test:snapshot, hygiene, doc-sync) run by hand.
 # Install: `node scripts/install-lefthook.mjs` (runs automatically via postinstall).
 
 pre-commit:

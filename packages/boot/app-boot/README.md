@@ -1,5 +1,5 @@
 ---
-description: "Shared Loader boot support for liwa profiles and the temporary Python SDK runtime: environment layers, patches, diagnostics, and configuration preview."
+description: "Shared Loader boot support for liwa profiles: environment layers, patches, diagnostics, and configuration preview."
 kind: "package-library"
 ---
 
@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`liwa-app-boot` is the shared Loader boot library behind `liwa` profiles, including the CLI packaged by the Python runtime wheel. It loads environment layers, composes profile bundles and patches, boots every plugin, and returns the running app or identifies the failed plugin and cause. Product applications use the `liwa` launcher instead of publishing separate bins; direct-config helpers remain only for lower-level embedders and tests. You can preview the effective configuration before booting, configure HMR through profile YAML, and let a terminal-owning app restore its terminal before a fatal exit.
+`liwa-app-boot` is the shared Loader boot library behind `liwa` profiles. It loads environment layers, composes profile bundles and patches, boots every plugin, and returns the running app or identifies the failed plugin and cause. Product applications use the `liwa` launcher instead of publishing separate bins; direct-config helpers remain only for lower-level embedders and tests. You can preview the effective configuration before booting, configure HMR through profile YAML, and let a terminal-owning app restore its terminal before a fatal exit.
 
 ## Table of Contents
 
@@ -131,7 +131,7 @@ This section explains how the outcomes above are realized and points at the code
 ### Design notes
 
 - **Runtime version.** `getLiwaRuntimeVersion()` reads this package's manifest through a filesystem path, including the executable's virtual filesystem; missing or invalid versions fail rather than bypassing compatibility checks.
-- **Profile launch data.** `ctx.profileContext` contains only profile locations, startup bundle names, parsed invocation overlays and the telemetry opt-out value. `readProfilePatches()` composes the supplied startup profile or reads current files at those locations; callers schedule and apply the result.
+- **Profile launch data.** `ctx.profileContext` contains only profile locations, startup bundle names, and parsed invocation overlays. `readProfilePatches()` composes the supplied startup profile or reads current files at those locations; callers schedule and apply the result.
 - **Process-local module resolution.** The launcher installs the runtime resolution on Node's internal ESM and CommonJS resolvers before profile rows mount. Node still owns exports, conditions, subpaths, module caches, and error codes; routed ESM failures report the original importer. Explicit CommonJS `paths` always retain native lookup, including paths inside profiles.
 - **Linked directories.** A profile link to an external directory admits its importers to peer-aware ancestor lookup, even without its own `package.json`. At each `D/node_modules` position, current `D/package.json` peer names present in the runtime table use the runtime package; other names use the physical candidate. A nearer physical package precedes a later peer declaration, and a peer position needs no physical `node_modules`. Installation-scope package directories are excluded from linked interception; overlapping roots do not change the importer's lookup order ([rule](../../../.agents/notes/implemented/architecture/2026-09-19-profile-resolution-lookup-order.md)).
 - **Package metadata.** `ctx.pluginPackages.packageOf` locates the owning package without loading code or requiring an exported `package.json`; a subpath selects its package without validating that file. The installed runtime resolution owns selection even for a miss. Low-level embedders that install the service without one retain native lookup. Display metadata uses the separate entry-aware reader described above.

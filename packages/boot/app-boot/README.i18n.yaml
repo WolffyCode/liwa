@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/boot/app-boot/README.md
 /:
-  en: e7d33e07e6c2f63f
-  zh: 24aeb7a3aa55b902
+  en: 04556162a39c98b4
+  zh: a98d2e1921ecb47f
 /liwa-app-boot:
   en: 2874f6afe9dfad83
   zh: 07d7a6c2a52b88ab
 /liwa-app-boot/summary:
-  en: 4c89afb7a5e2db55
-  zh: 180cf4b91aed7191
+  en: 530b0f21d69d18ed
+  zh: 8f3c11887b644310
 /liwa-app-boot/table-of-contents:
   en: d152484eb41ac6b4
   zh: 09388d293f9be9cb
@@ -42,8 +42,8 @@
   en: f4a2695cb4c8a570
   zh: 89837235d2f376cf
 /liwa-app-boot/understand-the-implementation/design-notes:
-  en: bbb057eafb1ebc3c
-  zh: 512f75ad6d11be62
+  en: 395bcda8241047c7
+  zh: fc33aefacf148c78
 /liwa-app-boot/understand-the-implementation/helper-behavior:
   en: 6fa850d1bb000d0e
   zh: aa83a40a9d3db295

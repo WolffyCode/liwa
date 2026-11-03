@@ -13,8 +13,6 @@ afterEach(cleanup)
 function mount(language = 'zh-CN') {
   cleanup()
   const api = {
-    analytics: vi.fn(async (_event: string, _attributes: object) => {}),
-    analyticsEnabled: async () => true,
     ...resolveDesktopLocale(language),
     saveApiKey: vi.fn<(value: string) => Promise<WelcomeSaveResult>>().mockResolvedValue({ ok: true }),
     skip: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
@@ -147,14 +145,4 @@ describe('desktop welcome presentation', () => {
     expect(html).toContain("default-src 'none'")
     expect(html).toContain("form-action 'none'")
   })
-})
-
-it('reports each return to the welcome entry once', () => {
-  const view = mount()
-  expect(view.api.analytics).not.toHaveBeenCalled()
-  fireEvent.click(view.button('#api-key'))
-  fireEvent.click(view.button('#back-to-entry'))
-  expect(view.api.analytics.mock.calls.map(([action]) => action)).toEqual(['auth_page_click', 'auth_page_view'])
-  fireEvent.click(view.button('#api-key'))
-  expect(view.api.analytics.mock.calls.at(-1)).toEqual(['auth_page_click', { button_name: 'api-key' }])
 })

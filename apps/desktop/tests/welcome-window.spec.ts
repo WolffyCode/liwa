@@ -40,7 +40,6 @@ function createWindow() {
 beforeEach(() => { electron.create.mockReset(); electron.handlers.clear() })
 
 const operations = {
-  analyticsEnabled: async () => true,
   saveApiKey: () => Promise.resolve({ ok: true as const }),
   skip: () => Promise.resolve(),
 }
@@ -163,25 +162,4 @@ describe('desktop welcome window', () => {
     current.once.mock.calls[0]![1]()
     expect(electron.handlers.size).toBe(0)
   })
-})
-
-it('accepts only permitted event fields and reads the current policy over IPC', async () => {
-  const window = createWindow()
-  electron.create.mockReturnValue(window)
-  const analytics = vi.fn(async () => {})
-  let enabled = true
-  await openWelcomeWindow(resolveDesktopLocale('en'), { ...operations, analytics, analyticsEnabled: async () => enabled })
-  const own = { sender: window.webContents, senderFrame: window.webContents.mainFrame }
-  const policy = electron.handlers.get(WELCOME_IPC.analyticsEnabled)!
-  expect(await policy(own)).toBe(true)
-  enabled = false
-  expect(await policy(own)).toBe(false)
-  const report = electron.handlers.get(WELCOME_IPC.analytics)!
-  await report(own, 'auth_page_click', { button_name: 'api-key' })
-  expect(analytics).toHaveBeenLastCalledWith('auth_page_click', { button_name: 'api-key' })
-  await expect(report(own, 'auth_page_click', { button_name: 'api-key', token: 'private' })).rejects.toThrow('invalid analytics')
-  await expect(report(own, 'desktop_app_launch', {})).rejects.toThrow('invalid analytics')
-  await expect(report(own, 'auth_page_view', null)).rejects.toThrow('invalid analytics')
-  await report(own, 'api_key_save_click', {})
-  expect(analytics).toHaveBeenLastCalledWith('api_key_save_click', {})
 })

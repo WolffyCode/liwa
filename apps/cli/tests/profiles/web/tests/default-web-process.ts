@@ -70,7 +70,6 @@ export async function withDefaultWeb(
         TSX_TSCONFIG_PATH: undefined,
         LIWA_HOME: join(root, 'home'),
         LIWA_AGENTS_HOME: join(root, '.agents'),
-        LIWA_TELEMETRY_DISABLED: '1',
         DEEPSEEK_API_KEY: 'keyless-default-web-no-call',
         NODE_NO_WARNINGS: '1',
       },

@@ -19,8 +19,7 @@
  * @module @liwa/tool-fs-search/search-core
  */
 
-import { existsSync } from 'node:fs'
-import { isAbsolute, join, parse, relative, sep } from 'node:path'
+import { isAbsolute, relative, sep } from 'node:path'
 import type { Context } from '@liwa/cordis'
 import { LiwaError } from '@liwa/llm'
 import { ItemRetainer, TextRetainer } from '@liwa/output-retention'
@@ -159,22 +158,16 @@ let rgPathPromise: Promise<string> | undefined
 /**
  * The packaged ripgrep binary path, resolved lazily once per process.
  *
- * A single-file runtime uses the executable's `-rg` sidecar because a native
- * helper cannot be spawned from pkg's virtual filesystem. Node-mode builds
- * fall back to the platform package selected by `@vscode/ripgrep`. Resolving
- * at the call boundary keeps a missing or corrupt binary at the first search
- * call as `SEARCH_FAILED`, rather than failing the Loader composition.
+ * The platform package selected by `@vscode/ripgrep` supplies the binary;
+ * Electron spawns it from the unpacked ASAR copy. Resolving at the call
+ * boundary keeps a missing or corrupt binary at the first search call as
+ * `SEARCH_FAILED`, rather than failing the Loader composition.
  *
  * @returns the packaged binary's absolute path; the memoized promise rejects
  *   when the platform package cannot be resolved.
  */
 export function resolveRgPath(): Promise<string> {
   rgPathPromise ??= Promise.resolve().then(async () => {
-    const executable = parse(process.execPath)
-    const executableSidecar = process.platform === 'win32'
-      ? join(executable.dir, `${executable.name}-rg.exe`)
-      : `${process.execPath}-rg`
-    if ('pkg' in process && existsSync(executableSidecar)) return executableSidecar
     const dependency = (await import('@vscode/ripgrep')).rgPath
     return process.versions.electron === undefined
       ? dependency

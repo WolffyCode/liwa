@@ -876,7 +876,6 @@ async function verifyProviderCwdResume(
     LIWA_SNAPSHOT_PROVIDER: model.provider,
     LIWA_SNAPSHOT_MODEL: model.model,
     LIWA_PERMISSION_MODE: 'read-only',
-    LIWA_TELEMETRY_DISABLED: '1',
     NODE_OPTIONS: [process.env.NODE_OPTIONS, '--disable-warning=ExperimentalWarning'].filter(Boolean).join(' '),
   }
   const launch = {
@@ -1333,7 +1332,6 @@ describe('headless recorded-session snapshots', () => {
               LIWA_MCP_RESOURCES_FIXTURE: join(repoRoot, 'packages/mcp/mcp-client/tests/fixtures/resources-server.ts'),
             } : {}),
             NODE_OPTIONS: [process.env.NODE_OPTIONS, '--disable-warning=ExperimentalWarning'].filter(Boolean).join(' '),
-            LIWA_TELEMETRY_DISABLED: '1',
             ...(mcpDemo === undefined ? {} : { LIWA_MCP_DEMO_URL: mcpDemo.url }),
           },
           prepare: async (cwd) => {

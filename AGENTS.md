@@ -21,14 +21,14 @@
 ## 这份代码现在的状态
 
 - 品牌已改成灵鲸（决策 40）：包作用域 `@liwa/*`、命令 `liwa`、环境变量 `LIWA_*`、数据目录 `~/.liwa`、工作区约定目录 `.liwa/`。不许把上游的名字（DeepSeek Harness、DSH、`dsh`、`@deepseek-ai/dsh-*`）带回来，`pnpm run verify-brand-terms` 会拦（例外清单在 `scripts/verify-brand-terms.ts`）。DeepSeek 作为模型与 API 供应商的名字照常用。[LICENSE](LICENSE) 里上游的 MIT 版权行必须保留。
-- 默认组合只向 DeepSeek 发模型调用（决策 41）：不挂遥测、反馈上报、会话日志与插件清单字段，请求只以 `User-Agent: liwa/<版本>` 标明身份，`scripts/default-composition-reporting.spec.ts` 拦着这些插件回到默认组合；插件包本身暂留，等以后单独裁剪。
+- 只向 DeepSeek 发模型调用（决策 41）：遥测、反馈、产品埋点、会话日志上报与插件清单字段的插件包都已删除，请求只以 `User-Agent: liwa/<版本>` 标明身份。旧会话日志里的 `feedback/*` 与 `session-log-deepseek/delivery-accepted` 事件仍要能读，它们的事件词汇留在 `packages/core/session/src/retired-events.ts`。
 - DeepSeek 模型只用 API key 接入：没有 DeepSeek 账号登录、余额与充值，网页和桌面端的引导都只提供“添加 API Key”。
 - 改造原则（决策 36）：继承来的插件能用就留；不能用就删，在原位置换成灵鲸的插件。继承来的 agent 要抽象成"大脑提供方"之一，Paseo 的 Claude Code、Codex 长会话是另外的实现。改 agent 循环、会话主干这类破坏性改动，按主人确认过的方案做，不顺手改。
-- 下面的命令继承自上游，改名后在本机验证过 build、lint、typecheck、test、test:snapshot、hygiene、doc-sync 与网页。
+- 下面的命令继承自上游，改名后在本机验证过 build、lint、typecheck、test、test:snapshot、hygiene、doc-sync 与网页。没有 GitHub 工作流（CI），检查全在本机跑：提交前、推送前由 lefthook 跑快检查，完整检查按下面的命令手动跑。
 - `.agents/notes/` 是上游的历史设计记录（正文保留上游当时的名字），只用来理解继承来的代码，不是灵鲸的决策依据；灵鲸的决策在 handoff。不新写这种风格的 Agent Note。
 - `.agents/skills/` 里是上游团队的工作流技能（PR 描述、推送前检查、升级指南、官方图标、双语翻译等），都设成了只能手动调用，不会自动触发；它们描述的是上游的流程，对灵鲸不适用，只在主人明确要求时用。`agent-experience` 是 `packages/preset/agent-preset` 随产品发布的技能，保持原样。
 - 不要动 `snapshots/**/workspace/` 下的 `AGENTS.md`：它们是 agent 读取工作区规则的测试夹具，不是给你的规则。
-- 只本地打包、不发布：桌面应用只在 Apple Silicon Mac 上用 `pnpm run package:desktop` 打成带临时签名的 `Liwa.app`（bundle id `com.wolffycode.liwa`，链接协议 `liwa://`），没有签名证书、公证、自动更新和 Windows／Intel 安装包；npm、PyPI、GitHub Releases 的发布脚本与工作流都已删除，运行时也不从注册表安装或读取 `@liwa/*` 包。Python SDK 与 SSH helper 只保留本地打包。见 `apps/desktop/packaging/README.zh.md`。
+- 只本地打包、不发布：桌面应用只在 Apple Silicon Mac 上用 `pnpm run package:desktop` 打成带临时签名的 `Liwa.app`（bundle id `com.wolffycode.liwa`，链接协议 `liwa://`），没有签名证书、公证、自动更新和 Windows／Intel 安装包；npm、PyPI、GitHub Releases 的发布脚本与工作流都已删除，运行时也不从注册表安装或读取 `@liwa/*` 包。SSH helper 只保留本地打包；Python SDK 已删除。见 `apps/desktop/packaging/README.zh.md`。
 - 继承来的代码有自己的写法。修改时遵守主人的全局原则，但不要为了风格单独大面积重写；要重写先问主人。
 
 ## 命令
@@ -57,7 +57,7 @@ pnpm run dev:web | dev:desktop  # 先 build:artifacts 再启动；start:web | st
 - 按改动选检查，不默认跑全量：行为改动跑相关测试；模型可见或用户可见的输出变了，更新对应的录制会话快照（`pnpm run test:snapshot`）；文档改动跑 `pnpm run doc-sync`；发布路径跑构建后的冒烟；模型提供方跑真实 API 的 e2e。
 - 覆盖率门槛是 `test:coverage`，不是 `test`（[原因](docs/testing.md)）。
 - 开发用 `build:artifacts`；声称完成之前，在最新一次 `build:artifacts` 之后跑 `build:check`，或者直接跑 `build`（[布局](docs/development.md#typescript-project-layout)）。
-- agent 循环、会话生命周期、`SessionEventMap` 的改动会影响 TypeScript 和 Python 两个 SDK 的期望输出，`pnpm run test` 不覆盖它们（[说明](docs/testing.md#when-a-snapshot-test-is-required)）。
+- agent 循环、会话生命周期、`SessionEventMap` 的改动会影响 TypeScript SDK 的期望输出，`pnpm run test` 不覆盖它们（[说明](docs/testing.md#when-a-snapshot-test-is-required)）。
 
 ## 密钥
 

@@ -70,13 +70,9 @@ describe('product identifiers', () => {
     'docs/user/guide/schedule.zh.md',
     'packages/bundle/web-app/cordis.patch.yml',
     'packages/client/ui-agent-preset/src/client/CreatePluginMenuItem.tsx',
-    'packages/client/ui-agent-preset/src/client/analytics.ts',
-    'packages/client/ui-agent-preset/tests/analytics.client.spec.ts',
     'packages/client/ui-agent-preset/tests/components.client.spec.tsx',
     'packages/client/ui-agent-preset/tests/create-plugin-menu-item.client.spec.tsx',
     'packages/client/ui-agent-preset/tests/section-store.client.spec.ts',
-    'packages/client/ui-conversation/src/client/input/submission-analytics.ts',
-    'packages/client/ui-conversation/tests/service-orchestration.client.spec.ts',
     'packages/client/ui-entry-customization/src/client/index.ts',
     'packages/client/ui-entry-customization/tests/menu.client.spec.tsx',
     'packages/client/ui-workspace/tests/workspaces-service.client.spec.ts',
@@ -132,8 +128,6 @@ describe('product identifiers', () => {
 
   it.each([
     ['apps/cli/tests/optional-bundle-transitions.e2e.ts', 1],
-    ['packages/client/ui-conversation/src/client/input/submission-analytics.ts', 1],
-    ['packages/client/ui-conversation/tests/service-orchestration.client.spec.ts', 1],
     ['packages/client/ui-entry-customization/src/client/index.ts', 1],
     ['packages/client/ui-entry-customization/tests/menu.client.spec.tsx', 1],
     ['packages/client/ui-workspace/tests/workspaces-service.client.spec.ts', 1],

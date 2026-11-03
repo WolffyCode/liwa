@@ -1,10 +1,9 @@
 import { existsSync } from 'node:fs'
-import { lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { expect, it, onTestFinished } from 'vitest'
 import { pinStagedDependencyVersions, pkgConfigExcludingCheckout, removePackageManagerRecords } from './executable-packaging.ts'
-import { materializeStagedLinks } from './build-exe-for-python-sdk-staging.ts'
 
 async function fixture() {
   const root = await mkdtemp(join(tmpdir(), 'liwa-exe-deploy-'))
@@ -34,24 +33,11 @@ async function filesMentioning(directory: string, path: string): Promise<string[
   return mentions
 }
 
-it('materializes a package junction without deleting its source and drops linked command directories', async () => {
-  const test = await fixture()
-  await mkdir(join(test.source, 'peer'))
-  await writeFile(join(test.source, 'peer/index.js'), 'intact')
-  await symlink(join(test.source, 'peer'), join(test.modules, 'peer'), 'junction')
-  await symlink(join(test.source, 'peer'), join(test.modules, '.bin'), 'junction')
-  await materializeStagedLinks(test.staging)
-  expect((await lstat(join(test.modules, 'peer'))).isSymbolicLink()).toBe(false)
-  expect(await readFile(join(test.modules, 'peer/index.js'), 'utf8')).toBe('intact')
-  expect(await readFile(join(test.source, 'peer/index.js'), 'utf8')).toBe('intact')
-  await expect(lstat(join(test.modules, '.bin'))).rejects.toThrow('ENOENT')
-})
-
 it('leaves no build-checkout path in a deployed payload while keeping its runtime files', async () => {
   const checkout = await mkdtemp(join(tmpdir(), 'liwa-exe-checkout-'))
   onTestFinished(() => rm(checkout, { recursive: true, force: true }))
-  // The Python carrier is deployed inside the checkout, so pnpm's records name both locations.
-  const staging = join(checkout, 'python/sdk-runtime/src/liwa_runtime/runtime/node')
+  // The SSH helper carrier is deployed inside the checkout, so pnpm's records name both locations.
+  const staging = join(checkout, '.liwa-build/ssh-helper-fixture/staging')
   const agentSource = `file://${checkout}/packages/core/agent`
   await writeFiles(staging, {
     'package.json': JSON.stringify({
@@ -94,10 +80,10 @@ it('rejects a locally specified dependency that the payload does not install', a
 })
 
 it('ignores the checkout around a staged payload, including the dot-prefixed pnpm store', () => {
-  const config = pkgConfigExcludingCheckout('C:\\work\\liwa', ['package.json'], ['**/*.map'])
+  const config = pkgConfigExcludingCheckout('C:\\work\\liwa', 'C:\\work\\liwa\\.liwa-build\\staging', ['package.json'], ['**/*.map'])
   expect(config.pkg.assets).toEqual(['package.json'])
   expect(config.pkg.ignore).toEqual([
-    '**/*.map', 'C:/work/liwa/node_modules/**', 'C:/work/liwa/node_modules/.pnpm/**',
+    'C:/work/liwa/.liwa-build/staging/**/*.map', 'C:/work/liwa/node_modules/**', 'C:/work/liwa/node_modules/.pnpm/**',
     ...['packages', 'apps', 'vendor', 'native', 'scripts'].map(tree => `C:/work/liwa/${tree}/**`),
     'C:/work/liwa/tsconfig*.json',
   ])

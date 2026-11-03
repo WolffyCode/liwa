@@ -123,7 +123,6 @@ export const EXCLUDED_PATHS: readonly { readonly reason: string; readonly patter
   { reason: 'Upstream design history; only links broken by the rename are repaired.', pattern: /^\.agents\/notes\//u },
   { reason: 'MIT copyright and upstream attribution must be retained.', pattern: /^(?:LICENSE|THIRD_PARTY_NOTICES\.md)$/u },
   { reason: 'Recorded sessions keep the model output and user input they were recorded with until re-recorded.', pattern: /^snapshots\/.*(?:\.jsonl|\.expected\.[a-z]+)$/u },
-  { reason: 'Python SDK recordings quote documentation verbatim and are re-recorded by the Python runtime lane.', pattern: /^scripts\/snapshots\//u },
   { reason: 'This policy and its tests spell the blocked names.', pattern: /^scripts\/verify-brand-terms(?:\.spec)?\.ts$/u },
 ]
 

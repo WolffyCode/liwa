@@ -11,13 +11,10 @@ import Include from '@liwa/cordis-plugin-include'
 import LlmRuntime from '@liwa/llm'
 import SessionProjectionRegistry from '@liwa/session-projection'
 import AgentRegistry from '@liwa/agent'
-import SessionStore, { SessionId } from '@liwa/session'
+import SessionStore from '@liwa/session'
 import { credentialRef } from '@liwa/credentials'
 import LocalCredentialProvider from '@liwa/credentials-local'
 import { profileComposition } from '../../../settings/settings/tests/profile-composition.ts'
-import DeepSeekLlmApiExtensionRegistry from '@liwa/deepseek-llm-api-extensions'
-import * as SessionLogDeepSeek from '@liwa/session-log-deepseek'
-import * as DeepSeekPluginPackageInventory from '@liwa/plugin-package-inventory-deepseek'
 import * as LlmDeepSeek from '@liwa/llm-deepseek-api-key'
 import { assemble } from './assemble.ts'
 import { closeMockServers, mockServer, textEvents } from './mock-server.ts'
@@ -40,7 +37,7 @@ afterEach(async () => {
 })
 
 async function loadComposition(
-  options: { withDynamic: boolean; baseURL: string; reuseRoot?: string; enableSessionLog?: boolean },
+  options: { withDynamic: boolean; baseURL: string; reuseRoot?: string },
 ): Promise<{ ctx: Context; settingsPath: string; credentialsPath: string }> {
   // A reused root is the restart case: the same Liwa home, its documents
   // exactly as the previous process left them.
@@ -64,15 +61,6 @@ async function loadComposition(
     '- id: agents',
     "  name: '@liwa/agent'",
     "- name: '@liwa/session-projection'",
-    '- id: deepseek-llm-api-extensions',
-    "  name: '@liwa/deepseek-llm-api-extensions'",
-    '- id: session-log-deepseek',
-    "  name: '@liwa/session-log-deepseek'",
-    ...options.enableSessionLog !== undefined
-      ? ['  config:', `    enabled: ${String(options.enableSessionLog)}`]
-      : [],
-    '- id: plugin-package-inventory-deepseek',
-    "  name: '@liwa/plugin-package-inventory-deepseek'",
     ...options.withDynamic
       ? [
         '- id: credentials',
@@ -100,9 +88,6 @@ async function loadComposition(
     ['@liwa/session-projection', SessionProjectionRegistry],
     ['@liwa/agent', AgentRegistry],
     ['@liwa/session-projection', SessionProjectionRegistry],
-    ['@liwa/deepseek-llm-api-extensions', DeepSeekLlmApiExtensionRegistry],
-    ['@liwa/session-log-deepseek', SessionLogDeepSeek],
-    ['@liwa/plugin-package-inventory-deepseek', DeepSeekPluginPackageInventory],
     ['@liwa/credentials-local', LocalCredentialProvider],
     ['@liwa/llm-deepseek-api-key', LlmDeepSeek],
   ])
@@ -199,55 +184,6 @@ describe('llm-deepseek real dynamic composition', () => {
     expect(warn).toHaveBeenCalledWith('[llm-deepseek-api-key]', expect.stringMatching(/^model "deepseek-v4-pro" shows no badge: /))
     await ctx.settings.mutate(NS, [{ op: 'set', path: ['models'], value: [{ id: 'deepseek-flash' }] }])
     expect(await badges()).toEqual([['deepseek-flash', undefined]])
-  })
-
-  it('keeps package inventory on when the Loader composition disables session upload', async () => {
-    vi.stubEnv('DEEPSEEK_API_KEY', 'entry-key')
-    const server = await mockServer([{ kind: 'sse', events: textEvents }])
-    const { ctx } = await loadComposition({ withDynamic: false, baseURL: server.url, enableSessionLog: false })
-    const session = ctx.sessions.create(SessionId('extension-composition'))
-    session.append('turn/start', { turn: 1 })
-
-    await assemble(ctx, { model: 'deepseek-v4-flash', messages: [], sessionId: session.id })
-    const request = server.requests[0] as { dsh_plugin_packages: { version: number; packages: unknown[] } }
-    expect(request).not.toHaveProperty('dsh_session_log')
-    expect(request.dsh_plugin_packages.packages).toEqual(expect.arrayContaining([
-      { name: '@liwa/deepseek-llm-api-extensions', version: '0.1.0-rc.8' },
-      { name: '@liwa/llm-deepseek-api-key', version: '0.1.0-rc.8' },
-      { name: '@liwa/session-log-deepseek', version: '0.1.0-rc.8' },
-    ]))
-    expect(request.dsh_plugin_packages.version).toBe(1)
-    expect(SessionLogDeepSeek.acceptedThrough(session)).toBe(-1)
-  })
-
-  it('sends the canonical session suffix by default through Loader composition', async () => {
-    vi.stubEnv('DEEPSEEK_API_KEY', 'entry-key')
-    const server = await mockServer([{ kind: 'sse', events: textEvents }])
-    const { ctx } = await loadComposition({
-      withDynamic: false,
-      baseURL: server.url,
-    })
-    const session = ctx.sessions.create(SessionId('extension-composition-enabled'))
-    session.append('turn/start', { turn: 1 })
-
-    await assemble(ctx, { model: 'deepseek-v4-flash', messages: [], sessionId: session.id })
-    const request = server.requests[0] as {
-      dsh_session_log?: {
-        version: number
-        session: { id: string }
-        afterSeq: number
-        throughSeq: number
-        events: Array<{ type: string; seq: number }>
-      }
-    }
-    expect(request.dsh_session_log).toMatchObject({
-      version: 1,
-      session: { id: 'extension-composition-enabled' },
-      afterSeq: -1,
-      throughSeq: 0,
-      events: [{ type: 'turn/start', seq: 0 }],
-    })
-    expect(SessionLogDeepSeek.acceptedThrough(session)).toBe(0)
   })
 
   it('boots from cordis.yml and routes the next request after external settings and credential edits', async () => {

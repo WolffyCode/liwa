@@ -65,8 +65,7 @@
     "@liwa/util-values": "workspace:*",
     "@liwa/client-ui-renderer": "workspace:*",
     "@liwa/client-ui-session": "workspace:*",
-    "clsx": "^2.1.1",
-    "@liwa/client-product-analytics": "workspace:*"
+    "clsx": "^2.1.1"
   },
   "files": [
     "locale/*.json",

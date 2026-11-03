@@ -389,7 +389,6 @@ describe.skipIf(!process.env.DEEPSEEK_API_KEY)('GitHub webhook through the real 
         LIWA_GITHUB_WEBHOOK_PORT: String(webhookPort),
         LIWA_GITHUB_WEBHOOK_SECRET: SECRET,
         LIWA_HOME: join(root, '.liwa'),
-        LIWA_TELEMETRY_DISABLED: '1',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
     })

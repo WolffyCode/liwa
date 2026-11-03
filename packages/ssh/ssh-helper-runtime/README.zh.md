@@ -33,7 +33,7 @@ kind: "package-library"
 pnpm exec tsx scripts/build-exe-for-ssh-helper.ts
 ```
 
-构建器需要 Node 24、C/C++ 编译器和该 Node 安装附带的开发头文件。Linux 还需要 `musl-gcc`，其 node-pty 扩展必须满足 glibc 基线。[原生构建工作流](../../../.github/workflows/build-exe-for-ssh-helper.yml) 在打包前准备兼容扩展。`--target` 选择一个原生目标，`--skip-build` 复用已准备的 JS／原生输出，`--dry-run` 校验目标与依赖声明而不构建。
+构建器需要 Node 24、C/C++ 编译器和该 Node 安装附带的开发头文件。Linux 还需要 `musl-gcc`，其 node-pty 扩展必须满足 glibc 基线。在 Linux 上，打包前先运行 [`scripts/prepare-linux-node-pty.sh`](../../../scripts/prepare-linux-node-pty.sh)，在 manylinux 2.28 容器中编译该扩展。`--target` 选择一个原生目标，`--skip-build` 复用已准备的 JS／原生输出，`--dry-run` 校验目标与依赖声明而不构建。
 
 | 目标 | 原生发行包 | 检查的部署基线 |
 |---|---|---|
@@ -52,7 +52,7 @@ pnpm exec tsx scripts/build-exe-for-ssh-helper.ts
 
 [OpenSSH 验证器](../../../scripts/verify-ssh-helper-ssh.ts) 接受 Linux `--archive`。它创建未安装 Node 的临时 glibc 2.28 SSH 服务器，仅挂载发行包和一次性公钥，并验证生产连接。这个可移植性测试不声明内核隔离能力，该检查由原生主机测试负责。测试身份、主机密钥、端口和工作区均由本次运行独占。
 
-普通 PR 和 master CI 运行源码及构建脚本检查，不构建 SSH 可执行文件。修改 helper 启动、原生依赖或打包逻辑时，应在合并前手动运行[原生工作流](../../../.github/workflows/build-exe-for-ssh-helper.yml)；它支持指定目标，默认构建全部四个平台。`CI master` 也提供手动 `ssh-helper` 测试入口。压缩包只作为本地构建产物，不会被发布。使用压缩包前仍须通过原生运行验证。仅检查部署目标不能证明已在最低 macOS 版本上运行。
+日常本机检查覆盖源码和构建脚本，不构建 SSH 可执行文件。修改 helper 启动、原生依赖或打包逻辑时，应在合并前为每个受影响的原生目标构建并运行两个验证器。压缩包只作为本地构建产物，不会被发布。使用压缩包前仍须通过原生运行验证。仅检查部署目标不能证明已在最低 macOS 版本上运行。
 
 -----
 
@@ -62,7 +62,7 @@ pnpm exec tsx scripts/build-exe-for-ssh-helper.ts
 <details>
 <summary>实现细节 — 点击展开</summary>
 
-载体通过仓库带补丁的 `pkg --sea` 流程内嵌完整依赖集合。入口分派 SSH helper、托管子进程启动器或 PTC worker。共享的[部署函数](../../../scripts/executable-packaging.ts) 也用于 Python SDK 构建器。生产部署严格安装 `pnpm-lock.yaml` 锁定的版本，随后删除 pnpm 的安装记录，并把清单中的工作区依赖固定为已安装的版本，部署元数据因此不会把构建检出目录的路径带进可执行文件。打包时排除检出目录自身的依赖和工作区源码，暂存载荷的模块解析因此不会把开发包嵌入可执行文件。
+载体通过仓库带补丁的 `pkg --sea` 流程内嵌完整依赖集合。入口分派 SSH helper、托管子进程启动器或 PTC worker。[部署函数](../../../scripts/executable-packaging.ts)负责准备暂存载荷。生产部署严格安装 `pnpm-lock.yaml` 锁定的版本，随后删除 pnpm 的安装记录，并把清单中的工作区依赖固定为已安装的版本，部署元数据因此不会把构建检出目录的路径带进可执行文件。打包时排除检出目录自身的依赖和工作区源码，暂存载荷的模块解析因此不会把开发包嵌入可执行文件。已部署的 `@liwa/node-addon-system-*` 包也不进入可执行文件，因为原生 system 扩展放在可执行文件旁的 `native/system/` 中。
 
 操作系统必须从真实文件执行 Landlock 和 PTY 启动器。进程内的解析钩子将 system 包指向随包分发的原生目录；node-pty 使用其既有的相对可执行文件定位 spawn-helper 的约定。二进制检查在打包前覆盖内嵌原生模块，并覆盖组装后压缩包中的外部资源。
 

@@ -21,7 +21,7 @@ it.skipIf(!process.env.DEEPSEEK_API_KEY || !runtime).each(['native', 'ptc'])('ch
     binArgs: ['--profile', 'headless', '--patch', 'office.patch.json',
       ...mode === 'ptc' ? ['--patch', join(repo, 'apps/cli/config/examples/ptc.yml')] : [],
       'In input.docx, change the title paragraph text to Quarterly results without changing its formatting; save result.docx. Do not render or visually inspect the finished file. Respond briefly in English.'],
-    env: { LIWA_PRIMARY_RUNTIME: runtime, LIWA_PERMISSION_MODE: 'danger-full-access', LIWA_TELEMETRY_DISABLED: '1',
+    env: { LIWA_PRIMARY_RUNTIME: runtime, LIWA_PERMISSION_MODE: 'danger-full-access',
       HTTP_PROXY: process.env.LIWA_OFFICE_TEST_PROXY, HTTPS_PROXY: process.env.LIWA_OFFICE_TEST_PROXY },
     async prepare(cwd) {
       await execa(python!, ['-c', `

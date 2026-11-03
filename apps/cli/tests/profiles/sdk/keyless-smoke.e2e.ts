@@ -51,7 +51,7 @@ function waitForLine(
   })
 }
 
-describe('Python SDK liwa profile keyless smoke', () => {
+describe('SDK profile keyless smoke', () => {
   it.each([
     { label: 'reports max-token turns with the default mapping config', envValue: undefined, editorEnabled: false },
     { label: 'reports max-token turns with mapping enabled through env', envValue: 'true', editorEnabled: false },
@@ -62,7 +62,7 @@ describe('Python SDK liwa profile keyless smoke', () => {
     const { envValue, editorEnabled } = scenario
     const ptc = 'ptc' in scenario && scenario.ptc
 
-    const root = await mkdtemp(join(tmpdir(), 'liwa-python-sdk-runtime-smoke-'))
+    const root = await mkdtemp(join(tmpdir(), 'liwa-sdk-runtime-smoke-'))
     const editorPatch = join(root, 'editor.patch.yml')
     if (editorEnabled) await writeFile(editorPatch, [
       '- insert:',
@@ -98,7 +98,6 @@ describe('Python SDK liwa profile keyless smoke', () => {
         ...launch.env,
         LIWA_HOME: join(root, '.liwa'),
         LIWA_PERMISSION_MODE: 'danger-full-access',
-        LIWA_TELEMETRY_DISABLED: '1',
         LIWA_TOOLS_MODE: ptc ? 'native' : 'ptc',
         DEEPSEEK_API_KEY: 'keyless-smoke-no-call',
         DEEPSEEK_BASE_URL: `http://127.0.0.1:${address.port}`,
@@ -233,21 +232,20 @@ describe('Python SDK liwa profile keyless smoke', () => {
 
   it.each([
     { label: 'boots the standalone minimal profile through its generated manifest', editorEnabled: false, imageEnabled: false, optOut: false, offloadEnabled: false },
-    { label: 'executes the documented editor opt-in patch with sdk-minimal', editorEnabled: true, imageEnabled: false, optOut: false, offloadEnabled: false },
+    { label: 'executes the editor opt-in patch with sdk-minimal', editorEnabled: true, imageEnabled: false, optOut: false, offloadEnabled: false },
     { label: 'sends a read_image result to the model with sdk-minimal', editorEnabled: false, imageEnabled: true, optOut: false, offloadEnabled: false },
     { label: 'offloads an over-budget image and continues with sdk-minimal', editorEnabled: false, imageEnabled: true, optOut: false, offloadEnabled: true },
     { label: 'retains the previous tools through the documented opt-out patch', editorEnabled: false, imageEnabled: false, optOut: true, offloadEnabled: false },
   ])('$label', async ({ editorEnabled, imageEnabled, optOut, offloadEnabled }) => {
-    const root = await mkdtemp(join(tmpdir(), 'liwa-python-sdk-minimal-'))
+    const root = await mkdtemp(join(tmpdir(), 'liwa-sdk-minimal-'))
     onTestFinished(() => rm(root, { recursive: true, force: true }))
     const editorPatch = join(root, 'editor.patch.yml')
-    if (editorEnabled) {
-      const guide = await readFile(join(repoRoot, 'docs/user/guide/python-sdk.md'), 'utf8')
-      const yaml = guide.split('<a id="opt-in-to-str_replace_editor"></a>')[1]
-        ?.match(/```yaml\n([\s\S]*?)```/)?.[1]
-      expect(yaml).toBeDefined()
-      await writeFile(editorPatch, yaml!)
-    }
+    if (editorEnabled) await writeFile(editorPatch, [
+      '- insert:',
+      '    - id: tool-str-replace-editor',
+      "      name: '@liwa/tool-str-replace-editor'",
+      '',
+    ].join('\n'))
     if (optOut) {
       const guide = await readFile(join(repoRoot, 'docs/upgrade-guide/v0.2.1-alpha.2/sdk-minimal-image-compaction/guide.md'), 'utf8')
       const yaml = guide.match(/```yaml\n([\s\S]*?)```/)?.[1]
@@ -434,7 +432,7 @@ describe('Python SDK liwa profile keyless smoke', () => {
       ...launch.args, '--profile', 'sdk', '--patch', patch,
     ], {
       cwd: repoRoot,
-      env: { ...launch.env, LIWA_HOME: home, LIWA_TELEMETRY_DISABLED: '1', DEEPSEEK_API_KEY: 'keyless-no-call' },
+      env: { ...launch.env, LIWA_HOME: home, DEEPSEEK_API_KEY: 'keyless-no-call' },
       stdin: 'pipe',
       stripFinalNewline: false,
       timeout: 25_000,
@@ -465,7 +463,7 @@ describe('Python SDK liwa profile keyless smoke', () => {
   }, 30_000)
 
   it('rejects an invalid max-token success env value', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'liwa-python-sdk-runtime-invalid-'))
+    const root = await mkdtemp(join(tmpdir(), 'liwa-sdk-runtime-invalid-'))
     try {
       const { exitCode, stdout, stderr } = await execa(launch.command, [
         ...launch.args,
@@ -497,12 +495,11 @@ describe('Python SDK liwa profile keyless smoke', () => {
 })
 
 /** Materialize a native-layout payload whose paths the query can validate without executing binaries. */
-async function officeFixture(root: string, pythonOnly: boolean) {
+async function officeFixture(root: string) {
   const source = join(root, 'resources', 'primary-runtime')
   const manifest: PrimaryRuntimeManifest = {
     desktopVersion: '1.0.0', platform: process.platform, arch: process.arch,
-    python: '3.12.14',
-    ...(pythonOnly ? {} : { node: '24.21.0', pnpm: '11.7.0' }),
+    python: '3.12.14', node: '24.21.0', pnpm: '11.7.0',
     pythonPackages: { 'python-docx': '1.2.0', 'python-pptx': '1.0.2', openpyxl: '3.1.5' },
   }
   const paths = workspaceDependencyPaths(source, manifest)
@@ -518,11 +515,11 @@ async function officeFixture(root: string, pythonOnly: boolean) {
   return { source, paths }
 }
 
-it.each(['unset', 'empty', 'bundled', 'full', 'python-only', 'python-only-no-cli', 'missing-assets', 'wrong-type'] as const)('composes Office resources through the SDK profile (%s)', async (mode) => {
+it.each(['unset', 'empty', 'full', 'missing-assets', 'wrong-type'] as const)('composes Office resources through the SDK profile (%s)', async (mode) => {
   const root = await mkdtemp(join(tmpdir(), 'sdk-office-'))
   onTestFinished(() => rm(root, { recursive: true, force: true }))
   const enabled = mode !== 'unset' && mode !== 'empty'
-  const { source, paths } = await officeFixture(root, mode.startsWith('python-only'))
+  const { source, paths } = await officeFixture(root)
   if (mode === 'missing-assets') await rm(join(root, 'resources', 'office-skills'), { recursive: true })
   if (mode === 'wrong-type') {
     await rm(paths.python)
@@ -546,14 +543,11 @@ it.each(['unset', 'empty', 'bundled', 'full', 'python-only', 'python-only-no-cli
   const address = server.address()
   if (address === null || typeof address === 'string') throw new Error('model fixture did not bind')
   const home = join(root, 'home')
-  const cliPatch = join(root, 'cli.patch.yml')
-  await writeFile(cliPatch, JSON.stringify(mode === 'python-only-no-cli' ? [{ id: 'skill-office', config: { assetRoot: join(root, 'resources', 'office-skills'), cli: false } }] : []))
   const officeLaunch = resolveExampleLaunch({
     srcBin: fileURLToPath(new URL('../../../src/bin.ts', import.meta.url)), mode: 'lib',
-    configArgs: ['--profile', 'sdk', '--patch', cliPatch],
-    env: { LIWA_HOME: home, LIWA_PRIMARY_RUNTIME: mode === 'unset' || mode === 'bundled' ? undefined : mode === 'empty' ? '' : source + '/',
-      LIWA_BUNDLED_PRIMARY_RUNTIME: mode === 'unset' ? undefined : mode === 'bundled' || mode === 'empty' ? source : join(root, 'unused-default'),
-      LIWA_PERMISSION_MODE: 'danger-full-access', LIWA_TELEMETRY_DISABLED: '1',
+    configArgs: ['--profile', 'sdk'],
+    env: { LIWA_HOME: home, LIWA_PRIMARY_RUNTIME: mode === 'unset' ? undefined : mode === 'empty' ? '' : source + '/',
+      LIWA_PERMISSION_MODE: 'danger-full-access',
       DEEPSEEK_API_KEY: 'local-fixture', DEEPSEEK_BASE_URL: `http://127.0.0.1:${address.port}` },
   })
   const child = execa(officeLaunch.command, officeLaunch.args, { cwd: repoRoot, env: officeLaunch.env, timeout: 60_000, reject: false })
@@ -612,7 +606,6 @@ it.each(['unset', 'empty', 'bundled', 'full', 'python-only', 'python-only-no-cli
       expect.objectContaining({ role: 'user', content }),
     ]))
   }
-  if (mode === 'python-only') expect(stderr).not.toContain('ENOENT')
   if (mode === 'missing-assets') expect(stderr).toContain('SKILL.md')
   await send(3, 'shutdown')
   const exit = await child

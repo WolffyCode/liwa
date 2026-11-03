@@ -56,7 +56,6 @@ function cleanEnvironment(root: string, liwaHome: string): NodeJS.ProcessEnv {
     ...env,
     LIWA_AGENTS_HOME: join(root, '.agents'),
     LIWA_HOME: liwaHome,
-    LIWA_TELEMETRY_DISABLED: '1',
     NODE_NO_WARNINGS: '1',
     SSH_CONNECTION: '',
     SSH_TTY: '',

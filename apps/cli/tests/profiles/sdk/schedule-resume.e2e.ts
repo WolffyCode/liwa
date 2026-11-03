@@ -49,7 +49,7 @@ it('delivers an overdue reminder with the SDK route and lets the client resume t
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
   const address = server.address()
   if (address === null || typeof address === 'string') throw new Error('model fixture has no port')
-  const env = { ...process.env, LIWA_PERMISSION_MODE: 'danger-full-access', LIWA_TELEMETRY_DISABLED: '1',
+  const env = { ...process.env, LIWA_PERMISSION_MODE: 'danger-full-access',
     DEEPSEEK_API_KEY: 'keyless-schedule-fixture', DEEPSEEK_BASE_URL: `http://127.0.0.1:${String(address.port)}` }
   clearAmbientProxyEnv(env)
   const first = new Liwa({ cwd: root, liwaHome: join(root, '.liwa'), patches: [patch],

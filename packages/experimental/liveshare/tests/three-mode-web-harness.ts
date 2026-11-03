@@ -425,7 +425,6 @@ export async function bootWebOwner(options: WebOwnerOptions = {}): Promise<WebOw
     env: {
       LIWA_HOME: home,
       LIWA_AGENTS_HOME: join(cwd, '.agents'),
-      LIWA_TELEMETRY_DISABLED: '1',
       DEEPSEEK_API_KEY: '',
       // Diagnostic only: the fixture appends one line per adapter call to this temp file.
       BASE_LLM_LOG: join(cwd, 'base-llm.log'),

@@ -57,7 +57,6 @@ describe.skipIf(!existsSync(join(repoRoot, 'apps/cli/lib/bin.js')))('liwa SOURCE
           ...clearedProxyEnv(),
           LIWA_HOME: join(root, 'home'),
           LIWA_AGENTS_HOME: join(root, 'agents'),
-          LIWA_TELEMETRY_DISABLED: '1',
           LIWA_CLI_MOCK_FAILURE: '0',
         },
         input: '',

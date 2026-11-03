@@ -40,7 +40,7 @@ describe('workspace dependency ranges', () => {
 
   describe.each([
     '.', 'packages/core/probe', 'packages/experimental/probe', 'apps/cli', 'apps/web',
-    'apps/desktop', 'apps/desktop-host', 'benchmarks', 'website', 'python/sdk-runtime', 'tools/probe',
+    'apps/desktop', 'apps/desktop-host', 'benchmarks', 'website', 'tools/probe',
     'vendor/loader', 'native/system', 'native/system/packages/entry',
   ])('consumer %s', (dir) => {
     it.each(['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'] as const)(
@@ -83,10 +83,10 @@ describe('workspace manifest discovery', () => {
   it('checks root, app, runtime, tooling, and newly declared members while honoring exclusions', () => {
     const root = mkdtempSync(join(tmpdir(), 'liwa-workspace-ranges-'))
     onTestFinished(() => { rmSync(root, { recursive: true, force: true }) })
-    const consumers = ['.', 'apps/cli', 'apps/web', 'apps/desktop', 'apps/desktop-host', 'benchmarks', 'website', 'python/sdk-runtime', 'tools/probe']
+    const consumers = ['.', 'apps/cli', 'apps/web', 'apps/desktop', 'apps/desktop-host', 'benchmarks', 'website', 'tools/probe']
     writeFileSync(join(root, 'pnpm-workspace.yaml'), [
       'packages:', '  - packages/*/*', '  - apps/*', '  - apps/cli', '  - benchmarks',
-      '  - website', '  - python/sdk-runtime', '  - tools/*', '  - "!tools/excluded"',
+      '  - website', '  - tools/*', '  - "!tools/excluded"',
     ].join('\n'))
     for (const dir of [...consumers, 'tools/excluded', 'unlisted/probe', 'packages/core/runtime']) {
       mkdirSync(join(root, dir), { recursive: true })
@@ -229,7 +229,7 @@ describe('experimental workspace constraints', () => {
     ])
   })
 
-  it('allows development and experimental consumers but rejects the Python release runtime', () => {
+  it('allows development and experimental consumers', () => {
     const manifests: WorkspaceManifest[] = [experimental, {
       dir: 'packages/core/test-only',
       manifest: {
@@ -242,17 +242,9 @@ describe('experimental workspace constraints', () => {
         name: '@liwa/experimental-consumer',
         dependencies: { '@liwa/experimental-prototype': 'workspace:^' },
       },
-    }, {
-      dir: 'python/sdk-runtime',
-      manifest: {
-        name: '@liwa/python-runtime',
-        dependencies: { '@liwa/experimental-prototype': 'workspace:^' },
-      },
     }]
 
-    expect(checkExperimentalDependencyIsolation(manifests)).toEqual([
-      '@liwa/python-runtime: dependencies.@liwa/experimental-prototype must not reference an experimental package',
-    ])
+    expect(checkExperimentalDependencyIsolation(manifests)).toEqual([])
   })
 })
 

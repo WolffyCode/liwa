@@ -365,7 +365,6 @@ describe.skipIf(!existsSync(liwaBin))('liwa BUILT bin (node lib/bin.js, no tsx)'
     try {
       const web = await runBuiltBin(['--profile', 'web', '--help'], {
         LIWA_HOME: home,
-        LIWA_TELEMETRY_DISABLED: '1',
       })
       expect(web.code).toBe(0)
       expect(web.stderr).toBe('')
@@ -376,7 +375,6 @@ describe.skipIf(!existsSync(liwaBin))('liwa BUILT bin (node lib/bin.js, no tsx)'
 
       const wildcardHost = await runBuiltBin(['web', '--host', '0.0.0.0'], {
         LIWA_HOME: home,
-        LIWA_TELEMETRY_DISABLED: '1',
       })
       expect(wildcardHost.code).toBe(1)
       expect(wildcardHost.stdout).toBe('')
@@ -384,7 +382,6 @@ describe.skipIf(!existsSync(liwaBin))('liwa BUILT bin (node lib/bin.js, no tsx)'
 
       const headlessHelp = await runBuiltBin(['headless', '--help'], {
         LIWA_HOME: home,
-        LIWA_TELEMETRY_DISABLED: '1',
       })
       expect(headlessHelp.code).toBe(0)
       expect(headlessHelp.stderr).toBe('')
@@ -392,7 +389,6 @@ describe.skipIf(!existsSync(liwaBin))('liwa BUILT bin (node lib/bin.js, no tsx)'
 
       const sdkHelp = await runBuiltBin(['sdk', '--help'], {
         LIWA_HOME: home,
-        LIWA_TELEMETRY_DISABLED: '1',
       })
       expect(sdkHelp.code).toBe(0)
       expect(sdkHelp.stderr).toBe('')
@@ -400,7 +396,6 @@ describe.skipIf(!existsSync(liwaBin))('liwa BUILT bin (node lib/bin.js, no tsx)'
 
       const acpHelp = await runBuiltBin(['acp', '--help'], {
         LIWA_HOME: home,
-        LIWA_TELEMETRY_DISABLED: '1',
       })
       expect(acpHelp.code).toBe(0)
       expect(acpHelp.stderr).toBe('')
@@ -408,7 +403,6 @@ describe.skipIf(!existsSync(liwaBin))('liwa BUILT bin (node lib/bin.js, no tsx)'
 
       const missingTask = await runBuiltBin(['--profile', 'headless'], {
         LIWA_HOME: home,
-        LIWA_TELEMETRY_DISABLED: '1',
       })
       expect(missingTask.code).toBe(1)
       expect(missingTask.stderr).toContain('a task is required')
@@ -429,7 +423,6 @@ describe.skipIf(!existsSync(liwaBin))('liwa BUILT bin (node lib/bin.js, no tsx)'
     try {
       const result = await runBuiltBin(['--profile', 'sdk', '--patch', patch], {
         LIWA_HOME: home,
-        LIWA_TELEMETRY_DISABLED: '1',
         DEEPSEEK_API_KEY: 'built-sdk-startup-failure-no-call',
       }, home)
       expect(result.code).toBe(0)
@@ -465,7 +458,6 @@ describe.skipIf(!existsSync(liwaBin))('liwa BUILT bin (node lib/bin.js, no tsx)'
       env: {
         ...process.env,
         LIWA_HOME: home,
-        LIWA_TELEMETRY_DISABLED: '1',
         DEEPSEEK_API_KEY: 'built-sdk-profile-no-call',
         DEEPSEEK_BASE_URL: server.baseURL,
       },
@@ -533,7 +525,6 @@ describe.skipIf(!existsSync(liwaBin))('liwa BUILT bin (node lib/bin.js, no tsx)'
       env: {
         ...process.env,
         LIWA_HOME: home,
-        LIWA_TELEMETRY_DISABLED: '1',
         DEEPSEEK_API_KEY: apiKey,
         DEEPSEEK_BASE_URL: server.baseURL,
         LIWA_PERMISSION_MODE: 'danger-full-access',
@@ -613,7 +604,6 @@ describe.skipIf(!existsSync(liwaBin))('liwa BUILT bin (node lib/bin.js, no tsx)'
     try {
       const result = await runBuiltBin(['--profile', 'headless', 'answer', 'from', 'the', 'published', 'entry'], {
         LIWA_HOME: home,
-        LIWA_TELEMETRY_DISABLED: '1',
         DEEPSEEK_API_KEY: apiKey,
         DEEPSEEK_BASE_URL: server.baseURL,
       })
@@ -676,7 +666,7 @@ describe.skipIf(!existsSync(liwaBin))('liwa BUILT bin (node lib/bin.js, no tsx)'
     try {
       const created = await runBuiltBin(
         ['rescue', '--from-default-profile', 'web', '--help'],
-        { LIWA_HOME: home, LIWA_TELEMETRY_DISABLED: '1' },
+        { LIWA_HOME: home },
       )
       expect(created.code).toBe(0)
       expect(created.stderr).toBe('')
@@ -697,7 +687,7 @@ describe.skipIf(!existsSync(liwaBin))('liwa BUILT bin (node lib/bin.js, no tsx)'
       writeFileSync(join(dir, 'cordis.patch.yml'), '- id: local-change\n  disabled: true\n')
       const repeated = await runBuiltBin(
         ['rescue', '--from-default-profile', 'web', '--help'],
-        { LIWA_HOME: home, LIWA_TELEMETRY_DISABLED: '1' },
+        { LIWA_HOME: home },
       )
       expect(repeated.code).toBe(0)
       expect(repeated.stderr).toBe('')
@@ -705,7 +695,7 @@ describe.skipIf(!existsSync(liwaBin))('liwa BUILT bin (node lib/bin.js, no tsx)'
 
       const reopened = await runBuiltBin(
         ['rescue', '--help'],
-        { LIWA_HOME: home, LIWA_TELEMETRY_DISABLED: '1' },
+        { LIWA_HOME: home },
       )
       expect(reopened.code).toBe(0)
       expect(reopened.stderr).toBe('')
@@ -720,7 +710,7 @@ describe.skipIf(!existsSync(liwaBin))('liwa BUILT bin (node lib/bin.js, no tsx)'
     try {
       const failed = await runBuiltBin(
         ['--profile', 'rescue', '--from-default-profile', 'web', '--port', 'not-a-number'],
-        { LIWA_HOME: home, LIWA_TELEMETRY_DISABLED: '1' },
+        { LIWA_HOME: home },
       )
       expect(failed.code).toBe(1)
       expect(failed.stderr).toContain('--port must be a number')
@@ -728,7 +718,7 @@ describe.skipIf(!existsSync(liwaBin))('liwa BUILT bin (node lib/bin.js, no tsx)'
 
       const retried = await runBuiltBin(
         ['rescue', '--help'],
-        { LIWA_HOME: home, LIWA_TELEMETRY_DISABLED: '1' },
+        { LIWA_HOME: home },
       )
       expect(retried.code).toBe(0)
       expect(retried.stderr).toBe('')
@@ -754,7 +744,6 @@ describe.skipIf(!existsSync(liwaBin))('liwa BUILT bin (node lib/bin.js, no tsx)'
         ['--profile', 'environment-probe'],
         {
           LIWA_HOME: home,
-          LIWA_TELEMETRY_DISABLED: '1',
           DEEPSEEK_API_KEY: undefined,
           DEEPSEEK_BASE_URL: server.baseURL,
         },
@@ -785,7 +774,6 @@ describe.skipIf(!existsSync(liwaBin))('liwa BUILT bin (node lib/bin.js, no tsx)'
         LIWA_HOME: home,
         LIWA_BROWSER_OPEN_TEST_EXIT_ON_READY: '1',
         DEEPSEEK_API_KEY: 'keyless-invalid-config',
-        LIWA_TELEMETRY_DISABLED: '1',
         NODE_OPTIONS: `--import=${webReadyExitHook}`,
       })
       expect(result.code, result.stderr).toBe(0)

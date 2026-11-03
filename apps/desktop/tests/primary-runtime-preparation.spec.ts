@@ -1,4 +1,4 @@
-/** Desktop carriers keep a complete interpreter payload even when SDK carriers choose Python-only. */
+/** Desktop requires a complete interpreter payload with Node.js and pnpm. */
 
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'

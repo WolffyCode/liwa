@@ -127,7 +127,6 @@
     "@liwa/attachment-local": "workspace:*",
     "@liwa/bash-local": "workspace:*",
     "@liwa/credentials-local": "workspace:*",
-    "@liwa/deepseek-llm-api-extensions": "workspace:*",
     "@liwa/experimental-agent-team": "workspace:*",
     "@liwa/experimental-ptc-runtime-python": "workspace:*",
     "@liwa/experimental-tool-agent-team": "workspace:*",

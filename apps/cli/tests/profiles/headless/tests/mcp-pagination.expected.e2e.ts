@@ -26,7 +26,6 @@ it('warns when MCP discovery exceeds the SDK page limit and completes the headle
     env: {
       LIWA_MCP_PAGINATION_FIXTURE: fileURLToPath(new URL('pagination-limit-server.ts', fixtureRoot)),
       LIWA_PERMISSION_MODE: 'danger-full-access',
-      LIWA_TELEMETRY_DISABLED: '1',
     },
   })
   expect(stdout).toBe('CLI tool round trip complete: CLI_TOOL_ROUND_TRIP\n')

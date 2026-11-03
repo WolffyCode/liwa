@@ -186,7 +186,7 @@ export function createWorkerHost(options: WorkerHostOptions): WorkerHost {
   const start = async (): Promise<void> => {
     try {
       const home = join(root, IMAGE_HOME_DIRECTORY)
-      const processShim = installProcessGlobal({ cwd: root, env: { LIWA_HOME: home, HOME: home, ...options.env } })
+      installProcessGlobal({ cwd: root, env: { LIWA_HOME: home, HOME: home, ...options.env } })
 
       const [bytes, overlays] = await Promise.all([
         readImage(options.image),
@@ -236,7 +236,7 @@ export function createWorkerHost(options: WorkerHostOptions): WorkerHost {
       // Resolved once the tunnel serves; a failed start never resolves it.
       const started = Promise.withResolvers<void>()
 
-      const { patches, profile, environment } = prepareProfile(appBoot, mounted, manifest, root, processShim.env)
+      const { patches, profile, environment } = prepareProfile(appBoot, mounted, manifest, root)
       const profileConfig = join(profile.dir, 'cordis.yml')
       const ctx = await appBoot.boot(BIN_NAME, profileConfig, patches, async (hostCtx) => {
         hostCtx.provide('profileContext', profile)
@@ -419,7 +419,6 @@ function deferLazyArchives(vfs: MemoryVfs, manifest: ImageManifest, root: string
  * @param vfs - Filesystem holding the profile.
  * @param manifest - Validated image manifest naming the profile and installation.
  * @param root - Virtual root, the process working directory.
- * @param env - The process shim's environment, after the launch layers applied.
  * @returns Effective boot patches, the profile context, and the launch environment snapshot.
  * @throws When the image names no installation manifest to anchor bundle resolution.
  */
@@ -428,7 +427,6 @@ function prepareProfile(
   vfs: MemoryVfs,
   manifest: ImageManifest,
   root: string,
-  env: Readonly<Record<string, string>>,
 ): { patches: unknown[]; profile: ProfileContext; environment: unknown } {
   if (manifest.installation === undefined) {
     throw new Error('webworker host: the image names no installation manifest, so no profile bundle can resolve; rebuild the image')
@@ -443,7 +441,7 @@ function prepareProfile(
   const profile: ProfileContext = {
     name: loaded.name, dir: loaded.dir, patchPath: loaded.patchPath, installAnchor, cwd: root, home,
     startedBundles: loaded.layers.map(layer => layer.packageName),
-    overlays: [], telemetryDisabledEnv: env.LIWA_TELEMETRY_DISABLED,
+    overlays: [],
   }
   return { patches: appBoot.readProfilePatches(BIN_NAME, profile, loaded), profile, environment }
 }

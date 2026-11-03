@@ -24,7 +24,7 @@ export type HeaderLeadingControlsProps =
  * @returns the sidebar toggle, plus the New Session control while the access snapshot allows `session/create`.
  */
 export function HeaderLeadingControls({
-  toggleSidebar, startSession, trackEntryClick, useRemoteAccess, useShortcuts, t,
+  toggleSidebar, startSession, useRemoteAccess, useShortcuts, t,
 }: HeaderLeadingControlsProps) {
   // A page whose access snapshot excludes starting a Session keeps only the sidebar toggle here.
   const canStartSession = useRemoteAccess('session/create')
@@ -50,10 +50,7 @@ export function HeaderLeadingControls({
             className={css.iconButton}
             aria-label={t('session.new.label')}
             aria-keyshortcuts={newShortcut?.aria}
-            onClick={() => {
-              trackEntryClick({ menu_name: 'new_session', position: 'titlebar' })
-              startSession()
-            }}
+            onClick={() => { startSession() }}
           >
             <IconNewChatOutlineRegular size={16} />
           </button>

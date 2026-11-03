@@ -20,7 +20,7 @@ A **bundle** is a distribution format for Cordis config rows and the code they m
 
 Each declares itself in its own `package.json` under a `liwa` field: `liwa.profile` lists a profile's bundles, and `liwa.bundle` points at a bundle's patch file.
 
-[`liwa-base`](../packages/bundle/base/README.md) is the shared first layer of the `web`, `headless`, `sdk`, and `acp` profiles: model adapters, tools, persistence, sandbox and approval policy, settings, credentials, telemetry. [`liwa-web-app`](../packages/bundle/web-app/README.md) adds the browser application, [`liwa-headless`](../packages/bundle/headless/README.md) adds a one-shot runner with no server, [`liwa-sdk-app`](../packages/bundle/sdk-app/README.md) adds the SDK JSON-RPC server, and [`liwa-acp-app`](../packages/bundle/acp-app/README.md) adds the automation-only ACP server. [`liwa-sdk-minimal`](../packages/bundle/sdk-minimal/README.md) is the deliberate exception: one bundle owns its complete explicit SDK tree and does not apply `liwa-base`.
+[`liwa-base`](../packages/bundle/base/README.md) is the shared first layer of the `web`, `headless`, `sdk`, and `acp` profiles: model adapters, tools, persistence, sandbox and approval policy, settings, credentials. [`liwa-web-app`](../packages/bundle/web-app/README.md) adds the browser application, [`liwa-headless`](../packages/bundle/headless/README.md) adds a one-shot runner with no server, [`liwa-sdk-app`](../packages/bundle/sdk-app/README.md) adds the SDK JSON-RPC server, and [`liwa-acp-app`](../packages/bundle/acp-app/README.md) adds the automation-only ACP server. [`liwa-sdk-minimal`](../packages/bundle/sdk-minimal/README.md) is the deliberate exception: one bundle owns its complete explicit SDK tree and does not apply `liwa-base`.
 
 Layers apply to an empty entry list: the profile's ordered bundles, its `cordis.patch.yml`, the home patch, then `--patch` overlays. A patch targets a row by id and replaces its whole config, or inserts new rows. A `preset` patch applies these operations inside that declaration’s `config.plugins`, with the same layer precedence.
 
@@ -43,8 +43,6 @@ Composition mechanics are in [app-boot](../packages/boot/app-boot/README.md#prof
 Supported Node applications launch through named `liwa` profiles. The shipped profiles are `web`, `headless`, `sdk`, `sdk-minimal`, and `acp`, selected with `liwa --profile <name>` or `liwa <name>`. `plugin` names the management command; a profile with that name requires `--profile plugin`. The TypeScript SDK resolves its same-version `liwa` dependency and selects `sdk`; custom plugin composition remains a profile plus ordered patch files, not another executable or inline application tree. `sdk-minimal` is a repository-owned standalone bundle behind the same launcher, not a caller-supplied Cordis tree.
 
 Vendored CLIs, build-only and test-only executables, direct in-process plugin mounting, and the private browser WebWorker preview are not Liwa application launchers. [`verify-application-entrypoints`](../scripts/verify-application-entrypoints.ts) keeps every package bin, executable source, root demo, and the root `start:web` and `dev:web` scripts in an explicit class and rejects a Node application path that bypasses `liwa`.
-
-The Python SDK follows the same application architecture. Its runtime wheel packages the normal `liwa` CLI as `liwa-sdk-runtime-<platform>-<arch>`, and the client launches `liwa --profile sdk` with an explicit Liwa home by default. The minimal example selects the shipped `sdk-minimal` profile. Python exposes profile selection and ordered patch files rather than a complete Cordis tree; persistent external plugins are installed through `liwa plugin`. The removed private direct-config carrier has no compatibility bin or fallback parser.
 
 ## Desktop application
 
@@ -70,7 +68,7 @@ Events are the extension points, and picking the right domain is the first decis
 
 - **Session events** are durable facts appended to the log and broadcast through `session/event`. Use one when the fact must survive a reload.
 - **Agent events** (`agent/*`) carry a live `Agent`: inbox, step, status, request, validation, continuation. Use one to observe or intercept work in flight.
-- **Capability events** attach policy and adapters to a seam (`fs/*`, `tools/*`, `telemetry/*`) without importing the loop.
+- **Capability events** attach policy and adapters to a seam (`fs/*`, `tools/*`, `llm/*`) without importing the loop.
 
 AgentLoop initializes Agents with rollback and awaits serial `agent/created` before queued work. Unload retains resources through Agent teardown; [agent-loop](../packages/core/agent-loop/README.md#understand-the-implementation) defines ordering.
 

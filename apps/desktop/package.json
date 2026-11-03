@@ -54,7 +54,6 @@
     "@liwa/client-ui-theme": "workspace:*",
     "@liwa/client-shortcuts": "workspace:*",
     "@liwa/atomic-write": "workspace:*",
-    "@liwa/client-product-analytics": "workspace:*",
     "@liwa/plugin-manager": "workspace:*",
     "zod": "4.4.3",
     "@liwa/util-file-drag": "workspace:*"

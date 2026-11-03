@@ -145,9 +145,6 @@ export const VIEWER_ENDPOINT_CLASSES = {
   'pluginMarket/readEntryDetail': 'owner-only', // owner plugin market
   'pluginMarket/search': 'owner-only', // owner plugin market
   'pluginMarket/setIndexes': 'owner-only', // owner plugin market
-  'productAnalytics/enabled': 'owner-only', // owner product analytics
-  'productAnalytics/report': 'owner-only', // owner product analytics
-  'productAnalytics/watchPolicy': 'owner-only', // owner product analytics
   'pluginRegistryProbe/fastest': 'owner-only', // owner plugin registry probe
   'sessionReferenceResolver/candidates': 'owner-only', // owner composer reference resolution
   'officeToPdf/generation': 'owner-only', // owner document export
@@ -183,10 +180,6 @@ export const VIEWER_ENDPOINT_CLASSES = {
   'dynamicCordisRunner/stopFromPanel': 'owner-only', // owner dynamic plugin runner
   'dynamicCordisRunner/syncInspectManifest': 'owner-only', // owner dynamic plugin runner
   'dynamicCordisRunner/undefineFromPanel': 'owner-only', // owner dynamic plugin runner
-  'sessionFeedback/record': 'owner-only', // owner command feedback
-  'messageFeedback/delete': 'owner-only', // owner message feedback
-  'messageFeedback/list': 'owner-only', // owner message feedback
-  'messageFeedback/put': 'owner-only', // owner message feedback
   'goals/clear': 'owner-only', // owner clears the goal
   'goals/complete': 'owner-only', // owner completes the goal
   'goals/create': 'owner-only', // owner creates a goal

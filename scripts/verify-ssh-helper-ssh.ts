@@ -82,7 +82,7 @@ export async function verifySshTransport(argv: string[]): Promise<void> {
     const report = join(temporary, 'report.json')
     await runArtifactDriver(config, report, 'portable', {
       HOME: home, PATH: `${bin}:${process.env.PATH ?? '/usr/bin:/bin'}`, LIWA_HOME: join(home, 'liwa'),
-      TSX_TSCONFIG_PATH: join(root, 'tsconfig.base.json'), LIWA_TELEMETRY_DISABLED: '1', LIWA_VERIFY_NO_NODE: '1',
+      TSX_TSCONFIG_PATH: join(root, 'tsconfig.base.json'), LIWA_VERIFY_NO_NODE: '1',
     })
     const evidence = { manifest, runtime: runtimeReportSchema.parse(JSON.parse(await readFile(report, 'utf8'))), glibc: await docker('exec', container, 'getconf', 'GNU_LIBC_VERSION') }
     assert.equal(evidence.glibc, 'glibc 2.28')

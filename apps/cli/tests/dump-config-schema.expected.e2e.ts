@@ -95,7 +95,7 @@ async function dump(
     builtBin, '--profile', profileName, format, ...args,
   ], {
     cwd: fixture.root,
-    env: { ...env, LIWA_HOME: fixture.home, LIWA_TELEMETRY_DISABLED: '1' },
+    env: { ...env, LIWA_HOME: fixture.home },
     extendEnv: false,
     input: '',
     timeout: processTimeoutMs,

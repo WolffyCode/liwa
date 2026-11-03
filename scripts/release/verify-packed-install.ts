@@ -42,7 +42,6 @@ function consumerEnvironment(consumerRoot: string): NodeJS.ProcessEnv {
   delete environment.NODE_PATH
   environment.LIWA_HOME = resolve(consumerRoot, '.liwa')
   environment.LIWA_AGENTS_HOME = resolve(consumerRoot, '.agents')
-  environment.LIWA_TELEMETRY_DISABLED = '1'
   return environment
 }
 

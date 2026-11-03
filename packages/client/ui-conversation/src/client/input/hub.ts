@@ -4,9 +4,6 @@
  * catalog subscription. Saved drafts enter the model before the first lookup
  * returns; Session-scope disposal releases the shell and its resources.
  */
-import type {} from '@liwa/client-product-analytics/client'
-import type { PlanProjection } from '@liwa/plan-mode/types'
-import type { GoalProjection } from '@liwa/goal/types'
 import type { Context } from '@liwa/cordis'
 import type {
   ISessions, SessionBinding, SessionFace,
@@ -14,7 +11,6 @@ import type {
 import type { SessionId } from '@liwa/session/types'
 import type { TranslateNS } from '@liwa/client-locale/client'
 import type { InboxState } from '@liwa/agent/types'
-import type { ModelSelectionProjection } from '@liwa/agent/types'
 import type { ObservableSnapshot } from '@liwa/client-store'
 import type {
   DraftAttachmentId, DraftAttachmentSerializationResult, DraftInitializationOptions, DraftInitializationResult, InputTriggerController,
@@ -25,7 +21,6 @@ import type { ComposerBlocks } from '../contract/composer-blocks.ts'
 import type { InputSubmitMode } from '../contract/composer-submission.ts'
 import type { PopupDismissFace } from './facade.ts'
 import { SessionInputShell } from './facade.ts'
-import { reportMessageSubmission } from './submission-analytics.ts'
 import { readConversationDraft } from '../stores.ts'
 
 /** Structural command face for per-session popup resolution. */
@@ -102,26 +97,6 @@ export class InputHub implements SessionInputResolver {
     const { session, ctx: actx } = binding
     const shell = new SessionInputShell({
       actx,
-      submissionState: () => {
-        const state = session.getSnapshot()
-        const model = session.projections.faceOf('modelSelection').getSnapshot() as ModelSelectionProjection | undefined
-        const plan = session.projections.faceOf('plan').getSnapshot() as PlanProjection | undefined
-        const goal = session.projections.faceOf('goal').getSnapshot() as GoalProjection | null | undefined
-        const agentPreset = session.projections.faceOf('agentPreset').getSnapshot()
-        const selection = model?.next ?? model?.lastUsed
-        return Object.freeze({
-          ...state.blank ? {} : { sessionId: state.sessionId },
-          ...selection == null ? {} : { model: Object.freeze({
-            provider: selection.provider, name: selection.model,
-            ...selection.reasoningEffort === undefined ? {} : { effort: selection.reasoningEffort },
-          }) },
-          runMode: plan?.active ? 'plan' : goal?.goal.phase === 'active' ? 'goal' : 'default',
-          running: state.running,
-          newSession: state.blank,
-          ...typeof agentPreset === 'string' ? { agentPreset } : {},
-        })
-      },
-      messageSubmitted: (submission) => { reportMessageSubmission(this.rootCtx, submission) },
       inputTriggers: () => this.controller(actx),
       popup: () => this.popup(actx),
       inbox: session.projections.faceOf('inbox') as ObservableSnapshot<InboxState | undefined>,

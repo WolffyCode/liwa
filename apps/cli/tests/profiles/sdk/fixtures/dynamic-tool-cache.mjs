@@ -3,9 +3,9 @@ import { appendFile } from 'node:fs/promises'
 import { defineTool } from '@liwa/tools'
 
 export const name = 'sdk-dynamic-tool-cache-fixture'
-export const inject = ['tools', 'systemPrompt', 'deepseekLlmApiExtensions']
+export const inject = ['tools', 'systemPrompt']
 
-/** Observe each request and let the model add or remove a scoped tool. */
+/** Observe each agent request on the wire and let the model add or remove a scoped tool. */
 export function apply(ctx, config) {
   const states = new Map()
   ctx.on('session/event', (session, event) => {
@@ -15,15 +15,22 @@ export function apply(ctx, config) {
       state.step = event.data.step
     }
   })
-  ctx.effect(() => ctx.deepseekLlmApiExtensions.register('dynamic_tool_cache_observer', {
-    async prepare(request) {
-      if (request.purpose !== undefined) return undefined
-      const state = states.get(request.sessionId)
-      if (state === undefined) throw new Error('The SDK request has no observed agent.')
-      await appendFile(config.evidencePath, `${JSON.stringify({ ...state, body: request.body })}\n`)
-      return undefined
-    },
-  }))
+  // The DeepSeek adapter calls the process fetch per request, so wrapping it shows the exact serialized
+  // body. Only agent requests carry cache_tool_control; title and other utility requests are skipped.
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async (input, init) => {
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+    if (url.endsWith('/messages') && typeof init?.body === 'string') {
+      const body = JSON.parse(init.body)
+      if (body.tools?.some(tool => tool.name === 'cache_tool_control')) {
+        const [state] = states.values()
+        if (state === undefined) throw new Error('The SDK request has no observed agent.')
+        await appendFile(config.evidencePath, `${JSON.stringify({ ...state, body })}\n`)
+      }
+    }
+    return originalFetch(input, init)
+  }
+  ctx.effect(() => () => { globalThis.fetch = originalFetch })
   ctx.on('agent/created', ({ agent }) => {
     const scope = agent.ctx
     const state = { stage: 'initial', turn: 0, step: 0 }

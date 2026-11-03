@@ -138,8 +138,6 @@ Web、headless 与 SDK 继承 base bundle 的原生工具执行；使用 [PTC ov
 
 基础组合包挂载原生 DeepSeek 适配器、settings 与凭据提供方、稳定的 `web_search` 和 `web_fetch`、HTTP fetch 提供方；它不挂载遥测、反馈上传或额外的 DeepSeek 请求字段，所以 DeepSeek 只收到模型调用及其附带的搜索、抓取调用。提供方凭据依次从继承环境、`$LIWA_HOME/.credentials.yaml`、调用目录的 `.env` 和 `$LIWA_HOME/.env` 解析；受管文档从不物化进 `process.env`，而两个 `.env` 文件都是普通启动环境层。搜索使用 `DEEPSEEK_API_KEY` 并接受 `DEEPSEEK_SEARCH_BASE_URL`。已启用的抓取调用会在所有 sandbox 与审批模式下执行，无需逐次确认，并且可以访问 loopback 与内网主机。Web app 会禁用 base 工具配置项，再通过 `cordis`、`ptc` 与 `standard` agent preset 暴露相同工具。
 
-[DeepSeek 会话日志贡献器](../../../packages/session/session-log-deepseek/README.zh.md)、[OTel 会话上传](../../../packages/session/session-telemetry-otel/README.zh.md)和反馈命令仍可由显式挂载它们的 profile 使用；在这样的 profile 里，任何非空的 `LIWA_TELEMETRY_DISABLED` 都会禁用 OTel 配置行。
-
 通过 `liwa plugin --profile <name> add <package-or-git-spec>` 安装外部插件组合包。安装的包拥有其依赖，并贡献其声明的 `cordis.patch.yml` 层。CLI 还随附 `@liwa/mcp-client` 作为供 patch 层使用的依赖，但默认不启用 MCP 服务器，因为每条服务器命令都是 agent 沙箱之外的受信任可执行代码。
 
 <a id="source-execution"></a>

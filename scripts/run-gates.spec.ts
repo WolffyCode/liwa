@@ -1,8 +1,7 @@
 import { readFileSync } from 'node:fs'
-import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi, type MockInstance } from 'vitest'
+import { afterEach, describe, expect, it, onTestFinished, vi, type MockInstance } from 'vitest'
 import {
   cliGateOptions,
-  ciWorkerEnvironment,
   collectDescendants,
   defaultConcurrency,
   formatGateResultReason,
@@ -15,15 +14,6 @@ import {
   type GateResult,
 } from './run-gates.ts'
 
-// Graph fixtures select their own browser pool instead of inheriting the CI
-// host's pool, and coverage gates take their shape from the values each case
-// sets, not from the lane that runs this file (a partitioned lane exports
-// LIWA_COVERAGE_PARTITIONS to every child).
-beforeEach(() => {
-  vi.stubEnv('LIWA_WEB_SNAPSHOT_WORKERS', undefined)
-  vi.stubEnv('LIWA_COVERAGE_MAX_WORKERS', undefined)
-  vi.stubEnv('LIWA_COVERAGE_PARTITIONS', undefined)
-})
 afterEach(() => vi.unstubAllEnvs())
 
 /**
@@ -103,7 +93,6 @@ async function abortAndExpectTreeStopped(promise: Promise<GateResult>, controlle
   expect(procStopped(pid)).toBe(true)
 }
 
-
 function gate(id: string, options: Partial<Gate> = {}): Gate {
   return {
     id,
@@ -137,126 +126,13 @@ function withPnpmEntrypoint<T>(action: () => T, entrypoint = '/private/pnpm.cjs'
   }
 }
 
-function withEnv<T>(name: string, value: string | undefined, action: () => T): T {
-  const previous = process.env[name]
-  if (value === undefined) Reflect.deleteProperty(process.env, name)
-  else process.env[name] = value
-  try {
-    return action()
-  } finally {
-    if (previous === undefined) Reflect.deleteProperty(process.env, name)
-    else process.env[name] = previous
-  }
-}
-
-// Mutates worker-global state: only use for synchronous, non-concurrent graph inspection.
-function withPlatform<T>(platform: NodeJS.Platform, action: () => T): T {
-  const original = Object.getOwnPropertyDescriptor(process, 'platform')!
-  Object.defineProperty(process, 'platform', { ...original, value: platform })
-  try { return action() } finally { Object.defineProperty(process, 'platform', original) }
-}
-
-// Mutates worker-global state: only use for synchronous, non-concurrent graph inspection.
-function withNodeVersion<T>(version: string, action: () => T): T {
-  const original = Object.getOwnPropertyDescriptor(process.versions, 'node')!
-  Object.defineProperty(process.versions, 'node', { ...original, value: version })
-  try { return action() } finally { Object.defineProperty(process.versions, 'node', original) }
-}
-
-describe('CI worker allocation', () => {
-  it.each([1, 2, 4, 8, 16, 64])('shares a %i CPU coverage budget without multiplying pools', (cpus) => {
-    const env = ciWorkerEnvironment('ci-coverage', { CI: 'true' }, cpus)
-    const exempt = Math.max(1, Math.floor(cpus / 3))
-    const instrumented = Number(env.LIWA_COVERAGE_PARTITIONS ?? 1)
-    expect(Number(env.LIWA_COVERAGE_MAX_WORKERS)).toBe(cpus)
-    expect(instrumented + exempt).toBe(Math.max(2, cpus))
-    expect(defaultConcurrency('ci-coverage', 3, cpus, { CI: 'true' }).workers).toBe(Math.min(3, cpus))
-    if (cpus <= 2) expect(env.LIWA_COVERAGE_PARTITIONS).toBeUndefined()
-  })
-
-  it('bounds overlapping readers and lets the isolated browser pool use the runner', () => {
-    const env = ciWorkerEnvironment('ci-consumers', { CI: 'true' }, 16)
-    expect(env).toMatchObject({
-      LIWA_OXLINT_THREADS: '8',
-      LIWA_PUBLINT_CONCURRENCY: '8',
-      LIWA_SNAPSHOT_MAX_WORKERS: '1',
-      LIWA_SNAPSHOT_MAX_CONCURRENCY: '8',
-      LIWA_WEB_SNAPSHOT_WORKERS: '16',
-    })
-  })
-
-  it('caps local defaults below the CPU count Node reports', () => {
-    expect(ciWorkerEnvironment('ci-coverage', {}, 256)).toMatchObject({
-      LIWA_OXLINT_THREADS: '6',
-      LIWA_COVERAGE_MAX_WORKERS: '48',
-      LIWA_COVERAGE_PARTITIONS: '32',
-      LIWA_WEB_SNAPSHOT_WORKERS: '12',
-    })
-    expect(defaultConcurrency('ci-static', 60, 256, {})).toEqual({
-      workers: 12,
-      source: '12 local default worker(s) of 256 CPU(s)',
-    })
-    expect(defaultConcurrency('ci-static', 60, 8, {}).workers).toBe(8)
-  })
-
-  it('preserves serial reference overrides on large hosts', () => {
-    const inherited = {
-      LIWA_GATE_CONCURRENCY: '1',
-      LIWA_COVERAGE_MAX_WORKERS: '1',
-      LIWA_OXLINT_THREADS: '1',
-      LIWA_PUBLINT_CONCURRENCY: '1',
-      LIWA_SNAPSHOT_MAX_CONCURRENCY: '1',
-      LIWA_WEB_SNAPSHOT_WORKERS: '1',
-    }
-    const additions = ciWorkerEnvironment('ci-primary', inherited, 64)
-    expect(additions).toEqual({ LIWA_SNAPSHOT_MAX_WORKERS: '1' })
-    expect(inherited.LIWA_COVERAGE_MAX_WORKERS).toBe('1')
-  })
-
-  it('honors an explicit coverage budget and partition override', () => {
-    expect(ciWorkerEnvironment('ci-coverage', { LIWA_COVERAGE_MAX_WORKERS: '6' }, 16))
-      .toHaveProperty('LIWA_COVERAGE_PARTITIONS', '4')
-    expect(ciWorkerEnvironment('ci-coverage', { LIWA_COVERAGE_PARTITIONS: '3' }, 16))
-      .not.toHaveProperty('LIWA_COVERAGE_PARTITIONS')
-  })
-
-  it('leaves the plain unit inventory with the environment pnpm run test finds', () => {
-    // A 3-CPU host would otherwise receive LIWA_COVERAGE_PARTITIONS=2, which
-    // the inventory's own coverage-gate tests read as a partitioned lane.
-    expect(ciWorkerEnvironment('ci-unit', {}, 3)).toEqual({})
-    expect(ciWorkerEnvironment('ci-unit', {}, 16)).toEqual({})
-  })
-
-  it.each(['0', '-1', 'NaN', '2.5'])('rejects invalid worker budget %s', (raw) => {
-    expect(() => ciWorkerEnvironment('ci-coverage', { LIWA_COVERAGE_MAX_WORKERS: raw }, 16))
-      .toThrow('LIWA_COVERAGE_MAX_WORKERS must be a positive integer')
-  })
-
-  it('keeps local documentation defaults unchanged', () => {
-    expect(ciWorkerEnvironment('doc-sync', {}, 64)).toEqual({})
-  })
-})
-
 describe('gate graph validation', () => {
   it.each([
-    'ci-primary',
-    'ci-linux-primary',
-    'ci-static',
-    'ci-lint-contracts-ready',
-    'ci-coverage',
-    'ci-unit',
-    'ci-bench',
-    'ci-snapshot',
-    'ci-artifacts',
-    'ci-consumers',
-    'ci-windows-blocking',
-    'ci-windows-complete',
-    'ci-windows-observational-ready',
-    'node-compat',
     'check-all',
     'hygiene',
     'doc-sync',
     'doc-quick',
+    'i18n',
   ] as const)('constructs and executes preflight for a valid non-empty %s graph', async (mode) => {
     const subject = withPnpmEntrypoint(() => gatesForMode(mode))
     const execute = vi.fn(async (item: Gate) => resultFor(item))
@@ -264,32 +140,11 @@ describe('gate graph validation', () => {
     await expect(runGates(subject, subject.length, execute)).resolves.toHaveLength(subject.length)
   })
 
-  it('uses the internal CI benchmark runner without changing the public benchmark scripts', () => {
-    const subject = withPnpmEntrypoint(() => gatesForMode('ci-bench'))
+  it('checks all maintained repository references in the documentation aggregates', () => {
     const { scripts } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as {
       scripts: Record<string, string>
     }
-
-    expect(scripts['check:ci:bench']).toBe('tsx scripts/run-gates.ts ci-bench')
-    expect(subject).toHaveLength(1)
-    expect(subject[0]).toMatchObject({
-      id: 'bench',
-      displayCommand: 'pnpm exec tsx scripts/run-ci-bench.ts',
-      args: ['/private/pnpm.cjs', 'exec', 'tsx', 'scripts/run-ci-bench.ts'],
-    })
-    expect(scripts['test:bench']).toBe('npm run build:bench && npm run build:web && npm run test:bench:built')
-    expect(scripts['build:bench']).toBe(
-      'npm run build:native-system && npm run build:lib && tsdown --config-loader native --config benchmarks/tsdown.config.ts',
-    )
-    expect(scripts['build:native-system']).toBe('tsx native/system/scripts/build.ts --host-addon-only')
-    expect(scripts['test:bench:built']).toBe('tsx scripts/run-bench-suite.ts')
-  })
-
-  it('checks all maintained repository references locally and in CI', () => {
-    const { scripts } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as {
-      scripts: Record<string, string>
-    }
-    for (const mode of ['doc-sync', 'doc-quick', 'ci-static'] as const) {
+    for (const mode of ['doc-sync', 'doc-quick'] as const) {
       const gates = withPnpmEntrypoint(() => gatesForMode(mode))
       expect(gates).toContainEqual(expect.objectContaining({
         id: 'repository-references',
@@ -305,11 +160,9 @@ describe('gate graph validation', () => {
     expect(ids).toContain('public-repository-links')
   })
 
-  it('checks the complete CLI reference locally and in the static CI lane', () => {
-    for (const mode of ['doc-sync', 'ci-static'] as const) {
-      const gates = withPnpmEntrypoint(() => gatesForMode(mode))
-      expect(gates.find(gate => gate.id === 'cli-help')).toBeDefined()
-    }
+  it('checks the complete CLI reference in the documentation gate', () => {
+    const gates = withPnpmEntrypoint(() => gatesForMode('doc-sync'))
+    expect(gates.find(gate => gate.id === 'cli-help')).toBeDefined()
   })
 
   it('keeps the concrete terminology policy in the documentation gate', () => {
@@ -319,17 +172,15 @@ describe('gate graph validation', () => {
   })
 
   it('checks retrospective releases alongside the current persistence history', () => {
-    for (const mode of ['doc-sync', 'ci-static'] as const) {
-      const ids = withPnpmEntrypoint(() => gatesForMode(mode).map(subject => subject.id))
-      expect(ids).toEqual(expect.arrayContaining(['persistence-changes', 'persistence-releases']))
-    }
+    const ids = withPnpmEntrypoint(() => gatesForMode('doc-sync').map(subject => subject.id))
+    expect(ids).toEqual(expect.arrayContaining(['persistence-changes', 'persistence-releases']))
   })
 
-  it('requires complete Session format references locally and in CI', () => {
+  it('requires complete Session format references in the documentation aggregates', () => {
     const { scripts } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as {
       scripts: Record<string, string>
     }
-    for (const mode of ['doc-sync', 'doc-quick', 'ci-static'] as const) {
+    for (const mode of ['doc-sync', 'doc-quick'] as const) {
       expect(withPnpmEntrypoint(() => gatesForMode(mode))).toContainEqual(expect.objectContaining({
         id: 'persistence-formats',
         displayCommand: 'pnpm run verify-persistence-formats',
@@ -369,8 +220,8 @@ describe('gate graph validation', () => {
     ])
   })
 
-  it('includes JSON resource checks in local and CI aggregates', () => {
-    for (const mode of ['i18n', 'check-all', 'ci-static', 'hygiene'] as const) {
+  it('includes JSON resource checks in the local aggregates', () => {
+    for (const mode of ['i18n', 'check-all', 'hygiene'] as const) {
       const ids = withPnpmEntrypoint(() => gatesForMode(mode).map(gate => gate.id))
       expect(ids).toEqual(expect.arrayContaining(['locale-metadata']))
       if (mode !== 'i18n') expect(ids).not.toContain('locale-dictionaries')
@@ -403,7 +254,7 @@ describe('gate graph validation', () => {
 
   it('launches a native pnpm entrypoint directly', () => {
     const entrypoint = String.raw`C:\Program Files\pnpm\pnpm.exe`
-    const subject = withPnpmEntrypoint(() => gatesForMode('ci-windows-blocking')[0], entrypoint)
+    const subject = withPnpmEntrypoint(() => gatesForMode('check-all').find(item => item.id === 'build'), entrypoint)
 
     expect(subject).toMatchObject({
       command: entrypoint,
@@ -411,7 +262,7 @@ describe('gate graph validation', () => {
     })
   })
 
-  it.each(['ci-primary', 'ci-static', 'check-all'] as const)(
+  it.each(['check-all'] as const)(
     'keeps the Liwa package license policy in %s',
     (mode) => {
       const ids = withPnpmEntrypoint(() => gatesForMode(mode).map(subject => subject.id))
@@ -420,7 +271,7 @@ describe('gate graph validation', () => {
     },
   )
 
-  it.each(['ci-primary', 'ci-static', 'check-all', 'hygiene'] as const)(
+  it.each(['check-all', 'hygiene'] as const)(
     'rejects new unknown casts in %s',
     (mode) => {
       const gate = withPnpmEntrypoint(() => gatesForMode(mode).find(subject => subject.id === 'no-unknown-casts'))
@@ -430,7 +281,7 @@ describe('gate graph validation', () => {
     },
   )
 
-  it.each(['ci-primary', 'ci-static', 'check-all', 'hygiene'] as const)(
+  it.each(['check-all', 'hygiene'] as const)(
     'keeps package dependency enforcement in %s',
     (mode) => {
       const ids = withPnpmEntrypoint(() => gatesForMode(mode).map(subject => subject.id))
@@ -439,7 +290,7 @@ describe('gate graph validation', () => {
     },
   )
 
-  it.each(['ci-primary', 'ci-static', 'check-all', 'hygiene'] as const)(
+  it.each(['check-all', 'hygiene'] as const)(
     'executes default-product experimental isolation in %s',
     (mode) => {
       const gate = withPnpmEntrypoint(() => gatesForMode(mode)
@@ -450,7 +301,7 @@ describe('gate graph validation', () => {
     },
   )
 
-  it.each(['ci-primary', 'ci-static', 'check-all'] as const)(
+  it.each(['check-all'] as const)(
     'keeps the client dependency policy in %s',
     (mode) => {
       const ids = withPnpmEntrypoint(() => gatesForMode(mode).map(subject => subject.id))
@@ -459,16 +310,7 @@ describe('gate graph validation', () => {
     },
   )
 
-  it.each(['ci-primary', 'ci-static', 'check-all'] as const)(
-    'keeps weighted approval policy tests in %s',
-    (mode) => {
-      const ids = withPnpmEntrypoint(() => gatesForMode(mode).map(subject => subject.id))
-
-      expect(ids).toContain('approval-policy')
-    },
-  )
-
-  it.each(['ci-primary', 'ci-static', 'check-all', 'hygiene'] as const)(
+  it.each(['check-all', 'hygiene'] as const)(
     'keeps hard-coded Client UI copy enforcement in %s',
     (mode) => {
       const ids = withPnpmEntrypoint(() => gatesForMode(mode).map(subject => subject.id))
@@ -477,7 +319,7 @@ describe('gate graph validation', () => {
     },
   )
 
-  it.each(['ci-primary', 'ci-static', 'check-all', 'hygiene'] as const)(
+  it.each(['check-all', 'hygiene'] as const)(
     'keeps browser app-route resolution enforcement in %s',
     (mode) => {
       const ids = withPnpmEntrypoint(() => gatesForMode(mode).map(subject => subject.id))
@@ -486,7 +328,7 @@ describe('gate graph validation', () => {
     },
   )
 
-  it.each(['ci-primary', 'ci-static', 'check-all', 'hygiene'] as const)(
+  it.each(['check-all', 'hygiene'] as const)(
     'keeps application entrypoint enforcement in %s',
     (mode) => {
       const ids = withPnpmEntrypoint(() => gatesForMode(mode).map(subject => subject.id))
@@ -494,228 +336,6 @@ describe('gate graph validation', () => {
       expect(ids).toContain('application-entrypoints')
     },
   )
-
-  it('keeps native Windows coverage blocking and behind the complete build', () => {
-    const complete = withPnpmEntrypoint(() => gatesForMode('ci-windows-complete'))
-    const observational = withPnpmEntrypoint(() => gatesForMode('ci-windows-observational-ready'))
-      .filter(gate => gate.id !== 'docs-site-build' && gate.id !== 'electron-install')
-    const byId = new Map(complete.map(subject => [subject.id, subject]))
-
-    expect(byId.get('coverage')?.allowFailure).not.toBe(true)
-    expect(byId.get('coverage')?.needs).toContain('build')
-    expect(byId.get('coverage-exempt-heavy')?.allowFailure).not.toBe(true)
-    expect(byId.get('coverage')?.needs).toContain('build')
-    expect(byId.get('coverage-exempt-heavy')?.needs).toContain('build')
-    expect(byId.get('coverage-exempt-heavy')?.args).toContain(
-      'packages/experimental/webworker-packer/tests/image-loadable.spec.ts',
-    )
-    expect(observational).not.toHaveLength(0)
-    for (const gate of observational) {
-      const completeGate = byId.get(gate.id)
-      expect(completeGate?.allowFailure).toBe(true)
-      expect(completeGate?.after).toEqual(expect.arrayContaining([
-        'coverage',
-        'coverage-exempt-heavy',
-      ]))
-      expect((completeGate?.needs ?? []).filter(id => id !== 'build')).toEqual(gate.needs ?? [])
-    }
-  })
-
-  it('runs the Windows built-bin smoke after other observational gates settle', () => {
-    const observational = withPnpmEntrypoint(() => gatesForMode('ci-windows-observational-ready'))
-    const builtBin = observational.find(gate => gate.id === 'built-bin-smoke')
-
-    expect(builtBin?.after).toEqual(
-      observational.filter(gate => gate.id !== 'built-bin-smoke').map(gate => gate.id),
-    )
-
-    const completeBuiltBin = withPnpmEntrypoint(() => gatesForMode('ci-windows-complete'))
-      .find(gate => gate.id === 'built-bin-smoke')
-    expect(completeBuiltBin?.after).toContain('windows-site')
-    expect(completeBuiltBin?.after).not.toContain('docs-site-build')
-  })
-
-  it('reuses the Windows build without dropping diagnostics or rebuilding the workspace', () => {
-    const ready = withPnpmEntrypoint(() => gatesForMode('ci-windows-observational-ready'))
-    const complete = withPnpmEntrypoint(() => gatesForMode('ci-windows-complete'))
-    const { scripts } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as {
-      scripts: Record<string, string>
-    }
-
-    expect(scripts['check:ci:windows-observational-ready']).toBe('tsx scripts/run-gates.ts ci-windows-observational-ready')
-    expect(scripts).not.toHaveProperty('check:ci:windows-observational')
-    const completeOnly = new Set(['build', 'windows-site', 'native-system', 'coverage', 'coverage-exempt-heavy'])
-    const shared = complete.filter(gate => !completeOnly.has(gate.id))
-    expect(ready.map(gate => gate.id).sort()).toEqual([...shared.map(gate => gate.id), 'docs-site-build'].sort())
-    expect(ready.some(gate => gate.id === 'build')).toBe(false)
-    expect(ready.find(gate => gate.id === 'docs-site-build')?.displayCommand).toBe('pnpm run docs:build:mpa')
-    for (const diagnostic of shared) {
-      expect(ready.find(gate => gate.id === diagnostic.id)).toMatchObject({
-        command: diagnostic.command,
-        args: diagnostic.args,
-      })
-      expect(ready.find(gate => gate.id === diagnostic.id)?.env).toEqual(diagnostic.env)
-    }
-    expect(complete.find(gate => gate.id === 'build')).toBeDefined()
-    expect(complete.find(gate => gate.id === 'coverage')).toBeDefined()
-  })
-
-  it('runs built Windows smoke after failed diagnostics settle on an existing build', async () => {
-    const ready = withPnpmEntrypoint(() => gatesForMode('ci-windows-observational-ready'))
-    const settled = new Set<string>()
-    const results = await runGates(ready, 8, async (subject) => {
-      if (subject.id === 'built-bin-smoke') {
-        expect(settled.size).toBe(ready.length - 1)
-        expect(settled.has('doc-graphs')).toBe(true)
-      }
-      settled.add(subject.id)
-      return resultFor(subject, subject.id === 'doc-graphs' ? 'failed' : 'passed')
-    })
-
-    expect(results.filter(result => result.status === 'failed').map(result => result.gate.id)).toEqual(['doc-graphs'])
-    expect(results.find(result => result.gate.id === 'built-bin-smoke')?.status).toBe('passed')
-    expect(results.some(result => result.status === 'skipped')).toBe(false)
-  })
-
-  it.each([undefined, '3'])('provisions Electron before Windows coverage with partition count %s', async (partitions) => {
-    const gates = withEnv('LIWA_COVERAGE_PARTITIONS', partitions, () =>
-      withPnpmEntrypoint(() => gatesForMode('ci-windows-complete')))
-    const installers = gates.filter(gate => gate.id === 'electron-install')
-    expect(installers).toHaveLength(1)
-    expect(installers[0]?.allowFailure).not.toBe(true)
-    expect(installers[0]?.needs ?? []).not.toContain('build')
-    expect(gates.find(gate => gate.id === 'coverage')?.needs).toContain('electron-install')
-    let installed = false
-    await runGates(gates, 8, async (subject) => {
-      if (subject.id === 'electron-install') installed = true
-      if (subject.id === 'coverage') expect(installed).toBe(true)
-      return resultFor(subject, 'passed')
-    })
-  })
-
-  it.each(['ci-windows-complete', 'ci-windows-observational-ready'] as const)(
-    'provisions the locked Electron binary before built smoke in %s', (mode) => {
-      const gates = withPnpmEntrypoint(() => gatesForMode(mode))
-      const install = gates.find(gate => gate.id === 'electron-install')
-      expect(install).toMatchObject({
-        command: process.execPath,
-        args: ['/private/pnpm.cjs', '--filter', '@liwa/desktop', 'exec', 'install-electron'],
-        env: { ELECTRON_GET_USE_PROXY: '1' },
-      })
-      expect(gates.find(gate => gate.id === 'built-bin-smoke')?.needs).toContain('electron-install')
-      expect(gates.filter(gate => gate.id !== 'electron-install').every(gate => gate.env?.ELECTRON_GET_USE_PROXY === undefined)).toBe(true)
-    },
-  )
-
-  it.each(['ci-windows-complete', 'ci-windows-observational-ready'] as const)(
-    'keeps failed Electron provisioning visible without stopping unrelated diagnostics in %s', async (mode) => {
-      const gates = withPnpmEntrypoint(() => gatesForMode(mode))
-      const attempted: string[] = []
-      const results = await runGates(gates, 8, async (subject) => {
-        attempted.push(subject.id)
-        return resultFor(subject, subject.id === 'electron-install' ? 'failed' : 'passed')
-      })
-      expect(results.filter(result => result.status === 'failed').map(result => result.gate.id)).toEqual(['electron-install'])
-      expect(attempted).not.toContain('built-bin-smoke')
-      expect(results.find(result => result.gate.id === 'built-bin-smoke')?.status).toBe('skipped')
-      expect(results.find(result => result.gate.id === 'doc-graphs')?.status).toBe('passed')
-      if (mode === 'ci-windows-complete') {
-        expect(results.filter(result => result.status === 'failed' && !result.gate.allowFailure).map(result => result.gate.id))
-          .toEqual(['electron-install'])
-        expect(attempted).not.toContain('coverage')
-        expect(results.find(result => result.gate.id === 'coverage')?.status).toBe('skipped')
-        expect(results.find(result => result.gate.id === 'coverage-exempt-heavy')?.status).toBe('passed')
-      }
-    },
-  )
-
-  it.each(['ci-coverage', 'ci-artifacts', 'ci-windows-blocking'] as const)(
-    'only provisions Electron for native Windows coverage in %s', (mode) => {
-      const original = Object.getOwnPropertyDescriptor(process, 'platform')
-      for (const platform of ['linux', 'darwin', 'win32'] as const) {
-        const gates = withPlatform(platform, () => withPnpmEntrypoint(() => gatesForMode(mode)))
-        const needed = platform === 'win32' && mode === 'ci-coverage'
-        expect(gates.filter(gate => gate.id === 'electron-install')).toHaveLength(needed ? 1 : 0)
-        if (needed) {
-          expect(gates.find(gate => gate.id === 'coverage')?.needs).toContain('electron-install')
-          expect(gates.find(gate => gate.id === 'electron-install')?.env).toEqual({ ELECTRON_GET_USE_PROXY: '1' })
-          expect(gates.filter(gate => gate.id !== 'electron-install').every(gate => gate.env?.ELECTRON_GET_USE_PROXY === undefined)).toBe(true)
-        }
-      }
-      expect(Object.getOwnPropertyDescriptor(process, 'platform')).toEqual(original)
-    },
-  )
-
-  it('restores the platform descriptor when coverage configuration is rejected', () => {
-    const original = Object.getOwnPropertyDescriptor(process, 'platform')
-    expect(() => withEnv('LIWA_COVERAGE_PARTITIONS', '1', () =>
-      withPlatform('win32', () => withPnpmEntrypoint(() => gatesForMode('ci-coverage')))))
-      .toThrow('LIWA_COVERAGE_PARTITIONS must be an integer greater than 1')
-    expect(Object.getOwnPropertyDescriptor(process, 'platform')).toEqual(original)
-  })
-
-  it('leaves the lane test budget to the inherited environment on both coverage gates', () => {
-    // vitest.config.ts reads LIWA_COVERAGE_TEST_TIMEOUT_MS per inline project
-    // (coverageTestTimeoutOptions); a gate argument would add a second owner.
-    for (const budget of ['15000', undefined]) {
-      const gates = withEnv('LIWA_COVERAGE_TEST_TIMEOUT_MS', budget, () =>
-        withPnpmEntrypoint(() => gatesForMode('ci-windows-complete')))
-      for (const id of ['coverage', 'coverage-exempt-heavy']) {
-        const gate = gates.find(subject => subject.id === id)
-        if (gate === undefined) throw new Error(`ci-windows-complete must define the ${id} gate`)
-        expect(gate.args).not.toEqual(expect.arrayContaining([
-          expect.stringMatching(/^--(?:testTimeout|expect\.poll\.timeout|hookTimeout)=/),
-        ]))
-        expect(gate.env ?? {}).not.toHaveProperty('LIWA_COVERAGE_TEST_TIMEOUT_MS')
-      }
-    }
-  })
-
-  it('runs the plain unit inventory after the native build and leaves its budget to the inherited environment', () => {
-    const { scripts } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as {
-      scripts: Record<string, string>
-    }
-    expect(scripts['check:ci:unit']).toBe('tsx scripts/run-gates.ts ci-unit')
-
-    // The aggregate is the `test` package script's two segments, in order,
-    // so a step added to one cannot silently leave the other. The lane sets
-    // LIWA_COVERAGE_TEST_TIMEOUT_MS; vitest.config.ts reads it per inline
-    // project (coverageTestTimeoutOptions), so the gate passes no budget flag.
-    const [nativeBuild, unitRun, ...rest] = (scripts.test ?? '').split(' && ')
-    expect(rest).toEqual([])
-    for (const budget of ['15000', undefined]) {
-      const gates = withEnv('LIWA_COVERAGE_TEST_TIMEOUT_MS', budget, () =>
-        withPnpmEntrypoint(() => gatesForMode('ci-unit')))
-      expect(gates.map(gate => gate.id)).toEqual(['native-system', 'unit'])
-      expect(gates[0]).toMatchObject({ displayCommand: nativeBuild })
-      expect(gates[1]?.displayCommand).toBe(`pnpm exec ${unitRun}`)
-      expect(gates[1]).toMatchObject({
-        label: 'test',
-        needs: ['native-system'],
-        streamOutput: true,
-        args: ['/private/pnpm.cjs', 'exec', 'vitest', 'run'],
-      })
-      expect(gates[1]?.env ?? {}).not.toHaveProperty('LIWA_COVERAGE_TEST_TIMEOUT_MS')
-    }
-  })
-
-  it('selects partitioned coverage only when explicitly configured', () => {
-    const coverage = withEnv('LIWA_COVERAGE_PARTITIONS', '3', () =>
-      withPnpmEntrypoint(() => gatesForMode('ci-windows-complete').find(subject => subject.id === 'coverage')))
-
-    expect(coverage).toMatchObject({
-      displayCommand: 'LIWA_COVERAGE_PARTITIONS=3 pnpm run test:coverage:partitioned',
-      args: ['/private/pnpm.cjs', 'run', 'test:coverage:partitioned'],
-      env: { LIWA_COVERAGE_EXEMPT_HEAVY: '1' },
-      streamOutput: true,
-    })
-  })
-
-  it('rejects an invalid coverage partition count before starting a gate', () => {
-    expect(() => withEnv('LIWA_COVERAGE_PARTITIONS', '1', () =>
-      withPnpmEntrypoint(() => gatesForMode('ci-windows-complete'))))
-      .toThrow('LIWA_COVERAGE_PARTITIONS must be an integer greater than 1')
-  })
 
   it.each([
     ['empty', [], /gate graph has no gates/],
@@ -774,251 +394,12 @@ describe('gate graph validation', () => {
   })
 })
 
-describe('Oxlint gate', () => {
-  it('uses the package script when no worker bound is configured', () => {
-    const subject = withEnv('LIWA_OXLINT_THREADS', undefined, () =>
-      withPnpmEntrypoint(() => gatesForMode('ci-lint-contracts-ready')[0]))
-
-    expect(subject).toMatchObject({
-      id: 'lint',
-      displayCommand: 'pnpm run lint:contracts-ready',
-      command: process.execPath,
-      args: ['/private/pnpm.cjs', 'run', 'lint:contracts-ready'],
-    })
-  })
-
-  it('surfaces the configured worker bound on the shared package script', () => {
-    const subject = withEnv('LIWA_OXLINT_THREADS', '4', () =>
-      withPnpmEntrypoint(() => gatesForMode('ci-lint-contracts-ready')[0]))
-
-    expect(subject).toMatchObject({
-      id: 'lint',
-      displayCommand: 'LIWA_OXLINT_THREADS=4 pnpm run lint:contracts-ready',
-      command: process.execPath,
-      args: ['/private/pnpm.cjs', 'run', 'lint:contracts-ready'],
-    })
-  })
-})
-
 describe('Typert contract preparation', () => {
-  it('prepares primary source consumers once before they run', () => {
-    const subject = withEnv('LIWA_OXLINT_THREADS', undefined, () =>
-      withPnpmEntrypoint(() => gatesForMode('ci-primary')))
-
-    expect(subject.find(item => item.id === 'typert-contracts')).toMatchObject({
-      displayCommand: 'pnpm exec tsx scripts/compile-referenced-projects.ts host-contracts',
-      args: ['/private/pnpm.cjs', 'exec', 'tsx', 'scripts/compile-referenced-projects.ts', 'host-contracts'],
-    })
-    for (const [id, script] of [
-      ['typecheck', 'typecheck:contracts-ready'],
-      ['lint', 'lint:contracts-ready'],
-      ['doc-typecheck', 'doc-typecheck:contracts-ready'],
-    ] as const) {
-      expect(subject.find(item => item.id === id)).toMatchObject({
-        displayCommand: `pnpm run ${script}`,
-        args: ['/private/pnpm.cjs', 'run', script],
-        needs: ['typert-contracts'],
-      })
-    }
-    expect(subject.find(item => item.id === 'build')?.needs).toEqual([
-      'typecheck',
-      'lint',
-      'doc-typecheck',
-    ])
-  })
-
-  it('reuses contracts from the validated consumer build', () => {
-    const subject = withPnpmEntrypoint(() => gatesForMode('ci-consumers'))
-
-    // Lint and duplication run in their own lane; the consumers graph only
-    // keeps the readers that consume built artifacts.
-    expect(subject.map(item => item.id)).not.toContain('lint-and-duplication')
-    expect(withPnpmEntrypoint(() => gatesForMode('ci-lint-contracts-ready'))).toContainEqual(expect.objectContaining({
-      id: 'lint',
-    }))
-    expect(subject.find(item => item.id === 'doc-typecheck')).toMatchObject({
-      displayCommand: 'pnpm run doc-typecheck:contracts-ready',
-      args: ['/private/pnpm.cjs', 'run', 'doc-typecheck:contracts-ready'],
-    })
-  })
-
   it('keeps standalone doc sync responsible for preparation', () => {
     const docTypecheck = withPnpmEntrypoint(() =>
       gatesForMode('doc-sync').find(item => item.id === 'doc-typecheck'))
 
     expect(docTypecheck?.displayCommand).toBe('pnpm run doc-typecheck')
-  })
-})
-
-describe('Node compatibility graph', () => {
-  it.each(['24.9.0', '24.19.0', '26.0.0'])('runs all source compatibility smokes serially on Node %s', (version) => {
-    const subject = withNodeVersion(version, () =>
-      withPnpmEntrypoint(() => gatesForMode('node-compat')))
-
-    expect(subject.filter(item => item.id === 'source-compat-smokes')).toMatchObject([{
-      label: 'source compatibility smokes',
-      args: [
-        '/private/pnpm.cjs',
-        'exec',
-        'vitest',
-        'run',
-        'packages/workflow/workflow-ptc/tests/source-runtime.compat.spec.ts',
-        'packages/session/session-persistence-jsonl/tests/zstd.compat.spec.ts',
-        'apps/cli/tests/source-launch.compat.spec.ts',
-        'scripts/vitest-environment.compat.spec.ts',
-        'scripts/command-entrypoints.compat.spec.ts',
-        'packages/boot/app-boot/tests/profile-resolution.spec.ts',
-        'packages/boot/app-boot/tests/profile-resolution-service.spec.ts',
-        'packages/boot/app-boot/tests/profile-resolution-worker-bootstrap.spec.ts',
-        '--no-file-parallelism',
-        '--maxWorkers=1',
-      ],
-      env: { VITEST_MAX_WORKERS: '1' },
-    }])
-  })
-
-  it.each(['1', '8'])('keeps source compatibility smokes serial with inherited VITEST_MAX_WORKERS=%s', (workers) => {
-    const subject = withEnv('VITEST_MAX_WORKERS', workers, () =>
-      withPnpmEntrypoint(() => gatesForMode('node-compat')))
-
-    expect(subject.find(item => item.id === 'source-compat-smokes')?.env).toEqual({ VITEST_MAX_WORKERS: '1' })
-  })
-
-  it.each(['24.19.0', '26.0.0'])('keeps Node %s compatibility source-only', (version) => {
-    const subject = withNodeVersion(version, () =>
-      withPnpmEntrypoint(() => gatesForMode('node-compat')))
-
-    expect(subject.map(item => item.id)).not.toContain('build')
-    expect(subject.map(item => item.id)).not.toContain('cli-lazy-search-startup-smoke')
-  })
-
-  it.each([undefined, '1'])('builds the complete Node 24.9 artifacts once with skip-typecheck=%s', (skipTypecheck) => {
-    const subject = withNodeVersion('24.9.0', () =>
-      withEnv('LIWA_NODE_COMPAT_SKIP_TYPECHECK', skipTypecheck, () =>
-        withPnpmEntrypoint(() => gatesForMode('node-compat'))))
-
-    expect(subject.filter(item => item.displayCommand === 'pnpm run build:artifacts')).toHaveLength(1)
-    expect(subject.find(item => item.id === 'build')?.args).toEqual([
-      '/private/pnpm.cjs', 'run', 'build:artifacts',
-    ])
-    expect(subject.map(item => item.id)).not.toContain('build:web')
-    expect(subject.find(item => item.id === 'cli-lazy-search-startup-smoke')).toMatchObject({
-      needs: ['build'],
-      env: { LIWA_REQUIRE_BUILT_CLI_SMOKE: '1' },
-    })
-  })
-
-  it.each(['passed', 'failed'] as const)('runs the Node 24.9 lazy-search smoke only after a passed build (%s)', async (buildStatus) => {
-    const subject = withNodeVersion('24.9.0', () =>
-      withEnv('LIWA_NODE_COMPAT_SKIP_TYPECHECK', '1', () =>
-        withPnpmEntrypoint(() => gatesForMode('node-compat'))))
-    let buildCompleted = false
-    let smokeStarted = false
-    const results = await runGates(subject, 2, async (item) => {
-      if (item.id === 'build') {
-        buildCompleted = true
-        return resultFor(item, buildStatus)
-      }
-      if (item.id === 'cli-lazy-search-startup-smoke') {
-        expect(buildCompleted).toBe(true)
-        smokeStarted = true
-      }
-      return resultFor(item)
-    })
-
-    expect(smokeStarted).toBe(buildStatus === 'passed')
-    expect(results.find(item => item.gate.id === 'cli-lazy-search-startup-smoke')?.status)
-      .toBe(buildStatus === 'passed' ? 'passed' : 'skipped')
-  })
-})
-
-describe('Node 24 lane ownership', () => {
-  it('keeps the static lane source-only', () => {
-    const subject = withPnpmEntrypoint(() => gatesForMode('ci-static'))
-
-    expect(subject.map(item => item.id)).not.toContain('build')
-    expect(subject.map(item => item.id)).not.toContain('doc-typecheck')
-  })
-
-  it('owns the build and orders its artifact consumers', () => {
-    const subject = withPnpmEntrypoint(() => gatesForMode('ci-consumers'))
-
-    expect(defaultConcurrency('ci-consumers', subject.length, 4, { CI: 'true' })).toEqual({
-      workers: 4,
-      source: '4 available CPU(s)',
-    })
-    expect(subject.map(item => item.id)).toEqual([
-      'build',
-      'node-compat',
-      'publint',
-      'snapshot',
-      'expected-output',
-      'web-snapshot',
-      'doc-typecheck',
-      'node-next-types',
-      'built-bin-smoke',
-    ])
-    expect(subject.find(item => item.id === 'publint')?.needs).toEqual(['build'])
-    // The consumers lane emits artifacts only: the aggregate test and script
-    // type checks belong to the master lanes, not to every pull request.
-    expect(subject.find(item => item.id === 'build')).toMatchObject({
-      displayCommand: 'pnpm run build:artifacts',
-      env: { LIWA_BUILD_CLIENT_PROFILE: 'official' },
-    })
-    expect(subject.find(item => item.id === 'node-compat')?.env).toEqual({
-      LIWA_BUILD_CLIENT_PROFILE: 'official',
-    })
-    for (const id of [
-      'snapshot',
-      'expected-output',
-      'web-snapshot',
-      'doc-typecheck',
-      'node-next-types',
-      'built-bin-smoke',
-    ]) {
-      expect(subject.find(item => item.id === id)?.needs).toEqual(['build'])
-    }
-    expect(subject.find(item => item.id === 'snapshot')?.env).toEqual({ LIWA_EXAMPLE_MODE: 'lib' })
-    expect(subject.find(item => item.id === 'expected-output')?.env).toEqual({ LIWA_EXAMPLE_MODE: 'lib' })
-    expect(subject.find(item => item.id === 'built-bin-smoke')?.env).toEqual({ LIWA_EXAMPLE_MODE: 'lib' })
-    expect(subject.find(item => item.id === 'doc-typecheck')?.env).toEqual({
-      LIWA_DOC_TYPECHECK_USE_BUILD_OUTPUT: '1',
-    })
-    expect(subject.find(item => item.id === 'built-bin-smoke')?.args).toEqual(
-      expect.arrayContaining([
-        'apps/cli/tests/profiles/headless/tests/source-tool.built.e2e.ts',
-        'apps/desktop/tests/acl-skill.built.e2e.ts',
-        'packages/subprocess/subprocess-local/tests/spawn-runner-built.e2e.ts',
-        'packages/subagent/subagent-codex/tests/loader-composition.e2e.ts',
-        'packages/subagent/subagent-claude-code/tests/loader-composition.e2e.ts',
-        'packages/experimental/agent-team/tests/built-lib.e2e.ts',
-      ]),
-    )
-    expect(subject.find(item => item.id === 'web-snapshot')).toMatchObject({
-      displayCommand: 'LIWA_SNAPSHOT=replay pnpm run test:web:built',
-      env: { LIWA_SNAPSHOT: 'replay' },
-      after: [
-        'publint',
-        'snapshot',
-        'expected-output',
-        'doc-typecheck',
-        'node-next-types',
-        'built-bin-smoke',
-      ],
-    })
-  })
-})
-
-describe('Linux primary graph', () => {
-  it('adds the same compare-only web gate after built client artifacts', () => {
-    const subject = withPnpmEntrypoint(() => gatesForMode('ci-linux-primary'))
-    const web = subject.find(item => item.id === 'web-snapshot')
-
-    expect(web).toMatchObject({
-      displayCommand: 'LIWA_SNAPSHOT=replay pnpm run test:web:built',
-      env: { LIWA_SNAPSHOT: 'replay' },
-      needs: ['build'],
-    })
   })
 })
 

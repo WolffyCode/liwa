@@ -35,12 +35,9 @@
 /liwa-llm-deepseek/use-this-package/dynamic-configuration:
   en: 49290fc5647136b4
   zh: 96fa9ce0f9e83c13
-/liwa-llm-deepseek/use-this-package/provider-specific-request-fields:
-  en: f13f24b504dcfb50
-  zh: 69b0ed9e2adf3394
 /liwa-llm-deepseek/use-this-package/failures-and-recovery:
-  en: 3a12e4414d35ee4e
-  zh: bf5914c98c85edab
+  en: 046e7fee4c0f6fc4
+  zh: 0140bd625441cb0c
 /liwa-llm-deepseek/understand-the-implementation:
   en: 1598ac8a8bb9b6bf
   zh: fdd089c5ae7722cd
@@ -51,11 +48,11 @@
   en: 584698e2c7686997
   zh: 2aed9608d5317d7b
 /liwa-llm-deepseek/understand-the-implementation/wire-flow:
-  en: c6ba97ef97e65c2a
-  zh: eb2602338e01af3b
+  en: d28e96cd76ebecb5
+  zh: 483384dc03ae5925
 /liwa-llm-deepseek/further-exploration:
-  en: c1dfc7b48b1b4a63
-  zh: 54e0f384d13edccd
+  en: 38272b452cc71503
+  zh: edfb351fdce2af6a
 /liwa-llm-deepseek/model-experience:
   en: 215e7ba838619b7b
   zh: a311da3843709f90
@@ -63,8 +60,8 @@
   en: 1dc50052999253c6
   zh: 7abf968fc18bffcd
 /liwa-llm-deepseek/model-experience/deepseek-request/what-the-model-sees:
-  en: 7f1cc5085b5017de
-  zh: 1303b6908cb8488b
+  en: f194403807db071b
+  zh: dd024341b9a646e2
 /liwa-llm-deepseek/model-experience/deepseek-request/token-effect:
   en: 837442d903732544
   zh: 96889ba0ebd2aa09

@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write apps/cli/README.md
 /liwa-cli:
-  en: 8615cdda78d0cc23
-  zh: c0eca146f08280f4
+  en: 6344cc98c9c51bb5
+  zh: e994a28175a3d018
 /liwa-cli/entry-modes:
   en: 5a3996d7479e176d
   zh: 1bb0612d8d890a41
@@ -18,5 +18,5 @@
   en: 178892e5db90ad0c
   zh: 967bd8cc7e6ec07b
 /liwa-cli/development:
-  en: 71e91e908d89b25a
-  zh: d7b0bb58a180e4f4
+  en: 94ff887882380d98
+  zh: 976b18fc9a7f8699

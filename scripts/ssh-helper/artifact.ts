@@ -4,7 +4,11 @@ import { lstat, readFile, readdir } from 'node:fs/promises'
 import { join, relative, sep } from 'node:path'
 import { z } from 'zod'
 
-/** Native target identifiers accepted by the builder and release workflow. */
+/** Workspace package whose production dependencies form the helper's embedded closure. */
+export const SSH_HELPER_RUNTIME_DIRECTORY = 'packages/ssh/ssh-helper-runtime'
+/** Deploy manifest of {@link SSH_HELPER_RUNTIME_DIRECTORY}, relative to the repository root. */
+export const SSH_HELPER_RUNTIME_MANIFEST = `${SSH_HELPER_RUNTIME_DIRECTORY}/package.json`
+/** Native target identifiers accepted by the builder. */
 export const SSH_HELPER_TARGETS = ['node24-linux-x64', 'node24-linux-arm64', 'node24-macos-x64', 'node24-macos-arm64'] as const
 /** One qualified OS and architecture for a bundled Node 24 helper. */
 export type SshHelperTarget = typeof SSH_HELPER_TARGETS[number]

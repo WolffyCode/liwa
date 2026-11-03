@@ -9,7 +9,7 @@ kind: "package-library"
 
 ## 概述
 
-`liwa-sdk-protocol` 让灵鲸运行时与其 SDK 客户端通过按换行分帧的字节流交换 JSON-RPC 2.0 消息：一个传输类，加上协议两端共同使用的具名请求、结果与通知类型。服务端是 [`liwa-sdk-jsonrpc-server`](../server/README.zh.md) 插件；客户端是 TypeScript 的 [`liwa-sdk-client`](../client/README.zh.md) 与 [Python SDK](../../../python/README.zh.md)（后者复现这些结构但不导入它们）。当你实现或调试协议某一端时使用本包：分帧规则、方法名、载荷类型与错误语义都在这里。它是纯库——无插件、无配置、无注册。
+`liwa-sdk-protocol` 让灵鲸运行时与其 SDK 客户端通过按换行分帧的字节流交换 JSON-RPC 2.0 消息：一个传输类，加上协议两端共同使用的具名请求、结果与通知类型。服务端是 [`liwa-sdk-jsonrpc-server`](../server/README.zh.md) 插件；客户端是 TypeScript 的 [`liwa-sdk-client`](../client/README.zh.md)。当你实现或调试协议某一端时使用本包：分帧规则、方法名、载荷类型与错误语义都在这里。它是纯库——无插件、无配置、无注册。
 
 ## 目录
 
@@ -108,7 +108,6 @@ kind: "package-library"
 
 - [JSON-RPC 服务插件](../server/README.zh.md) — 通过 stdio 服务该协议的运行时插件。
 - [TypeScript SDK 客户端](../client/README.zh.md) — 驱动该协议的客户端。
-- [Python SDK](../../../python/README.zh.md) — 复现这些结构的 Python 对应实现。
 - [SDK 应用组合包](../../bundle/sdk-app/README.zh.md) — 启动服务器的 `liwa --profile sdk` 应用。
 
 -----
@@ -139,6 +138,6 @@ kind: "package-library"
 <details>
 <summary>维护者的工作上下文——点击展开</summary>
 
-本开发备注是维护者的工作上下文，明确不具权威性——已交付的行为与限制见上文各节与代码。本协议的各个结构由 Python SDK 复现（而非导入），因此在这里更改方法、载荷或协议稳定值 `serverInfo.name` 时，必须在同一次变更中更新 Python 对侧与 TypeScript 客户端。没有记录其他未解决的开放设计问题。
+本开发备注是维护者的工作上下文，明确不具权威性——已交付的行为与限制见上文各节与代码。在这里更改方法、载荷或协议稳定值 `serverInfo.name` 时，必须在同一次变更中更新 TypeScript 客户端。没有记录其他未解决的开放设计问题。
 
 </details>

@@ -59,7 +59,6 @@
     "@liwa/client-ui-commands": "workspace:*",
     "@liwa/client-ui-conversation": "workspace:*",
     "@liwa/client-ui-layout": "workspace:*",
-    "@liwa/client-ui-message-feedback": "workspace:*",
     "@liwa/client-ui-primitives": "workspace:*",
     "@liwa/client-ui-renderer": "workspace:*",
     "@liwa/client-ui-session": "workspace:*",

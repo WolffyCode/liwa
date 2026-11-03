@@ -2,8 +2,8 @@
  * Shared wire protocol for the Liwa SDK runtime: the
  * newline-delimited JSON-RPC stdio transport plus the named request, result,
  * and notification types both wire ends speak. The runtime server plugin
- * (`@liwa/sdk-jsonrpc-server`) serves this protocol; SDK clients
- * (`@liwa/sdk-client`, the Python SDK) drive it.
+ * (`@liwa/sdk-jsonrpc-server`) serves this protocol; the SDK client
+ * (`@liwa/sdk-client`) drives it.
  *
  * @module @liwa/sdk-protocol
  */

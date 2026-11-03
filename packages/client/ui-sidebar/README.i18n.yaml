@@ -6,8 +6,8 @@
   en: 205c3264f7996bf1
   zh: d542e03db86643cd
 /liwa-client-ui-sidebar:
-  en: 2ccff10a9a3076fd
-  zh: c572242fa7b41f4a
+  en: 5082ded7168fbfbf
+  zh: 76cdab252b6b4204
 /liwa-client-ui-sidebar/summary:
   en: c9905f6008b3839e
   zh: 0ce81bea079692bd
@@ -30,14 +30,11 @@
   en: ad056356461d3896
   zh: da0a41f7845abb79
 /liwa-client-ui-sidebar/use-this-package/scrollbars:
-  en: 9e7b31acee759f2b
-  zh: 3a6beb63b23d26ae
-/liwa-client-ui-sidebar/use-this-package/click-analytics:
-  en: 8855ad013285a27e
-  zh: f19b3e75c38c5b0a
+  en: d053b1ed0f4fd293
+  zh: ff25a56541f57530
 /liwa-client-ui-sidebar/understand-the-implementation:
-  en: 311b2b9ad74eb21e
-  zh: bc2ce3df28b2f2bc
+  en: 5963c97171674d2d
+  zh: 4526cd946e98cbea
 /liwa-client-ui-sidebar/understand-the-implementation/slot-discipline:
   en: 6eefc5c45abe8a8f
   zh: 20b651e48a0ea903

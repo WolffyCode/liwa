@@ -1,6 +1,5 @@
 /** Register the Chat Conversation target, renderers, stats, and details surface. */
 import type {} from '@liwa/client-ui-file-drag/client'
-import type {} from '@liwa/client-product-analytics/client'
 import type { Context } from '@liwa/cordis'
 import type { ImageAttachmentRef } from '@liwa/attachment'
 import type {} from '@liwa/api-remotes/client'
@@ -242,7 +241,6 @@ export function apply(ctx: Context): void {
         const binding = ctx.sessions.binding(sessionId)
         if (binding === undefined) throw new Error(`ui-chat: unknown session "${sessionId}"`)
         const session = binding.session
-        const chat = chatSource(binding)
         return {
           ...nodeSources(binding),
           fileDrag: ctx.fileDrag.actions,
@@ -292,11 +290,7 @@ export function apply(ctx: Context): void {
             read: () => chatScrollPositions.get(sessionId) ?? null,
           },
           forkAt: (seq) => {
-            const turn = [...chat.getSnapshot().timeline.turns.values()].find(turn => turn.end?.seq === seq)
-            const messageId = turn?.data.get('turn-tail')?.closing?.finalNode.messageId
-            ctx.sessions.fork({ sessionId, atSeq: seq, increaseTitle: true, onCreated: (childId) => {
-              ctx.get('productAnalytics')?.track('branch_session_click', { session_id: childId, parent_session_id: sessionId, ...messageId === undefined ? {} : { parent_message_id: messageId }, click_position: 'footer' })
-            } })
+            ctx.sessions.fork({ sessionId, atSeq: seq, increaseTitle: true })
               .then((childId) => { ctx.uiWorkspace.openSession(childId) })
               .catch(() => {
                 // Fork or child-title failure leaves the source view unchanged.

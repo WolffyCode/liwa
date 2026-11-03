@@ -57,8 +57,7 @@
     "react": "^18.2.0",
     "@liwa/client-ui-renderer": "workspace:*",
     "@liwa/util-values": "workspace:*",
-    "@liwa/remote-mock": "workspace:*",
-    "@liwa/client-product-analytics": "workspace:*"
+    "@liwa/remote-mock": "workspace:*"
   },
   "dependencies": {
     "@liwa/schemastery": "workspace:~"

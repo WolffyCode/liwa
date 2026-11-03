@@ -84,7 +84,6 @@ export function registerVisualIntentCases(selected: readonly DocumentFormat[], o
         // The CLI fixture and its log live outside the workspace; bwrap's private /tmp hides both.
         env: { LIWA_PRIMARY_RUNTIME: runtime, LIWA_PERMISSION_MODE: 'danger-full-access',
           LIWA_HOME: join(controlRoot, 'home'), LIWA_AGENTS_HOME: join(controlRoot, 'agents'),
-          LIWA_TELEMETRY_DISABLED: '1',
           TMPDIR: previewRoot, TMP: previewRoot, TEMP: previewRoot,
           HTTP_PROXY: process.env.LIWA_OFFICE_TEST_PROXY, HTTPS_PROXY: process.env.LIWA_OFFICE_TEST_PROXY },
         async prepare(cwd) {

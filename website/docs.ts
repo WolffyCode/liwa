@@ -147,14 +147,6 @@ const homeAndGuide = pairedPages([
     order: 4,
   },
   {
-    source: 'docs/user/guide/python-sdk.md',
-    route: 'guide/python-sdk.md',
-    label: { root: 'Python', en: 'Python' },
-    sidebar: { root: 'zh-guide', en: 'en-guide' },
-    section: { root: 'SDK', en: 'SDK' },
-    order: 1,
-  },
-  {
     source: 'docs/user/guide/github-review.md',
     route: 'guide/github-review.md',
     label: { root: 'GitHub 评审会话', en: 'GitHub review sessions' },
@@ -325,7 +317,6 @@ const subsystemGroups = [
     ['session-projection.md', '会话投影', 'Session projections'],
     ['persistence.md', '会话持久化', 'Session persistence'],
     ['spill.md', 'Spill 存储', 'Spill storage'],
-    ['session-telemetry.md', '遥测', 'SessionTelemetryBackend'],
   ]],
   ['模型与上下文', 'Model and context', [
     ['llm-streaming.md', 'LLM 流式响应', 'LLM streaming'],

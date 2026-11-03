@@ -1,8 +1,6 @@
 /** Platform-neutral assembly of generated Host Remote contributions. */
 
 import type { Context } from '@liwa/cordis'
-import productAnalyticsRemote from '@liwa/client-product-analytics/remote'
-export type {} from '@liwa/client-product-analytics/remote'
 import agentPresetsRemote from '@liwa/agent-preset-registry/remote'
 import userQuestionsRemote from '@liwa/user-questions/remote'
 import commandsRemote from '@liwa/commands/remote'
@@ -17,9 +15,7 @@ import toolResultsRemote from '@liwa/client-ui-trajectory/remote'
 import pluginRegistryProbeRemote from '@liwa/client-ui-plugin-manager/remote'
 import pluginMarketRemote from '@liwa/plugin-market/remote'
 import pluginInventoryRemote from '@liwa/host-plugin-inventory/remote'
-import messageFeedbackRemote from '@liwa/message-feedback/remote'
 import permissionPresetsRemote from '@liwa/permission-presets/remote'
-import sessionFeedbackRemote from '@liwa/command-feedback/remote'
 import fileUploadsRemote from '@liwa/client-file-upload/remote'
 import sessionReferencesRemote from '@liwa/session-reference/remote'
 import subagentsRemote from '@liwa/subagent/remote'
@@ -57,9 +53,7 @@ export type {} from '@liwa/schedule/remote'
 export type {} from '@liwa/office-to-pdf/remote'
 export type {} from '@liwa/llm/remote'
 export type {} from '@liwa/host-plugin-inventory/remote'
-export type {} from '@liwa/message-feedback/remote'
 export type {} from '@liwa/permission-presets/remote'
-export type {} from '@liwa/command-feedback/remote'
 export type {} from '@liwa/client-file-upload/remote'
 export type {} from '@liwa/session-reference/remote'
 export type {} from '@liwa/subagent/remote'
@@ -187,10 +181,9 @@ export async function apply(ctx: Context): Promise<() => Promise<void>> {
   const disposers: Array<() => Promise<void>> = []
   try {
     for (const contribution of [
-      productAnalyticsRemote, agentPresetsRemote, commandsRemote, settingsControllerRemote,
+      agentPresetsRemote, commandsRemote, settingsControllerRemote,
       goalsRemote, llmRemote, dynamicRemote, scheduleRemote,
       pluginInventoryRemote, pluginManagerRemote, pluginMarketRemote, pluginRegistryProbeRemote, toolResultsRemote,
-      messageFeedbackRemote, sessionFeedbackRemote,
       fileUploadsRemote, sessionReferencesRemote,
       permissionPresetsRemote, subagentsRemote, sessionRemote, jobRemote, workspaceRemote, workspaceFilesRemote, terminalRemote,
       officeToPdfRemote, userQuestionsRemote,

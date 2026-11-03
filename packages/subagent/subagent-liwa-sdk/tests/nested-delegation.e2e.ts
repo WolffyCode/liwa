@@ -30,7 +30,7 @@ describe('external tasks with a nested fork', () => {
     const idle = join(root, 'idle')
     const patch = join(root, 'nested.patch.yml')
     const env = {
-      LIWA_HOME: join(root, 'home'), LIWA_TELEMETRY_DISABLED: '1',
+      LIWA_HOME: join(root, 'home'),
       LIWA_TEST_CHILD_READY: ready, LIWA_TEST_CHILD_RELEASE: release, LIWA_TEST_ROOT_IDLE: idle,
       LIWA_TEST_SUMMARY_ERROR: outcome === 'error' ? '1' : '0',
     }

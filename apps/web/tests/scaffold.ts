@@ -776,7 +776,7 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
         ...options.profile?.packageManager === undefined ? {} : { packageManager: options.profile.packageManager },
         cwd: workspaceCwd, home: liwaHome,
         startedBundles: loadProfileDirectory('liwa', profileDir, INSTALL_ANCHOR).layers.map(layer => layer.packageName),
-        overlays: processOverlays, telemetryDisabledEnv: undefined,
+        overlays: processOverlays,
       }
       // HMR gates file-driven reloads on application readiness, which the
       // launcher commits after boot; this direct harness is ready at once.
@@ -1127,7 +1127,6 @@ export function normalizeWebSessionVolatiles(log: string, workspaceCwd?: string)
     if (line.trim() === '') return line
     let record = normalizeClientTimeZones(mapJsonStringValues(JSON.parse(line), (value) => {
       let normalized = value
-        .replace(/Anonymous user: [0-9a-f-]{36}(?=\.$)/gi, 'Anonymous user: {{anonymousUserId}}')
         // The checkout path and listener port differ per machine and run.
         .replace(/Current Liwa implementation checkout: "(?:[^"\\]|\\.)*"\./g, 'Current Liwa implementation checkout: "{{sourceRoot}}".')
         .replace(/Current Liwa Web GUI URL: "(?:[^"\\]|\\.)*"\./g, 'Current Liwa Web GUI URL: "{{webUrl}}".')

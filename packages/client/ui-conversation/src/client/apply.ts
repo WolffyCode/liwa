@@ -1,5 +1,4 @@
 /** Registers the target-neutral Conversation assembly, shell, input, and docks. */
-import type {} from '@liwa/client-product-analytics/client'
 import type { Context } from '@liwa/cordis'
 import z from '@liwa/schemastery'
 import type { ISessions, SessionBinding } from '@liwa/api-session-controller/client'

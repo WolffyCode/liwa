@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Generate node-gyp's Makefile on the runner, then compile against glibc 2.28.
+# Generate node-gyp's Makefile on the host, then compile against glibc 2.28.
 case "$(uname -m)" in
   x86_64) image=quay.io/pypa/manylinux_2_28_x86_64 ;;
   aarch64) image=quay.io/pypa/manylinux_2_28_aarch64 ;;

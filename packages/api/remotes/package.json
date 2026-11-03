@@ -77,7 +77,6 @@
     "@liwa/goal": "workspace:*",
     "@liwa/host-plugin-inventory": "workspace:*",
     "@liwa/llm": "workspace:*",
-    "@liwa/message-feedback": "workspace:*",
     "@liwa/permission-presets": "workspace:*",
     "@liwa/schedule": "workspace:*",
     "@liwa/scope": "workspace:*",
@@ -90,13 +89,11 @@
     "@liwa/user-questions": "workspace:*",
     "@liwa/cordis": "workspace:~",
     "zod": "4.4.3",
-    "@liwa/command-feedback": "workspace:*",
     "@liwa/api-terminal-controller": "workspace:*",
     "@liwa/plugin-manager": "workspace:*",
     "@liwa/plugin-market": "workspace:*",
     "@liwa/client-ui-plugin-manager": "workspace:*",
     "@liwa/office-to-pdf": "workspace:*",
-    "@liwa/client-product-analytics": "workspace:*",
     "@liwa/client-ui-trajectory": "workspace:*"
   }
 }

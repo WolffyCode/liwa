@@ -46,8 +46,6 @@ export function registerDeepSeekProvider<C extends DeepSeekConnectionOptions>(
   ctx.inject(['settings'], (child) => { child.effect(() => child.settings.configure({ auto: false }, ctx.fiber)) })
   // These conditions repeat on every request of a route; log each first occurrence only.
   const degradedReplays = new Set<string>()
-  const omittedRoutes = new Set<string>()
-  const unacceptedRoutes = new Set<string>()
   const adapter = new DeepSeekAdapter({
     ...dependencies,
     onReplayDegrade: ({ provider, model, reason }) => {
@@ -56,24 +54,10 @@ export function registerDeepSeekProvider<C extends DeepSeekConnectionOptions>(
       degradedReplays.add(key)
       ctx.logger.warn(`llm-deepseek: unusable Messages replay state on assistant history for route "${provider}/${model}"; sending provider-neutral content (${reason})`)
     },
-    onExtensionsOmitted: ({ provider, model, fields, error }) => {
-      const route = `${provider}/${model}`
-      if (omittedRoutes.has(route)) return
-      omittedRoutes.add(route)
-      ctx.logger.warn(`llm-deepseek: sending route "${route}" without request extension fields ${fields.join(', ')} because they failed to serialize: %o`, error)
-    },
-    onExtensionsUnaccepted: ({ provider, model, error }) => {
-      const route = `${provider}/${model}`
-      if (unacceptedRoutes.has(route)) return
-      unacceptedRoutes.add(route)
-      ctx.logger.warn(`llm-deepseek: route "${route}" request extension acceptance failed; contributors resend on a later request: %o`, error)
-    },
     resolveAttachments: () => ctx.get('attachments'),
     resolveImageAccess: (attachments, ref) => resolveImageAttachmentAccess(
       attachments, hostPath => ctx.get('fs')?.processPathFromHostPath(hostPath), ref,
     ),
-    prepareExtensions: request => ctx.get('deepseekLlmApiExtensions')?.prepare(request)
-      ?? Promise.resolve({ fields: {}, accept: () => Promise.resolve() }),
   })
   const registration = ctx.llm.registerAdapter([provider], adapter)
   let registeredPolicy = dependencies.options().retryPolicy

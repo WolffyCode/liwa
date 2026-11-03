@@ -12,7 +12,6 @@ import type { ObservableSnapshot } from '@liwa/client-store'
 import type { WorkspaceId } from '@liwa/api-workspace-controller/client'
 import type { ShortcutCatalogEntry } from '@liwa/client-shortcuts/client'
 import type { MainPanelId } from '@liwa/client-ui-layout/client'
-import type { ProductEventMap } from '@liwa/client-product-analytics/client'
 
 declare module '@liwa/client-ui-slots' {
   interface SlotMap {
@@ -163,8 +162,6 @@ export type SidebarRootInjected = {
    * @param pinned - Whether the launcher shows in the sidebar.
    */
   setPinned: (id: string, pinned: boolean) => void
-  /** Record activation of an official navigation control without changing navigation. */
-  trackEntryClick: (attributes: ProductEventMap['sidebar_menu_click']) => void
   /** Private reactive sources bound to framework selector hooks. */
   hooks: {
     panels: ObservableSnapshot<readonly SidebarPanelMetadata[]>

@@ -177,7 +177,7 @@ describe('Assembled liveshare viewer page on a writable share', () => {
       const input = inputFixture?.context().get('conversation')?.input.for(scope)
       if (input === undefined) throw new Error('real source input is missing after downgrade')
       input.setDraft('must not reach Owner after downgrade')
-      input.submit('queue', 'click')
+      input.submit('queue')
     })
     expect(owner.prompts).toHaveLength(beforeDeniedSend)
 

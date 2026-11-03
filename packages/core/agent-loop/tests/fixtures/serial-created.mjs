@@ -1,4 +1,4 @@
-/** Awaited creation context shared by TypeScript and Python SDK snapshots. */
+/** Awaited creation context shared by SDK snapshots. */
 import { randomUUID } from 'node:crypto'
 import { setImmediate } from 'node:timers/promises'
 

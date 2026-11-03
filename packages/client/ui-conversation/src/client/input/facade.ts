@@ -22,7 +22,7 @@ import type {
 import type {
   ArbitrateKey, ArbitrateOutcome, ComposerKeyboard, DraftInput, DraftSnapshot, ReferenceInsert, TokenSpan,
 } from '../contract/draft-editor.ts'
-import type { InputSubmitMode, MessageSubmission, MessageSubmissionState } from '../contract/composer-submission.ts'
+import type { InputSubmitMode } from '../contract/composer-submission.ts'
 import { serializeDraftPrompt } from './prompt.ts'
 import { SubmitMachine } from './machine.ts'
 import { resolveDraftInput, snapshotDraft } from '../draft.ts'
@@ -42,10 +42,6 @@ export interface PopupDismissFace {
 export interface SessionInputDeps {
   /** Session-scope ctx handed to claim.submit transactions. */
   actx: Context
-  /** Snapshot the Session facts before asynchronous command arbitration. */
-  submissionState?: () => MessageSubmissionState
-  /** Notify one ordinary message attempt before reference serialization. */
-  messageSubmitted?: (submission: MessageSubmission) => void
   /** Enter adjudication face resolver; absent/undefined answer = every '/' line falls to the default sink. */
   inputTriggers?: (() => InputTriggerController | undefined) | undefined
   /** PopupSelect shell face resolver (dismissal on submit lock / escape). */
@@ -388,16 +384,8 @@ export class SessionInputShell implements SessionInput {
    * (adjudicating/submitting/sending) force-closes the transient layers: the
    * popup dismisses and the menu tracks frozen.
    */
-  submit(mode: InputSubmitMode = 'queue', source?: 'click' | 'enter'): void {
+  submit(mode: InputSubmitMode = 'queue'): void {
     if (this.disposed) return
-    const timestamp = Date.now()
-    let state: MessageSubmissionState | undefined
-    if (this.snapshot.phase === 'plain' && (this.snapshot.draft.trim() !== '' || this.attachmentIds.length > 0)) {
-      try { state = this.deps.submissionState?.() } catch (_error) { /* Optional Session observations cannot interrupt submission. */ }
-    }
-    const submission: MessageSubmission = Object.freeze({
-      timestamp, mode, ...source === undefined ? {} : { source }, ...state === undefined ? {} : { state },
-    })
     // Claimed pre-gate: a claim that does not declare attachment acceptance never
     // submits while attachments are present — one notice, everything retained.
     // Enter-time adjudication applies the same policy for unclaimed lines
@@ -414,7 +402,6 @@ export class SessionInputShell implements SessionInput {
       occurrences: [...this.projection.occurrences],
       quotes: [...this.projection.quotes],
       attachmentIds: [...this.attachmentIds],
-      submission,
     })
     if (frozen(this.snapshot.phase)) {
       this.deps.popup?.()?.dismiss()
@@ -717,7 +704,6 @@ export class SessionInputShell implements SessionInput {
     draft: string,
     mode: InputSubmitMode,
   ): void {
-    this.notifySubmission(attempt.submission)
     const { occurrences, quotes, attachmentIds } = attempt
     const inputTriggers = this.deps.inputTriggers?.()
     const prompt = serializeDraftPrompt(snapshotDraft(draft, occurrences, undefined, quotes), async (source, ref) => {
@@ -730,11 +716,6 @@ export class SessionInputShell implements SessionInput {
     }
     if (!(prompt instanceof Promise)) { send(prompt); return }
     void prompt.then(send, (error: unknown) => { this.failSink(attempt, error) })
-  }
-
-  private notifySubmission(submission: MessageSubmission | undefined): void {
-    if (submission === undefined) return
-    try { this.deps.messageSubmitted?.(submission) } catch (_error) { /* Notification consumers cannot interrupt submission. */ }
   }
 
   /**

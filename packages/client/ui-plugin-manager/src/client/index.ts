@@ -6,7 +6,6 @@
  * A plugin that carries its own configuration renders it on this page through
  * the slots the page declares (`slot-contract.ts`).
  */
-import type {} from '@liwa/client-product-analytics/client'
 import type {} from '@liwa/client-locale/client'
 import type { Context as ClientContext } from '@liwa/cordis'
 // Type-only: the root `main` keyed slot the page registers into, declared by

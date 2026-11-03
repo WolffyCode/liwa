@@ -24,7 +24,6 @@
   "devDependencies": {
     "@liwa/cordis": "workspace:~",
     "@liwa/client-locale": "workspace:*",
-    "@liwa/client-product-analytics": "workspace:*",
     "@liwa/client-store": "workspace:*",
     "@liwa/client-ui-sidebar": "workspace:*",
     "@liwa/client-ui-conversation": "workspace:*",

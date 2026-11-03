@@ -36,7 +36,6 @@ it.each([
       env: {
         LIWA_HOME: join(root, '.liwa'),
         LIWA_AGENTS_HOME: join(root, '.agents'),
-        LIWA_TELEMETRY_DISABLED: '1',
       },
     })
     const child = execa(launch.command, launch.args, {

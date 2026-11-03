@@ -13,7 +13,6 @@ type Page = 'entry' | 'key'
 export function Welcome({ api }: { api: WelcomeApi }) {
   const { messages: m } = api
   const [page, setPage] = useState<Page>('entry')
-  const visiblePage = useRef<Page>('entry')
   const [draft, setDraft] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -31,8 +30,6 @@ export function Welcome({ api }: { api: WelcomeApi }) {
   }, [api, m.welcomeTitle])
 
   useEffect(() => {
-    if (page === 'entry' && visiblePage.current !== 'entry') void api.analytics?.('auth_page_view', {})
-    visiblePage.current = page
     if (page === 'key') input.current?.focus()
     else if (focusEntry.current) {
       focusEntry.current = false
@@ -43,7 +40,6 @@ export function Welcome({ api }: { api: WelcomeApi }) {
   async function saveKey(event: FormEvent) {
     event.preventDefault()
     if (busyRef.current) return
-    void api.analytics?.('api_key_save_click', {})
     const value = draft.trim()
     if (!/^[\x21-\x7e]+$/.test(value) || /^[A-Z][A-Z0-9_]*=[^=]/.test(value)
       || ((value.startsWith('"') || value.startsWith("'") || value.charCodeAt(0) === 96) && value.at(-1) === value[0])) {
@@ -102,7 +98,7 @@ export function Welcome({ api }: { api: WelcomeApi }) {
         </div>
       </form>
       <div id="entry-actions" className="actions" hidden={page !== 'entry'}>
-        <button ref={keyButton} id="api-key" className="primary" type="button" onClick={() => { void api.analytics?.('auth_page_click', { button_name: 'api-key' }); setPage('key') }}>{m.welcomeApiKey}</button>
+        <button ref={keyButton} id="api-key" className="primary" type="button" onClick={() => { setPage('key') }}>{m.welcomeApiKey}</button>
       </div>
       <div id="key-actions" className="actions" hidden={page !== 'key'}>
         <button id="save-key" className="primary" type="submit" form="key-form" disabled={busy || draft.trim() === ''}>{m.welcomeKeySave}</button>

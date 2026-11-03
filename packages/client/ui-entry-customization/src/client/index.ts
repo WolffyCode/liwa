@@ -2,7 +2,6 @@
 import type { Context } from '@liwa/cordis'
 import { createSnapshotStore } from '@liwa/client-store'
 import type {} from '@liwa/client-locale/client'
-import type {} from '@liwa/client-product-analytics/client'
 import type {} from '@liwa/client-ui-renderer/client'
 import type {} from '@liwa/client-ui-sidebar/client'
 import type {} from '@liwa/client-ui-conversation/client'
@@ -41,11 +40,9 @@ export function apply(ctx: Context): void {
     region,
     hooks: { pluginNavigation },
     browsePlugins: () => {
-      ctx.get('productAnalytics')?.track('more_menu_item_click', { region, action: 'browse_plugins' })
       ctx.get('pluginNavigation')?.openList()
     },
     createPlugin: () => {
-      ctx.get('productAnalytics')?.track('more_menu_item_click', { region, action: 'create_plugin' })
       ctx.uiWorkspace.startSession(undefined, {
         agentPreset: 'cordis', prompt: t(`createPrompt.${region}`), whenDraftExists: 'append',
       })

@@ -15,7 +15,7 @@ const python = runtime && join(runtime, 'dependencies/python', process.platform 
 const launch = {
   binScript: join(repo, 'apps/cli/src/bin.ts'), sourceImport: 'tsx/esm' as const, tsconfigPath: join(repo, 'tsconfig.base.json'),
   configPath: 'office.patch.json', processTimeoutMs: 110_000,
-  env: { LIWA_PRIMARY_RUNTIME: runtime, LIWA_PERMISSION_MODE: 'danger-full-access', LIWA_TELEMETRY_DISABLED: '1',
+  env: { LIWA_PRIMARY_RUNTIME: runtime, LIWA_PERMISSION_MODE: 'danger-full-access',
     HTTP_PROXY: process.env.LIWA_OFFICE_TEST_PROXY, HTTPS_PROXY: process.env.LIWA_OFFICE_TEST_PROXY },
 }
 

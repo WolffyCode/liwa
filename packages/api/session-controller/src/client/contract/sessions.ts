@@ -128,7 +128,7 @@ export interface ISessions {
    *   seq (a real event seq the caller already knows; a cut inside an open
    *   turn is balanced Host-side with synthetic closers, and omission selects
    *   the latest completed-turn prefix), and whether to increment an
-   *   inherited durable title before resolving. `onCreated` observes the catalogued child before that optional rename.
+   *   inherited durable title before resolving.
    * @returns the child session id.
    * @throws when the fork fails, or when a requested child-title rename fails after creation.
    */
@@ -136,7 +136,6 @@ export interface ISessions {
     sessionId: SessionId
     atSeq?: number
     increaseTitle?: boolean
-    onCreated?: (childId: SessionId) => void
     /** False refuses source migration; omission preserves the Host default. */
     allowMigration?: boolean
   }): Promise<SessionId>

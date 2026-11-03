@@ -101,7 +101,7 @@ Team 策略与 schema 由 [`@liwa/experimental-tool-agent-team`](../tool-agent-t
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **仅显式启用**——本包随安装提供但默认关闭；随附 CLI、Web、SDK、ACP 与 Python profile 都不会启用它。
+- **仅显式启用**——本包随安装提供但默认关闭；随附 CLI、Web、SDK 与 ACP profile 都不会启用它。
 - **Workflow 子代理工具**——[Team 工具可见性限制](../tool-agent-team/README.zh.md#known-limitations-and-deferred-work)也适用于 workflow 子代理。
 - **共享 checkout**——所有 teammate 都观察同一个工作目录；本 bundle 不提供 worktree 隔离或文件系统锁。
 - **预设内的子代理控件**——Web 预设仍可在预设作用域挂载 continuable Subagent 控件；顶层组合包不会替换这些注册。

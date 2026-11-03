@@ -81,8 +81,7 @@
     "@liwa/util-workspace-path": "workspace:*",
     "clsx": "^2.0.0",
     "react": "^18.2.0",
-    "@liwa/client-shortcuts": "workspace:*",
-    "@liwa/client-product-analytics": "workspace:*"
+    "@liwa/client-shortcuts": "workspace:*"
   },
   "files": [
     "locale/*.json",

@@ -47,7 +47,7 @@ it('configures MCP on a live profile, restores it on restart, and removes its to
     const child = spawn(process.execPath, [join(repo, 'apps/cli/lib/bin.js'), '--profile', 'web', '--patch', patch,
       '--port', '0', '--no-open'], { cwd: join(root, 'workspace'),
       env: { ...process.env, LIWA_HOME: join(root, 'home'), LIWA_AGENTS_HOME: join(root, 'agents'),
-        LIWA_TELEMETRY_DISABLED: '1', DEEPSEEK_API_KEY: 'keyless-no-model-calls' },
+        DEEPSEEK_API_KEY: 'keyless-no-model-calls' },
       stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
     })
     let output = ''

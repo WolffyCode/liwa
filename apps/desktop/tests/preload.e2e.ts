@@ -81,9 +81,9 @@ describe.skipIf(!existsSync(preload('preload-app')))('built sandboxed Desktop pr
       expect(send).toHaveBeenCalledWith('liwa-desktop:locale-changed', 'zh')
     } else {
       expect(exposed.has('liwaWelcome')).toBe(true)
-      const bridge = exposed.get('liwaWelcome') as { analyticsEnabled(): Promise<unknown> }
-      void bridge.analyticsEnabled()
-      expect(invoke).toHaveBeenCalledWith('liwa-welcome:analytics-enabled')
+      const bridge = exposed.get('liwaWelcome') as { skip(): Promise<unknown> }
+      void bridge.skip()
+      expect(invoke).toHaveBeenCalledWith('liwa-welcome:skip')
     }
   })
 })

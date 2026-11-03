@@ -53,7 +53,6 @@
         provider: mock
         model: mock-routed
         env:
-          LIWA_TELEMETRY_DISABLED: '1'
           LIWA_TEST_CHILD_FAILURE: !!js String(process.env.LIWA_TEST_CHILD_FAILURE ?? '')
 
 - id: sandbox-policy

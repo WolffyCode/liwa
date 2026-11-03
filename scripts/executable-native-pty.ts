@@ -1,10 +1,10 @@
-/** Resolve the native node-pty input used by the SDK and SSH executable builders. */
+/** Resolve the native node-pty input used by the SSH helper executable builder. */
 
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 
 /**
- * Prefer the workflow's manylinux build and fall back to node-pty's target prebuild.
+ * Prefer the manylinux build from `scripts/prepare-linux-node-pty.sh` and fall back to node-pty's target prebuild.
  * @param packageDirectory - installed node-pty package directory.
  * @param arch - Linux target architecture.
  * @returns the existing addon path.
@@ -20,26 +20,4 @@ export function resolveLinuxNodePtyAddon(
   throw new Error(
     `executable-native-pty: node-pty addon is absent from both ${built} and ${prebuilt}.`,
   )
-}
-
-/**
- * Require both node-pty addons used by the Windows ConPTY backend.
- * @param packageDirectory - staged node-pty package directory.
- * @param arch - Windows target architecture.
- * @returns the existing addon paths in load order.
- */
-export function resolveWindowsNodePtyAddons(
-  packageDirectory: string,
-  arch: 'x64',
-): string[] {
-  const directory = join(packageDirectory, 'prebuilds', `win32-${arch}`)
-  const addons = [
-    join(directory, 'conpty.node'),
-    join(directory, 'conpty_console_list.node'),
-  ]
-  const missing = addons.filter(path => !existsSync(path))
-  if (missing.length > 0) {
-    throw new Error(`executable-native-pty: Windows node-pty addons are missing: ${missing.join(', ')}.`)
-  }
-  return addons
 }

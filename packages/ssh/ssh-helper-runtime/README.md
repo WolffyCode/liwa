@@ -33,7 +33,7 @@ This private workspace produces local archives; it is not a profile plugin or an
 pnpm exec tsx scripts/build-exe-for-ssh-helper.ts
 ```
 
-The builder requires Node 24, a C/C++ compiler and the development headers from that Node installation. Linux additionally needs `musl-gcc`; its node-pty addon must meet the glibc baseline. The [native workflow](../../../.github/workflows/build-exe-for-ssh-helper.yml) prepares the compatible addon before packaging. `--target` selects one native target, `--skip-build` reuses prepared JS/native outputs, and `--dry-run` validates the target and dependency declarations without building.
+The builder requires Node 24, a C/C++ compiler and the development headers from that Node installation. Linux additionally needs `musl-gcc`; its node-pty addon must meet the glibc baseline. On Linux, run [`scripts/prepare-linux-node-pty.sh`](../../../scripts/prepare-linux-node-pty.sh) before packaging to compile that addon in a manylinux 2.28 container. `--target` selects one native target, `--skip-build` reuses prepared JS/native outputs, and `--dry-run` validates the target and dependency declarations without building.
 
 | Target | Native archive | Checked deployment baseline |
 |---|---|---|
@@ -52,7 +52,7 @@ The [artifact verifier](../../../scripts/verify-ssh-helper-artifact.ts) accepts 
 
 The [OpenSSH verifier](../../../scripts/verify-ssh-helper-ssh.ts) accepts a Linux `--archive`. It creates a temporary glibc 2.28 SSH server with no Node installation, mounts only the release and a disposable public key, and exercises the production connection. Its portability lane makes no kernel-confinement claim; the native host lane owns that check. Test identities, host keys, ports and workspaces are private to the run.
 
-Ordinary PR and master CI run source and build-script checks without building SSH executables. For changes to helper startup, native dependencies or packaging, manually run the [native workflow](../../../.github/workflows/build-exe-for-ssh-helper.yml) before merging; it accepts selected targets and defaults to all four. `CI master` also exposes the manual `ssh-helper` suite. Archives stay local build outputs; nothing publishes them. Native validation remains mandatory before an archive is used. Deployment-target inspection alone does not establish execution on the oldest macOS version.
+The ordinary local checks cover sources and build scripts without building SSH executables. For changes to helper startup, native dependencies or packaging, build each affected native target and run both verifiers before merging. Archives stay local build outputs; nothing publishes them. Native validation remains mandatory before an archive is used. Deployment-target inspection alone does not establish execution on the oldest macOS version.
 
 -----
 
@@ -62,7 +62,7 @@ Ordinary PR and master CI run source and build-script checks without building SS
 <details>
 <summary>Implementation internals — click to expand</summary>
 
-The carrier embeds its closed dependency set with the repository’s patched `pkg --sea` pipeline. Its entry dispatches the SSH helper, managed subprocess runner or PTC worker. Shared [deployment helpers](../../../scripts/executable-packaging.ts) also serve the Python SDK builder. Production deploy installs exactly the versions in `pnpm-lock.yaml`, then drops pnpm’s install records and pins the manifest’s workspace dependencies to their installed versions, so deploy metadata carries no build-checkout path into the executable. Packaging ignores the checkout’s own dependencies and workspace sources, so module resolution from the staged payload cannot embed development packages.
+The carrier embeds its closed dependency set with the repository’s patched `pkg --sea` pipeline. Its entry dispatches the SSH helper, managed subprocess runner or PTC worker. [Deployment helpers](../../../scripts/executable-packaging.ts) prepare the staged payload. Production deploy installs exactly the versions in `pnpm-lock.yaml`, then drops pnpm’s install records and pins the manifest’s workspace dependencies to their installed versions, so deploy metadata carries no build-checkout path into the executable. Packaging ignores the checkout’s own dependencies and workspace sources, so module resolution from the staged payload cannot embed development packages. It also leaves the deployed `@liwa/node-addon-system-*` packages out of the blob, because the native system addon travels in `native/system/` beside the executable.
 
 The operating system must execute the Landlock and PTY launchers from real files. A process-local resolution hook points the system package at its co-shipped native directory; node-pty uses its existing executable-relative spawn-helper convention. Binary inspection covers the embedded native modules before packaging and the external resources of the assembled archive.
 

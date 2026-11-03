@@ -59,7 +59,6 @@
     "@liwa/client-connection": "workspace:*",
     "@liwa/client-locale": "workspace:*",
     "@liwa/client-modules": "workspace:*",
-    "@liwa/client-product-analytics": "workspace:*",
     "@liwa/client-store": "workspace:*",
     "@liwa/client-test-runtime": "workspace:*",
     "@liwa/client-ui-layout": "workspace:*",

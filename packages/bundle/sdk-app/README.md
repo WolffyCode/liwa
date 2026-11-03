@@ -23,7 +23,7 @@ The SDK stdio application as a `liwa` profile bundle over [`liwa-base`](../base/
 <a id="use-this-package"></a>
 ## Use this package
 
-The `sdk` profile includes native desktop tools and model context. Native tool execution is the default. For PTC, pass the [executor overlay](../../../apps/cli/config/examples/ptc.yml) through `--patch` or the `patches` option in the TypeScript or Python SDK. `LIWA_TOOLS_MODE` is ignored.
+The `sdk` profile includes native desktop tools and model context. Native tool execution is the default. For PTC, pass the [executor overlay](../../../apps/cli/config/examples/ptc.yml) through `--patch` or the `patches` option in the TypeScript SDK. `LIWA_TOOLS_MODE` is ignored.
 
 The startup provider binds stdin EOF to the launcher's bounded successful shutdown. SDK protocol `shutdown`, SIGINT, and SIGTERM retain their owning server or launcher paths; disposal drains the root profile tree and persistence. Stdout is reserved for newline-delimited JSON-RPC frames. The bundle disables model-generated session titles because the SDK exposes no title surface; deterministic fallback titles remain durable without an auxiliary model request. The inherited projection cache checkpoints SDK-created sessions for later consumers; its durability barrier flushes each covered log prefix before publishing the cache row and may split otherwise coalesced JSONL runs. A deployment selects a different complete composition through profile bundles and patch files, not another app bin.
 
@@ -35,7 +35,7 @@ The startup provider binds stdin EOF to the launcher's bounded successful shutdo
 
 The SDK uses the base `read`, `write`, and `edit` defaults. To add `str_replace_editor`, use the explicit insertion patch in the [base configuration guide](../base/README.md#use-this-package). The standalone `sdk-minimal` profile owns its separate tool selection.
 
-The Python runtime exposes explicitly downloaded authoring resources and Office sidecars to this profile. `LIWA_PRIMARY_RUNTIME` overrides the authoring payload; an empty value disables its query. Office skills can use either resource independently. Profile patches can disable `skill-office` or replace its `assetRoot` independently of `workspace-dependencies`; filesystem skills with the same name take precedence. See the [runtime package](../../../python/sdk-runtime/README.md) for downloads and configuration.
+`LIWA_PRIMARY_RUNTIME` names a payload prepared by [`prepare:primary-runtime`](../../skill/tool-workspace-dependencies/README.md) and enables the dependency query and Office skills; unset or empty leaves both off. Profile patches can disable `skill-office` or replace its `assetRoot` independently of `workspace-dependencies`; filesystem skills with the same name take precedence.
 
 -----
 
@@ -62,7 +62,7 @@ The static prefix is stable for a fixed profile, provider, model, and tool roste
 
 - **No graphical client** — file cards, native file opening, and browser state require an embedding client; the SDK starts no Web server.
 - **User time zone is unknown** — the SDK protocol does not carry a user time zone, so time context reports `Browser time zone for this request: unavailable.` The process or container time zone may differ from the user's. The `time-context.timeZone` setting only controls fallback timestamp formatting; it does not establish the user's time zone. Automatic detection and SDK time-zone input are deferred.
-- **Questions require an answerer** — configure `onUserQuestion` in TypeScript or `on_user_question` in Python, or supply a native `user-questions/request` handler; otherwise `ask_user_question` returns `NO_PROVIDER`.
+- **Questions require an answerer** — configure `onUserQuestion` in the TypeScript client, or supply a native `user-questions/request` handler; otherwise `ask_user_question` returns `NO_PROVIDER`.
 - **Schedules share the runtime lifetime** — delivery needs a running process and its persistent Session storage.
 - **A profile can omit the SDK server** — a custom profile selected by the TypeScript client must retain this bundle or another `liwa-sdk-jsonrpc-server` row; client initialization fails when no peer answers.
 - **User plugins can violate stdout purity** — profile and per-launch patches are trusted application composition. The shipped bundle writes no non-protocol stdout, but it cannot contain an arbitrary inserted plugin.

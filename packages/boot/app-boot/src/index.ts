@@ -1,5 +1,5 @@
 /**
- * Shared boot glue for `liwa` profiles, including the CLI packaged by the Python runtime wheel: load the gitignored
+ * Shared boot glue for `liwa` profiles: load the gitignored
  * `.env`, install the fail-loud Loader guards, resolve the config path (snapshot-aware), load the
  * optional user patch layers from the Liwa home (`~/.liwa`), expose its path resolver to
  * config expressions, and drive the Cordis Loader against a leaf `cordis.yml` until the tree settles.
@@ -18,7 +18,7 @@ import Include, { applyPatches, parseEntryYaml, stringifyEntryYaml, type PatchOp
 import Group from '@liwa/cordis-plugin-group'
 import { liwaHomePath, resolveLiwaHome } from '@liwa/home-paths'
 import { createLaunchEnvironmentSnapshot, type LaunchEnvironmentSnapshot } from '@liwa/launch-environment'
-export { readBundlePatches, readProfilePatches, resolveTelemetryPatch, type ProfileContext, type ProfilePnpmInvocation } from './profile-context.ts'
+export { readBundlePatches, readProfilePatches, type ProfileContext, type ProfilePnpmInvocation } from './profile-context.ts'
 export { sanitizeProfile } from './profile-sanitize.ts'
 export { getLiwaRuntimeVersion, evaluatePluginCompatibility, isLiwaRuntimePackage, pluginCompatibilityWarning, type PluginCompatibility } from './plugin-compatibility.ts'
 export {

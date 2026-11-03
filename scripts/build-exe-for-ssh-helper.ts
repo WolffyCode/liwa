@@ -11,14 +11,15 @@ import {
   PKG_CONFIG_FILE, pinStagedDependencyVersions, pkgConfigExcludingCheckout, pnpmInvocation,
   productionDeployArguments, removePackageManagerRecords,
 } from './executable-packaging.ts'
-import { materializeStagedLinks } from './build-exe-for-python-sdk-staging.ts'
 import { resolveLinuxNodePtyAddon } from './executable-native-pty.ts'
-import { artifactManifestSchema, fileDigest, payloadFiles, SSH_HELPER_TARGETS, verifyPayload, type SshHelperTarget } from './ssh-helper/artifact.ts'
+import {
+  artifactManifestSchema, fileDigest, payloadFiles, SSH_HELPER_RUNTIME_DIRECTORY, SSH_HELPER_RUNTIME_MANIFEST, SSH_HELPER_TARGETS,
+  verifyPayload, type SshHelperTarget,
+} from './ssh-helper/artifact.ts'
 import { probeHelper } from './ssh-helper/probe.ts'
 import { verifyNativePayload } from './ssh-helper/native.ts'
 
 const root = resolve(import.meta.dirname, '..')
-const closureDirectory = 'packages/ssh/ssh-helper-runtime'
 const closureName = '@liwa/ssh-helper-runtime'
 const assets = ['package.json', 'lib/**/*.js', ...['js', 'cjs', 'mjs', 'json', 'node', 'so', 'so.*', 'dylib', 'wasm', 'sh', 'bash'].map(extension => `node_modules/**/*.${extension}`)]
 /**
@@ -48,7 +49,7 @@ async function pnpm(...args: string[]): Promise<void> { const [command, argv] = 
 
 async function compileRuntime(dependencies: Readonly<Record<string, string>>): Promise<void> {
   await pnpm('exec', 'tsx', 'native/system/scripts/build.ts')
-  await pnpm('exec', 'tsc', '-b', closureDirectory, 'native/system/packages/entry')
+  await pnpm('exec', 'tsc', '-b', SSH_HELPER_RUNTIME_DIRECTORY, 'native/system/packages/entry')
   const names = new Set([closureName, ...Object.keys(dependencies)])
   for (const path of globSync(['packages/*/*/package.json', 'vendor/*/package.json'], { cwd: root }).sort()) {
     if (!names.has((await manifest(join(root, path))).name)) continue
@@ -123,8 +124,8 @@ export async function buildSshHelper(argv: string[]): Promise<void> {
   if (!SSH_HELPER_TARGETS.some(target => target === selected)) throw new Error(`Unsupported SSH helper target: ${selected}`)
   if (!values['dry-run'] && selected !== host) throw new Error(`SSH helper target ${selected} requires its native host; current host is ${host}`)
   const target = selected as SshHelperTarget
-  const definition = await manifest(join(root, closureDirectory, 'package.json'))
-  const closure = await verifyRuntimeClosure(root, `${closureDirectory}/package.json`, false)
+  const definition = await manifest(join(root, SSH_HELPER_RUNTIME_MANIFEST))
+  const closure = await verifyRuntimeClosure(root, SSH_HELPER_RUNTIME_MANIFEST)
   if (closure.failures.length > 0) throw new Error(`SSH helper runtime dependencies are incomplete:\n${closure.failures.join('\n')}`)
   const output = resolve(root, values.output ?? 'dist-exe/ssh-helper')
   if (values['dry-run']) {
@@ -139,7 +140,6 @@ export async function buildSshHelper(argv: string[]): Promise<void> {
     const product = join(temporary, 'liwa-ssh-helper')
     await mkdir(product)
     await pnpm(...productionDeployArguments(closureName, staging))
-    await materializeStagedLinks(staging)
     await removePackageManagerRecords(staging)
     await pinStagedDependencyVersions(staging)
     for (const peer of globSync(omittedOptionalPeers.flatMap(name => [name, `${name}-*`]), { cwd: join(staging, 'node_modules') })) {
@@ -151,7 +151,8 @@ export async function buildSshHelper(argv: string[]): Promise<void> {
     await writeFile(join(staging, 'runtime-bootstrap.mjs'), 'import { runSshHelperRuntime } from "./lib/index.js";\nawait runSshHelperRuntime();\n')
     await writeFile(join(staging, 'package.json'), `${JSON.stringify({ ...stagedManifest, bin: 'runtime-bootstrap.mjs' }, null, 2)}\n`)
     // The staging sits inside the checkout; the temporary directory takes this checkout-naming config with it.
-    const pkgConfig = pkgConfigExcludingCheckout(root, assets, ['node_modules/@liwa/node-addon-system-*/**/*'])
+    // The native system addon travels beside the executable (prepareNative), so its deployed platform packages stay out of the blob.
+    const pkgConfig = pkgConfigExcludingCheckout(root, staging, assets, ['node_modules/@liwa/node-addon-system-*/**/*'])
     await writeFile(join(staging, PKG_CONFIG_FILE), `${JSON.stringify(pkgConfig, null, 2)}\n`)
     const executable = join(product, 'liwa-ssh-helper')
     await pnpm('exec', 'pkg', staging, '--sea', '--targets', target, '--output', executable)

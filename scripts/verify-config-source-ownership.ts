@@ -15,8 +15,6 @@ const SHIPPED_CONFIG_GLOBS = [
   // Bundle identity comes from the package manifest, not the domain directory.
   'packages/*/*/cordis.patch.yml',
   'packages/*/*/presets/*.patch.yml',
-  // The Python runtime ships its own default composition inside the wheel.
-  'python/*/src/**/cordis.yml',
 ]
 
 /** Ordinary single-line configuration forms this source check rejects; not full YAML analysis. */

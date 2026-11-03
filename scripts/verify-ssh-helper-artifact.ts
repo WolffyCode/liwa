@@ -133,7 +133,7 @@ export async function verifySshHelper(argv: string[]): Promise<void> {
     const helperHash = await fileDigest(executable)
     const environment = {
       HOME: home, PATH: process.env.PATH, LIWA_HOME: join(home, 'liwa'),
-      TSX_TSCONFIG_PATH: join(root, 'tsconfig.base.json'), LIWA_TELEMETRY_DISABLED: '1',
+      TSX_TSCONFIG_PATH: join(root, 'tsconfig.base.json'),
       ...(values.backend === undefined ? {} : { LIWA_EXPECT_SANDBOX_RUNNER: values.backend }),
     }
     const runs = await Promise.allSettled([0, 1].map(async (index) => {

@@ -32,8 +32,6 @@
         liwaHome: !!js process.env.LIWA_TEST_CHILD_HOME
         provider: mock
         model: mock-routed
-        env:
-          LIWA_TELEMETRY_DISABLED: '1'
 
     - id: subagent-model-selection-settings
       name: '@liwa/tool-subagent/model-selection-settings'

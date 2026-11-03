@@ -1,4 +1,4 @@
-/** Shared production-deploy preparation for the SDK and SSH executable carriers. */
+/** Production-deploy preparation for the SSH helper executable carrier. */
 import { existsSync } from 'node:fs'
 import { glob, readFile, rm, writeFile } from 'node:fs/promises'
 import { extname, join, resolve } from 'node:path'
@@ -80,18 +80,21 @@ export function productionDeployArguments(packageName: string, target: string): 
  * Build a pkg configuration that also ignores the checkout around a staged payload. pkg resolves a
  * module missing from the payload by climbing into ancestor `node_modules`, so a payload staged
  * inside the checkout would embed development packages such as tsx. pkg matches ignores against
- * absolute paths, so callers write the result to {@link PKG_CONFIG_FILE}: pkg embeds the manifest.
+ * absolute paths, so payload-relative ignores are anchored at the payload here, and callers write
+ * the result to {@link PKG_CONFIG_FILE}: pkg embeds the manifest.
  * @param checkout - repository root whose dependencies and sources stay out of the executable.
+ * @param payload - staged payload root that pkg packages.
  * @param assets - pkg asset globs relative to the payload.
- * @param ignore - payload-specific pkg ignore globs.
+ * @param ignore - pkg ignore globs relative to the payload.
  * @returns the configuration object pkg reads from {@link PKG_CONFIG_FILE}.
  */
 export function pkgConfigExcludingCheckout(
-  checkout: string, assets: readonly string[], ignore: readonly string[],
+  checkout: string, payload: string, assets: readonly string[], ignore: readonly string[],
 ): { pkg: { assets: string[]; ignore: string[] } } {
   const root = checkout.replaceAll('\\', '/')
+  const payloadRoot = payload.replaceAll('\\', '/')
   return { pkg: { assets: [...assets], ignore: [
-    ...ignore,
+    ...ignore.map(glob => `${payloadRoot}/${glob}`),
     // picomatch's `**` skips dot directories, so pnpm's virtual store needs its own pattern.
     `${root}/node_modules/**`, `${root}/node_modules/.pnpm/**`,
     ...CHECKOUT_SOURCE_TREES.map(tree => `${root}/${tree}/**`),

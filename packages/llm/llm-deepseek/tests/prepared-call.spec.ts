@@ -18,7 +18,6 @@ function adapter(connection: () => DeepSeekConnectionOptions) {
   return new DeepSeekAdapter({
     options: connection,
     resolveAuth: snapshot => Promise.resolve({ headers: { 'x-api-key': `key-for-${snapshot.apiKeyEnv}` } }),
-    prepareExtensions: () => Promise.resolve({ fields: {}, accept: () => Promise.resolve() }),
   })
 }
 

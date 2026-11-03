@@ -40,7 +40,7 @@ describe('standard ACP v1 control surface', () => {
   it('selects, mounts MCP, closes, restarts, resumes, and cancels through the SDK only', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'liwa-acp-control-'))
     const persistenceRoot = join(cwd, '.sessions')
-    const env = { LIWA_CONFORMANCE_PERSISTENCE_ROOT: persistenceRoot, LIWA_TELEMETRY_DISABLED: '1' }
+    const env = { LIWA_CONFORMANCE_PERSISTENCE_ROOT: persistenceRoot }
     const mcpServers = [{ name: 'fixture', command: process.execPath, args: [mcpServer], env: [] }]
     let first: LaunchedAcpTestAgent | undefined
     let second: LaunchedAcpTestAgent | undefined

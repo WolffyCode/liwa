@@ -56,7 +56,6 @@ function spawnWeb(root: string, patch: string, interrupt: string, flags: string[
       DEEPSEEK_API_KEY: 'keyless-web-public-url-no-call',
       LIWA_AGENTS_HOME: join(root, '.agents'),
       LIWA_HOME: join(root, 'home'),
-      LIWA_TELEMETRY_DISABLED: '1',
       NODE_NO_WARNINGS: '1',
       WEB_INTERRUPT_FILE: interrupt,
     },

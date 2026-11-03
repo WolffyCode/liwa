@@ -29,19 +29,12 @@
   "peerDependencies": {
     "@liwa/cordis": "workspace:~",
     "@liwa/compaction": "workspace:*",
-    "@liwa/deepseek-llm-api-extensions": "workspace:*",
     "@liwa/llm": "workspace:*",
     "@liwa/session": "workspace:*"
-  },
-  "peerDependenciesMeta": {
-    "@liwa/deepseek-llm-api-extensions": {
-      "optional": true
-    }
   },
   "devDependencies": {
     "@liwa/cordis": "workspace:~",
     "@liwa/compaction": "workspace:*",
-    "@liwa/deepseek-llm-api-extensions": "workspace:*",
     "@liwa/llm": "workspace:*",
     "@liwa/session": "workspace:*"
   },

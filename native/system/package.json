@@ -16,7 +16,6 @@
     "test:launcher": "node ./test/launcher.test.js",
     "test:flock": "node --test ./test/flock.test.js",
     "test:packaging": "node --test ./test/package-matrix.test.js ./test/release-packing.test.js",
-    "gha:matrix": "node ./scripts/github-matrix.mjs",
     "release:bump": "node ./scripts/bump-release.mjs",
     "release:commit": "node ./scripts/commit-release.mjs",
     "release:assemble-prebuilds": "node ./scripts/assemble-prebuilds.mjs",

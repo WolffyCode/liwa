@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`liwa-sdk-protocol` lets a Liwa runtime and its SDK clients exchange JSON-RPC 2.0 messages over newline-delimited byte streams: one transport class plus the named request, result, and notification types both wire ends speak. The serving side is the [`liwa-sdk-jsonrpc-server`](../server/README.md) plugin; the clients are the TypeScript [`liwa-sdk-client`](../client/README.md) and the [Python SDK](../../../python/README.md), which mirrors these shapes without importing them. Use this package when you implement or debug a wire end: framing rules, method names, payload types, and error semantics all live here. It is a pure library — no plugin, no configuration, no registrations.
+`liwa-sdk-protocol` lets a Liwa runtime and its SDK clients exchange JSON-RPC 2.0 messages over newline-delimited byte streams: one transport class plus the named request, result, and notification types both wire ends speak. The serving side is the [`liwa-sdk-jsonrpc-server`](../server/README.md) plugin; the client is the TypeScript [`liwa-sdk-client`](../client/README.md). Use this package when you implement or debug a wire end: framing rules, method names, payload types, and error semantics all live here. It is a pure library — no plugin, no configuration, no registrations.
 
 ## Table of Contents
 
@@ -104,11 +104,10 @@ Incoming lines are parsed one at a time: a frame with `id` and `method` is answe
 <a id="further-exploration"></a>
 ## Further Exploration
 
-Read these pages when the wire contract is not enough. They move from the serving plugin to the clients and the runnable application.
+Read these pages when the wire contract is not enough. They move from the serving plugin to the client and the runnable application.
 
 - [JSON-RPC serving plugin](../server/README.md) — the runtime plugin that serves this protocol over stdio.
 - [TypeScript SDK client](../client/README.md) — the client that drives this protocol.
-- [Python SDK](../../../python/README.md) — the Python counterpart that mirrors these shapes.
 - [SDK application bundle](../../bundle/sdk-app/README.md) — the `liwa --profile sdk` application that boots the server.
 
 -----
@@ -139,6 +138,6 @@ These limits define what the protocol does not cover or promise. They are curren
 <details>
 <summary>Working context for maintainers — click to expand</summary>
 
-This Dev Note is working context for maintainers and is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the code. This protocol's shapes are mirrored (not imported) by the Python SDK, so changing a method, payload, or the wire-stable `serverInfo.name` here requires updating the Python counterpart and the TypeScript client in the same change. No other unresolved design questions are recorded.
+This Dev Note is working context for maintainers and is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the code. Changing a method, payload, or the wire-stable `serverInfo.name` here requires updating the TypeScript client in the same change. No other unresolved design questions are recorded.
 
 </details>

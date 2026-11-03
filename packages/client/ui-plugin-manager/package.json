@@ -73,8 +73,7 @@
     "react-dom": "^18.2.0",
     "@liwa/util-crypto": "workspace:*",
     "@liwa/client-ui-settings": "workspace:*",
-    "@liwa/plugin-manager": "workspace:*",
-    "@liwa/client-product-analytics": "workspace:*"
+    "@liwa/plugin-manager": "workspace:*"
   },
   "files": [
     "locale/*.json",

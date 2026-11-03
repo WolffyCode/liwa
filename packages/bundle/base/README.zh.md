@@ -47,7 +47,7 @@ kind: "package-bundle"
 
 ### 你得到什么
 
-开箱即用，基于本核心构建的每个 profile 都提供：DeepSeek 模型连接（提供方与模型可配置，你还可以在设置中启用额外提供方）、完整工具集——文件编辑、shell 命令、web 搜索、HTTP(S) 抓取、subagent、任务与目标跟踪——可跨重启存活的持久会话，以及默认权限策略：把文件写入限制在工作区内，危险操作前征询许可。Web 抓取无需逐次审批，并且可以访问 loopback 与内网主机。DeepSeek 只收到模型调用及其附带的搜索、抓取调用：本核心不挂载遥测、反馈上传，也不在模型请求之外附加任何字段，模型请求只通过 `User-Agent` 标明应用（[协议参考](../../../docs/deepseek-llm-api-wire-extensions.zh.md)）。
+开箱即用，基于本核心构建的每个 profile 都提供：DeepSeek 模型连接（提供方与模型可配置，你还可以在设置中启用额外提供方）、完整工具集——文件编辑、shell 命令、web 搜索、HTTP(S) 抓取、subagent、任务与目标跟踪——可跨重启存活的持久会话，以及默认权限策略：把文件写入限制在工作区内，危险操作前征询许可。Web 抓取无需逐次审批，并且可以访问 loopback 与内网主机。DeepSeek 只收到模型调用及其附带的搜索、抓取调用：灵鲸不带遥测、反馈上传，也不附加额外请求字段，模型请求只通过 `User-Agent` 标明应用。
 
 `subagent` 与 `subagent_fork` 都创建受管理的子任务，并立即返回 child id。使用 `send_message` 可引导活跃子任务，或在完成后继续其对话。[委派工具行为](../../subagent/tool-subagent/README.zh.md)说明了结果交付和后端能力。
 

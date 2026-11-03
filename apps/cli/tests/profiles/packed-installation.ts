@@ -91,7 +91,6 @@ export async function createPackedInstallation(temporaryPrefix: string, extraPac
   Object.assign(environment, {
     LIWA_HOME: home,
     LIWA_AGENTS_HOME: join(temporary, 'agents'),
-    LIWA_TELEMETRY_DISABLED: '1',
     CI: 'true',
   })
   const [pnpm, ...prefix] = pnpmCommand()

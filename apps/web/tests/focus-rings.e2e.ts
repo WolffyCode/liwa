@@ -211,7 +211,7 @@ async function compileFixture(): Promise<{ script: string; css: string }> {
     import ${source('ui-theme/src/styles/focus.css')}
     import ${source('ui-theme/src/styles/gradient-shadow-text.css')}
     import triggerCss from ${source('ui-permission-presets/src/client/PermissionSelect.module.css')}
-    import feedbackCss from ${source('ui-message-feedback/src/client/FeedbackDialog.module.css')}
+    import fieldCss from ${source('ui-plugin-manager/src/client/PluginManagerPage.module.css')}
     import workflowCss from ${source('ui-workflow-run/src/client/WorkflowRunPanel.module.css')}
     import cardCss from ${source('ui-primitives/src/HoverCard.module.css')}
     import pillCss from ${source('ui-primitives/src/Pill.module.css')}
@@ -226,7 +226,7 @@ async function compileFixture(): Promise<{ script: string; css: string }> {
         <Menu open={open} autoFocus onClose={() => setOpen(false)}
           anchor={<button className={triggerCss.trigger} onClick={() => setOpen(!open)}>Open menu</button>}
           items={[{ id: 'first', label: 'First item' }, { id: 'last', label: 'Last item' }]} />
-        <textarea aria-label="Feedback" className={feedbackCss.detail} />
+        <textarea aria-label="Text field" className={fieldCss.registryCustomField} />
         <button aria-label="Workflow member" className={workflowCss.memberButton}>
           <span data-member-ring className={workflowCss.memberLabelWrap}>
             <span className={workflowCss.memberLabel}>Member</span>
@@ -382,7 +382,7 @@ describe('source-compiled supplementary focus paint', () => {
 
   it('negative control: blanket shadow suppression destroys input and card paint and misses descendants', async () => {
     const page = await openFixture()
-    const input = page.getByRole('textbox', { name: 'Feedback' })
+    const input = page.getByRole('textbox', { name: 'Text field' })
     const card = page.getByRole('button', { name: 'Elevated card' })
     const elevation = (await paint(card)).shadow
     await input.click()
@@ -442,7 +442,7 @@ describe('source-compiled supplementary focus paint', () => {
 
   it('preserves clicked text-input paint and card elevation while suppressing descendant rings', async () => {
     const page = await openFixture()
-    const input = page.getByRole('textbox', { name: 'Feedback' })
+    const input = page.getByRole('textbox', { name: 'Text field' })
     await input.click()
     await page.keyboard.type('Still focused')
     await expect.poll(async () => {

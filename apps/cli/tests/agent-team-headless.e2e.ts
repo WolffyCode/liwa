@@ -59,7 +59,6 @@ describe('liwa run with Agent Teams enabled', () => {
         env: {
           LIWA_HOME: home,
           LIWA_AGENTS_HOME: join(cwd, '.agents'),
-          LIWA_TELEMETRY_DISABLED: '1',
           DEEPSEEK_API_KEY: '',
           NODE_OPTIONS: [
             process.env.NODE_OPTIONS,

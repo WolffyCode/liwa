@@ -89,7 +89,6 @@ async function runHeadlessPtySmoke(): Promise<string> {
         LIWA_HOME: home,
         LIWA_AGENTS_HOME: join(cwd, '.agents'),
         DEEPSEEK_API_KEY: 'keyless-shutdown-no-call',
-        LIWA_TELEMETRY_DISABLED: '1',
         LIWA_TEST_SHUTDOWN_ARM_FILE: join(cwd, 'shutdown-armed'),
       },
     })

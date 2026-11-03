@@ -58,7 +58,7 @@ it.skipIf(!process.env.DEEPSEEK_API_KEY || process.platform === 'win32')(`agent 
     ], {
       cwd: root, env: {
         PATH: path, LIWA_HOME: join(root, 'home'), LIWA_AGENTS_HOME: join(root, 'agents'),
-        LIWA_PERMISSION_MODE: 'danger-full-access', LIWA_TELEMETRY_DISABLED: '1',
+        LIWA_PERMISSION_MODE: 'danger-full-access',
         LIWA_PRIMARY_RUNTIME: carrier === 'sdk' ? undefined : '',
       },
       timeout: 110_000, killSignal: 'SIGKILL', reject: false,

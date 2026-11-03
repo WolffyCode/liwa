@@ -59,7 +59,7 @@ describe('ShellEnvRegistry', () => {
     const ctx = new Context()
     ctx.provide('profileContext', {
       name: 'web', dir: '/profiles/web', patchPath: '/profiles/web/cordis.patch.yml', installAnchor: '/liwa/package.json',
-      cwd: '/work', home: '/home', startedBundles: [], overlays: [], telemetryDisabledEnv: undefined,
+      cwd: '/work', home: '/home', startedBundles: [], overlays: [],
     })
     const registry = new ShellEnvRegistry(ctx, { liwaHome: './test-liwa-home' })
     expect(registry.collect(execution())).toMatchObject({ LIWA_PROFILE: 'web', LIWA_PROFILE_DIR: '/profiles/web' })

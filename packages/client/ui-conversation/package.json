@@ -96,7 +96,6 @@
     "@liwa/agent": "workspace:*",
     "@liwa/settings": "workspace:*",
     "@liwa/client-shortcuts": "workspace:*",
-    "@liwa/client-product-analytics": "workspace:*",
     "@liwa/message-quotes": "workspace:*"
   },
   "files": [

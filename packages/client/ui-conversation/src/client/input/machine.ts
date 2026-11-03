@@ -8,7 +8,7 @@
  * only then does the editor clear, and a refusal or failure returns it to
  * editing unchanged.
  */
-import type { InputSubmitMode, MessageSubmission } from '../contract/composer-submission.ts'
+import type { InputSubmitMode } from '../contract/composer-submission.ts'
 import type { DraftQuote, Occurrence } from '../contract/draft-editor.ts'
 import type {
   CommandClaim, DraftAttachmentId, InputEffect, InputEvent, InputState, SubmitAttempt,
@@ -110,7 +110,6 @@ export class SubmitMachine {
     occurrences: readonly Occurrence[],
     quotes: readonly DraftQuote[],
     attachmentIds: readonly DraftAttachmentId[],
-    submission?: MessageSubmission,
   ): SubmitAttempt {
     const controller = new AbortController()
     this.seq += 1
@@ -122,7 +121,6 @@ export class SubmitMachine {
       quotes,
       attachmentIds,
       mode,
-      ...submission === undefined ? {} : { submission },
     }
     this.inflight = { attempt, controller }
     return attempt
@@ -137,15 +135,15 @@ export class SubmitMachine {
 
   private onEnter(ev: Extract<InputEvent, { type: 'enter' }>): readonly InputEffect[] {
     if (this.phase === 'adjudicating' || this.phase === 'submitting' || this.phase === 'sending') return []
-    const { mode, draft, occurrences, quotes, attachmentIds, submission } = ev
+    const { mode, draft, occurrences, quotes, attachmentIds } = ev
     if (this.phase === 'claimed' && this.claim !== undefined) {
-      const attempt = this.beginAttempt(mode, draft, occurrences, quotes, attachmentIds, submission)
+      const attempt = this.beginAttempt(mode, draft, occurrences, quotes, attachmentIds)
       this.phase = 'submitting'
       return [{ type: 'begin-submit', attempt, claim: this.claim, args: argsAfter(draft, this.claim.token) }]
     }
     const trimmed = draft.trim()
     if (trimmed === '' && attachmentIds.length === 0) return []
-    const attempt = this.beginAttempt(mode, draft, occurrences, quotes, attachmentIds, submission)
+    const attempt = this.beginAttempt(mode, draft, occurrences, quotes, attachmentIds)
     if (trimmed.startsWith('/')) {
       this.phase = 'adjudicating'
       return [{ type: 'adjudicate', attempt, draft }]

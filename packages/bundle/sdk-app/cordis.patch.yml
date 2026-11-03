@@ -23,22 +23,21 @@
 - id: hmr
   disabled: true
 
-# The packaged carrier supplies a default; LIWA_PRIMARY_RUNTIME overrides it,
-# including an empty-string opt-out. Each row can be patched independently.
+# LIWA_PRIMARY_RUNTIME names a prepared payload; unset or empty leaves both rows disabled.
+# Each row can be patched independently.
 - insert:
     - id: workspace-dependencies
       name: '@liwa/tool-workspace-dependencies'
-      disabled: !!js "!(process.env.LIWA_PRIMARY_RUNTIME ?? process.env.LIWA_BUNDLED_PRIMARY_RUNTIME)"
+      disabled: !!js "!process.env.LIWA_PRIMARY_RUNTIME"
       config:
-        source: !!js "process.getBuiltinModule('node:path').resolve(process.env.LIWA_PRIMARY_RUNTIME ?? process.env.LIWA_BUNDLED_PRIMARY_RUNTIME ?? '')"
+        source: !!js "process.getBuiltinModule('node:path').resolve(process.env.LIWA_PRIMARY_RUNTIME ?? '')"
 
     - id: skill-office
       name: '@liwa/skill-office'
-      disabled: !!js "!(process.env.LIWA_PRIMARY_RUNTIME ?? process.env.LIWA_BUNDLED_PRIMARY_RUNTIME) && !process.env.LIWA_BUNDLED_OFFICE_CLI"
+      disabled: !!js "!process.env.LIWA_PRIMARY_RUNTIME"
       config:
-        assetRoot: !!js "process.env.LIWA_BUNDLED_OFFICE_SKILLS ?? process.getBuiltinModule('node:path').resolve(process.env.LIWA_PRIMARY_RUNTIME ?? process.env.LIWA_BUNDLED_PRIMARY_RUNTIME ?? '', '..', 'office-skills')"
-        cli: !!js "process.env.LIWA_BUNDLED_OFFICE_CLI === '' ? false : process.env.LIWA_BUNDLED_OFFICE_CLI"
-        node: !!js "process.env.LIWA_BUNDLED_OFFICE_NODE ?? process.getBuiltinModule('node:path').resolve(process.env.LIWA_PRIMARY_RUNTIME ?? process.env.LIWA_BUNDLED_PRIMARY_RUNTIME ?? '', 'dependencies', 'node', 'bin', process.platform === 'win32' ? 'node.exe' : 'node')"
+        assetRoot: !!js "process.getBuiltinModule('node:path').resolve(process.env.LIWA_PRIMARY_RUNTIME ?? '', '..', 'office-skills')"
+        node: !!js "process.getBuiltinModule('node:path').resolve(process.env.LIWA_PRIMARY_RUNTIME ?? '', 'dependencies', 'node', 'bin', process.platform === 'win32' ? 'node.exe' : 'node')"
 
 # Share native desktop tools and model context without starting a Web server.
 - insert:

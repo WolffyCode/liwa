@@ -29,7 +29,6 @@
         provider: mock
         model: mock-echo
         env:
-          LIWA_TELEMETRY_DISABLED: '1'
           LIWA_TEST_CHILD_FAILURE: '1'
     - id: tool-subagent-liwa-sdk-diagnostic
       name: '@liwa/tool-subagent'
@@ -48,7 +47,6 @@
         provider: mock
         model: mock-echo
         env:
-          LIWA_TELEMETRY_DISABLED: '1'
           LIWA_TEST_CHILD_FAILURE: '1'
     - id: tool-subagent-liwa-sdk-diagnostic-second
       name: '@liwa/tool-subagent'

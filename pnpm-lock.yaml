@@ -246,9 +246,6 @@ importers:
       semver:
         specifier: ^7.8.5
         version: 7.8.5
-      smol-toml:
-        specifier: ^1.9.0
-        version: 1.9.0
       spdx-expression-parse:
         specifier: ^5.0.0
         version: 5.0.0
@@ -577,9 +574,6 @@ importers:
       '@liwa/credentials-local':
         specifier: workspace:*
         version: link:../../packages/credentials/credentials-local
-      '@liwa/deepseek-llm-api-extensions':
-        specifier: workspace:*
-        version: link:../../packages/llm/deepseek-llm-api-extensions
       '@liwa/experimental-agent-team':
         specifier: workspace:*
         version: link:../../packages/experimental/agent-team
@@ -725,9 +719,6 @@ importers:
       '@liwa/atomic-write':
         specifier: workspace:*
         version: link:../../packages/util/atomic-write
-      '@liwa/client-product-analytics':
-        specifier: workspace:*
-        version: link:../../packages/client/product-analytics
       '@liwa/client-shortcuts':
         specifier: workspace:*
         version: link:../../packages/client/shortcuts
@@ -1458,18 +1449,12 @@ importers:
       '@liwa/client-file-upload':
         specifier: workspace:*
         version: link:../../client/file-upload
-      '@liwa/client-product-analytics':
-        specifier: workspace:*
-        version: link:../../client/product-analytics
       '@liwa/client-ui-plugin-manager':
         specifier: workspace:*
         version: link:../../client/ui-plugin-manager
       '@liwa/client-ui-trajectory':
         specifier: workspace:*
         version: link:../../client/ui-trajectory
-      '@liwa/command-feedback':
-        specifier: workspace:*
-        version: link:../../feedback/command-feedback
       '@liwa/commands':
         specifier: workspace:*
         version: link:../../interaction/commands
@@ -1494,9 +1479,6 @@ importers:
       '@liwa/llm':
         specifier: workspace:*
         version: link:../../llm/llm
-      '@liwa/message-feedback':
-        specifier: workspace:*
-        version: link:../../feedback/message-feedback
       '@liwa/office-to-pdf':
         specifier: workspace:*
         version: link:../../document/office-to-pdf
@@ -3397,55 +3379,6 @@ importers:
         specifier: workspace:*
         version: link:../../util/package-manifest
 
-  packages/client/product-analytics:
-    dependencies:
-      '@liwa/schemastery':
-        specifier: link:../../../vendor/schemastery
-        version: link:../../../vendor/schemastery
-      '@liwa/typert-protocol':
-        specifier: workspace:*
-        version: link:../../typert/protocol
-      zod:
-        specifier: 4.4.3
-        version: 4.4.3
-    devDependencies:
-      '@liwa/api-gateway':
-        specifier: workspace:*
-        version: link:../../api/gateway
-      '@liwa/app-boot':
-        specifier: workspace:*
-        version: link:../../boot/app-boot
-      '@liwa/compaction':
-        specifier: workspace:*
-        version: link:../../compaction/compaction
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-      '@liwa/cordis-plugin-loader':
-        specifier: workspace:~
-        version: link:../../../vendor/loader
-      '@liwa/host-product-telemetry-otel':
-        specifier: workspace:*
-        version: link:../../host/product-telemetry-otel
-      '@liwa/host-webserver':
-        specifier: workspace:*
-        version: link:../../host/webserver
-      '@liwa/llm':
-        specifier: workspace:*
-        version: link:../../llm/llm
-      '@liwa/loader-smoke':
-        specifier: workspace:*
-        version: link:../../test-support/loader-smoke
-      '@liwa/otel':
-        specifier: workspace:*
-        version: link:../../telemetry/otel
-      '@liwa/session':
-        specifier: workspace:*
-        version: link:../../core/session
-      '@liwa/settings':
-        specifier: workspace:*
-        version: link:../../settings/settings
-
   packages/client/resources:
     devDependencies:
       '@liwa/client-store':
@@ -3530,9 +3463,6 @@ importers:
       '@liwa/client-locale':
         specifier: workspace:*
         version: link:../locale
-      '@liwa/client-product-analytics':
-        specifier: workspace:*
-        version: link:../product-analytics
       '@liwa/client-store':
         specifier: workspace:*
         version: link:../store
@@ -3726,9 +3656,6 @@ importers:
       '@liwa/client-locale':
         specifier: workspace:*
         version: link:../locale
-      '@liwa/client-product-analytics':
-        specifier: workspace:*
-        version: link:../product-analytics
       '@liwa/client-store':
         specifier: workspace:*
         version: link:../store
@@ -3928,9 +3855,6 @@ importers:
       '@liwa/client-locale':
         specifier: workspace:*
         version: link:../locale
-      '@liwa/client-product-analytics':
-        specifier: workspace:*
-        version: link:../product-analytics
       '@liwa/client-shortcuts':
         specifier: workspace:*
         version: link:../shortcuts
@@ -4217,9 +4141,6 @@ importers:
       '@liwa/client-locale':
         specifier: workspace:*
         version: link:../locale
-      '@liwa/client-product-analytics':
-        specifier: workspace:*
-        version: link:../product-analytics
       '@liwa/client-store':
         specifier: workspace:*
         version: link:../store
@@ -4482,72 +4403,6 @@ importers:
         specifier: ^18.2.0
         version: 18.3.1
 
-  packages/client/ui-message-feedback:
-    devDependencies:
-      '@liwa/api-remotes':
-        specifier: workspace:*
-        version: link:../../api/remotes
-      '@liwa/client-connection':
-        specifier: workspace:*
-        version: link:../connection
-      '@liwa/client-locale':
-        specifier: workspace:*
-        version: link:../locale
-      '@liwa/client-store':
-        specifier: workspace:*
-        version: link:../store
-      '@liwa/client-test-runtime':
-        specifier: workspace:*
-        version: link:../../test-support/client-runtime
-      '@liwa/client-ui-chat':
-        specifier: workspace:*
-        version: link:../ui-chat
-      '@liwa/client-ui-commands':
-        specifier: workspace:*
-        version: link:../ui-commands
-      '@liwa/client-ui-conversation':
-        specifier: workspace:*
-        version: link:../ui-conversation
-      '@liwa/client-ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
-      '@liwa/client-ui-renderer':
-        specifier: workspace:*
-        version: link:../ui-renderer
-      '@liwa/client-ui-session':
-        specifier: workspace:*
-        version: link:../ui-session
-      '@liwa/client-ui-slots':
-        specifier: workspace:*
-        version: link:../ui-slots
-      '@liwa/command-feedback':
-        specifier: workspace:*
-        version: link:../../feedback/command-feedback
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-      '@liwa/message-feedback':
-        specifier: workspace:*
-        version: link:../../feedback/message-feedback
-      '@liwa/remote-mock':
-        specifier: workspace:*
-        version: link:../../test-support/remote-mock
-      '@liwa/session':
-        specifier: workspace:*
-        version: link:../../core/session
-      '@liwa/typert-protocol':
-        specifier: workspace:*
-        version: link:../../typert/protocol
-      '@testing-library/react':
-        specifier: ^16.3.3
-        version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react:
-        specifier: ^18.2.0
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.3.1(react@18.3.1)
-
   packages/client/ui-model-selection:
     devDependencies:
       '@liwa/agent':
@@ -4562,9 +4417,6 @@ importers:
       '@liwa/client-locale':
         specifier: workspace:*
         version: link:../locale
-      '@liwa/client-product-analytics':
-        specifier: workspace:*
-        version: link:../product-analytics
       '@liwa/client-store':
         specifier: workspace:*
         version: link:../store
@@ -4833,9 +4685,6 @@ importers:
       '@liwa/client-locale':
         specifier: workspace:*
         version: link:../locale
-      '@liwa/client-product-analytics':
-        specifier: workspace:*
-        version: link:../product-analytics
       '@liwa/client-store':
         specifier: workspace:*
         version: link:../store
@@ -5336,9 +5185,6 @@ importers:
       '@liwa/client-modules':
         specifier: workspace:*
         version: link:../modules
-      '@liwa/client-product-analytics':
-        specifier: workspace:*
-        version: link:../product-analytics
       '@liwa/client-shortcuts':
         specifier: workspace:*
         version: link:../shortcuts
@@ -5400,9 +5246,6 @@ importers:
       '@liwa/client-locale':
         specifier: workspace:*
         version: link:../locale
-      '@liwa/client-product-analytics':
-        specifier: workspace:*
-        version: link:../product-analytics
       '@liwa/client-store':
         specifier: workspace:*
         version: link:../store
@@ -5514,45 +5357,6 @@ importers:
       react:
         specifier: ^18.2.0
         version: 18.3.1
-
-  packages/client/ui-settings-session-log:
-    devDependencies:
-      '@liwa/api-remotes':
-        specifier: workspace:*
-        version: link:../../api/remotes
-      '@liwa/client-locale':
-        specifier: workspace:*
-        version: link:../locale
-      '@liwa/client-store':
-        specifier: workspace:*
-        version: link:../store
-      '@liwa/client-test-runtime':
-        specifier: workspace:*
-        version: link:../../test-support/client-runtime
-      '@liwa/client-ui-layout':
-        specifier: workspace:*
-        version: link:../ui-layout
-      '@liwa/client-ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
-      '@liwa/client-ui-renderer':
-        specifier: workspace:*
-        version: link:../ui-renderer
-      '@liwa/client-ui-settings':
-        specifier: workspace:*
-        version: link:../ui-settings
-      '@liwa/client-ui-slots':
-        specifier: workspace:*
-        version: link:../ui-slots
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-      react:
-        specifier: ^18.2.0
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.3.1(react@18.3.1)
 
   packages/client/ui-settings-shell:
     devDependencies:
@@ -5712,9 +5516,6 @@ importers:
       '@liwa/client-locale':
         specifier: workspace:*
         version: link:../locale
-      '@liwa/client-product-analytics':
-        specifier: workspace:*
-        version: link:../product-analytics
       '@liwa/client-shortcuts':
         specifier: workspace:*
         version: link:../shortcuts
@@ -6663,9 +6464,6 @@ importers:
       '@liwa/client-locale':
         specifier: workspace:*
         version: link:../locale
-      '@liwa/client-product-analytics':
-        specifier: workspace:*
-        version: link:../product-analytics
       '@liwa/client-shortcuts':
         specifier: workspace:*
         version: link:../shortcuts
@@ -11474,83 +11272,6 @@ importers:
         specifier: ^18.2.0
         version: 18.3.1
 
-  packages/feedback/command-feedback:
-    dependencies:
-      zod:
-        specifier: 4.4.3
-        version: 4.4.3
-    devDependencies:
-      '@liwa/agent':
-        specifier: workspace:*
-        version: link:../../core/agent
-      '@liwa/agent-loop-testkit':
-        specifier: workspace:*
-        version: link:../../test-support/agent-loop-testkit
-      '@liwa/anonymous-user-id':
-        specifier: workspace:*
-        version: link:../../identity/anonymous-user-id
-      '@liwa/commands':
-        specifier: workspace:*
-        version: link:../../interaction/commands
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-      '@liwa/cordis-plugin-include':
-        specifier: workspace:~
-        version: link:../../../vendor/include
-      '@liwa/cordis-plugin-loader':
-        specifier: workspace:~
-        version: link:../../../vendor/loader
-      '@liwa/llm':
-        specifier: workspace:*
-        version: link:../../llm/llm
-      '@liwa/session':
-        specifier: workspace:*
-        version: link:../../core/session
-      '@liwa/typert-protocol':
-        specifier: workspace:*
-        version: link:../../typert/protocol
-
-  packages/feedback/message-feedback:
-    dependencies:
-      '@liwa/schemastery':
-        specifier: link:../../../vendor/schemastery
-        version: link:../../../vendor/schemastery
-      zod:
-        specifier: 4.4.3
-        version: 4.4.3
-    devDependencies:
-      '@liwa/brand':
-        specifier: workspace:*
-        version: link:../../util/brand
-      '@liwa/command-feedback':
-        specifier: workspace:*
-        version: link:../command-feedback
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-      '@liwa/cordis-plugin-include':
-        specifier: workspace:~
-        version: link:../../../vendor/include
-      '@liwa/cordis-plugin-loader':
-        specifier: workspace:~
-        version: link:../../../vendor/loader
-      '@liwa/llm':
-        specifier: workspace:*
-        version: link:../../llm/llm
-      '@liwa/session':
-        specifier: workspace:*
-        version: link:../../core/session
-      '@liwa/session-persistence':
-        specifier: workspace:*
-        version: link:../../session/session-persistence
-      '@liwa/session-persistence-jsonl':
-        specifier: workspace:*
-        version: link:../../session/session-persistence-jsonl
-      '@liwa/typert-protocol':
-        specifier: workspace:*
-        version: link:../../typert/protocol
-
   packages/fs/fs:
     devDependencies:
       '@liwa/brand':
@@ -12197,37 +11918,6 @@ importers:
         specifier: workspace:*
         version: link:../../typert/protocol
 
-  packages/host/product-telemetry-otel:
-    dependencies:
-      '@liwa/schemastery':
-        specifier: link:../../../vendor/schemastery
-        version: link:../../../vendor/schemastery
-      '@opentelemetry/api-logs':
-        specifier: 0.222.0
-        version: 0.222.0
-      '@opentelemetry/otlp-exporter-base':
-        specifier: 0.222.0
-        version: 0.222.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/sdk-logs':
-        specifier: 0.222.0
-        version: 0.222.0(@opentelemetry/api@1.9.1)
-    devDependencies:
-      '@liwa/app-boot':
-        specifier: workspace:*
-        version: link:../../boot/app-boot
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-      '@liwa/cordis-plugin-loader':
-        specifier: workspace:~
-        version: link:../../../vendor/loader
-      '@liwa/loader-smoke':
-        specifier: workspace:*
-        version: link:../../test-support/loader-smoke
-      '@liwa/otel':
-        specifier: workspace:*
-        version: link:../../telemetry/otel
-
   packages/host/webserver:
     dependencies:
       '@liwa/schemastery':
@@ -12258,18 +11948,6 @@ importers:
       selfsigned:
         specifier: ^4.0.1
         version: 4.0.1
-
-  packages/identity/anonymous-user-id:
-    devDependencies:
-      '@liwa/brand':
-        specifier: workspace:*
-        version: link:../../util/brand
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-      '@liwa/home-paths':
-        specifier: workspace:*
-        version: link:../../util/home-paths
 
   packages/interaction/commands:
     dependencies:
@@ -12548,12 +12226,6 @@ importers:
         specifier: workspace:*
         version: link:../../core/tools
 
-  packages/llm/deepseek-llm-api-extensions:
-    devDependencies:
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-
   packages/llm/llm:
     dependencies:
       '@liwa/brand':
@@ -12639,9 +12311,6 @@ importers:
       '@liwa/credentials-local':
         specifier: workspace:*
         version: link:../../credentials/credentials-local
-      '@liwa/deepseek-llm-api-extensions':
-        specifier: workspace:*
-        version: link:../deepseek-llm-api-extensions
       '@liwa/fs':
         specifier: workspace:*
         version: link:../../fs/fs
@@ -12660,15 +12329,9 @@ importers:
       '@liwa/llm-deepseek-api-key':
         specifier: workspace:*
         version: link:../llm-deepseek-api-key
-      '@liwa/plugin-package-inventory-deepseek':
-        specifier: workspace:*
-        version: link:../plugin-package-inventory-deepseek
       '@liwa/session':
         specifier: workspace:*
         version: link:../../core/session
-      '@liwa/session-log-deepseek':
-        specifier: workspace:*
-        version: link:../../session/session-log-deepseek
       '@liwa/session-projection':
         specifier: workspace:*
         version: link:../../session/session-projection
@@ -12852,46 +12515,6 @@ importers:
       '@liwa/tools':
         specifier: workspace:*
         version: link:../../core/tools
-
-  packages/llm/plugin-package-inventory-deepseek:
-    dependencies:
-      '@liwa/brand':
-        specifier: workspace:*
-        version: link:../../util/brand
-      '@liwa/schemastery':
-        specifier: link:../../../vendor/schemastery
-        version: link:../../../vendor/schemastery
-    devDependencies:
-      '@liwa/agent':
-        specifier: workspace:*
-        version: link:../../core/agent
-      '@liwa/agent-preset-registry':
-        specifier: workspace:*
-        version: link:../../preset/agent-preset-registry
-      '@liwa/app-boot':
-        specifier: workspace:*
-        version: link:../../boot/app-boot
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-      '@liwa/cordis-plugin-include':
-        specifier: workspace:~
-        version: link:../../../vendor/include
-      '@liwa/cordis-plugin-loader':
-        specifier: workspace:~
-        version: link:../../../vendor/loader
-      '@liwa/deepseek-llm-api-extensions':
-        specifier: workspace:*
-        version: link:../deepseek-llm-api-extensions
-      '@liwa/scope':
-        specifier: workspace:*
-        version: link:../../core/scope
-      '@liwa/session':
-        specifier: workspace:*
-        version: link:../../core/session
-      '@liwa/session-projection':
-        specifier: workspace:*
-        version: link:../../session/session-projection
 
   packages/llm/token-meter:
     dependencies:
@@ -13762,9 +13385,6 @@ importers:
       '@liwa/client-ui-layout':
         specifier: workspace:*
         version: link:../../client/ui-layout
-      '@liwa/client-ui-message-feedback':
-        specifier: workspace:*
-        version: link:../../client/ui-message-feedback
       '@liwa/client-ui-primitives':
         specifier: workspace:*
         version: link:../../client/ui-primitives
@@ -14053,55 +13673,6 @@ importers:
         specifier: workspace:~
         version: link:../../../vendor/cordis
 
-  packages/session/session-log-deepseek:
-    dependencies:
-      '@liwa/brand':
-        specifier: workspace:*
-        version: link:../../util/brand
-      '@liwa/schemastery':
-        specifier: link:../../../vendor/schemastery
-        version: link:../../../vendor/schemastery
-      '@liwa/util-values':
-        specifier: workspace:*
-        version: link:../../util/values
-    devDependencies:
-      '@liwa/command-feedback':
-        specifier: workspace:*
-        version: link:../../feedback/command-feedback
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-      '@liwa/cordis-plugin-include':
-        specifier: workspace:~
-        version: link:../../../vendor/include
-      '@liwa/cordis-plugin-loader':
-        specifier: workspace:~
-        version: link:../../../vendor/loader
-      '@liwa/deepseek-llm-api-extensions':
-        specifier: workspace:*
-        version: link:../../llm/deepseek-llm-api-extensions
-      '@liwa/llm':
-        specifier: workspace:*
-        version: link:../../llm/llm
-      '@liwa/llm-deepseek':
-        specifier: workspace:*
-        version: link:../../llm/llm-deepseek
-      '@liwa/llm-deepseek-api-key':
-        specifier: workspace:*
-        version: link:../../llm/llm-deepseek-api-key
-      '@liwa/llm-mock-server':
-        specifier: workspace:*
-        version: link:../../test-support/llm-mock-server
-      '@liwa/message-feedback':
-        specifier: workspace:*
-        version: link:../../feedback/message-feedback
-      '@liwa/session':
-        specifier: workspace:*
-        version: link:../../core/session
-      '@liwa/session-persistence-jsonl':
-        specifier: workspace:*
-        version: link:../session-persistence-jsonl
-
   packages/session/session-persistence:
     dependencies:
       '@liwa/util-values':
@@ -14238,79 +13809,6 @@ importers:
       '@liwa/session-projection':
         specifier: workspace:*
         version: link:../session-projection
-
-  packages/session/session-telemetry:
-    devDependencies:
-      '@liwa/agent':
-        specifier: workspace:*
-        version: link:../../core/agent
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-      '@liwa/session':
-        specifier: workspace:*
-        version: link:../../core/session
-
-  packages/session/session-telemetry-otel:
-    dependencies:
-      '@liwa/schemastery':
-        specifier: link:../../../vendor/schemastery
-        version: link:../../../vendor/schemastery
-      '@opentelemetry/api-logs':
-        specifier: 0.222.0
-        version: 0.222.0
-    devDependencies:
-      '@liwa/anonymous-user-id':
-        specifier: workspace:*
-        version: link:../../identity/anonymous-user-id
-      '@liwa/app-boot':
-        specifier: workspace:*
-        version: link:../../boot/app-boot
-      '@liwa/bash-local':
-        specifier: workspace:*
-        version: link:../../shell/bash-local
-      '@liwa/command-feedback':
-        specifier: workspace:*
-        version: link:../../feedback/command-feedback
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-      '@liwa/cordis-plugin-loader':
-        specifier: workspace:~
-        version: link:../../../vendor/loader
-      '@liwa/cordis-plugin-logger-console':
-        specifier: workspace:~
-        version: link:../../../vendor/logger-console
-      '@liwa/http-proxy':
-        specifier: workspace:*
-        version: link:../../util/http-proxy
-      '@liwa/llm':
-        specifier: workspace:*
-        version: link:../../llm/llm
-      '@liwa/loader-smoke':
-        specifier: workspace:*
-        version: link:../../test-support/loader-smoke
-      '@liwa/message-feedback':
-        specifier: workspace:*
-        version: link:../../feedback/message-feedback
-      '@liwa/otel':
-        specifier: workspace:*
-        version: link:../../telemetry/otel
-      '@liwa/session':
-        specifier: workspace:*
-        version: link:../../core/session
-      '@liwa/session-checkpoint-policy':
-        specifier: workspace:*
-        version: link:../session-checkpoint-policy
-      '@liwa/session-persistence-jsonl':
-        specifier: workspace:*
-        version: link:../session-persistence-jsonl
-      '@liwa/session-telemetry':
-        specifier: workspace:*
-        version: link:../session-telemetry
-      '@liwa/subprocess-local':
-        specifier: workspace:*
-        version: link:../../subprocess/subprocess-local
 
   packages/session/session-title:
     dependencies:
@@ -16211,40 +15709,6 @@ importers:
         specifier: workspace:~
         version: link:../../../vendor/cordis
 
-  packages/telemetry/otel:
-    dependencies:
-      '@opentelemetry/api':
-        specifier: ^1.9.1
-        version: 1.9.1
-      '@opentelemetry/api-logs':
-        specifier: 0.222.0
-        version: 0.222.0
-      '@opentelemetry/core':
-        specifier: 2.11.0
-        version: 2.11.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/otlp-exporter-base':
-        specifier: 0.222.0
-        version: 0.222.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/otlp-transformer':
-        specifier: 0.222.0
-        version: 0.222.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/resources':
-        specifier: 2.11.0
-        version: 2.11.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/sdk-logs':
-        specifier: 0.222.0
-        version: 0.222.0(@opentelemetry/api@1.9.1)
-      got:
-        specifier: ^14.6.6
-        version: 14.6.6
-    devDependencies:
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-      '@liwa/session':
-        specifier: workspace:*
-        version: link:../../core/session
-
   packages/terminal/terminal:
     devDependencies:
       '@liwa/agent':
@@ -16485,9 +15949,6 @@ importers:
       '@liwa/cordis':
         specifier: workspace:~
         version: link:../../../vendor/cordis
-      '@liwa/deepseek-llm-api-extensions':
-        specifier: workspace:*
-        version: link:../../llm/deepseek-llm-api-extensions
       '@liwa/llm':
         specifier: workspace:*
         version: link:../../llm/llm
@@ -17337,450 +16798,6 @@ importers:
       '@liwa/typert-protocol':
         specifier: workspace:*
         version: link:../../typert/protocol
-
-  python/sdk-runtime:
-    dependencies:
-      '@liwa/acp':
-        specifier: workspace:*
-        version: link:../../packages/acp/acp
-      '@liwa/agent':
-        specifier: workspace:*
-        version: link:../../packages/core/agent
-      '@liwa/agent-default-model':
-        specifier: workspace:*
-        version: link:../../packages/core/agent-default-model
-      '@liwa/agent-instructions':
-        specifier: workspace:*
-        version: link:../../packages/context/agent-instructions
-      '@liwa/agent-loop':
-        specifier: workspace:*
-        version: link:../../packages/core/agent-loop
-      '@liwa/agent-preset-registry':
-        specifier: workspace:*
-        version: link:../../packages/preset/agent-preset-registry
-      '@liwa/agent-tool-presentation':
-        specifier: workspace:*
-        version: link:../../packages/core/agent-tool-presentation
-      '@liwa/api-gateway':
-        specifier: workspace:*
-        version: link:../../packages/api/gateway
-      '@liwa/api-session-controller':
-        specifier: workspace:*
-        version: link:../../packages/api/session-controller
-      '@liwa/app-boot':
-        specifier: workspace:*
-        version: link:../../packages/boot/app-boot
-      '@liwa/atomic-write':
-        specifier: workspace:*
-        version: link:../../packages/util/atomic-write
-      '@liwa/attachment':
-        specifier: workspace:*
-        version: link:../../packages/attachment/attachment
-      '@liwa/authorization':
-        specifier: workspace:*
-        version: link:../../packages/credentials/authorization
-      '@liwa/base':
-        specifier: workspace:*
-        version: link:../../packages/bundle/base
-      '@liwa/bash-local':
-        specifier: workspace:*
-        version: link:../../packages/shell/bash-local
-      '@liwa/brand':
-        specifier: workspace:*
-        version: link:../../packages/util/brand
-      '@liwa/cli':
-        specifier: workspace:*
-        version: link:../../apps/cli
-      '@liwa/client-connection':
-        specifier: workspace:*
-        version: link:../../packages/client/connection
-      '@liwa/client-file-upload':
-        specifier: workspace:*
-        version: link:../../packages/client/file-upload
-      '@liwa/cmdline':
-        specifier: workspace:*
-        version: link:../../packages/boot/cmdline
-      '@liwa/command-compact':
-        specifier: workspace:*
-        version: link:../../packages/compaction/command-compact
-      '@liwa/command-goal':
-        specifier: workspace:*
-        version: link:../../packages/goal/command-goal
-      '@liwa/commands':
-        specifier: workspace:*
-        version: link:../../packages/interaction/commands
-      '@liwa/compaction':
-        specifier: workspace:*
-        version: link:../../packages/compaction/compaction
-      '@liwa/compaction-basic':
-        specifier: workspace:*
-        version: link:../../packages/compaction/compaction-basic
-      '@liwa/compaction-image-offload':
-        specifier: workspace:*
-        version: link:../../packages/compaction/compaction-image-offload
-      '@liwa/compaction-tool-result-pruner':
-        specifier: workspace:*
-        version: link:../../packages/compaction/compaction-tool-result-pruner
-      '@liwa/config-editor':
-        specifier: workspace:*
-        version: link:../../packages/boot/config-editor
-      '@liwa/cordis':
-        specifier: workspace:~
-        version: link:../../vendor/cordis
-      '@liwa/cordis-host-runner':
-        specifier: workspace:*
-        version: link:../../packages/extensions/cordis-host-runner
-      '@liwa/cordis-plugin-group':
-        specifier: workspace:~
-        version: link:../../vendor/group
-      '@liwa/cordis-plugin-include':
-        specifier: workspace:~
-        version: link:../../vendor/include
-      '@liwa/cordis-plugin-loader':
-        specifier: workspace:~
-        version: link:../../vendor/loader
-      '@liwa/cordis-plugin-timer':
-        specifier: workspace:~
-        version: link:../../vendor/timer
-      '@liwa/cosmokit':
-        specifier: link:../../vendor/cosmokit
-        version: link:../../vendor/cosmokit
-      '@liwa/credentials':
-        specifier: workspace:*
-        version: link:../../packages/credentials/credentials
-      '@liwa/deepseek-llm-api-extensions':
-        specifier: workspace:*
-        version: link:../../packages/llm/deepseek-llm-api-extensions
-      '@liwa/file-reference':
-        specifier: workspace:*
-        version: link:../../packages/context/file-reference
-      '@liwa/fs':
-        specifier: workspace:*
-        version: link:../../packages/fs/fs
-      '@liwa/fs-local':
-        specifier: workspace:*
-        version: link:../../packages/fs/fs-local
-      '@liwa/fs-observation-policy':
-        specifier: workspace:*
-        version: link:../../packages/fs/fs-observation-policy
-      '@liwa/fs-sandbox':
-        specifier: workspace:*
-        version: link:../../packages/fs/fs-sandbox
-      '@liwa/goal':
-        specifier: workspace:*
-        version: link:../../packages/goal/goal
-      '@liwa/goal-round-driver':
-        specifier: workspace:*
-        version: link:../../packages/goal/goal-round-driver
-      '@liwa/home-paths':
-        specifier: workspace:*
-        version: link:../../packages/util/home-paths
-      '@liwa/host-plugin-inventory':
-        specifier: workspace:*
-        version: link:../../packages/host/plugin-inventory
-      '@liwa/host-webserver':
-        specifier: workspace:*
-        version: link:../../packages/host/webserver
-      '@liwa/http-proxy':
-        specifier: workspace:*
-        version: link:../../packages/util/http-proxy
-      '@liwa/jobs':
-        specifier: workspace:*
-        version: link:../../packages/jobs/jobs
-      '@liwa/jobs-local':
-        specifier: workspace:*
-        version: link:../../packages/jobs/jobs-local
-      '@liwa/launch-environment':
-        specifier: workspace:*
-        version: link:../../packages/util/launch-environment
-      '@liwa/llm':
-        specifier: workspace:*
-        version: link:../../packages/llm/llm
-      '@liwa/llm-deepseek':
-        specifier: workspace:*
-        version: link:../../packages/llm/llm-deepseek
-      '@liwa/llm-deepseek-api-key':
-        specifier: workspace:*
-        version: link:../../packages/llm/llm-deepseek-api-key
-      '@liwa/llm-pi-ai':
-        specifier: workspace:*
-        version: link:../../packages/llm/llm-pi-ai
-      '@liwa/llm-retry':
-        specifier: workspace:*
-        version: link:../../packages/llm/llm-retry
-      '@liwa/mcp-client':
-        specifier: workspace:*
-        version: link:../../packages/mcp/mcp-client
-      '@liwa/native-command':
-        specifier: workspace:*
-        version: link:../../packages/util/native-command
-      '@liwa/output-retention':
-        specifier: workspace:*
-        version: link:../../packages/util/output-retention
-      '@liwa/permission-presets':
-        specifier: workspace:*
-        version: link:../../packages/interaction/permission-presets
-      '@liwa/persona':
-        specifier: workspace:*
-        version: link:../../packages/preset/persona
-      '@liwa/plan-mode':
-        specifier: workspace:*
-        version: link:../../packages/plan/plan-mode
-      '@liwa/plugin-manager':
-        specifier: workspace:*
-        version: link:../../packages/boot/plugin-manager
-      '@liwa/plugin-market':
-        specifier: workspace:*
-        version: link:../../packages/boot/plugin-market
-      '@liwa/ptc-runtime':
-        specifier: workspace:*
-        version: link:../../packages/ptc-runtime/ptc-runtime
-      '@liwa/ptc-runtime-node':
-        specifier: workspace:*
-        version: link:../../packages/ptc-runtime/ptc-runtime-node
-      '@liwa/pwsh-local':
-        specifier: workspace:*
-        version: link:../../packages/shell/pwsh-local
-      '@liwa/repeat-tool-reminder':
-        specifier: workspace:*
-        version: link:../../packages/guard/repeat-tool-reminder
-      '@liwa/sandbox':
-        specifier: workspace:*
-        version: link:../../packages/sandbox/sandbox
-      '@liwa/sandbox-local':
-        specifier: workspace:*
-        version: link:../../packages/sandbox/sandbox-local
-      '@liwa/sandbox-policy':
-        specifier: workspace:*
-        version: link:../../packages/sandbox/sandbox-policy
-      '@liwa/schedule':
-        specifier: workspace:*
-        version: link:../../packages/schedule/schedule
-      '@liwa/schemastery':
-        specifier: link:../../vendor/schemastery
-        version: link:../../vendor/schemastery
-      '@liwa/scope':
-        specifier: workspace:*
-        version: link:../../packages/core/scope
-      '@liwa/sdk-jsonrpc-server':
-        specifier: workspace:*
-        version: link:../../packages/sdk/server
-      '@liwa/sdk-protocol':
-        specifier: workspace:*
-        version: link:../../packages/sdk/protocol
-      '@liwa/session':
-        specifier: workspace:*
-        version: link:../../packages/core/session
-      '@liwa/session-checkpoint-policy':
-        specifier: workspace:*
-        version: link:../../packages/session/session-checkpoint-policy
-      '@liwa/session-persistence':
-        specifier: workspace:*
-        version: link:../../packages/session/session-persistence
-      '@liwa/session-persistence-jsonl':
-        specifier: workspace:*
-        version: link:../../packages/session/session-persistence-jsonl
-      '@liwa/session-projection':
-        specifier: workspace:*
-        version: link:../../packages/session/session-projection
-      '@liwa/session-query':
-        specifier: workspace:*
-        version: link:../../packages/session-query/session-query
-      '@liwa/session-query-sqlite':
-        specifier: workspace:*
-        version: link:../../packages/session-query/session-query-sqlite
-      '@liwa/session-reference':
-        specifier: workspace:*
-        version: link:../../packages/context/session-reference
-      '@liwa/session-title':
-        specifier: workspace:*
-        version: link:../../packages/session/session-title
-      '@liwa/session-title-llm':
-        specifier: workspace:*
-        version: link:../../packages/session/session-title-llm
-      '@liwa/settings':
-        specifier: workspace:*
-        version: link:../../packages/settings/settings
-      '@liwa/shell':
-        specifier: workspace:*
-        version: link:../../packages/shell/shell
-      '@liwa/shell-env':
-        specifier: workspace:*
-        version: link:../../packages/shell/shell-env
-      '@liwa/skill':
-        specifier: workspace:*
-        version: link:../../packages/skill/skill
-      '@liwa/skill-filesystem':
-        specifier: workspace:*
-        version: link:../../packages/skill/skill-filesystem
-      '@liwa/skill-office':
-        specifier: workspace:*
-        version: link:../../packages/skill/skill-office
-      '@liwa/spill':
-        specifier: workspace:*
-        version: link:../../packages/spill/spill
-      '@liwa/storage':
-        specifier: workspace:*
-        version: link:../../packages/storage/storage
-      '@liwa/storage-domain':
-        specifier: workspace:*
-        version: link:../../packages/storage/storage-domain
-      '@liwa/subagent':
-        specifier: workspace:*
-        version: link:../../packages/subagent/subagent
-      '@liwa/subagent-acp':
-        specifier: workspace:*
-        version: link:../../packages/subagent/subagent-acp
-      '@liwa/subagent-fork-in-process':
-        specifier: workspace:*
-        version: link:../../packages/subagent/subagent-fork-in-process
-      '@liwa/subagent-spawn-in-process':
-        specifier: workspace:*
-        version: link:../../packages/subagent/subagent-spawn-in-process
-      '@liwa/subprocess':
-        specifier: workspace:*
-        version: link:../../packages/subprocess/subprocess
-      '@liwa/subprocess-local':
-        specifier: workspace:*
-        version: link:../../packages/subprocess/subprocess-local
-      '@liwa/system-prompt':
-        specifier: workspace:*
-        version: link:../../packages/core/system-prompt
-      '@liwa/terminal':
-        specifier: workspace:*
-        version: link:../../packages/terminal/terminal
-      '@liwa/terminal-bash':
-        specifier: workspace:*
-        version: link:../../packages/terminal/terminal-bash
-      '@liwa/time-context':
-        specifier: workspace:*
-        version: link:../../packages/context/time-context
-      '@liwa/timeout':
-        specifier: workspace:*
-        version: link:../../packages/util/timeout
-      '@liwa/token-meter':
-        specifier: workspace:*
-        version: link:../../packages/llm/token-meter
-      '@liwa/tool-ask-user':
-        specifier: workspace:*
-        version: link:../../packages/interaction/tool-ask-user
-      '@liwa/tool-bash':
-        specifier: workspace:*
-        version: link:../../packages/shell/tool-bash
-      '@liwa/tool-bash-persistent':
-        specifier: workspace:*
-        version: link:../../packages/shell/tool-bash-persistent
-      '@liwa/tool-call-timeout-policy':
-        specifier: workspace:*
-        version: link:../../packages/guard/timeout-policy
-      '@liwa/tool-cordis':
-        specifier: workspace:*
-        version: link:../../packages/extensions/tool-cordis
-      '@liwa/tool-executor-ptc':
-        specifier: workspace:*
-        version: link:../../packages/core/tool-executor-ptc
-      '@liwa/tool-fs':
-        specifier: workspace:*
-        version: link:../../packages/fs/tool-fs
-      '@liwa/tool-fs-search':
-        specifier: workspace:*
-        version: link:../../packages/fs/tool-fs-search
-      '@liwa/tool-goal':
-        specifier: workspace:*
-        version: link:../../packages/goal/tool-goal
-      '@liwa/tool-jobs':
-        specifier: workspace:*
-        version: link:../../packages/jobs/tool-jobs
-      '@liwa/tool-present':
-        specifier: workspace:*
-        version: link:../../packages/deliverables/tool-present
-      '@liwa/tool-pwsh':
-        specifier: workspace:*
-        version: link:../../packages/shell/tool-pwsh
-      '@liwa/tool-pwsh-persistent':
-        specifier: workspace:*
-        version: link:../../packages/shell/tool-pwsh-persistent
-      '@liwa/tool-schedule':
-        specifier: workspace:*
-        version: link:../../packages/schedule/tool-schedule
-      '@liwa/tool-skill':
-        specifier: workspace:*
-        version: link:../../packages/skill/tool-skill
-      '@liwa/tool-str-replace-editor':
-        specifier: workspace:*
-        version: link:../../packages/fs/tool-str-replace-editor
-      '@liwa/tool-subagent':
-        specifier: workspace:*
-        version: link:../../packages/subagent/tool-subagent
-      '@liwa/tool-subagent-control':
-        specifier: workspace:*
-        version: link:../../packages/subagent/tool-subagent-control
-      '@liwa/tool-todo':
-        specifier: workspace:*
-        version: link:../../packages/todo/tool-todo
-      '@liwa/tool-web':
-        specifier: workspace:*
-        version: link:../../packages/web/tool-web
-      '@liwa/tool-workflow':
-        specifier: workspace:*
-        version: link:../../packages/workflow/tool-workflow
-      '@liwa/tool-working-directory':
-        specifier: workspace:*
-        version: link:../../packages/session/tool-working-directory
-      '@liwa/tool-workspace-dependencies':
-        specifier: workspace:*
-        version: link:../../packages/skill/tool-workspace-dependencies
-      '@liwa/tools':
-        specifier: workspace:*
-        version: link:../../packages/core/tools
-      '@liwa/typert-protocol':
-        specifier: workspace:*
-        version: link:../../packages/typert/protocol
-      '@liwa/typert-registry':
-        specifier: workspace:*
-        version: link:../../packages/typert/registry
-      '@liwa/user-approval':
-        specifier: workspace:*
-        version: link:../../packages/interaction/user-approval
-      '@liwa/user-questions':
-        specifier: workspace:*
-        version: link:../../packages/interaction/user-questions
-      '@liwa/util-time':
-        specifier: workspace:*
-        version: link:../../packages/util/time
-      '@liwa/util-values':
-        specifier: workspace:*
-        version: link:../../packages/util/values
-      '@liwa/util-workspace-path':
-        specifier: workspace:*
-        version: link:../../packages/util/workspace-path
-      '@liwa/web':
-        specifier: workspace:*
-        version: link:../../packages/web/web
-      '@liwa/web-fetch-http':
-        specifier: workspace:*
-        version: link:../../packages/web/web-fetch-http
-      '@liwa/web-search-deepseek':
-        specifier: workspace:*
-        version: link:../../packages/web/web-search-deepseek
-      '@liwa/web-search-exa':
-        specifier: workspace:*
-        version: link:../../packages/web/web-search-exa
-      '@liwa/web-search-perplexity':
-        specifier: workspace:*
-        version: link:../../packages/web/web-search-perplexity
-      '@liwa/workflow':
-        specifier: workspace:*
-        version: link:../../packages/workflow/workflow
-      '@liwa/workflow-ptc':
-        specifier: workspace:*
-        version: link:../../packages/workflow/workflow-ptc
-      '@liwa/working-directory':
-        specifier: workspace:*
-        version: link:../../packages/session/working-directory
-      '@liwa/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace/workspace
 
   vendor/cordis:
     dependencies:
@@ -19436,9 +18453,6 @@ packages:
     resolution: {integrity: sha512-hloP58zRVCRSpgDxmqCWJNlizAlUgJFqG2ypq79DCvyv9tHjRYMDOcPFjzfl/A1/YxDvRCZz8wvZvmapQnKwFQ==}
     engines: {node: '>=12'}
 
-  '@keyv/serialize@1.1.1':
-    resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
-
   '@koromix/koffi-darwin-arm64@3.1.1':
     resolution: {integrity: sha512-+Dl0zQDh1Wb55AWOn9hp7K30qgkODvrvN+ZNkFOh81Q0oFX/rpJQtocgjAuYk2zFAcajSeVDumkcHMPwnKSXzA==}
     cpu: [arm64]
@@ -19825,61 +18839,15 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@opentelemetry/api-logs@0.222.0':
-    resolution: {integrity: sha512-9mb1If+IF6u0ZVXkHQ6ogEae5HwA6ajIVUgpSDQyRASxft6BSXHvBvPooRle3yFN/fKnCdSOnuu0OC3PLcF6+g==}
-    engines: {node: '>=8.0.0'}
-
   '@opentelemetry/api@1.9.1':
     resolution: {integrity: sha512-gLyJlPHPZYdAk1JENA9LeHejZe1Ti77/pTeFm/nMXmQH/HFZlcS/O2XJB+L8fkbrNSqhdtlvjBVjxwUYanNH5Q==}
     engines: {node: '>=8.0.0'}
-
-  '@opentelemetry/core@2.11.0':
-    resolution: {integrity: sha512-7YP44XH0tV6+Mb54x2YGf84i7yi+31MBZlE8JwvozkxyTvXbSp10X7cI7YE49ChJ3shMJoBmCJF3+1QFBJctGA==}
-    engines: {node: ^18.19.0 || >=20.6.0}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.0.0 <1.10.0'
 
   '@opentelemetry/core@2.9.0':
     resolution: {integrity: sha512-m2nckMT80NnmjTYSPjJQObBJ+8dgkoajEOUbznL8AHZ3T3yHRk2P7gI1PhEBc1+lOnrYE9UWrWHqJDsmqjmNbw==}
     engines: {node: ^18.19.0 || >=20.6.0}
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.10.0'
-
-  '@opentelemetry/otlp-exporter-base@0.222.0':
-    resolution: {integrity: sha512-YbywG3veEm2Fb6TbdxRkuquWob6eVWXuA8/Ba1tXz9jHfUqpdE3keilOHEtPboC4CvS1bjeeVfNkWGOOrLj+lw==}
-    engines: {node: ^18.19.0 || >=20.6.0}
-    peerDependencies:
-      '@opentelemetry/api': ^1.3.0
-
-  '@opentelemetry/otlp-transformer@0.222.0':
-    resolution: {integrity: sha512-/F3BZ89+CJQnZkMh2tCrtcdB+XT2Dxhj4FFE+WPQ//413hmFL0/RfEX6vgOIWGhiSzrkHWTK3+6SiT7K5/g/jQ==}
-    engines: {node: ^18.19.0 || >=20.6.0}
-    peerDependencies:
-      '@opentelemetry/api': ^1.3.0
-
-  '@opentelemetry/resources@2.11.0':
-    resolution: {integrity: sha512-Ie7+8q8MDF4FAEQCKVMTx3ReUvxiIAgIiiW3c9JdmP8+HMcDy20puT+AHjexnExgnbvBxjQ9fjkFDWrikJ2jQA==}
-    engines: {node: ^18.19.0 || >=20.6.0}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.3.0 <1.10.0'
-
-  '@opentelemetry/sdk-logs@0.222.0':
-    resolution: {integrity: sha512-+19YHODIjaUCArxleaJtuufFZVpz/xvvK+VllQqE+W8hHolxdoRwHfK/s667zezwh1hkx6FFF+oYzetYgqK+Bg==}
-    engines: {node: ^18.19.0 || >=20.6.0}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.4.0 <1.10.0'
-
-  '@opentelemetry/sdk-metrics@2.11.0':
-    resolution: {integrity: sha512-7GXXcObyHyDUUSG+L+kJoquty01bzm7ivE7+SSgXXJcHuPzGviptxwARmI2c+bnnxjexGQbJnyNlN8HxBP/Y7A==}
-    engines: {node: ^18.19.0 || >=20.6.0}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.9.0 <1.10.0'
-
-  '@opentelemetry/sdk-trace@2.11.0':
-    resolution: {integrity: sha512-fFnTqGm8/G73GQVnxYi7LXa1ZVYEUvgL6XI1LpvV0bPC7WQ/ZGgKxCSl8FnlZBKto9JHHEFTO6s6CUpvvtwFrA==}
-    engines: {node: ^18.19.0 || >=20.6.0}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.3.0 <1.10.0'
 
   '@opentelemetry/semantic-conventions@1.43.0':
     resolution: {integrity: sha512-eSYWTm620tTk45EKSedaUL8MFYI8hW164hIXsgIHyxu3VobUB3fFCu5t0hQby6OoWRPsG1KkKUG2M5UadiLiVg==}
@@ -20619,10 +19587,6 @@ packages:
   '@sindresorhus/is@4.6.0':
     resolution: {integrity: sha512-t09vSN3MdfsyCHoFcTRCH/iUtG7OJ0CsjzB8cjAmKc/va/kIgeDI/TxsigdncE/4be734m0cvIYwNaV4i2XqAw==}
     engines: {node: '>=10'}
-
-  '@sindresorhus/is@7.2.0':
-    resolution: {integrity: sha512-P1Cz1dWaFfR4IR+U13mqqiGsLFf1KbayybWwdd2vfctdV6hDpUkgCY0nKOLLTMSoRd/jJNjtbqzf13K8DCCXQw==}
-    engines: {node: '>=18'}
 
   '@sindresorhus/merge-streams@4.0.0':
     resolution: {integrity: sha512-tlqY9xq5ukxTUZBmoOp+m61cqwQD5pHJtFY3Mn8CA8ps6yghLH/Hw8UPdqg4OLmFW3IFlcXnQNmo/dh8HzXYIQ==}
@@ -21647,10 +20611,6 @@ packages:
     resolution: {integrity: sha512-tjwM5exMg6BGRI+kNmTntNsvdZS1X8BFYS6tnJ2hdH0kVxM6/eVZ2xy+FqStSWvYmtfFMDLIxurorHwDKfDz5Q==}
     engines: {node: '>=18'}
 
-  byte-counter@0.1.0:
-    resolution: {integrity: sha512-jheRLVMeUKrDBjVw2O5+k4EvR4t9wtxHL+bo/LxfkxsVeuGMy3a5SEGgXdAFA4FSzTrU8rQXQIrsZ3oBq5a0pQ==}
-    engines: {node: '>=20'}
-
   bytes@3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
     engines: {node: '>= 0.8'}
@@ -21666,14 +20626,6 @@ packages:
   cacheable-lookup@5.0.4:
     resolution: {integrity: sha512-2/kNscPhpcxrOigMZzbiWF7dz8ilhb/nIHU3EyZiXWXpeq/au8qJ8VhdftMkty3n7Gj6HIGalQG8oiBNB3AJgA==}
     engines: {node: '>=10.6.0'}
-
-  cacheable-lookup@7.0.0:
-    resolution: {integrity: sha512-+qJyx4xiKra8mZrcwhjMRMUhD5NR1R8esPkzIYxX96JiecFoxAXFuz/GpR3+ev4PE1WamHip78wV0vcmPQtp8w==}
-    engines: {node: '>=14.16'}
-
-  cacheable-request@13.0.19:
-    resolution: {integrity: sha512-SVXGH037+Mo1aIMO5B2UcleR43FGjFdN+M8JObSyEoQ2Mn4CODRWx28gN5jiTF0n5ItsgtIZfyargMNs8GX4kg==}
-    engines: {node: '>=18'}
 
   cacheable-request@7.0.4:
     resolution: {integrity: sha512-v+p6ongsrp0yTGbJXjgxPow2+DL93DASP4kXCDKb8/bwRtt9OEF3whggkkDkGNzgcWy2XaF4a8nZglC7uElscg==}
@@ -22097,10 +21049,6 @@ packages:
 
   decode-named-character-reference@1.3.0:
     resolution: {integrity: sha512-GtpQYB283KrPp6nRw50q3U9/VfOutZOe103qlN7BPP6Ad27xYnOIWv4lPzo8HCAL+mMZofJ9KEy30fq6MfaK6Q==}
-
-  decompress-response@10.0.0:
-    resolution: {integrity: sha512-oj7KWToJuuxlPr7VV0vabvxEIiqNMo+q0NueIiL3XhtwC6FVOX7Hr1c0C4eD0bmf7Zr+S/dSf2xvkH3Ad6sU3Q==}
-    engines: {node: '>=20'}
 
   decompress-response@6.0.0:
     resolution: {integrity: sha512-aW35yZM6Bb/4oJlZncMH2LCoZtJXTRxES17vE3hoRiowU2kWHaJKFkSBDnDR+cm9J+9QhXmREyIfv0pji9ejCQ==}
@@ -22572,10 +21520,6 @@ packages:
   form-data-encoder@1.7.2:
     resolution: {integrity: sha512-qfqtYan3rxrnCk1VYaA4H+Ms9xdpPqvLZa6xmMgFvhO32x7/3J/ExcTd6qpxM0vH2GdMI+poehyBZvqfMTto8A==}
 
-  form-data-encoder@4.1.0:
-    resolution: {integrity: sha512-G6NsmEW15s0Uw9XnCg+33H3ViYRyiM0hMrMhhqQOR8NFc5GhYrI+6I3u7OTw7b91J2g8rtvMBZJDbcGb2YUniw==}
-    engines: {node: '>= 18'}
-
   form-data@4.0.6:
     resolution: {integrity: sha512-vKatAh4SlVfgbv+YtmhiRjhEMJsYpsG1Y2rMQtR+SVSbytsSD1YGzDIcrAJmdFec88u/+VoGmxnl+80gL1tRCQ==}
     engines: {node: '>= 6'}
@@ -22733,10 +21677,6 @@ packages:
     resolution: {integrity: sha512-6tfZ91bOr7bOXnK7PRDCGBLa1H4U080YHNaAQ2KsMGlLEzRbk44nsZF2E1IeRc3vtJHPVbKCYgdFbaGO2ljd8g==}
     engines: {node: '>=10.19.0'}
 
-  got@14.6.6:
-    resolution: {integrity: sha512-QLV1qeYSo5l13mQzWgP/y0LbMr5Plr5fJilgAIwgnwseproEbtNym8xpLsDzeZ6MWXgNE6kdWGBjdh3zT/Qerg==}
-    engines: {node: '>=20'}
-
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
@@ -22841,10 +21781,6 @@ packages:
 
   http2-wrapper@1.0.3:
     resolution: {integrity: sha512-V+23sDMr12Wnz7iTcDeJr3O6AIxlnvT/bmaAAAP/Xda35C90p9599p0F1eHR/N1KILWSoWVAiOMFjBBXaXSMxg==}
-    engines: {node: '>=10.19.0'}
-
-  http2-wrapper@2.2.1:
-    resolution: {integrity: sha512-V5nVw1PAOgfI3Lmeaj2Exmeg7fenjhRUgz1lPSezy1CuhPYbgQtbQj4jZfEAEMlaL+vupsvhjqCyjzob0yxsmQ==}
     engines: {node: '>=10.19.0'}
 
   https-proxy-agent@7.0.6:
@@ -23178,9 +22114,6 @@ packages:
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
-  keyv@5.6.0:
-    resolution: {integrity: sha512-CYDD3SOtsHtyXeEORYRx2qBtpDJFjRTGXUtmNEMGyzYOKj1TE3tycdlho7kA1Ufx9OYWZzg52QFBGALTirzDSw==}
-
   khroma@2.1.0:
     resolution: {integrity: sha512-Ls993zuzfayK269Svk9hzpeGUKob/sIgZzyHYdjQoAdQetRKpOLj+k/QQQ/6Qi0Yz65mlROrfd+Ev+1+7dz9Kw==}
 
@@ -23413,10 +22346,6 @@ packages:
     resolution: {integrity: sha512-tqNXrS78oMOE73NMxK4EMLQsQowWf8jKooH9g7xPavRT706R6bkQJ6DY2Te7QukaZsulxa30wQ7bk0pm4XiHmA==}
     engines: {node: '>=8'}
 
-  lowercase-keys@3.0.0:
-    resolution: {integrity: sha512-ozCC6gdQ+glXOQsveKD0YsDy8DSQFjDTz4zyzEHNV5+JP5D62LmfDZ6o1cycFx9ouG940M5dE8C8CTewdj2YWQ==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
-
   lru-cache@11.5.1:
     resolution: {integrity: sha512-RPimw/7aMdv2oqRrxKwvZXcPfwBrn/JZ2xYcY9Hus/6LaS3VOAKVWKWgNLCFSiOm1ESXinjsDlidVU7JlnCN2A==}
     engines: {node: 20 || >=22}
@@ -23645,10 +22574,6 @@ packages:
     resolution: {integrity: sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==}
     engines: {node: '>=10'}
 
-  mimic-response@4.0.0:
-    resolution: {integrity: sha512-e5ISH9xMYU0DzrT+jl8q2ze9D6eWBto+I8CNpe+VI+K2J/F/k3PdkdTdz4wvGVH4NTpo+NRYTVIuMQEMMcsLqg==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
-
   minimatch@10.2.5:
     resolution: {integrity: sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg==}
     engines: {node: 18 || 20 || >=22}
@@ -23861,10 +22786,6 @@ packages:
     resolution: {integrity: sha512-DlL+XwOy3NxAQ8xuC0okPgK46iuVNAK01YN7RueYBqqFeGsBjV9XmCAzAdgt+667bCl5kPh9EqKKDwnaPG1I7A==}
     engines: {node: '>=10'}
 
-  normalize-url@8.1.1:
-    resolution: {integrity: sha512-JYc0DPlpGWB40kH5g07gGTrYuMqV653k3uBKY6uITPWds3M0ov3GaWGp9lbE3Bzngx8+XkfzgvASb9vk9JDFXQ==}
-    engines: {node: '>=14.16'}
-
   npm-run-path@6.0.0:
     resolution: {integrity: sha512-9qny7Z9DsQU8Ou39ERsPU4OZQlSTP47ShQzuKZ6PRXpYLtIFgl/DEBYEXKlvcEa+9tHVcK8CF81Y2V72qaZhWA==}
     engines: {node: '>=18'}
@@ -23967,10 +22888,6 @@ packages:
   p-cancelable@2.1.1:
     resolution: {integrity: sha512-BZOr3nRQHOntUjTrH8+Lh54smKHoHyur8We1V8DSMVrl5A2malOOwuJRnKRDjSnkoeBh4at6BwEnb5I7Jl31wg==}
     engines: {node: '>=8'}
-
-  p-cancelable@4.0.1:
-    resolution: {integrity: sha512-wBowNApzd45EIKdO1LaU+LrMBwAcjfPaYtVzV3lmfM3gf8Z4CHZsiIqlM8TZZ8okYvh5A1cP6gTfCRQtwUpaUg==}
-    engines: {node: '>=14.16'}
 
   p-limit@3.1.0:
     resolution: {integrity: sha512-TYOanM3wGwNGsZN2cVTYPArw454xnXj5qmWF1bEoAc4+cU/ol7GVh7odevjp1FNHduHc3KZMcFduxU5Xc6uJRQ==}
@@ -24360,10 +23277,6 @@ packages:
   responselike@2.0.1:
     resolution: {integrity: sha512-4gl03wn3hj1HP3yzgdI7d3lCkF95F21Pz4BPGvKHinyQzALR5CapwC8yIi0Rh58DEMQ/SguC03wFj2k0M/mHhw==}
 
-  responselike@4.0.2:
-    resolution: {integrity: sha512-cGk8IbWEAnaCpdAt1BHzJ3Ahz5ewDJa0KseTsE3qIRMJ3C698W8psM7byCeWVpd/Ha7FUYzuRVzXoKoM6nRUbA==}
-    engines: {node: '>=20'}
-
   restructure@3.0.2:
     resolution: {integrity: sha512-gSfoiOEA0VPE6Tukkrr7I0RBdE0s7H1eFCDBk05l1KIQT1UIKNc5JZy6jdyW6eYH3aR3g5b3PuL77rq0hvwtAw==}
 
@@ -24622,10 +23535,6 @@ packages:
   simple-update-notifier@2.0.0:
     resolution: {integrity: sha512-a2B9Y0KlNXl9u/vsW6sTIu9vGEpfKu2wRV6l1H3XEas/0gUIzGzBoP/IouTcUQbm9JWZLH3COxyn03TYlFax6w==}
     engines: {node: '>=10'}
-
-  smol-toml@1.9.0:
-    resolution: {integrity: sha512-hpd+HLON7HdZXqYchMM/+LaTTbdK0AU3NngIJ4KVyWbY9bfQqdL9cD+4yf6dUoU2Ap4VsU0JkQi6FxAI1B2mXQ==}
-    engines: {node: '>= 18'}
 
   source-map-js@1.2.2:
     resolution: {integrity: sha512-KGj/8Y43x35aZVDtt+J4mK1hoLGHULMYfSkODJNQjNDC3oW1PqPoxMwo0pLUsWM/UEGzON/NxeHywEfNXNP3Vw==}
@@ -24932,10 +23841,6 @@ packages:
   type-fest@0.13.1:
     resolution: {integrity: sha512-34R7HTnG0XIJcBSn5XhDd7nNFPRcXYRZrBB2O2jdKqYODldSzBAqzsWoZYYvduky73toYS/ESqxPvkDf/F0XMg==}
     engines: {node: '>=10'}
-
-  type-fest@4.41.0:
-    resolution: {integrity: sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA==}
-    engines: {node: '>=16'}
 
   type-is@2.1.0:
     resolution: {integrity: sha512-faYHw0anBbc/kWF3zFTEnxSFOAGUX9GFbOBthvDdLsIlEoWOFOtS0zgCiQYwIskL9iGXZL3kAXD8OoZ4GmMATA==}
@@ -26979,8 +25884,6 @@ snapshots:
     dependencies:
       jsbi: 4.3.2
 
-  '@keyv/serialize@1.1.1': {}
-
   '@koromix/koffi-darwin-arm64@3.1.1':
     optional: true
 
@@ -27348,63 +26251,11 @@ snapshots:
   '@openai/codex@0.153.4-win32-x64':
     optional: true
 
-  '@opentelemetry/api-logs@0.222.0':
-    dependencies:
-      '@opentelemetry/api': 1.9.1
-
   '@opentelemetry/api@1.9.1': {}
-
-  '@opentelemetry/core@2.11.0(@opentelemetry/api@1.9.1)':
-    dependencies:
-      '@opentelemetry/api': 1.9.1
-      '@opentelemetry/semantic-conventions': 1.43.0
 
   '@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1)':
     dependencies:
       '@opentelemetry/api': 1.9.1
-      '@opentelemetry/semantic-conventions': 1.43.0
-
-  '@opentelemetry/otlp-exporter-base@0.222.0(@opentelemetry/api@1.9.1)':
-    dependencies:
-      '@opentelemetry/api': 1.9.1
-      '@opentelemetry/core': 2.11.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/otlp-transformer': 0.222.0(@opentelemetry/api@1.9.1)
-
-  '@opentelemetry/otlp-transformer@0.222.0(@opentelemetry/api@1.9.1)':
-    dependencies:
-      '@opentelemetry/api': 1.9.1
-      '@opentelemetry/api-logs': 0.222.0
-      '@opentelemetry/core': 2.11.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/resources': 2.11.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/sdk-logs': 0.222.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/sdk-metrics': 2.11.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/sdk-trace': 2.11.0(@opentelemetry/api@1.9.1)
-
-  '@opentelemetry/resources@2.11.0(@opentelemetry/api@1.9.1)':
-    dependencies:
-      '@opentelemetry/api': 1.9.1
-      '@opentelemetry/core': 2.11.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/semantic-conventions': 1.43.0
-
-  '@opentelemetry/sdk-logs@0.222.0(@opentelemetry/api@1.9.1)':
-    dependencies:
-      '@opentelemetry/api': 1.9.1
-      '@opentelemetry/api-logs': 0.222.0
-      '@opentelemetry/core': 2.11.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/resources': 2.11.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/semantic-conventions': 1.43.0
-
-  '@opentelemetry/sdk-metrics@2.11.0(@opentelemetry/api@1.9.1)':
-    dependencies:
-      '@opentelemetry/api': 1.9.1
-      '@opentelemetry/core': 2.11.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/resources': 2.11.0(@opentelemetry/api@1.9.1)
-
-  '@opentelemetry/sdk-trace@2.11.0(@opentelemetry/api@1.9.1)':
-    dependencies:
-      '@opentelemetry/api': 1.9.1
-      '@opentelemetry/core': 2.11.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/resources': 2.11.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/semantic-conventions': 1.43.0
 
   '@opentelemetry/semantic-conventions@1.43.0': {}
@@ -27873,8 +26724,6 @@ snapshots:
   '@silvia-odwyer/photon-node@0.3.4': {}
 
   '@sindresorhus/is@4.6.0': {}
-
-  '@sindresorhus/is@7.2.0': {}
 
   '@sindresorhus/merge-streams@4.0.0': {}
 
@@ -29061,8 +27910,6 @@ snapshots:
     dependencies:
       run-applescript: 7.1.0
 
-  byte-counter@0.1.0: {}
-
   bytes@3.1.2: {}
 
   bytestreamjs@2.0.1: {}
@@ -29070,18 +27917,6 @@ snapshots:
   cac@7.0.0: {}
 
   cacheable-lookup@5.0.4: {}
-
-  cacheable-lookup@7.0.0: {}
-
-  cacheable-request@13.0.19:
-    dependencies:
-      '@types/http-cache-semantics': 4.2.0
-      get-stream: 9.0.1
-      http-cache-semantics: 4.2.0
-      keyv: 5.6.0
-      mimic-response: 4.0.0
-      normalize-url: 8.1.1
-      responselike: 4.0.2
 
   cacheable-request@7.0.4:
     dependencies:
@@ -29507,10 +28342,6 @@ snapshots:
   decode-named-character-reference@1.3.0:
     dependencies:
       character-entities: 2.0.2
-
-  decompress-response@10.0.0:
-    dependencies:
-      mimic-response: 4.0.0
 
   decompress-response@6.0.0:
     dependencies:
@@ -30162,8 +28993,6 @@ snapshots:
 
   form-data-encoder@1.7.2: {}
 
-  form-data-encoder@4.1.0: {}
-
   form-data@4.0.6:
     dependencies:
       asynckit: 0.4.0
@@ -30366,21 +29195,6 @@ snapshots:
       p-cancelable: 2.1.1
       responselike: 2.0.1
 
-  got@14.6.6:
-    dependencies:
-      '@sindresorhus/is': 7.2.0
-      byte-counter: 0.1.0
-      cacheable-lookup: 7.0.0
-      cacheable-request: 13.0.19
-      decompress-response: 10.0.0
-      form-data-encoder: 4.1.0
-      http2-wrapper: 2.2.1
-      keyv: 5.6.0
-      lowercase-keys: 3.0.0
-      p-cancelable: 4.0.1
-      responselike: 4.0.2
-      type-fest: 4.41.0
-
   graceful-fs@4.2.11: {}
 
   grok-mermaid@0.2.3: {}
@@ -30521,11 +29335,6 @@ snapshots:
       - supports-color
 
   http2-wrapper@1.0.3:
-    dependencies:
-      quick-lru: 5.1.1
-      resolve-alpn: 1.2.1
-
-  http2-wrapper@2.2.1:
     dependencies:
       quick-lru: 5.1.1
       resolve-alpn: 1.2.1
@@ -30813,10 +29622,6 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
-  keyv@5.6.0:
-    dependencies:
-      '@keyv/serialize': 1.1.1
-
   khroma@2.1.0: {}
 
   koffi@3.1.1:
@@ -31001,8 +29806,6 @@ snapshots:
       js-tokens: 4.0.0
 
   lowercase-keys@2.0.0: {}
-
-  lowercase-keys@3.0.0: {}
 
   lru-cache@11.5.1: {}
 
@@ -31425,8 +30228,6 @@ snapshots:
 
   mimic-response@3.1.0: {}
 
-  mimic-response@4.0.0: {}
-
   minimatch@10.2.5:
     dependencies:
       brace-expansion: 5.0.12
@@ -31611,8 +30412,6 @@ snapshots:
 
   normalize-url@6.1.0: {}
 
-  normalize-url@8.1.1: {}
-
   npm-run-path@6.0.0:
     dependencies:
       path-key: 4.0.0
@@ -31745,8 +30544,6 @@ snapshots:
       oxlint-tsgolint: 7.0.2001
 
   p-cancelable@2.1.1: {}
-
-  p-cancelable@4.0.1: {}
 
   p-limit@3.1.0:
     dependencies:
@@ -32109,10 +30906,6 @@ snapshots:
     dependencies:
       lowercase-keys: 2.0.0
 
-  responselike@4.0.2:
-    dependencies:
-      lowercase-keys: 3.0.0
-
   restructure@3.0.2: {}
 
   retry@0.12.0: {}
@@ -32472,8 +31265,6 @@ snapshots:
     dependencies:
       semver: 7.8.5
 
-  smol-toml@1.9.0: {}
-
   source-map-js@1.2.2: {}
 
   source-map-support@0.5.21:
@@ -32782,8 +31573,6 @@ snapshots:
 
   type-fest@0.13.1:
     optional: true
-
-  type-fest@4.41.0: {}
 
   type-is@2.1.0:
     dependencies:

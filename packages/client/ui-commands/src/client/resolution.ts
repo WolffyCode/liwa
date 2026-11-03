@@ -6,7 +6,6 @@ import { en, zh } from './locales.ts'
 const BUILTINS = {
   goal: '@liwa/command-goal',
   plan: '@liwa/plan-mode',
-  feedback: '@liwa/command-feedback',
   compact: '@liwa/command-compact',
   permission: '@liwa/permission-presets',
   export: '@liwa/session-log-export',

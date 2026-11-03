@@ -12,8 +12,8 @@
   en: a18fe401763efde4
   zh: ef59a76d9c694654
 /llm-streaming/compact-assistant-streams:
-  en: 2313b173c062e1dc
-  zh: 028606c050bd7155
+  en: 1e81750fac8566f4
+  zh: c906a0d5a741b8bd
 /llm-streaming/llmfailure:
   en: 13415501869b4ca9
   zh: 723c7533cce3d1d6
@@ -41,9 +41,6 @@
 /llm-streaming/the-model-request/the-request-envelope-llmcallconfig-and-the-logged-header:
   en: 5e5d7e6b1673b671
   zh: 042a4cd942220bc5
-/llm-streaming/official-deepseek-request-extensions:
-  en: 80f4402abe349371
-  zh: 53f08e78123b4049
 /llm-streaming/service-and-provider-contracts:
   en: f17aef58b8ea9134
   zh: 7d6f6c209eb45013

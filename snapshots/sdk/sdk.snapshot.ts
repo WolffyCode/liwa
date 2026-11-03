@@ -679,7 +679,6 @@ async function runScenario(scenario: CorpusScenario): Promise<{
     LIWA_SNAPSHOT: mode,
     LIWA_SNAPSHOT_PROVIDER: route.provider,
     LIWA_SNAPSHOT_MODEL: route.model,
-    LIWA_TELEMETRY_DISABLED: '1',
     LIWA_AGENTS_HOME: join(cwd, '.agents'),
     NODE_OPTIONS: [process.env.NODE_OPTIONS, '--disable-warning=ExperimentalWarning'].filter(Boolean).join(' '),
     ...parentFixture === undefined ? {} : {

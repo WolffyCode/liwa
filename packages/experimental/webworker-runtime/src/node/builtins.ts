@@ -55,7 +55,6 @@ import * as koffi from './external_packages/koffi.ts'
 import * as libreofficeKit from './external_packages/libreoffice-kit.ts'
 import * as nodePty from './external_packages/node-pty.ts'
 import * as execa from './external_packages/execa.ts'
-import * as got from './external_packages/got.ts'
 import * as nodeAddonRequireBuiltin from './external_packages/node-addon-require-builtin.ts'
 import * as piAi from './external_packages/pi-ai.ts'
 import * as piCodingAgent from './external_packages/pi-coding-agent.ts'
@@ -107,7 +106,6 @@ const EXTERNALS: Record<string, StaticModuleFactory> = {
   'sharp': () => sharp,
   'node-pty': () => nodePty,
   'execa': () => execa,
-  'got': () => got,
   'node-addon-require-builtin': () => nodeAddonRequireBuiltin,
   'ws': () => ws,
   '@vscode/ripgrep': () => ripgrep,
