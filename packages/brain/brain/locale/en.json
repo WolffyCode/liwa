@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Agent CLI providers",
+    "description": "Register agent CLI providers and open sessions with usage, process, and child-agent records."
+  }
+}

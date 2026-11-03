@@ -14,9 +14,12 @@ const root = resolve(import.meta.dirname, '..')
 /** Repo-authored TypeScript that may cite docs in comments. */
 const PATTERNS = ['packages/**/*.ts']
 
-/** Paths excluded from the scan: built output and vendored upstream source. */
+/**
+ * Paths excluded from the scan: built output, vendored upstream source, and
+ * upstream source copied in place (src/paseo/, whose comments cite upstream docs).
+ */
 const isExcluded = (p: string): boolean =>
-  p.includes('/lib/') || p.endsWith('.d.ts') || p.startsWith('vendor/')
+  p.includes('/lib/') || p.endsWith('.d.ts') || p.startsWith('vendor/') || p.includes('/src/paseo/')
 
 /** A non-first `lib` segment puts `/lib/` in every path below the directory, so the walker skips it. */
 const isExcludedDirectory = (dir: string): boolean => dir.split('/').slice(1).includes('lib')

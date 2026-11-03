@@ -593,6 +593,109 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'brains',
+    summary: '`ctx.brains`：提供方登记、可用性探测、成员配置目录、会话的开启与续接、会话 / 子 agent / 进程 / 用量的登记。 提供方的登记与调用方的会话都是调用方上下文里的 effect：提供方插件卸载时它的会话一起关，调用方卸载时它开的会话一起关。',
+    description: '`ctx.brains`：提供方登记、可用性探测、成员配置目录、会话的开启与续接、会话 / 子 agent / 进程 / 用量的登记。 提供方的登记与调用方的会话都是调用方上下文里的 effect：提供方插件卸载时它的会话一起关，调用方卸载时它开的会话一起关。',
+    methods: [
+      {
+        signature: 'register(provider: BrainProvider): () => void',
+        description: '登记一个提供方，直到返回的函数被调用或登记它的插件卸载；释放时它开着的会话一起关。',
+        parameters: [{ name: 'provider', description: '提供方；`impl` 与 `meta` 在这里校验。' }],
+        returns: '释放函数。',
+        throws: ['{BrainError} `invalid_input`（实现名或能力声明不合规）、`conflict`（实现名已被登记）。'],
+      },
+      {
+        signature: 'describe(impl: ImplId): Meta',
+        description: '一个提供方的能力声明。',
+        parameters: [{ name: 'impl', description: '提供方。' }],
+        returns: '能力声明的副本。',
+        throws: ['{BrainError} `not_found`。'],
+      },
+      {
+        signature: 'list(): BrainProviderView[]',
+        description: '全部已登记的提供方（`brain_provider`）。',
+        parameters: [],
+        returns: '按实现名排序的登记副本。',
+      },
+      {
+        signature: 'async probe(impl: ImplId, signal?: AbortSignal): Promise<BrainProbeResult>',
+        description: '探测一个提供方能不能开会话；结果记进登记，不可用时发 `brain.provider.unavailable.v1`。探测本身出错或超时按不可用处理。',
+        parameters: [{ name: 'impl', description: '提供方。' }, { name: 'signal', description: '取消探测。' }],
+        returns: '探测结果。',
+        throws: ['{BrainError} `not_found`。'],
+      },
+      {
+        signature: 'async prepareConfigDir(member: MemberId, impl: ImplId, spec: MemberConfigSpec): Promise<string>',
+        description: '生成或刷新成员给某家提供方的配置目录（01 §4.6），每次覆盖。',
+        parameters: [{ name: 'member', description: '成员。' }, { name: 'impl', description: '提供方。' }, { name: 'spec', description: '规矩、本事目录、模型、MCP、是否读仓库指令。' }],
+        returns: '成员配置目录，作为 `SessionConfig.configDir`。',
+      },
+      {
+        signature: 'async createSession(owner: Context, request: CreateSessionRequest): Promise<BrainSession>',
+        description: '开一个新会话。先做三项核对：压缩关不掉的提供方不接 `compaction: \'off\'`；原生工具去不掉的提供方不接 `nativeToolPolicy: \'none\'`；原生子 agent 只对干活的活放开，其余种类改成关并记在 `adjustments` 里。',
+        parameters: [{ name: 'owner', description: '归属方上下文；它卸载时会话一起关。' }, { name: 'request', description: '提供方与会话配置。' }],
+        returns: '会话句柄。',
+        throws: ['{BrainError} `not_found`、`invalid_input`、`timeout`，或提供方自己的失败。'],
+      },
+      {
+        signature: 'async resumeSession(owner: Context, request: ResumeSessionRequest): Promise<BrainSession>',
+        description: '在新进程里续接一个会话（提供方 `Meta.resume` 为 true 时）。核对同 createSession。',
+        parameters: [{ name: 'owner', description: '归属方上下文；它卸载时会话一起关。' }, { name: 'request', description: '提供方、续接句柄与这一代的会话配置。' }],
+        returns: '会话句柄。',
+        throws: ['{BrainError} `not_found`、`unavailable`（提供方不支持续接）、`invalid_input`、`timeout`，或提供方自己的失败。'],
+      },
+      {
+        signature: 'openChildTask(_owner: Context, _request: OpenChildTaskRequest): Promise<BrainSession>',
+        description: '跨 CLI 子活的会话（01 §4.5 路②）。要等第三层的 tasks；这一阶段只留接口位置，调用即报"未实现"。',
+        parameters: [{ name: '_owner', description: '归属方上下文。' }, { name: '_request', description: '父活、提供方与会话配置。' }],
+        returns: '永远以 `BrainError(unavailable, brain.not_implemented)` 拒绝。',
+      },
+      {
+        signature: 'children(sessionId: BrainSessionId): BrainChildView[]',
+        description: '某个会话的子 agent。',
+        parameters: [{ name: 'sessionId', description: '会话号。' }],
+        returns: '子 agent 登记的副本。',
+        throws: ['{BrainError} `not_found`（没有开着的这个会话）。'],
+      },
+      {
+        signature: 'get(sessionId: BrainSessionId): BrainSession | undefined',
+        description: '一个开着的会话。',
+        parameters: [{ name: 'sessionId', description: '会话号。' }],
+        returns: '会话句柄；没有时为 `undefined`。',
+      },
+      {
+        signature: 'listSessions(): BrainSessionView[]',
+        description: '全部开着的会话（`brain_session` 里未关的行）。',
+        parameters: [],
+        returns: '会话登记的副本。',
+      },
+      {
+        signature: 'processes(): BrainProcessView[]',
+        description: '开着的会话拉起过的进程（`brain_process`）。',
+        parameters: [],
+        returns: '进程登记的副本。',
+      },
+      {
+        signature: 'onUsage(listener: (record: BrainUsageRecord) => void): () => void',
+        description: '订阅用量（guard 以后经它记账）。随调用方上下文释放。',
+        parameters: [{ name: 'listener', description: '收到每条用量记录。' }],
+        returns: '取消订阅。',
+      },
+    ],
+  },
+  {
+    key: 'brainStartup',
+    summary: '命令执行方从 BRAIN_STARTUP_SERVICE 读到的东西。',
+    description: '命令执行方从 BRAIN_STARTUP_SERVICE 读到的东西。',
+    methods: [
+      {
+        signature: 'command: BrainCommand',
+        description: '这次调用的命令。',
+        parameters: [],
+      },
+    ],
+  },
+  {
     key: 'browserUse',
     summary: 'Owns one optional provider registration in the shared browser-use service.',
     description: 'Owns one optional provider registration in the shared browser-use service.',
@@ -4537,6 +4640,70 @@ export const EVENT_API: readonly EventApiEntry[] = [
     parameters: [{ name: 'key', description: 'the credential record the finished attempt was authorizing.' }, { name: 'settlement', description: 'how it ended, including the `failed` case its caller sees as a thrown error.' }],
   },
   {
+    name: 'brain.child.ended.v1',
+    mode: 'emit',
+    signature: '\'brain.child.ended.v1\'(view: BrainChildView): void',
+    summary: '子 agent 结束了；会话先关时由 brains 补记 `aborted`。',
+    description: '子 agent 结束了；会话先关时由 brains 补记 `aborted`。',
+    parameters: [{ name: 'view', description: '带结束原因与用量的子 agent 登记。' }],
+  },
+  {
+    name: 'brain.child.opened.v1',
+    mode: 'emit',
+    signature: '\'brain.child.opened.v1\'(view: BrainChildView): void',
+    summary: '提供方报了一个子 agent（`brain_child` 新行）。',
+    description: '提供方报了一个子 agent（`brain_child` 新行）。',
+    parameters: [{ name: 'view', description: '子 agent 登记。' }],
+  },
+  {
+    name: 'brain.process.exited.v1',
+    mode: 'emit',
+    signature: '\'brain.process.exited.v1\'(view: BrainProcessView): void',
+    summary: '一个登记过的进程退出了。',
+    description: '一个登记过的进程退出了。',
+    parameters: [{ name: 'view', description: '带退出码与信号的进程登记。' }],
+  },
+  {
+    name: 'brain.process.spawned.v1',
+    mode: 'emit',
+    signature: '\'brain.process.spawned.v1\'(view: BrainProcessView): void',
+    summary: '会话经启动上下文拉起了一个进程（`brain_process` 新行）。',
+    description: '会话经启动上下文拉起了一个进程（`brain_process` 新行）。',
+    parameters: [{ name: 'view', description: '进程登记。' }],
+  },
+  {
+    name: 'brain.provider.unavailable.v1',
+    mode: 'emit',
+    signature: '\'brain.provider.unavailable.v1\'(record: BrainProviderUnavailableRecord): void',
+    summary: '一次探测发现提供方不可用。',
+    description: '一次探测发现提供方不可用。',
+    parameters: [{ name: 'record', description: '提供方与探测结果。' }],
+  },
+  {
+    name: 'brain.session.closed.v1',
+    mode: 'emit',
+    signature: '\'brain.session.closed.v1\'(record: BrainSessionClosedRecord): void',
+    summary: '一代会话关了（`brain_session` 收尾），带用量汇总。',
+    description: '一代会话关了（`brain_session` 收尾），带用量汇总。',
+    parameters: [{ name: 'record', description: '关闭时的会话登记与用量汇总。' }],
+  },
+  {
+    name: 'brain.session.opened.v1',
+    mode: 'emit',
+    signature: '\'brain.session.opened.v1\'(view: BrainSessionView): void',
+    summary: '一代会话开了（`brain_session` 新行）。',
+    description: '一代会话开了（`brain_session` 新行）。',
+    parameters: [{ name: 'view', description: '会话登记。' }],
+  },
+  {
+    name: 'brain.usage.v1',
+    mode: 'emit',
+    signature: '\'brain.usage.v1\'(record: BrainUsageRecord): void',
+    summary: '一条用量（`brain_usage` 新行）：回合结束、提供方级更新、子 agent 结束。',
+    description: '一条用量（`brain_usage` 新行）：回合结束、提供方级更新、子 agent 结束。',
+    parameters: [{ name: 'record', description: '用量记录。' }],
+  },
+  {
     name: 'commands/change',
     mode: 'emit',
     signature: '\'commands/change\'(): void',
@@ -5325,6 +5492,102 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface BoxProps {\n    readonly flexDirection?: \'row\' | \'column\' | undefined;\n    readonly paddingX?: number | undefined;\n    readonly paddingY?: number | undefined;\n    readonly padding?: number | undefined;\n    readonly gap?: number | undefined;\n    readonly border?: boolean | string | undefined;\n    readonly borderColor?: string | undefined;\n    readonly children?: UiNode | undefined;\n}',
   },
   {
+    name: 'BrainChildKind',
+    declaration: 'export type BrainChildKind = \'native-child\' | \'cross-cli-task\';',
+  },
+  {
+    name: 'BrainChildView',
+    declaration: 'export interface BrainChildView {\n    childId: ChildId;\n    sessionId: BrainSessionId;\n    kind: BrainChildKind;\n    provider: ImplId;\n    label: string;\n    parentChildId?: ChildId;\n    state: \'running\' | \'ended\';\n    stopReason?: ChildStopReason;\n    usage?: Usage;\n    openedAt: string;\n    endedAt?: string;\n}',
+  },
+  {
+    name: 'BrainCloseReason',
+    declaration: 'export type BrainCloseReason = \'closed\' | \'owner\' | \'process_exit\' | \'service\';',
+  },
+  {
+    name: 'BrainCommand',
+    declaration: 'export type BrainCommand = {\n    command: \'list\';\n    json: boolean;\n} | {\n    command: \'probe\';\n    impl: string;\n    json: boolean;\n} | {\n    command: \'run\';\n    provider: string;\n    prompt: string;\n    model?: string;\n    cwd?: string;\n    mode: PermissionMode;\n    member?: string;\n    mindKind?: (typeof RUN_MIND_KINDS)[number];\n    json: boolean;\n};',
+  },
+  {
+    name: 'BrainEvent',
+    declaration: 'export type BrainEvent = z.output<typeof BrainEventSchema>;',
+  },
+  {
+    name: 'BrainEventOf',
+    declaration: 'export type BrainEventOf<K extends BrainEvent[\'kind\']> = Extract<BrainEvent, {\n    kind: K;\n}>;',
+  },
+  {
+    name: 'BrainLaunchContext',
+    declaration: 'export interface BrainLaunchContext extends BrainProcessHost {\n    readonly sessionId: BrainSessionId;\n    readonly homeDir: string;\n    readonly logger: Logger;\n}',
+  },
+  {
+    name: 'BrainProbeContext',
+    declaration: 'export interface BrainProbeContext extends BrainProcessHost {\n    readonly logger: Logger;\n    readonly signal?: AbortSignal | undefined;\n}',
+  },
+  {
+    name: 'BrainProbeResult',
+    declaration: 'export interface BrainProbeResult {\n    available: boolean;\n    version?: string;\n    problems: string[];\n}',
+  },
+  {
+    name: 'BrainProcessHost',
+    declaration: 'export interface BrainProcessHost {\n    resolveExecutable(command: string, env?: Readonly<Record<string, string>>, signal?: AbortSignal): Promise<string>;\n    spawn(spec: SubprocessSpawnSpec): SubprocessHandle;\n}',
+  },
+  {
+    name: 'BrainProcessId',
+    declaration: 'export type BrainProcessId = Branded<\'BrainProcessId\'>;',
+  },
+  {
+    name: 'BrainProcessState',
+    declaration: 'export type BrainProcessState = \'live\' | \'exited\';',
+  },
+  {
+    name: 'BrainProcessView',
+    declaration: 'export interface BrainProcessView {\n    processId: BrainProcessId;\n    sessionId: BrainSessionId;\n    impl: ImplId;\n    command: string;\n    argvHash: string;\n    startedAt: string;\n    state: BrainProcessState;\n    exitCode?: number | null;\n    signal?: string | null;\n    exitedAt?: string;\n}',
+  },
+  {
+    name: 'BrainProvider',
+    declaration: 'export interface BrainProvider {\n    readonly impl: ImplId;\n    readonly meta: Meta;\n    probe(context: BrainProbeContext): Promise<BrainProbeResult>;\n    createSession(config: SessionConfig, launch: BrainLaunchContext): Promise<BrainProviderSession>;\n    resumeSession(handle: ResumeHandle, config: SessionConfig, launch: BrainLaunchContext): Promise<BrainProviderSession>;\n}',
+  },
+  {
+    name: 'BrainProviderSession',
+    declaration: 'export interface BrainProviderSession {\n    readonly id: string | null;\n    subscribe(listener: (event: BrainEvent) => void): () => void;\n    startTurn(input: TurnInput): Promise<{\n        turnId: TurnId;\n    }>;\n    deliver(input: TurnInput, options: DeliverOptions): Promise<DeliverResult>;\n    cancel(options: CancelOptions): Promise<void>;\n    respondToPermission(requestId: PermissionRequestId, response: PermissionResponse): Promise<void>;\n    persistence(): ResumeHandle | null;\n    canStopRuntime?(): Promise<boolean>;\n    setModel?(model: string): Promise<void>;\n    close(): Promise<void>;\n}',
+  },
+  {
+    name: 'BrainProviderUnavailableRecord',
+    declaration: 'export interface BrainProviderUnavailableRecord {\n    impl: ImplId;\n    result: BrainProbeResult;\n    at: string;\n}',
+  },
+  {
+    name: 'BrainProviderView',
+    declaration: 'export interface BrainProviderView {\n    impl: ImplId;\n    plugin: string;\n    meta: Meta;\n    available: boolean | undefined;\n    lastProbeAt?: string;\n    probeResult?: BrainProbeResult;\n}',
+  },
+  {
+    name: 'BrainSession',
+    declaration: 'export interface BrainSession {\n    readonly id: BrainSessionId;\n    readonly impl: ImplId;\n    readonly config: SessionConfig;\n    readonly state: BrainSessionState;\n    readonly activeTurnId: TurnId | undefined;\n    startTurn(input: TurnInput): Promise<{\n        turnId: TurnId;\n    }>;\n    deliver(input: TurnInput, options: DeliverOptions): Promise<DeliverResult>;\n    cancel(options: CancelOptions): Promise<void>;\n    respondToPermission(requestId: PermissionRequestId, response: PermissionResponse): Promise<void>;\n    persistence(): ResumeHandle | null;\n    canStopRuntime(): Promise<boolean>;\n    close(reason?: BrainCloseReason): Promise<void>;\n    subscribe(listener: (event: BrainEvent) => void): () => void;\n    events(signal?: AbortSignal): AsyncIterable<BrainEvent>;\n    usage(): Usage;\n    children(): BrainChildView[];\n    pendingPermissions(): BrainEventOf<\'permission.request\'>[];\n    view(): BrainSessionView;\n}',
+  },
+  {
+    name: 'BrainSessionClosedRecord',
+    declaration: 'export interface BrainSessionClosedRecord {\n    session: BrainSessionView;\n    usage: Usage;\n}',
+  },
+  {
+    name: 'BrainSessionId',
+    declaration: 'export type BrainSessionId = Branded<\'BrainSessionId\'>;',
+  },
+  {
+    name: 'BrainSessionState',
+    declaration: 'export type BrainSessionState = \'open\' | \'stopping\' | \'closing\' | \'closed\';',
+  },
+  {
+    name: 'BrainSessionView',
+    declaration: 'export interface BrainSessionView {\n    sessionId: BrainSessionId;\n    impl: ImplId;\n    member: MemberId;\n    mindKind: MindKind;\n    owner: SessionOwner;\n    model: string;\n    configDir: string;\n    homeDir: string;\n    state: BrainSessionState;\n    openedAt: string;\n    resumedFrom?: ResumeHandle;\n    adjustments: string[];\n    closedAt?: string;\n    closeReason?: BrainCloseReason;\n}',
+  },
+  {
+    name: 'BrainUsageRecord',
+    declaration: 'export interface BrainUsageRecord {\n    sessionId: BrainSessionId;\n    impl: ImplId;\n    member: MemberId;\n    owner: SessionOwner;\n    turnId?: TurnId;\n    childId?: ChildId;\n    source: BrainUsageSource;\n    usage: Partial<Usage>;\n    at: string;\n}',
+  },
+  {
+    name: 'BrainUsageSource',
+    declaration: 'export type BrainUsageSource = \'turn\' | \'update\' | \'child\';',
+  },
+  {
     name: 'Branded',
     declaration: 'export type Branded<B extends string> = string & {\n    readonly [BRAND]: B;\n};',
   },
@@ -5391,6 +5654,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'CheckState',
     declaration: 'export type CheckState = \'pending\' | \'success\' | \'failure\' | \'neutral\' | \'skipped\' | \'cancelled\';',
+  },
+  {
+    name: 'ChildId',
+    declaration: 'export type ChildId = Branded<\'BrainChildId\'>;',
+  },
+  {
+    name: 'ChildStopReason',
+    declaration: 'export type ChildStopReason = z.output<typeof ChildStopReasonSchema>;',
   },
   {
     name: 'ClaimOutcome',
@@ -5677,6 +5948,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface CreateSessionOptions {\n    readonly seed?: readonly SessionEvent[];\n    readonly inheritedEventCount?: SessionLogOffset;\n    readonly meta?: {\n        readonly cwd?: string;\n        readonly parentSession?: SessionId;\n        readonly createdAt?: number;\n        readonly isSeeded?: boolean;\n        readonly origin?: \'subagent\';\n        readonly delegationDepth?: number;\n        readonly agentPreset?: string;\n    };\n}',
   },
   {
+    name: 'CreateSessionRequest',
+    declaration: 'export interface CreateSessionRequest {\n    impl: ImplId;\n    cfg: SessionConfigInput;\n}',
+  },
+  {
     name: 'CreateShareRequest',
     declaration: 'export interface CreateShareRequest {\n    readonly sessionId: string;\n    readonly sessionTitle?: string;\n    readonly accessMode?: \'open\' | \'selected\';\n    readonly ttlMinutes?: number;\n    readonly allowedSubjectIds?: readonly string[];\n    readonly allowsFork?: boolean;\n    readonly sessionMode?: \'view\' | \'write\';\n}',
   },
@@ -5757,8 +6032,20 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface DailyScheduleRecord {\n    readonly id: ScheduleId;\n    readonly kind: \'daily\';\n    readonly title: string;\n    readonly prompt: string;\n    readonly time: string;\n    readonly timeZone: string;\n    readonly scheduledAt: string;\n}',
   },
   {
+    name: 'DeliverOptions',
+    declaration: 'export interface DeliverOptions {\n    semantics: DeliverySemantics;\n    wake: boolean;\n    expectedTurnId?: TurnId;\n}',
+  },
+  {
+    name: 'DeliverResult',
+    declaration: 'export type DeliverResult = \'accepted\' | \'unsupported\' | \'unavailable\';',
+  },
+  {
     name: 'DeliveryRetentionBounds',
     declaration: 'export interface DeliveryRetentionBounds {\n    readonly days: number;\n    readonly records: number;\n}',
+  },
+  {
+    name: 'DeliverySemantics',
+    declaration: 'export type DeliverySemantics = z.output<typeof DeliverySemanticsSchema>;',
   },
   {
     name: 'DeveloperMessage',
@@ -6203,6 +6490,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ImageVariantId',
     declaration: 'export type ImageVariantId = Branded<\'ImageVariantId\'>;',
+  },
+  {
+    name: 'ImplId',
+    declaration: 'export type ImplId = Branded<\'BrainImplId\'>;',
   },
   {
     name: 'IncompatiblePlugin',
@@ -6665,6 +6956,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type McpResourceRequest = {\n    method: \'resources/list\' | \'resources/templates/list\';\n    cursor?: string;\n} | {\n    method: \'resources/read\';\n    uri: string;\n};',
   },
   {
+    name: 'MemberConfigSpec',
+    declaration: 'export type MemberConfigSpec = Pick<SessionConfig, \'rules\' | \'skillsDir\' | \'projectDocs\' | \'model\' | \'mcpServers\' | \'kernelTools\'>;',
+  },
+  {
+    name: 'MemberId',
+    declaration: 'export type MemberId = Branded<\'BrainMemberId\'>;',
+  },
+  {
     name: 'Mergeability',
     declaration: 'export type Mergeability = \'mergeable\' | \'conflicting\' | \'unknown\';',
   },
@@ -6691,6 +6990,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'MessageSourceMap',
     declaration: 'export interface MessageSourceMap {\n    user: {\n        kind: \'user\';\n    };\n    model: ModelMessageSource;\n    tool: ToolMessageSource;\n    \'system-prompt\': SystemPromptMessageSource;\n}',
+  },
+  {
+    name: 'Meta',
+    declaration: 'export type Meta = z.output<typeof MetaSchema>;',
+  },
+  {
+    name: 'MindKind',
+    declaration: 'export type MindKind = z.output<typeof MindKindSchema>;',
   },
   {
     name: 'ModDefinition',
@@ -6805,6 +7112,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type OneShotScheduleRecord = AfterScheduleRecord | AtScheduleRecord;',
   },
   {
+    name: 'OpenChildTaskRequest',
+    declaration: 'export interface OpenChildTaskRequest extends CreateSessionRequest {\n    parentTask: string;\n}',
+  },
+  {
     name: 'OptionalSessionSeq',
     declaration: 'export type OptionalSessionSeq = SessionSeq | null;',
   },
@@ -6875,6 +7186,18 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'PermissionCatalog',
     declaration: 'export interface PermissionCatalog {\n    options: PresetOption[];\n    defaultOptions: PresetOption[];\n    defaultPreset: string;\n}',
+  },
+  {
+    name: 'PermissionMode',
+    declaration: 'export type PermissionMode = (typeof PERMISSION_MODES)[number];',
+  },
+  {
+    name: 'PermissionRequestId',
+    declaration: 'export type PermissionRequestId = Branded<\'BrainPermissionRequestId\'>;',
+  },
+  {
+    name: 'PermissionResponse',
+    declaration: 'export interface PermissionResponse {\n    optionId: string;\n    reason?: string;\n}',
   },
   {
     name: 'PluginChange',
@@ -7385,6 +7708,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ResumeAgentOptions {\n    readonly resumeSessionId: SessionId;\n    readonly parentAgent?: Agent;\n    readonly agentOptions?: AgentOptions;\n    readonly signal?: AbortSignal;\n    readonly setup?: AgentSetup;\n}',
   },
   {
+    name: 'ResumeHandle',
+    declaration: 'export type ResumeHandle = z.output<typeof ResumeHandleSchema>;',
+  },
+  {
+    name: 'ResumeSessionRequest',
+    declaration: 'export interface ResumeSessionRequest extends CreateSessionRequest {\n    resume: ResumeHandle;\n}',
+  },
+  {
     name: 'ReviewDecision',
     declaration: 'export type ReviewDecision = \'approved\' | \'changes-requested\' | \'review-required\' | \'none\';',
   },
@@ -7625,6 +7956,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type SessionChangeRequestsListener = (changeRequests: readonly SessionChangeRequest[]) => void;',
   },
   {
+    name: 'SessionConfig',
+    declaration: 'export type SessionConfig = z.output<typeof SessionConfigSchema>;',
+  },
+  {
+    name: 'SessionConfigInput',
+    declaration: 'export type SessionConfigInput = z.input<typeof SessionConfigSchema>;',
+  },
+  {
     name: 'SessionControlBaseline',
     declaration: 'export interface SessionControlBaseline {\n    readonly projections: Readonly<Record<SessionId, SessionProjectionBaseline>>;\n}',
   },
@@ -7835,6 +8174,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SessionOpenWorkspacePathValue',
     declaration: 'export interface SessionOpenWorkspacePathValue {\n    readonly opened: true;\n}',
+  },
+  {
+    name: 'SessionOwner',
+    declaration: 'export type SessionOwner = z.output<typeof SessionOwnerSchema>;',
   },
   {
     name: 'SessionPage',
@@ -9021,6 +9364,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface TurnEndReasonMap {\n    completed: {\n        kind: \'completed\';\n    };\n    aborted: {\n        kind: \'aborted\';\n        reason: TurnEndCancelCause;\n    };\n    blocked: {\n        kind: \'blocked\';\n    };\n    error: {\n        kind: \'error\';\n        error: LlmFailure;\n    };\n    \'max-tokens\': {\n        kind: \'max-tokens\';\n    };\n    interrupted: {\n        kind: \'interrupted\';\n    };\n    forked: {\n        kind: \'forked\';\n    };\n}',
   },
   {
+    name: 'TurnId',
+    declaration: 'export type TurnId = Branded<\'BrainTurnId\'>;',
+  },
+  {
+    name: 'TurnInput',
+    declaration: 'export type TurnInput = z.output<typeof TurnInputSchema>;',
+  },
+  {
     name: 'TurnStartInput',
     declaration: 'export interface TurnStartInput {\n    text: string;\n    turnId: string;\n    agentId?: string;\n}',
   },
@@ -9195,6 +9546,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'UpdateTeamTaskRequest',
     declaration: 'export interface UpdateTeamTaskRequest {\n    readonly taskId: TeamTaskId;\n    readonly expectedRevision: number;\n    readonly action: TeamTaskAction;\n    readonly subject?: string;\n    readonly description?: string;\n    readonly blockedBy?: readonly TeamTaskId[];\n    readonly writeScopes?: readonly string[];\n    readonly owner?: string;\n}',
+  },
+  {
+    name: 'Usage',
+    declaration: 'export type Usage = z.output<typeof UsageSchema>;',
   },
   {
     name: 'UserMessage',

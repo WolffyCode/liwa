@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Skriptgesteuerter Brain-Anbieter",
+    "description": "Nur für Tests gedachter Agent-CLI-Anbieter, der skriptgesteuerte Runden abspielt, für Vertragstests und Testprofile."
+  }
+}

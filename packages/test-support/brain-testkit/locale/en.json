@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Scripted brain provider",
+    "description": "A test-only agent CLI provider that replays scripted turns, for contract tests and test profiles."
+  }
+}

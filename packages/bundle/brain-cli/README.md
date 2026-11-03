@@ -1,0 +1,105 @@
+---
+description: "The liwa brain command: list, probe, and try the agent CLI providers of ctx.brains from a terminal, as the shipped brain profile over liwa-base."
+kind: "package-bundle"
+---
+
+# @liwa/brain-cli
+
+English | [中文](README.zh.md)
+
+## Summary
+
+`liwa brain` lists, probes, and tries the agent CLI providers a profile mounts. The shipped `brain` profile stacks this layer over `liwa-base`, so `liwa brain list` works without setup. `run` opens one session in the process, prints every event as one line, answers permission requests, runs one turn, and closes the session. Providers come from the plugins the profile mounts; the bundle mounts none.
+
+## Table of Contents
+
+- [Use this package](#use-this-package)
+- [Understand the implementation](#understand-the-implementation)
+- [Further Exploration](#further-exploration)
+- [Model Experience](#model-experience)
+- [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
+- [Dev Note](#dev-note)
+
+-----
+
+<a id="use-this-package"></a>
+## Use this package
+
+### Install into a profile
+
+The layer is in-box: the shipped `brain` profile (`@liwa/base`, `@liwa/brain-cli`) is created on first use, and `liwa brain <subcommand>` abbreviates `liwa --profile brain <subcommand>`. Provider plugins join that profile like any plugin:
+
+```text
+liwa plugin --profile brain add <provider-package>
+```
+
+### What you get
+
+```text
+liwa brain list [--json]
+liwa brain probe <impl> [--json]
+liwa brain run --provider <impl> [--model <m>] [--cwd <dir>] [--mode ask|allow-once|allow-session|deny]
+               [--member <name>] [--mind <kind>] [--json] "<prompt>"
+```
+
+`list` probes every registered provider and prints a table; `probe` exits 1 when the provider is unavailable. `run` prepares the member configuration directory, opens a session with the command's values and the runner row's turn budget, prints events to stdout and session notes to stderr, and exits 0 when the turn completes. `--mode` answers permission requests: `ask` prompts on the terminal (the default on a terminal), `deny` is the default otherwise. The scripted test provider joins through an explicit overlay:
+
+```text
+liwa brain --patch apps/cli/tests/profiles/brain/scripted-provider.patch.yml run --provider fake "hello"
+```
+
+-----
+
+<a id="understand-the-implementation"></a>
+## Understand the implementation
+
+<details>
+<summary>Implementation internals — click to expand</summary>
+
+The patch inserts three rows over base: `brains` (`@liwa/brain`, `membersRoot` under the Liwa home), `brain-cli-startup` (parses the launcher's inner arguments and provides `brainStartup`), and `brain-cli` (runs the command after the loader settles, then requests exit). It disables HMR and the interactive credential store, as the one-shot headless profile does.
+
+| File | Role |
+|---|---|
+| [`cordis.patch.yml`](cordis.patch.yml) | The layer's rows |
+| [`src/startup.ts`](src/startup.ts) | Command grammar and help; publishes `brainStartup` |
+| [`src/index.ts`](src/index.ts) | `list`, `probe`, and `run`; event lines and permission answers |
+
+</details>
+
+-----
+
+<a id="further-exploration"></a>
+## Further Exploration
+
+- [@liwa/brain](../../brain/brain/README.md) — the service the command drives.
+- [Bundle group](../README.md) — the other shipped layers.
+- [liwa app](../../../apps/cli/README.md) — how `liwa <name>` selects a profile.
+
+-----
+
+<a id="model-experience"></a>
+## Model Experience
+
+Indirectly, through the selected provider: `run` hands the prompt to that provider's CLI, which builds every model request.
+
+#### KV Cache effect
+
+The command adds no model input of its own; caching is the provider's.
+
+## Known Limitations and Deferred Work
+
+<a id="known-limitations-and-deferred-work"></a>
+
+- **One turn per run** — `run` closes its session after the first turn; resident sessions, multi-session management, and reconnects belong to the future gateway.
+- **No `sessions` or `children` subcommands** — a one-shot process has no sessions to list beyond its own run.
+- **Model placeholder** — without `--model`, the provider receives the model id `default` until the roster owns model choice.
+
+<a id="dev-note"></a>
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+None.
+
+</details>

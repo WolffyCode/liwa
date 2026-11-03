@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Proveedor de cerebro con guion",
+    "description": "Proveedor de CLI de agentes solo para pruebas que reproduce turnos con guion, para pruebas de contrato y perfiles de prueba."
+  }
+}

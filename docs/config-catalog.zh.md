@@ -454,6 +454,54 @@ export type Config = LocalConfig
 ```
 <!-- END GENERATED config-catalog:@liwa/bash-sandbox -->
 
+<!-- BEGIN GENERATED config-catalog:@liwa/brain -->
+<a id="liwabrain"></a>
+
+## `@liwa/brain`
+
+- `inject`: `subprocess`
+- `source`: [`packages/brain/brain/src/index.ts:97`](../packages/brain/brain/src/index.ts)
+
+```ts config-catalog
+/** `ctx.brains` 的配置。 */
+export interface Config {
+  /** 成员数据目录的根；`prepareConfigDir` 写 `<membersRoot>/<member>/brains/`。 */
+  membersRoot: string
+  /** 开会话、续接、开回合的时限（毫秒）。 */
+  handshakeTimeoutMs?: number
+  /** 送达、取消、答复权限、回收否决的时限（毫秒）。 */
+  callTimeoutMs?: number
+  /** 关会话与等其进程退出的时限（毫秒）。 */
+  closeTimeoutMs?: number
+  /** 一次可用性探测的时限（毫秒）。 */
+  probeTimeoutMs?: number
+}
+```
+<!-- END GENERATED config-catalog:@liwa/brain -->
+
+<!-- BEGIN GENERATED config-catalog:@liwa/brain-cli -->
+<a id="liwabrain-cli"></a>
+
+## `@liwa/brain-cli`
+
+- `inject`: `brains` · `brainStartup`
+- `source`: [`packages/bundle/brain-cli/src/index.ts:30`](../packages/bundle/brain-cli/src/index.ts)
+
+```ts config-catalog
+/** `run` 开会话时用的回合预算与会话缺省值（以后由 minds 与 roster 给）。 */
+export interface Config {
+  /** 每回合推理次数上限。 */
+  maxInferencesPerTurn: number
+  /** 每回合工具调用次数上限。 */
+  maxToolCallsPerTurn: number
+  /** 回合看门狗（毫秒）。 */
+  watchdogMs: number
+  /** 成功调用即结束回合的工具。 */
+  concludeOn: string[]
+}
+```
+<!-- END GENERATED config-catalog:@liwa/brain-cli -->
+
 <!-- BEGIN GENERATED config-catalog:@liwa/client-connection -->
 <a id="liwaclient-connection"></a>
 
@@ -4685,6 +4733,8 @@ export interface Config {
 | `@liwa/app-boot` | — | [`packages/boot/app-boot/src/index.ts`](../packages/boot/app-boot/src/index.ts) |
 | `@liwa/atomic-write` | — | [`packages/util/atomic-write/src/index.ts`](../packages/util/atomic-write/src/index.ts) |
 | `@liwa/base` | — | [`packages/bundle/base/src/index.ts`](../packages/bundle/base/src/index.ts) |
+| `@liwa/brain-shared` | — | [`packages/brain/brain-shared/src/index.ts`](../packages/brain/brain-shared/src/index.ts) |
+| `@liwa/brain-testkit` | — | [`packages/test-support/brain-testkit/src/index.ts`](../packages/test-support/brain-testkit/src/index.ts) |
 | `@liwa/brand` | — | [`packages/util/brand/src/index.ts`](../packages/util/brand/src/index.ts) |
 | `@liwa/chunked-list` | — | [`packages/util/chunked-list/src/index.ts`](../packages/util/chunked-list/src/index.ts) |
 | `@liwa/client-store` | — | [`packages/client/store/src/index.ts`](../packages/client/store/src/index.ts) |

@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Fournisseurs de CLI d'agents",
+    "description": "Enregistre des fournisseurs de CLI d'agents et ouvre des sessions avec le suivi de l'usage, des processus et des agents enfants."
+  }
+}

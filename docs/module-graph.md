@@ -134,12 +134,17 @@ flowchart TD
     pkg_plugin_manager["plugin-manager"]
     pkg_plugin_market["plugin-market"]
   end
+  subgraph group_brain["packages/brain"]
+    pkg_brain["brain"]
+    pkg_brain_shared["brain-shared"]
+  end
   subgraph group_browser_use["packages/browser-use"]
     pkg_browser_use["browser-use"]
   end
   subgraph group_bundle["packages/bundle"]
     pkg_acp_app["acp-app"]
     pkg_base["base"]
+    pkg_brain_cli["brain-cli"]
     pkg_headless["headless"]
     pkg_sdk_app["sdk-app"]
     pkg_sdk_minimal["sdk-minimal"]
@@ -434,6 +439,7 @@ flowchart TD
   end
   subgraph group_test_support["packages/test-support"]
     pkg_agent_loop_testkit["agent-loop-testkit"]
+    pkg_brain_testkit["brain-testkit"]
     pkg_client_test_runtime["client-test-runtime"]
     pkg_llm_mock_server["llm-mock-server"]
     pkg_llm_replay["llm-replay"]
@@ -502,6 +508,8 @@ flowchart TD
   pkg_attachment_local --> pkg_home_paths
   pkg_hmr --> pkg_app_boot
   pkg_hmr --> pkg_cmdline
+  pkg_brain --> pkg_subprocess
+  pkg_brain_shared --> pkg_subprocess
   pkg_deliverable_file_references --> pkg_system_prompt
   pkg_experimental_computer_use_cua_driver_mcp --> pkg_computer_use
   pkg_experimental_forge_github --> pkg_experimental_forge
@@ -570,6 +578,9 @@ flowchart TD
   pkg_session_turn_outline --> pkg_session_projection
   pkg_shell --> pkg_sandbox
   pkg_shell --> pkg_subprocess
+  pkg_brain_testkit --> pkg_brain
+  pkg_brain_testkit --> pkg_subprocess
+  pkg_brain_testkit --> pkg_subprocess_local
   pkg_workspace --> pkg_session
   pkg_workspace --> pkg_session_persistence
   pkg_workspace --> pkg_storage
@@ -1458,6 +1469,7 @@ flowchart TD
 | [`cmdline`](../packages/boot/cmdline) | `boot` | — |
 | [`acp-app`](../packages/bundle/acp-app) | `bundle` | — |
 | [`base`](../packages/bundle/base) | `bundle` | — |
+| [`brain-cli`](../packages/bundle/brain-cli) | `bundle` | — |
 | [`sdk-app`](../packages/bundle/sdk-app) | `bundle` | — |
 | [`sdk-minimal`](../packages/bundle/sdk-minimal) | `bundle` | — |
 | [`client-file-upload`](../packages/client/file-upload) | `client` | — |
@@ -1597,6 +1609,8 @@ flowchart TD
 | [`api-terminal-controller`](../packages/api/terminal-controller) | `api` | [`subprocess`](../packages/subprocess/subprocess) |
 | [`attachment-local`](../packages/attachment/attachment-local) | `attachment` | [`attachment`](../packages/attachment/attachment), [`home-paths`](../packages/util/home-paths) |
 | [`hmr`](../packages/boot/hmr) | `boot` | [`app-boot`](../packages/boot/app-boot), [`cmdline`](../packages/boot/cmdline) |
+| [`brain`](../packages/brain/brain) | `brain` | [`subprocess`](../packages/subprocess/subprocess) |
+| [`brain-shared`](../packages/brain/brain-shared) | `brain` | [`subprocess`](../packages/subprocess/subprocess) |
 | [`deliverable-file-references`](../packages/deliverables/deliverable-file-references) | `deliverables` | [`system-prompt`](../packages/core/system-prompt) |
 | [`experimental-computer-use-cua-driver-mcp`](../packages/experimental/computer-use-cua-driver-mcp) | `experimental` | [`computer-use`](../packages/computer-use/computer-use) |
 | [`experimental-forge-github`](../packages/experimental/forge-github) | `experimental` | [`experimental-forge`](../packages/experimental/forge), [`subprocess`](../packages/subprocess/subprocess) |
@@ -1627,6 +1641,7 @@ flowchart TD
 | [`session-stats`](../packages/session/session-stats) | `session` | [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection) |
 | [`session-turn-outline`](../packages/session/session-turn-outline) | `session` | [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection) |
 | [`shell`](../packages/shell/shell) | `shell` | [`sandbox`](../packages/sandbox/sandbox), [`subprocess`](../packages/subprocess/subprocess) |
+| [`brain-testkit`](../packages/test-support/brain-testkit) | `test-support` | [`brain`](../packages/brain/brain), [`subprocess`](../packages/subprocess/subprocess), [`subprocess-local`](../packages/subprocess/subprocess-local) |
 | [`workspace`](../packages/workspace/workspace) | `workspace` | [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`storage`](../packages/storage/storage), [`storage-domain`](../packages/storage/storage-domain), [`typert-protocol`](../packages/typert/protocol) |
 | [`llm-deepseek`](../packages/llm/llm-deepseek) | `llm` | [`atomic-write`](../packages/util/atomic-write), [`attachment`](../packages/attachment/attachment), [`fs`](../packages/fs/fs), [`home-paths`](../packages/util/home-paths), [`launch-environment`](../packages/util/launch-environment), [`llm`](../packages/llm/llm), [`timeout`](../packages/util/timeout) |
 | [`llm-pi-ai`](../packages/llm/llm-pi-ai) | `llm` | [`attachment`](../packages/attachment/attachment), [`authorization`](../packages/credentials/authorization), [`credentials`](../packages/credentials/credentials), [`fs`](../packages/fs/fs), [`launch-environment`](../packages/util/launch-environment), [`llm`](../packages/llm/llm), [`timeout`](../packages/util/timeout) |

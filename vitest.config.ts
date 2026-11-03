@@ -270,6 +270,9 @@ export default defineConfig({
         'packages/self-modification/*/src/**/*.{ts,tsx}',
         // A killed executable lint-contract test can leave a non-product source probe behind.
         'packages/*/*/src/oxlint-contract-*.ts',
+        // Paseo source copied in place (src/paseo/) is upstream code; its own tests stay upstream, and the
+        // in-place changes are covered by the owning package's tests.
+        'packages/*/*/src/paseo/**',
         // Client/web UI files whose remaining branches need a browser-grade
         // harness the jsdom lane doesn't cover yet. TODO(gui): cover and
         // remove as the client test lane matures.

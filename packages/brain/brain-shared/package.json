@@ -1,0 +1,46 @@
+{
+  "name": "@liwa/brain-shared",
+  "description": "Paseo provider code shared by the Liwa brain providers (copied in place with NOTICE) plus the bridge from that code to the subprocess seam",
+  "version": "0.2.2-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
+    "directory": "packages/brain/brain-shared"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./paseo/*": {
+      "types": "./lib/types/paseo/*.d.ts",
+      "default": "./lib/types/paseo/*.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "zod": "4.4.3"
+  },
+  "peerDependencies": {
+    "@liwa/cordis": "workspace:~",
+    "@liwa/subprocess": "workspace:*"
+  },
+  "devDependencies": {
+    "@liwa/cordis": "workspace:~",
+    "@liwa/subprocess": "workspace:*",
+    "@liwa/subprocess-local": "workspace:*"
+  }
+}

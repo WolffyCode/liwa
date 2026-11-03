@@ -8,8 +8,8 @@ import { historicalSchemaRegion } from './historical-schema-region.ts'
 
 const root = resolve(import.meta.dirname, '..')
 const blockedTerm = 'prove' + 'nance'
-// Liwa designs and research retain source terminology, quoted fields, and paper titles.
-const excludedPrefixes = ['vendor/', '.agents/notes/archived/', 'docs/liwa/'] as const
+// Liwa designs retain source terminology; copied Paseo sources retain upstream wording.
+const excludedPrefixes = ['vendor/', '.agents/notes/archived/', 'docs/liwa/', 'packages/brain/brain-shared/src/paseo/'] as const
 
 /** One blocked term occurrence in a tracked path or text line. */
 export interface ConcreteTermViolation {

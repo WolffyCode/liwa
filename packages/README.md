@@ -35,6 +35,7 @@ Every package lives in exactly one group; new packages join existing groups, and
 | [`schedule/`](schedule/README.md) | Host-owned scheduled follow-ups |
 | [`llm/`](llm/README.md) | LLM capability family: abstract service + provider adapters |
 | [`subprocess/`](subprocess/README.md) | Subprocess capability family: Service Definition + local process-tree provider |
+| [`brain/`](brain/README.md) | Brain capability family: agent CLI contract, `ctx.brains`, and shared Paseo provider code |
 | [`ssh/`](ssh/README.md) | POSIX remote connection with paired filesystem, subprocess and sandbox providers |
 | [`shell/`](shell/README.md) | Bash capability family: executor seam, local impl, model-facing tools |
 | [`terminal/`](terminal/README.md) | Persistent PTY service with owner-scoped sessions and a local shell backend |

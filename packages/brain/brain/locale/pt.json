@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Provedores de CLI de agentes",
+    "description": "Registra provedores de CLI de agentes e abre sessões com registro de uso, processos e agentes filhos."
+  }
+}

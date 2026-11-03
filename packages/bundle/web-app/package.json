@@ -184,7 +184,8 @@
     "@liwa/client-ui-shortcuts": "workspace:*",
     "@liwa/liwa-dev-context": "workspace:*",
     "@liwa/deliverable-file-references": "workspace:*",
-    "@liwa/client-ui-file-drag": "workspace:*"
+    "@liwa/client-ui-file-drag": "workspace:*",
+    "@liwa/brain": "workspace:*"
   },
   "peerDependencies": {
     "@liwa/cordis": "workspace:~",

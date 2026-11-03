@@ -14,6 +14,10 @@
 - [`liwa`](#liwa)
 - [`liwa plugin`](#liwa-plugin)
 - [`liwa acp`](#liwa-acp)
+- [`liwa brain`](#liwa-brain)
+- [`liwa brain list`](#liwa-brain-list)
+- [`liwa brain probe`](#liwa-brain-probe)
+- [`liwa brain run`](#liwa-brain-run)
 - [`liwa headless`](#liwa-headless)
 - [`liwa sdk`](#liwa-sdk)
 - [`liwa sdk-minimal`](#liwa-sdk-minimal)
@@ -97,6 +101,97 @@ Options:
 Example:
   liwa --profile acp     serve ACP until the client disconnects
 
+```
+
+<a id="liwa-brain"></a>
+## `liwa brain`
+
+调用方式: `liwa brain --help`, `liwa brain help --help`, `liwa --profile brain --help`, `liwa --profile brain help --help`
+
+```text
+Usage: liwa brain [options] [command]
+
+Inspect and try the agent CLI providers mounted in this profile.
+
+Options:
+  -h, --help                 show this help
+
+Commands:
+  list [options]             list the registered providers and probe each of
+                             them
+  probe [options] <impl>     probe one provider: availability, version, and
+                             problems
+  run [options] <prompt...>  open one session in this process, stream its
+                             events, run one turn, and close it
+  help [command]             display help for command
+
+Examples:
+  liwa brain list                                   list providers and probe them
+  liwa brain probe claude                           check one provider in detail
+  liwa brain run --provider deepseek "hello"        open a session, run one turn, close it
+  liwa brain run --provider codex --mode deny --cwd ./repo "fix the tests"
+
+```
+
+<a id="liwa-brain-list"></a>
+## `liwa brain list`
+
+调用方式: `liwa brain list --help`, `liwa --profile brain list --help`
+
+```text
+Usage: liwa brain list [options]
+
+list the registered providers and probe each of them
+
+Options:
+  --json      print one JSON document instead of a table
+  -h, --help  show this help
+```
+
+<a id="liwa-brain-probe"></a>
+## `liwa brain probe`
+
+调用方式: `liwa brain probe --help`, `liwa --profile brain probe --help`
+
+```text
+Usage: liwa brain probe [options] <impl>
+
+probe one provider: availability, version, and problems
+
+Arguments:
+  impl        provider implementation name
+
+Options:
+  --json      print one JSON document instead of text
+  -h, --help  show this help
+```
+
+<a id="liwa-brain-run"></a>
+## `liwa brain run`
+
+调用方式: `liwa brain run --help`, `liwa --profile brain run --help`
+
+```text
+Usage: liwa brain run [options] <prompt...>
+
+open one session in this process, stream its events, run one turn, and close it
+
+Arguments:
+  prompt             the prompt; multiple words are joined by spaces
+
+Options:
+  --provider <impl>  provider implementation name
+  --model <model>    model id handed to the provider (default: "default")
+  --cwd <dir>        working directory of the session (default: the current
+                     directory)
+  --mode <mode>      how permission requests are answered (default: ask on a
+                     terminal, deny otherwise) (choices: "ask", "allow-once",
+                     "allow-session", "deny")
+  --member <name>    member that owns the session (default: cli)
+  --mind <kind>      session kind (default: work) (choices: "instance", "work",
+                     "think", "own", "tidy")
+  --json             print each event as one JSON line
+  -h, --help         show this help
 ```
 
 <a id="liwa-headless"></a>

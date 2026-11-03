@@ -35,6 +35,7 @@ kind: "package-group"
 | [`schedule/`](schedule/README.zh.md) | Host 拥有的定时后续操作 |
 | [`llm/`](llm/README.zh.md) | LLM（大语言模型）能力系列：抽象服务 + 提供方适配器 |
 | [`subprocess/`](subprocess/README.zh.md) | 子进程能力系列：Service Definition + 本地进程树提供方 |
+| [`brain/`](brain/README.zh.md) | 大脑能力系列：agent CLI 契约、`ctx.brains` 与共用的 Paseo 提供方代码 |
 | [`ssh/`](ssh/README.zh.md) | POSIX 远端连接及配套文件系统、子进程与沙箱提供方 |
 | [`shell/`](shell/README.zh.md) | Bash 能力系列：执行器 seam、本地实现、面向模型的工具 |
 | [`terminal/`](terminal/README.zh.md) | 持久 PTY 服务：限定所有者范围的会话与本地 shell 后端 |

@@ -1,0 +1,6 @@
+# Test-only overlay for the `brain` profile: mounts the script-replay brain
+# provider (`fake`) so `liwa brain list|probe|run` can be exercised without a
+# real agent CLI. Never part of a shipped profile.
+- insert:
+    - id: brain-scripted-provider
+      name: '@liwa/brain-testkit/plugin'

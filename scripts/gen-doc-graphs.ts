@@ -245,6 +245,23 @@ const SERVICE_ROLES: ServiceRole[] = [
     note: 'Connection-owned providers serve shared resource tools in the calling agent scope.',
   },
   {
+    key: 'brains',
+    pkg: 'brain',
+    title: 'Agent CLI brain providers',
+    mode: 'seam',
+    implementations: ['brain-testkit'],
+    consumers: ['brain-cli'],
+    note: 'Agent CLI providers register one client each; callers open sessions whose handle validates configuration, fans out events, sums usage, and records processes and child agents. The scripted test provider is the only implementation until the CLI provider packages land.',
+  },
+  {
+    key: 'brainStartup',
+    pkg: 'brain-cli',
+    title: 'liwa brain invocation',
+    mode: 'core',
+    consumers: ['brain-cli'],
+    note: 'Supplies the parsed list, probe, or run command to the brain command runner.',
+  },
+  {
     key: 'browserUse',
     pkg: 'browser-use',
     title: 'Browser-use provider registration',
@@ -660,7 +677,7 @@ const SERVICE_ROLES: ServiceRole[] = [
     title: 'Subprocess seam',
     mode: 'seam',
     implementations: ['subprocess-local', 'subprocess-ssh'],
-    consumers: ['bash-local', 'bash-sandbox', 'terminal-bash', 'lsp-stdio', 'subagent-acp', 'subagent-codex', 'subagent-claude-code'],
+    consumers: ['bash-local', 'bash-sandbox', 'terminal-bash', 'lsp-stdio', 'subagent-acp', 'subagent-codex', 'subagent-claude-code', 'brain'],
     note: 'The bash executors, the PTY shell backend, the LSP host, and the out-of-process ACP, Codex, and Claude Code subagent backends spawn through ctx.subprocess; the service owns process coordinates, tree/session lifetime, stdio dispositions, terminal mechanics, and kill escalation.',
   },
   {

@@ -33,6 +33,14 @@
 | `app-boot/config-reload` | `emit` | [`packages/boot/app-boot/src/index.ts:54`](../packages/boot/app-boot/src/index.ts) | [`app-boot`](../packages/boot/app-boot) (`emit`) | [`settings`](../packages/settings/settings) |
 | `approval/request` | `waterfall` | [`packages/interaction/user-approval/src/types.ts:87`](../packages/interaction/user-approval/src/types.ts) | [`user-approval`](../packages/interaction/user-approval) (`waterfall`) | [`acp`](../packages/acp/acp), `remotes`, `server` |
 | `authorization/settled` | `emit` | [`packages/credentials/authorization/src/index.ts:57`](../packages/credentials/authorization/src/index.ts) | [`authorization`](../packages/credentials/authorization) (`events.dispatch`) | - |
+| `brain.child.ended.v1` | `emit` | [`packages/brain/brain/src/index.ts:80`](../packages/brain/brain/src/index.ts) | [`brain`](../packages/brain/brain) (`emit`) | - |
+| `brain.child.opened.v1` | `emit` | [`packages/brain/brain/src/index.ts:74`](../packages/brain/brain/src/index.ts) | [`brain`](../packages/brain/brain) (`emit`) | - |
+| `brain.process.exited.v1` | `emit` | [`packages/brain/brain/src/index.ts:68`](../packages/brain/brain/src/index.ts) | [`brain`](../packages/brain/brain) (`emit`) | - |
+| `brain.process.spawned.v1` | `emit` | [`packages/brain/brain/src/index.ts:62`](../packages/brain/brain/src/index.ts) | [`brain`](../packages/brain/brain) (`emit`) | - |
+| `brain.provider.unavailable.v1` | `emit` | [`packages/brain/brain/src/index.ts:92`](../packages/brain/brain/src/index.ts) | [`brain`](../packages/brain/brain) (`emit`) | - |
+| `brain.session.closed.v1` | `emit` | [`packages/brain/brain/src/index.ts:56`](../packages/brain/brain/src/index.ts) | [`brain`](../packages/brain/brain) (`emit`) | - |
+| `brain.session.opened.v1` | `emit` | [`packages/brain/brain/src/index.ts:50`](../packages/brain/brain/src/index.ts) | [`brain`](../packages/brain/brain) (`emit`) | - |
+| `brain.usage.v1` | `emit` | [`packages/brain/brain/src/index.ts:86`](../packages/brain/brain/src/index.ts) | [`brain`](../packages/brain/brain) (`emit`) | - |
 | `commands/change` | `emit` | [`packages/interaction/commands/src/types.ts:89`](../packages/interaction/commands/src/types.ts) | [`commands`](../packages/interaction/commands) (`events.dispatch`) | `remotes` |
 | `compaction/summary-error` | `waterfall` | [`packages/compaction/compaction/src/index.ts:106`](../packages/compaction/compaction/src/index.ts) | [`compaction-basic`](../packages/compaction/compaction-basic) (`waterfall`) | [`compaction-image-offload`](../packages/compaction/compaction-image-offload) |
 | `connection/request` | `waterfall` | [`packages/client/connection/src/index.ts:71`](../packages/client/connection/src/index.ts) | `connection` (`waterfall`) | - |

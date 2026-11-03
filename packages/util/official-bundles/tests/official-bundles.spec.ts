@@ -27,6 +27,7 @@ describe('Shipped profile templates', () => {
       headless: { bundles: ['@liwa/base', '@liwa/headless'] },
       sdk: { bundles: ['@liwa/base', '@liwa/sdk-app'] },
       'sdk-minimal': { bundles: ['@liwa/sdk-minimal'] },
+      brain: { bundles: ['@liwa/base', '@liwa/brain-cli'] },
     })
   })
 })

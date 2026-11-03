@@ -64,6 +64,20 @@ describe('concrete terminology policy', () => {
     )).toEqual([{ file: '.agents/notes/implemented/process/current.md', line: 1 }])
   })
 
+  it('preserves copied Paseo sources while checking the Liwa bridge and neighboring paths', () => {
+    expect(findConcreteTermViolations(
+      'packages/brain/brain-shared/src/paseo/protocol/agent-message.ts',
+      blockedTerm,
+    )).toEqual([])
+    for (const file of [
+      'packages/brain/brain-shared/src/process.ts',
+      'packages/brain/brain-shared/src/paseo-extra/protocol/agent-message.ts',
+      'packages/brain/brain-shared/README.md',
+    ]) {
+      expect(findConcreteTermViolations(file, blockedTerm)).toEqual([{ file, line: 1 }])
+    }
+  })
+
   it('preserves historical identifiers only in alpha and RC release schema snapshots', () => {
     for (const channel of ['alpha', 'rc']) {
       expect(findConcreteTermViolations(

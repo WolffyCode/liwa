@@ -68,6 +68,8 @@ export function findUnknownCasts(file: string, text: string): UnknownCast[] {
 function isSource(file: string): boolean {
   return /\.(?:[cm]?[jt]s|[jt]sx)$/u.test(file)
     && !file.startsWith('vendor/')
+    // Paseo source copied in place under a package's src/paseo/ keeps its upstream idioms, like vendor/.
+    && !/^packages\/[^/]+\/[^/]+\/src\/paseo\//u.test(file)
     && !file.startsWith('.agents/notes/archived/')
 }
 

@@ -340,6 +340,9 @@ export class CordisCatalogProjector {
       if (declaration.face !== this.face.face
         || (!/^packages\/[^/]+\/[^/]+\/src\/.+\.tsx?$/.test(declaration.location.file)
           && !(declaration.kind === 'enum' && /^vendor\/[^/]+\/src\/.+\.ts$/.test(declaration.location.file)))) continue
+      // Upstream source copied in place (src/paseo/) declares upstream names such as JsonValue; it never
+      // supplies a Liwa service or event type, and counting it would make those names ambiguous.
+      if (declaration.location.file.includes('/src/paseo/')) continue
       if (declarations.has(declaration.name)) {
         ambiguous.add(declaration.name)
         continue

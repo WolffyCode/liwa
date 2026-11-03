@@ -36,6 +36,7 @@ One page per subsystem of Liwa: what it is, the data structures it moves, and â€
 | [attachment.md](attachment.md) | durable image identity and metadata, validation inputs, verified reads, and the `AttachmentStore` seam |
 | [shell.md](shell.md) | the shell executor seam: `ShellExecRequest`/`Spec`, `ShellRunResult`, background `ShellProcess` handles |
 | [subprocess.md](subprocess.md) | the subprocess seam: fully-explicit `SubprocessSpawnSpec`, offset-based output readers, unclassified `SubprocessOutcome`, and the managed `LIWA_*` environment vocabulary |
+| [brain.md](brain.md) | the brain-provider seam: the agent CLI contract, `ctx.brains` sessions, and the versioned provider, process, session, child, and usage records |
 | [ssh.md](ssh.md) | the POSIX SSH connection and remote filesystem, subprocess and sandbox providers |
 | [terminal.md](terminal.md) | persistent terminal ids, backend/session contracts, send readiness, bounded reads, and owner-visible snapshots |
 | [sandbox.md](sandbox.md) | per-session policy resolution and the process-confinement seam: file-effect modes, execution/provider policies, `ConfinedArgv`, enforcement and fail-closed errors |

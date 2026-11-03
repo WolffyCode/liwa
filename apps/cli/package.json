@@ -110,7 +110,8 @@
     "@liwa/cua-bundle": "workspace:*",
     "@liwa/experimental-plugin-market-bundle": "workspace:*",
     "@liwa/personalized-recommendations": "workspace:*",
-    "@liwa/experimental-forge-bundle": "workspace:*"
+    "@liwa/experimental-forge-bundle": "workspace:*",
+    "@liwa/brain-cli": "workspace:*"
   },
   "devDependencies": {
     "@liwa/skill-badge": "workspace:*",
@@ -162,7 +163,8 @@
     "@types/ws": "8.18.1",
     "ajv": "^8.20.0",
     "execa": "^10.0.1",
-    "ws": "8.21.3"
+    "ws": "8.21.3",
+    "@liwa/brain-testkit": "workspace:*"
   },
   "exports": {
     "./profile-boot": {

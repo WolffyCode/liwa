@@ -30,9 +30,9 @@ const PATTERNS = [
   'packages/**/*.ts',
 ]
 
-/** Exclude built/vendor source and Liwa designs that name proposed or historical package layouts. */
+/** Exclude built/vendor/copied source and Liwa designs that name proposed or historical package layouts. */
 const isExcluded = (p: string): boolean =>
-  isArchivedAgentNotePath(p) || p.startsWith('docs/liwa/') || p.includes('/lib/') || p.endsWith('.d.ts') || p.startsWith('vendor/')
+  isArchivedAgentNotePath(p) || p.startsWith('docs/liwa/') || p.includes('/lib/') || p.endsWith('.d.ts') || p.startsWith('vendor/') || p.includes('/src/paseo/')
 
 /**
  * Directory names of every real package, `packages/<group>/<pkg>`. A broken

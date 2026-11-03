@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "agent CLI 提供方",
+    "description": "登记 agent CLI 提供方，开会话，并记录用量、进程与子 agent。"
+  }
+}

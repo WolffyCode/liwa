@@ -1,0 +1,55 @@
+@liwa/brain-shared — 第三方来源声明
+
+本包 src/paseo/ 下的文件拷自 Paseo：
+  Upstream: https://github.com/getpaseo/paseo
+  Commit:   8018231a00a6b45ed6cda1856f954ba14b4824c0
+  Version:  0.15.0-beta.1
+  License:  Apache-2.0
+  License text: https://www.apache.org/licenses/LICENSE-2.0
+  Copyright (c) 2025-present Mohamed Boudra
+
+上游没有 NOTICE 文件。每个拷来的文件第一行注明来源路径；原样拷贝，需要改的行原地改（Apache-2.0 第 4(b) 条要求标注改动），
+改动处有"灵鲸改"注释。本包其余文件（src/index.ts、src/process.ts、tests/）是灵鲸自己写的，MIT。
+
+路径对照：packages/server/src/server/agent/ → src/paseo/agent/；packages/protocol/src/ → src/paseo/protocol/；
+packages/server/src/utils/ → src/paseo/utils/。
+
+全部文件的共同改动：
+  - 相对导入的后缀 .js 改成 .ts（本仓库约定）；@getpaseo/protocol/<x> 改成对 src/paseo/protocol/<x>.ts 的相对导入。
+  - 文件头加一行来源注释。
+  - 本包 tsconfig 关掉 noUncheckedIndexedAccess 与 exactOptionalPropertyTypes，与上游的编译选项一致，以免改写拷贝。
+
+逐文件改动（未列出的文件除上面的共同改动外与上游相同）：
+
+src/paseo/agent/agent-sdk-types.ts（← agent/agent-sdk-types.ts）
+  - 去掉 AgentAttachment（@getpaseo/protocol/messages，Paseo 的 PR / issue / 上传附件）及其在 AgentPromptContentBlock 里的分支。
+  - AgentLaunchContext 去掉 paseoTools（Paseo 自己的工具目录，不迁），换成 processHost?: ProviderProcessHost（brains 登记归属后转给 ctx.subprocess 的进程入口）。
+
+src/paseo/protocol/agent-types.ts（← packages/protocol/src/agent-types.ts）
+  - 同样去掉 AgentAttachment 及其在 AgentPromptContentBlock 里的分支。
+
+src/paseo/protocol/provider-config.ts（← packages/protocol/src/provider-config.ts）
+  - AgentProviderSchema 原从 provider-manifest.ts（Paseo 界面的提供方清单，不迁）导入，改为就地定义同一行 z.string()。
+
+src/paseo/protocol/tool-call-display.ts（← packages/protocol/src/tool-call-display.ts）
+  - 去掉按 Paseo 工具目录（paseo-tool-presentation/，不迁）出展示名的分支；其余规则不变。
+
+src/paseo/agent/provider-launch-config.ts（← agent/provider-launch-config.ts）
+  - 可执行解析从 executable-resolution（which + --version 探测）改为经 subprocess 的 resolveExecutable（findProviderExecutable）；
+    checkProviderLaunchAvailable、isProviderCommandAvailable 因此多一个 host 参数。
+  - ProcessEnvRecord / ExternalProcessEnv 原从 paseo-env.ts（不迁）导入，改为就地定义。
+  - resolveShellEnv、createProviderEnv 的基底从 process.env 改为 subprocess 的 scrubbedParentEnv()（剥掉凭据与 LIWA_*）。
+
+src/paseo/agent/providers/diagnostic-utils.ts（← agent/providers/diagnostic-utils.ts）
+  - utils/spawn 的 execCommand 改为经 subprocess 的 execProviderCommand；resolveBinaryVersion、buildCommandResolutionDiagnosticRows、
+    buildBinaryDiagnosticRows 及内部探测函数因此多一个 host 参数；去掉 killSignal 选项（终止阶梯归 subprocess）。
+
+原样迁入（只有共同改动）：
+  agent/provider-options.ts、agent/provider-notices.ts、agent/provider-refresh-deadline.ts、agent/provider-session-import.ts、
+  agent/system-prompt.ts、agent/runtime-mcp-config.ts、agent/provider-subagents/store.ts、agent/agent-timeline-content.ts、
+  agent/agent-timeline-store.ts、agent/agent-timeline-store-types.ts、agent/timeline-projection.ts、agent/provider-history-timestamps.ts、
+  agent/create-agent-mode.ts、agent/providers/provider-runner.ts、agent/providers/tool-call-detail-primitives.ts、
+  agent/providers/tool-call-mapper-utils.ts、agent/providers/question-card-answer.ts、agent/providers/custom-message.ts、
+  agent/providers/resume-process-cwd.ts、agent/providers/provider-image-output.ts、agent/providers/jsonl-frame-decoder.ts、
+  protocol/tool-name-normalization.ts、protocol/agent-message.ts、protocol/path-utils.ts、protocol/timeline-turn.ts、
+  protocol/timeline-identity.ts、utils/promise-timeout.ts、utils/path.ts、utils/string-command-shell.ts

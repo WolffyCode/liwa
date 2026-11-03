@@ -51,6 +51,8 @@ export { REGION_BEGIN, REGION_END }
  */
 export const SERVICE_PAGE: Record<string, string> = {
   headlessStartup: 'boot.md',
+  brains: 'brain.md',
+  brainStartup: 'brain.md',
   translator: 'translation.md',
   cotTranslation: 'translation.md',
   speechToText: 'voice-input.md',
@@ -219,6 +221,15 @@ export const SERVICE_WALK_EXEMPTIONS: Record<string, string> = {
  * {@link EVENT_WALK_EXEMPTIONS} names each one with its documentation owner.
  */
 export const EVENT_SCOPE_PAGE: Record<string, string> = {
+  // The brain records keep the dotted, versioned names of the Liwa design (01 §2), one scope each.
+  'brain.session.opened.v1': 'brain.md',
+  'brain.session.closed.v1': 'brain.md',
+  'brain.process.spawned.v1': 'brain.md',
+  'brain.process.exited.v1': 'brain.md',
+  'brain.child.opened.v1': 'brain.md',
+  'brain.child.ended.v1': 'brain.md',
+  'brain.usage.v1': 'brain.md',
+  'brain.provider.unavailable.v1': 'brain.md',
   'app-boot': 'boot.md',
   hmr: 'boot.md',
   'plugin-manager': 'boot.md',
@@ -910,6 +921,24 @@ export const FOUNDATION_TYPE_NAMES: ReadonlySet<string> = new Set([
 
 /** Project types deliberately documented outside the subsystems catalog. */
 export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
+  BrainProbeResult: 'the brain-provider contract is owned by packages/brain/brain/README.md and src/provider.ts',
+  BrainProvider: 'the brain-provider contract is owned by packages/brain/brain/README.md and src/provider.ts',
+  BrainProviderView: 'the brain-provider contract is owned by packages/brain/brain/README.md and src/views.ts',
+  BrainSession: 'the brain-provider contract is owned by packages/brain/brain/README.md and src/session.ts',
+  BrainSessionId: 'the brain-provider contract is owned by packages/brain/brain/README.md and src/brand.ts',
+  CreateSessionRequest: 'the brain-provider contract is owned by packages/brain/brain/README.md and src/index.ts',
+  ImplId: 'the brain-provider contract is owned by packages/brain/brain/README.md and src/brand.ts',
+  MemberConfigSpec: 'the brain-provider contract is owned by packages/brain/brain/README.md and src/config-dir/shared.ts',
+  MemberId: 'the brain-provider contract is owned by packages/brain/brain/README.md and src/brand.ts',
+  Meta: 'the brain-provider contract is owned by packages/brain/brain/README.md and src/contract.ts',
+  OpenChildTaskRequest: 'the brain-provider contract is owned by packages/brain/brain/README.md and src/index.ts',
+  ResumeSessionRequest: 'the brain-provider contract is owned by packages/brain/brain/README.md and src/index.ts',
+  BrainSessionView: 'brain-provider records are owned by packages/brain/brain/README.md and src/views.ts',
+  BrainSessionClosedRecord: 'brain-provider records are owned by packages/brain/brain/README.md and src/views.ts',
+  BrainProcessView: 'brain-provider records are owned by packages/brain/brain/README.md and src/views.ts',
+  BrainChildView: 'brain-provider records are owned by packages/brain/brain/README.md and src/views.ts',
+  BrainUsageRecord: 'brain-provider records are owned by packages/brain/brain/README.md and src/views.ts',
+  BrainProviderUnavailableRecord: 'brain-provider records are owned by packages/brain/brain/README.md and src/views.ts',
   ActionCardDecision: 'packages/experimental/action-cards/README.md',
   ActionCardKind: 'packages/experimental/action-cards/README.md',
   ActionCardResult: 'packages/experimental/action-cards/README.md',

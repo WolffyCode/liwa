@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "脚本回放的大脑提供方",
+    "description": "只用于测试的 agent CLI 提供方，回放脚本化的回合，给契约测试与测试 profile 用。"
+  }
+}

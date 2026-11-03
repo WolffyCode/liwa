@@ -297,6 +297,9 @@ importers:
       '@liwa/base':
         specifier: workspace:*
         version: link:../../packages/bundle/base
+      '@liwa/brain-cli':
+        specifier: workspace:*
+        version: link:../../packages/bundle/brain-cli
       '@liwa/client-ui-agent-preset':
         specifier: workspace:*
         version: link:../../packages/client/ui-agent-preset
@@ -571,6 +574,9 @@ importers:
       '@liwa/bash-local':
         specifier: workspace:*
         version: link:../../packages/shell/bash-local
+      '@liwa/brain-testkit':
+        specifier: workspace:*
+        version: link:../../packages/test-support/brain-testkit
       '@liwa/credentials-local':
         specifier: workspace:*
         version: link:../../packages/credentials/credentials-local
@@ -2268,6 +2274,50 @@ importers:
         specifier: ^7.8.0
         version: 7.8.0
 
+  packages/brain/brain:
+    dependencies:
+      '@liwa/brand':
+        specifier: workspace:*
+        version: link:../../util/brand
+      '@liwa/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+      '@liwa/util-values':
+        specifier: workspace:*
+        version: link:../../util/values
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@liwa/brain-testkit':
+        specifier: workspace:*
+        version: link:../../test-support/brain-testkit
+      '@liwa/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@liwa/subprocess':
+        specifier: workspace:*
+        version: link:../../subprocess/subprocess
+      '@liwa/subprocess-local':
+        specifier: workspace:*
+        version: link:../../subprocess/subprocess-local
+
+  packages/brain/brain-shared:
+    dependencies:
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@liwa/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@liwa/subprocess':
+        specifier: workspace:*
+        version: link:../../subprocess/subprocess
+      '@liwa/subprocess-local':
+        specifier: workspace:*
+        version: link:../../subprocess/subprocess-local
+
   packages/browser-use/browser-use:
     devDependencies:
       '@liwa/brand':
@@ -2570,8 +2620,42 @@ importers:
         specifier: workspace:~
         version: link:../../../vendor/cordis
 
+  packages/bundle/brain-cli:
+    dependencies:
+      '@liwa/brain':
+        specifier: workspace:*
+        version: link:../../brain/brain
+      '@liwa/cmdline':
+        specifier: workspace:*
+        version: link:../../boot/cmdline
+      '@liwa/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+      commander:
+        specifier: ^15.0.0
+        version: 15.0.0
+    devDependencies:
+      '@liwa/brain-testkit':
+        specifier: workspace:*
+        version: link:../../test-support/brain-testkit
+      '@liwa/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@liwa/cordis-plugin-loader':
+        specifier: workspace:~
+        version: link:../../../vendor/loader
+      '@liwa/subprocess':
+        specifier: workspace:*
+        version: link:../../subprocess/subprocess
+      '@liwa/subprocess-local':
+        specifier: workspace:*
+        version: link:../../subprocess/subprocess-local
+
   packages/bundle/headless:
     dependencies:
+      '@liwa/brain':
+        specifier: workspace:*
+        version: link:../../brain/brain
       '@liwa/brand':
         specifier: workspace:*
         version: link:../../util/brand
@@ -2830,6 +2914,9 @@ importers:
       '@liwa/app-boot':
         specifier: workspace:*
         version: link:../../boot/app-boot
+      '@liwa/brain':
+        specifier: workspace:*
+        version: link:../../brain/brain
       '@liwa/client-connection':
         specifier: workspace:*
         version: link:../../client/connection
@@ -15818,6 +15905,31 @@ importers:
       '@liwa/working-directory':
         specifier: workspace:*
         version: link:../../session/working-directory
+
+  packages/test-support/brain-testkit:
+    dependencies:
+      '@liwa/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+      '@liwa/util-values':
+        specifier: workspace:*
+        version: link:../../util/values
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.1)(@vitest/coverage-v8@4.1.11)(happy-dom@20.11.6)(jsdom@29.1.1(@noble/hashes@2.4.0))(vite@8.2.2(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
+    devDependencies:
+      '@liwa/brain':
+        specifier: workspace:*
+        version: link:../../brain/brain
+      '@liwa/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@liwa/subprocess':
+        specifier: workspace:*
+        version: link:../../subprocess/subprocess
+      '@liwa/subprocess-local':
+        specifier: workspace:*
+        version: link:../../subprocess/subprocess-local
 
   packages/test-support/client-runtime:
     dependencies:

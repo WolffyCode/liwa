@@ -39,6 +39,12 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@liwa/plugin-manager` | yes | Current-profile plugin and bundle management shared by liwa CLI, Web and agent tools |
 | `@liwa/plugin-market` | yes | Configured plugin market indexes for the Web Discover page and the plugin_market agent tool |
 
+## brain
+
+| Package | Config | Description |
+|---|---|---|
+| `@liwa/brain` | yes | Brain-provider capability seam (ctx.brains): the agent CLI contract, provider registration, and wrapped sessions with usage, process, and child-agent records |
+
 ## browser-use
 
 | Package | Config | Description |
@@ -50,6 +56,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | Package | Config | Description |
 |---|---|---|
 | `@liwa/acp-app` | no | The liwa ACP profile bundle: automation-only JSON-RPC stdio and process lifecycle over liwa-base |
+| `@liwa/brain-cli` | yes | The liwa brain command bundle: list, probe, and try the agent CLI providers of ctx.brains over liwa-base |
 | `@liwa/headless` | yes | The liwa one-shot bundle: a direct core Agent/Session runner over liwa-base with no Host, HTTP, or browser layer |
 | `@liwa/sdk-app` | yes | The liwa SDK profile bundle: stdio JSON-RPC serving and process lifecycle over liwa-base |
 | `@liwa/web-app` | yes | The liwa browser-surface bundle: the web patch layer over liwa-base plus the runtime glue plugin (frontend dist serving, bash runtime variables, URL line) |

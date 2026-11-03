@@ -46,7 +46,8 @@
     "@liwa/cmdline": "workspace:*",
     "@liwa/util-values": "workspace:*",
     "@liwa/schemastery": "workspace:~",
-    "commander": "^15.0.0"
+    "commander": "^15.0.0",
+    "@liwa/brain": "workspace:*"
   },
   "peerDependencies": {
     "@liwa/cordis": "workspace:~",

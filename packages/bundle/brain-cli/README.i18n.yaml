@@ -1,0 +1,43 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/bundle/brain-cli/README.md
+/:
+  en: 6348cb1e7d125276
+  zh: bd9f503ff56ec06f
+/liwa-brain-cli:
+  en: b4f7f689c69226ee
+  zh: ee2635f9c491971f
+/liwa-brain-cli/summary:
+  en: 5f3231581d50b210
+  zh: 31fd3e5918a152f6
+/liwa-brain-cli/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 09388d293f9be9cb
+/liwa-brain-cli/use-this-package:
+  en: bbff250eba0f1b89
+  zh: 0a618f05cc88ee2b
+/liwa-brain-cli/use-this-package/install-into-a-profile:
+  en: ab008ffc2c01d80c
+  zh: 7425bb5273c10fd8
+/liwa-brain-cli/use-this-package/what-you-get:
+  en: e70905a16ce4b810
+  zh: 8aae0277668813b3
+/liwa-brain-cli/understand-the-implementation:
+  en: e6dc814e1324cb73
+  zh: 214f7bc7275e2e4f
+/liwa-brain-cli/further-exploration:
+  en: e3229186c321beb7
+  zh: 655e8f4da1c82c9f
+/liwa-brain-cli/model-experience:
+  en: 2c6e78a1763a740f
+  zh: 3335fc73bd7ba4ee
+/liwa-brain-cli/model-experience/kv-cache-effect:
+  en: 5eaaa31458937dcd
+  zh: 67464f2e9001db25
+/liwa-brain-cli/known-limitations-and-deferred-work:
+  en: e2f7768605135c5d
+  zh: 3a39831af03c8ffb
+/liwa-brain-cli/known-limitations-and-deferred-work/dev-note:
+  en: e67f633dc6fe7773
+  zh: 3bb0c20c93f16f98

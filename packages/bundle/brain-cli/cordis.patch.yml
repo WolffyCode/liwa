@@ -1,0 +1,31 @@
+# The liwa-brain-cli bundle patch: the `liwa brain` command over liwa-base.
+# `liwa brain <subcommand>` boots the `brain` profile; the startup row parses
+# `list`, `probe <impl>`, and `run --provider <impl> "<prompt>"` from the
+# launcher's inner arguments, and the runner executes the command against
+# ctx.brains, then exits. Providers are whatever brain-provider plugins the
+# profile mounts; none is mounted here, and the test-only scripted provider
+# arrives only through an explicit --patch overlay.
+
+- insert:
+    # The brain-provider seam; members' CLI configuration lives under the
+    # Liwa home, one directory per member.
+    - id: brains
+      name: '@liwa/brain'
+      config:
+        membersRoot: !!js liwaHomePath('members')
+
+    - id: brain-cli-startup
+      name: '@liwa/brain-cli/startup'
+
+    - id: brain-cli
+      name: '@liwa/brain-cli'
+
+- id: hmr
+  disabled: true
+
+# One-shot commands use launch-time credentials instead of the interactive store.
+- id: credentials
+  disabled: true
+
+- id: authorization
+  disabled: true

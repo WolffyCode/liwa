@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This group maps the installable patch layers used by `liwa --profile`. Each package declares `liwa.bundle.patch`; the launcher stacks those patch documents to assemble a named profile. The `web`, `headless`, `acp`, and `sdk` profiles build on `liwa-base`, while `sdk-minimal` supplies its complete tree in one bundle. Domain packages can declare additional layers outside this directory.
+This group maps the installable patch layers used by `liwa --profile`. Each package declares `liwa.bundle.patch`; the launcher stacks those patch documents to assemble a named profile. The `web`, `headless`, `brain`, `acp`, and `sdk` profiles build on `liwa-base`, while `sdk-minimal` supplies its complete tree in one bundle. Domain packages can declare additional layers outside this directory.
 
 ## Table of Contents
 
@@ -26,6 +26,7 @@ This group maps the installable patch layers used by `liwa --profile`. Each pack
 | [`acp-app`](acp-app/README.md) | Automation-only ACP stdio application over base | mounts the ACP bridge |
 | [`web-app`](web-app/README.md) | Browser application layer over base | mounts Web rows |
 | [`headless`](headless/README.md) | One-shot command-line task application over base | `headless-runner` |
+| [`brain-cli`](brain-cli/README.md) | `liwa brain` command for listing, probing, and trying agent CLI providers over base | `brain-cli` |
 | [`sdk-app`](sdk-app/README.md) | SDK JSON-RPC stdio application over base | mounts the SDK server |
 | [`sdk-minimal`](sdk-minimal/README.md) | Standalone minimal SDK application without base or Web | — (complete patch tree) |
 

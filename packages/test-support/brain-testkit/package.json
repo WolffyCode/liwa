@@ -1,0 +1,57 @@
+{
+  "name": "@liwa/brain-testkit",
+  "description": "Test kit for brain providers: a script-replay provider, a direct-provider test host, and the brain.provider contract suite every provider must pass",
+  "version": "0.2.2-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
+    "directory": "packages/test-support/brain-testkit"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./contract": {
+      "types": "./lib/types/contract.d.ts",
+      "default": "./lib/types/contract.js"
+    },
+    "./plugin": {
+      "types": "./lib/types/plugin.d.ts",
+      "default": "./lib/types/plugin.js"
+    },
+    "./src/*": "./src/*",
+    "./locale/*.json": "./locale/*.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "locale/*.json",
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@liwa/schemastery": "workspace:~",
+    "@liwa/util-values": "workspace:*",
+    "vitest": "^4.1.11"
+  },
+  "peerDependencies": {
+    "@liwa/brain": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/subprocess": "workspace:*",
+    "@liwa/subprocess-local": "workspace:*"
+  },
+  "devDependencies": {
+    "@liwa/brain": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/subprocess": "workspace:*",
+    "@liwa/subprocess-local": "workspace:*"
+  }
+}

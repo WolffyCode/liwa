@@ -1,0 +1,52 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/brain/brain/README.md
+/:
+  en: 181cc31be27a9c14
+  zh: c7ae125b406ae5ae
+/liwa-brain:
+  en: 159c6b081218c5af
+  zh: 785011ae2763ee76
+/liwa-brain/summary:
+  en: 4a132bbfbec06187
+  zh: b39826dbca3fad6a
+/liwa-brain/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 09388d293f9be9cb
+/liwa-brain/use-this-package:
+  en: bbff250eba0f1b89
+  zh: 0a618f05cc88ee2b
+/liwa-brain/use-this-package/mount-the-service:
+  en: 2b915939c53a1e58
+  zh: b0f88a0a75190e0f
+/liwa-brain/use-this-package/register-a-provider:
+  en: 04fd26a901001540
+  zh: 499522ac0f7988af
+/liwa-brain/use-this-package/open-a-session:
+  en: 0f73ae1f4efc20b1
+  zh: 66749c92368e6019
+/liwa-brain/use-this-package/drive-and-observe-it:
+  en: 2faad084b78cd2fd
+  zh: 26f62b4bba8d2038
+/liwa-brain/use-this-package/records-and-events:
+  en: 54461980d8cf236e
+  zh: 07bc68e1481d1cfe
+/liwa-brain/understand-the-implementation:
+  en: 6a623712075ee05a
+  zh: 29877d7604d1d522
+/liwa-brain/further-exploration:
+  en: f4d200deb545305f
+  zh: 1a275f3e088d0537
+/liwa-brain/model-experience:
+  en: 34aee4d9b3792341
+  zh: 7cf30627521ac19b
+/liwa-brain/model-experience/kv-cache-effect:
+  en: 19cfce69130ac450
+  zh: 0fbe84794018b04f
+/liwa-brain/known-limitations-and-deferred-work:
+  en: 91d3ec6f9700c976
+  zh: 9f50ac6ba63aa8eb
+/liwa-brain/known-limitations-and-deferred-work/dev-note:
+  en: 90a9378c53d9feb0
+  zh: 7ab26830d8abbb22

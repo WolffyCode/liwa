@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Provedor de cérebro roteirizado",
+    "description": "Provedor de CLI de agentes apenas para testes que reproduz turnos roteirizados, para testes de contrato e perfis de teste."
+  }
+}

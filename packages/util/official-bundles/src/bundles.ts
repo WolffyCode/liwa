@@ -23,6 +23,9 @@ export const PROFILE_TEMPLATES: Record<string, ProfileTemplate> = {
   'sdk-minimal': {
     bundles: ['@liwa/sdk-minimal'],
   },
+  brain: {
+    bundles: ['@liwa/base', '@liwa/brain-cli'],
+  },
 }
 
 /**

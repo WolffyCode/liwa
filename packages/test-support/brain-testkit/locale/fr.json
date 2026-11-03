@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Fournisseur de cerveau scénarisé",
+    "description": "Fournisseur de CLI d'agents réservé aux tests, qui rejoue des tours scénarisés pour les tests de contrat et les profils de test."
+  }
+}

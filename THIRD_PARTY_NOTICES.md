@@ -25,6 +25,14 @@ The Cordis framework and its foundation libraries are source-vendored into this 
 | `@liwa/cordis-plugin-hmr` | `@cordisjs/plugin-hmr` | [vendor/hmr](vendor/hmr/) | MIT |
 | `@liwa/cordis-plugin-logger-console` | `@cordisjs/plugin-logger-console` | [vendor/logger-console](vendor/logger-console/) | MIT |
 
+## Copied upstream source
+
+The following packages carry upstream source files copied in place rather than installed from npm. Each file records its origin on its first line, changed lines are edited in place, and the package's `NOTICE` lists the commit, the license, and every change.
+
+| Package | Upstream | Commit | License |
+| --- | --- | --- | --- |
+| [packages/brain/brain-shared](packages/brain/brain-shared/NOTICE) | https://github.com/getpaseo/paseo | `8018231a00a6b45ed6cda1856f954ba14b4824c0` | Apache-2.0 |
+
 ## Runtime npm dependencies
 
 External packages installed for runtime use or embedded in distributed Host or browser artifacts. Browser inputs are resolved through the shipping tsdown and Vite configurations, independently of npm dependency sections. Host embedding declarations identify the distributing package and its embedded dependencies. The tier covers every plugin a user can mount from `cordis.yml` — not only what the `liwa` CLI and Web UI load by default.

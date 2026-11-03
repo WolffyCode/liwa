@@ -535,6 +535,43 @@ export function collectBundledPythonDependencies(
 }
 
 /** pnpm-patched external packages, from `pnpm-workspace.yaml`. */
+/** Upstream source copied into one workspace package, as its NOTICE file declares it. */
+interface CopiedSourceRow {
+  /** Repository-relative package directory. */
+  directory: string
+  /** Upstream repository URL. */
+  upstream: string
+  /** Full upstream commit the files were copied from. */
+  commit: string
+  /** SPDX license of the copied files. */
+  license: string
+}
+
+/**
+ * Collect packages that carry upstream source copied in place: every
+ * `packages/<group>/<package>/NOTICE` declares `Upstream:`, `Commit:`, and
+ * `License:` lines, and the files themselves record each in-place change.
+ * @returns rows sorted by package directory.
+ * @throws when a NOTICE omits a field or names a license outside the permissive allowlist.
+ */
+function collectCopiedSource(): CopiedSourceRow[] {
+  const rows: CopiedSourceRow[] = []
+  for (const notice of globSync('packages/*/*/NOTICE', { cwd: root }).map(path => path.split('\\').join('/')).sort()) {
+    const text = readFileSync(resolve(root, notice), 'utf8')
+    const field = (name: string): string => {
+      const value = new RegExp(`^\\s*${name}:\\s*(\\S+)`, 'mu').exec(text)?.[1]
+      if (value === undefined) throw new Error(`gen-third-party-notices: ${notice} has no "${name}:" line.`)
+      return value
+    }
+    const license = field('License')
+    if (!PERMISSIVE_LICENSES.has(license)) {
+      throw new Error(`gen-third-party-notices: ${notice} declares ${license}, outside the permissive-license allowlist.`)
+    }
+    rows.push({ directory: notice.slice(0, -'/NOTICE'.length), upstream: field('Upstream'), commit: field('Commit'), license })
+  }
+  return rows
+}
+
 function collectPatched(): { spec: string; patch: string }[] {
   const workspace = yaml.load(readFileSync(resolve(root, 'pnpm-workspace.yaml'), 'utf8')) as { patchedDependencies?: Record<string, string> }
   return Object.entries(workspace.patchedDependencies ?? {}).map(([spec, patch]) => ({ spec, patch }))
@@ -648,6 +685,7 @@ export async function render(): Promise<string> {
   const vendored = collectVendored()
   const bundledPython = collectBundledPythonDependencies(primaryRuntimeLock.pythonPackages)
   const patched = collectPatched()
+  const copied = collectCopiedSource()
   const claudeDistribution = runtimeDeps.some(
     dep => dep.name === CLAUDE_AGENT_SDK_PACKAGE,
   )
@@ -677,7 +715,15 @@ The Cordis framework and its foundation libraries are source-vendored into this 
 | --- | --- | --- | --- |
 ${vendored.map(row => `| \`${row.npmName}\` | \`${row.upstreamName}\` | [${row.sourceDirectory}](${row.sourceDirectory}/) | MIT |`).join('\n')}
 
-## Runtime npm dependencies
+${copied.length === 0 ? '' : `## Copied upstream source
+
+The following packages carry upstream source files copied in place rather than installed from npm. Each file records its origin on its first line, changed lines are edited in place, and the package's \`NOTICE\` lists the commit, the license, and every change.
+
+| Package | Upstream | Commit | License |
+| --- | --- | --- | --- |
+${copied.map(row => `| [${row.directory}](${row.directory}/NOTICE) | ${row.upstream} | \`${row.commit}\` | ${row.license} |`).join('\n')}
+
+`}## Runtime npm dependencies
 
 External packages installed for runtime use or embedded in distributed Host or browser artifacts. Browser inputs are resolved through the shipping tsdown and Vite configurations, independently of npm dependency sections. Host embedding declarations identify the distributing package and its embedded dependencies. The tier covers every plugin a user can mount from \`cordis.yml\` — not only what the \`liwa\` CLI and Web UI load by default.
 

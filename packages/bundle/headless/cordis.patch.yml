@@ -15,6 +15,15 @@
     - id: headless-startup
       name: '@liwa/headless/startup'
 
+    # The brain-provider seam (ctx.brains): agent CLI providers register into it
+    # and the member layer opens their sessions through it. The future deepseek
+    # agent profile does not mount it, so it lives in the Liwa-process surface
+    # bundles rather than in the shared base. No provider is mounted by default.
+    - id: brains
+      name: '@liwa/brain'
+      config:
+        membersRoot: !!js liwaHomePath('members')
+
     # Reads its task and run options from the ordinary headlessStartup provider.
     - id: headless-runner
       name: '@liwa/headless'

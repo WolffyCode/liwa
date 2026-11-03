@@ -1,0 +1,43 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/test-support/brain-testkit/README.md
+/:
+  en: 011cae9d3a96441d
+  zh: 44089069e8c25485
+/liwa-brain-testkit:
+  en: 00d2ebd40c557347
+  zh: 2754d357fa4283d9
+/liwa-brain-testkit/summary:
+  en: 3c95b23beed72364
+  zh: 2c17af0e499e4f21
+/liwa-brain-testkit/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 09388d293f9be9cb
+/liwa-brain-testkit/use-this-package:
+  en: bbff250eba0f1b89
+  zh: 0a618f05cc88ee2b
+/liwa-brain-testkit/use-this-package/when-to-use-it:
+  en: 1c00f232bec28481
+  zh: 984899ed7b7e3b34
+/liwa-brain-testkit/use-this-package/entry-point:
+  en: 1b439cd0486a9fe6
+  zh: 3ec7936ab2c20016
+/liwa-brain-testkit/understand-the-implementation:
+  en: 69387f06517d5f2a
+  zh: 69ccafac1142f695
+/liwa-brain-testkit/further-exploration:
+  en: c664de455c1a9bff
+  zh: 55f7859269cbd447
+/liwa-brain-testkit/model-experience:
+  en: 0abac208d1b9d46d
+  zh: 13c301551d1b5ddc
+/liwa-brain-testkit/model-experience/kv-cache-effect:
+  en: 6470ef792aac6204
+  zh: a4cfcdeddad08a8e
+/liwa-brain-testkit/known-limitations-and-deferred-work:
+  en: 0ae2d315db111500
+  zh: 7f4d686050484317
+/liwa-brain-testkit/known-limitations-and-deferred-work/dev-note:
+  en: e67f633dc6fe7773
+  zh: 3bb0c20c93f16f98
