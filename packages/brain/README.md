@@ -27,7 +27,9 @@ Mount `brain` once; provider packages build on `brain-shared` and register into 
 | Package | Role | ctx key |
 |---|---|---|
 | [`brain`](brain/README.md) | Brain-provider contract, provider registration, and wrapped sessions | `ctx.brains` |
-| [`brain-shared`](brain-shared/README.md) | Paseo provider code shared by the CLI providers, and its subprocess bridge | — (library) |
+| [`brain-shared`](brain-shared/README.md) | Paseo provider code shared by the CLI providers, and the Paseo-session-to-contract mapping | — (library) |
+| [`brain-acp`](brain-acp/README.md) | Generic ACP agent CLI provider on Paseo's ACP client | registers into `ctx.brains` |
+| [`brain-deepseek`](brain-deepseek/README.md) | The `deepseek` provider: one `liwa --profile deepseek` process per session | registers into `ctx.brains` |
 
 <a id="related-documentation"></a>
 ## Related documentation

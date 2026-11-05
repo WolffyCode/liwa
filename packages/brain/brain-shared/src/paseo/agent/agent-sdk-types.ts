@@ -10,7 +10,7 @@ import type {
   ToolPolicy,
 } from "../protocol/agent-types.ts";
 import type { AgentMessage } from "../protocol/agent-message.ts";
-import type { ProviderProcessHost } from "../../process.ts";
+import type { ProviderProcessHost } from "@liwa/brain";
 
 export type {
   AgentFeature,

@@ -4,6 +4,8 @@
  * @module @liwa/brain-testkit/harness
  */
 
+import { mkdirSync } from 'node:fs'
+import { deflateSync } from 'node:zlib'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -12,7 +14,7 @@ import { Context } from '@liwa/cordis'
 import LocalSubprocessRuntime from '@liwa/subprocess-local'
 import type { SubprocessHandle } from '@liwa/subprocess'
 import {
-  BrainSessionId, SessionConfigSchema,
+  BrainBlobStore, BrainSessionId, SessionConfigSchema,
   type BrainEvent, type BrainLaunchContext, type BrainProbeContext, type SessionConfig, type SessionConfigInput,
 } from '@liwa/brain'
 
@@ -28,11 +30,14 @@ export interface BrainTestHost {
   readonly ctx: Context
   /** 本宿主的临时目录（释放时删除）。 */
   readonly root: string
+  /** 回合输入 blob 的存储（测试放图片用；启动上下文从它读）。 */
+  readonly blobs: BrainBlobStore
   /**
-   * 一个新会话的启动上下文。
+   * 一个新会话的启动上下文，带一个独占的 home 目录。
+   * @param homeDir - 沿用的 home（续接时传原会话的 home）；省略时新建一个。
    * @returns 记下拉起句柄的启动上下文。
    */
-  launch(): RecordingLaunchContext
+  launch(homeDir?: string): RecordingLaunchContext
   /**
    * 探测用的上下文。
    * @param signal - 取消探测。
@@ -64,7 +69,6 @@ export function sampleSessionConfig(root: string, overrides: Partial<SessionConf
     cwd: root,
     dataDir: join(root, 'data'),
     nativeToolPolicy: 'worktree',
-    model: 'scripted',
     limits: { maxInferencesPerTurn: 8, maxToolCallsPerTurn: 16, watchdogMs: 60_000 },
     concludeOn: ['report'],
     permission: { mode: 'provider', autoAllow: [] },
@@ -88,16 +92,23 @@ export async function createBrainTestHost(): Promise<BrainTestHost> {
   await ctx.plugin(LocalSubprocessRuntime)
   const subprocess = ctx.subprocess
   const logger = ctx.logger('brain-test')
+  const blobs = new BrainBlobStore(join(root, 'blobs'))
   return {
     ctx,
     root,
-    launch() {
+    blobs,
+    launch(reuseHome) {
       const processes: SubprocessHandle[] = []
+      const sessionId = BrainSessionId(`brain-session-${randomUUID()}`)
+      // 每个会话一个 home，与 ctx.brains 给 per-session 提供方的布局相同；续接时沿用原会话的 home。
+      const homeDir = reuseHome ?? join(root, 'homes', sessionId)
+      mkdirSync(homeDir, { recursive: true })
       return {
-        sessionId: BrainSessionId(`brain-session-${randomUUID()}`),
-        homeDir: root,
+        sessionId,
+        homeDir,
         logger,
         processes,
+        readBlob: ref => blobs.readBlob(ref),
         resolveExecutable: (command, env, signal) => subprocess.resolveExecutable(command, env, signal),
         spawn(spec) {
           const handle = subprocess.spawn(spec)
@@ -210,4 +221,49 @@ export function isTurnTerminal(event: BrainEvent): event is Extract<BrainEvent, 
  */
 export function textInput(text: string): { blocks: [{ kind: 'text'; text: string }] } {
   return { blocks: [{ kind: 'text', text }] }
+}
+
+/**
+ * 一张纯色的 PNG（测图片输入用：真的图片解码器能读，模型看得出颜色）。
+ * @param width - 宽（像素）。
+ * @param height - 高（像素）。
+ * @param rgb - 颜色。
+ * @returns PNG 字节。
+ */
+export function solidPng(width: number, height: number, rgb: readonly [number, number, number]): Uint8Array {
+  const row = Buffer.alloc(1 + width * 3)
+  for (let x = 0; x < width; x += 1) row.set(rgb, 1 + x * 3)
+  const raw = Buffer.concat(Array.from({ length: height }, () => row))
+  const chunk = (type: string, data: Buffer): Buffer => {
+    const length = Buffer.alloc(4)
+    length.writeUInt32BE(data.length)
+    const body = Buffer.concat([Buffer.from(type, 'ascii'), data])
+    const crc = Buffer.alloc(4)
+    crc.writeUInt32BE(crc32(body))
+    return Buffer.concat([length, body, crc])
+  }
+  const header = Buffer.alloc(13)
+  header.writeUInt32BE(width, 0)
+  header.writeUInt32BE(height, 4)
+  header.set([8, 2, 0, 0, 0], 8)
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk('IHDR', header),
+    chunk('IDAT', deflateSync(raw)),
+    chunk('IEND', Buffer.alloc(0)),
+  ])
+}
+
+/**
+ * PNG 块用的 CRC-32。
+ * @param bytes - 块类型与数据。
+ * @returns 校验值。
+ */
+function crc32(bytes: Uint8Array): number {
+  let crc = 0xffffffff
+  for (const byte of bytes) {
+    crc ^= byte
+    for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1))
+  }
+  return (crc ^ 0xffffffff) >>> 0
 }

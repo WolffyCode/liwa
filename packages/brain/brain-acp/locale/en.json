@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "ACP agent CLI provider",
+    "description": "Connect any agent CLI that speaks the Agent Client Protocol as a brain provider, with a configurable command, environment, and vendor shim."
+  }
+}

@@ -18,6 +18,7 @@
 - [`liwa brain list`](#liwa-brain-list)
 - [`liwa brain probe`](#liwa-brain-probe)
 - [`liwa brain run`](#liwa-brain-run)
+- [`liwa deepseek`](#liwa-deepseek)
 - [`liwa headless`](#liwa-headless)
 - [`liwa sdk`](#liwa-sdk)
 - [`liwa sdk-minimal`](#liwa-sdk-minimal)
@@ -129,7 +130,8 @@ Examples:
   liwa brain list                                   list providers and probe them
   liwa brain probe claude                           check one provider in detail
   liwa brain run --provider deepseek "hello"        open a session, run one turn, close it
-  liwa brain run --provider codex --mode deny --cwd ./repo "fix the tests"
+  liwa brain run --provider deepseek --mode plan --permit deny --cwd ./repo "plan the fix"
+  liwa brain run --provider deepseek --image ./shot.png "what is in this picture?"
 
 ```
 
@@ -181,17 +183,41 @@ Arguments:
 
 Options:
   --provider <impl>  provider implementation name
-  --model <model>    model id handed to the provider (default: "default")
+  --model <model>    model id handed to the provider (default: the provider
+                     CLI's own default model)
   --cwd <dir>        working directory of the session (default: the current
                      directory)
-  --mode <mode>      how permission requests are answered (default: ask on a
-                     terminal, deny otherwise) (choices: "ask", "allow-once",
-                     "allow-session", "deny")
+  --mode <mode>      provider-specific session mode, e.g. plan or default
+                     (default: the provider's default mode)
+  --permit <policy>  how permission requests and questions are answered
+                     (default: ask on a terminal, deny otherwise) (choices:
+                     "ask", "allow-once", "allow-session", "deny")
+  --image <file>     attach an image (png, jpeg, webp, gif) to the prompt;
+                     repeatable (default: [])
   --member <name>    member that owns the session (default: cli)
   --mind <kind>      session kind (default: work) (choices: "instance", "work",
                      "think", "own", "tidy")
   --json             print each event as one JSON line
   -h, --help         show this help
+```
+
+<a id="liwa-deepseek"></a>
+## `liwa deepseek`
+
+调用方式: `liwa deepseek --help`, `liwa --profile deepseek --help`
+
+```text
+Usage: liwa --profile deepseek [options]
+
+Serve one Liwa agent session over Agent Client Protocol stdio, with the _liwa
+extensions.
+
+Options:
+  -h, --help  show this help
+
+Example:
+  liwa --profile deepseek     serve ACP on stdio until the client disconnects
+
 ```
 
 <a id="liwa-headless"></a>

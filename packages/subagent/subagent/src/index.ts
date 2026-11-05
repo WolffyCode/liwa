@@ -38,6 +38,7 @@ import type { Scoped } from '@liwa/scope'
 import { assertObjectJsonSchema } from '@liwa/tools'
 import type { ContentBlock, MessageId, MessageSource } from '@liwa/llm'
 import type { Agent } from '@liwa/agent'
+import type { DelegatedApproval } from './child-agent.ts'
 import type { SessionId } from '@liwa/session'
 import { canonicalClientTimeZone } from '@liwa/util-time'
 import { Remote, RemoteError, TypertRemoteService, principalOf, type Principal } from '@liwa/typert-protocol'
@@ -121,7 +122,7 @@ export {
   resolveChildDepth,
   SubagentDepthError,
 } from './child-agent.ts'
-export type { ChildComposition, DelegatedPolicyOverrides } from './child-agent.ts'
+export type { ChildComposition, DelegatedApproval, DelegatedPolicyOverrides } from './child-agent.ts'
 export type { AgentMessageSource, SubagentSettledMessageSource } from './continuation-messages.ts'
 export type * from './control-types.ts'
 export type { SubagentDescendantListEntry } from './list-children.ts'
@@ -182,12 +183,18 @@ interface BrowserPromptSource {
   readonly principal?: Principal
 }
 
-/** Host configuration for continuable subagent capacity. */
+/** Host configuration for continuable subagent capacity and delegated approvals. */
 export interface Config {
   /** Maximum live children sharing uninterrupted continuable parent links; defaults to 8. */
   maxActiveSubagents: Volatile<number>
   /** Default delegation depth for tools without an explicit limit; defaults to 1. */
   maxDepth: Volatile<number>
+  /**
+   * How in-process children's approval asks are handled: `reject` (default) pins them to the
+   * `never` policy; `forward` keeps the parent's policy so the asks reach the parent's answerers
+   * (for example the ACP server, which reports a descendant's ask through its root session).
+   */
+  delegatedApproval: DelegatedApproval
 }
 
 /** Named provider registry with managed activations, durable discovery, and local child messaging. */
@@ -195,6 +202,7 @@ export class SubagentRuntime extends TypertRemoteService {
   static Config = z.object({
     maxDepth: z.number().step(1).min(0).max(Number.MAX_SAFE_INTEGER).default(1).volatile(),
     maxActiveSubagents: z.number().step(1).min(1).max(Number.MAX_SAFE_INTEGER).default(8).volatile(),
+    delegatedApproval: z.union(['reject', 'forward'] as const).default('reject'),
   })
   static inject = ['workingDirectory', 'sessionProjections']
   private providers = new Map<string, SubagentProvider>()
@@ -217,7 +225,7 @@ export class SubagentRuntime extends TypertRemoteService {
         },
         prepareContinuable: (name, request) => this.prepareContinuable(name, request),
         observeActivation: (provider, childId, parent) => this.observeActivation(provider, childId, parent),
-      }, () => this.config.maxActiveSubagents.get())
+      }, () => this.config.maxActiveSubagents.get(), () => this.config.delegatedApproval)
       this.manager = manager
       childCtx.effect(() => () => {
         /* v8 ignore else -- one injected binding owns the slot until its fiber disposes. */

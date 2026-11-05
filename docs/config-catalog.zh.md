@@ -18,7 +18,7 @@
 
 - `inject`: `agents` · `llm` · `sessionPersistence` · `sessions`
 - `refs`: `Stream` (`@agentclientprotocol/sdk`)
-- `source`: [`packages/acp/acp/src/index.ts:74`](../packages/acp/acp/src/index.ts)
+- `source`: [`packages/acp/acp/src/index.ts:104`](../packages/acp/acp/src/index.ts)
 
 ```ts config-catalog
 /** Plugin config: the provider/model selection used for each ACP-created agent. */
@@ -460,13 +460,15 @@ export type Config = LocalConfig
 ## `@liwa/brain`
 
 - `inject`: `subprocess`
-- `source`: [`packages/brain/brain/src/index.ts:97`](../packages/brain/brain/src/index.ts)
+- `source`: [`packages/brain/brain/src/index.ts:104`](../packages/brain/brain/src/index.ts)
 
 ```ts config-catalog
 /** `ctx.brains` 的配置。 */
 export interface Config {
   /** 成员数据目录的根；`prepareConfigDir` 写 `<membersRoot>/<member>/brains/`。 */
   membersRoot: string
+  /** 回合输入 blob（图片等）的本地存储目录；省略时为 `<membersRoot>/.blobs`（成员名不以点开头，不会撞上）。 */
+  blobsDir?: string
   /** 开会话、续接、开回合的时限（毫秒）。 */
   handshakeTimeoutMs?: number
   /** 送达、取消、答复权限、回收否决的时限（毫秒）。 */
@@ -479,13 +481,41 @@ export interface Config {
 ```
 <!-- END GENERATED config-catalog:@liwa/brain -->
 
+<!-- BEGIN GENERATED config-catalog:@liwa/brain-acp -->
+<a id="liwabrain-acp"></a>
+
+## `@liwa/brain-acp`
+
+- `inject`: `brains` · `subprocess`
+- `source`: [`packages/brain/brain-acp/src/index.ts:42`](../packages/brain/brain-acp/src/index.ts)
+
+```ts config-catalog
+/** 一个通用 ACP 提供方实例的配置。 */
+export interface Config {
+  /** 在 `ctx.brains` 里的实现名（多实例时各取一个）。 */
+  impl: string
+  /** 拉起 CLI 的 argv（第一项是可执行文件，从不经 shell）；`copilot` 留空用它的默认 `copilot --acp`。 */
+  command: string[]
+  /** 显式给 CLI 的环境项（越过 subprocess 对父环境的剥离）。 */
+  env: Record<string, string>
+  /** 厂商 shim。 */
+  vendor: AcpVendor
+  /** 给人看的名字（诊断里用）。 */
+  label?: string
+}
+
+/** 厂商 shim。 */
+export type AcpVendor = (typeof ACP_VENDORS)[number]
+```
+<!-- END GENERATED config-catalog:@liwa/brain-acp -->
+
 <!-- BEGIN GENERATED config-catalog:@liwa/brain-cli -->
 <a id="liwabrain-cli"></a>
 
 ## `@liwa/brain-cli`
 
 - `inject`: `brains` · `brainStartup`
-- `source`: [`packages/bundle/brain-cli/src/index.ts:30`](../packages/bundle/brain-cli/src/index.ts)
+- `source`: [`packages/bundle/brain-cli/src/index.ts:32`](../packages/bundle/brain-cli/src/index.ts)
 
 ```ts config-catalog
 /** `run` 开会话时用的回合预算与会话缺省值（以后由 minds 与 roster 给）。 */
@@ -501,6 +531,42 @@ export interface Config {
 }
 ```
 <!-- END GENERATED config-catalog:@liwa/brain-cli -->
+
+<!-- BEGIN GENERATED config-catalog:@liwa/brain-deepseek -->
+<a id="liwabrain-deepseek"></a>
+
+## `@liwa/brain-deepseek`
+
+- `inject`: `brains` · `subprocess`
+- `source`: [`packages/brain/brain-deepseek/src/index.ts:35`](../packages/brain/brain-deepseek/src/index.ts)
+
+```ts config-catalog
+/** `deepseek` 提供方的配置。 */
+export interface Config {
+  /** 在 `ctx.brains` 里的实现名。 */
+  impl: string
+  /**
+   * 起 `liwa` 的 argv（不含 `--profile`）；留空用本体所在的安装（构建产物，或从源码跑时的源码入口）。
+   * 测试或换安装时显式给。
+   */
+  launcher: string[]
+  /** 显式 `launcher` 要的环境项（例如源码入口的 `TSX_TSCONFIG_PATH`）。 */
+  launcherEnv: Record<string, string>
+  /** 模型路由读密钥的环境变量名；值从凭据服务或启动环境读，按这个名字注入子进程。 */
+  apiKeyEnv: string
+  /** 启动环境里有就原样转给子进程的变量名（例如自定端点）。 */
+  forwardEnv: string[]
+  /** 显式给子进程的其余环境项。 */
+  env: Record<string, string>
+  /** 会话 patch 里的模型路由（`agent-default-model` 的 provider）。 */
+  provider: string
+  /** 会话种类对应的预设 id 前缀（与 `deepseek-app` 的预设一致）。 */
+  presetPrefix: string
+  /** 仓库指令与灵鲸规矩每条链的字节上限（会话 patch 里 `agent-instructions.maxBytes`）。 */
+  instructionsMaxBytes: number
+}
+```
+<!-- END GENERATED config-catalog:@liwa/brain-deepseek -->
 
 <!-- BEGIN GENERATED config-catalog:@liwa/client-connection -->
 <a id="liwaclient-connection"></a>
@@ -809,6 +875,31 @@ export interface Config {
 }
 ```
 <!-- END GENERATED config-catalog:@liwa/credentials-local -->
+
+<!-- BEGIN GENERATED config-catalog:@liwa/deepseek-app -->
+<a id="liwadeepseek-app"></a>
+
+## `@liwa/deepseek-app`
+
+- `inject`: `acpExtensions` · `agents`
+- `source`: [`packages/bundle/deepseek-app/src/index.ts:45`](../packages/bundle/deepseek-app/src/index.ts)
+
+```ts config-catalog
+/** `_liwa` 扩展的配置。 */
+export interface Config {
+  /** 会话预设的 id 前缀：会话种类 `work` 用 `<前缀>work`；`_meta.liwa` 不给种类时用注册表的默认预设。 */
+  presetPrefix: string
+  /** 会开原生子会话的工具名；子会话策略只管这些工具。 */
+  childTools: string[]
+  /** `nativeToolPolicy: 'readonly'` 时留下的只读原生工具（读文件、搜索、联网、本事、待办、提问、交付）。 */
+  readonlyTools: string[]
+  /** 会话说明在系统提示词里的顺序位置。 */
+  notesOrder: number
+  /** `_meta.liwa.model` 给了模型、当前又没有提供方路由时用的提供方。 */
+  defaultProvider: string
+}
+```
+<!-- END GENERATED config-catalog:@liwa/deepseek-app -->
 
 <!-- BEGIN GENERATED config-catalog:@liwa/experimental-agent-team -->
 <a id="liwaexperimental-agent-team"></a>
@@ -3322,16 +3413,31 @@ export type JournalMode = 'wal' | 'delete' | 'truncate' | 'persist'
 
 - `inject`: `workingDirectory` · `sessionProjections`
 - `refs`: `Volatile` (`@liwa/cordis`)
-- `source`: [`packages/subagent/subagent/src/index.ts:186`](../packages/subagent/subagent/src/index.ts)
+- `source`: [`packages/subagent/subagent/src/index.ts:187`](../packages/subagent/subagent/src/index.ts)
 
 ```ts config-catalog
-/** Host configuration for continuable subagent capacity. */
+/** Host configuration for continuable subagent capacity and delegated approvals. */
 export interface Config {
   /** Maximum live children sharing uninterrupted continuable parent links; defaults to 8. */
   maxActiveSubagents: Volatile<number>
   /** Default delegation depth for tools without an explicit limit; defaults to 1. */
   maxDepth: Volatile<number>
+  /**
+   * How in-process children's approval asks are handled: `reject` (default) pins them to the
+   * `never` policy; `forward` keeps the parent's policy so the asks reach the parent's answerers
+   * (for example the ACP server, which reports a descendant's ask through its root session).
+   */
+  delegatedApproval: DelegatedApproval
 }
+
+/**
+ * How a delegated child's approval asks are handled. `reject` pins the child to the `never`
+ * policy, so its asks are rejected deterministically and nobody is prompted. `forward` keeps
+ * the parent's approval policy, so the child's asks reach the same answerers the parent's
+ * do (a host that routes a descendant's ask to the session's owner answers them there); the
+ * parent agent itself never answers them — there is no answering surface for a parent model.
+ */
+export type DelegatedApproval = 'reject' | 'forward'
 ```
 <!-- END GENERATED config-catalog:@liwa/subagent -->
 

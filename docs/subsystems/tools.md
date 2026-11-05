@@ -450,10 +450,17 @@ interface ToolExecution extends ToolExecutionInput {
 interface ToolDispatchExecution extends Omit<ToolExecution, 'signal'> {
   /** Cancellation signal visible to the next wrapper or tool body. */
   signal: AbortSignal
+  /**
+   * Mark this execution's successful result as terminal for the current agent
+   * turn, as {@link ToolRunContext.concludeTurn} does from the tool body. A
+   * wrapper calls it before `next()` so policy (a session's conclude-on tools)
+   * can end the turn without the tool knowing; a failed result never concludes.
+   */
+  concludeTurn(): void
 }
 ```
 
-`ToolExecutionToken` is an opaque runtime `Symbol` used only for identity comparison. Before policy, `execute()` materializes and freezes arguments, rejects non-JSON input, and assigns the token. Identity fields, the required caller signal, and the optional parent token remain readonly. A `ToolDispatchExecution` wrapper may replace but not remove the signal; the registry re-fuses the caller signal before invoking the body. Final observers receive the frozen execution identity.
+`ToolExecutionToken` is an opaque runtime `Symbol` used only for identity comparison. Before policy, `execute()` materializes and freezes arguments, rejects non-JSON input, and assigns the token. Identity fields, the required caller signal, and the optional parent token remain readonly. A `ToolDispatchExecution` wrapper may replace but not remove the signal; the registry re-fuses the caller signal before invoking the body. A wrapper may also call `concludeTurn()` before `next()` to make a successful result end the turn, as the tool body can through its run context. Final observers receive the frozen execution identity.
 
 A `ToolGuard` is scope-aware final pre-dispatch policy. Its return type deliberately has no allow result: `undefined` preserves the waterfall decision, while a returned reason can only reduce permission, so a later listener cannot undo it.
 

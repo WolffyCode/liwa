@@ -1,23 +1,25 @@
 /**
  * `liwa brain` 的命令执行方：`list` 列出并探测已登记的提供方；`probe <impl>` 详细探测一家；
- * `run` 在本进程里开一个会话，把事件流按行打到 stdout，跑完一个回合后关会话退出，期间的权限请求按
- * `--mode` 自动答或在终端问。常驻、多会话管理、断开再连属于以后的前后端网关，这里不做。
+ * `run` 在本进程里开一个会话（`--mode` 是提供方的会话模式，`--image` 附图片），把事件流按行打到 stdout，跑完
+ * 一个回合后关会话退出，期间的权限请求与问答按 `--permit` 自动答或在终端问。常驻、多会话管理、断开再连属于
+ * 以后的前后端网关，这里不做。
  * @module @liwa/brain-cli
  */
 
 import { randomUUID } from 'node:crypto'
-import { resolve } from 'node:path'
+import { readFile } from 'node:fs/promises'
+import { extname, resolve } from 'node:path'
 import type { Context } from '@liwa/cordis'
 import z from '@liwa/schemastery'
 import {
-  ImplId, MemberId,
-  type BrainEvent, type BrainEventOf, type BrainProbeResult, type BrainSession, type MindKind, type PermissionOption,
-  type SessionConfigInput,
+  BrainError, ImplId, MemberId,
+  type BrainEvent, type BrainEventOf, type BrainProbeResult, type BrainSession, type MindKind, type PermissionAnswer,
+  type PermissionOption, type PermissionResponse, type SessionConfigInput, type TurnInput,
 } from '@liwa/brain'
 // 空的类型导入带来 loader 与 cmdline 的 Context 合并（等装配完成、读退出请求）。
 import type {} from '@liwa/cordis-plugin-loader'
 import type {} from '@liwa/cmdline'
-import type { BrainCommand, PermissionMode } from './startup.ts'
+import type { BrainCommand, PermitPolicy } from './startup.ts'
 import { internals } from './runner-internals.ts'
 
 /** 稳定的 cordis 插件名。 */
@@ -72,7 +74,9 @@ export function resolveRunSession(command: RunCommand, config: Config, configDir
     cwd: resolve(command.cwd ?? process.cwd()),
     dataDir: resolve(configDir, 'cli-runs'),
     nativeToolPolicy: 'worktree',
-    model: command.model ?? 'default',
+    // 不给 --model 就不传模型，所用 CLI 用它自己的默认模型（不传占位值）。
+    ...(command.model === undefined ? {} : { model: command.model }),
+    ...(command.mode === undefined ? {} : { modeId: command.mode }),
     limits: {
       maxInferencesPerTurn: config.maxInferencesPerTurn,
       maxToolCallsPerTurn: config.maxToolCallsPerTurn,
@@ -123,7 +127,7 @@ export function formatEvent(event: BrainEvent): string {
     case 'item.tool_call.completed':
       return `${label} ${event.ok ? 'ok' : 'failed'} ${JSON.stringify(event.result)}`
     case 'permission.request':
-      return `${label} ${event.tool} ${JSON.stringify(event.args)} options=${event.options.map(option => `${option.id}(${option.effect})`).join(',')}`
+      return `${label} ${event.category} ${event.tool} ${event.questions === undefined ? JSON.stringify(event.args) : JSON.stringify(event.questions.map(question => question.question))} options=${event.options.map(option => `${option.id}(${option.effect})`).join(',')}`
     case 'permission.resolved':
       return `${label} ${event.optionId} -> ${event.effect}`
     case 'usage.update':
@@ -132,34 +136,98 @@ export function formatEvent(event: BrainEvent): string {
       return `${label} ${event.childId} ${JSON.stringify(event.label)}${event.parentChildId === undefined ? '' : ` parent=${event.parentChildId}`}`
     case 'child.ended':
       return `${label} ${event.childId} ${event.stopReason} usage=${JSON.stringify(event.usage)}`
+    case 'session.mode_changed':
+      return `${label} ${String(event.modeId)}`
+    case 'session.model_changed':
+      return `${label} ${event.model}`
   }
 }
 
 /**
- * 按 `--mode` 从选项里挑一个答复；`ask` 在终端问。
- * @param mode - 答复方式。
+ * 按 `--permit` 答一个问答请求：`ask` 在终端逐个问；允许类策略给每个问题选第一个选项（有只收自由文本的问题就谢绝）；
+ * `deny` 谢绝。
+ * @param permit - 应答策略。
+ * @param request - 问答请求。
+ * @param io - 终端提问。
+ * @returns 答复。
+ */
+async function answerQuestions(permit: PermitPolicy, request: BrainEventOf<'permission.request'>, io: Pick<BrainCliIo, 'ask'>): Promise<PermissionResponse> {
+  const questions = request.questions ?? []
+  const answerOption = request.options.find(option => option.effect === 'allow_once') ?? request.options.find(option => option.effect.startsWith('allow'))
+  const decline = request.options.find(option => option.effect === 'deny_once') ?? request.options[0]
+  const declined: PermissionResponse = { optionId: decline?.id ?? '' }
+  if (answerOption === undefined || permit === 'deny') return declined
+  const answers: Record<string, PermissionAnswer> = {}
+  for (const question of questions) {
+    if (permit !== 'ask') {
+      const first = question.options[0]
+      if (first === undefined) return declined
+      answers[question.id] = { selected: [first.label] }
+      continue
+    }
+    const menu = question.options.map((option, index) => `  ${String(index + 1)}) ${option.label}${option.description === undefined ? '' : ` — ${option.description}`}`).join('\n')
+    const hint = question.options.length === 0 ? 'Answer' : question.multiSelect ? 'Choose numbers separated by commas, or type an answer' : 'Choose a number, or type an answer'
+    const reply = (await io.ask(`${question.header === undefined ? '' : `[${question.header}] `}${question.question}${question.detail === undefined ? '' : `\n${question.detail}`}\n${menu}${menu === '' ? '' : '\n'}${hint}: `)).trim()
+    if (reply === '') return declined
+    const picked = reply.split(',').map(part => question.options[Number(part.trim()) - 1]?.label)
+    answers[question.id] = picked.every(label => label !== undefined) && question.options.length > 0
+      ? { selected: question.multiSelect ? picked : picked.slice(0, 1) }
+      : { selected: [], custom: reply }
+  }
+  return { optionId: answerOption.id, answers }
+}
+
+/**
+ * 按 `--permit` 答一个权限请求（问答请求带上答案）；`ask` 在终端问。
+ * @param permit - 应答策略。
  * @param request - 权限请求。
  * @param io - 终端提问。
- * @returns 所选选项的号。
+ * @returns 答复。
  */
-export async function choosePermission(mode: PermissionMode, request: BrainEventOf<'permission.request'>, io: Pick<BrainCliIo, 'ask'>): Promise<string> {
+export async function choosePermission(permit: PermitPolicy, request: BrainEventOf<'permission.request'>, io: Pick<BrainCliIo, 'ask'>): Promise<PermissionResponse> {
+  if (request.questions !== undefined) return answerQuestions(permit, request, io)
   const byEffect = (...effects: PermissionOption['effect'][]): PermissionOption | undefined =>
     effects.map(effect => request.options.find(option => option.effect === effect)).find(option => option !== undefined)
-  switch (mode) {
+  switch (permit) {
     case 'allow-once':
-      return (byEffect('allow_once', 'allow_session', 'allow_always') ?? request.options[0])?.id ?? ''
+      return { optionId: (byEffect('allow_once', 'allow_session', 'allow_always') ?? request.options[0])?.id ?? '' }
     case 'allow-session':
-      return (byEffect('allow_session', 'allow_once', 'allow_always') ?? request.options[0])?.id ?? ''
+      return { optionId: (byEffect('allow_session', 'allow_once', 'allow_always') ?? request.options[0])?.id ?? '' }
     case 'deny':
-      return (byEffect('deny_once', 'deny_always', 'cancel') ?? request.options[0])?.id ?? ''
+      return { optionId: (byEffect('deny_once', 'deny_always', 'cancel') ?? request.options[0])?.id ?? '' }
     case 'ask': {
       const menu = request.options.map((option, index) => `  ${String(index + 1)}) ${option.label} [${option.effect}]`).join('\n')
       const answer = (await io.ask(`Permission requested for ${request.tool} ${JSON.stringify(request.args)}\n${menu}\nChoose 1-${String(request.options.length)}: `)).trim()
       const picked = request.options[Number(answer) - 1] ?? request.options.find(option => option.id === answer)
       // 答不上来的输入原样交给提供方，按契约以 deny_once 处理。
-      return picked?.id ?? answer
+      return { optionId: picked?.id ?? answer }
     }
   }
+}
+
+/** `--image` 认的图片扩展名。 */
+const IMAGE_TYPES: Readonly<Record<string, string>> = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+}
+
+/**
+ * `run` 的回合输入：提示词，再加 `--image` 给的图片（存进 brains 的 blob 存储，引用放进输入）。
+ * @param ctx - 带 `brains` 的上下文。
+ * @param command - `run` 命令。
+ * @returns 回合输入。
+ * @throws {BrainError} `invalid_input`：图片扩展名不认识。
+ */
+export async function runInput(ctx: Context, command: RunCommand): Promise<TurnInput> {
+  const images = await Promise.all(command.images.map(async (file) => {
+    const mime = IMAGE_TYPES[extname(file).toLowerCase()]
+    if (mime === undefined) throw new BrainError('invalid_input', 'brain.image_type', `--image ${file}: use a .png, .jpg, .jpeg, .webp, or .gif file`)
+    return { kind: 'image' as const, blob: await ctx.brains.blobs.put(await readFile(resolve(file)), mime) }
+  }))
+  return { blocks: [{ kind: 'text', text: command.prompt }, ...images] }
 }
 
 /**
@@ -243,7 +311,7 @@ async function runSession(ctx: Context, command: RunCommand, config: Config, io:
     rules: '',
     skillsDir: '',
     projectDocs: true,
-    model: command.model ?? 'default',
+    ...(command.model === undefined ? {} : { model: command.model }),
   })
   const session: BrainSession = await ctx.brains.createSession(ctx, { impl, cfg: resolveRunSession(command, config, configDir) })
   io.stderr.write(`liwa: brain session ${session.id} opened on ${impl} (home ${session.view().homeDir})\n`)
@@ -258,8 +326,7 @@ async function runSession(ctx: Context, command: RunCommand, config: Config, io:
     io.stdout.write(command.json ? `${JSON.stringify(event)}\n` : `${formatEvent(event)}\n`)
     if (event.kind === 'permission.request') {
       answering = answering.then(async () => {
-        const optionId = await choosePermission(command.mode, event, io)
-        await session.respondToPermission(event.requestId, { optionId })
+        await session.respondToPermission(event.requestId, await choosePermission(command.permit, event, io))
       }).catch((error: unknown) => {
         io.stderr.write(`liwa: answering permission ${event.requestId} failed: ${error instanceof Error ? error.message : String(error)}\n`)
       })
@@ -275,7 +342,7 @@ async function runSession(ctx: Context, command: RunCommand, config: Config, io:
     }
   })
   try {
-    const { turnId } = await session.startTurn({ blocks: [{ kind: 'text', text: command.prompt }] })
+    const { turnId } = await session.startTurn(await runInput(ctx, command))
     target = turnId
     const known = outcomes.get(turnId) ?? (state.exited ? 1 : undefined)
     return known ?? await new Promise<number>((resolve) => { wake = resolve })

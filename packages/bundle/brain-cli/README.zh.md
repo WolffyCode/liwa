@@ -9,7 +9,7 @@ kind: "package-bundle"
 
 ## 概述
 
-`liwa brain` 列出、探测并试用一个 profile 挂载的 agent CLI 提供方。随附的 `brain` profile 把这一层叠在 `liwa-base` 之上，所以 `liwa brain list` 不用任何设置就能用。`run` 在本进程里开一个会话，每个事件打一行，答复权限请求，跑一个回合后关会话。提供方来自 profile 挂载的插件；本层不挂任何提供方。
+`liwa brain` 列出、探测并试用一个 profile 挂载的 agent CLI 提供方。随附的 `brain` profile 把这一层叠在 `liwa-base` 之上，所以 `liwa brain list` 不用任何设置就能用。`run` 在本进程里开一个会话，每个事件打一行，答复权限请求，跑一个回合后关会话。提供方来自 profile 挂载的插件；本层挂 `deepseek`（灵鲸自己的 agent）和一行关着的通用 `acp`。
 
 ## 目录
 
@@ -38,11 +38,11 @@ liwa plugin --profile brain add <provider-package>
 ```text
 liwa brain list [--json]
 liwa brain probe <impl> [--json]
-liwa brain run --provider <impl> [--model <m>] [--cwd <dir>] [--mode ask|allow-once|allow-session|deny]
-               [--member <name>] [--mind <kind>] [--json] "<prompt>"
+liwa brain run --provider <impl> [--model <m>] [--mode <mode>] [--cwd <dir>] [--permit ask|allow-once|allow-session|deny]
+               [--image <file>]... [--member <name>] [--mind <kind>] [--json] "<prompt>"
 ```
 
-`list` 探测每个已登记的提供方并打一张表；提供方不可用时 `probe` 以 1 退出。`run` 准备成员配置目录，用命令给的值与执行行的回合预算开会话，事件打到 stdout、会话说明打到 stderr，回合正常结束时以 0 退出。`--mode` 决定怎么答权限请求：`ask` 在终端里问（终端上的默认），其他情况默认 `deny`。测试用的脚本提供方经显式覆盖文件加入：
+`list` 探测每个已登记的提供方并打一张表；提供方不可用时 `probe` 以 1 退出。`run` 准备成员配置目录，用命令给的值与执行行的回合预算开会话，事件打到 stdout、会话说明打到 stderr，回合正常结束时以 0 退出。`--mode` 是提供方的会话模式，同 `paseo run`（`deepseek` 有 `plan` 与 `default`）。`--permit` 决定怎么答权限请求与提问：`ask` 在终端里问（终端上的默认），允许类策略给每个问题答它的第一个选项，`deny`（其他情况的默认）谢绝。`--image` 给提示词附一个 png、jpeg、webp 或 gif 文件。测试用的脚本提供方经显式覆盖文件加入：
 
 ```text
 liwa brain --patch apps/cli/tests/profiles/brain/scripted-provider.patch.yml run --provider fake "hello"
@@ -56,7 +56,7 @@ liwa brain --patch apps/cli/tests/profiles/brain/scripted-provider.patch.yml run
 <details>
 <summary>实现细节——点击展开</summary>
 
-patch 在 base 之上插入三行：`brains`（`@liwa/brain`，`membersRoot` 在灵鲸 home 下）、`brain-cli-startup`（解析启动器交来的内部参数，提供 `brainStartup`）、`brain-cli`（等 loader 装配完成后执行命令，再请求退出）。它像一次性的 headless profile 一样关掉 HMR 与交互式凭据存储。
+patch 在 base 之上插入这些行：`brains`（`@liwa/brain`，`membersRoot` 在灵鲸 home 下）、提供方行 `brain-deepseek` 与 `brain-acp`（设好 `command` 之前关着）、`brain-cli-startup`（解析启动器交来的内部参数，提供 `brainStartup`）、`brain-cli`（等 loader 装配完成后执行命令，再请求退出）。它像一次性的 headless profile 一样关掉 HMR 与交互式凭据存储。
 
 | 文件 | 职责 |
 |---|---|
@@ -92,7 +92,7 @@ patch 在 base 之上插入三行：`brains`（`@liwa/brain`，`membersRoot` 在
 
 - **一次一个回合**——`run` 在第一个回合后关会话；常驻会话、多会话管理与断开再连归以后的网关。
 - **没有 `sessions`、`children` 子命令**——一次性进程里除了自己这次 run 没有会话可列。
-- **模型占位**——不给 `--model` 时，提供方收到的模型名是 `default`，直到 roster 接管模型选择。
+- **不列模型**——不给 `--model` 时会话不带模型，由提供方的 CLI 用它自己的默认模型；命令还不能列出提供方的模型。
 
 <a id="dev-note"></a>
 ### 开发备注

@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Perfil do agente DeepSeek",
+    "description": "Serve uma sessão de agente do Liwa por processo via ACP stdio, com a extensão _liwa e uma predefinição de agente por tipo de sessão."
+  }
+}

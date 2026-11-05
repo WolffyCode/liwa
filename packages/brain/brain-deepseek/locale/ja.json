@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "DeepSeek エージェントプロバイダー",
+    "description": "Liwa 自身の DeepSeek エージェントをブレインプロバイダーとして実行します。セッションごとに liwa --profile deepseek プロセスを 1 つ起動し、割り込み指示・使用量・子エージェントに対応します。"
+  }
+}

@@ -37,12 +37,12 @@ afterEach(async () => {
   await rm(workspace, { recursive: true, force: true })
 })
 
-async function setupWalled(script: Script): Promise<{ ctx: Context; parent: Agent }> {
+async function setupWalled(script: Script, runtime: { delegatedApproval?: 'reject' | 'forward' } = {}): Promise<{ ctx: Context; parent: Agent }> {
   const ctx = new Context()
   contexts.push(ctx)
   await mountAgentLoopTestDependencies(ctx)
   await mountLocalActivations(ctx)
-  await ctx.plugin(SubagentRuntime)
+  await ctx.plugin(SubagentRuntime, runtime)
   await ctx.plugin(SandboxPolicyService, { mode: 'workspace-write', workspaceRoot: workspace })
   await ctx.plugin(SandboxedFileSystem, { cwd: workspace })
   await ctx.plugin(ToolFs)
@@ -315,6 +315,53 @@ describe('in-process policy inheritance', () => {
       )
       expect(asked?.data.toolName).toBe('write')
       expect(decided?.data).toMatchObject({ id: asked?.data.id, outcome: 'rejected' })
+    } finally {
+      await run.dispose()
+    }
+  })
+
+  it('forwards a child escalation to the parent\'s answerers when the host chooses forward', async () => {
+    const script: Script = []
+    const { ctx, parent } = await setupWalled(script, { delegatedApproval: 'forward' })
+    const asked: string[] = []
+    ctx.on('approval/request', (request) => {
+      asked.push(request.agent.session.id)
+      return Promise.resolve('allowed-once' as const)
+    })
+    const target = join(workspace, 'escalation-forwarded.txt')
+    setSandboxMode(parent.session, 'read-only')
+    script.push(
+      toolCallResponse('write', 'write', {
+        file_path: target,
+        content: 'forwarded',
+        sandbox_permissions: 'workspace-write',
+        justification: 'test escalation forwarded to the owner',
+      }),
+      textResponse('child done'),
+    )
+
+    const run = await startPreparedActivation(spawnRequest(parent), {})
+    try {
+      await run.result
+      const child = run.localAgent
+      // The child keeps the parent's policy (no `never` pin) and its ask reaches the answerer as the child.
+      expect(child.session.snapshotEvents().filter(event => event.type === 'approval/policy')).toEqual([])
+      expect(asked).toEqual([child.session.id])
+      expect(await readFile(target, 'utf8')).toBe('forwarded')
+    } finally {
+      await run.dispose()
+    }
+  })
+
+  it('forwards the parent\'s own approval override to the child under forward', async () => {
+    const { ctx, parent } = await setupWalled([textResponse('child done')], { delegatedApproval: 'forward' })
+    ctx.approval.setPolicy(parent, 'never')
+    const run = await startPreparedActivation(spawnRequest(parent), {})
+    try {
+      await run.result
+      expect(run.localAgent.session.snapshotEvents().filter(event => event.type === 'approval/policy')).toMatchObject([
+        { data: { policy: 'never', source: 'delegation' } },
+      ])
     } finally {
       await run.dispose()
     }

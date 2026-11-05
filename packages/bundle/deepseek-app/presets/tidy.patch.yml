@@ -1,0 +1,21 @@
+# Preset deepseek-tidy: the nightly tidy task. It reads files and searches;
+# proposals leave through kernel tools, not through native writes.
+- insert:
+    - id: preset-deepseek-tidy
+      name: '@liwa/agent-preset'
+      config:
+        id: deepseek-tidy
+        order: 5
+        plugins:
+          - id: time-context
+            name: '@liwa/time-context'
+          - id: tool-fs
+            name: '@liwa/tool-fs'
+            config:
+              read: true
+              write: false
+              edit: false
+          - id: tool-fs-search
+            name: '@liwa/tool-fs-search'
+            config:
+              sampleOverCapGlobResults: false

@@ -1,0 +1,120 @@
+# The liwa-deepseek-app bundle patch: the `deepseek` brain provider's process,
+# `liwa --profile deepseek`, over liwa-base. Stdout belongs to ACP; the process
+# serves exactly one session per launch and opens no port. The session's persona,
+# model, preset default, and session policy (repository instructions, skills,
+# compaction) arrive as a home-level patch written by the client into this
+# process's LIWA_HOME; everything here is the shared composition. Without that
+# patch (any other ACP client) the process is a full coding agent.
+
+# A Liwa member's agent: no first-run title model call.
+- id: session-title-llm
+  disabled: true
+
+- insert:
+    - id: deepseek-app-startup
+      name: '@liwa/deepseek-app/startup'
+
+    # The standard ACP v1 server. Created agents start on the default model
+    # selection (the session patch overrides `agent-default-model`).
+    - id: acp
+      name: '@liwa/acp'
+      inject: [deepseekAppStartup, agentDefaultModel]
+      config:
+        provider: !!js ctx.agentDefaultModel.currentSelection().provider
+        model: !!js ctx.agentDefaultModel.currentSelection().model
+
+    # Liwa's ACP extension: `_liwa/steer|usage|children` and `_meta.liwa`
+    # (per-session preset, notes, budgets, conclude tools, child policy, usage).
+    # Without this row the process is a plain ACP agent.
+    - id: deepseek-liwa
+      name: '@liwa/deepseek-app'
+
+- id: hmr
+  disabled: true
+
+# One-shot child processes use launch-time credentials (the client forwards the
+# key by name) instead of the interactive store.
+- id: credentials
+  disabled: true
+
+- id: authorization
+  disabled: true
+
+# In-process children forward their approval asks: the ACP server reports a
+# descendant's ask through the root session (`_meta.liwa.childId`), so the
+# session's owner answers it; the parent agent never does.
+- id: subagent
+  config:
+    delegatedApproval: forward
+
+# ── the agent plane moves behind agent presets ─────────────────────────────
+#
+# One preset per session kind (`deepseek-instance|work|think|own|tidy`, under
+# `presets/`); the `_liwa` extension mounts the one `_meta.liwa.mindKind` names.
+# The host-plane rows below are disabled for the same reasons as in the Web
+# surface: registries stay on the host, model-facing tools move into presets.
+#
+# Session policy stays on the host plane instead, because one process serves
+# one session and the session patch decides it per session: `agent-instructions`
+# (repository AGENTS.md / CLAUDE.md, and the member rules in $LIWA_HOME/AGENTS.md),
+# `skill-filesystem` + `tool-skill` (the member skills directory, and the
+# repository's skills when repository documents are read), and the compactor
+# (`compaction-basic` + `tool-result-pruner`). The base rows stay mounted here.
+
+- id: tool-plugin-manager
+  disabled: true
+
+- id: tool-bash
+  disabled: true
+
+- id: tool-pwsh
+  disabled: true
+
+- id: tool-jobs
+  disabled: true
+
+- id: tool-fs
+  disabled: true
+
+- id: tool-fs-search
+  disabled: true
+
+- id: command-goal
+  disabled: true
+
+- id: tool-goal
+  disabled: true
+
+- id: plan-mode
+  disabled: true
+
+# `/compact` is a human slash command; ACP carries no commands.
+- id: command-compact
+  disabled: true
+
+- id: tool-subagent-control
+  disabled: true
+
+- id: tool-subagent
+  disabled: true
+
+- id: tool-subagent-fork
+  disabled: true
+
+- id: workflow-ptc
+  disabled: true
+
+- id: tool-workflow
+  disabled: true
+
+- id: tool-todo
+  disabled: true
+
+- id: tool-web
+  disabled: true
+
+- insert:
+    - id: agent-preset-registry
+      name: '@liwa/agent-preset-registry'
+      config:
+        default: deepseek-work

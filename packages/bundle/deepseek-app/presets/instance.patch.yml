@@ -1,0 +1,13 @@
+# Preset deepseek-instance: the member's instance session. Persona and session
+# notes come from the session itself (personaPrefix in the session patch, notes
+# in `_meta.liwa`); the instance acts only through kernel tools reached over
+# MCP, so it mounts no native tool and, with compaction off, no compactor.
+- insert:
+    - id: preset-deepseek-instance
+      name: '@liwa/agent-preset'
+      config:
+        id: deepseek-instance
+        order: 1
+        plugins:
+          - id: time-context
+            name: '@liwa/time-context'

@@ -18,10 +18,10 @@ export const inject = ['cmdlineArgs']
 /** 本插件发布、命令执行方注入的服务名。 */
 export const BRAIN_STARTUP_SERVICE = 'brainStartup'
 
-/** 回合里的权限请求怎么答：在终端问，或按固定选择自动答。 */
-export const PERMISSION_MODES = ['ask', 'allow-once', 'allow-session', 'deny'] as const
+/** 回合里的权限请求（含问答）怎么答：在终端问，或按固定选择自动答（`--permit`）。 */
+export const PERMIT_POLICIES = ['ask', 'allow-once', 'allow-session', 'deny'] as const
 /** 回合里的权限请求怎么答。 */
-export type PermissionMode = (typeof PERMISSION_MODES)[number]
+export type PermitPolicy = (typeof PERMIT_POLICIES)[number]
 
 /** `run` 可选的会话种类。 */
 export const RUN_MIND_KINDS = ['instance', 'work', 'think', 'own', 'tidy'] as const
@@ -36,7 +36,12 @@ export type BrainCommand =
     prompt: string
     model?: string
     cwd?: string
-    mode: PermissionMode
+    /** 提供方的会话模式（Paseo `--mode`，例如 deepseek 的 `plan`）；省略即提供方默认模式。 */
+    mode?: string
+    /** 权限请求与问答的应答策略。 */
+    permit: PermitPolicy
+    /** 附在提示词后的图片文件。 */
+    images: string[]
     member?: string
     mindKind?: (typeof RUN_MIND_KINDS)[number]
     json: boolean
@@ -70,7 +75,8 @@ Examples:
   liwa brain list                                   list providers and probe them
   liwa brain probe claude                           check one provider in detail
   liwa brain run --provider deepseek "hello"        open a session, run one turn, close it
-  liwa brain run --provider codex --mode deny --cwd ./repo "fix the tests"
+  liwa brain run --provider deepseek --mode plan --permit deny --cwd ./repo "plan the fix"
+  liwa brain run --provider deepseek --image ./shot.png "what is in this picture?"
 `)
   program.command('list')
     .description('list the registered providers and probe each of them')
@@ -91,10 +97,12 @@ Examples:
     .description('open one session in this process, stream its events, run one turn, and close it')
     .helpOption('-h, --help', 'show this help')
     .requiredOption('--provider <impl>', 'provider implementation name')
-    .option('--model <model>', 'model id handed to the provider (default: "default")')
+    .option('--model <model>', 'model id handed to the provider (default: the provider CLI\'s own default model)')
     .option('--cwd <dir>', 'working directory of the session (default: the current directory)')
-    .addOption(new Option('--mode <mode>', 'how permission requests are answered (default: ask on a terminal, deny otherwise)')
-      .choices([...PERMISSION_MODES]))
+    .option('--mode <mode>', 'provider-specific session mode, e.g. plan or default (default: the provider\'s default mode)')
+    .addOption(new Option('--permit <policy>', 'how permission requests and questions are answered (default: ask on a terminal, deny otherwise)')
+      .choices([...PERMIT_POLICIES]))
+    .option('--image <file>', 'attach an image (png, jpeg, webp, gif) to the prompt; repeatable', (file: string, files: string[]) => [...files, file], [] as string[])
     .option('--member <name>', 'member that owns the session (default: cli)')
     .addOption(new Option('--mind <kind>', 'session kind (default: work)').choices([...RUN_MIND_KINDS]))
     .option('--json', 'print each event as one JSON line')
@@ -103,7 +111,9 @@ Examples:
     provider: string
     model?: string
     cwd?: string
-    mode?: PermissionMode
+    mode?: string
+    permit?: PermitPolicy
+    image: string[]
     member?: string
     mind?: (typeof RUN_MIND_KINDS)[number]
     json?: boolean
@@ -111,8 +121,8 @@ Examples:
     const prompt = words.join(' ')
     if (prompt.trim() === '') run.error('error: a prompt is required, for example: liwa brain run --provider deepseek "hello"')
     const interactive = internals.stdinIsTty()
-    if (options.mode === 'ask' && !interactive) {
-      run.error('error: --mode ask needs an interactive terminal; choose allow-once, allow-session, or deny')
+    if (options.permit === 'ask' && !interactive) {
+      run.error('error: --permit ask needs an interactive terminal; choose allow-once, allow-session, or deny')
     }
     publish({
       command: 'run',
@@ -120,7 +130,9 @@ Examples:
       prompt,
       ...(options.model === undefined ? {} : { model: options.model }),
       ...(options.cwd === undefined ? {} : { cwd: options.cwd }),
-      mode: options.mode ?? (interactive ? 'ask' : 'deny'),
+      ...(options.mode === undefined ? {} : { mode: options.mode }),
+      permit: options.permit ?? (interactive ? 'ask' : 'deny'),
+      images: options.image,
       ...(options.member === undefined ? {} : { member: options.member }),
       ...(options.mind === undefined ? {} : { mindKind: options.mind }),
       json: options.json === true,

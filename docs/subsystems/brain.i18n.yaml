@@ -6,11 +6,14 @@
   en: 4ae6bcf08d58626a
   zh: 343a4c1f02126106
 /brain-providers/contract:
-  en: 8537d4a9f39c4f50
-  zh: 622a84a9b51e20ab
+  en: 499b4f0a3de1ecb9
+  zh: d6b5464f8cb422b5
 /brain-providers/sessions:
   en: 86434259d543ad30
   zh: 1b729267279e4be1
+/brain-providers/providers:
+  en: c0ca2ee3bfeaa5dc
+  zh: 770bc8725d2f895f
 /brain-providers/records:
   en: a36833c00c452d5e
   zh: 0ab17e650c224c9d

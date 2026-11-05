@@ -8,9 +8,15 @@ Brain providers connect agent CLIs to Liwa: the deepseek agent process, Claude C
 
 A provider declares a `Meta`: the delivery matrix (next step, next turn, whether cancel keeps the queue), whether it resumes, whether its compaction or native tools can be switched off, how it injects the persona, its transport, and whether it observes its own child agents. A session is opened with one `SessionConfig` and streams `BrainEvent`s: turn start and end with usage, message and reasoning increments, tool calls, permission requests and their resolutions, provider-level usage, child agents, and CLI exits. Semantics a provider declares false always answer `unsupported`, so the layer above can supply them at turn boundaries.
 
+Permission requests say what they are (tool, plan, mode, question); a question carries typed questions and is answered with typed answers, and the owner — never a parent agent — answers a child agent's request. Child agents are session-scoped: their events carry the child id and the turn that started them and keep arriving after that turn ends, and a provider may start a turn of its own when a background child's result wakes its CLI. Sessions switch models and modes through the handle when the provider declares it, and image input travels as content-addressed blobs the provider reads back. Everything else in the session configuration — native tools, compaction, repository documents, rules, skills, environment — is the provider's to carry out, and a combination it cannot honour fails when the session opens.
+
 ## Sessions
 
 `ctx.brains.createSession` checks the configuration against the provider's `Meta`, creates the provider's home inside the member configuration directory, and wraps the provider session in one handle. The handle fans events out to every subscriber, tracks the running turn and pending permissions, sums usage, records every process the session spawns and reports its exit, records child agents and closes the unfinished ones as `aborted`, and closes with the context that opened it. A cancel the provider does not confirm leaves the session refusing new turns until a later cancel succeeds.
+
+## Providers
+
+Two providers ship. [`deepseek`](../../packages/brain/brain-deepseek/README.md) runs Liwa's own agent as one `liwa --profile deepseek` process ([`deepseek-app`](../../packages/bundle/deepseek-app/README.md)) per session, in that session's own home, and speaks ACP plus the `_liwa` extension: next-step steering, server-side usage, child-agent records, and the session's kind, budgets, notes, and model in `session/new`'s `_meta.liwa`. [`acp`](../../packages/brain/brain-acp/README.md) connects any other ACP agent CLI through Paseo's ACP client, one configuration row per CLI. Both are plugin rows in the `web`, `headless`, and `brain` bundles (the `acp` row is off until configured), so a profile swaps or drops them in configuration. The `deepseek` process extends the base's ACP server through `ctx.acpExtensions`, whose surface is listed below.
 
 ## Records
 
@@ -23,6 +29,40 @@ Providers, processes, sessions, child agents, and usage are in-memory records in
 ## Cordis API
 
 Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — the language sides differ only in locale-specific paired document paths. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).
+
+<a id="ctxacpextensions--acpextensionregistry"></a>
+
+### `ctx.acpExtensions` — `AcpExtensionRegistry`
+
+`ctx.acpExtensions`：ACP 扩展的登记表（扩展插件看到的那一面）。
+
+```ts cordis-catalog
+/**
+ * 登记一个扩展，直到返回的函数被调用。
+ * @param extension - 扩展。
+ * @returns 释放函数。
+ * @throws 传输已连上（扩展方法只能在连上之前加），或方法名不以 `_` 开头、与已登记的重名。
+ */
+register(extension: AcpExtension): () => void
+
+/**
+ * 按会话号找会话（给扩展方法用）。
+ * @param sessionId - 会话号。
+ * @returns 会话；没有时为 `undefined`。
+ */
+session(sessionId: string): AcpSessionView | undefined
+
+/**
+ * 一个 Agent 归哪个会话上报。
+ * @param agent - Agent（可以是后代）。
+ * @returns 会话；不属于任何开着的会话时为 `undefined`。
+ */
+sessionOf(agent: Agent): AcpSessionView | undefined
+```
+
+Types: [Agent](core.md)
+
+Source: [`packages/acp/acp/src/extensions.ts`](../../packages/acp/acp/src/extensions.ts)
 
 <a id="ctxbrains--brainregistry"></a>
 
@@ -63,17 +103,20 @@ list(): BrainProviderView[]
 async probe(impl: ImplId, signal?: AbortSignal): Promise<BrainProbeResult>
 
 /**
- * 生成或刷新成员给某家提供方的配置目录（01 §4.6），每次覆盖。
+ * 生成或刷新成员给某家提供方的配置目录（01 §4.6），每次覆盖：建好 `<brains>/<impl>/`，内容由提供方的
+ * `writeMemberConfig` 写。
  * @param member - 成员。
  * @param impl - 提供方。
- * @param spec - 规矩、本事目录、模型、MCP、是否读仓库指令。
+ * @param spec - 规矩、本事目录、模型（可省）、MCP、是否读仓库指令。
  * @returns 成员配置目录，作为 `SessionConfig.configDir`。
+ * @throws {BrainError} `not_found`（没有这个提供方），或提供方写法自己的失败。
  */
 async prepareConfigDir(member: MemberId, impl: ImplId, spec: MemberConfigSpec): Promise<string>
 
 /**
- * 开一个新会话。先做三项核对：压缩关不掉的提供方不接 `compaction: 'off'`；原生工具去不掉的提供方不接
- * `nativeToolPolicy: 'none'`；原生子 agent 只对干活的活放开，其余种类改成关并记在 `adjustments` 里。
+ * 开一个新会话。先做四项核对：压缩关不掉的提供方不接 `compaction: 'off'`；原生工具去不掉的提供方不接
+ * `nativeToolPolicy: 'none'`；没有会话模式的提供方不接 `modeId`；原生子 agent 只对干活的活放开，其余种类改成关并记在
+ * `adjustments` 里。其余策略（工具、压缩、仓库指令、规矩、本事的实际落实）由提供方在开会话时负责，做不到的组合由它拒绝。
  * @param owner - 归属方上下文；它卸载时会话一起关。
  * @param request - 提供方与会话配置。
  * @returns 会话句柄。

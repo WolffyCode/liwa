@@ -71,7 +71,7 @@ kind: "package-reference"
 | `session/prompt` | 有序文本、资源链接与受支持图片，每个会话一次一个提示词；根 Agent 与后代完成且有序更新交付后才结算。 |
 | `session/cancel` / `$/cancel_request` | 提示词所拥有的取消路径；没有进行中的 ACP 提示词时取消自主工作，未知会话 id 则为空操作。 |
 | `session/update` | 已提交 assistant 消息与 thought、通用工具生命周期、配置变化与上下文用量，按会话串行交付。 |
-| `session/request_permission` | 带一次性允许／拒绝选项的权限提示；你的客户端可以自动回答。 |
+| `session/request_permission` | 带一次性允许／拒绝选项的权限提示，并说明所问的调用（工具、原始入参、请求方给的理由）；你的客户端可以自动回答。 |
 
 会话列表和恢复允许普通 fork，包括含有 `parentSession` 的历史日志；`origin: subagent` 仍被排除。
 
@@ -80,6 +80,15 @@ kind: "package-reference"
 即使前一轮已经完成，追加 `turn/start` 或 `turn/end` 失败仍会使提示词请求失败。
 
 会话配置从实时 LLM（大语言模型）服务目录提供不透明的提供方／模型选项，并在确切模型声明推理选项时提供 `reasoning_effort`。选项变更记录 Session 选择，从下一个模型步骤开始生效，包括当前轮次的后续步骤；已准备的步骤及其重试保留捕获的选择。图片准入检查准入开始时的当前选择。恢复会还原记录中的选择，即使尚未有请求使用它。ACP 客户端是受信控制器：stdio MCP 条目授权其绝对命令与环境，HTTP 条目授权其绝对 HTTP(S) URL 与 header；初始连接或发现失败会回滚尚未发布的 Agent。不支持的界面会被省略或拒绝：`session/load`、删除、fork、附加目录、SSE（Server-Sent Events）或 ACP 传输 MCP、mode、命令、计划、终端、客户端文件系统操作与 elicitation。
+
+<a id="extension-seam"></a>
+### 扩展口
+
+插件可以不改标准界面就扩展这个服务器：注入 `acpExtensions`，用 `ctx.acpExtensions.register(extension)` 登记一个 `AcpExtension`。扩展可以加 `_` 前缀的请求方法；按 `session/new` / `session/resume` 的 `_meta` 组装每个新建或续接的会话（在 Agent 建出之前，所以能在 Agent 作用域上挂预设或钩子）；修饰 `session/prompt` 的返回与每个权限请求；把 `session/cancel` 的 `_meta` 变成取消选项。`session(sessionId)` 与 `sessionOf(agent)` 给出会话视图（它的 Agent、有没有在途提示词、发额外 `session/update` 的 `notify`）；`sessionOf` 沿 `parentSession` 找到后代上报经过的根会话。在启动器下，传输等 profile 报告就绪才连接，所以每个扩展方法都在第一条消息之前登记好；没有启动器（直接挂载）时立即连接。`@liwa/deepseek-app` 是第一个扩展（`_liwa`）。
+
+后代（会话根 Agent 的子 agent）的权限请求在根会话上发出——客户端只认识根会话；扩展可以标明它来自哪个子会话。每个权限请求都按记下的那次调用说明自己问的是什么——`toolCall` 的 `title` 是工具名，`rawInput` 是原始入参，请求方的理由（例如沙箱提权的说明）作为文字 `content`——因为后代的调用从不作为 `session/update` 到达客户端。会话视图的 `admit` 按 `session/prompt` 的规则收 ACP 内容（文本、图片），给往运行中回合送输入的扩展方法用。
+
+agent 的提问（`ask_user_question`、经 `ctx.userQuestions` 的计划审批）对在 `initialize` 声明了 `elicitation.form` 的客户端以 `elicitation/create` 发出：每个问题一个表单字段（单选是 `oneOf`，多选是 `anyOf` 数组，没有选项是自由文本，另配一个以 `_meta.liwa.otherFor` 标明的"其他"文本字段）；客户端谢绝或取消表单即撤下问题。没有这项能力时问题交给下一个答复者。会话的 Agent 够得着计划模式（`@liwa/plan-mode`，在它的预设里或宿主层）时，`session/new` 与 `session/resume` 报 `default` 与 `plan` 两种模式，`session/set_mode` 在两者之间切（回合之间立刻，回合中下一步生效），切换落日志后发 `current_mode_update`。
 
 -----
 
@@ -108,6 +117,7 @@ kind: "package-reference"
 | [`src/index.ts`](src/index.ts) | 插件入口：`Config` schema、`AgentSideConnection` 接线、按会话记录、准入与结算、清理 |
 | [`src/content.ts`](src/content.ts) | 协议内容准入与投影：图片校验、路由重查、提示词重建、assistant 块转换 |
 | [`src/codec.ts`](src/codec.ts) | 轮次结束到 ACP `stopReason` 的纯映射 |
+| [`src/extensions.ts`](src/extensions.ts) | 扩展登记处（`ctx.acpExtensions`）与服务器在各接口处调用的宿主 |
 
 ### 准入与提示词结算
 

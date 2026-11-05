@@ -42,7 +42,7 @@ describeBrainProviderContract({
 })
 ```
 
-提供方拿到一个宿主：挂好的 `ctx.subprocess`、临时目录、记录拉起的启动上下文与一份现成的 `SessionConfig`。对每个场景（`reply`、`tool`、`permission`、`child`、`long`、`exit`），被测方给出让它的 CLI 演出该场景的输入。依赖 `Meta` 能力的测试——子 agent 观察、续接、各送达语义——按声明检查行为，包括 `unsupported`。
+提供方拿到一个宿主：挂好的 `ctx.subprocess`、临时目录、记录拉起的启动上下文与一份现成的 `SessionConfig`。对每个场景（`reply`、`tool`、`permission`、`question`、`answers`、`child`、`child-permission`、`background`、`image`、`long`、`exit`），被测方给出让它的 CLI 演出该场景的输入，`unsupported` 列出它的 CLI 演不了的场景；不会照提示词退出的真 CLI 给 `exitCli`，在两回合之间结束它的进程。`testTimeoutMs` 为进程启动较慢的提供方放宽每条测试与每个钩子的时限。每个启动上下文在临时目录下有自己的 home，续接沿用它所续会话的 home。依赖 `Meta` 能力的测试——子 agent 观察、续接、各送达语义、换模型与切模式（被测方给出要用的 `models` 与 `modes`）——按声明检查行为，包括 `unsupported`。测试查边界结果，不只查形状：允许的工具调用跑成、拒绝的跑不成，`cancel` 变成中断的回合，问题的答案以原样的结构到达 CLI（选项与补充文字分开，带逗号的选项与文字不变——`answers` 场景的 CLI 用 `echoAnswers` 说出它收到的），子 agent 的权限请求带上所问调用的事实（入参里有 `CHILD_PERMISSION_MARK`），确认的取消恰好收尾捕获的回合、紧接着开的回合保有自己的条目，一次切模式只报一次，后台子 agent 熬过 `preempt` 取消、之后在 CLI 自己开的回合里被报出，而 `owner` 取消停掉它，图片的字节到达 CLI。
 
 脚本提供方（`ScriptedBrainProvider`）按提示词选 `ScriptStep` 回放；`demoScript` 按关键词挑场景。`@liwa/brain-testkit/plugin` 把它登记进 `ctx.brains`：
 

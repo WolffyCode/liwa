@@ -9,8 +9,8 @@
   en: 61c3711221599eaf
   zh: c8db4819685a2ace
 /liwa-cli-help/contents:
-  en: bef067fdd388ed4e
-  zh: ef3729edd4e5b7be
+  en: 842dc15c7a3b6f92
+  zh: c737065b2b412223
 /liwa-cli-help/liwa:
   en: 6e378bdef10b56a2
   zh: 80b63c70e0a76539
@@ -30,8 +30,11 @@
   en: 3b0147e700bd65ee
   zh: 9b7a437261c43c51
 /liwa-cli-help/liwa-brain-run:
-  en: 813932608a404969
-  zh: 354aaef8ad3127bf
+  en: 38be7e6e4d05a386
+  zh: b6974c17598a683d
+/liwa-cli-help/liwa-deepseek:
+  en: 471cbc4ca6e162d5
+  zh: bedeab4e027ba6d5
 /liwa-cli-help/liwa-headless:
   en: a32ba49919f06c38
   zh: 59577d8add5fb501

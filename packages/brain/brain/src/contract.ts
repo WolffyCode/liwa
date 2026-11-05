@@ -52,7 +52,10 @@ export const MetaSchema = z.strictObject({
   nativeTools: z.boolean(),
   permissionHook: z.boolean(),
   rollback: z.boolean(),
+  /** 后续回合能不能换模型（`setModel`）。 */
   modelSwitch: z.boolean(),
+  /** 能不能列出、读取、切换会话模式（Paseo 的 modes；`availableModes` / `currentMode` / `setMode`）。 */
+  modeSwitch: z.boolean(),
   /** 送达语义矩阵；为 false 的一项让对应的 `deliver` 恒回 `unsupported`。 */
   delivery: z.strictObject({ nextStep: z.boolean(), nextTurn: z.boolean(), cancelKeepsQueue: z.boolean() }),
   /** 提供方自带压缩能不能关；`always_on` 的提供方不跑实例会话。 */
@@ -113,7 +116,10 @@ export const McpSseServerSchema = z.object({
   headers: z.record(z.string(), z.string()).optional(),
   alwaysLoad: z.boolean().optional(),
 })
-/** 一台 MCP 服务器，形状同 Paseo 的 `McpServerConfig`。 */
+/**
+ * 一台 MCP 服务器，形状同 Paseo 的 `McpServerConfig`。`alwaysLoad: true` 要求它的工具全部常驻提示词、不放在
+ * 工具搜索之后延迟加载；不延迟加载任何工具的提供方天然满足，保证不了的提供方在 `createSession` 时拒绝。
+ */
 export const McpServerSchema = z.discriminatedUnion('type', [McpStdioServerSchema, McpHttpServerSchema, McpSseServerSchema])
 /** 一台 MCP 服务器。 */
 export type McpServer = z.output<typeof McpServerSchema>
@@ -152,7 +158,11 @@ export const SessionConfigSchema = z.object({
   kernelTools: KernelToolsSchema.optional(),
   mcpServers: z.record(z.string(), McpServerSchema).optional(),
   nativeToolPolicy: z.enum(['none', 'readonly', 'worktree']),
-  model: z.string().min(1),
+  /** 提供方的模型名；省略即所用 CLI 自己的默认模型（不传占位值）。 */
+  model: z.string().min(1).optional(),
+  /** 开会话时的会话模式（提供方 `availableModes()` 里的一个号）；省略即提供方的默认模式。 */
+  modeId: z.string().min(1).optional(),
+  /** 交给 CLI 进程的额外环境项；与提供方自己要注入的变量重名时 `createSession` 拒绝。 */
   env: z.record(z.string(), z.string()).optional(),
   /** 回合预算：推理次数、工具调用次数、看门狗。 */
   limits: z.object({
@@ -188,7 +198,8 @@ export type SessionConfigInput = z.input<typeof SessionConfigSchema>
 
 /**
  * 新的提供方进程续接一个会话需要的东西（Paseo `AgentPersistenceHandle`）：`sessionRef` 是提供方自己的会话号；
- * `nativeHandle` 与 `metadata` 装提供方要原样带回的其余信息。
+ * `nativeHandle` 与 `metadata` 装提供方要原样带回的其余信息；`home` 由 `ctx.brains` 填写：会话 home 是
+ * `per-session` 的提供方续接时要在同一目录重拉进程（那里有它的转录）。
  */
 export const ResumeHandleSchema = z.object({
   provider: ImplIdSchema,
@@ -196,6 +207,7 @@ export const ResumeHandleSchema = z.object({
   createdAt: IsoSchema,
   nativeHandle: z.string().optional(),
   metadata: z.record(z.string(), JsonValueSchema).optional(),
+  home: z.string().min(1).optional(),
 })
 /** 续接句柄。 */
 export type ResumeHandle = z.output<typeof ResumeHandleSchema>
@@ -283,14 +295,95 @@ export const PermissionOptionSchema = z.object({ id: z.string().min(1), label: z
 /** 权限请求给出的一个选项。 */
 export type PermissionOption = z.output<typeof PermissionOptionSchema>
 
+/**
+ * 问答类权限请求（`category: 'question'`）里的一个问题，形状照底座 `ask_user_question` 与 Paseo 问题卡：
+ * `options` 为空表示只收自由文本。
+ */
+export const PermissionQuestionSchema = z.object({
+  /** 问题号；答复的 `answers` 以它为键。 */
+  id: z.string().min(1),
+  question: z.string(),
+  /** 短标题（Paseo 问题卡按它分组，Claude / Codex 的原生答案也按它或问题全文取）。 */
+  header: z.string().optional(),
+  /** 问题的补充说明（例如要审的计划全文）。 */
+  detail: z.string().optional(),
+  options: z.array(z.object({ label: z.string().min(1), description: z.string().optional() })),
+  /** 是否可多选。 */
+  multiSelect: z.boolean(),
+})
+/** 问答类权限请求里的一个问题。 */
+export type PermissionQuestion = z.output<typeof PermissionQuestionSchema>
+
+/** 对一个问题的答案：选中的选项文字（按选择顺序），和/或自由文本；至少有一样。 */
+export const PermissionAnswerSchema = z.object({
+  selected: z.array(z.string().min(1)),
+  custom: z.string().min(1).optional(),
+}).refine(answer => answer.selected.length > 0 || answer.custom !== undefined, { message: 'an answer selects an option or carries custom text' })
+/** 对一个问题的答案。 */
+export type PermissionAnswer = z.output<typeof PermissionAnswerSchema>
+
+/**
+ * 核对问答答复：每个问题恰好答一次、单选至多选一个、选中的文字必须是该问题的选项。
+ * @param questions - 请求里的问题。
+ * @param answers - 答复里的答案，以问题号为键。
+ * @returns 第一处不合规的说明；合规时为 `undefined`。
+ */
+export function checkPermissionAnswers(
+  questions: readonly PermissionQuestion[],
+  answers: Readonly<Record<string, PermissionAnswer>>,
+): string | undefined {
+  const known = new Set(questions.map(question => question.id))
+  const stray = Object.keys(answers).find(id => !known.has(id))
+  if (stray !== undefined) return `answers name an unknown question ${JSON.stringify(stray)}`
+  for (const question of questions) {
+    const answer = answers[question.id]
+    if (answer === undefined) return `question ${JSON.stringify(question.id)} has no answer`
+    const parsed = PermissionAnswerSchema.safeParse(answer)
+    if (!parsed.success) return `the answer to ${JSON.stringify(question.id)} is invalid: ${parsed.error.issues.map(issue => issue.message).join('; ')}`
+    if (!question.multiSelect && answer.selected.length > 1) return `question ${JSON.stringify(question.id)} takes one option, not ${String(answer.selected.length)}`
+    const labels = new Set(question.options.map(option => option.label))
+    const unknown = answer.selected.find(label => !labels.has(label))
+    if (unknown !== undefined) return `question ${JSON.stringify(question.id)} has no option ${JSON.stringify(unknown)}`
+  }
+  return undefined
+}
+
+/** 一种会话模式（Paseo `AgentMode`）。 */
+export const BrainModeSchema = z.object({ id: z.string().min(1), label: z.string(), description: z.string().optional() })
+/** 一种会话模式。 */
+export type BrainMode = z.output<typeof BrainModeSchema>
+
+/**
+ * 一次 `setMode` 的结果：所选模式，以及它从什么时候起生效——立刻（空闲时切换，下一回合就是新模式）、
+ * 正在跑的回合的下一步、或下一回合（Paseo 的 "applies next turn" 提示）。
+ */
+export interface ModeChange {
+  /** 所选的模式号。 */
+  modeId: string
+  /** 生效时机。 */
+  appliesAt: 'now' | 'next_step' | 'next_turn'
+}
+
+/** 条目与权限请求的回合归属：父会话自己的条目必带回合号；子 agent 的条目带 `childId`，回合号是开它的那个回合（知道时）。 */
+const turnOrChild = {
+  check: (event: { turnId?: unknown; childId?: unknown }): boolean => event.turnId !== undefined || event.childId !== undefined,
+  message: { message: 'turnId is required unless the event belongs to a child agent (childId)' },
+}
+
 /** 子 agent 结束的原因；会话先关时由 brains 补记 `aborted`。 */
 export const ChildStopReasonSchema = z.enum(['completed', 'failed', 'cancelled', 'aborted'])
 /** 子 agent 结束的原因。 */
 export type ChildStopReason = z.output<typeof ChildStopReasonSchema>
 
 /**
- * 一个会话流出的全部事件。回合与条目事件带所属回合号；`child.*` 翻译提供方自己的子 agent；
- * 子 agent 干的活带它的 `childId`。`process.exited` 由 `ctx.brains` 根据它登记的拉起补发，提供方不发。
+ * 一个会话流出的全部事件。回合事件带所属回合号；`child.*` 翻译提供方自己的子 agent；子 agent 干的活带它的
+ * `childId`。`process.exited` 由 `ctx.brains` 根据它登记的拉起补发，提供方不发。
+ *
+ * 回合归属的规则（照 Paseo：提供方子 agent 是会话级的，可以在后台跨回合，见 `docs/agent-lifecycle.md`）：
+ * 父会话自己的条目与权限请求必带 `turnId`，且只在那个回合里出现；子 agent 的条目、权限请求带 `childId`，
+ * `turnId` 是开这个子 agent 的父回合（`child.started.turnId`，不知道就省略），父回合结束后它们照常到达，
+ * 不得借用后来的父回合。父回合的终止事件只收尾父会话自己的条目。同一个 `childId` 在 `child.ended` 之后可以
+ * 再 `child.started`（提供方修正了状态，例如续接后又在跑）。
  */
 export const BrainEventSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('turn.started'), turnId: TurnIdSchema }),
@@ -326,12 +419,25 @@ export const BrainEventSchema = z.discriminatedUnion('kind', [
     signal: z.string().nullable(),
   }),
   /** `delta` 是同一 `itemId` 自上一条起的增量；消费方累计。 */
-  z.object({ kind: z.literal('item.message'), turnId: TurnIdSchema, itemId: ItemIdSchema, delta: z.string(), final: z.boolean(), childId: ChildIdSchema.optional() }),
+  z.object({
+    kind: z.literal('item.message'),
+    turnId: TurnIdSchema.optional(),
+    itemId: ItemIdSchema,
+    delta: z.string(),
+    final: z.boolean(),
+    childId: ChildIdSchema.optional(),
+  }).refine(turnOrChild.check, turnOrChild.message),
   /** `summary` 与 `item.message.delta` 同样是增量。 */
-  z.object({ kind: z.literal('item.reasoning'), turnId: TurnIdSchema, itemId: ItemIdSchema, summary: z.string(), childId: ChildIdSchema.optional() }),
+  z.object({
+    kind: z.literal('item.reasoning'),
+    turnId: TurnIdSchema.optional(),
+    itemId: ItemIdSchema,
+    summary: z.string(),
+    childId: ChildIdSchema.optional(),
+  }).refine(turnOrChild.check, turnOrChild.message),
   z.object({
     kind: z.literal('item.tool_call.started'),
-    turnId: TurnIdSchema,
+    turnId: TurnIdSchema.optional(),
     callId: CallIdSchema,
     tool: z.string().min(1),
     args: JsonValueSchema,
@@ -340,26 +446,35 @@ export const BrainEventSchema = z.discriminatedUnion('kind', [
     batch: z.number().int().min(1).optional(),
     detail: ToolCallDetailSchema.optional(),
     childId: ChildIdSchema.optional(),
-  }),
+  }).refine(turnOrChild.check, turnOrChild.message),
   z.object({
     kind: z.literal('item.tool_call.completed'),
-    turnId: TurnIdSchema,
+    turnId: TurnIdSchema.optional(),
     callId: CallIdSchema,
     result: JsonValueSchema,
     ok: z.boolean(),
     childId: ChildIdSchema.optional(),
-  }),
+  }).refine(turnOrChild.check, turnOrChild.message),
+  /**
+   * 一次权限请求。`category` 区分种类：`tool` 原生工具审批、`plan` 计划审批、`question` 向主人提问（带
+   * `questions`，答复带 `answers`）、`mode` 模式切换审批、`other`。子 agent 发起的带 `childId`。
+   */
   z.object({
     kind: z.literal('permission.request'),
-    turnId: TurnIdSchema,
+    turnId: TurnIdSchema.optional(),
     requestId: PermissionRequestIdSchema,
-    category: z.enum(['tool', 'plan', 'question', 'other']),
+    category: z.enum(['tool', 'plan', 'question', 'mode', 'other']),
     tool: z.string(),
     args: JsonValueSchema,
+    title: z.string().optional(),
+    description: z.string().optional(),
     detail: ToolCallDetailSchema.optional(),
+    /** `category: 'question'` 时必有，至少一个问题；其余种类不带。 */
+    questions: z.array(PermissionQuestionSchema).min(1).optional(),
     options: z.array(PermissionOptionSchema).min(1),
     childId: ChildIdSchema.optional(),
-  }),
+  }).refine(turnOrChild.check, turnOrChild.message)
+    .refine(event => (event.category === 'question') === (event.questions !== undefined), { message: 'questions are present exactly on question requests' }),
   /** 提供方已应用答复；对不上的选项号按 `deny_once` 应用。 */
   z.object({
     kind: z.literal('permission.resolved'),
@@ -368,8 +483,13 @@ export const BrainEventSchema = z.discriminatedUnion('kind', [
     optionId: z.string(),
     effect: PermissionEffectSchema,
   }),
-  /** 提供方级的用量（额度窗口、余额），不必等回合结束。 */
+  /** 提供方级的用量（上下文、额度窗口、余额，以及提供方报得出的中途 token），不必等回合结束。 */
   z.object({ kind: z.literal('usage.update'), turnId: TurnIdSchema.optional(), usage: UsageSchema.partial() }),
+  /** 会话所选的模式变了（`setMode` 的结果或 CLI 自己切的，例如计划获批后离开计划模式）。 */
+  z.object({ kind: z.literal('session.mode_changed'), modeId: z.string().nullable(), availableModes: z.array(BrainModeSchema).optional() }),
+  /** 后续回合的模型变了。 */
+  z.object({ kind: z.literal('session.model_changed'), model: z.string().min(1) }),
+  /** `turnId` 是开这个子 agent 的父回合（知道时）；它之后的条目都带这个 `childId`。 */
   z.object({
     kind: z.literal('child.started'),
     childId: ChildIdSchema,
@@ -377,6 +497,7 @@ export const BrainEventSchema = z.discriminatedUnion('kind', [
     label: z.string(),
     provider: ImplIdSchema,
     parentChildId: ChildIdSchema.optional(),
+    turnId: TurnIdSchema.optional(),
   }),
   z.object({ kind: z.literal('child.ended'), childId: ChildIdSchema, stopReason: ChildStopReasonSchema, usage: UsageSchema }),
 ])
@@ -421,4 +542,9 @@ export interface PermissionResponse {
   optionId: string
   /** 拒绝时交给提供方的说明（可选）。 */
   reason?: string
+  /**
+   * 问答类请求的答案，以问题号为键（Paseo `updatedInput.answers` 的语义：随允许类答复一起交给提供方，由提供方
+   * 翻成原生答案）。问答请求选允许类选项时必给且每个问题都要答；其余请求不能带。
+   */
+  answers?: Record<string, PermissionAnswer>
 }

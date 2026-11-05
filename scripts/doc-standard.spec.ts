@@ -84,7 +84,7 @@ const PACKAGE_LIBRARIES: Readonly<Record<string, string>> = {
   'packages/test-support/agent-loop-testkit': 'Test helper library; mounts nothing into a product composition.',
   'packages/test-support/tool-testkit': 'Tool fixture library; exports helpers without a plugin entry.',
   'packages/test-support/brain-testkit': 'Brain provider test library; the scripted-provider plugin is a separate subpath entry.',
-  'packages/brain/brain-shared': 'Migrated Paseo provider code and its subprocess bridge; plain module exports with no plugin entry.',
+  'packages/brain/brain-shared': 'Migrated Paseo provider code and the Paseo-session mapping; plain module exports with no plugin entry.',
   'packages/test-support/client-runtime': 'Browser-side test infrastructure.',
   'packages/test-support/llm-mock-server': 'Test server library; substitutes provider wire behavior.',
   'packages/test-support/loader-smoke': 'Test harness library; mounts nothing into a product composition.',

@@ -1,0 +1,85 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/bundle/deepseek-app/README.md
+/:
+  en: 3cea3ad259c20722
+  zh: 9b653ae507d7f5c9
+/liwa-deepseek-app:
+  en: 17273a42d9a64478
+  zh: e7c235ad3465a8db
+/liwa-deepseek-app/summary:
+  en: a99c7041baf0b3ef
+  zh: 8c58f6770149f0e3
+/liwa-deepseek-app/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 09388d293f9be9cb
+/liwa-deepseek-app/use-this-package:
+  en: bbff250eba0f1b89
+  zh: 0a618f05cc88ee2b
+/liwa-deepseek-app/use-this-package/run-it:
+  en: 7154fc8e6d5dbfc0
+  zh: 7e72e9e828c1b52c
+/liwa-deepseek-app/use-this-package/the-liwa-extension:
+  en: 2f232fa4a2ee17d8
+  zh: bba49e822190ac7e
+/liwa-deepseek-app/use-this-package/presets:
+  en: 1043dfdcbe4a0574
+  zh: 1c597b1cd4cf5239
+/liwa-deepseek-app/understand-the-implementation:
+  en: a487f49379c7dc25
+  zh: a2fa790f5bad5e6e
+/liwa-deepseek-app/further-exploration:
+  en: 0282afb1a8fc8151
+  zh: f266e449ca9e94aa
+/liwa-deepseek-app/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/liwa-deepseek-app/model-experience/session-notes-system-prompt-section:
+  en: 6aefe4654978eeb7
+  zh: fd4b8b095eeaf5ec
+/liwa-deepseek-app/model-experience/session-notes-system-prompt-section/what-the-model-sees:
+  en: 3af44407b8b83d9d
+  zh: 3cf777b29ce8a815
+/liwa-deepseek-app/model-experience/session-notes-system-prompt-section/what-the-model-sees/session-notes-section:
+  en: afceba67c4076a9e
+  zh: ec72e4c14f7ffa82
+/liwa-deepseek-app/model-experience/session-notes-system-prompt-section/token-effect:
+  en: f41696a55cbf4124
+  zh: 4db95c00542f38b5
+/liwa-deepseek-app/model-experience/session-notes-system-prompt-section/kv-cache-effect:
+  en: 75237a93fce7bcca
+  zh: c19231c016e8cf0f
+/liwa-deepseek-app/model-experience/steering-message:
+  en: e8d395e0af3ac99f
+  zh: e39a881d816ec334
+/liwa-deepseek-app/model-experience/steering-message/what-the-model-sees:
+  en: b0a979038344d0c2
+  zh: 75552b7fa5263007
+/liwa-deepseek-app/model-experience/steering-message/what-the-model-sees/steered-input:
+  en: 6c61b5eee16f9971
+  zh: 82d13465aba31b05
+/liwa-deepseek-app/model-experience/steering-message/token-effect:
+  en: f73f86de9ee6b588
+  zh: c8d0fc888d1a229e
+/liwa-deepseek-app/model-experience/steering-message/kv-cache-effect:
+  en: 81eae846ff180fbf
+  zh: cdf372be24650f1f
+/liwa-deepseek-app/model-experience/budget-and-child-policy-refusals:
+  en: ae682529e9339023
+  zh: c8df0ea3a3031942
+/liwa-deepseek-app/model-experience/budget-and-child-policy-refusals/what-the-model-sees:
+  en: 05fb7100f012b689
+  zh: 5bad5c85745bd656
+/liwa-deepseek-app/model-experience/budget-and-child-policy-refusals/token-effect:
+  en: 0a0f327391601300
+  zh: 1d7924b95af2cc61
+/liwa-deepseek-app/model-experience/budget-and-child-policy-refusals/kv-cache-effect:
+  en: 817ef34ccd5948fb
+  zh: 5a8785dbeafa7b9b
+/liwa-deepseek-app/known-limitations-and-deferred-work:
+  en: 53d004209ec8b081
+  zh: 7fa04ed4c6de88c2
+/liwa-deepseek-app/known-limitations-and-deferred-work/dev-note:
+  en: e67f633dc6fe7773
+  zh: 3bb0c20c93f16f98

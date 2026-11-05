@@ -111,7 +111,8 @@
     "@liwa/experimental-plugin-market-bundle": "workspace:*",
     "@liwa/personalized-recommendations": "workspace:*",
     "@liwa/experimental-forge-bundle": "workspace:*",
-    "@liwa/brain-cli": "workspace:*"
+    "@liwa/brain-cli": "workspace:*",
+    "@liwa/deepseek-app": "workspace:*"
   },
   "devDependencies": {
     "@liwa/skill-badge": "workspace:*",

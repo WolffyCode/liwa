@@ -1,0 +1,104 @@
+{
+  "name": "@liwa/deepseek-app",
+  "description": "The liwa deepseek profile bundle: one Liwa agent session per process over ACP stdio, with Liwa's _liwa extension and one agent preset per session kind (the deepseek brain provider's CLI)",
+  "version": "0.2.2-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
+    "directory": "packages/bundle/deepseek-app"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./startup": {
+      "types": "./lib/types/startup.d.ts",
+      "default": "./lib/startup.js"
+    },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./presets/*.patch.yml": "./presets/*.patch.yml",
+    "./src/*": "./src/*",
+    "./locale/*.json": "./locale/*.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "locale/*.json",
+    "lib/index.js",
+    "lib/startup.js",
+    "cordis.patch.yml",
+    "presets/instance.patch.yml",
+    "presets/work.patch.yml",
+    "presets/think.patch.yml",
+    "presets/own.patch.yml",
+    "presets/tidy.patch.yml",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "liwa": {
+    "bundle": {
+      "patch": [
+        "./cordis.patch.yml",
+        "./presets/instance.patch.yml",
+        "./presets/work.patch.yml",
+        "./presets/think.patch.yml",
+        "./presets/own.patch.yml",
+        "./presets/tidy.patch.yml"
+      ]
+    }
+  },
+  "dependencies": {
+    "@agentclientprotocol/sdk": "1.4.0",
+    "@liwa/acp": "workspace:*",
+    "@liwa/agent-preset": "workspace:*",
+    "@liwa/agent-preset-registry": "workspace:*",
+    "@liwa/cmdline": "workspace:*",
+    "@liwa/plan-mode": "workspace:*",
+    "@liwa/schemastery": "workspace:~",
+    "@liwa/time-context": "workspace:*",
+    "@liwa/tool-ask-user": "workspace:*",
+    "@liwa/tool-bash": "workspace:*",
+    "@liwa/tool-fs": "workspace:*",
+    "@liwa/tool-fs-search": "workspace:*",
+    "@liwa/tool-goal": "workspace:*",
+    "@liwa/tool-jobs": "workspace:*",
+    "@liwa/tool-present": "workspace:*",
+    "@liwa/tool-pwsh": "workspace:*",
+    "@liwa/tool-subagent": "workspace:*",
+    "@liwa/tool-subagent-control": "workspace:*",
+    "@liwa/tool-todo": "workspace:*",
+    "@liwa/tool-web": "workspace:*",
+    "@liwa/tool-workflow": "workspace:*",
+    "@liwa/workflow-ptc": "workspace:*",
+    "commander": "^15.0.0",
+    "zod": "4.4.3"
+  },
+  "peerDependencies": {
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-default-model": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/subagent": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/scope": "workspace:*"
+  },
+  "devDependencies": {
+    "@liwa/cordis": "workspace:~",
+    "@liwa/agent": "workspace:*",
+    "@liwa/agent-default-model": "workspace:*",
+    "@liwa/llm": "workspace:*",
+    "@liwa/session": "workspace:*",
+    "@liwa/subagent": "workspace:*",
+    "@liwa/system-prompt": "workspace:*",
+    "@liwa/tools": "workspace:*",
+    "@liwa/scope": "workspace:*"
+  }
+}

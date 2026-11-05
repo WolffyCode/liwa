@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "DeepSeek agent profile",
+    "description": "每个进程经 ACP stdio 提供一个灵鲸 agent 会话，带 _liwa 扩展，每种会话一个 agent 预设。"
+  }
+}

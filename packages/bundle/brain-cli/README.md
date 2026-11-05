@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`liwa brain` lists, probes, and tries the agent CLI providers a profile mounts. The shipped `brain` profile stacks this layer over `liwa-base`, so `liwa brain list` works without setup. `run` opens one session in the process, prints every event as one line, answers permission requests, runs one turn, and closes the session. Providers come from the plugins the profile mounts; the bundle mounts none.
+`liwa brain` lists, probes, and tries the agent CLI providers a profile mounts. The shipped `brain` profile stacks this layer over `liwa-base`, so `liwa brain list` works without setup. `run` opens one session in the process, prints every event as one line, answers permission requests, runs one turn, and closes the session. Providers come from the plugins the profile mounts; the bundle mounts `deepseek` (Liwa's own agent) and a switched-off generic `acp` row.
 
 ## Table of Contents
 
@@ -38,11 +38,11 @@ liwa plugin --profile brain add <provider-package>
 ```text
 liwa brain list [--json]
 liwa brain probe <impl> [--json]
-liwa brain run --provider <impl> [--model <m>] [--cwd <dir>] [--mode ask|allow-once|allow-session|deny]
-               [--member <name>] [--mind <kind>] [--json] "<prompt>"
+liwa brain run --provider <impl> [--model <m>] [--mode <mode>] [--cwd <dir>] [--permit ask|allow-once|allow-session|deny]
+               [--image <file>]... [--member <name>] [--mind <kind>] [--json] "<prompt>"
 ```
 
-`list` probes every registered provider and prints a table; `probe` exits 1 when the provider is unavailable. `run` prepares the member configuration directory, opens a session with the command's values and the runner row's turn budget, prints events to stdout and session notes to stderr, and exits 0 when the turn completes. `--mode` answers permission requests: `ask` prompts on the terminal (the default on a terminal), `deny` is the default otherwise. The scripted test provider joins through an explicit overlay:
+`list` probes every registered provider and prints a table; `probe` exits 1 when the provider is unavailable. `run` prepares the member configuration directory, opens a session with the command's values and the runner row's turn budget, prints events to stdout and session notes to stderr, and exits 0 when the turn completes. `--mode` is the provider's session mode, as in `paseo run` (for `deepseek`, `plan` or `default`). `--permit` answers permission requests and questions: `ask` prompts on the terminal (the default on a terminal), the allow policies answer a question with each question's first option, and `deny` (the default otherwise) declines. `--image` attaches a png, jpeg, webp, or gif file to the prompt. The scripted test provider joins through an explicit overlay:
 
 ```text
 liwa brain --patch apps/cli/tests/profiles/brain/scripted-provider.patch.yml run --provider fake "hello"
@@ -56,7 +56,7 @@ liwa brain --patch apps/cli/tests/profiles/brain/scripted-provider.patch.yml run
 <details>
 <summary>Implementation internals — click to expand</summary>
 
-The patch inserts three rows over base: `brains` (`@liwa/brain`, `membersRoot` under the Liwa home), `brain-cli-startup` (parses the launcher's inner arguments and provides `brainStartup`), and `brain-cli` (runs the command after the loader settles, then requests exit). It disables HMR and the interactive credential store, as the one-shot headless profile does.
+The patch inserts rows over base: `brains` (`@liwa/brain`, `membersRoot` under the Liwa home), the provider rows `brain-deepseek` and `brain-acp` (disabled until a `command` is set), `brain-cli-startup` (parses the launcher's inner arguments and provides `brainStartup`), and `brain-cli` (runs the command after the loader settles, then requests exit). It disables HMR and the interactive credential store, as the one-shot headless profile does.
 
 | File | Role |
 |---|---|
@@ -92,7 +92,7 @@ The command adds no model input of its own; caching is the provider's.
 
 - **One turn per run** — `run` closes its session after the first turn; resident sessions, multi-session management, and reconnects belong to the future gateway.
 - **No `sessions` or `children` subcommands** — a one-shot process has no sessions to list beyond its own run.
-- **Model placeholder** — without `--model`, the provider receives the model id `default` until the roster owns model choice.
+- **No model listing** — without `--model`, the session carries no model and the provider's CLI uses its own default; the command cannot list a provider's models yet.
 
 <a id="dev-note"></a>
 ### Dev Note

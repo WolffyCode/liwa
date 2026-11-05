@@ -42,12 +42,14 @@
     }
   },
   "dependencies": {
+    "@liwa/brain": "workspace:*",
+    "@liwa/brain-acp": "workspace:*",
+    "@liwa/brain-deepseek": "workspace:*",
     "@liwa/brand": "workspace:*",
     "@liwa/cmdline": "workspace:*",
-    "@liwa/util-values": "workspace:*",
     "@liwa/schemastery": "workspace:~",
-    "commander": "^15.0.0",
-    "@liwa/brain": "workspace:*"
+    "@liwa/util-values": "workspace:*",
+    "commander": "^15.0.0"
   },
   "peerDependencies": {
     "@liwa/cordis": "workspace:~",

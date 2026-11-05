@@ -40,6 +40,18 @@
     },
     {
       "path": "../../interaction/user-approval"
+    },
+    {
+      "path": "../../interaction/user-questions"
+    },
+    {
+      "path": "../../plan/plan-mode"
+    },
+    {
+      "path": "../../preset/agent-preset-registry"
+    },
+    {
+      "path": "../../boot/cmdline"
     }
   ]
 }

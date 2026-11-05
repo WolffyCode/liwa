@@ -10,12 +10,14 @@ import type { Logger } from '@liwa/cordis'
 import type { SubprocessHandle, SubprocessOutcome, SubprocessRuntime, SubprocessSpawnSpec } from '@liwa/subprocess'
 import { assertNever } from '@liwa/util-values'
 import { BrainProcessId, type BrainSessionId, type ChildId, type ImplId, type PermissionRequestId, type TurnId } from './brand.ts'
-import type {
-  BrainEvent, BrainEventOf, CancelOptions, DeliverOptions, DeliverResult, Meta, PermissionResponse, ResumeHandle,
-  SessionConfig, TurnInput, Usage,
+import type { BrainBlobReader } from './blobs.ts'
+import {
+  checkPermissionAnswers,
+  type BrainEvent, type BrainEventOf, type BrainMode, type CancelOptions, type DeliverOptions, type DeliverResult, type Meta,
+  type ModeChange, type PermissionResponse, type ResumeHandle, type SessionConfig, type TurnInput, type Usage,
 } from './contract.ts'
 import { BrainError } from './errors.ts'
-import type { BrainLaunchContext, BrainProviderSession } from './provider.ts'
+import type { BrainLaunchContext, BrainProviderSession, BrainSessionHome } from './provider.ts'
 import type {
   BrainChildView, BrainCloseReason, BrainProcessView, BrainSessionState, BrainSessionView, BrainUsageRecord,
 } from './views.ts'
@@ -56,6 +58,30 @@ export interface BrainSession {
    * @param response - 所选选项。
    */
   respondToPermission(requestId: PermissionRequestId, response: PermissionResponse): Promise<void>
+  /**
+   * 换后续回合的模型。提供方声明 `Meta.modelSwitch` 才行；生效后 `view().model` 变成新模型，订阅者收到
+   * `session.model_changed`。
+   * @param model - 提供方的模型名。
+   * @throws {BrainError} `unavailable`（不支持换模型或会话已关）、`conflict`（取消失败后的停止中）、`invalid_input`（提供方不认识这个模型）、`timeout`。
+   */
+  setModel(model: string): Promise<void>
+  /**
+   * 这个会话能切的模式。
+   * @returns 模式；提供方不支持模式或这个会话没有可切的模式时为空数组。
+   */
+  availableModes(): Promise<BrainMode[]>
+  /**
+   * 当前所选的模式。
+   * @returns 模式号；没有模式时为 `null`。
+   */
+  currentMode(): Promise<string | null>
+  /**
+   * 切换模式。提供方声明 `Meta.modeSwitch` 才行；`view().modeId` 变成所选模式，订阅者收到 `session.mode_changed`。
+   * @param modeId - `availableModes()` 里的一个号。
+   * @returns 所选模式与生效时机。
+   * @throws {BrainError} `unavailable`（不支持模式或会话已关）、`conflict`（停止中）、`invalid_input`（不认识的模式）、`timeout`。
+   */
+  setMode(modeId: string): Promise<ModeChange>
   /**
    * 续接句柄；关闭后仍可读。
    * @returns 句柄，或还续不上时的 `null`。
@@ -109,6 +135,8 @@ export interface BrainSession {
 export interface BrainSessionHost {
   /** 本会话的日志器。 */
   readonly logger: Logger
+  /** 回合输入 blob 的读取（交给提供方的启动上下文）。 */
+  readonly blobs: BrainBlobReader
   /** 时限。 */
   readonly timeouts: BrainTimeouts
   /**
@@ -158,6 +186,7 @@ export interface ManagedBrainSessionInit {
   id: BrainSessionId
   impl: ImplId
   meta: Meta
+  sessionHome: BrainSessionHome
   config: SessionConfig
   homeDir: string
   adjustments: string[]
@@ -290,6 +319,7 @@ export class ManagedBrainSession implements BrainSession {
   /** 开会话用的配置。 */
   readonly config: SessionConfig
   private readonly meta: Meta
+  private readonly sessionHome: BrainSessionHome
   private readonly host: BrainSessionHost
   private provider: BrainProviderSession | undefined
   private unsubscribeProvider: (() => void) | undefined
@@ -316,6 +346,7 @@ export class ManagedBrainSession implements BrainSession {
     this.id = init.id
     this.impl = init.impl
     this.meta = init.meta
+    this.sessionHome = init.sessionHome
     this.config = init.config
     this.record = {
       sessionId: init.id,
@@ -323,11 +354,12 @@ export class ManagedBrainSession implements BrainSession {
       member: init.config.member,
       mindKind: init.config.mindKind,
       owner: init.config.owner,
-      model: init.config.model,
+      ...(init.config.model === undefined ? {} : { model: init.config.model }),
       configDir: init.config.configDir,
       homeDir: init.homeDir,
       state: 'open',
       openedAt: new Date().toISOString(),
+      ...(init.config.modeId === undefined ? {} : { modeId: init.config.modeId }),
       ...(init.resumedFrom === undefined ? {} : { resumedFrom: init.resumedFrom }),
       adjustments: [...init.adjustments],
     }
@@ -353,6 +385,7 @@ export class ManagedBrainSession implements BrainSession {
       sessionId: this.id,
       homeDir: this.record.homeDir,
       logger: this.host.logger,
+      readBlob: ref => this.host.blobs.readBlob(ref),
       resolveExecutable: (command, env, signal) => subprocess.resolveExecutable(command, env, signal),
       spawn: spec => this.spawnOwned(subprocess, spec),
     }
@@ -466,6 +499,16 @@ export class ManagedBrainSession implements BrainSession {
       case 'child.ended':
         this.endChild(event)
         break
+      case 'session.model_changed':
+        // setModel 成功时已经报过同一个模型的就不重复报。
+        if (this.record.model === event.model) return
+        this.record.model = event.model
+        break
+      case 'session.mode_changed':
+        if (event.modeId === (this.record.modeId ?? null) && event.availableModes === undefined) return
+        if (event.modeId === null) delete this.record.modeId
+        else this.record.modeId = event.modeId
+        break
       case 'process.exited':
         // 进程退出只由 brains 依据它登记的拉起补发；提供方发的丢弃，保持唯一来源。
         this.host.logger.warn(`brain session ${this.id}: provider ${this.impl} emitted process.exited; brains reports process exits itself`)
@@ -487,7 +530,10 @@ export class ManagedBrainSession implements BrainSession {
     if (this.activeTurn === turnId) this.activeTurn = undefined
     this.endedTurns.push(turnId)
     if (this.endedTurns.length > ENDED_TURN_MEMORY) this.endedTurns.shift()
-    for (const [requestId, request] of this.pending) if (request.turnId === turnId) this.pending.delete(requestId)
+    // 回合结束只撤父会话自己在这一回合的请求；子 agent 的请求跨回合等主人答复。
+    for (const [requestId, request] of this.pending) {
+      if (request.turnId === turnId && request.childId === undefined) this.pending.delete(requestId)
+    }
   }
 
   private openChild(event: BrainEventOf<'child.started'>): void {
@@ -611,16 +657,94 @@ export class ManagedBrainSession implements BrainSession {
   /** @inheritdoc */
   async respondToPermission(requestId: PermissionRequestId, response: PermissionResponse): Promise<void> {
     const provider = this.requireProvider('respondToPermission')
-    if (!this.pending.has(requestId)) {
+    const request = this.pending.get(requestId)
+    if (request === undefined) {
       throw new BrainError('not_found', 'brain.permission_unknown', `brain session ${this.id} has no pending permission request ${requestId}`)
+    }
+    const option = request.options.find(candidate => candidate.id === response.optionId)
+    if (request.questions === undefined) {
+      if (response.answers !== undefined) {
+        throw new BrainError('invalid_input', 'brain.permission_answers_unexpected', `permission request ${requestId} is not a question; answer it without answers`)
+      }
+    } else if (option?.effect.startsWith('allow') === true) {
+      // 允许一个问答请求就是交出答案（Paseo：问题卡的允许必带 updatedInput.answers，否则请求仍挂着）。
+      const problem = response.answers === undefined ? 'an allowing answer to a question needs answers' : checkPermissionAnswers(request.questions, response.answers)
+      if (problem !== undefined) {
+        throw new BrainError('invalid_input', 'brain.permission_answers_invalid', `permission request ${requestId}: ${problem}; the request stays pending`)
+      }
+    } else if (response.answers !== undefined) {
+      throw new BrainError('invalid_input', 'brain.permission_answers_unexpected', `permission request ${requestId}: answers go with an allowing option, not ${option?.effect ?? 'an unknown option'}`)
     }
     await within(provider.respondToPermission(requestId, response), this.host.timeouts.callMs, `${this.impl} respondToPermission`)
     this.pending.delete(requestId)
   }
 
+  /**
+   * 换模型、切模式之前的检查：提供方声明并实现了这项操作、会话开着且不在停止中。
+   * @param operation - 操作名（写进错误）。
+   * @param declared - 提供方是否在 `Meta` 里声明了这项能力。
+   * @param pick - 从提供方会话取出这项操作（没实现时为 `undefined`）。
+   * @param code - 不支持时的错误代码。
+   * @returns 绑定到提供方会话的操作。
+   */
+  private requireSwitch<A extends unknown[], R>(
+    operation: string,
+    declared: boolean,
+    pick: (provider: BrainProviderSession) => ((...args: A) => Promise<R>) | undefined,
+    code: string,
+  ): (...args: A) => Promise<R> {
+    const provider = this.requireProvider(operation)
+    const method = declared ? pick(provider) : undefined
+    if (method === undefined) {
+      throw new BrainError('unavailable', code, `brain provider ${this.impl} does not support ${operation}`)
+    }
+    if (this.currentState === 'stopping') {
+      throw new BrainError('conflict', 'brain.session_stopping', `brain session ${this.id} is still stopping after a failed cancel; cancel again or close it before ${operation}`)
+    }
+    return method
+  }
+
+  /** @inheritdoc */
+  async setModel(model: string): Promise<void> {
+    const setModel = this.requireSwitch('setModel', this.meta.modelSwitch, provider => provider.setModel?.bind(provider), 'brain.model_switch_unsupported')
+    if (model === '') throw new BrainError('invalid_input', 'brain.model_empty', 'setModel needs a model name')
+    await within(setModel(model), this.host.timeouts.callMs, `${this.impl} setModel`)
+    if (this.currentState === 'closed' || this.record.model === model) return
+    // 提供方没有先报这次变化时由句柄补报，保证换成功之后状态可观察。
+    this.record.model = model
+    this.fanOut({ kind: 'session.model_changed', model })
+  }
+
+  /** @inheritdoc */
+  async availableModes(): Promise<BrainMode[]> {
+    const provider = this.requireProvider('availableModes')
+    if (!this.meta.modeSwitch || provider.availableModes === undefined) return []
+    return within(provider.availableModes(), this.host.timeouts.callMs, `${this.impl} availableModes`)
+  }
+
+  /** @inheritdoc */
+  async currentMode(): Promise<string | null> {
+    const provider = this.requireProvider('currentMode')
+    if (!this.meta.modeSwitch || provider.currentMode === undefined) return null
+    return within(provider.currentMode(), this.host.timeouts.callMs, `${this.impl} currentMode`)
+  }
+
+  /** @inheritdoc */
+  async setMode(modeId: string): Promise<ModeChange> {
+    const setMode = this.requireSwitch('setMode', this.meta.modeSwitch, provider => provider.setMode?.bind(provider), 'brain.mode_switch_unsupported')
+    const change = await within(setMode(modeId), this.host.timeouts.callMs, `${this.impl} setMode`)
+    if (this.currentState === 'closed' || this.record.modeId === change.modeId) return change
+    this.record.modeId = change.modeId
+    this.fanOut({ kind: 'session.mode_changed', modeId: change.modeId })
+    return change
+  }
+
   /** @inheritdoc */
   persistence(): ResumeHandle | null {
-    return this.provider?.persistence() ?? null
+    const handle = this.provider?.persistence() ?? null
+    if (handle === null || this.sessionHome !== 'per-session') return handle
+    // per-session 的提供方在同一目录续接：句柄带上这一代的 home。
+    return { ...handle, home: this.record.homeDir }
   }
 
   /** @inheritdoc */

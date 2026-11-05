@@ -189,7 +189,10 @@ export function apply(ctx: Context, config: Config): void {
   ctx.systemPrompt.section({
     name: 'tool:goal',
     order: ctx.systemPrompt.getSectionOrder('TOOL_GOAL'),
-    text: guidance(resolved.blockedAfterConsecutiveRounds),
+    // Guidance follows the tools' visibility (a scope may restrict the goal tools away).
+    text: ({ scope, toolSet }) => ctx.tools.get('get_goal', scope, toolSet) === undefined
+      ? ''
+      : guidance(resolved.blockedAfterConsecutiveRounds),
   })
 
   ctx.tools.register(defineTool({

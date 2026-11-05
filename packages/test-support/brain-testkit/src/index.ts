@@ -5,10 +5,12 @@
  */
 
 export {
-  SCRIPTED_META, SCRIPTED_PERMISSION_OPTIONS, ScriptedBrainProvider, demoScript, inputText,
+  ANSWERS_ECHO, CHILD_PERMISSION_MARK, SCRIPTED_ANSWER_QUESTIONS, SCRIPTED_META, SCRIPTED_MODELS, SCRIPTED_MODES,
+  SCRIPTED_PERMISSION_OPTIONS, SCRIPTED_QUESTION, SCRIPTED_QUESTION_OPTIONS,
+  ScriptedBrainProvider, demoScript, echoAnswers, inputText, readEchoedAnswers,
   type DemoScenario, type ScriptSelector, type ScriptStep, type ScriptedProviderOptions, type ScriptedTurn,
 } from './scripted-provider.ts'
 export {
-  createBrainTestHost, isTurnTerminal, recordEvents, sampleSessionConfig, textInput,
+  createBrainTestHost, isTurnTerminal, recordEvents, sampleSessionConfig, solidPng, textInput,
   type BrainTestHost, type EventRecorder, type RecordingLaunchContext,
 } from './harness.ts'

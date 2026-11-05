@@ -26,6 +26,9 @@ export const PROFILE_TEMPLATES: Record<string, ProfileTemplate> = {
   brain: {
     bundles: ['@liwa/base', '@liwa/brain-cli'],
   },
+  deepseek: {
+    bundles: ['@liwa/base', '@liwa/deepseek-app'],
+  },
 }
 
 /**

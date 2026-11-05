@@ -44,6 +44,8 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | Package | Config | Description |
 |---|---|---|
 | `@liwa/brain` | yes | Brain-provider capability seam (ctx.brains): the agent CLI contract, provider registration, and wrapped sessions with usage, process, and child-agent records |
+| `@liwa/brain-acp` | yes | Generic Agent Client Protocol brain provider: Paseo's ACP client (moved to ACP SDK 1.4) registered into ctx.brains, with Paseo's vendor shims as configuration |
+| `@liwa/brain-deepseek` | yes | The deepseek brain provider: Liwa's own agent as a per-session `liwa --profile deepseek` CLI process, driven over ACP with the _liwa extension and registered into ctx.brains |
 
 ## browser-use
 
@@ -57,6 +59,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 |---|---|---|
 | `@liwa/acp-app` | no | The liwa ACP profile bundle: automation-only JSON-RPC stdio and process lifecycle over liwa-base |
 | `@liwa/brain-cli` | yes | The liwa brain command bundle: list, probe, and try the agent CLI providers of ctx.brains over liwa-base |
+| `@liwa/deepseek-app` | yes | The liwa deepseek profile bundle: one Liwa agent session per process over ACP stdio, with Liwa's _liwa extension and one agent preset per session kind (the deepseek brain provider's CLI) |
 | `@liwa/headless` | yes | The liwa one-shot bundle: a direct core Agent/Session runner over liwa-base with no Host, HTTP, or browser layer |
 | `@liwa/sdk-app` | yes | The liwa SDK profile bundle: stdio JSON-RPC serving and process lifecycle over liwa-base |
 | `@liwa/web-app` | yes | The liwa browser-surface bundle: the web patch layer over liwa-base plus the runtime glue plugin (frontend dist serving, bash runtime variables, URL line) |

@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "DeepSeek-Agent-Anbieter",
+    "description": "Führt Liwas eigenen DeepSeek-Agenten als Brain-Anbieter aus: ein liwa --profile deepseek-Prozess pro Sitzung, mit Steuerung, Nutzung und Kind-Agenten."
+  }
+}

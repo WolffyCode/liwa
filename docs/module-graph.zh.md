@@ -138,6 +138,8 @@ flowchart TD
   end
   subgraph group_brain["packages/brain"]
     pkg_brain["brain"]
+    pkg_brain_acp["brain-acp"]
+    pkg_brain_deepseek["brain-deepseek"]
     pkg_brain_shared["brain-shared"]
   end
   subgraph group_browser_use["packages/browser-use"]
@@ -147,6 +149,7 @@ flowchart TD
     pkg_acp_app["acp-app"]
     pkg_base["base"]
     pkg_brain_cli["brain-cli"]
+    pkg_deepseek_app["deepseek-app"]
     pkg_headless["headless"]
     pkg_sdk_app["sdk-app"]
     pkg_sdk_minimal["sdk-minimal"]
@@ -511,6 +514,9 @@ flowchart TD
   pkg_hmr --> pkg_app_boot
   pkg_hmr --> pkg_cmdline
   pkg_brain --> pkg_subprocess
+  pkg_brain_acp --> pkg_subprocess
+  pkg_brain_deepseek --> pkg_app_boot
+  pkg_brain_deepseek --> pkg_subprocess
   pkg_brain_shared --> pkg_subprocess
   pkg_deliverable_file_references --> pkg_system_prompt
   pkg_experimental_computer_use_cua_driver_mcp --> pkg_computer_use
@@ -1305,6 +1311,13 @@ flowchart TD
   pkg_plugin_market --> pkg_subprocess
   pkg_plugin_market --> pkg_tools
   pkg_plugin_market --> pkg_typert_protocol
+  pkg_deepseek_app --> pkg_agent
+  pkg_deepseek_app --> pkg_agent_default_model
+  pkg_deepseek_app --> pkg_llm
+  pkg_deepseek_app --> pkg_session
+  pkg_deepseek_app --> pkg_subagent
+  pkg_deepseek_app --> pkg_system_prompt
+  pkg_deepseek_app --> pkg_tools
   pkg_headless --> pkg_agent
   pkg_headless --> pkg_agent_default_model
   pkg_headless --> pkg_fs
@@ -1612,6 +1625,8 @@ flowchart TD
 | [`attachment-local`](../packages/attachment/attachment-local) | `attachment` | [`attachment`](../packages/attachment/attachment), [`home-paths`](../packages/util/home-paths) |
 | [`hmr`](../packages/boot/hmr) | `boot` | [`app-boot`](../packages/boot/app-boot), [`cmdline`](../packages/boot/cmdline) |
 | [`brain`](../packages/brain/brain) | `brain` | [`subprocess`](../packages/subprocess/subprocess) |
+| [`brain-acp`](../packages/brain/brain-acp) | `brain` | [`subprocess`](../packages/subprocess/subprocess) |
+| [`brain-deepseek`](../packages/brain/brain-deepseek) | `brain` | [`app-boot`](../packages/boot/app-boot), [`subprocess`](../packages/subprocess/subprocess) |
 | [`brain-shared`](../packages/brain/brain-shared) | `brain` | [`subprocess`](../packages/subprocess/subprocess) |
 | [`deliverable-file-references`](../packages/deliverables/deliverable-file-references) | `deliverables` | [`system-prompt`](../packages/core/system-prompt) |
 | [`experimental-computer-use-cua-driver-mcp`](../packages/experimental/computer-use-cua-driver-mcp) | `experimental` | [`computer-use`](../packages/computer-use/computer-use) |
@@ -1779,6 +1794,7 @@ flowchart TD
 | [`tool-subagent-control`](../packages/subagent/tool-subagent-control) | `subagent` | [`agent`](../packages/core/agent), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`tools`](../packages/core/tools) |
 | [`api-session-controller`](../packages/api/session-controller) | `api` | [`agent`](../packages/core/agent), [`agent-default-model`](../packages/core/agent-default-model), [`agent-preset-registry`](../packages/preset/agent-preset-registry), [`api-gateway`](../packages/api/gateway), [`attachment`](../packages/attachment/attachment), [`client-connection`](../packages/client/connection), [`client-file-upload`](../packages/client/file-upload), [`commands`](../packages/interaction/commands), [`file-reference`](../packages/context/file-reference), [`fs`](../packages/fs/fs), [`llm`](../packages/llm/llm), [`native-command`](../packages/util/native-command), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`session-projection`](../packages/session/session-projection), [`session-projection-cache`](../packages/session/session-projection-cache), [`session-query`](../packages/session-query/session-query), [`session-title`](../packages/session/session-title), [`skill`](../packages/skill/skill), [`subagent`](../packages/subagent/subagent), [`typert-protocol`](../packages/typert/protocol), [`typert-registry`](../packages/typert/registry), [`util-time`](../packages/util/time), [`util-values`](../packages/util/values), [`util-workspace-path`](../packages/util/workspace-path), [`working-directory`](../packages/session/working-directory), [`workspace`](../packages/workspace/workspace) |
 | [`plugin-market`](../packages/boot/plugin-market) | `boot` | [`plugin-manager`](../packages/boot/plugin-manager), [`settings`](../packages/settings/settings), [`subprocess`](../packages/subprocess/subprocess), [`tools`](../packages/core/tools), [`typert-protocol`](../packages/typert/protocol) |
+| [`deepseek-app`](../packages/bundle/deepseek-app) | `bundle` | [`agent`](../packages/core/agent), [`agent-default-model`](../packages/core/agent-default-model), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`system-prompt`](../packages/core/system-prompt), [`tools`](../packages/core/tools) |
 | [`headless`](../packages/bundle/headless) | `bundle` | [`agent`](../packages/core/agent), [`agent-default-model`](../packages/core/agent-default-model), [`fs`](../packages/fs/fs), [`llm`](../packages/llm/llm), [`permission-presets`](../packages/interaction/permission-presets), [`sandbox-policy`](../packages/sandbox/sandbox-policy), [`session`](../packages/core/session), [`session-query`](../packages/session-query/session-query), [`subagent`](../packages/subagent/subagent), [`user-approval`](../packages/interaction/user-approval) |
 | [`compaction-basic`](../packages/compaction/compaction-basic) | `compaction` | [`agent`](../packages/core/agent), [`commands`](../packages/interaction/commands), [`compaction`](../packages/compaction/compaction), [`compaction-tool-result-pruner`](../packages/compaction/compaction-tool-result-pruner), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`token-meter`](../packages/llm/token-meter) |
 | [`session-reference`](../packages/context/session-reference) | `context` | [`agent`](../packages/core/agent), [`compaction`](../packages/compaction/compaction), [`llm`](../packages/llm/llm), [`output-retention`](../packages/util/output-retention), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`session-projection-cache`](../packages/session/session-projection-cache), [`session-query`](../packages/session-query/session-query), [`session-title`](../packages/session/session-title), [`spill`](../packages/spill/spill), [`subagent`](../packages/subagent/subagent), [`system-prompt`](../packages/core/system-prompt), [`typert-protocol`](../packages/typert/protocol) |

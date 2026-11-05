@@ -1,0 +1,48 @@
+{
+  "name": "@liwa/brain-acp",
+  "description": "Generic Agent Client Protocol brain provider: Paseo's ACP client (moved to ACP SDK 1.4) registered into ctx.brains, with Paseo's vendor shims as configuration",
+  "version": "0.2.2-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
+    "directory": "packages/brain/brain-acp"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./locale/*.json": "./locale/*.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "locale/*.json",
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@agentclientprotocol/sdk": "1.4.0",
+    "@liwa/brain": "workspace:*",
+    "@liwa/brain-shared": "workspace:*",
+    "@liwa/schemastery": "workspace:~",
+    "zod": "4.4.3"
+  },
+  "peerDependencies": {
+    "@liwa/cordis": "workspace:~",
+    "@liwa/subprocess": "workspace:*"
+  },
+  "devDependencies": {
+    "@liwa/brain-testkit": "workspace:*",
+    "@liwa/cordis": "workspace:~",
+    "@liwa/subprocess": "workspace:*",
+    "@liwa/subprocess-local": "workspace:*"
+  }
+}

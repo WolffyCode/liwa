@@ -1,0 +1,51 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../vendor/cosmokit"
+    },
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../../../vendor/schemastery"
+    },
+    {
+      "path": "../../boot/app-boot"
+    },
+    {
+      "path": "../../bundle/deepseek-app"
+    },
+    {
+      "path": "../../credentials/credentials"
+    },
+    {
+      "path": "../../util/launch-environment"
+    },
+    {
+      "path": "../brain"
+    },
+    {
+      "path": "../brain-acp"
+    },
+    {
+      "path": "../brain-acp/tsconfig.paseo.json"
+    },
+    {
+      "path": "../brain-shared"
+    },
+    {
+      "path": "../brain-shared/tsconfig.paseo.json"
+    },
+    {
+      "path": "../../subprocess/subprocess"
+    }
+  ]
+}

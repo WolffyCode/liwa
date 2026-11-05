@@ -8,9 +8,11 @@
 
 import { randomUUID } from 'node:crypto'
 import { mkdir } from 'node:fs/promises'
+import { isAbsolute, join, relative, resolve } from 'node:path'
 import { Context, Service } from '@liwa/cordis'
 import z from '@liwa/schemastery'
 import type { SubprocessRuntime } from '@liwa/subprocess'
+import { BrainBlobStore } from './blobs.ts'
 import { BrainSessionId, type ImplId, type MemberId } from './brand.ts'
 import { homeDirFor, prepareMemberConfigDir, type MemberConfigSpec } from './config-dir/index.ts'
 import {
@@ -25,6 +27,7 @@ import type {
   BrainSessionView, BrainUsageRecord,
 } from './views.ts'
 
+export { BrainBlobStore, type BrainBlobReader } from './blobs.ts'
 export * from './brand.ts'
 export * from './contract.ts'
 export * from './errors.ts'
@@ -32,9 +35,13 @@ export type * from './provider.ts'
 export type * from './views.ts'
 export { accumulateUsage, type BrainSession, type BrainTimeouts } from './session.ts'
 export {
-  KERNEL_MCP_SERVER_NAME, RULES_PRECEDENCE, homeDirFor, memberBrainsDir, memberMcpServers, rulesDocument,
-  type MemberConfigSpec,
+  KERNEL_MCP_SERVER_NAME, RULES_PRECEDENCE, homeDirFor, memberBrainsDir, memberMcpServers, replaceSkills, rulesDocument,
+  type MemberConfigSpec, type MemberConfigWriter,
 } from './config-dir/index.ts'
+export {
+  ProviderCommandError, execProviderCommand, findProviderExecutable, mergeLaunchEnv, spawnProviderProcess,
+  type ProviderCommandOptions, type ProviderCommandResult, type ProviderProcessHost,
+} from './process.ts'
 
 declare module '@liwa/cordis' {
   interface Context {
@@ -97,6 +104,8 @@ declare module '@liwa/cordis' {
 export interface Config {
   /** 成员数据目录的根；`prepareConfigDir` 写 `<membersRoot>/<member>/brains/`。 */
   membersRoot: string
+  /** 回合输入 blob（图片等）的本地存储目录；省略时为 `<membersRoot>/.blobs`（成员名不以点开头，不会撞上）。 */
+  blobsDir?: string
   /** 开会话、续接、开回合的时限（毫秒）。 */
   handshakeTimeoutMs?: number
   /** 送达、取消、答复权限、回收否决的时限（毫秒）。 */
@@ -150,6 +159,32 @@ function invalid(what: string, issues: readonly { path: readonly PropertyKey[]; 
 }
 
 /**
+ * 续接句柄里的 home：只认这一代成员配置目录下这家提供方的子目录，挡住指到别处的句柄。
+ * @param configDir - 这一代的成员配置目录。
+ * @param impl - 提供方。
+ * @param home - 续接句柄里的 home。
+ * @returns 规范化的 home。
+ * @throws {BrainError} `invalid_input`（home 不在 `<configDir>/<impl>/` 下）。
+ */
+function resumedHome(configDir: string, impl: ImplId, home: string): string {
+  const base = resolve(configDir, impl)
+  const target = resolve(home)
+  if (relative(base, target).startsWith('..') || isAbsolute(relative(base, target)) || target === base) {
+    throw new BrainError('invalid_input', 'brain.resume_home_outside', `resume handle home ${home} is not a session home under ${base}`)
+  }
+  return target
+}
+
+/**
+ * blob 存储目录：配置给了就用它，否则放在成员数据目录的根下。
+ * @param config - 服务配置。
+ * @returns 目录。
+ */
+export function resolveBlobsDir(config: Pick<Config, 'membersRoot' | 'blobsDir'>): string {
+  return config.blobsDir ?? join(config.membersRoot, '.blobs')
+}
+
+/**
  * `ctx.brains`：提供方登记、可用性探测、成员配置目录、会话的开启与续接、会话 / 子 agent / 进程 / 用量的登记。
  * 提供方的登记与调用方的会话都是调用方上下文里的 effect：提供方插件卸载时它的会话一起关，调用方卸载时它开的会话一起关。
  */
@@ -158,6 +193,7 @@ export class BrainRegistry extends Service {
 
   static Config: z<Config> = z.object({
     membersRoot: z.string().required(),
+    blobsDir: z.string(),
     handshakeTimeoutMs: z.natural().min(1).default(30_000),
     callTimeoutMs: z.natural().min(1).default(10_000),
     closeTimeoutMs: z.natural().min(1).default(30_000),
@@ -168,7 +204,9 @@ export class BrainRegistry extends Service {
   private readonly sessions = new Map<BrainSessionId, ManagedBrainSession>()
   private readonly usageListeners = new Set<(record: BrainUsageRecord) => void>()
   private readonly selfCtx: Context
-  private readonly settings: Required<Config>
+  private readonly settings: Required<Omit<Config, 'blobsDir'>>
+  /** 回合输入 blob 的存储（图片等）：调用方 `put` 拿引用，提供方经启动上下文读回。 */
+  readonly blobs: BrainBlobStore
 
   /**
    * @param ctx - 服务上下文。
@@ -178,7 +216,8 @@ export class BrainRegistry extends Service {
     super(ctx, 'brains')
     this.selfCtx = ctx
     // schemastery 在构造服务之前已经校验并补齐缺省值。
-    this.settings = config as Required<Config>
+    this.settings = config as Required<Omit<Config, 'blobsDir'>>
+    this.blobs = new BrainBlobStore(resolveBlobsDir(config))
     ctx.effect(() => () => this.closeAll(), 'brains teardown')
   }
 
@@ -284,19 +323,24 @@ export class BrainRegistry extends Service {
   }
 
   /**
-   * 生成或刷新成员给某家提供方的配置目录（01 §4.6），每次覆盖。
+   * 生成或刷新成员给某家提供方的配置目录（01 §4.6），每次覆盖：建好 `<brains>/<impl>/`，内容由提供方的
+   * `writeMemberConfig` 写。
    * @param member - 成员。
    * @param impl - 提供方。
-   * @param spec - 规矩、本事目录、模型、MCP、是否读仓库指令。
+   * @param spec - 规矩、本事目录、模型（可省）、MCP、是否读仓库指令。
    * @returns 成员配置目录，作为 `SessionConfig.configDir`。
+   * @throws {BrainError} `not_found`（没有这个提供方），或提供方写法自己的失败。
    */
   async prepareConfigDir(member: MemberId, impl: ImplId, spec: MemberConfigSpec): Promise<string> {
-    return prepareMemberConfigDir(this.settings.membersRoot, member, impl, spec)
+    const { provider } = this.requireProvider(impl)
+    const write = provider.writeMemberConfig?.bind(provider)
+    return prepareMemberConfigDir(this.settings.membersRoot, member, impl, spec, write)
   }
 
   /**
-   * 开一个新会话。先做三项核对：压缩关不掉的提供方不接 `compaction: 'off'`；原生工具去不掉的提供方不接
-   * `nativeToolPolicy: 'none'`；原生子 agent 只对干活的活放开，其余种类改成关并记在 `adjustments` 里。
+   * 开一个新会话。先做四项核对：压缩关不掉的提供方不接 `compaction: 'off'`；原生工具去不掉的提供方不接
+   * `nativeToolPolicy: 'none'`；没有会话模式的提供方不接 `modeId`；原生子 agent 只对干活的活放开，其余种类改成关并记在
+   * `adjustments` 里。其余策略（工具、压缩、仓库指令、规矩、本事的实际落实）由提供方在开会话时负责，做不到的组合由它拒绝。
    * @param owner - 归属方上下文；它卸载时会话一起关。
    * @param request - 提供方与会话配置。
    * @returns 会话句柄。
@@ -410,6 +454,9 @@ export class BrainRegistry extends Service {
     if (config.nativeToolPolicy === 'none' && record.meta.nativeTools) {
       throw new BrainError('invalid_input', 'brain.native_tools_not_removable', `brain provider ${record.impl} cannot remove its native tools; it cannot run a session with nativeToolPolicy "none"`)
     }
+    if (config.modeId !== undefined && !record.meta.modeSwitch) {
+      throw new BrainError('invalid_input', 'brain.mode_switch_unsupported', `brain provider ${record.impl} has no session modes; open the session without modeId`)
+    }
     if (config.childPolicy.native && config.mindKind !== 'work') {
       config = { ...config, childPolicy: { ...config.childPolicy, native: false } }
       adjustments.push(`childPolicy.native=false: native child agents are only allowed for work sessions, not ${config.mindKind}`)
@@ -425,12 +472,16 @@ export class BrainRegistry extends Service {
     resume: ResumeHandle | undefined,
   ): Promise<BrainSession> {
     const id = BrainSessionId(`brain-session-${randomUUID()}`)
-    const homeDir = homeDirFor(config.configDir, record.impl, id)
+    // per-session 的提供方续接时回到上一代的 home（它的转录在那里）；其余情况按布局给目录。
+    const homeDir = resume?.home !== undefined && record.provider.sessionHome === 'per-session'
+      ? resumedHome(config.configDir, record.impl, resume.home)
+      : homeDirFor(config.configDir, record.impl, id, record.provider.sessionHome)
     await mkdir(homeDir, { recursive: true })
     const session = new ManagedBrainSession(this.sessionHost(record.impl, id), {
       id,
       impl: record.impl,
       meta: record.meta,
+      sessionHome: record.provider.sessionHome,
       config,
       homeDir,
       adjustments,
@@ -461,6 +512,7 @@ export class BrainRegistry extends Service {
   private sessionHost(impl: ImplId, id: BrainSessionId): BrainSessionHost {
     return {
       logger: this.selfCtx.logger(`brain:${impl}`),
+      blobs: this.blobs,
       timeouts: {
         handshakeMs: this.settings.handshakeTimeoutMs,
         callMs: this.settings.callTimeoutMs,

@@ -249,9 +249,17 @@ const SERVICE_ROLES: ServiceRole[] = [
     pkg: 'brain',
     title: 'Agent CLI brain providers',
     mode: 'seam',
-    implementations: ['brain-testkit'],
+    implementations: ['brain-deepseek', 'brain-acp', 'brain-testkit'],
     consumers: ['brain-cli'],
-    note: 'Agent CLI providers register one client each; callers open sessions whose handle validates configuration, fans out events, sums usage, and records processes and child agents. The scripted test provider is the only implementation until the CLI provider packages land.',
+    note: 'Agent CLI providers register one client each; callers open sessions whose handle validates configuration, fans out events, sums usage, and records processes and child agents. `deepseek` runs Liwa\'s own agent as one `liwa --profile deepseek` process per session, `acp` drives any other ACP agent CLI, and the scripted provider serves the contract tests.',
+  },
+  {
+    key: 'acpExtensions',
+    pkg: 'acp',
+    title: 'ACP server extensions',
+    mode: 'core',
+    consumers: ['deepseek-app'],
+    note: 'Extension plugins add `_`-prefixed methods and `_meta` hooks (session setup, prompt result, permission request, cancel) to the standard ACP server before its transport connects; the deepseek profile mounts the `_liwa` extension.',
   },
   {
     key: 'brainStartup',
@@ -677,7 +685,7 @@ const SERVICE_ROLES: ServiceRole[] = [
     title: 'Subprocess seam',
     mode: 'seam',
     implementations: ['subprocess-local', 'subprocess-ssh'],
-    consumers: ['bash-local', 'bash-sandbox', 'terminal-bash', 'lsp-stdio', 'subagent-acp', 'subagent-codex', 'subagent-claude-code', 'brain'],
+    consumers: ['bash-local', 'bash-sandbox', 'terminal-bash', 'lsp-stdio', 'subagent-acp', 'subagent-codex', 'subagent-claude-code', 'brain', 'brain-acp', 'brain-deepseek'],
     note: 'The bash executors, the PTY shell backend, the LSP host, and the out-of-process ACP, Codex, and Claude Code subagent backends spawn through ctx.subprocess; the service owns process coordinates, tree/session lifetime, stdio dispositions, terminal mechanics, and kill escalation.',
   },
   {

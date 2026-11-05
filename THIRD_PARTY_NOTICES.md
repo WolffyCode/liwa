@@ -31,6 +31,7 @@ The following packages carry upstream source files copied in place rather than i
 
 | Package | Upstream | Commit | License |
 | --- | --- | --- | --- |
+| [packages/brain/brain-acp](packages/brain/brain-acp/NOTICE) | https://github.com/getpaseo/paseo | `8018231a00a6b45ed6cda1856f954ba14b4824c0` | Apache-2.0 |
 | [packages/brain/brain-shared](packages/brain/brain-shared/NOTICE) | https://github.com/getpaseo/paseo | `8018231a00a6b45ed6cda1856f954ba14b4824c0` | Apache-2.0 |
 
 ## Runtime npm dependencies

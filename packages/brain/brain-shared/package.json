@@ -1,6 +1,6 @@
 {
   "name": "@liwa/brain-shared",
-  "description": "Paseo provider code shared by the Liwa brain providers (copied in place with NOTICE) plus the bridge from that code to the subprocess seam",
+  "description": "Paseo provider code shared by the Liwa brain providers (copied in place with NOTICE), plus Liwa's mapping from a Paseo agent session to the brain.provider session contract",
   "version": "0.2.2-alpha.2",
   "publishConfig": {
     "access": "public"
@@ -32,6 +32,8 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@liwa/brain": "workspace:*",
+    "@liwa/util-values": "workspace:*",
     "zod": "4.4.3"
   },
   "peerDependencies": {
@@ -39,6 +41,7 @@
     "@liwa/subprocess": "workspace:*"
   },
   "devDependencies": {
+    "@liwa/brain-testkit": "workspace:*",
     "@liwa/cordis": "workspace:~",
     "@liwa/subprocess": "workspace:*",
     "@liwa/subprocess-local": "workspace:*"

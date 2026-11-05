@@ -6,7 +6,7 @@ import {
   type ProviderProcessHost,
 } from '../src/index.ts'
 
-describe('brain-shared process bridge', () => {
+describe('provider process helpers', () => {
   const ctx = new Context()
   let host: ProviderProcessHost
 

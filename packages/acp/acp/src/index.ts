@@ -42,17 +42,47 @@ import {
   type ResumeSessionResponse,
   type SetSessionConfigOptionRequest,
   type SetSessionConfigOptionResponse,
+  type SetSessionModeRequest,
+  type SetSessionModeResponse,
   type SessionNotification,
   type Stream,
 } from '@agentclientprotocol/sdk'
-import type { SessionId } from '@liwa/session'
+import type { Agent } from '@liwa/agent'
+import type { Session, SessionEvent, SessionId } from '@liwa/session'
 import type {} from '@liwa/session-persistence'
 // Side-effect type import: declaration-merges the approval waterfall answered below.
 import type {} from '@liwa/user-approval'
+// Side-effect type import: declaration-merges the launcher's startup signal read below.
+import type {} from '@liwa/cmdline'
 import { supportsAcpImagePrompts } from './content.ts'
+import { AcpExtensionHost, AcpExtensionRegistry, type AcpSessionView } from './extensions.ts'
 import { AcpMcpConfigError } from './mcp.ts'
 import { AcpModelConfigError } from './model-control.ts'
+import { AcpModeError, sessionModeState, setSessionMode } from './modes.ts'
+import { answerFromContent, questionSchema } from './questions.ts'
 import { AcpSession } from './session.ts'
+import { approvalToolCall } from './updates.ts'
+import { UserQuestionError } from '@liwa/user-questions'
+
+export {
+  AcpExtensionRegistry,
+  type AcpExtension, type AcpExtensionMethod, type AcpExtensionMethodContext, type AcpSessionSetup, type AcpSessionView,
+} from './extensions.ts'
+
+declare module '@liwa/cordis' {
+  interface Context {
+    /** Registry of ACP extensions (`_`-prefixed methods and `_meta` hooks); published by the ACP server. */
+    acpExtensions: AcpExtensionRegistry
+  }
+}
+
+/** Longest parent chain followed when routing a descendant's permission request to its root session. */
+const MAX_DELEGATION_WALK = 64
+
+/** Read a protocol `_meta` object, or nothing when absent or not an object. */
+function metaOf(value: unknown): Record<string, unknown> | undefined {
+  return value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : undefined
+}
 
 const DEFAULT_SESSION_LIST_PAGE_SIZE = 100
 
@@ -103,12 +133,55 @@ export function apply(ctx: Context, config: AcpConfig): void {
   const activating = new Set<SessionId>()
   let closed = false
   let imagePromptEnabled = false
+  // Whether the client advertised form elicitation at initialization; only then do user questions reach it.
+  let clientAnswersQuestions = false
 
   /** Return the bridge-owned record for an agent, rejecting same-id impostors. */
   const ownedRecord = (agent: Parameters<AcpSession['owns']>[0]): AcpSession | undefined => {
     const record = sessions.get(agent.session.id)
     return record?.owns(agent) === true ? record : undefined
   }
+
+  /** The owned root record an agent reports through: itself, or the first owned ancestor along `parentSession`. */
+  const reportingRecord = (agent: Agent): AcpSession | undefined => {
+    let current: Agent | undefined = agent
+    for (let hops = 0; current !== undefined && hops < MAX_DELEGATION_WALK; hops += 1) {
+      const owned = ownedRecord(current)
+      if (owned !== undefined) return owned
+      const parent: SessionId | undefined = current.session.header.parentSession
+      current = parent === undefined ? undefined : ctx.agents.get(parent)
+    }
+    return undefined
+  }
+
+  const views = new WeakMap<AcpSession, AcpSessionView>()
+  /** The extension-facing view of one session record. */
+  const viewOf = (record: AcpSession): AcpSessionView => {
+    let view = views.get(record)
+    if (view === undefined) {
+      view = {
+        sessionId: record.agent.session.id,
+        agent: record.agent,
+        get prompting() { return record.prompting },
+        notify: (update, meta) => record.notifyExtension(update, meta),
+        admit: (prompt, signal) => record.admitContent(prompt, imagePromptEnabled, signal),
+      }
+      views.set(record, view)
+    }
+    return view
+  }
+
+  const extensions = new AcpExtensionHost({
+    session: (sessionId) => {
+      const record = sessions.get(brandString<SessionId>(sessionId))
+      return record === undefined ? undefined : viewOf(record)
+    },
+    sessionOf: (agent) => {
+      const record = reportingRecord(agent)
+      return record === undefined ? undefined : viewOf(record)
+    },
+  })
+  ctx.provide('acpExtensions', new AcpExtensionRegistry(extensions))
 
   const assertOpen = (): void => {
     if (closed) throw internalError('the ACP bridge has been disposed')
@@ -122,6 +195,8 @@ export function apply(ctx: Context, config: AcpConfig): void {
 
   /** Send one ordered protocol update while containing transport-only failure. */
   const notify = async (notification: SessionNotification): Promise<void> => {
+    /* v8 ignore next -- sessions exist only after the transport connected. */
+    if (conn === undefined) return
     try {
       await conn.notify(methods.client.session.update, notification)
     /* v8 ignore start -- the ACP SDK contains notification-handler failures; only a transport write failure reaches this guard. */
@@ -131,7 +206,30 @@ export function apply(ctx: Context, config: AcpConfig): void {
     /* v8 ignore stop */
   }
 
+  /**
+   * Committed facts of the calls still waiting for their result, per session, for the sessions that report through an
+   * owned root (the root itself and its descendants): a permission request then describes the exact call it asks
+   * about. A descendant's calls never reach the client as updates, so the request is the only place they can.
+   */
+  const openCalls = new WeakMap<Session, Map<string, SessionEvent<'tool/call'>>>()
+  const trackCall = (session: Session, event: SessionEvent): void => {
+    if (event.type === 'tool/result') {
+      openCalls.get(session)?.delete(event.data.message.toolCallId)
+      return
+    }
+    if (event.type !== 'tool/call') return
+    const agent = ctx.agents.get(session.header.id)
+    if (agent === undefined || reportingRecord(agent) === undefined) return
+    let calls = openCalls.get(session)
+    if (calls === undefined) {
+      calls = new Map()
+      openCalls.set(session, calls)
+    }
+    calls.set(event.data.callId, event)
+  }
+
   ctx.on('session/event', (session, event) => {
+    trackCall(session, event)
     const record = sessions.get(session.header.id)
     if (record?.ownsSession(session) === true) record.onSessionEvent(session, event)
   })
@@ -155,28 +253,65 @@ export function apply(ctx: Context, config: AcpConfig): void {
   // Permission requests are a machine policy channel for ACP clients such as
   // liwa-subagent-acp. The bridge offers one-shot choices only and never infers a
   // durable grant from an unknown client response.
+  // A descendant's request (a subagent of the session's root) reports through the root's
+  // session, the only one the client knows; extensions may annotate where it came from.
+  // The request describes the call it asks about (tool, raw input, the asker's reason), so
+  // a client can decide a descendant's call it never saw as an update.
   ctx.on('approval/request', (request, next) => {
-    const record = ownedRecord(request.agent)
-    if (record === undefined || request.callId === undefined) return next()
+    const record = reportingRecord(request.agent)
+    const client = conn
+    if (record === undefined || request.callId === undefined || client === undefined) return next()
     const callId = request.callId
     return record.drainUpdates().then(() => {
       const params: RequestPermissionRequest = {
         sessionId: record.agent.session.id,
-        toolCall: { toolCallId: callId },
+        toolCall: approvalToolCall(callId, request.toolName, request.reason, openCalls.get(request.agent.session)?.get(callId)),
         options: [
           { optionId: 'allow-once', name: 'Allow once', kind: 'allow_once' },
           { optionId: 'reject-once', name: 'Reject', kind: 'reject_once' },
         ],
       }
-      return conn.request(methods.client.session.requestPermission, params)
+      return client.request(
+        methods.client.session.requestPermission,
+        extensions.permissionRequest(viewOf(record), request.agent, request, params),
+      )
     }).then(({ outcome }) => {
       if (outcome.outcome === 'cancelled') return 'cancelled'
       return outcome.optionId === 'allow-once' ? 'allowed-once' : 'rejected'
     })
   })
 
+  // The agent's questions (`ask_user_question`, plan review) reach a client that advertised form
+  // elicitation as `elicitation/create`; without one they go to the next answerer. Only a session's
+  // root agent may ask (the user-questions service enforces it), so only owned roots are answered here.
+  ctx.on('user-questions/request', async (request, next) => {
+    const agent = request.agent
+    const record = agent === undefined ? undefined : ownedRecord(agent)
+    const client = conn
+    if (!clientAnswersQuestions || record === undefined || client === undefined) return next()
+    await record.drainUpdates()
+    request.signal?.throwIfAborted()
+    const asked = client.request(methods.client.elicitation.create, {
+      sessionId: record.agent.session.id,
+      ...(request.wait === undefined ? {} : { toolCallId: request.wait.callId }),
+      mode: 'form',
+      message: request.questions.map(item => item.question).join('\n'),
+      requestedSchema: questionSchema(request.questions),
+    })
+    const signal = request.signal
+    const response = signal === undefined ? await asked : await new Promise<Awaited<typeof asked>>((resolve, reject) => {
+      const onAbort = (): void => { reject(new UserQuestionError('the question was withdrawn before the client answered', 'ASK_ABORTED')) }
+      signal.addEventListener('abort', onAbort, { once: true })
+      asked.then(resolve, reject).finally(() => { signal.removeEventListener('abort', onAbort) })
+    })
+    if (response.action !== 'accept') throw new UserQuestionError(`the client ${response.action === 'decline' ? 'declined' : 'dismissed'} the question`, 'ASK_CANCELLED')
+    return answerFromContent(request.questions, metaOf('content' in response ? response.content : undefined) ?? {})
+  })
+
   const implementation = {
-    async initialize(_params: InitializeRequest): Promise<InitializeResponse> {
+    async initialize(params: InitializeRequest): Promise<InitializeResponse> {
+      const form = params.clientCapabilities?.elicitation?.form
+      clientAnswersQuestions = form !== undefined && form !== null
       // Single-version agent: the spec's "same version if supported, else
       // the latest supported" both resolve to this server's one version.
       imagePromptEnabled = await supportsAcpImagePrompts(ctx, config.provider, config.model)
@@ -213,6 +348,7 @@ export function apply(ctx: Context, config: AcpConfig): void {
           agentOptions: agentOptions(config),
           signal,
           notify,
+          extend: agentCtx => extensions.setupSession({ agentCtx, sessionId, meta: metaOf(params._meta), resumed: false }),
         })
       } catch (error: unknown) {
         if (error instanceof AcpMcpConfigError) throw invalidParams(error.message)
@@ -230,7 +366,8 @@ export function apply(ctx: Context, config: AcpConfig): void {
         // The attached log writer's flush materializes an empty session durably.
         await ctx.sessions.flush(record.agent.session)
         assertOpen()
-        return { sessionId, configOptions }
+        const modes = sessionModeState(ctx, record.agent)
+        return { sessionId, configOptions, ...(modes === undefined ? {} : { modes }) }
       } catch (error: unknown) {
         sessions.delete(sessionId)
         await record.close('session/new activation failed')
@@ -263,6 +400,7 @@ export function apply(ctx: Context, config: AcpConfig): void {
             agentOptions: agentOptions(config),
             signal,
             notify,
+            extend: agentCtx => extensions.setupSession({ agentCtx, sessionId, meta: metaOf(params._meta), resumed: true }),
           })
         } catch (error: unknown) {
           if (error instanceof AcpMcpConfigError) throw invalidParams(error.message)
@@ -281,7 +419,9 @@ export function apply(ctx: Context, config: AcpConfig): void {
         }
         sessions.set(sessionId, record)
         try {
-          return { configOptions: await record.configOptions(signal) }
+          const configOptions = await record.configOptions(signal)
+          const modes = sessionModeState(ctx, record.agent)
+          return { configOptions, ...(modes === undefined ? {} : { modes }) }
         } catch (error: unknown) {
           sessions.delete(sessionId)
           await record.close('session/resume option discovery failed')
@@ -344,6 +484,20 @@ export function apply(ctx: Context, config: AcpConfig): void {
       }
     },
 
+    setSessionMode(params: SetSessionModeRequest): Promise<SetSessionModeResponse> {
+      assertOpen()
+      const record = requireSession(brandString<SessionId>(params.sessionId))
+      try {
+        // Between turns the switch is logged now; during a turn it applies at the next step, and the
+        // session sends current_mode_update once the selection is logged.
+        setSessionMode(ctx, record.agent, params.modeId)
+      } catch (error: unknown) {
+        if (error instanceof AcpModeError) return Promise.reject(invalidParams(error.message))
+        throw error
+      }
+      return Promise.resolve({})
+    },
+
     async closeSession(params: CloseSessionRequest): Promise<CloseSessionResponse> {
       assertOpen()
       const sessionId = brandString<SessionId>(params.sessionId)
@@ -361,11 +515,13 @@ export function apply(ctx: Context, config: AcpConfig): void {
     async prompt(params: PromptRequest, requestSignal: AbortSignal): Promise<PromptResponse> {
       assertOpen()
       const record = requireSession(brandString<SessionId>(params.sessionId))
-      return record.prompt(params, imagePromptEnabled, requestSignal)
+      const response = await record.prompt(params, imagePromptEnabled, requestSignal)
+      return extensions.promptResponse(viewOf(record), response)
     },
 
     cancel(params: CancelNotification): Promise<void> {
-      sessions.get(brandString<SessionId>(params.sessionId))?.cancel()
+      const record = sessions.get(brandString<SessionId>(params.sessionId))
+      record?.cancel(extensions.cancelOptions(viewOf(record), metaOf(params._meta)))
       return Promise.resolve()
     },
   }
@@ -386,10 +542,36 @@ export function apply(ctx: Context, config: AcpConfig): void {
     .onRequest(methods.agent.session.resume, ({ params, signal }) => implementation.resumeSession(params, signal))
     .onRequest(methods.agent.session.close, ({ params }) => implementation.closeSession(params))
     .onRequest(methods.agent.session.setConfigOption, ({ params, signal }) => implementation.setSessionConfigOption(params, signal))
+    .onRequest(methods.agent.session.setMode, ({ params }) => implementation.setSessionMode(params))
     .onRequest(methods.agent.session.prompt, ({ params, signal }) => implementation.prompt(params, signal))
     .onNotification(methods.agent.session.cancel, ({ params }) => implementation.cancel(params))
-  const connection = app.connect(stream)
-  const conn: AgentContext = connection.client
+
+  // Extension methods must be on the app before it connects, so the transport connects once
+  // the launcher reports the whole profile mounted (every extension plugin has registered).
+  // Without a launcher (direct mounting in tests) it connects immediately.
+  let connection: ReturnType<typeof app.connect> | undefined
+  let conn: AgentContext | undefined
+  const connect = (): void => {
+    if (closed || connection !== undefined) return
+    for (const [method, handler] of extensions.seal()) {
+      app.onRequest(method, (raw: unknown) => metaOf(raw) ?? {}, ({ params, signal }) => {
+        assertOpen()
+        return handler(params, { signal, session: sessionId => extensions.lookup.session(sessionId) })
+      })
+    }
+    connection = app.connect(stream)
+    conn = connection.client
+    /* v8 ignore start -- production transport rejection and teardown failure. */
+    void connection.closed
+      .catch((error: unknown) => {
+        logger.warn(`acp: connection closed with an error: ${String(error)}`)
+      })
+      .then(quiesce)
+      .catch((error: unknown) => {
+        logger.warn(`acp: connection-close teardown failed: ${String(error)}`)
+      })
+    /* v8 ignore stop */
+  }
 
   let quiescing: Promise<void> | undefined
   const quiesce = (): Promise<void> => {
@@ -422,18 +604,11 @@ export function apply(ctx: Context, config: AcpConfig): void {
     return quiescing
   }
 
-  /* v8 ignore start -- production transport rejection and teardown failure. */
-  void connection.closed
-    .catch((error: unknown) => {
-      logger.warn(`acp: connection closed with an error: ${String(error)}`)
-    })
-    .then(quiesce)
-    .catch((error: unknown) => {
-      logger.warn(`acp: connection-close teardown failed: ${String(error)}`)
-    })
-  /* v8 ignore stop */
-
   ctx.effect(() => quiesce, 'acp.connection')
+
+  const ready = ctx.get('appReady')
+  if (ready === undefined) connect()
+  else ctx.effect(() => ready.onReady(connect), 'acp.connect-when-ready')
 }
 
 /**

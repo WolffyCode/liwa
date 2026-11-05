@@ -69,8 +69,10 @@ export interface BrainSessionView {
   mindKind: MindKind
   /** 实例或活，加代次。 */
   owner: SessionOwner
-  /** 开会话时的模型。 */
-  model: string
+  /** 当前的模型：开会话时指定的，或之后 `setModel` / 提供方报的；省略时用的是 CLI 自己的默认模型。 */
+  model?: string
+  /** 当前所选的会话模式：开会话时指定的，或之后 `setMode` / 提供方报的；省略即提供方的默认模式。 */
+  modeId?: string
   /** 成员配置目录。 */
   configDir: string
   /** 提供方 home。 */
@@ -118,7 +120,10 @@ export interface BrainChildView {
   endedAt?: string
 }
 
-/** `brain_usage` 的来源：回合结束、提供方级更新、子 agent 结束。 */
+/**
+ * `brain_usage` 的来源：回合结束、提供方级更新、子 agent 结束。子 agent 跑在父会话的回合里，它的消耗已经算进
+ * 所属回合的 `turn` 记录；`child` 记录是分项，不另行累加。
+ */
 export type BrainUsageSource = 'turn' | 'update' | 'child'
 
 /** `brain_usage`：一条用量记录，经 `onUsage` 与 `brain.usage.v1` 推出去。 */

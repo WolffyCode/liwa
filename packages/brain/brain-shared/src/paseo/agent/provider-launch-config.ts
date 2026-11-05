@@ -1,6 +1,6 @@
 // 来源：getpaseo/paseo@8018231a00a6b45ed6cda1856f954ba14b4824c0（Apache-2.0）packages/server/src/server/agent/provider-launch-config.ts；原地改动见包内 NOTICE。
 import { scrubbedParentEnv } from "@liwa/subprocess";
-import { findProviderExecutable, type ProviderProcessHost } from "../../process.ts";
+import { findProviderExecutable, type ProviderProcessHost } from "@liwa/brain";
 
 // 灵鲸改：上游这两个类型来自 paseo-env.ts（Paseo 守护进程自己的环境处理，不迁），这里就地写出。
 type ProcessEnvRecord = Record<string, string | undefined>;

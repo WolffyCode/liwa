@@ -251,7 +251,10 @@ export function apply(ctx: Context, config: Config = {}): void {
   ctx.systemPrompt.section({
     name: 'tool:bash',
     order: ctx.systemPrompt.getSectionOrder('TOOL_BASH'),
-    text: 'Check the [exit code: N] marker on every bash result; investigate failures before moving on.',
+    // Guidance follows the tool's visibility (a scope may restrict bash away, like the filesystem tools' sections).
+    text: ({ scope, toolSet }) => ctx.tools.get('bash', scope, toolSet) === undefined
+      ? ''
+      : 'Check the [exit code: N] marker on every bash result; investigate failures before moving on.',
   })
 
   /**

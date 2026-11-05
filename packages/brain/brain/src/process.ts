@@ -1,12 +1,15 @@
 /**
- * 迁来的 Paseo 提供方代码与 subprocess seam 之间的桥。Paseo 用自己的 `utils/spawn`、`tree-kill`
- * 与可执行解析拉 CLI；灵鲸的提供方只经 `ctx.subprocess` 碰进程，大脑会话还要先登记归属再交给
- * seam。`src/paseo/` 里的调用点因此只需原地把 Paseo 的 import 换成这里的同名能力。
- * @module @liwa/brain-shared/process
+ * 提供方拉 CLI 用的进程帮助：找可执行文件、跑完一条短命令、以原始管道拉起常驻 CLI。提供方只经
+ * `ctx.subprocess` 碰进程，大脑会话还要先登记归属再交给 seam，所以这里的函数都只收一个
+ * {@link ProviderProcessHost}（会话里就是 `BrainLaunchContext`，探测时就是 `BrainProbeContext`）。
+ * 函数名与失败形状照 Paseo 的 `findExecutable` / `execCommand` / `spawnProcess`，迁来的 Paseo 代码在调用点
+ * 原地换成这里的同名能力即可。
+ * @module @liwa/brain/process
  */
 
 import { SubprocessExecutableNotFoundError } from '@liwa/subprocess'
 import type { SubprocessHandle, SubprocessRuntime, SubprocessSpawnSpec } from '@liwa/subprocess'
+import { BrainError } from './errors.ts'
 
 /**
  * 提供方代码要用的两项子进程操作。大脑会话经启动上下文给出登记归属的实现；会话之外做可用性探测的
@@ -206,4 +209,25 @@ function definedEntries(env: Readonly<Record<string, string | undefined>> | unde
   const entries: Record<string, string> = {}
   for (const [key, value] of Object.entries(env)) if (value !== undefined) entries[key] = value
   return entries
+}
+
+/**
+ * 一个会话的 CLI 进程环境：提供方自己要注入的变量（密钥、home、端点）加调用方经 `SessionConfig.env` 给的额外项。
+ * 两边重名时大声失败，不让调用方的值悄悄盖掉提供方的隔离与凭据，也不让提供方悄悄吞掉调用方的值。
+ * @param impl - 提供方（写进错误）。
+ * @param owned - 提供方注入的变量。
+ * @param extra - `SessionConfig.env`。
+ * @returns 合并后的环境项。
+ * @throws {BrainError} `invalid_input`：`SessionConfig.env` 与提供方注入的变量重名。
+ */
+export function mergeLaunchEnv(
+  impl: string,
+  owned: Readonly<Record<string, string>>,
+  extra: Readonly<Record<string, string>> | undefined,
+): Record<string, string> {
+  const clashes = Object.keys(extra ?? {}).filter(name => Object.hasOwn(owned, name))
+  if (clashes.length > 0) {
+    throw new BrainError('invalid_input', 'brain.env_clash', `SessionConfig.env sets ${clashes.join(', ')}, which brain provider ${impl} injects itself; drop them from env`)
+  }
+  return { ...extra, ...owned }
 }

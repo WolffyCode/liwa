@@ -1,7 +1,6 @@
 /**
- * 成员配置目录各写法共用的部分：输入形状、规矩文本的优先级声明、本事目录的复制、MCP 服务器汇总。
- * 每家 CLI 的写法各在一个文件里（`claude.ts`、`codex.ts`、`deepseek.ts`），互不相干，便于各提供方
- * 分别细化自己那一份。
+ * 成员配置目录各家写法共用的部分：输入形状、规矩文本的优先级声明、本事目录的复制、MCP 服务器汇总。
+ * 每家 CLI 的写法归它自己的提供方包（`BrainProvider.writeMemberConfig`），只从这里取共用的帮助。
  * @module @liwa/brain/config-dir/shared
  */
 
@@ -9,7 +8,7 @@ import { cp, mkdir, rm, stat } from 'node:fs/promises'
 import type { McpServer, SessionConfig } from '../contract.ts'
 import { BrainError } from '../errors.ts'
 
-/** 生成成员配置目录要用的会话配置项。 */
+/** 生成成员配置目录要用的会话配置项；`model` 省略即所用 CLI 的默认模型，写法里不写占位值。 */
 export type MemberConfigSpec = Pick<SessionConfig, 'rules' | 'skillsDir' | 'projectDocs' | 'model' | 'mcpServers' | 'kernelTools'>
 
 /** 写在规矩文本最前面的优先级声明（four-layers §3.2、01 §4.6）。 */

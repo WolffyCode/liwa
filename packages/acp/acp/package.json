@@ -31,32 +31,44 @@
   "dependencies": {
     "@agentclientprotocol/sdk": "1.4.0",
     "@liwa/brand": "workspace:*",
+    "@liwa/cmdline": "workspace:*",
     "@liwa/schemastery": "workspace:~"
   },
   "peerDependencies": {
-    "@liwa/cordis": "workspace:~",
     "@liwa/agent": "workspace:*",
+    "@liwa/agent-preset-registry": "workspace:*",
     "@liwa/attachment": "workspace:*",
+    "@liwa/cordis": "workspace:~",
     "@liwa/llm": "workspace:*",
     "@liwa/mcp-client": "workspace:*",
+    "@liwa/plan-mode": "workspace:*",
     "@liwa/session": "workspace:*",
     "@liwa/session-persistence": "workspace:*",
     "@liwa/token-meter": "workspace:*",
-    "@liwa/user-approval": "workspace:*"
+    "@liwa/user-approval": "workspace:*",
+    "@liwa/user-questions": "workspace:*"
   },
   "peerDependenciesMeta": {
+    "@liwa/agent-preset-registry": {
+      "optional": true
+    },
+    "@liwa/plan-mode": {
+      "optional": true
+    },
     "@liwa/token-meter": {
       "optional": true
     }
   },
   "devDependencies": {
-    "@liwa/cordis": "workspace:~",
     "@liwa/agent": "workspace:*",
     "@liwa/agent-loop": "workspace:*",
     "@liwa/agent-loop-testkit": "workspace:*",
+    "@liwa/agent-preset-registry": "workspace:*",
     "@liwa/attachment": "workspace:*",
+    "@liwa/cordis": "workspace:~",
     "@liwa/llm": "workspace:*",
     "@liwa/mcp-client": "workspace:*",
+    "@liwa/plan-mode": "workspace:*",
     "@liwa/session": "workspace:*",
     "@liwa/session-persistence": "workspace:*",
     "@liwa/session-persistence-jsonl": "workspace:*",
@@ -65,6 +77,7 @@
     "@liwa/token-meter": "workspace:*",
     "@liwa/tool-testkit": "workspace:*",
     "@liwa/tools": "workspace:*",
-    "@liwa/user-approval": "workspace:*"
+    "@liwa/user-approval": "workspace:*",
+    "@liwa/user-questions": "workspace:*"
   }
 }

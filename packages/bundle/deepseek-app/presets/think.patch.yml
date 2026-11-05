@@ -1,0 +1,27 @@
+# Preset deepseek-think: a thinking task. It reads but never writes: files,
+# search, and the web. The compactor follows the session's compaction setting
+# (a host row the session patch switches).
+- insert:
+    - id: preset-deepseek-think
+      name: '@liwa/agent-preset'
+      config:
+        id: deepseek-think
+        order: 3
+        plugins:
+          - id: time-context
+            name: '@liwa/time-context'
+          - id: tool-fs
+            name: '@liwa/tool-fs'
+            config:
+              read: true
+              write: false
+              edit: false
+          - id: tool-fs-search
+            name: '@liwa/tool-fs-search'
+            config:
+              sampleOverCapGlobResults: false
+          - id: tool-web
+            name: '@liwa/tool-web'
+            config:
+              fetch: true
+              searchTimeoutMs: 60000

@@ -5,10 +5,11 @@ import { Context } from '@liwa/cordis'
 import LocalSubprocessRuntime from '@liwa/subprocess-local'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
-  SCRIPTED_META, ScriptedBrainProvider, recordEvents, sampleSessionConfig, textInput,
+  SCRIPTED_META, ScriptedBrainProvider, echoAnswers, recordEvents, sampleSessionConfig, solidPng, textInput,
 } from '@liwa/brain-testkit'
 import BrainRegistry, {
-  BrainError, BrainSessionId, ImplId, MemberId, PermissionRequestId, RULES_PRECEDENCE, homeDirFor,
+  BrainBlobStore, BrainError, BrainEventSchema, BrainSessionId, ImplId, MemberId, PermissionRequestId, RULES_PRECEDENCE,
+  checkPermissionAnswers, homeDirFor, memberMcpServers, mergeLaunchEnv, replaceSkills, resolveBlobsDir, rulesDocument,
   type BrainEvent, type BrainProcessView, type BrainProvider, type BrainProviderSession, type BrainSessionClosedRecord,
   type BrainUsageRecord, type BrainSessionView, type BrainChildView,
 } from '../src/index.ts'
@@ -81,6 +82,7 @@ describe('ctx.brains', () => {
     const broken: BrainProvider = {
       impl: ImplId('broken'),
       meta: SCRIPTED_META,
+      sessionHome: 'per-member',
       probe: () => Promise.reject(new Error('binary missing')),
       createSession: () => Promise.reject(new Error('unused')),
       resumeSession: () => Promise.reject(new Error('unused')),
@@ -227,6 +229,7 @@ describe('ctx.brains', () => {
     const provider: BrainProvider = {
       impl: ImplId('flaky'),
       meta: inner.meta,
+      sessionHome: 'per-member',
       probe: context => inner.probe(context),
       resumeSession: (handle, config, launch) => inner.resumeSession(handle, config, launch),
       async createSession(config, launch) {
@@ -315,6 +318,7 @@ describe('ctx.brains', () => {
       ctx.brains.register({
         impl: FAKE,
         meta: inner.meta,
+        sessionHome: 'per-member',
         probe: context => inner.probe(context),
         resumeSession: (handle, config, launch) => inner.resumeSession(handle, config, launch),
         async createSession(config, launch) {
@@ -338,38 +342,158 @@ describe('ctx.brains', () => {
     }
   })
 
-  it('prepares the member configuration directory for each CLI', async () => {
+  it('lets each provider write its own part of the member configuration directory', async () => {
     const { ctx, root } = fixture
     const skills = join(root, 'skills')
     await mkdir(join(skills, 'review'), { recursive: true })
     await writeFile(join(skills, 'review', 'SKILL.md'), '# review\n')
+    const writes: { dir: string; model: string | undefined }[] = []
+    ctx.brains.register(new ScriptedBrainProvider({
+      impl: ImplId('writer'),
+      memberConfig: async (dir, spec) => {
+        writes.push({ dir, model: spec.model })
+        await writeFile(join(dir, 'RULES.md'), rulesDocument(spec.rules))
+        await writeFile(join(dir, 'mcp.json'), JSON.stringify(memberMcpServers(spec)))
+        await replaceSkills(spec.skillsDir, join(dir, 'skills'))
+      },
+    }))
+    ctx.brains.register(new ScriptedBrainProvider({ impl: ImplId('bare'), sessionHome: 'per-session' }))
     const spec = {
       rules: 'Report back in Chinese.',
       skillsDir: skills,
       projectDocs: false,
-      model: 'sonnet',
-      mcpServers: { files: { type: 'stdio' as const, command: 'mcp-files', args: ['--root', '/'], env: { A: 'b' } } },
+      mcpServers: { files: { type: 'stdio' as const, command: 'mcp-files', args: ['--root', '/'] } },
       kernelTools: { endpoint: 'http://127.0.0.1:9/mcp', token: 'token-1', tools: [] },
     }
     const member = MemberId('mina')
-    const dir = await ctx.brains.prepareConfigDir(member, ImplId('claude'), spec)
+    const dir = await ctx.brains.prepareConfigDir(member, ImplId('writer'), spec)
     expect(dir).toBe(join(root, 'members', 'mina', 'brains'))
-    expect(await readFile(join(dir, 'claude', 'CLAUDE.md'), 'utf8')).toBe(`${RULES_PRECEDENCE}\n\nReport back in Chinese.\n`)
-    expect(JSON.parse(await readFile(join(dir, 'claude', 'settings.json'), 'utf8'))).toEqual({ model: 'sonnet' })
-    expect(await readFile(join(dir, 'claude', 'skills', 'review', 'SKILL.md'), 'utf8')).toBe('# review\n')
-    expect((await stat(join(dir, 'claude', 'projects'))).isDirectory()).toBe(true)
-    await ctx.brains.prepareConfigDir(member, ImplId('codex'), { ...spec, skillsDir: '' })
-    const toml = await readFile(join(dir, 'codex', 'config.toml'), 'utf8')
-    expect(toml).toContain('model = "sonnet"')
-    expect(toml).toContain('project_doc_max_bytes = 0')
-    expect(toml).toContain('[mcp_servers."liwa"]\nurl = "http://127.0.0.1:9/mcp"\nhttp_headers = { "Authorization" = "Bearer token-1" }')
-    expect(toml).toContain('[mcp_servers."files"]\ncommand = "mcp-files"\nargs = ["--root", "/"]\nenv = { "A" = "b" }')
-    expect(await readFile(join(dir, 'codex', 'AGENTS.md'), 'utf8')).toContain(RULES_PRECEDENCE)
-    await ctx.brains.prepareConfigDir(member, ImplId('deepseek'), { ...spec, rules: '' })
-    expect((await stat(join(dir, 'deepseek'))).isDirectory()).toBe(true)
-    await expect(ctx.brains.prepareConfigDir(member, ImplId('claude'), { ...spec, skillsDir: join(root, 'missing') }))
+    // 不给模型就不写占位值。
+    expect(writes).toEqual([{ dir: join(dir, 'writer'), model: undefined }])
+    expect(await readFile(join(dir, 'writer', 'RULES.md'), 'utf8')).toBe(`${RULES_PRECEDENCE}\n\nReport back in Chinese.\n`)
+    expect(JSON.parse(await readFile(join(dir, 'writer', 'mcp.json'), 'utf8'))).toMatchObject({
+      liwa: { type: 'http', url: 'http://127.0.0.1:9/mcp', headers: { Authorization: 'Bearer token-1' } },
+      files: { type: 'stdio', command: 'mcp-files' },
+    })
+    expect(await readFile(join(dir, 'writer', 'skills', 'review', 'SKILL.md'), 'utf8')).toBe('# review\n')
+    await ctx.brains.prepareConfigDir(member, ImplId('bare'), { ...spec, rules: '' })
+    expect((await stat(join(dir, 'bare'))).isDirectory()).toBe(true)
+    await expect(ctx.brains.prepareConfigDir(member, ImplId('writer'), { ...spec, skillsDir: join(root, 'missing') }))
       .rejects.toMatchObject({ code: 'brain.skills_dir_missing' })
-    expect(homeDirFor(dir, ImplId('deepseek'), BrainSessionId('brain-session-1'))).toBe(join(dir, 'deepseek', 'brain-session-1'))
-    expect(homeDirFor(dir, ImplId('claude'), BrainSessionId('brain-session-1'))).toBe(join(dir, 'claude'))
+    await expect(ctx.brains.prepareConfigDir(member, ImplId('nobody'), spec)).rejects.toMatchObject({ code: 'brain.provider_unknown' })
+    expect(homeDirFor(dir, ImplId('bare'), BrainSessionId('brain-session-1'), 'per-session')).toBe(join(dir, 'bare', 'brain-session-1'))
+    expect(homeDirFor(dir, ImplId('writer'), BrainSessionId('brain-session-1'), 'per-member')).toBe(join(dir, 'writer'))
+  })
+
+  it('opens a session without a model and resumes a per-session provider in the same home', async () => {
+    const { ctx } = fixture
+    ctx.brains.register(new ScriptedBrainProvider({ impl: ImplId('homed'), sessionHome: 'per-session', process: false }))
+    const config = cfg()
+    expect(config.model).toBeUndefined()
+    const first = await ctx.brains.createSession(ctx, { impl: ImplId('homed'), cfg: config })
+    expect(first.view().model).toBeUndefined()
+    const home = first.view().homeDir
+    expect(home).toBe(join(config.configDir, 'homed', first.id))
+    const recorder = recordEvents(first)
+    const { turnId } = await first.startTurn(textInput('hello'))
+    await recorder.waitForKind('turn.completed', event => event.turnId === turnId)
+    const handle = first.persistence()
+    expect(handle?.home).toBe(home)
+    await first.close()
+    if (handle === null) return
+    const resumed = await ctx.brains.resumeSession(ctx, { impl: ImplId('homed'), resume: handle, cfg: config })
+    expect(resumed.view().homeDir).toBe(home)
+    await resumed.close()
+    await expect(ctx.brains.resumeSession(ctx, { impl: ImplId('homed'), resume: { ...handle, home: '/elsewhere' }, cfg: config }))
+      .rejects.toMatchObject({ code: 'brain.resume_home_outside' })
+  })
+
+  it('switches models and modes behind capability and lifecycle checks, and makes the change observable', async () => {
+    const { ctx } = fixture
+    ctx.brains.register(new ScriptedBrainProvider({ process: false }))
+    ctx.brains.register(new ScriptedBrainProvider({ impl: ImplId('fixed'), process: false, meta: { modelSwitch: false, modeSwitch: false } }))
+    const session = await ctx.brains.createSession(ctx, { impl: FAKE, cfg: cfg({ modeId: 'plan' }) })
+    const events = recordEvents(session).events
+    expect(session.view().modeId).toBe('plan')
+    await session.setModel('scripted-large')
+    expect(session.view().model).toBe('scripted-large')
+    expect(events.filter(event => event.kind === 'session.model_changed')).toEqual([{ kind: 'session.model_changed', model: 'scripted-large' }])
+    await expect(session.setModel('scripted-missing')).rejects.toMatchObject({ code: 'brain.model_unknown' })
+    expect(session.view().model).toBe('scripted-large')
+    expect((await session.availableModes()).map(mode => mode.id)).toEqual(['default', 'plan'])
+    expect(await session.currentMode()).toBe('plan')
+    expect(await session.setMode('default')).toEqual({ modeId: 'default', appliesAt: 'now' })
+    expect(session.view().modeId).toBe('default')
+    expect(events.filter(event => event.kind === 'session.mode_changed')).toEqual([{ kind: 'session.mode_changed', modeId: 'default' }])
+    await expect(session.setMode('bypass')).rejects.toMatchObject({ code: 'brain.mode_unknown' })
+    const fixed = await ctx.brains.createSession(ctx, { impl: ImplId('fixed'), cfg: cfg() })
+    await expect(fixed.setModel('scripted-large')).rejects.toMatchObject({ code: 'brain.model_switch_unsupported' })
+    await expect(fixed.setMode('plan')).rejects.toMatchObject({ code: 'brain.mode_switch_unsupported' })
+    expect(await fixed.availableModes()).toEqual([])
+    expect(await fixed.currentMode()).toBeNull()
+    await expect(ctx.brains.createSession(ctx, { impl: ImplId('fixed'), cfg: cfg({ modeId: 'plan' }) })).rejects.toMatchObject({ code: 'brain.mode_switch_unsupported' })
+    await session.close()
+    await expect(session.setModel('scripted-small')).rejects.toMatchObject({ code: 'brain.session_closed' })
+    await expect(session.setMode('plan')).rejects.toMatchObject({ code: 'brain.session_closed' })
+  })
+
+  it('checks question answers before they reach the provider, and keeps child requests across parent turns', async () => {
+    const { ctx } = fixture
+    ctx.brains.register(new ScriptedBrainProvider({ process: false }))
+    const session = await ctx.brains.createSession(ctx, { impl: FAKE, cfg: cfg() })
+    const recorder = recordEvents(session)
+    const { turnId } = await session.startTurn(textInput('question please'))
+    const request = await recorder.waitForKind('permission.request', event => event.category === 'question')
+    expect(BrainEventSchema.safeParse(request).success).toBe(true)
+    await expect(session.respondToPermission(request.requestId, { optionId: 'answer' })).rejects.toMatchObject({ code: 'brain.permission_answers_invalid' })
+    await expect(session.respondToPermission(request.requestId, { optionId: 'answer', answers: { color: { selected: ['green'] } } })).rejects.toMatchObject({ code: 'brain.permission_answers_invalid' })
+    await expect(session.respondToPermission(request.requestId, { optionId: 'decline', answers: { color: { selected: ['red'] } } })).rejects.toMatchObject({ code: 'brain.permission_answers_unexpected' })
+    expect(session.pendingPermissions()).toHaveLength(1)
+    await session.respondToPermission(request.requestId, { optionId: 'answer', answers: { color: { selected: [], custom: 'teal' } } })
+    await recorder.waitForKind('turn.completed', event => event.turnId === turnId)
+    expect(recorder.events.some(event => event.kind === 'item.message' && event.delta.includes(echoAnswers({ color: { selected: [], custom: 'teal' } })))).toBe(true)
+    expect(checkPermissionAnswers([{ id: 'q', question: 'Q', options: [{ label: 'a' }, { label: 'b' }], multiSelect: false }], { q: { selected: ['a', 'b'] } }))
+      .toMatch(/takes one option/)
+    expect(checkPermissionAnswers([{ id: 'q', question: 'Q', options: [], multiSelect: false }], { q: { selected: [] } })).toMatch(/is invalid/)
+    expect(checkPermissionAnswers([{ id: 'q', question: 'Q', options: [], multiSelect: false }], { other: { selected: ['x'] } })).toMatch(/unknown question/)
+    // 普通工具请求不带答案。
+    const tool = await ctx.brains.createSession(ctx, { impl: FAKE, cfg: cfg() })
+    const toolRecorder = recordEvents(tool)
+    await tool.startTurn(textInput('permission please'))
+    const toolRequest = await toolRecorder.waitForKind('permission.request')
+    await expect(tool.respondToPermission(toolRequest.requestId, { optionId: 'allow-once', answers: {} })).rejects.toMatchObject({ code: 'brain.permission_answers_unexpected' })
+    // 子 agent 的条目可以只带 childId；父会话自己的条目必带回合号。
+    expect(BrainEventSchema.safeParse({ kind: 'item.message', itemId: 'i', delta: 'x', final: true, childId: 'c' }).success).toBe(true)
+    expect(BrainEventSchema.safeParse({ kind: 'item.message', itemId: 'i', delta: 'x', final: true }).success).toBe(false)
+    expect(BrainEventSchema.safeParse({ kind: 'permission.request', turnId: 't', requestId: 'r', category: 'question', tool: 't', args: null, options: [{ id: 'a', label: 'A', effect: 'allow_once' }] }).success).toBe(false)
+  })
+
+  it('stores turn-input blobs by content and refuses references that do not match', async () => {
+    const { ctx, root } = fixture
+    const png = solidPng(2, 2, [1, 2, 3])
+    const ref = await ctx.brains.blobs.put(png, 'image/png')
+    expect(ref).toMatchObject({ bytes: png.byteLength, mime: 'image/png' })
+    expect(await ctx.brains.blobs.put(png, 'image/png')).toEqual(ref)
+    expect(Buffer.from(await ctx.brains.blobs.readBlob(ref)).equals(Buffer.from(png))).toBe(true)
+    expect(ctx.brains.blobs.dir).toBe(join(root, 'members', '.blobs'))
+    await expect(ctx.brains.blobs.readBlob({ ...ref, bytes: ref.bytes + 1 })).rejects.toMatchObject({ code: 'brain.blob_mismatch' })
+    await expect(ctx.brains.blobs.readBlob({ ...ref, blob: 'f'.repeat(64) })).rejects.toMatchObject({ code: 'brain.blob_missing' })
+    await expect(ctx.brains.blobs.readBlob({ ...ref, blob: 'nope' })).rejects.toMatchObject({ code: 'brain.blob_ref_invalid' })
+    expect(resolveBlobsDir({ membersRoot: '/m', blobsDir: '/b' })).toBe('/b')
+    const elsewhere = new BrainBlobStore(join(root, 'other'))
+    await expect(elsewhere.readBlob(ref)).rejects.toMatchObject({ code: 'brain.blob_missing' })
+    // 提供方经启动上下文读到同一份字节。
+    ctx.brains.register(new ScriptedBrainProvider({ process: false }))
+    const session = await ctx.brains.createSession(ctx, { impl: FAKE, cfg: cfg() })
+    const recorder = recordEvents(session)
+    const { turnId } = await session.startTurn({ blocks: [{ kind: 'text', text: 'image please' }, { kind: 'image', blob: ref }] })
+    await recorder.waitForKind('turn.completed', event => event.turnId === turnId)
+    expect(recorder.events.some(event => event.kind === 'item.message' && event.delta.includes(`image/png ${String(png.byteLength)}B`))).toBe(true)
+  })
+
+  it('merges the session environment with what the provider injects, refusing clashes', () => {
+    expect(mergeLaunchEnv('x', { KEY: 'k' }, { EXTRA: 'e' })).toEqual({ EXTRA: 'e', KEY: 'k' })
+    expect(mergeLaunchEnv('x', { KEY: 'k' }, undefined)).toEqual({ KEY: 'k' })
+    expect(() => mergeLaunchEnv('x', { KEY: 'k' }, { KEY: 'other' })).toThrow(/KEY/)
   })
 })

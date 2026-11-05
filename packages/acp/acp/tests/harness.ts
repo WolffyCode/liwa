@@ -10,6 +10,8 @@ import {
   methods,
   ndJsonStream,
   type Agent as AcpAgent,
+  type CreateElicitationRequest,
+  type CreateElicitationResponse,
   type PromptRequest,
   type PromptResponse,
   type RequestPermissionRequest,
@@ -190,6 +192,7 @@ interface BridgeClient {
   resumeSession: NonNullable<AcpAgent['resumeSession']>
   closeSession: NonNullable<AcpAgent['closeSession']>
   setSessionConfigOption: NonNullable<AcpAgent['setSessionConfigOption']>
+  setSessionMode: NonNullable<AcpAgent['setSessionMode']>
   prompt: (params: PromptRequest, options?: SendRequestOptions) => Promise<PromptResponse>
   cancel: NonNullable<AcpAgent['cancel']>
 }
@@ -204,6 +207,10 @@ export interface BridgeHarness {
   permissionRequests: RequestPermissionRequest[]
   persistenceRoot: string
   onPermission: (request: RequestPermissionRequest) => RequestPermissionResponse
+  /** Elicitations the client received, in order. */
+  elicitations: CreateElicitationRequest[]
+  /** The client's answer to an elicitation (the client only gets them when initialized with form elicitation). */
+  onElicitation: (request: CreateElicitationRequest) => CreateElicitationResponse | Promise<CreateElicitationResponse>
   onSessionUpdateError: (() => void) | undefined
   registerCatalogProvider: (provider: string) => () => void
   replacePrimaryProviders: (providers: string[]) => void
@@ -249,6 +256,7 @@ export async function makeBridgeHarness(options: {
   const updates: CapturedUpdate[] = []
   const sessionUpdates: { sessionId: string; update: CapturedUpdate }[] = []
   const permissionRequests: RequestPermissionRequest[] = []
+  const elicitations: CreateElicitationRequest[] = []
   const harness: BridgeHarness = {
     ctx,
     adapter,
@@ -258,6 +266,8 @@ export async function makeBridgeHarness(options: {
     permissionRequests,
     persistenceRoot,
     onPermission: () => ({ outcome: { outcome: 'cancelled' } }),
+    elicitations,
+    onElicitation: () => ({ action: 'cancel' }),
     onSessionUpdateError: undefined,
     registerCatalogProvider: provider => ctx.llm.registerAdapter([provider], new MockAdapter([], false, provider)),
     replacePrimaryProviders: (providers) => { primaryAdapter.replace(providers) },
@@ -283,6 +293,10 @@ export async function makeBridgeHarness(options: {
       permissionRequests.push(params)
       return Promise.resolve(harness.onPermission(params))
     })
+    .onRequest(methods.client.elicitation.create, async ({ params }) => {
+      elicitations.push(params)
+      return harness.onElicitation(params)
+    })
 
   const config = { stream: agentStream, ...options.config } as AcpConfig
   if (!(options.config && 'provider' in options.config)) config.provider = 'mock'
@@ -302,6 +316,7 @@ export async function makeBridgeHarness(options: {
     resumeSession: params => client.request(methods.agent.session.resume, params),
     closeSession: params => client.request(methods.agent.session.close, params),
     setSessionConfigOption: params => client.request(methods.agent.session.setConfigOption, params),
+    setSessionMode: params => client.request(methods.agent.session.setMode, params),
     prompt: (params, options) => client.request(methods.agent.session.prompt, params, options),
     cancel: params => client.notify(methods.agent.session.cancel, params),
   }

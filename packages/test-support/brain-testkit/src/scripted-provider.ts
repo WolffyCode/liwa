@@ -1,18 +1,19 @@
 /**
- * 回放脚本驱动的假提供方：一份脚本描述一个回合里 CLI 做了什么（流式文本、思考、工具调用、权限请求、
- * 子 agent、用量、失败、在两回合之间退出），假提供方按 `brain.provider` 契约把它翻成事件。每个会话
- * 经启动上下文拉起一个空转的 node 子进程，代替真实 CLI 进程，使进程归属、退出与 `session.exited`
- * 都走真实路径。它只用于测试与显式的测试 profile，不进产品默认组合。
+ * 回放脚本驱动的假提供方：一份脚本描述一个回合里 CLI 做了什么（流式文本、思考、工具调用、权限请求、问答、
+ * 子 agent（含跨回合的后台子 agent）、用量、失败、在两回合之间退出），假提供方按 `brain.provider` 契约把它翻成
+ * 事件；它也有模式（`default` / `plan`）与可换的模型。每个会话经启动上下文拉起一个空转的 node 子进程，代替真实
+ * CLI 进程，使进程归属、退出与 `session.exited` 都走真实路径。它只用于测试与显式的测试 profile，不进产品默认组合。
  * @module @liwa/brain-testkit/scripted-provider
  */
 
 import { setTimeout as sleep } from 'node:timers/promises'
 import {
-  BrainError, CallId, ChildId, ItemId, PermissionRequestId, TurnId,
-  type BrainEvent, type BrainLaunchContext, type BrainProbeContext, type BrainProbeResult, type BrainProvider,
-  type BrainProviderSession, type CancelOptions, type ChildStopReason, type DeliverOptions, type DeliverResult,
-  type FailureCategory, type ImplId, type Meta, type PermissionEffect, type PermissionOption, type PermissionResponse,
-  type ResumeHandle, type SessionConfig, type ToolCallDetail, type TurnInput, type Usage,
+  BrainError, CallId, ChildId, ItemId, PermissionRequestId, TurnId, checkPermissionAnswers,
+  type BrainEvent, type BrainLaunchContext, type BrainMode, type BrainProbeContext, type BrainProbeResult, type BrainProvider,
+  type BrainProviderSession, type BrainSessionHome, type CancelOptions, type CancelReason, type ChildStopReason,
+  type DeliverOptions, type DeliverResult, type MemberConfigWriter, type ModeChange, type PermissionAnswer,
+  type FailureCategory, type ImplId, type Meta, type PermissionEffect, type PermissionOption, type PermissionQuestion,
+  type PermissionResponse, type ResumeHandle, type SessionConfig, type ToolCallDetail, type TurnInput, type Usage,
 } from '@liwa/brain'
 import type { SubprocessHandle } from '@liwa/subprocess'
 import { assertNever, type JsonValue } from '@liwa/util-values'
@@ -29,6 +30,15 @@ export type ScriptStep =
   | { kind: 'permission'; tool: string; args: JsonValue; result: JsonValue; detail?: ToolCallDetail }
   /** 一个原生子 agent：开始、跑自己的几步、结束。 */
   | { kind: 'child'; label: string; steps: ScriptStep[]; stopReason?: ChildStopReason; usage?: Usage }
+  /**
+   * 一个后台子 agent：开始后父回合接着往下走；它在后台停 `ms` 毫秒再跑自己的几步、结束（父回合结束了也照常），然后
+   * CLI 自己开一个回合报它的结果。按 `pause` / `drain` / `owner` 取消父回合时它一起被停；抢占、看门狗只停父回合。
+   */
+  | { kind: 'background'; label: string; ms: number; steps: ScriptStep[]; usage?: Usage }
+  /** 向主人提问：答了就说出答案，谢绝就说谢绝了。 */
+  | { kind: 'question'; questions: PermissionQuestion[] }
+  /** 说出本回合输入里的图片（MIME 与字节数）。 */
+  | { kind: 'images' }
   /** 提供方级用量更新（额度窗口、余额、上下文）。 */
   | { kind: 'usage'; usage: Partial<Usage> }
   /** 停顿 `ms` 毫秒（取消可打断）。 */
@@ -68,7 +78,22 @@ export interface ScriptedProviderOptions {
   process?: boolean
   /** 流式步骤之间的停顿（毫秒），默认 0（只让出事件循环）。 */
   stepDelayMs?: number
+  /** 会话 home 的布局，默认 `per-member`。 */
+  sessionHome?: BrainSessionHome
+  /** 成员配置目录里这家的写法（可选，测公共层的配置目录用）。 */
+  memberConfig?: MemberConfigWriter
+  /** 可换的模型，默认 {@link SCRIPTED_MODELS}。 */
+  models?: readonly string[]
 }
+
+/** 假提供方默认可换的模型。 */
+export const SCRIPTED_MODELS: readonly string[] = ['scripted-small', 'scripted-large']
+
+/** 假提供方的模式。 */
+export const SCRIPTED_MODES: readonly BrainMode[] = [
+  { id: 'default', label: 'Default' },
+  { id: 'plan', label: 'Plan', description: 'Plan before acting.' },
+]
 
 /** 假提供方的默认能力声明：送达语义、续接、子 agent 观察都支持。 */
 export const SCRIPTED_META: Meta = {
@@ -78,6 +103,7 @@ export const SCRIPTED_META: Meta = {
   permissionHook: true,
   rollback: false,
   modelSwitch: true,
+  modeSwitch: true,
   delivery: { nextStep: true, nextTurn: true, cancelKeepsQueue: true },
   compaction: 'none',
   budget: { inferences: false, toolCalls: false, concludeOn: false },
@@ -98,8 +124,70 @@ export const SCRIPTED_PERMISSION_OPTIONS: readonly PermissionOption[] = [
   { id: 'cancel', label: 'Deny and stop', effect: 'cancel' },
 ]
 
+/** 问答请求给出的三个选项：作答、谢绝、谢绝并停下。 */
+export const SCRIPTED_QUESTION_OPTIONS: readonly PermissionOption[] = [
+  { id: 'answer', label: 'Answer', effect: 'allow_once' },
+  { id: 'decline', label: 'Decline', effect: 'deny_once' },
+  { id: 'cancel', label: 'Decline and stop', effect: 'cancel' },
+]
+
 /** 演示脚本按提示词里的关键词挑的场景。 */
-export type DemoScenario = 'reply' | 'tool' | 'permission' | 'child' | 'long' | 'exit' | 'fail'
+export type DemoScenario =
+  | 'reply' | 'tool' | 'permission' | 'child' | 'child-permission' | 'background' | 'question' | 'answers' | 'image' | 'long' | 'exit' | 'fail'
+
+/** 子 agent 请求权限的那次调用的入参里带的标记（契约测试据它核对请求带上了所问调用的事实）。 */
+export const CHILD_PERMISSION_MARK = 'child-permission-mark'
+
+/** 假 CLI 说出它收到的答案时用的前缀，后面是一个 JSON 对象：问题号 → `{ selected, custom? }`。 */
+export const ANSWERS_ECHO = 'ANSWERS '
+
+/**
+ * 假 CLI 说出它收到的答案：{@link ANSWERS_ECHO} 加上以问题号为键的结构化答案（选项与补充文字分开）。
+ * @param answers - 收到的答案，以问题号为键。
+ * @returns 一行文字。
+ */
+export function echoAnswers(answers: Readonly<Record<string, PermissionAnswer>>): string {
+  const canonical = Object.fromEntries(Object.entries(answers).map(([id, answer]) => [id, {
+    selected: [...answer.selected],
+    ...(answer.custom === undefined ? {} : { custom: answer.custom }),
+  }]))
+  return `${ANSWERS_ECHO}${JSON.stringify(canonical)}`
+}
+
+/**
+ * 从回复里读回 {@link echoAnswers} 说出的答案。
+ * @param reply - 回复全文。
+ * @returns 以问题号为键的答案；回复里没有时为 `undefined`。
+ */
+export function readEchoedAnswers(reply: string): Record<string, PermissionAnswer> | undefined {
+  const at = reply.indexOf(ANSWERS_ECHO)
+  if (at < 0) return undefined
+  try {
+    return JSON.parse(reply.slice(at + ANSWERS_ECHO.length).trim()) as Record<string, PermissionAnswer>
+  } catch (_notJson) {
+    // 说得不完整就当没说；调用方按缺失处理。
+    return undefined
+  }
+}
+
+/** 演示脚本 `question` 场景问的问题。 */
+export const SCRIPTED_QUESTION: PermissionQuestion = {
+  id: 'color',
+  header: 'Color',
+  question: 'Which color should the button be?',
+  options: [{ label: 'red' }, { label: 'blue', description: 'the calm one' }],
+  multiSelect: false,
+}
+
+/**
+ * 演示脚本 `answers` 场景问的问题：一个有选项、也收补充文字的单选（选项里有带逗号的），一个选项里有逗号的多选，
+ * 一个只收自由文本的问题。
+ */
+export const SCRIPTED_ANSWER_QUESTIONS: readonly PermissionQuestion[] = [
+  { id: 'pick', header: 'Pick', question: 'Which color should the button be?', options: [{ label: 'red' }, { label: 'blue, green' }], multiSelect: false },
+  { id: 'tags', header: 'Tags', question: 'Which tags apply?', options: [{ label: 'a, b' }, { label: 'c' }, { label: 'd' }], multiSelect: true },
+  { id: 'note', header: 'Note', question: 'Anything else?', options: [], multiSelect: false },
+]
 
 /**
  * 演示与契约测试共用的脚本：提示词里出现场景名（`permission`、`child` 等）就跑那个场景，否则回显。
@@ -108,7 +196,8 @@ export type DemoScenario = 'reply' | 'tool' | 'permission' | 'child' | 'long' | 
  * @returns 本回合的脚本。
  */
 export function demoScript(prompt: string, turn: number): ScriptedTurn {
-  const scenario = (['permission', 'child', 'long', 'exit', 'fail', 'tool'] as const).find(name => prompt.includes(name)) ?? 'reply'
+  // `child-permission` 里含有 `child` 与 `permission`，先认它。
+  const scenario = (['child-permission', 'permission', 'background', 'child', 'answers', 'question', 'image', 'long', 'exit', 'fail', 'tool'] as const).find(name => prompt.includes(name)) ?? 'reply'
   const reply: ScriptStep = { kind: 'text', text: `Turn ${String(turn)}: you said "${prompt.trim()}".`, chunks: 3 }
   switch (scenario) {
     case 'reply':
@@ -130,6 +219,41 @@ export function demoScript(prompt: string, turn: number): ScriptedTurn {
           reply,
         ],
       }
+    case 'child-permission':
+      return {
+        steps: [
+          {
+            kind: 'child',
+            label: 'writer',
+            steps: [
+              {
+                kind: 'permission',
+                tool: 'write',
+                args: { path: 'notes.md', content: 'from the child', justification: `the child writes outside its sandbox (${CHILD_PERMISSION_MARK})` },
+                result: 'written',
+                detail: { type: 'write', path: 'notes.md' },
+              },
+              { kind: 'text', text: 'Child wrote the notes.' },
+            ],
+            usage: { tokens: { input: 5, output: 3 } },
+          },
+          reply,
+        ],
+      }
+    case 'background':
+      return {
+        steps: [
+          { kind: 'background', label: 'researcher', ms: 300, steps: [{ kind: 'tool', tool: 'read_file', args: { path: 'NOTES.md' }, result: 'notes' }, { kind: 'text', text: 'Background child found the notes.' }], usage: { tokens: { input: 7, output: 4 } } },
+          { kind: 'text', text: 'Started a background helper.' },
+          { kind: 'hold' },
+        ],
+      }
+    case 'question':
+      return { steps: [{ kind: 'question', questions: [SCRIPTED_QUESTION] }] }
+    case 'answers':
+      return { steps: [{ kind: 'question', questions: SCRIPTED_ANSWER_QUESTIONS.map(question => ({ ...question, options: question.options.map(option => ({ ...option })) })) }] }
+    case 'image':
+      return { steps: [{ kind: 'images' }] }
     case 'long':
       return { steps: [{ kind: 'text', text: 'Working…' }, { kind: 'hold' }, reply] }
     case 'exit':
@@ -162,9 +286,14 @@ export class ScriptedBrainProvider implements BrainProvider {
   readonly impl: ImplId
   /** 能力声明。 */
   readonly meta: Meta
+  /** 会话 home 的布局。 */
+  readonly sessionHome: BrainSessionHome
+  /** 成员配置目录里这家的写法（给了 `memberConfig` 才有）。 */
+  readonly writeMemberConfig?: MemberConfigWriter
   private readonly script: ScriptSelector
   private readonly spawnProcess: boolean
   private readonly stepDelayMs: number
+  private readonly models: readonly string[]
   private readonly transcripts = new Map<string, ScriptedTranscript>()
   private sessions = 0
 
@@ -174,9 +303,12 @@ export class ScriptedBrainProvider implements BrainProvider {
   constructor(options: ScriptedProviderOptions = {}) {
     this.impl = options.impl ?? ('fake' as ImplId)
     this.meta = { ...SCRIPTED_META, ...options.meta }
+    this.sessionHome = options.sessionHome ?? 'per-member'
+    if (options.memberConfig !== undefined) this.writeMemberConfig = options.memberConfig
     this.script = options.script ?? demoScript
     this.spawnProcess = options.process ?? true
     this.stepDelayMs = options.stepDelayMs ?? 0
+    this.models = options.models ?? SCRIPTED_MODELS
   }
 
   /** @inheritdoc */
@@ -214,6 +346,12 @@ export class ScriptedBrainProvider implements BrainProvider {
   }
 
   private start(nativeId: string, transcript: ScriptedTranscript, config: SessionConfig, launch: BrainLaunchContext): ScriptedSession {
+    if (config.modeId !== undefined && !SCRIPTED_MODES.some(mode => mode.id === config.modeId)) {
+      throw new BrainError('invalid_input', 'brain.mode_unknown', `scripted provider ${this.impl} has no mode ${config.modeId}`)
+    }
+    if (config.model !== undefined && !this.models.includes(config.model)) {
+      throw new BrainError('invalid_input', 'brain.model_unknown', `scripted provider ${this.impl} has no model ${config.model}`)
+    }
     const child = this.spawnProcess
       ? launch.spawn({
         argv: [process.execPath, '-e', 'setInterval(() => {}, 1 << 30)'],
@@ -232,6 +370,8 @@ export class ScriptedBrainProvider implements BrainProvider {
       child,
       stepDelayMs: this.stepDelayMs,
       launch,
+      models: this.models,
+      modeId: config.modeId ?? 'default',
     })
   }
 }
@@ -244,15 +384,26 @@ interface RunningTurn {
   steers: string[]
   /** 本回合开着的子 agent。 */
   children: Set<ChildId>
+  /** 本回合输入里的图片（MIME 与字节数）。 */
+  images: { mime: string; bytes: number }[]
   /** 唤醒 `hold` 的回调（插话到达或取消）。 */
   wake?: (() => void) | undefined
 }
 
-/** 一次待答的权限请求。 */
+/** 一次待答的权限请求；问答请求带问题。 */
 interface PendingPermission {
   turnId: TurnId
-  resolve: (effect: PermissionEffect, optionId: string) => void
+  questions?: PermissionQuestion[]
+  resolve: (effect: PermissionEffect, optionId: string, answers?: Record<string, PermissionAnswer>) => void
 }
+
+/** 一个后台子 agent。 */
+interface BackgroundChild {
+  abort: AbortController
+}
+
+/** 连同后台子 agent 一起停的取消原因（01 §4.5）。 */
+const STOP_CHILDREN: ReadonlySet<CancelReason> = new Set(['pause', 'drain', 'owner'])
 
 /** 构造 {@link ScriptedSession} 的事实。 */
 interface ScriptedSessionInit {
@@ -265,6 +416,8 @@ interface ScriptedSessionInit {
   child: SubprocessHandle | undefined
   stepDelayMs: number
   launch: BrainLaunchContext
+  models: readonly string[]
+  modeId: string
 }
 
 /** 假提供方的一个会话。 */
@@ -275,14 +428,17 @@ class ScriptedSession implements BrainProviderSession {
   private turn: RunningTurn | undefined
   private queued: string[] = []
   private readonly permissions = new Map<PermissionRequestId, PendingPermission>()
+  private readonly background = new Map<ChildId, BackgroundChild>()
   private closed = false
   private exited = false
   private persisted = false
   private counter = 0
+  private mode: string
 
   constructor(init: ScriptedSessionInit) {
     this.init = init
     this.id = init.nativeId
+    this.mode = init.modeId
     if (init.transcript.turns > 0) {
       this.persisted = true
       init.persist()
@@ -318,18 +474,21 @@ class ScriptedSession implements BrainProviderSession {
     }
   }
 
-  startTurn(input: TurnInput): Promise<{ turnId: TurnId }> {
-    return settled(() => {
-      this.requireLive('startTurn')
-      if (this.turn !== undefined) {
-        throw new BrainError('conflict', 'brain.turn_active', `scripted session ${this.id} already runs a turn`)
-      }
-      const prompt = [...this.queued.splice(0), inputText(input)].join('\n')
-      return { turnId: this.begin(prompt) }
-    })
+  async startTurn(input: TurnInput): Promise<{ turnId: TurnId }> {
+    this.requireLive('startTurn')
+    // 图片从 blob 存储取回（引用对不上就在这里失败），假 CLI 只记 MIME 与字节数。
+    const images = await Promise.all(input.blocks.flatMap(block => (block.kind === 'image'
+      ? [this.init.launch.readBlob(block.blob).then(bytes => ({ mime: block.blob.mime, bytes: bytes.byteLength }))]
+      : [])))
+    this.requireLive('startTurn')
+    if (this.turn !== undefined) {
+      throw new BrainError('conflict', 'brain.turn_active', `scripted session ${this.id} already runs a turn`)
+    }
+    const prompt = [...this.queued.splice(0), inputText(input)].join('\n')
+    return { turnId: this.begin(prompt, images) }
   }
 
-  private begin(prompt: string): TurnId {
+  private begin(prompt: string, images: RunningTurn['images'] = []): TurnId {
     this.init.transcript.turns += 1
     const turnNumber = this.init.transcript.turns
     const turn: RunningTurn = {
@@ -337,6 +496,7 @@ class ScriptedSession implements BrainProviderSession {
       abort: new AbortController(),
       steers: [],
       children: new Set(),
+      images,
     }
     this.turn = turn
     this.emit({ kind: 'turn.started', turnId: turn.turnId })
@@ -427,6 +587,27 @@ class ScriptedSession implements BrainProviderSession {
           this.emit({ kind: 'child.ended', childId: child, stopReason: step.stopReason ?? 'completed', usage: step.usage ?? {} })
           break
         }
+        case 'background':
+          this.startBackground(turn.turnId, step, childId)
+          break
+        case 'question': {
+          const answer = await this.askQuestion(turn, step.questions)
+          if (answer === undefined) return { kind: 'interrupted' }
+          if (answer.effect === 'cancel') {
+            this.interrupt(turn, 'question cancelled')
+            return { kind: 'interrupted' }
+          }
+          const text = answer.answers === undefined ? 'The question was declined.' : `Answered: ${echoAnswers(answer.answers)}`
+          this.emit({ kind: 'item.message', turnId: turn.turnId, itemId: ItemId(this.nextId('msg')), delta: text, final: true, ...(childId === undefined ? {} : { childId }) })
+          output += text.length
+          break
+        }
+        case 'images': {
+          const text = turn.images.length === 0 ? 'No images.' : `Images: ${turn.images.map(image => `${image.mime} ${String(image.bytes)}B`).join(', ')}`
+          this.emit({ kind: 'item.message', turnId: turn.turnId, itemId: ItemId(this.nextId('msg')), delta: text, final: true, ...(childId === undefined ? {} : { childId }) })
+          output += text.length
+          break
+        }
         case 'usage':
           this.emit({ kind: 'usage.update', turnId: turn.turnId, usage: step.usage })
           break
@@ -455,6 +636,96 @@ class ScriptedSession implements BrainProviderSession {
       }
     }
     return { kind: 'completed', output, exit }
+  }
+
+  /**
+   * 开一个后台子 agent：它的条目带开它的回合号，父回合结束后照常到达；结束后 CLI 自己开一个回合报它的结果。
+   * @param origin - 开它的父回合。
+   * @param step - 脚本步骤。
+   * @param parentChildId - 开它的子 agent（有的话）。
+   */
+  private startBackground(origin: TurnId, step: Extract<ScriptStep, { kind: 'background' }>, parentChildId: ChildId | undefined): void {
+    const childId = ChildId(this.nextId('child'))
+    const abort = new AbortController()
+    this.background.set(childId, { abort })
+    this.emit({ kind: 'child.started', childId, childKind: 'native-child', label: step.label, provider: this.init.impl, turnId: origin, ...(parentChildId === undefined ? {} : { parentChildId }) })
+    void (async () => {
+      try {
+        await sleep(step.ms, undefined, { signal: abort.signal })
+      } catch (_stopped) {
+        // 被取消原因或关会话停下；结束由停它的一方报。
+        return
+      }
+      let report = ''
+      for (const inner of step.steps) {
+        if (abort.signal.aborted || this.closed) return
+        if (inner.kind === 'text') {
+          report = inner.text
+          this.emit({ kind: 'item.message', turnId: origin, itemId: ItemId(this.nextId('msg')), delta: inner.text, final: true, childId })
+        } else if (inner.kind === 'tool') {
+          const callId = CallId(this.nextId('call'))
+          this.emit({ kind: 'item.tool_call.started', turnId: origin, callId, tool: inner.tool, args: inner.args, native: inner.native ?? true, childId })
+          await new Promise<void>(resolve => setImmediate(resolve))
+          this.emit({ kind: 'item.tool_call.completed', turnId: origin, callId, result: inner.result, ok: inner.ok ?? true, childId })
+        }
+      }
+      if (abort.signal.aborted || this.closed) return
+      this.background.delete(childId)
+      this.emit({ kind: 'child.ended', childId, stopReason: 'completed', usage: step.usage ?? {} })
+      await this.reportBackground(step.label, report)
+    })()
+  }
+
+  /**
+   * 后台子 agent 的结果叫醒 CLI：等到没有回合在跑，开一个提供方自己的回合说出结果。
+   * @param label - 子 agent 的名字。
+   * @param report - 它的结果。
+   */
+  private async reportBackground(label: string, report: string): Promise<void> {
+    while (this.turn !== undefined && !this.closed && !this.exited) await sleep(20)
+    if (this.closed || this.exited) return
+    this.init.transcript.turns += 1
+    const turnId = TurnId(`${this.id}-turn-${String(this.init.transcript.turns)}`)
+    this.emit({ kind: 'turn.started', turnId })
+    const text = `Child ${label} reported: ${report}`
+    this.emit({ kind: 'item.message', turnId, itemId: ItemId(this.nextId('msg')), delta: text, final: true })
+    this.persisted = true
+    this.init.persist()
+    this.emit({ kind: 'turn.completed', turnId, usage: { tokens: { input: report.length, output: text.length }, inferences: 1 } })
+  }
+
+  private askQuestion(
+    turn: RunningTurn,
+    questions: PermissionQuestion[],
+  ): Promise<{ effect: PermissionEffect; answers?: Record<string, PermissionAnswer> } | undefined> {
+    const requestId = PermissionRequestId(this.nextId('question'))
+    return new Promise((resolve) => {
+      const onAbort = (): void => {
+        this.permissions.delete(requestId)
+        resolve(undefined)
+      }
+      turn.abort.signal.addEventListener('abort', onAbort, { once: true })
+      this.permissions.set(requestId, {
+        turnId: turn.turnId,
+        questions,
+        resolve: (effect, optionId, answers) => {
+          turn.abort.signal.removeEventListener('abort', onAbort)
+          this.permissions.delete(requestId)
+          this.emit({ kind: 'permission.resolved', turnId: turn.turnId, requestId, optionId, effect })
+          resolve({ effect, ...(answers === undefined || !effect.startsWith('allow') ? {} : { answers }) })
+        },
+      })
+      this.emit({
+        kind: 'permission.request',
+        turnId: turn.turnId,
+        requestId,
+        category: 'question',
+        tool: 'ask_user_question',
+        args: { questions: questions.map(question => question.question) },
+        questions: questions.map(question => ({ ...question, options: question.options.map(option => ({ ...option })) })),
+        options: SCRIPTED_QUESTION_OPTIONS.map(option => ({ ...option })),
+      })
+    })
   }
 
   private async boundary(turn: RunningTurn): Promise<void> {
@@ -557,6 +828,14 @@ class ScriptedSession implements BrainProviderSession {
       // 先撤回提供方还没读走的插话，否则刚停的回合会被它重新拉起；next_turn 队列按 keepQueue 去留。
       if (turn !== undefined) turn.steers.length = 0
       if (!options.keepQueue || !this.init.meta.delivery.cancelKeepsQueue) this.queued = []
+      if (STOP_CHILDREN.has(options.reason)) {
+        // 暂停、排空、归属方结束：后台子 agent 一起停；抢占与看门狗让它们跑完。
+        for (const [childId, child] of this.background) {
+          child.abort.abort()
+          this.emit({ kind: 'child.ended', childId, stopReason: 'cancelled', usage: {} })
+        }
+        this.background.clear()
+      }
       if (turn === undefined) return
       this.interrupt(turn, `cancelled: ${options.reason}`)
     })
@@ -579,11 +858,16 @@ class ScriptedSession implements BrainProviderSession {
       if (pending === undefined) {
         throw new BrainError('not_found', 'brain.permission_unknown', `scripted session ${this.id} has no pending permission ${requestId}`)
       }
-      const option = SCRIPTED_PERMISSION_OPTIONS.find(candidate => candidate.id === response.optionId)
+      const options = pending.questions === undefined ? SCRIPTED_PERMISSION_OPTIONS : SCRIPTED_QUESTION_OPTIONS
+      const option = options.find(candidate => candidate.id === response.optionId)
       if (option === undefined) {
         this.init.launch.logger.warn(`scripted session ${this.id}: unknown permission option ${response.optionId}; applying deny_once`)
       }
-      pending.resolve(option?.effect ?? 'deny_once', response.optionId)
+      if (pending.questions !== undefined && option?.effect.startsWith('allow') === true) {
+        const problem = response.answers === undefined ? 'an answer needs answers' : checkPermissionAnswers(pending.questions, response.answers)
+        if (problem !== undefined) throw new BrainError('invalid_input', 'brain.permission_answers_invalid', `scripted question ${requestId}: ${problem}`)
+      }
+      pending.resolve(option?.effect ?? 'deny_once', response.optionId, response.answers)
     })
   }
 
@@ -594,13 +878,38 @@ class ScriptedSession implements BrainProviderSession {
 
   canStopRuntime(): Promise<boolean> {
     return settled(() => {
-      return this.turn === undefined && this.permissions.size === 0
+      return this.turn === undefined && this.permissions.size === 0 && this.background.size === 0
     })
   }
 
-  setModel(_model: string): Promise<void> {
+  setModel(model: string): Promise<void> {
     return settled(() => {
       this.requireLive('setModel')
+      if (!this.init.models.includes(model)) {
+        throw new BrainError('invalid_input', 'brain.model_unknown', `scripted session ${this.id} has no model ${model}; available: ${this.init.models.join(', ')}`)
+      }
+      this.emit({ kind: 'session.model_changed', model })
+    })
+  }
+
+  availableModes(): Promise<BrainMode[]> {
+    return Promise.resolve(SCRIPTED_MODES.map(mode => ({ ...mode })))
+  }
+
+  currentMode(): Promise<string | null> {
+    return Promise.resolve(this.mode)
+  }
+
+  setMode(modeId: string): Promise<ModeChange> {
+    return settled(() => {
+      this.requireLive('setMode')
+      if (!SCRIPTED_MODES.some(mode => mode.id === modeId)) {
+        throw new BrainError('invalid_input', 'brain.mode_unknown', `scripted session ${this.id} has no mode ${modeId}`)
+      }
+      const changed = this.mode !== modeId
+      this.mode = modeId
+      if (changed) this.emit({ kind: 'session.mode_changed', modeId })
+      return { modeId, appliesAt: this.turn === undefined ? 'now' as const : 'next_step' as const }
     })
   }
 
@@ -611,6 +920,8 @@ class ScriptedSession implements BrainProviderSession {
     turn?.abort.abort()
     turn?.wake?.()
     this.closed = true
+    for (const child of this.background.values()) child.abort.abort()
+    this.background.clear()
     this.permissions.clear()
     this.listeners.clear()
     const child = this.init.child

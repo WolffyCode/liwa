@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "ACP エージェント CLI プロバイダー",
+    "description": "Agent Client Protocol を話す任意のエージェント CLI をブレインプロバイダーとして接続します。コマンド・環境・ベンダー shim は設定できます。"
+  }
+}

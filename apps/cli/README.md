@@ -11,13 +11,14 @@ The `liwa` command is the sole supported Node application launcher: profiles are
 | `liwa <name>` / `liwa --profile <name>` | Boot the named profile under `$LIWA_HOME/profiles/<name>`. |
 | `liwa --profile <name> --from-default-profile <template>` | Replace a custom profile with a fresh copy of a shipped template, then boot it. |
 | `liwa --profile acp` | Serve automation clients over ACP stdio until disconnect. |
+| `liwa --profile deepseek` | Serve one Liwa agent session over ACP stdio with the `_liwa` extension (the `deepseek` brain provider's process). |
 | `liwa --profile headless "job"` | Run one fresh persisted session, print the final answer, and exit. |
 | `liwa --profile sdk` | Serve SDK clients over JSON-RPC stdio until shutdown or disconnect. |
 | `liwa --profile sdk-minimal` | Serve SDK clients with the standalone minimal agent tree. |
 | `liwa web` | Boot the Web profile. |
 | `liwa plugin --profile <name> <pnpm args>` | Manage a profile's plugins by forwarding to pnpm in the profile directory. |
 
-The invoking directory is the default workspace root. The `web`, `headless`, `brain`, `sdk`, `sdk-minimal`, and `acp` profiles auto-initialize on first use from shipped templates. Create or reset another profile at a non-shipped name with `--from-default-profile`, or initialize a base-backed profile through `liwa plugin`. The `desktop` name is reserved for the Electron-owned profile, so the CLI rejects boot and config-dump requests for it. The npm CLI also rejects its plugin-management requests; the [Desktop-installed command](../desktop/README.md#bundled-command-runtime) can manage the initialized Desktop profile using that installation’s runtime.
+The invoking directory is the default workspace root. The `web`, `headless`, `brain`, `deepseek`, `sdk`, `sdk-minimal`, and `acp` profiles auto-initialize on first use from shipped templates. Create or reset another profile at a non-shipped name with `--from-default-profile`, or initialize a base-backed profile through `liwa plugin`. The `desktop` name is reserved for the Electron-owned profile, so the CLI rejects boot and config-dump requests for it. The npm CLI also rejects its plugin-management requests; the [Desktop-installed command](../desktop/README.md#bundled-command-runtime) can manage the initialized Desktop profile using that installation’s runtime.
 
 ## App arguments
 
@@ -43,7 +44,7 @@ The tree composes over an empty root:
 - then the profile's `cordis.patch.yml`, then the home-level `$LIWA_HOME/cordis.patch.yml`
 - then `--patch` overlays
 
-Bundles named in `liwa.profile.bundles` resolve from the liwa installation first (`@liwa/base`, `@liwa/web-app`, `@liwa/headless`, `@liwa/sdk-app`, `@liwa/sdk-minimal`, `@liwa/acp-app`), then from the profile's own `node_modules`, where pnpm installs out-of-tree plugins.
+Bundles named in `liwa.profile.bundles` resolve from the liwa installation first (`@liwa/base`, `@liwa/web-app`, `@liwa/headless`, `@liwa/brain-cli`, `@liwa/deepseek-app`, `@liwa/sdk-app`, `@liwa/sdk-minimal`, `@liwa/acp-app`), then from the profile's own `node_modules`, where pnpm installs out-of-tree plugins.
 
 Use `--dump-default-config` and `--dump-config` to inspect the composed tree without booting it. `--dump-config-schema` imports the composed tree's declared plugin schemas and prints JSON Schema for entries and patches instead of configuration values; read the [schema-dump safety and scope](reference/README.md#config-schema-dump) before inspecting untrusted plugins.
 

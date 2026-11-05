@@ -1,7 +1,7 @@
 /** Standard ACP updates derived from committed Liwa session events. */
 
 import type { Context } from '@liwa/cordis'
-import type { SessionUpdate, ToolCallContent } from '@agentclientprotocol/sdk'
+import type { SessionUpdate, ToolCallContent, ToolCallUpdate } from '@agentclientprotocol/sdk'
 import type { Session, SessionEvent } from '@liwa/session'
 import type {} from '@liwa/token-meter'
 import { assistantBlockToAcp } from './content.ts'
@@ -57,6 +57,32 @@ export function toolCallUpdate(event: SessionEvent<'tool/call'>): SessionUpdate 
     kind: 'other',
     status: 'in_progress',
     rawInput: parseToolArguments(event.data.arguments),
+  }
+}
+
+/**
+ * Describe the tool call a permission request asks about, so the client sees what it decides without its own
+ * record of the call: the committed call fact (name and raw input, the same projection as {@link toolCallUpdate})
+ * when the call was logged — a descendant's calls never reach the client as updates — and the asker's reason as
+ * text content.
+ * @param callId - the tool call being decided.
+ * @param toolName - the tool named by the approval request (used when the call fact is unknown).
+ * @param reason - the asker's human-readable reason, when given.
+ * @param call - the committed tool-call event, when known.
+ * @returns the request's `toolCall`.
+ */
+export function approvalToolCall(
+  callId: string,
+  toolName: string,
+  reason: string | undefined,
+  call: SessionEvent<'tool/call'> | undefined,
+): ToolCallUpdate {
+  return {
+    toolCallId: callId,
+    title: call?.data.name ?? toolName,
+    kind: 'other',
+    ...(call === undefined ? {} : { rawInput: parseToolArguments(call.data.arguments) }),
+    ...(reason === undefined || reason === '' ? {} : { content: [{ type: 'content' as const, content: { type: 'text' as const, text: reason } }] }),
   }
 }
 

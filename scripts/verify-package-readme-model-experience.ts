@@ -203,6 +203,8 @@ const SENTENCE_MODEL_EXPERIENCE: Readonly<Record<string, SentenceContract>> = {
   'packages/brain/brain-shared': { kind: 'none', reason: 'The library only supplies provider-side code; provider packages own what their CLIs send to a model.' },
   'packages/test-support/brain-testkit': { kind: 'none', reason: 'Scripted turns replay locally and never reach a model.' },
   'packages/bundle/brain-cli': { kind: 'indirect', reason: 'The command hands the prompt to the selected provider, whose CLI builds every model request.' },
+  'packages/brain/brain-acp': { kind: 'indirect', reason: 'The provider drives an ACP agent CLI, which builds every model request from the prompts and MCP servers the session gives it.' },
+  'packages/brain/brain-deepseek': { kind: 'indirect', reason: 'The provider drives a liwa --profile deepseek process, whose agent builds every model request; @liwa/deepseek-app documents what it injects.' },
   'packages/subprocess/subprocess-local': { kind: 'indirect', reason: 'The spawn backend delegates model rendering to consumer seams such as the bash executor family.' },
   'packages/sandbox/sandbox-local': { kind: 'indirect', reason: 'The provider backend delegates model rendering to liwa-bash-sandbox and liwa-tool-bash.' },
   'packages/sandbox/sandbox-windows-acl': { kind: 'indirect', reason: 'The provider backend delegates model rendering to the shell/pwsh sandbox executors and their tools.' },

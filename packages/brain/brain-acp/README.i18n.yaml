@@ -1,0 +1,46 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/brain/brain-acp/README.md
+/:
+  en: 9cc9338a829830ef
+  zh: 8c5e3346d70121a8
+/liwa-brain-acp:
+  en: 112691f01fad1d0e
+  zh: 377986bb2bb93fed
+/liwa-brain-acp/summary:
+  en: 8a1d88ae567f898e
+  zh: eb6495375c5dc61f
+/liwa-brain-acp/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 09388d293f9be9cb
+/liwa-brain-acp/use-this-package:
+  en: bbff250eba0f1b89
+  zh: 0a618f05cc88ee2b
+/liwa-brain-acp/use-this-package/configure-a-provider:
+  en: f3f11bbecb5753c8
+  zh: f2bb9c4b84ebc996
+/liwa-brain-acp/use-this-package/what-a-session-does:
+  en: 02aef42b17575139
+  zh: b9c6866221666ead
+/liwa-brain-acp/use-this-package/build-another-provider-on-it:
+  en: 3dedb5ff982ea6dd
+  zh: 628d082a61677ddc
+/liwa-brain-acp/understand-the-implementation:
+  en: f315aba1547b7514
+  zh: f857b269a4105e50
+/liwa-brain-acp/further-exploration:
+  en: ed967e6f556bf5b5
+  zh: dd66609e9be7a60d
+/liwa-brain-acp/model-experience:
+  en: 8fcf3eee342e855f
+  zh: 1ea66f025a88aef8
+/liwa-brain-acp/model-experience/kv-cache-effect:
+  en: c56e113659a224db
+  zh: 48580a231157cdf0
+/liwa-brain-acp/known-limitations-and-deferred-work:
+  en: 7dbd6e6207e7a601
+  zh: 26148233e128f327
+/liwa-brain-acp/known-limitations-and-deferred-work/dev-note:
+  en: e67f633dc6fe7773
+  zh: 3bb0c20c93f16f98

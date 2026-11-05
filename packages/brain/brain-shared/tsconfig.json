@@ -3,15 +3,20 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "lib/types",
-    // src/paseo/ is upstream Paseo source kept as copied; Paseo compiles it without these two
-    // checks, so the package matches the upstream options instead of rewriting the copies.
-    "noUncheckedIndexedAccess": false,
-    "exactOptionalPropertyTypes": false
+    "tsBuildInfoFile": "lib/tsconfig.tsbuildinfo"
   },
+  // Liwa's own modules compile under the repository's full strictness; the copied Paseo
+  // sources under src/paseo/ are a separate project with upstream compiler options.
   "include": [
     "src"
   ],
+  "exclude": [
+    "src/paseo"
+  ],
   "references": [
+    {
+      "path": "./tsconfig.paseo.json"
+    },
     {
       "path": "../../../vendor/cosmokit"
     },
@@ -19,7 +24,13 @@
       "path": "../../../vendor/cordis"
     },
     {
+      "path": "../brain"
+    },
+    {
       "path": "../../subprocess/subprocess"
+    },
+    {
+      "path": "../../util/values"
     }
   ]
 }

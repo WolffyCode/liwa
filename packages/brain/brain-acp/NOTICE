@@ -1,0 +1,72 @@
+@liwa/brain-acp — 第三方来源声明
+
+本包 src/paseo/ 下的文件拷自 Paseo：
+  Upstream: https://github.com/getpaseo/paseo
+  Commit:   8018231a00a6b45ed6cda1856f954ba14b4824c0
+  Version:  0.15.0-beta.1
+  License:  Apache-2.0
+  License text: https://www.apache.org/licenses/LICENSE-2.0
+  Copyright (c) 2025-present Mohamed Boudra
+
+上游没有 NOTICE 文件。每个拷来的文件第一行注明来源路径；原样拷贝，需要改的行原地改（Apache-2.0 第 4(b) 条要求标注改动），
+改动处有"灵鲸改"注释。本包其余文件（src/index.ts、src/adapter.ts、src/elicitation.ts、tests/）是灵鲸自己写的，MIT。
+
+路径对照：packages/server/src/server/agent/providers/ → src/paseo/agent/providers/。
+
+全部文件的共同改动：
+  - 相对导入的后缀 .js 改成 .ts（本仓库约定）。
+  - 上游同目录之外的模块（agent-sdk-types、provider-launch-config、diagnostic-utils、provider-runner 等）已在 @liwa/brain-shared
+    的 src/paseo/ 下，改成从 @liwa/brain-shared/paseo/<上游路径> 导入；@getpaseo/protocol/<x> 同样改成 brain-shared 的对应子路径。
+  - import type { Logger } from "pino" 换成 @liwa/brain-shared 的 PaseoLogger（接在 cordis logger 上的同形接口）。
+  - 文件头加一行来源注释。
+  - src/paseo/ 用单独的 tsconfig.paseo.json，关掉 noUncheckedIndexedAccess 与 exactOptionalPropertyTypes，与上游的编译选项一致，以免改写拷贝。
+
+ACP SDK 从 0.17 升到 1.4（@agentclientprotocol/sdk 1.4.0；写法照底座 @liwa/subagent-acp）：
+  - ClientSideConnection(() => client, stream) 换成 client() 应用：每个客户端方法用 onRequest / onNotification 按方法名登记，
+    再 connect(ndJsonStream(...))；扩展通知（_ 前缀）也按方法名登记，名字由客户端选项 extensionNotificationMethods 给出。
+  - 发往 agent 的请求一律 connection.agent.request(methods.agent.…, params)；session/cancel 是 notify；扩展方法也走 request。
+  - 会话响应里不稳定的 models（SessionModelState）与 unstable_setSessionModel 在 1.4 去掉了：类型就地写出，旧版 agent 带来的
+    models 仍按原逻辑读；模型只经 session/set_config_option 切换。
+  - session/prompt 不再收 messageId（1.4 只留给本地回显的用户消息），去掉。
+  - 1.4 的 exports 不再放出生成的 zod 模块（dist/schema/zod.gen.js）；cursor 的校验改成按类型的最小检查。
+
+逐文件改动：
+
+src/paseo/agent/providers/acp-agent.ts（← acp-agent.ts）
+  - 上面列出的 SDK 1.4 改动。
+  - 进程：node:child_process 的 spawn 与 tree-kill 换成 @liwa/brain 的 spawnProviderProcess 与 @liwa/subprocess 的句柄
+    （ChildProcessWithoutNullStreams 改为管道齐全的 SubprocessHandle；terminateWithTreeKill 改为 terminate() 加等待退出，
+    宽限期 ACP_PROCESS_GRACE_MS = 2000 与上游 tree-kill 的 gracefulTimeoutMs 相同）；退出事实读句柄的 done，
+    不读 exitCode / signalCode；拉起失败让 done 拒绝，没有单独的 spawn 事件。终端进程同样经 subprocess 拉起，从不经 shell。
+  - 会话的进程入口：AgentLaunchContext.processHost（brains 先登记归属）；会话之外的探测、模型目录与诊断用客户端选项 processHost。
+  - stderr 只留最近 64 KiB 作诊断（pushStderrChunk）；上游不设上限，常驻会话的 CLI 会一直写日志。
+  - `_meta` 扩展口：ACPMetaExtension（requestMeta 给 session/new、session/load、session/resume、session/prompt、session/cancel 加 _meta；
+    observe 在 Paseo 翻译之前看到原始的 session/update、session/prompt 返回与 session/request_permission），
+    ACPAgentClient.sessionExtension(config, launchContext) 给每个会话配一个（通用 ACP 不带）；
+    ACPAgentSession.requestExtension(method, params) 调本会话的扩展方法，参数自动带会话号。
+  - 两回合之间进程退出也推一个不带回合号的 turn_failed（与 Paseo 的 Claude 适配器一致），上游只在回合中报。
+  - 工具调用的 timeline 条目在 metadata 里带上原始入参与结果（rawInput / rawOutput），上游只给展示用的 detail。
+  - clientInfo 自报名改为 liwa。
+  - 回合输入渲染里去掉 Paseo 附件（PR / issue / 上传）分支。
+  - 表单式 elicitation（elicitation/create），只做接线：客户端能力声明 elicitation.form，登记 elicitation/create 处理器；
+    ACPAgentSession.createElicitation 把表单原样放进一个 Paseo 问答权限请求（kind "question"、name 为导出的
+    ACP_ELICITATION_REQUEST、input.requestedSchema；URL 模式、别的会话的、没有字段的表单谢绝），respondToPermission
+    允许时把 updatedInput.content 原样作为表单内容回 accept，拒绝为 decline、拒绝并中断为 cancel；getPendingPermissions、
+    canStopRuntime 与撤回待答请求一并覆盖问答。表单怎么读成问题、答案怎么填回表单在灵鲸自写的 src/elicitation.ts
+    （经 src/adapter.ts 的 AcpBrainSession），不在拷来的文件里。
+  - 权限请求（session/request_permission）：请求自带的 toolCall 字段叠在先前的工具快照之上、以请求为准
+    （上游只在没有快照时读它们），映射出的 AgentPermissionRequest 多带 input（快照的原始入参）与 description
+    （请求 toolCall 的文字内容，例如审批理由）。后代会话的调用没有经过 session/update，只能靠请求自己说明。
+  - ACPAgentSession.interruptSession：不管有没有前台提示词都发 session/cancel（先撤回待答请求），给服务端自己跑起来的回合
+    与连同后台子会话一起停用；interrupt() 仍只在有前台提示词时发。
+
+src/paseo/agent/providers/generic-acp-agent.ts（← generic-acp-agent.ts）
+  - 选项多 extensionNotificationMethods 与 processHost，转给 ACPAgentClient。
+
+src/paseo/agent/providers/copilot-acp-agent.ts、kimi-acp-agent.ts、kiro-acp-agent.ts、trae-acp-agent.ts、cursor-acp-agent.ts
+  - 选项多 processHost（探测与诊断拉进程用）。
+  - copilot、kimi、cursor：方法调用改为 SDK 1.4 的 ClientContext.request；kiro：扩展通知按方法名登记。
+  - cursor：生成的 zod 模块不再导出，校验改为按类型的最小检查。
+
+原样迁入（只有共同改动）：
+  acp-options.ts

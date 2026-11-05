@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Fournisseur de CLI d'agents ACP",
+    "description": "Connecte toute CLI d'agents parlant l'Agent Client Protocol comme fournisseur de cerveau, avec commande, environnement et adaptateur fournisseur configurables."
+  }
+}

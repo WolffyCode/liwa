@@ -71,7 +71,7 @@ One connection can run several sessions at once, each independent. The calls a c
 | `session/prompt` | Ordered text, resource links, and supported images, one prompt at a time per session; settlement follows root and descendant completion plus ordered update delivery. |
 | `session/cancel` / `$/cancel_request` | The prompt-owned cancellation path; without an ACP prompt in flight it cancels autonomous work, while unknown session ids are no-ops. |
 | `session/update` | Committed assistant messages and thoughts, generic tool lifecycle, configuration changes, and context usage, serialized per session. |
-| `session/request_permission` | A permission prompt with one-shot allow/reject choices; your client can answer automatically. |
+| `session/request_permission` | A permission prompt with one-shot allow/reject choices, describing the call it asks about (tool, raw input, the asker's reason); your client can answer automatically. |
 
 Session listing and resume admit ordinary forks, including historical logs with `parentSession`; `origin: subagent` remains excluded.
 
@@ -80,6 +80,15 @@ A prompt remains in flight while managed descendants run, while their results tr
 A failure to append `turn/start` or `turn/end` rejects the prompt even when a preceding turn completed.
 
 Session configuration offers opaque provider/model choices from the live LLM service catalog and a `reasoning_effort` selector when the exact model declares one. An option change records the Session selection and takes effect at the next model step, including a continuation in the current turn; an already prepared step and its retries keep their captured selection. Image admission checks the selection current when admission begins. Resume restores a recorded selection even when no request has used it yet. ACP clients are trusted controllers: stdio MCP entries authorize their absolute commands and environment, HTTP entries authorize their absolute HTTP(S) URLs and headers, and any initial connection or discovery failure rolls back the unpublished Agent. Unsupported surfaces are omitted or rejected: `session/load`, deletion, fork, additional directories, SSE or ACP-transport MCP, modes, commands, plans, terminals, client filesystem operations, and elicitation.
+
+<a id="extension-seam"></a>
+### Extension seam
+
+A plugin can extend this server without changing the standard surface: it injects `acpExtensions` and registers an `AcpExtension` with `ctx.acpExtensions.register(extension)`. An extension may add `_`-prefixed request methods, set up each new or resumed session from its `session/new` / `session/resume` `_meta` (before the Agent is created, so it can mount presets or hooks on the Agent scope), decorate the `session/prompt` result and each permission request, and turn `session/cancel`'s `_meta` into cancel options. `session(sessionId)` and `sessionOf(agent)` give a session view (its Agent, whether a prompt is in flight, and a `notify` for extra `session/update` messages); `sessionOf` follows `parentSession` to the root session a descendant reports through. Under the launcher, the transport connects once the profile reports ready, so every extension method is registered before the first message; without a launcher (direct mounting) it connects at once. `@liwa/deepseek-app` is the first extension (`_liwa`).
+
+A descendant's permission request (a subagent of a session's root Agent) is sent on the root session, the only one the client knows; an extension can mark which child it came from. Every permission request describes the call it asks about from the logged call itself — `toolCall` carries the tool as `title`, the raw input as `rawInput`, and the asker's reason (for example a sandbox escalation's justification) as text `content` — because a descendant's calls never reach the client as `session/update`s. A session view's `admit` takes ACP content (text, images) under the `session/prompt` rules, for an extension method that feeds the running turn.
+
+The agent's questions (`ask_user_question`, plan review through `ctx.userQuestions`) reach a client that advertised `elicitation.form` at `initialize` as `elicitation/create`: one form field per question (single choice `oneOf`, multiple choice an `anyOf` array, no options free text, plus an "Other" text field marked `_meta.liwa.otherFor`); a declined or cancelled form dismisses the question. Without that capability questions go to the next answerer. When the session's Agent can reach plan mode (`@liwa/plan-mode`, in its preset or on the host), `session/new` and `session/resume` report the modes `default` and `plan`, `session/set_mode` switches between them (between turns at once, during a turn at the next step), and `current_mode_update` follows once the switch is logged.
 
 -----
 
@@ -108,6 +117,7 @@ The decision history lives in the [ACP as an automation-only protocol note](../.
 | [`src/index.ts`](src/index.ts) | Plugin entry: `Config` schema, `AgentSideConnection` wiring, per-session records, admission and settlement, teardown |
 | [`src/content.ts`](src/content.ts) | Wire-content admission and projection: image validation, route recheck, prompt reconstruction, assistant block conversion |
 | [`src/codec.ts`](src/codec.ts) | Pure turn-ending to ACP `stopReason` mapping |
+| [`src/extensions.ts`](src/extensions.ts) | The extension registry (`ctx.acpExtensions`) and the host the server calls at each seam |
 
 ### Admission and prompt settlement
 

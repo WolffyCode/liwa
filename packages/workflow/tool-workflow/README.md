@@ -116,7 +116,7 @@ Read these pages when the tool-level contract is not enough. They move from the 
 
 #### What the model sees
 
-Every parent request in this plugin's registration scope receives the workflow guidance below. A scoped tool restriction can hide the schema without removing this independently registered guidance.
+Every parent request in this plugin's registration scope that can see the tool receives the workflow guidance below. A scoped tool restriction that hides the tool also removes this guidance.
 
 ##### Workflow guidance
 

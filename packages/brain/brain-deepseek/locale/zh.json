@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "DeepSeek agent 提供方",
+    "description": "把灵鲸自己的 DeepSeek agent 接成大脑提供方：每个会话一个 liwa --profile deepseek 进程，支持插话、用量与子 agent。"
+  }
+}

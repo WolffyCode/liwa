@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from '@liwa/cordis'
@@ -6,6 +6,7 @@ import { internals as cmdlineInternals, provideCmdline } from '@liwa/cmdline'
 import LocalSubprocessRuntime from '@liwa/subprocess-local'
 import BrainRegistry, { TurnId } from '@liwa/brain'
 import * as scriptedProvider from '@liwa/brain-testkit/plugin'
+import { echoAnswers, solidPng } from '@liwa/brain-testkit'
 import { afterEach, describe, expect, it } from 'vitest'
 import * as runner from '../src/index.ts'
 import * as startup from '../src/startup.ts'
@@ -77,7 +78,7 @@ describe('liwa brain', () => {
   })
 
   it('runs one turn and prints its events', async () => {
-    const result = await brain(['run', '--provider', 'fake', '--model', 'scripted-1', 'hello', 'there'])
+    const result = await brain(['run', '--provider', 'fake', '--model', 'scripted-large', '--mode', 'plan', 'hello', 'there'])
     expect(result.code).toBe(0)
     expect(result.stdout).toMatch(/^turn\.started\s+turn=/m)
     expect(result.stdout).toMatch(/^item\.message\s+"Turn 1: you"/m)
@@ -88,19 +89,44 @@ describe('liwa brain', () => {
     expect(result.stderr).toMatch(/closed \(usage \{"tokens"/)
   })
 
-  it('answers permissions by mode, in JSON or by asking', async () => {
-    const denied = await brain(['run', '--provider', 'fake', '--mode', 'deny', '--json', 'permission please'])
+  it('answers permissions by --permit, in JSON or by asking', async () => {
+    const denied = await brain(['run', '--provider', 'fake', '--permit', 'deny', '--json', 'permission please'])
     const events = denied.stdout.trim().split('\n').map(line => JSON.parse(line) as { kind: string; effect?: string; ok?: boolean })
     expect(events.find(event => event.kind === 'permission.resolved')?.effect).toBe('deny_once')
     expect(events.find(event => event.kind === 'item.tool_call.completed')?.ok).toBe(false)
     expect(denied.code).toBe(0)
-    const allowed = await brain(['run', '--provider', 'fake', '--mode', 'allow-session', 'permission please'])
+    const allowed = await brain(['run', '--provider', 'fake', '--permit', 'allow-session', 'permission please'])
     expect(allowed.stdout).toMatch(/permission\.resolved\s+allow-session -> allow_session/)
     const asked = await brain(['run', '--provider', 'fake', 'permission please'], { tty: true, answers: ['1'] })
     expect(asked.stdout).toMatch(/permission\.resolved\s+allow-once -> allow_once/)
-    const stopped = await brain(['run', '--provider', 'fake', '--mode', 'ask', 'permission please'], { tty: true, answers: ['4'] })
+    const stopped = await brain(['run', '--provider', 'fake', '--permit', 'ask', 'permission please'], { tty: true, answers: ['4'] })
     expect(stopped.stdout).toMatch(/turn\.interrupted/)
     expect(stopped.code).toBe(1)
+  })
+
+  it('answers questions on the terminal or by policy, and attaches images', async () => {
+    const asked = await brain(['run', '--provider', 'fake', 'question please'], { tty: true, answers: ['2'] })
+    expect(asked.stdout).toMatch(/permission\.request\s+question ask_user_question/)
+    // 假 CLI 原样说出它收到的结构化答案（事件行里是 JSON 字符串）。
+    const said = (answers: Parameters<typeof echoAnswers>[0]): string => JSON.stringify(`Answered: ${echoAnswers(answers)}`)
+    expect(asked.stdout).toContain(said({ color: { selected: ['blue'] } }))
+    const typed = await brain(['run', '--provider', 'fake', 'question please'], { tty: true, answers: ['green please'] })
+    expect(typed.stdout).toContain(said({ color: { selected: [], custom: 'green please' } }))
+    const first = await brain(['run', '--provider', 'fake', '--permit', 'allow-once', 'question please'])
+    expect(first.stdout).toContain(said({ color: { selected: ['red'] } }))
+    const declined = await brain(['run', '--provider', 'fake', '--permit', 'deny', 'question please'])
+    expect(declined.stdout).toMatch(/The question was declined/)
+    const root = await mkdtemp(join(tmpdir(), 'liwa-brain-cli-image-'))
+    cleanups.push(() => rm(root, { recursive: true, force: true }))
+    await writeFile(join(root, 'red.png'), solidPng(4, 4, [255, 0, 0]))
+    const image = await brain(['run', '--provider', 'fake', '--image', join(root, 'red.png'), 'image please'])
+    expect(image.stdout).toMatch(/Images: image\/png \d+B/)
+    const wrong = await brain(['run', '--provider', 'fake', '--image', join(root, 'notes.txt'), 'image please'])
+    expect(wrong.code).toBe(1)
+    expect(wrong.stderr).toContain('use a .png')
+    const badMode = await brain(['run', '--provider', 'fake', '--mode', 'bypass', 'hi'])
+    expect(badMode.code).toBe(1)
+    expect(badMode.stderr).toContain('has no mode bypass')
   })
 
   it('reports children, failures, and a CLI exit', async () => {
@@ -117,9 +143,9 @@ describe('liwa brain', () => {
   })
 
   it('rejects unusable invocations', async () => {
-    const noTty = await brain(['run', '--provider', 'fake', '--mode', 'ask', 'hi'])
+    const noTty = await brain(['run', '--provider', 'fake', '--permit', 'ask', 'hi'])
     expect(noTty.code).toBe(1)
-    expect(noTty.stderr).toContain('--mode ask needs an interactive terminal')
+    expect(noTty.stderr).toContain('--permit ask needs an interactive terminal')
     const blank = await brain(['run', '--provider', 'fake', ' '])
     expect(blank.stderr).toContain('a prompt is required')
     const help = await brain(['--help'])
@@ -137,6 +163,8 @@ describe('liwa brain helpers', () => {
       runner.formatEvent({ kind: 'usage.update', usage: { inferences: 1 } }),
       runner.formatEvent({ kind: 'turn.interrupted', turnId: TurnId('t') }),
       runner.formatEvent({ kind: 'turn.completed', turnId: TurnId('t'), usage: {}, concludedBy: 'report' }),
+      runner.formatEvent({ kind: 'session.mode_changed', modeId: 'plan' }),
+      runner.formatEvent({ kind: 'session.model_changed', model: 'm' }),
     ]
     expect(lines.every(line => !line.includes('\n'))).toBe(true)
     expect(lines[3]).toContain('concludedBy=report')

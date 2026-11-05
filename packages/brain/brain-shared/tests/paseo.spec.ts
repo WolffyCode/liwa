@@ -1,7 +1,7 @@
 import { Context } from '@liwa/cordis'
 import LocalSubprocessRuntime from '@liwa/subprocess-local'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import type { ProviderProcessHost } from '../src/index.ts'
+import type { ProviderProcessHost } from '@liwa/brain'
 import {
   checkProviderLaunchAvailable, createProviderEnv, createProviderEnvSpec, isProviderCommandAvailable, resolveProviderLaunch,
   resolveShellEnv,

@@ -10,7 +10,7 @@ import {
   type ResolvedProviderLaunch,
 } from "../provider-launch-config.ts";
 // 灵鲸改：上游的 utils/spawn execCommand 换成经 subprocess 的 execProviderCommand；下面各函数因此多一个 host 参数。
-import { execProviderCommand, type ProviderProcessHost } from "../../../process.ts";
+import { execProviderCommand, type ProviderProcessHost } from "@liwa/brain";
 
 export interface DiagnosticEntry {
   label: string;

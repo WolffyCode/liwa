@@ -27,6 +27,7 @@ This group maps the installable patch layers used by `liwa --profile`. Each pack
 | [`web-app`](web-app/README.md) | Browser application layer over base | mounts Web rows |
 | [`headless`](headless/README.md) | One-shot command-line task application over base | `headless-runner` |
 | [`brain-cli`](brain-cli/README.md) | `liwa brain` command for listing, probing, and trying agent CLI providers over base | `brain-cli` |
+| [`deepseek-app`](deepseek-app/README.md) | One Liwa agent session per process over ACP stdio, with the `_liwa` extension and per-kind presets (the `deepseek` provider's CLI) | `deepseek-liwa` |
 | [`sdk-app`](sdk-app/README.md) | SDK JSON-RPC stdio application over base | mounts the SDK server |
 | [`sdk-minimal`](sdk-minimal/README.md) | Standalone minimal SDK application without base or Web | — (complete patch tree) |
 

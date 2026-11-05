@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "ACP-Agent-CLI-Anbieter",
+    "description": "Bindet jede Agent-CLI, die das Agent Client Protocol spricht, als Brain-Anbieter an – mit konfigurierbarem Befehl, Umgebung und Hersteller-Shim."
+  }
+}

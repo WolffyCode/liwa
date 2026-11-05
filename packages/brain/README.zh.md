@@ -27,7 +27,9 @@ kind: "package-group"
 | 包 | 职责 | ctx 键 |
 |---|---|---|
 | [`brain`](brain/README.zh.md) | 大脑提供方契约、提供方登记与会话句柄 | `ctx.brains` |
-| [`brain-shared`](brain-shared/README.zh.md) | 各 CLI 提供方共用的 Paseo 提供方代码及其 subprocess 桥 | —（库） |
+| [`brain-shared`](brain-shared/README.zh.md) | 各 CLI 提供方共用的 Paseo 提供方代码，以及 Paseo 会话到契约的映射 | —（库） |
+| [`brain-acp`](brain-acp/README.zh.md) | 建在 Paseo ACP 客户端上的通用 ACP agent CLI 提供方 | 登记进 `ctx.brains` |
+| [`brain-deepseek`](brain-deepseek/README.zh.md) | 提供方 `deepseek`：每个会话一个 `liwa --profile deepseek` 进程 | 登记进 `ctx.brains` |
 
 <a id="related-documentation"></a>
 ## 相关文档

@@ -9,7 +9,7 @@
   Copyright (c) 2025-present Mohamed Boudra
 
 上游没有 NOTICE 文件。每个拷来的文件第一行注明来源路径；原样拷贝，需要改的行原地改（Apache-2.0 第 4(b) 条要求标注改动），
-改动处有"灵鲸改"注释。本包其余文件（src/index.ts、src/process.ts、tests/）是灵鲸自己写的，MIT。
+改动处有"灵鲸改"注释。本包其余文件（src/index.ts、src/session.ts、src/turn-input.ts、src/logger.ts、tests/）是灵鲸自己写的，MIT。
 
 路径对照：packages/server/src/server/agent/ → src/paseo/agent/；packages/protocol/src/ → src/paseo/protocol/；
 packages/server/src/utils/ → src/paseo/utils/。
@@ -17,7 +17,10 @@ packages/server/src/utils/ → src/paseo/utils/。
 全部文件的共同改动：
   - 相对导入的后缀 .js 改成 .ts（本仓库约定）；@getpaseo/protocol/<x> 改成对 src/paseo/protocol/<x>.ts 的相对导入。
   - 文件头加一行来源注释。
-  - 本包 tsconfig 关掉 noUncheckedIndexedAccess 与 exactOptionalPropertyTypes，与上游的编译选项一致，以免改写拷贝。
+  - src/paseo/ 用单独的 tsconfig.paseo.json，关掉 noUncheckedIndexedAccess 与 exactOptionalPropertyTypes，与上游的编译选项一致，
+    以免改写拷贝；灵鲸自己的模块在主项目 tsconfig.json 里按全仓库的严格程度编译。
+  - 进程入口（ProviderProcessHost、findProviderExecutable、execProviderCommand）是灵鲸的进程帮助，在 @liwa/brain，
+    拷来的文件从 @liwa/brain 导入。
 
 逐文件改动（未列出的文件除上面的共同改动外与上游相同）：
 

@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "ACP agent CLI 提供方",
+    "description": "把任何说 Agent Client Protocol 的 agent CLI 接成大脑提供方，命令、环境与厂商适配都可配置。"
+  }
+}

@@ -61,8 +61,13 @@ flowchart LR
   pkg_mcp_client["mcp-client"]
   pkg_brain["brain"]
   svc_brains["ctx.brains<br/>Agent CLI brain providers"]
+  pkg_brain_deepseek["brain-deepseek"]
+  pkg_brain_acp["brain-acp"]
   pkg_brain_testkit["brain-testkit"]
   pkg_brain_cli["brain-cli"]
+  pkg_acp["acp"]
+  svc_acpExtensions["ctx.acpExtensions<br/>ACP server extensions"]
+  pkg_deepseek_app["deepseek-app"]
   svc_brainStartup["ctx.brainStartup<br/>liwa brain invocation"]
   pkg_browser_use["browser-use"]
   svc_browserUse["ctx.browserUse<br/>Browser-use provider registration"]
@@ -190,7 +195,6 @@ flowchart LR
   pkg_skill_filesystem["skill-filesystem"]
   pkg_skill_office["skill-office"]
   svc_agents["ctx.agents<br/>Agent service"]
-  pkg_acp["acp"]
   svc_agentDefaultModel["ctx.agentDefaultModel<br/>Default Agent model selection"]
   svc_agentLoop["ctx.agentLoop<br/>Concrete loop driver"]
   pkg_base["base"]
@@ -300,6 +304,7 @@ flowchart LR
   svc_cordisInspect["ctx.cordisInspect<br/>Dynamic Cordis inspect registry"]
   pkg_experimental_liveshare["experimental-liveshare"]
   svc_liveshareShares["ctx.liveshareShares<br/>Owner share management Remote"]
+  pkg_acp --> svc_acpExtensions
   pkg_action_cards --> svc_actionCards
   pkg_agent --> svc_agents
   pkg_agent_default_model --> svc_agentDefaultModel
@@ -324,7 +329,9 @@ flowchart LR
   pkg_bash_local --> svc_shell
   pkg_bash_sandbox --> svc_shell
   pkg_brain --> svc_brains
+  pkg_brain_acp --> svc_brains
   pkg_brain_cli --> svc_brainStartup
+  pkg_brain_deepseek --> svc_brains
   pkg_brain_testkit --> svc_brains
   pkg_browser_use --> svc_browserUse
   pkg_client_connection --> svc_connection
@@ -457,6 +464,7 @@ flowchart LR
   pkg_working_directory --> svc_workingDirectory
   pkg_workspace --> svc_workspaceRegistry
   pkg_workspace_changes --> svc_workspaceChanges
+  svc_acpExtensions --> pkg_deepseek_app
   svc_actionCards --> pkg_client_ui_action_cards
   svc_actionCards --> pkg_creation_recommendations
   svc_agentDefaultModel --> pkg_api_session_controller
@@ -572,6 +580,8 @@ flowchart LR
   svc_subprocess --> pkg_bash_local
   svc_subprocess --> pkg_bash_sandbox
   svc_subprocess --> pkg_brain
+  svc_subprocess --> pkg_brain_acp
+  svc_subprocess --> pkg_brain_deepseek
   svc_subprocess --> pkg_lsp_stdio
   svc_subprocess --> pkg_subagent_acp
   svc_subprocess --> pkg_subagent_claude_code
@@ -638,7 +648,8 @@ flowchart LR
 | `ctx.worktrees` | `seam` | [`experimental-worktree`](../packages/experimental/worktree) | [`experimental-worktree`](../packages/experimental/worktree) | [`experimental-tool-worktree`](../packages/experimental/tool-worktree) | - | 显式实验组合从固定的本地提交创建工作树。检出目录与共享 Git 元数据受现有写权限约束；工作目录服务拥有创建后的 Session 目录。 |
 | `ctx.workingDirectory` | `seam` | [`working-directory`](../packages/session/working-directory) | [`working-directory`](../packages/session/working-directory) | [`tool-working-directory`](../packages/session/tool-working-directory), [`tool-fs`](../packages/fs/tool-fs), [`tool-bash`](../packages/shell/tool-bash), [`tool-pwsh`](../packages/shell/tool-pwsh), [`subagent`](../packages/subagent/subagent), [`sdk-jsonrpc-server`](../packages/sdk/server) | - | 一个 Session 投影拥有有效执行目录。文件系统验证变更，用户上下文报告目录信息，原始元数据与写入授权保持不变。 |
 | `ctx.mcpResources` | `seam` | [`mcp-resources`](../packages/mcp/mcp-resources) | [`mcp-client`](../packages/mcp/mcp-client) | [`mcp-resources`](../packages/mcp/mcp-resources) | - | 连接所有者提供的操作在调用 agent 的作用域内服务于共享资源工具。 |
-| `ctx.brains` | `seam` | [`brain`](../packages/brain/brain) | [`brain-testkit`](../packages/test-support/brain-testkit) | [`brain-cli`](../packages/bundle/brain-cli) | - | 每个 agent CLI 提供方登记一个客户端；调用方开的会话句柄校验配置、扇出事件、汇总用量，并登记进程与子 agent。CLI 提供方包落地之前，脚本测试提供方是唯一实现。 |
+| `ctx.brains` | `seam` | [`brain`](../packages/brain/brain) | [`brain-deepseek`](../packages/brain/brain-deepseek), [`brain-acp`](../packages/brain/brain-acp), [`brain-testkit`](../packages/test-support/brain-testkit) | [`brain-cli`](../packages/bundle/brain-cli) | - | 每个 agent CLI 提供方登记一个客户端；调用方开的会话句柄校验配置、扇出事件、汇总用量，并登记进程与子 agent。`deepseek` 把灵鲸自己的 agent 作为每个会话一个 `liwa --profile deepseek` 进程运行，`acp` 驱动任何别的 ACP agent CLI，脚本提供方服务契约测试。 |
+| `ctx.acpExtensions` | `core` | [`acp`](../packages/acp/acp) | - | [`deepseek-app`](../packages/bundle/deepseek-app) | - | 扩展插件在标准 ACP 服务器的传输连接之前，给它加 `_` 前缀的方法与 `_meta` 钩子（会话组装、prompt 返回、权限请求、取消）；deepseek profile 挂 `_liwa` 扩展。 |
 | `ctx.brainStartup` | `core` | [`brain-cli`](../packages/bundle/brain-cli) | - | [`brain-cli`](../packages/bundle/brain-cli) | - | 把解析出的 list、probe 或 run 命令交给大脑命令执行方。 |
 | `ctx.browserUse` | `seam` | [`browser-use`](../packages/browser-use/browser-use) | [`experimental-browser-use-playwright-mcp`](../packages/experimental/browser-use-playwright-mcp), [`experimental-browser-use-chrome-devtools-mcp`](../packages/experimental/browser-use-chrome-devtools-mcp), [`experimental-browser-use-stagehand-native`](../packages/experimental/browser-use-stagehand-native) | [`experimental-browser-use-playwright-mcp`](../packages/experimental/browser-use-playwright-mcp), [`experimental-browser-use-chrome-devtools-mcp`](../packages/experimental/browser-use-chrome-devtools-mcp), [`experimental-browser-use-stagehand-native`](../packages/experimental/browser-use-stagehand-native) | - | 每个服务实例注册一个提供方拥有的名称。提供方按实时 Session 拥有自己的工具与浏览器资源；共享服务不提供浏览器操作 API。 |
 | `ctx.computerUse` | `seam` | [`computer-use`](../packages/computer-use/computer-use) | [`experimental-computer-use-cua-driver-mcp`](../packages/experimental/computer-use-cua-driver-mcp), [`experimental-computer-use-cua-driver-native`](../packages/experimental/computer-use-cua-driver-native) | [`experimental-computer-use-cua-driver-mcp`](../packages/experimental/computer-use-cua-driver-mcp), [`experimental-computer-use-cua-driver-native`](../packages/experimental/computer-use-cua-driver-native) | - | 每个服务实例只注册一个提供方自定的名称。各提供方也拥有自己的模型工具；服务不提供通用操作 API、运行时选择或 Session 流程锁。 |
@@ -693,7 +704,7 @@ flowchart LR
 | `ctx.schedule` | `core` | [`schedule`](../packages/schedule/schedule) | - | - | - | 独立于 Session 的加载状态存储任务，并将到期消息排入原 Session。 |
 | `ctx.goals` | `core` | [`goal`](../packages/goal/goal) | - | - | - | 从会话日志折叠带修订版本的目标状态，并将实时延续激活保留在进程本地。 |
 | `ctx.ssh` | `core` | [`ssh`](../packages/ssh/ssh) | - | [`fs-ssh`](../packages/ssh/fs-ssh), [`subprocess-ssh`](../packages/ssh/subprocess-ssh), [`sandbox-ssh`](../packages/ssh/sandbox-ssh) | - | 负责一条经过认证的 OpenSSH 连接、已安装辅助程序身份、独立程序流，以及配套远端提供方的断连清理。 |
-| `ctx.subprocess` | `seam` | [`subprocess`](../packages/subprocess/subprocess) | [`subprocess-local`](../packages/subprocess/subprocess-local), [`subprocess-ssh`](../packages/ssh/subprocess-ssh) | [`bash-local`](../packages/shell/bash-local), [`bash-sandbox`](../packages/shell/bash-sandbox), [`terminal-bash`](../packages/terminal/terminal-bash), [`lsp-stdio`](../packages/lsp/lsp-stdio), [`subagent-acp`](../packages/subagent/subagent-acp), [`subagent-codex`](../packages/subagent/subagent-codex), [`subagent-claude-code`](../packages/subagent/subagent-claude-code), [`brain`](../packages/brain/brain) | - | Bash 执行器、PTY shell 后端、LSP Host，以及进程外 ACP、Codex 和 Claude Code subagent 后端都通过 ctx.subprocess 执行 spawn；该服务负责进程坐标、进程树／会话生命周期、stdio 处置、终端机制和 kill 升级。 |
+| `ctx.subprocess` | `seam` | [`subprocess`](../packages/subprocess/subprocess) | [`subprocess-local`](../packages/subprocess/subprocess-local), [`subprocess-ssh`](../packages/ssh/subprocess-ssh) | [`bash-local`](../packages/shell/bash-local), [`bash-sandbox`](../packages/shell/bash-sandbox), [`terminal-bash`](../packages/terminal/terminal-bash), [`lsp-stdio`](../packages/lsp/lsp-stdio), [`subagent-acp`](../packages/subagent/subagent-acp), [`subagent-codex`](../packages/subagent/subagent-codex), [`subagent-claude-code`](../packages/subagent/subagent-claude-code), [`brain`](../packages/brain/brain), [`brain-acp`](../packages/brain/brain-acp), [`brain-deepseek`](../packages/brain/brain-deepseek) | - | Bash 执行器、PTY shell 后端、LSP Host，以及进程外 ACP、Codex 和 Claude Code subagent 后端都通过 ctx.subprocess 执行 spawn；该服务负责进程坐标、进程树／会话生命周期、stdio 处置、终端机制和 kill 升级。 |
 | `ctx.shell` | `seam` | [`shell`](../packages/shell/shell) | [`bash-local`](../packages/shell/bash-local), [`bash-sandbox`](../packages/shell/bash-sandbox), [`pwsh-local`](../packages/shell/pwsh-local) | [`tool-bash`](../packages/shell/tool-bash), [`tool-pwsh`](../packages/shell/tool-pwsh), [`hooks-claude-code`](../packages/experimental/hooks-claude-code), [`hooks-codex`](../packages/experimental/hooks-codex) | - | 面向模型的 shell 工具和钩子桥接消费此 seam；沙箱、远程或 PowerShell 执行器可以替换 bash-local，而无需改动这些消费方。 |
 | `ctx.shellEnv` | `core` | [`shell-env`](../packages/shell/shell-env) | - | [`tool-bash`](../packages/shell/tool-bash), [`tool-pwsh`](../packages/shell/tool-pwsh) | - | 插件声明限定于 effect 作用域的 LIWA_* 事实；每个 shell 工具在每次执行时收集一份可信快照，其执行器据此重建命名空间。 |
 | `ctx.terminals` | `seam` | [`terminal`](../packages/terminal/terminal) | [`terminal-bash`](../packages/terminal/terminal-bash) | [`tool-terminal`](../packages/experimental/tool-terminal) | - | 注册表负责精确到 Agent 的会话身份和清理；后端负责终端机制，tool-terminal 则提供限定于所有者作用域的模型接口。 |

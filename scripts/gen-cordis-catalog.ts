@@ -53,6 +53,7 @@ export const SERVICE_PAGE: Record<string, string> = {
   headlessStartup: 'boot.md',
   brains: 'brain.md',
   brainStartup: 'brain.md',
+  acpExtensions: 'brain.md',
   translator: 'translation.md',
   cotTranslation: 'translation.md',
   speechToText: 'voice-input.md',
@@ -921,6 +922,8 @@ export const FOUNDATION_TYPE_NAMES: ReadonlySet<string> = new Set([
 
 /** Project types deliberately documented outside the subsystems catalog. */
 export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
+  AcpExtension: 'the ACP server extension contract is owned by packages/acp/acp/README.md and src/extensions.ts',
+  AcpSessionView: 'the ACP server extension contract is owned by packages/acp/acp/README.md and src/extensions.ts',
   BrainProbeResult: 'the brain-provider contract is owned by packages/brain/brain/README.md and src/provider.ts',
   BrainProvider: 'the brain-provider contract is owned by packages/brain/brain/README.md and src/provider.ts',
   BrainProviderView: 'the brain-provider contract is owned by packages/brain/brain/README.md and src/views.ts',

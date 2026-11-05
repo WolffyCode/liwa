@@ -122,7 +122,7 @@ Read these pages when the package-level contract is not enough. They move from t
 
 #### What the model sees
 
-Every request in this plugin's registration scope contains this guidance. Agent-scoped tool filtering may hide the tools without removing the independently registered prompt section.
+Every request in this plugin's registration scope that can see `job_output` contains this guidance. Agent-scoped tool filtering that hides the job tools also removes the section.
 
 ##### Background-job guidance
 

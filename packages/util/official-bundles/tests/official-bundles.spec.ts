@@ -28,6 +28,7 @@ describe('Shipped profile templates', () => {
       sdk: { bundles: ['@liwa/base', '@liwa/sdk-app'] },
       'sdk-minimal': { bundles: ['@liwa/sdk-minimal'] },
       brain: { bundles: ['@liwa/base', '@liwa/brain-cli'] },
+      deepseek: { bundles: ['@liwa/base', '@liwa/deepseek-app'] },
     })
   })
 })

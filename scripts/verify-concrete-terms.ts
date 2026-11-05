@@ -9,7 +9,9 @@ import { historicalSchemaRegion } from './historical-schema-region.ts'
 const root = resolve(import.meta.dirname, '..')
 const blockedTerm = 'prove' + 'nance'
 // Liwa designs retain source terminology; copied Paseo sources retain upstream wording.
-const excludedPrefixes = ['vendor/', '.agents/notes/archived/', 'docs/liwa/', 'packages/brain/brain-shared/src/paseo/'] as const
+// Each package's NOTICE records the copied source.
+const excludedPrefixes = ['vendor/', '.agents/notes/archived/', 'docs/liwa/'] as const
+const copiedPaseoSource = /^packages\/[^/]+\/[^/]+\/src\/paseo\//u
 
 /** One blocked term occurrence in a tracked path or text line. */
 export interface ConcreteTermViolation {
@@ -21,6 +23,7 @@ export interface ConcreteTermViolation {
 
 function isExcluded(file: string): boolean {
   return excludedPrefixes.some(prefix => file.startsWith(prefix))
+    || copiedPaseoSource.test(file)
     // Release snapshots retain the identifiers present in their pinned source;
     // historical-format pairing records key sections by those identifiers' headings.
     || /^docs\/persistence-changes\/releases\/liwa-v\d+\.\d+\.\d+-(?:alpha|rc)\.\d+\.schema\.json$/u.test(file)

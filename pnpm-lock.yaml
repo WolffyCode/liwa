@@ -339,6 +339,9 @@ importers:
       '@liwa/cua-bundle':
         specifier: workspace:*
         version: link:../../packages/experimental/cua-bundle
+      '@liwa/deepseek-app':
+        specifier: workspace:*
+        version: link:../../packages/bundle/deepseek-app
       '@liwa/experimental-agent-team-profile':
         specifier: workspace:*
         version: link:../../packages/experimental/agent-team-profile
@@ -1237,6 +1240,9 @@ importers:
       '@liwa/brand':
         specifier: workspace:*
         version: link:../../util/brand
+      '@liwa/cmdline':
+        specifier: workspace:*
+        version: link:../../boot/cmdline
       '@liwa/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
@@ -1250,6 +1256,9 @@ importers:
       '@liwa/agent-loop-testkit':
         specifier: workspace:*
         version: link:../../test-support/agent-loop-testkit
+      '@liwa/agent-preset-registry':
+        specifier: workspace:*
+        version: link:../../preset/agent-preset-registry
       '@liwa/attachment':
         specifier: workspace:*
         version: link:../../attachment/attachment
@@ -1262,6 +1271,9 @@ importers:
       '@liwa/mcp-client':
         specifier: workspace:*
         version: link:../../mcp/mcp-client
+      '@liwa/plan-mode':
+        specifier: workspace:*
+        version: link:../../plan/plan-mode
       '@liwa/session':
         specifier: workspace:*
         version: link:../../core/session
@@ -1289,6 +1301,9 @@ importers:
       '@liwa/user-approval':
         specifier: workspace:*
         version: link:../../interaction/user-approval
+      '@liwa/user-questions':
+        specifier: workspace:*
+        version: link:../../interaction/user-questions
 
   packages/api/gateway:
     dependencies:
@@ -2302,12 +2317,95 @@ importers:
         specifier: workspace:*
         version: link:../../subprocess/subprocess-local
 
-  packages/brain/brain-shared:
+  packages/brain/brain-acp:
     dependencies:
+      '@agentclientprotocol/sdk':
+        specifier: 1.4.0
+        version: 1.4.0(zod@4.4.3)
+      '@liwa/brain':
+        specifier: workspace:*
+        version: link:../brain
+      '@liwa/brain-shared':
+        specifier: workspace:*
+        version: link:../brain-shared
+      '@liwa/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
       zod:
         specifier: 4.4.3
         version: 4.4.3
     devDependencies:
+      '@liwa/brain-testkit':
+        specifier: workspace:*
+        version: link:../../test-support/brain-testkit
+      '@liwa/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@liwa/subprocess':
+        specifier: workspace:*
+        version: link:../../subprocess/subprocess
+      '@liwa/subprocess-local':
+        specifier: workspace:*
+        version: link:../../subprocess/subprocess-local
+
+  packages/brain/brain-deepseek:
+    dependencies:
+      '@liwa/brain':
+        specifier: workspace:*
+        version: link:../brain
+      '@liwa/brain-acp':
+        specifier: workspace:*
+        version: link:../brain-acp
+      '@liwa/brain-shared':
+        specifier: workspace:*
+        version: link:../brain-shared
+      '@liwa/credentials':
+        specifier: workspace:*
+        version: link:../../credentials/credentials
+      '@liwa/deepseek-app':
+        specifier: workspace:*
+        version: link:../../bundle/deepseek-app
+      '@liwa/launch-environment':
+        specifier: workspace:*
+        version: link:../../util/launch-environment
+      '@liwa/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@agentclientprotocol/sdk':
+        specifier: 1.4.0
+        version: 1.4.0(zod@4.4.3)
+      '@liwa/app-boot':
+        specifier: workspace:*
+        version: link:../../boot/app-boot
+      '@liwa/brain-testkit':
+        specifier: workspace:*
+        version: link:../../test-support/brain-testkit
+      '@liwa/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@liwa/subprocess':
+        specifier: workspace:*
+        version: link:../../subprocess/subprocess
+      '@liwa/subprocess-local':
+        specifier: workspace:*
+        version: link:../../subprocess/subprocess-local
+
+  packages/brain/brain-shared:
+    dependencies:
+      '@liwa/brain':
+        specifier: workspace:*
+        version: link:../brain
+      '@liwa/util-values':
+        specifier: workspace:*
+        version: link:../../util/values
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@liwa/brain-testkit':
+        specifier: workspace:*
+        version: link:../../test-support/brain-testkit
       '@liwa/cordis':
         specifier: workspace:~
         version: link:../../../vendor/cordis
@@ -2625,6 +2723,12 @@ importers:
       '@liwa/brain':
         specifier: workspace:*
         version: link:../../brain/brain
+      '@liwa/brain-acp':
+        specifier: workspace:*
+        version: link:../../brain/brain-acp
+      '@liwa/brain-deepseek':
+        specifier: workspace:*
+        version: link:../../brain/brain-deepseek
       '@liwa/cmdline':
         specifier: workspace:*
         version: link:../../boot/cmdline
@@ -2651,11 +2755,120 @@ importers:
         specifier: workspace:*
         version: link:../../subprocess/subprocess-local
 
+  packages/bundle/deepseek-app:
+    dependencies:
+      '@agentclientprotocol/sdk':
+        specifier: 1.4.0
+        version: 1.4.0(zod@4.4.3)
+      '@liwa/acp':
+        specifier: workspace:*
+        version: link:../../acp/acp
+      '@liwa/agent-preset':
+        specifier: workspace:*
+        version: link:../../preset/agent-preset
+      '@liwa/agent-preset-registry':
+        specifier: workspace:*
+        version: link:../../preset/agent-preset-registry
+      '@liwa/cmdline':
+        specifier: workspace:*
+        version: link:../../boot/cmdline
+      '@liwa/plan-mode':
+        specifier: workspace:*
+        version: link:../../plan/plan-mode
+      '@liwa/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+      '@liwa/time-context':
+        specifier: workspace:*
+        version: link:../../context/time-context
+      '@liwa/tool-ask-user':
+        specifier: workspace:*
+        version: link:../../interaction/tool-ask-user
+      '@liwa/tool-bash':
+        specifier: workspace:*
+        version: link:../../shell/tool-bash
+      '@liwa/tool-fs':
+        specifier: workspace:*
+        version: link:../../fs/tool-fs
+      '@liwa/tool-fs-search':
+        specifier: workspace:*
+        version: link:../../fs/tool-fs-search
+      '@liwa/tool-goal':
+        specifier: workspace:*
+        version: link:../../goal/tool-goal
+      '@liwa/tool-jobs':
+        specifier: workspace:*
+        version: link:../../jobs/tool-jobs
+      '@liwa/tool-present':
+        specifier: workspace:*
+        version: link:../../deliverables/tool-present
+      '@liwa/tool-pwsh':
+        specifier: workspace:*
+        version: link:../../shell/tool-pwsh
+      '@liwa/tool-subagent':
+        specifier: workspace:*
+        version: link:../../subagent/tool-subagent
+      '@liwa/tool-subagent-control':
+        specifier: workspace:*
+        version: link:../../subagent/tool-subagent-control
+      '@liwa/tool-todo':
+        specifier: workspace:*
+        version: link:../../todo/tool-todo
+      '@liwa/tool-web':
+        specifier: workspace:*
+        version: link:../../web/tool-web
+      '@liwa/tool-workflow':
+        specifier: workspace:*
+        version: link:../../workflow/tool-workflow
+      '@liwa/workflow-ptc':
+        specifier: workspace:*
+        version: link:../../workflow/workflow-ptc
+      commander:
+        specifier: ^15.0.0
+        version: 15.0.0
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@liwa/agent':
+        specifier: workspace:*
+        version: link:../../core/agent
+      '@liwa/agent-default-model':
+        specifier: workspace:*
+        version: link:../../core/agent-default-model
+      '@liwa/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@liwa/llm':
+        specifier: workspace:*
+        version: link:../../llm/llm
+      '@liwa/scope':
+        specifier: workspace:*
+        version: link:../../core/scope
+      '@liwa/session':
+        specifier: workspace:*
+        version: link:../../core/session
+      '@liwa/subagent':
+        specifier: workspace:*
+        version: link:../../subagent/subagent
+      '@liwa/system-prompt':
+        specifier: workspace:*
+        version: link:../../core/system-prompt
+      '@liwa/tools':
+        specifier: workspace:*
+        version: link:../../core/tools
+
   packages/bundle/headless:
     dependencies:
       '@liwa/brain':
         specifier: workspace:*
         version: link:../../brain/brain
+      '@liwa/brain-acp':
+        specifier: workspace:*
+        version: link:../../brain/brain-acp
+      '@liwa/brain-deepseek':
+        specifier: workspace:*
+        version: link:../../brain/brain-deepseek
       '@liwa/brand':
         specifier: workspace:*
         version: link:../../util/brand
@@ -2917,6 +3130,12 @@ importers:
       '@liwa/brain':
         specifier: workspace:*
         version: link:../../brain/brain
+      '@liwa/brain-acp':
+        specifier: workspace:*
+        version: link:../../brain/brain-acp
+      '@liwa/brain-deepseek':
+        specifier: workspace:*
+        version: link:../../brain/brain-deepseek
       '@liwa/client-connection':
         specifier: workspace:*
         version: link:../../client/connection

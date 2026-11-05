@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "DeepSeek-Agent-Profil",
+    "description": "Stellt pro Prozess eine Liwa-Agentensitzung über ACP-stdio bereit, mit der _liwa-Erweiterung und einer Agentenvorgabe pro Sitzungsart."
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "DeepSeek agent provider",
+    "description": "Run Liwa's own DeepSeek agent as a brain provider: one liwa --profile deepseek process per session, with steering, usage, and child agents."
+  }
+}

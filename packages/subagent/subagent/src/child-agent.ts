@@ -17,7 +17,7 @@ import type { ToolRestriction } from '@liwa/tools'
 // opportunistically (the documented `ctx.get` pattern), never as a hard dep —
 // and merge the inherited permission session-event payloads.
 import type {} from '@liwa/sandbox-policy'
-import type {} from '@liwa/user-approval'
+import type { ApprovalPolicy } from '@liwa/user-approval'
 import type {} from '@liwa/permission-presets'
 // Type-only: make `ctx.get('agentPresets')` resolve to the preset roster when
 // composed — a child inherits its parent's composition opportunistically (the
@@ -217,21 +217,30 @@ function applyChildOverrides(childCtx: Context, composition: ChildComposition): 
   if (composition.toolFilter !== undefined) childCtx.tools.restrict(composition.toolFilter)
 }
 
+/**
+ * How a delegated child's approval asks are handled. `reject` pins the child to the `never`
+ * policy, so its asks are rejected deterministically and nobody is prompted. `forward` keeps
+ * the parent's approval policy, so the child's asks reach the same answerers the parent's
+ * do (a host that routes a descendant's ask to the session's owner answers them there); the
+ * parent agent itself never answers them — there is no answering surface for a parent model.
+ */
+export type DelegatedApproval = 'reject' | 'forward'
+
 /** Policy seeded onto a child session's log at the delegation boundary. */
 export interface DelegatedPolicyOverrides {
   /**
    * The parent's current preset identity when it runs in Auto or Full access;
-   * the child keeps it under the pinned `never` approval policy.
+   * the child keeps it under the delegated approval policy.
    */
   readonly permissionPreset: 'auto' | 'danger-full-access' | undefined
   /** The parent session's explicit sandbox-mode override, or `undefined` without one. */
   readonly sandboxMode: SandboxMode | undefined
   /**
-   * `'never'` whenever the approval capability is composed, `undefined`
-   * otherwise: a delegated child acts only within the sandbox scope fixed at
-   * delegation, so its asks are rejected deterministically.
+   * Under `reject`: `'never'` whenever the approval capability is composed, so the child's asks
+   * are rejected deterministically. Under `forward`: the parent's own logged override (the child
+   * then resolves exactly as the parent does), or `undefined` when the parent has none.
    */
-  readonly approvalPolicy: 'never' | undefined
+  readonly approvalPolicy: ApprovalPolicy | undefined
 }
 
 /**
@@ -240,17 +249,20 @@ export interface DelegatedPolicyOverrides {
  * parent's future, not to this child. Auto and Full access identities are
  * inherited only through the in-process Liwa path so either can replace a stale
  * same-bundle fork value. Only the parent session's explicit sandbox override
- * is captured — never deployment defaults or one-shot grants — and the approval
- * policy is pinned to `'never'` regardless of the parent's own policy.
+ * is captured — never deployment defaults or one-shot grants. The approval
+ * policy follows the host's delegated-approval choice: pinned to `'never'`
+ * under `reject`, the parent's own override under `forward`.
  * @param parent - the delegating parent agent.
- * @returns the sandbox override (or `undefined` without one) and the approval pin.
+ * @param approval - the host's delegated-approval choice.
+ * @returns the sandbox override (or `undefined` without one) and the approval policy.
  */
-export function captureDelegatedPolicyOverrides(parent: Agent): DelegatedPolicyOverrides {
+export function captureDelegatedPolicyOverrides(parent: Agent, approval: DelegatedApproval = 'reject'): DelegatedPolicyOverrides {
   const preset = parent.ctx.get('permissionPresets')?.current(parent.session)
+  const service = parent.ctx.get('approval')
   return {
     permissionPreset: preset === 'auto' || preset === 'danger-full-access' ? preset : undefined,
     sandboxMode: parent.ctx.get('sandboxPolicy')?.overrideOf(parent.session),
-    approvalPolicy: parent.ctx.get('approval') === undefined ? undefined : 'never',
+    approvalPolicy: service === undefined ? undefined : approval === 'reject' ? 'never' : service.overrideOf(parent.session),
   }
 }
 

@@ -23,7 +23,7 @@ import {
   appendDelegatedPolicyOverrides, applyChildComposition, captureDelegatedPolicyOverrides,
   childSessionMeta, resolveChildAgentOptions, resolveChildDepth,
 } from './child-agent.ts'
-import type { ChildComposition, DelegatedPolicyOverrides } from './child-agent.ts'
+import type { ChildComposition, DelegatedApproval, DelegatedPolicyOverrides } from './child-agent.ts'
 import { createAgentMessage, withContinuableReturnGuidance, createSettlementMessage } from './continuation-messages.ts'
 import { assertSubagentMaxDepth } from './depth.ts'
 import { foldSubagentDescriptor, snapshotSubagentDescriptor } from './descriptor.ts'
@@ -157,6 +157,7 @@ export class SubagentManager {
     private readonly ctx: Context,
     private readonly host: SubagentHost,
     private readonly maxActiveSubagents: () => number,
+    private readonly delegatedApproval: () => DelegatedApproval = () => 'reject',
   ) {
     // Ordinary Cordis owner effects unwind in reverse registration order, which
     // cannot express the dynamic child graph. Register the private scope's
@@ -401,7 +402,7 @@ export class SubagentManager {
     })
     // Capture before the first await: a later parent switch belongs to the
     // parent's future, not to this child.
-    const delegatedPolicies = captureDelegatedPolicyOverrides(parent)
+    const delegatedPolicies = captureDelegatedPolicyOverrides(parent, this.delegatedApproval())
 
     // An idle continuation-managed parent must not settle while a caller is
     // still creating its child. A turn-scoped delegation does not need this,

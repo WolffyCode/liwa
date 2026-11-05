@@ -82,6 +82,32 @@ export interface TypeApiEntry {
 /** Every harness `ctx.<key>` service, sorted by key. */
 export const SERVICE_API: readonly ServiceApiEntry[] = [
   {
+    key: 'acpExtensions',
+    summary: '`ctx.acpExtensions`：ACP 扩展的登记表（扩展插件看到的那一面）。',
+    description: '`ctx.acpExtensions`：ACP 扩展的登记表（扩展插件看到的那一面）。',
+    methods: [
+      {
+        signature: 'register(extension: AcpExtension): () => void',
+        description: '登记一个扩展，直到返回的函数被调用。',
+        parameters: [{ name: 'extension', description: '扩展。' }],
+        returns: '释放函数。',
+        throws: ['传输已连上（扩展方法只能在连上之前加），或方法名不以 `_` 开头、与已登记的重名。'],
+      },
+      {
+        signature: 'session(sessionId: string): AcpSessionView | undefined',
+        description: '按会话号找会话（给扩展方法用）。',
+        parameters: [{ name: 'sessionId', description: '会话号。' }],
+        returns: '会话；没有时为 `undefined`。',
+      },
+      {
+        signature: 'sessionOf(agent: Agent): AcpSessionView | undefined',
+        description: '一个 Agent 归哪个会话上报。',
+        parameters: [{ name: 'agent', description: 'Agent（可以是后代）。' }],
+        returns: '会话；不属于任何开着的会话时为 `undefined`。',
+      },
+    ],
+  },
+  {
     key: 'actionCards',
     summary: 'Card tool, kind registry, Session projection, user actions and status notices.',
     description: 'Card tool, kind registry, Session projection, user actions and status notices.',
@@ -598,6 +624,11 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     description: '`ctx.brains`：提供方登记、可用性探测、成员配置目录、会话的开启与续接、会话 / 子 agent / 进程 / 用量的登记。 提供方的登记与调用方的会话都是调用方上下文里的 effect：提供方插件卸载时它的会话一起关，调用方卸载时它开的会话一起关。',
     methods: [
       {
+        signature: 'readonly blobs: BrainBlobStore',
+        description: '回合输入 blob 的存储（图片等）：调用方 `put` 拿引用，提供方经启动上下文读回。',
+        parameters: [],
+      },
+      {
         signature: 'register(provider: BrainProvider): () => void',
         description: '登记一个提供方，直到返回的函数被调用或登记它的插件卸载；释放时它开着的会话一起关。',
         parameters: [{ name: 'provider', description: '提供方；`impl` 与 `meta` 在这里校验。' }],
@@ -626,13 +657,14 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: 'async prepareConfigDir(member: MemberId, impl: ImplId, spec: MemberConfigSpec): Promise<string>',
-        description: '生成或刷新成员给某家提供方的配置目录（01 §4.6），每次覆盖。',
-        parameters: [{ name: 'member', description: '成员。' }, { name: 'impl', description: '提供方。' }, { name: 'spec', description: '规矩、本事目录、模型、MCP、是否读仓库指令。' }],
+        description: '生成或刷新成员给某家提供方的配置目录（01 §4.6），每次覆盖：建好 `<brains>/<impl>/`，内容由提供方的 `writeMemberConfig` 写。',
+        parameters: [{ name: 'member', description: '成员。' }, { name: 'impl', description: '提供方。' }, { name: 'spec', description: '规矩、本事目录、模型（可省）、MCP、是否读仓库指令。' }],
         returns: '成员配置目录，作为 `SessionConfig.configDir`。',
+        throws: ['{BrainError} `not_found`（没有这个提供方），或提供方写法自己的失败。'],
       },
       {
         signature: 'async createSession(owner: Context, request: CreateSessionRequest): Promise<BrainSession>',
-        description: '开一个新会话。先做三项核对：压缩关不掉的提供方不接 `compaction: \'off\'`；原生工具去不掉的提供方不接 `nativeToolPolicy: \'none\'`；原生子 agent 只对干活的活放开，其余种类改成关并记在 `adjustments` 里。',
+        description: '开一个新会话。先做四项核对：压缩关不掉的提供方不接 `compaction: \'off\'`；原生工具去不掉的提供方不接 `nativeToolPolicy: \'none\'`；没有会话模式的提供方不接 `modeId`；原生子 agent 只对干活的活放开，其余种类改成关并记在 `adjustments` 里。其余策略（工具、压缩、仓库指令、规矩、本事的实际落实）由提供方在开会话时负责，做不到的组合由它拒绝。',
         parameters: [{ name: 'owner', description: '归属方上下文；它卸载时会话一起关。' }, { name: 'request', description: '提供方与会话配置。' }],
         returns: '会话句柄。',
         throws: ['{BrainError} `not_found`、`invalid_input`、`timeout`，或提供方自己的失败。'],
@@ -5188,6 +5220,26 @@ export const EVENT_API: readonly EventApiEntry[] = [
 /** Shapes of every exported type the Service and Event signatures reference (transitively), sorted by name. */
 export const TYPE_API: readonly TypeApiEntry[] = [
   {
+    name: 'AcpExtension',
+    declaration: 'export interface AcpExtension {\n    readonly name: string;\n    readonly methods?: Readonly<Record<string, AcpExtensionMethod>>;\n    setupSession?(setup: AcpSessionSetup): Promise<void> | void;\n    promptResponse?(session: AcpSessionView, response: PromptResponse): PromptResponse;\n    permissionRequest?(session: AcpSessionView, agent: Agent, approval: ApprovalRequestEvent, request: RequestPermissionRequest): RequestPermissionRequest;\n    cancelOptions?(session: AcpSessionView, meta: Record<string, unknown> | undefined): CancelOptions | undefined;\n}',
+  },
+  {
+    name: 'AcpExtensionMethod',
+    declaration: 'export type AcpExtensionMethod = (params: Record<string, unknown>, context: AcpExtensionMethodContext) => Promise<Record<string, unknown>>;',
+  },
+  {
+    name: 'AcpExtensionMethodContext',
+    declaration: 'export interface AcpExtensionMethodContext {\n    readonly signal: AbortSignal;\n    session(sessionId: string): AcpSessionView | undefined;\n}',
+  },
+  {
+    name: 'AcpSessionSetup',
+    declaration: 'export interface AcpSessionSetup {\n    readonly agentCtx: Context;\n    readonly sessionId: SessionId;\n    readonly meta: Record<string, unknown> | undefined;\n    readonly resumed: boolean;\n}',
+  },
+  {
+    name: 'AcpSessionView',
+    declaration: 'export interface AcpSessionView {\n    readonly sessionId: SessionId;\n    readonly agent: Agent;\n    readonly prompting: boolean;\n    notify(update: SessionUpdate, meta?: Record<string, unknown>): Promise<void>;\n    admit(prompt: readonly AcpContentBlock[], signal: AbortSignal): Promise<ContentBlock[]>;\n}',
+  },
+  {
     name: 'ActionCardDecision',
     declaration: 'export interface ActionCardDecision {\n    readonly callId: ToolCallId;\n    readonly action: string;\n    readonly phase: string;\n    readonly data?: ActionCardFields | undefined;\n}',
   },
@@ -5488,8 +5540,20 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type BindingOrigin = \'created\' | \'referenced\' | \'discovered\' | \'tracked\';',
   },
   {
+    name: 'BlobRef',
+    declaration: 'export type BlobRef = z.output<typeof BlobRefSchema>;',
+  },
+  {
     name: 'BoxProps',
     declaration: 'export interface BoxProps {\n    readonly flexDirection?: \'row\' | \'column\' | undefined;\n    readonly paddingX?: number | undefined;\n    readonly paddingY?: number | undefined;\n    readonly padding?: number | undefined;\n    readonly gap?: number | undefined;\n    readonly border?: boolean | string | undefined;\n    readonly borderColor?: string | undefined;\n    readonly children?: UiNode | undefined;\n}',
+  },
+  {
+    name: 'BrainBlobReader',
+    declaration: 'export interface BrainBlobReader {\n    readBlob(ref: BlobRef): Promise<Uint8Array>;\n}',
+  },
+  {
+    name: 'BrainBlobStore',
+    declaration: 'export class BrainBlobStore implements BrainBlobReader {\n    constructor(readonly dir: string);\n    async put(bytes: Uint8Array, mime: string): Promise<BlobRef>;\n    async readBlob(ref: BlobRef): Promise<Uint8Array>;\n}',
   },
   {
     name: 'BrainChildKind',
@@ -5505,7 +5569,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'BrainCommand',
-    declaration: 'export type BrainCommand = {\n    command: \'list\';\n    json: boolean;\n} | {\n    command: \'probe\';\n    impl: string;\n    json: boolean;\n} | {\n    command: \'run\';\n    provider: string;\n    prompt: string;\n    model?: string;\n    cwd?: string;\n    mode: PermissionMode;\n    member?: string;\n    mindKind?: (typeof RUN_MIND_KINDS)[number];\n    json: boolean;\n};',
+    declaration: 'export type BrainCommand = {\n    command: \'list\';\n    json: boolean;\n} | {\n    command: \'probe\';\n    impl: string;\n    json: boolean;\n} | {\n    command: \'run\';\n    provider: string;\n    prompt: string;\n    model?: string;\n    cwd?: string;\n    mode?: string;\n    permit: PermitPolicy;\n    images: string[];\n    member?: string;\n    mindKind?: (typeof RUN_MIND_KINDS)[number];\n    json: boolean;\n};',
   },
   {
     name: 'BrainEvent',
@@ -5517,7 +5581,11 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'BrainLaunchContext',
-    declaration: 'export interface BrainLaunchContext extends BrainProcessHost {\n    readonly sessionId: BrainSessionId;\n    readonly homeDir: string;\n    readonly logger: Logger;\n}',
+    declaration: 'export interface BrainLaunchContext extends BrainProcessHost, BrainBlobReader {\n    readonly sessionId: BrainSessionId;\n    readonly homeDir: string;\n    readonly logger: Logger;\n}',
+  },
+  {
+    name: 'BrainMode',
+    declaration: 'export type BrainMode = z.output<typeof BrainModeSchema>;',
   },
   {
     name: 'BrainProbeContext',
@@ -5545,11 +5613,11 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'BrainProvider',
-    declaration: 'export interface BrainProvider {\n    readonly impl: ImplId;\n    readonly meta: Meta;\n    probe(context: BrainProbeContext): Promise<BrainProbeResult>;\n    createSession(config: SessionConfig, launch: BrainLaunchContext): Promise<BrainProviderSession>;\n    resumeSession(handle: ResumeHandle, config: SessionConfig, launch: BrainLaunchContext): Promise<BrainProviderSession>;\n}',
+    declaration: 'export interface BrainProvider {\n    readonly impl: ImplId;\n    readonly meta: Meta;\n    readonly sessionHome: BrainSessionHome;\n    writeMemberConfig?(dir: string, spec: MemberConfigSpec): Promise<void>;\n    probe(context: BrainProbeContext): Promise<BrainProbeResult>;\n    createSession(config: SessionConfig, launch: BrainLaunchContext): Promise<BrainProviderSession>;\n    resumeSession(handle: ResumeHandle, config: SessionConfig, launch: BrainLaunchContext): Promise<BrainProviderSession>;\n}',
   },
   {
     name: 'BrainProviderSession',
-    declaration: 'export interface BrainProviderSession {\n    readonly id: string | null;\n    subscribe(listener: (event: BrainEvent) => void): () => void;\n    startTurn(input: TurnInput): Promise<{\n        turnId: TurnId;\n    }>;\n    deliver(input: TurnInput, options: DeliverOptions): Promise<DeliverResult>;\n    cancel(options: CancelOptions): Promise<void>;\n    respondToPermission(requestId: PermissionRequestId, response: PermissionResponse): Promise<void>;\n    persistence(): ResumeHandle | null;\n    canStopRuntime?(): Promise<boolean>;\n    setModel?(model: string): Promise<void>;\n    close(): Promise<void>;\n}',
+    declaration: 'export interface BrainProviderSession {\n    readonly id: string | null;\n    subscribe(listener: (event: BrainEvent) => void): () => void;\n    startTurn(input: TurnInput): Promise<{\n        turnId: TurnId;\n    }>;\n    deliver(input: TurnInput, options: DeliverOptions): Promise<DeliverResult>;\n    cancel(options: CancelOptions): Promise<void>;\n    respondToPermission(requestId: PermissionRequestId, response: PermissionResponse): Promise<void>;\n    persistence(): ResumeHandle | null;\n    canStopRuntime?(): Promise<boolean>;\n    setModel?(model: string): Promise<void>;\n    availableModes?(): Promise<BrainMode[]>;\n    currentMode?(): Promise<string | null>;\n    setMode?(modeId: string): Promise<ModeChange>;\n    close(): Promise<void>;\n}',
   },
   {
     name: 'BrainProviderUnavailableRecord',
@@ -5561,11 +5629,15 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'BrainSession',
-    declaration: 'export interface BrainSession {\n    readonly id: BrainSessionId;\n    readonly impl: ImplId;\n    readonly config: SessionConfig;\n    readonly state: BrainSessionState;\n    readonly activeTurnId: TurnId | undefined;\n    startTurn(input: TurnInput): Promise<{\n        turnId: TurnId;\n    }>;\n    deliver(input: TurnInput, options: DeliverOptions): Promise<DeliverResult>;\n    cancel(options: CancelOptions): Promise<void>;\n    respondToPermission(requestId: PermissionRequestId, response: PermissionResponse): Promise<void>;\n    persistence(): ResumeHandle | null;\n    canStopRuntime(): Promise<boolean>;\n    close(reason?: BrainCloseReason): Promise<void>;\n    subscribe(listener: (event: BrainEvent) => void): () => void;\n    events(signal?: AbortSignal): AsyncIterable<BrainEvent>;\n    usage(): Usage;\n    children(): BrainChildView[];\n    pendingPermissions(): BrainEventOf<\'permission.request\'>[];\n    view(): BrainSessionView;\n}',
+    declaration: 'export interface BrainSession {\n    readonly id: BrainSessionId;\n    readonly impl: ImplId;\n    readonly config: SessionConfig;\n    readonly state: BrainSessionState;\n    readonly activeTurnId: TurnId | undefined;\n    startTurn(input: TurnInput): Promise<{\n        turnId: TurnId;\n    }>;\n    deliver(input: TurnInput, options: DeliverOptions): Promise<DeliverResult>;\n    cancel(options: CancelOptions): Promise<void>;\n    respondToPermission(requestId: PermissionRequestId, response: PermissionResponse): Promise<void>;\n    setModel(model: string): Promise<void>;\n    availableModes(): Promise<BrainMode[]>;\n    currentMode(): Promise<string | null>;\n    setMode(modeId: string): Promise<ModeChange>;\n    persistence(): ResumeHandle | null;\n    canStopRuntime(): Promise<boolean>;\n    close(reason?: BrainCloseReason): Promise<void>;\n    subscribe(listener: (event: BrainEvent) => void): () => void;\n    events(signal?: AbortSignal): AsyncIterable<BrainEvent>;\n    usage(): Usage;\n    children(): BrainChildView[];\n    pendingPermissions(): BrainEventOf<\'permission.request\'>[];\n    view(): BrainSessionView;\n}',
   },
   {
     name: 'BrainSessionClosedRecord',
     declaration: 'export interface BrainSessionClosedRecord {\n    session: BrainSessionView;\n    usage: Usage;\n}',
+  },
+  {
+    name: 'BrainSessionHome',
+    declaration: 'export type BrainSessionHome = \'per-session\' | \'per-member\';',
   },
   {
     name: 'BrainSessionId',
@@ -5577,7 +5649,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'BrainSessionView',
-    declaration: 'export interface BrainSessionView {\n    sessionId: BrainSessionId;\n    impl: ImplId;\n    member: MemberId;\n    mindKind: MindKind;\n    owner: SessionOwner;\n    model: string;\n    configDir: string;\n    homeDir: string;\n    state: BrainSessionState;\n    openedAt: string;\n    resumedFrom?: ResumeHandle;\n    adjustments: string[];\n    closedAt?: string;\n    closeReason?: BrainCloseReason;\n}',
+    declaration: 'export interface BrainSessionView {\n    sessionId: BrainSessionId;\n    impl: ImplId;\n    member: MemberId;\n    mindKind: MindKind;\n    owner: SessionOwner;\n    model?: string;\n    modeId?: string;\n    configDir: string;\n    homeDir: string;\n    state: BrainSessionState;\n    openedAt: string;\n    resumedFrom?: ResumeHandle;\n    adjustments: string[];\n    closedAt?: string;\n    closeReason?: BrainCloseReason;\n}',
   },
   {
     name: 'BrainUsageRecord',
@@ -7004,6 +7076,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ModDefinition {\n    readonly name: string;\n    readonly version?: string;\n    readonly root?: string;\n    readonly options?: PluginOptions;\n    readonly register: ModRegister;\n}',
   },
   {
+    name: 'ModeChange',
+    declaration: 'export interface ModeChange {\n    modeId: string;\n    appliesAt: \'now\' | \'next_step\' | \'next_turn\';\n}',
+  },
+  {
     name: 'ModelCatalog',
     declaration: 'export interface ModelCatalog {\n    readonly default: ModelSelection;\n    readonly routableProviders: readonly string[];\n    readonly groups: readonly ModelProviderGroup[];\n    readonly failures: readonly ModelCatalogFailure[];\n}',
   },
@@ -7188,16 +7264,16 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface PermissionCatalog {\n    options: PresetOption[];\n    defaultOptions: PresetOption[];\n    defaultPreset: string;\n}',
   },
   {
-    name: 'PermissionMode',
-    declaration: 'export type PermissionMode = (typeof PERMISSION_MODES)[number];',
-  },
-  {
     name: 'PermissionRequestId',
     declaration: 'export type PermissionRequestId = Branded<\'BrainPermissionRequestId\'>;',
   },
   {
     name: 'PermissionResponse',
-    declaration: 'export interface PermissionResponse {\n    optionId: string;\n    reason?: string;\n}',
+    declaration: 'export interface PermissionResponse {\n    optionId: string;\n    reason?: string;\n    answers?: Record<string, PermissionAnswer>;\n}',
+  },
+  {
+    name: 'PermitPolicy',
+    declaration: 'export type PermitPolicy = (typeof PERMIT_POLICIES)[number];',
   },
   {
     name: 'PluginChange',
@@ -9201,7 +9277,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ToolDispatchExecution',
-    declaration: 'export interface ToolDispatchExecution extends Omit<ToolExecution, \'signal\'> {\n    signal: AbortSignal;\n}',
+    declaration: 'export interface ToolDispatchExecution extends Omit<ToolExecution, \'signal\'> {\n    signal: AbortSignal;\n    concludeTurn(): void;\n}',
   },
   {
     name: 'ToolErrorInfo',

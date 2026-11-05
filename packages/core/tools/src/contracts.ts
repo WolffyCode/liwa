@@ -231,6 +231,13 @@ export interface ToolExecution extends ToolExecutionInput {
 export interface ToolDispatchExecution extends Omit<ToolExecution, 'signal'> {
   /** Cancellation signal visible to the next wrapper or tool body. */
   signal: AbortSignal
+  /**
+   * Mark this execution's successful result as terminal for the current agent
+   * turn, as {@link ToolRunContext.concludeTurn} does from the tool body. A
+   * wrapper calls it before `next()` so policy (a session's conclude-on tools)
+   * can end the turn without the tool knowing; a failed result never concludes.
+   */
+  concludeTurn(): void
 }
 
 /**

@@ -557,6 +557,16 @@ function loadCompilerOptions(scanRoot: string): ts.CompilerOptions {
 }
 
 /**
+ * Whether a repository-relative file is Paseo source copied in place: exactly under a
+ * package's `src/paseo/` directory (a sibling such as `src/paseo-extra/` is ordinary source).
+ * @param rel - repository-relative path with `/` separators.
+ * @returns true for `packages/<group>/<package>/src/paseo/**`.
+ */
+export function isCopiedPaseoSource(rel: string): boolean {
+  return /^packages\/[^/]+\/[^/]+\/src\/paseo\//u.test(rel)
+}
+
+/**
  * Walk every non-vendored package source file and collect JSDoc-completeness
  * violations for its module-level exports. Returns findings instead of
  * throwing so tests assert on the list; the CLI entry turns a non-empty list
@@ -568,8 +578,8 @@ export function collectExportJsdocViolations(scanRoot: string = root): string[] 
   const violations: string[] = []
   const rels = globSync('packages/*/*/src/**/*.ts', { cwd: scanRoot })
     .map(path => path.split(sep).join('/'))
-    // Paseo source copied in place under src/paseo/ keeps its upstream documentation, like vendor/.
-    .filter(rel => !rel.split('/').slice(3, 5).join('/').startsWith('src/paseo'))
+    // Paseo source copied in place under a package's src/paseo/ keeps its upstream documentation, like vendor/.
+    .filter(rel => !isCopiedPaseoSource(rel))
     .sort()
   const program = ts.createProgram(rels.map(rel => resolve(scanRoot, rel)), loadCompilerOptions(scanRoot))
   const checker = program.getTypeChecker()

@@ -1,0 +1,27 @@
+# Preset deepseek-own: her own activity (reading, writing, browsing) inside
+# its own working directory, with a todo list. The compactor follows the
+# session's compaction setting.
+- insert:
+    - id: preset-deepseek-own
+      name: '@liwa/agent-preset'
+      config:
+        id: deepseek-own
+        order: 4
+        plugins:
+          - id: time-context
+            name: '@liwa/time-context'
+          - id: tool-fs
+            name: '@liwa/tool-fs'
+          - id: tool-fs-search
+            name: '@liwa/tool-fs-search'
+            config:
+              sampleOverCapGlobResults: false
+          - id: tool-web
+            name: '@liwa/tool-web'
+            config:
+              fetch: true
+              searchTimeoutMs: 60000
+          - id: tool-todo
+            name: '@liwa/tool-todo'
+            config:
+              allowParallelInProgress: true

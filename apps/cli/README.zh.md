@@ -11,13 +11,14 @@
 | `liwa <name>` / `liwa --profile <name>` | 启动位于 `$LIWA_HOME/profiles/<name>` 的指定 profile。 |
 | `liwa --profile <name> --from-default-profile <template>` | 用随附模板的全新副本替换自定义 profile，然后启动它。 |
 | `liwa --profile acp` | 通过 ACP stdio 为自动化客户端提供服务，直至断开连接。 |
+| `liwa --profile deepseek` | 经 ACP stdio 提供一个带 `_liwa` 扩展的灵鲸 agent 会话（大脑提供方 `deepseek` 的进程）。 |
 | `liwa --profile headless "job"` | 运行一个全新的持久化会话，打印最终答案并退出。 |
 | `liwa --profile sdk` | 通过 JSON-RPC stdio 为 SDK 客户端提供服务，直至关闭或断开连接。 |
 | `liwa --profile sdk-minimal` | 以独立极简 agent（智能体）配置树为 SDK 客户端提供服务。 |
 | `liwa web` | 启动 Web profile。 |
 | `liwa plugin --profile <name> <pnpm args>` | 通过在 profile 目录中转发给 pnpm 来管理该 profile 的插件。 |
 
-运行命令时所在的目录将作为默认 workspace 根目录。`web`、`headless`、`brain`、`sdk`、`sdk-minimal` 和 `acp` profile 在首次使用时会从随附模板自动初始化。使用 `--from-default-profile` 可以基于这些模板之一，在非内置名称处创建或重置其他 profile；通过 `liwa plugin` 则可以初始化一个以 base 为基础的 profile。`desktop` 名称保留给 Electron 持有的 profile，因此 CLI（命令行界面）会拒绝针对它的启动和配置 dump 请求。npm CLI 也会拒绝其插件管理请求；[Desktop 内置命令](../desktop/README.zh.md#bundled-command-runtime)可以使用该安装的运行时管理已初始化的 Desktop profile。
+运行命令时所在的目录将作为默认 workspace 根目录。`web`、`headless`、`brain`、`deepseek`、`sdk`、`sdk-minimal` 和 `acp` profile 在首次使用时会从随附模板自动初始化。使用 `--from-default-profile` 可以基于这些模板之一，在非内置名称处创建或重置其他 profile；通过 `liwa plugin` 则可以初始化一个以 base 为基础的 profile。`desktop` 名称保留给 Electron 持有的 profile，因此 CLI（命令行界面）会拒绝针对它的启动和配置 dump 请求。npm CLI 也会拒绝其插件管理请求；[Desktop 内置命令](../desktop/README.zh.md#bundled-command-runtime)可以使用该安装的运行时管理已初始化的 Desktop profile。
 
 ## 应用参数
 
@@ -43,7 +44,7 @@ profile 目录包含一个 `package.json`，其中记录树外插件依赖，以
 - profile 自身的 `cordis.patch.yml`，然后是 home 级的 `$LIWA_HOME/cordis.patch.yml`
 - `--patch` 指定的覆盖层
 
-`liwa.profile.bundles` 中列出的组合包先从 liwa 安装目录解析（`@liwa/base`、`@liwa/web-app`、`@liwa/headless`、`@liwa/sdk-app`、`@liwa/sdk-minimal`、`@liwa/acp-app`），再从 profile 自身的 `node_modules` 解析；pnpm 会将树外插件安装到该目录。
+`liwa.profile.bundles` 中列出的组合包先从 liwa 安装目录解析（`@liwa/base`、`@liwa/web-app`、`@liwa/headless`、`@liwa/brain-cli`、`@liwa/deepseek-app`、`@liwa/sdk-app`、`@liwa/sdk-minimal`、`@liwa/acp-app`），再从 profile 自身的 `node_modules` 解析；pnpm 会将树外插件安装到该目录。
 
 使用 `--dump-default-config` 和 `--dump-config` 可在不启动的情况下检查组合后的配置树。`--dump-config-schema` 会导入组合树中插件声明的 schema，并打印描述 entry 与 patch 的 JSON Schema，而不是配置值；检查不受信任的插件前，请阅读 [schema dump 的安全性与范围](reference/README.zh.md#config-schema-dump)。
 

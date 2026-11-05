@@ -48,6 +48,8 @@ The tool returns a child session id immediately. The parent receives a completio
 
 The limits section on the **Plugins → Subagent** page edits the Host’s `subagent` settings section. User values override this plugin's composition; reset removes the user override. `maxDepth` defaults to `1` and supplies the delegation tools' depth when their own configuration omits it. An explicit tool depth, including `provider-managed`, takes precedence. Depth `0` disables delegation through tools inheriting this setting; depth `1` permits direct children only. Changes apply on the next delegation attempt. Direct service callers continue to supply their own optional request depth.
 
+`delegatedApproval` decides what happens to an in-process child's approval asks. `reject` (the default) pins the child to the `never` approval policy, so its asks are rejected without prompting anyone. `forward` keeps the parent's policy, so the child's asks reach the same answerers as the parent's — for example the ACP server reports them on the root session for the session's owner to answer. The parent agent never answers a child's ask in either case.
+
 ### Activation capacity
 
 Set `maxActiveSubagents` on the host plugin to limit live and materializing children in each activation tree. It defaults to `8` and accepts positive safe integers. A top-level parent starts a pool shared by its local and external descendants; the root parent consumes no slot. Creation and cold resume reserve before yielding, and disposal returns the slot only after cleanup. Waiting parents, pending inbox work, and stopping activations remain counted. Sending to a resident child reuses its slot. Delegation depth is a separate policy.

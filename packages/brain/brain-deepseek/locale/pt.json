@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Provedor do agente DeepSeek",
+    "description": "Executa o próprio agente DeepSeek do Liwa como provedor de cérebro: um processo liwa --profile deepseek por sessão, com direcionamento, uso e agentes filhos."
+  }
+}

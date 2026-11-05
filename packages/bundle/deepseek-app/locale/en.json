@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "DeepSeek agent profile",
+    "description": "Serve one Liwa agent session per process over ACP stdio, with the _liwa extension and one agent preset per session kind."
+  }
+}

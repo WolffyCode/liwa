@@ -8,9 +8,15 @@
 
 提供方声明一份 `Meta`：送达语义矩阵（下一步、下一回合、取消是否保留队列）、能不能续接、自带压缩与原生工具能不能关、怎么注入人设、传输方式，以及是否观察自己的子 agent。会话用一份 `SessionConfig` 打开，流出 `BrainEvent`：带用量的回合开始与结束、消息与思考的增量、工具调用、权限请求及其答复、提供方级用量、子 agent 与 CLI 退出。提供方声明为 false 的语义恒回 `unsupported`，上层据此在回合边界补上。
 
+权限请求说明自己是什么（工具、计划、模式、提问）；提问带有类型的问题，用有类型的答案答复，子 agent 的请求由主人答复，从不由父 agent 代答。子 agent 是会话级的：它们的事件带子 agent 号与开它的回合，那个回合结束后照常到达；后台子 agent 的结果叫醒 CLI 时，提供方可以自己开一个回合。提供方声明支持时，句柄能换模型、切模式；图片输入以按内容寻址的 blob 传递，由提供方读回。会话配置里其余的——原生工具、压缩、仓库指令、规矩、本事、环境——由提供方落实，做不到的组合在开会话时失败。
+
 ## 会话
 
 `ctx.brains.createSession` 按提供方的 `Meta` 核对配置，在成员配置目录里建好提供方的 home，再把提供方会话包进一个句柄。句柄把事件扇出给每个订阅者，跟踪在跑的回合与待答的权限，汇总用量，登记会话拉起的每个进程并报告其退出，登记子 agent 并把没结束的记为 `aborted`，随开会话的上下文一起关闭。提供方没确认的取消让会话拒绝新回合，直到之后某次取消成功。
+
+## 提供方
+
+随包两个提供方。[`deepseek`](../../packages/brain/brain-deepseek/README.zh.md) 把灵鲸自己的 agent 作为每个会话一个 `liwa --profile deepseek` 进程（[`deepseek-app`](../../packages/bundle/deepseek-app/README.zh.md)）运行在该会话自己的 home 里，说 ACP 加 `_liwa` 扩展：下一步插话、服务端用量、子 agent 记录，以及 `session/new` 的 `_meta.liwa` 里的会话种类、预算、说明与模型。[`acp`](../../packages/brain/brain-acp/README.zh.md) 经 Paseo 的 ACP 客户端接任何别的 ACP agent CLI，每家 CLI 一行配置。两者都是 `web`、`headless`、`brain` 三个 bundle 里的插件行（`acp` 那一行配好之前关着），所以 profile 在配置里就能换掉或去掉它们。`deepseek` 进程经 `ctx.acpExtensions` 扩展底座的 ACP 服务器，它的接口列在下面。
 
 ## 登记
 
@@ -23,6 +29,40 @@
 ## Cordis API
 
 Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — the language sides differ only in locale-specific paired document paths. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.zh.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).
+
+<a id="ctxacpextensions--acpextensionregistry"></a>
+
+### `ctx.acpExtensions` — `AcpExtensionRegistry`
+
+`ctx.acpExtensions`：ACP 扩展的登记表（扩展插件看到的那一面）。
+
+```ts cordis-catalog
+/**
+ * 登记一个扩展，直到返回的函数被调用。
+ * @param extension - 扩展。
+ * @returns 释放函数。
+ * @throws 传输已连上（扩展方法只能在连上之前加），或方法名不以 `_` 开头、与已登记的重名。
+ */
+register(extension: AcpExtension): () => void
+
+/**
+ * 按会话号找会话（给扩展方法用）。
+ * @param sessionId - 会话号。
+ * @returns 会话；没有时为 `undefined`。
+ */
+session(sessionId: string): AcpSessionView | undefined
+
+/**
+ * 一个 Agent 归哪个会话上报。
+ * @param agent - Agent（可以是后代）。
+ * @returns 会话；不属于任何开着的会话时为 `undefined`。
+ */
+sessionOf(agent: Agent): AcpSessionView | undefined
+```
+
+Types: [Agent](core.zh.md)
+
+Source: [`packages/acp/acp/src/extensions.ts`](../../packages/acp/acp/src/extensions.ts)
 
 <a id="ctxbrains--brainregistry"></a>
 
@@ -63,17 +103,20 @@ list(): BrainProviderView[]
 async probe(impl: ImplId, signal?: AbortSignal): Promise<BrainProbeResult>
 
 /**
- * 生成或刷新成员给某家提供方的配置目录（01 §4.6），每次覆盖。
+ * 生成或刷新成员给某家提供方的配置目录（01 §4.6），每次覆盖：建好 `<brains>/<impl>/`，内容由提供方的
+ * `writeMemberConfig` 写。
  * @param member - 成员。
  * @param impl - 提供方。
- * @param spec - 规矩、本事目录、模型、MCP、是否读仓库指令。
+ * @param spec - 规矩、本事目录、模型（可省）、MCP、是否读仓库指令。
  * @returns 成员配置目录，作为 `SessionConfig.configDir`。
+ * @throws {BrainError} `not_found`（没有这个提供方），或提供方写法自己的失败。
  */
 async prepareConfigDir(member: MemberId, impl: ImplId, spec: MemberConfigSpec): Promise<string>
 
 /**
- * 开一个新会话。先做三项核对：压缩关不掉的提供方不接 `compaction: 'off'`；原生工具去不掉的提供方不接
- * `nativeToolPolicy: 'none'`；原生子 agent 只对干活的活放开，其余种类改成关并记在 `adjustments` 里。
+ * 开一个新会话。先做四项核对：压缩关不掉的提供方不接 `compaction: 'off'`；原生工具去不掉的提供方不接
+ * `nativeToolPolicy: 'none'`；没有会话模式的提供方不接 `modeId`；原生子 agent 只对干活的活放开，其余种类改成关并记在
+ * `adjustments` 里。其余策略（工具、压缩、仓库指令、规矩、本事的实际落实）由提供方在开会话时负责，做不到的组合由它拒绝。
  * @param owner - 归属方上下文；它卸载时会话一起关。
  * @param request - 提供方与会话配置。
  * @returns 会话句柄。

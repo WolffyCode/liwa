@@ -1,0 +1,43 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/brain/brain-deepseek/README.md
+/:
+  en: 094714e5a0ce6fb4
+  zh: a2defd7c37c1323a
+/liwa-brain-deepseek:
+  en: e2dd65cb0c2bbb24
+  zh: bb7cc0e88728b3ce
+/liwa-brain-deepseek/summary:
+  en: c6e04e69d017d894
+  zh: f691bc00cf97d23d
+/liwa-brain-deepseek/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 09388d293f9be9cb
+/liwa-brain-deepseek/use-this-package:
+  en: bbff250eba0f1b89
+  zh: 0a618f05cc88ee2b
+/liwa-brain-deepseek/use-this-package/where-it-is-mounted:
+  en: de4a2533eeb3cc86
+  zh: 7465cc6937ea4fbb
+/liwa-brain-deepseek/use-this-package/what-a-session-does:
+  en: 75c6cd0f9a2c2b7c
+  zh: b678325b5510b18e
+/liwa-brain-deepseek/understand-the-implementation:
+  en: 7ffdf4774a48bfea
+  zh: 35773987e19727b3
+/liwa-brain-deepseek/further-exploration:
+  en: 696d561ba8b09a3b
+  zh: 5d3a4796e2da727a
+/liwa-brain-deepseek/model-experience:
+  en: c91aec7d42b1aaa3
+  zh: 719fa5ac3c8e8c56
+/liwa-brain-deepseek/model-experience/kv-cache-effect:
+  en: 7321fc2ecfcd8055
+  zh: d8412f1909794f79
+/liwa-brain-deepseek/known-limitations-and-deferred-work:
+  en: 859bc83676a297ab
+  zh: 6b42605bd1370953
+/liwa-brain-deepseek/known-limitations-and-deferred-work/dev-note:
+  en: dbf00eea723a1fc2
+  zh: fb913dae46652ec8

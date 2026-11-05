@@ -3,21 +3,24 @@
 import type { Context } from '@liwa/cordis'
 import {
   RequestError,
+  type ContentBlock as AcpContentBlock,
   type McpServer,
   type PromptRequest,
   type PromptResponse,
   type SessionConfigOption,
   type SessionNotification,
+  type SessionUpdate,
   type StopReason,
 } from '@agentclientprotocol/sdk'
-import type { Agent, AgentHandle, AgentOptions, AgentStatus } from '@liwa/agent'
+import type { Agent, AgentHandle, AgentOptions, AgentStatus, CancelOptions } from '@liwa/agent'
 import { installModelSelection } from '@liwa/agent'
-import { createUserMessage, errorChain, type UserMessage } from '@liwa/llm'
+import { createUserMessage, errorChain, type ContentBlock, type UserMessage } from '@liwa/llm'
 import { type Session, type SessionEvent, type SessionId, type TurnEndReason } from '@liwa/session'
 import { AcpContentError, admitAcpPrompt } from './content.ts'
 import { turnEndToStopReason } from './codec.ts'
 import { mountAcpMcpServers } from './mcp.ts'
 import { AcpModelControl } from './model-control.ts'
+import { ACP_DEFAULT_MODE, ACP_PLAN_MODE } from './modes.ts'
 import { assistantUpdates, toolCallUpdate, toolResultUpdate } from './updates.ts'
 
 /** Subagent completion and teardown without depending on the subagent package. */
@@ -35,6 +38,8 @@ interface AcpSessionBuildOptions {
   agentOptions: AgentOptions
   signal: AbortSignal
   notify: (notification: SessionNotification) => Promise<void>
+  /** Extension composition run in the unpublished Agent scope after MCP mounts; a throw fails the session. */
+  extend?: (agentCtx: Context) => Promise<void>
 }
 
 /** Fresh ACP session construction inputs. */
@@ -82,6 +87,7 @@ function internalError(detail: string): RequestError {
 async function composeAgent(agentCtx: Context, options: AcpSessionBuildOptions): Promise<void> {
   installModelSelection(agentCtx)
   await mountAcpMcpServers(agentCtx, options.mcpServers, options.cwd)
+  await options.extend?.(agentCtx)
 }
 
 /**
@@ -142,6 +148,41 @@ export class AcpSession {
       setup: agentCtx => composeAgent(agentCtx, options),
     })
     return new AcpSession(ctx, handle, options.notify)
+  }
+
+  /** Whether an ACP prompt is admitted and not yet settled. */
+  get prompting(): boolean {
+    return this.inflight !== undefined
+  }
+
+  /**
+   * Queue one extension-authored update behind every update already queued for this session.
+   * @param update - standard session update.
+   * @param meta - optional `_meta` attached to the notification.
+   * @returns settlement once the notification reaches the transport.
+   */
+  notifyExtension(update: SessionUpdate, meta?: Record<string, unknown>): Promise<void> {
+    const delivery = this.outputTail.then(() => this.notify({
+      sessionId: this.agent.session.id,
+      update,
+      ...meta === undefined ? {} : { _meta: meta },
+    }))
+    this.outputTail = delivery.catch((error: unknown) => {
+      this.ctx.logger.warn(`acp: extension update delivery failed: ${errorChain(error)}`)
+    })
+    return delivery
+  }
+
+  /**
+   * Admit ACP content outside a prompt (an extension's mid-turn input) under the prompt's own rules.
+   * @param prompt - untrusted ACP content blocks in wire order.
+   * @param imageEnabled - connection capability advertised at initialization.
+   * @param signal - admission cancellation signal.
+   * @returns ordered durable core content.
+   */
+  admitContent(prompt: readonly AcpContentBlock[], imageEnabled: boolean, signal: AbortSignal): Promise<ContentBlock[]> {
+    this.assertActive()
+    return admitAcpPrompt(this.ctx, this.agent.model.current(), prompt, imageEnabled, signal)
   }
 
   /**
@@ -305,11 +346,14 @@ export class AcpSession {
     }
   }
 
-  /** Cancel the active prompt, or autonomous work when no ACP prompt exists. */
-  cancel(): void {
+  /**
+   * Cancel the active prompt, or autonomous work when no ACP prompt exists.
+   * @param options - Agent cancellation options an extension chose (for example keeping the inbox).
+   */
+  cancel(options?: CancelOptions): void {
     const inflight = this.inflight
-    this.cancelPrompt('ACP prompt cancelled')
-    if (inflight === undefined) this.agent.cancel({ kind: 'user' })
+    this.cancelPrompt('ACP prompt cancelled', options)
+    if (inflight === undefined) this.agent.cancel({ kind: 'user' }, options)
   }
 
   /**
@@ -343,6 +387,17 @@ export class AcpSession {
           /* v8 ignore start -- the bridge notifier contains transport rejection. */
           .catch((error: unknown) => {
             this.ctx.logger.warn(`acp: tool-call update delivery failed: ${errorChain(error)}`)
+          })
+        /* v8 ignore stop */
+      } else if (event.type === 'plan/mode') {
+        // The plan-mode selection reached the log (between turns at once, mid-turn at the next step).
+        const previous = this.outputTail
+        const currentModeId = event.data.active ? ACP_PLAN_MODE : ACP_DEFAULT_MODE
+        this.outputTail = previous
+          .then(() => this.notify({ sessionId: this.agent.session.id, update: { sessionUpdate: 'current_mode_update', currentModeId } }))
+          /* v8 ignore start -- the bridge notifier contains transport rejection. */
+          .catch((error: unknown) => {
+            this.ctx.logger.warn(`acp: mode update delivery failed: ${errorChain(error)}`)
           })
         /* v8 ignore stop */
       } else if (event.type === 'tool/result') {
@@ -456,7 +511,7 @@ export class AcpSession {
     if (this.closing !== undefined) throw invalidParams(`session is closing: ${this.agent.session.id}`)
   }
 
-  private cancelPrompt(detail: string): void {
+  private cancelPrompt(detail: string, options?: CancelOptions): void {
     const inflight = this.inflight
     if (inflight === undefined) return
     const firstCancellation = !inflight.admissionController.signal.aborted
@@ -467,7 +522,7 @@ export class AcpSession {
       inflight.cancellationDone.resolve()
       return
     }
-    this.agent.cancel({ kind: 'user' })
+    this.agent.cancel({ kind: 'user' }, options)
     if (firstCancellation) {
       const done = inflight.cancellationDone
       // Plugin disposal can detach status observers before this activity retires.

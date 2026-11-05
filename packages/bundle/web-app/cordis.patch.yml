@@ -57,13 +57,28 @@
       name: '@liwa/client-ui-open-in-app'
 
     # The brain-provider seam (ctx.brains): agent CLI providers register into it
-    # and the member layer opens their sessions through it. The future deepseek
-    # agent profile does not mount it, so it lives in the Liwa-process surface
-    # bundles rather than in the shared base. No provider is mounted by default.
+    # and the member layer opens their sessions through it. The deepseek agent
+    # profile does not mount it (no process inside its own process), so it lives
+    # in the Liwa-process surface bundles rather than in the shared base.
     - id: brains
       name: '@liwa/brain'
       config:
         membersRoot: !!js liwaHomePath('members')
+
+    # Agent CLI providers. `deepseek` runs Liwa's own agent as one
+    # `liwa --profile deepseek` process per session (the deepseek-app bundle of this
+    # installation); disable the row to drop the provider. `acp` connects any other
+    # ACP agent CLI: enable it and set `command` (one row per CLI, each with its own
+    # `impl`); Paseo's vendor shims are selected by `vendor`.
+    - id: brain-deepseek
+      name: '@liwa/brain-deepseek'
+
+    - id: brain-acp
+      name: '@liwa/brain-acp'
+      disabled: true
+      config:
+        impl: acp
+        command: []
 
     - id: workspace
       name: '@liwa/workspace'

@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Fournisseur de l'agent DeepSeek",
+    "description": "Exécute l'agent DeepSeek de Liwa comme fournisseur de cerveau : un processus liwa --profile deepseek par session, avec guidage, usage et agents enfants."
+  }
+}
