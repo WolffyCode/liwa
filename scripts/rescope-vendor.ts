@@ -447,6 +447,7 @@ const VENDORED_LIBRARY = /^@liwa\\/(?:(?:cosmokit|schemastery)(?:\\/|$)|cordis-p
 export function isRescopeExcluded(file: string): boolean {
   if (file === 'scripts/rescope-vendor.ts') return true // the mapping itself
   if (file.startsWith('.agents/notes/')) return true // notes record what was true when written
+  if (file.startsWith('docs/liwa/')) return true // Liwa designs and research name upstream packages as source terminology
   // Recorded model payloads quote documentation verbatim, so they must mirror the
   // sources on disk — including the notes this rescope leaves alone.
   if (file.startsWith('scripts/snapshots/')) return true

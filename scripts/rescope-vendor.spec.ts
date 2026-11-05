@@ -23,6 +23,14 @@ describe('rescope file selection', () => {
   ])('keeps %s subject to upstream package-name checks', (file) => {
     expect(isRescopeExcluded(file)).toBe(false)
   })
+
+  it('excludes docs/liwa/ where designs name upstream packages as source terminology', () => {
+    expect(isRescopeExcluded('docs/liwa/handoff.md')).toBe(true)
+  })
+
+  it('keeps docs/ outside docs/liwa/ subject to upstream package-name checks', () => {
+    expect(isRescopeExcluded('docs/rescope-example.md')).toBe(false)
+  })
 })
 
 describe('exactEditState', () => {
