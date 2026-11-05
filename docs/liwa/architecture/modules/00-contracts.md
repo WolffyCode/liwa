@@ -187,13 +187,13 @@ export type BrainClient = ClientOf<typeof Methods, typeof Handles>;      // 由�
 
 契约与运行时接口归 `@liwa/brain`：`contract.ts` 用 zod 4 定义数据 schema 并推导数据类型；`brand.ts` 定义各类品牌 id；`provider.ts` 手写提供方 TypeScript 接口，`session.ts` 包装成调用方会话句柄。schema 用在登记、会话配置、续接句柄与契约测试等边界；品牌 transform 只改类型、不改值、不抛异常。本节不使用 §2.2 的描述符与 `ClientOf`；Cordis 插件配置用 schemastery，会话配置用 zod schema。依据：〔一手〕dev 分支 `packages/brain/brain/src/{contract,brand,provider,session,index}.ts`。
 
-下列为契约字段摘要（`?` 表示可选；完整 schema 以 `contract.ts` 为准，模型省略语义按主人已定方案执行）。代次与回合预算为正整数，子 agent 深度与并发上限为非负整数；输入块、收尾工具及权限选项非空。`SessionConfig` 后续扩展只加可选字段：
+下列为契约字段摘要（`?` 表示可选；完整 schema 以 dev `2eca7d13` 的 `contract.ts` 为准，模型省略语义已实现）。代次与回合预算为正整数，子 agent 深度与并发上限为非负整数；输入块、收尾工具及权限选项非空。`SessionConfig` 后续扩展只加可选字段：
 
 ```ts
 type Meta = {
   streaming: boolean; resume: boolean;
   nativeTools: boolean; // true = 带着关不掉的原生工具
-  permissionHook: boolean; rollback: boolean; modelSwitch: boolean;
+  permissionHook: boolean; rollback: boolean; modelSwitch: boolean; modeSwitch: boolean;
   delivery: { nextStep: boolean; nextTurn: boolean; cancelKeepsQueue: boolean };
   compaction: 'none' | 'switchable' | 'always_on';
   budget: { inferences: boolean; toolCalls: boolean; concludeOn: boolean };
@@ -215,15 +215,17 @@ type SessionConfig = {
   kernelTools?: { endpoint: string; token: string; tools: ToolDef[] } | { native: ToolDef[]; token: string };
   mcpServers?: Record<string, McpServer>; // toolport 接入前，调用方可直接给 Paseo 形状的 stdio / http / sse 服务器表
   nativeToolPolicy: 'none' | 'readonly' | 'worktree'; model?: string; // 省略即提供方 CLI 默认模型
+  modeId?: string; // 省略即提供方默认会话模式
   env?: Record<string, string>;
   limits: { maxInferencesPerTurn: number; maxToolCallsPerTurn: number; watchdogMs: number };
   concludeOn: string[]; // 至少一个；成功调用其中之一即结束回合
   permission: { mode: 'kernel' | 'provider'; autoAllow: string[] };
-  compaction: 'off' | 'provider'; configDir: string; rules: string; skillsDir: string; projectDocs: boolean;
+  compaction: 'off' | 'provider'; configDir: string; rules: string; skillsDir: string; projectDocs: boolean; // 外部 CLI 由灵鲸受控注入项目文档，见 01 §4.6
   childPolicy: { native: boolean; maxDepth: number; maxConcurrent: number; crossCli: ImplId[] };
   resume?: { identityProbe: boolean };
 };
-type ResumeHandle = { provider: ImplId; sessionRef: string; createdAt: Iso; nativeHandle?: string; metadata?: Record<string, JsonValue> };
+type ResumeHandle = { provider: ImplId; sessionRef: string; createdAt: Iso; nativeHandle?: string; metadata?: Record<string, JsonValue>; home?: string };
+type BlobRef = { blob: string; bytes: number; mime: string }; // blob 是 64 位小写十六进制 SHA-256，bytes 非负整数
 type TurnInput = { blocks: ({ kind: 'text'; text: string } | { kind: 'block'; name: string; text: string } | { kind: 'image'; blob: BlobRef })[] };
 type Usage = { // 报不出的字段留空，不许填 0
   tokens?: { input: number; output: number; cacheRead?: number; cacheWrite?: number };
@@ -234,6 +236,15 @@ type Usage = { // 报不出的字段留空，不许填 0
 };
 type PermissionEffect = 'allow_once' | 'allow_session' | 'allow_always' | 'deny_once' | 'deny_always' | 'cancel';
 type PermissionOption = { id: string; label: string; effect: PermissionEffect };
+type PermissionQuestion = {
+  id: string; question: string; header?: string; detail?: string;
+  options: { label: string; description?: string }[]; multiSelect: boolean;
+}; // options 为空只收自由文本；尚无通用“可填补充文字”标志
+// 至少一个 selected 或非空 custom；公共 checkPermissionAnswers 校验问题号、选项和单选约束
+type PermissionAnswer = { selected: string[]; custom?: string };
+type PermissionResponse = { optionId: string; reason?: string; answers?: Record<string, PermissionAnswer> };
+type BrainMode = { id: string; label: string; description?: string };
+type ModeChange = { modeId: string; appliesAt: 'now' | 'next_step' | 'next_turn' };
 type BrainEvent =
   | { kind: 'turn.started'; turnId: TurnId }
   | { kind: 'turn.completed'; turnId: TurnId; usage: Usage; concludedBy?: string }
@@ -242,17 +253,22 @@ type BrainEvent =
   | { kind: 'session.exited'; category: FailureCategory; message: string }
   | { kind: 'session.compacted'; turnId?: TurnId; preTokens?: number; postTokens?: number }
   | { kind: 'process.exited'; pid?: number; code: number | null; signal: string | null }
-  | { kind: 'item.message'; turnId: TurnId; itemId: ItemId; delta: string; final: boolean; childId?: ChildId }
-  | { kind: 'item.reasoning'; turnId: TurnId; itemId: ItemId; summary: string; childId?: ChildId }
-  | { kind: 'item.tool_call.started'; turnId: TurnId; callId: CallId; tool: string; args: JsonValue; native: boolean; batch?: number; detail?: ToolCallDetail; childId?: ChildId }
-  | { kind: 'item.tool_call.completed'; turnId: TurnId; callId: CallId; result: JsonValue; ok: boolean; childId?: ChildId }
-  | { kind: 'permission.request'; turnId: TurnId; requestId: PermissionRequestId; category: 'tool' | 'plan' | 'question' | 'other'; tool: string; args: JsonValue; detail?: ToolCallDetail; options: PermissionOption[]; childId?: ChildId }
+  | { kind: 'item.message'; turnId?: TurnId; itemId: ItemId; delta: string; final: boolean; childId?: ChildId }
+  | { kind: 'item.reasoning'; turnId?: TurnId; itemId: ItemId; summary: string; childId?: ChildId }
+  | { kind: 'item.tool_call.started'; turnId?: TurnId; callId: CallId; tool: string; args: JsonValue; native: boolean; batch?: number; detail?: ToolCallDetail; childId?: ChildId }
+  | { kind: 'item.tool_call.completed'; turnId?: TurnId; callId: CallId; result: JsonValue; ok: boolean; childId?: ChildId }
+  | { kind: 'permission.request'; turnId?: TurnId; requestId: PermissionRequestId; category: 'tool' | 'plan' | 'question' | 'mode' | 'other'; tool: string; args: JsonValue; title?: string; description?: string; detail?: ToolCallDetail; questions?: PermissionQuestion[]; options: PermissionOption[]; childId?: ChildId }
   | { kind: 'permission.resolved'; turnId?: TurnId; requestId: PermissionRequestId; optionId: string; effect: PermissionEffect }
   | { kind: 'usage.update'; turnId?: TurnId; usage: Partial<Usage> }
-  | { kind: 'child.started'; childId: ChildId; childKind: 'native-child'; label: string; provider: ImplId; parentChildId?: ChildId }
+  | { kind: 'session.mode_changed'; modeId: string | null; availableModes?: BrainMode[] }
+  | { kind: 'session.model_changed'; model: string }
+  | { kind: 'child.started'; childId: ChildId; childKind: 'native-child'; label: string; provider: ImplId; parentChildId?: ChildId; turnId?: TurnId }
   | { kind: 'child.ended'; childId: ChildId; stopReason: 'completed' | 'failed' | 'cancelled' | 'aborted'; usage: Usage };
+type MemberConfigSpec = Pick<SessionConfig, 'rules' | 'skillsDir' | 'projectDocs' | 'model' | 'mcpServers' | 'kernelTools'>;
 interface BrainProvider {
   readonly impl: ImplId; readonly meta: Meta;
+  readonly sessionHome: 'per-session' | 'per-member';
+  writeMemberConfig?(dir: string, spec: MemberConfigSpec): Promise<void>;
   probe(ctx: BrainProbeContext): Promise<BrainProbeResult>;
   createSession(cfg: SessionConfig, launch: BrainLaunchContext): Promise<BrainProviderSession>;
   resumeSession(handle: ResumeHandle, cfg: SessionConfig, launch: BrainLaunchContext): Promise<BrainProviderSession>;
@@ -263,9 +279,11 @@ interface BrainProviderSession {
   startTurn(input: TurnInput): Promise<{ turnId: TurnId }>;
   deliver(input: TurnInput, options: { semantics: 'next_step' | 'next_turn'; wake: boolean; expectedTurnId?: TurnId }): Promise<'accepted' | 'unsupported' | 'unavailable'>;
   cancel(options: { reason: 'preempt' | 'watchdog' | 'hard_limit' | 'pause' | 'drain' | 'owner'; keepQueue: boolean }): Promise<void>;
-  respondToPermission(requestId: PermissionRequestId, response: { optionId: string; reason?: string }): Promise<void>;
+  respondToPermission(requestId: PermissionRequestId, response: PermissionResponse): Promise<void>;
   persistence(): ResumeHandle | null;
   canStopRuntime?(): Promise<boolean>; setModel?(model: string): Promise<void>;
+  availableModes?(): Promise<BrainMode[]>; currentMode?(): Promise<string | null>;
+  setMode?(modeId: string): Promise<ModeChange>;
   close(): Promise<void>;
 }
 ```
@@ -273,18 +291,32 @@ interface BrainProviderSession {
 | 项 | 规则 | 依据 |
 | --- | --- | --- |
 | 原生工具 | `Meta.nativeTools` 表示“带着关不掉的原生工具”，不是“能否使用原生工具”；为 true 时拒绝 `nativeToolPolicy: 'none'`。Claude 能以 `tools: []` 清空，声明 false；Codex 声明 true，最终由真 CLI 验收 | 〔一手〕dev 分支 `packages/brain/brain/src/contract.ts`、`packages/brain/brain/src/index.ts`；〔一手〕`01-agent-cli.md` §4.2、§4.3 的源码依据 |
-| 模型 | `SessionConfig.model` 可选，`liwa brain run` 省略 `--model` 就不传占位值，由所用 CLI 使用自己的默认模型；配置目录生成也不写占位模型 | 〔一手〕主人对第 1 步验收后的决定（handoff 决策 53）；〔一手〕`paseo@8018231a:packages/cli/src/commands/agent/run.ts`；第 2 步落实代码 |
+| 模型 | `SessionConfig.model` 可选，`liwa brain run` 省略 `--model` 就不传占位值，由所用 CLI 使用自己的默认模型；配置目录生成也不写占位模型 | 〔一手〕主人对第 1 步验收后的决定（handoff 决策 53）；〔一手〕`paseo@8018231a:packages/cli/src/commands/agent/run.ts`；dev `packages/brain/brain/src/contract.ts:162`、`packages/bundle/brain-cli/src/startup.ts:100` |
 | 事件订阅 | 提供方用 Paseo 的 `subscribe`；调用方句柄提供多订阅者扇出与 `events(signal?)`，每次迭代自建立订阅起收事件，不追放会话创建后的历史，不做创建即无界缓冲；没有首参 `CallContext`，`persistence()` 同步 | 〔一手〕dev 分支 `packages/brain/brain/src/provider.ts`、`packages/brain/brain/src/session.ts` |
-| 权限请求 | 原生请求翻成至少一个允许选项与一个 `deny_once` 的 `options[]`；未知 `optionId` 按 `deny_once` 应用并发 `permission.resolved`；`cancel` 拒绝并中断回合。第一版可见选项为 `allow_once`、`allow_session`、`deny_once`、`cancel`；永久策略留给 toolport / guard | 〔一手〕dev 分支 `packages/brain/brain/src/contract.ts`、`packages/test-support/brain-testkit/src/contract.ts` |
-| 字段与判别 | `BrainEvent.kind` 是判别标签，子 agent 种类用 `childKind`；条目与权限请求可带 `childId`。`permission.resolved`、中断原因、失败 code / diagnostic 与可选 `usage.update.turnId` 保留 Paseo 提供的事实 | 〔一手〕dev 分支 `packages/brain/brain/src/contract.ts` |
+| 权限请求 | 原生请求翻成至少一个允许选项与一个 `deny_once` 的 `options[]`；未知 `optionId` 按 `deny_once` 应用并发 `permission.resolved`；`cancel` 拒绝并中断回合。默认补一次性允许／拒绝／取消；`allow_session` 只在原生能力可兑现时展示，ACP／deepseek 不提供，第一版是否要求 Claude Code／Codex 提供仍待主人定；永久策略留给 toolport／guard，通用 ACP 只给 allow_always 时才照实展示 | 〔一手〕dev 分支 `packages/brain/brain/src/contract.ts`、`packages/test-support/brain-testkit/src/contract.ts` |
+| 字段与判别 | `BrainEvent.kind` 是判别标签，子 agent 种类用 `childKind`；父条目与父权限请求必带 turnId；子条目／请求可省 turnId，但必须带 childId，知道时保留开子时的原父回合号，不能借用后来的回合。`permission.resolved`、中断原因、失败 code / diagnostic 与可选 `usage.update.turnId` 保留 Paseo 提供的事实 | 〔一手〕dev 分支 `packages/brain/brain/src/contract.ts` |
 | 进程 | 会话进程一律经 `BrainLaunchContext.spawn`，brains 先登记归属再交 `ctx.subprocess`；`process.exited` 由 brains 发，提供方不发；`pid` 可选，本阶段 subprocess 不公开进程身份，登记只存命令名与 argv 哈希等归属信息，不存参数原文 | 〔一手〕dev 分支 `packages/brain/brain/src/provider.ts`、`packages/brain/brain/src/session.ts`、`packages/brain/brain/src/views.ts` |
 | 内核工具令牌 | endpoint 与 native 两种分支都带令牌，原生工具也经 `toolport.invoke(token, tool, args)` 回本体；令牌绑定 owner 编号与代次，换代作废 | 〔一手〕`02-minds.md` §4.4；dev 分支 `packages/brain/brain/src/contract.ts` |
 | 额度 | quotaWindows 的 usedPercent 为 0–100、可带重置时间与窗口长度，balances 记录余额；经 usage.update 上报，guard 接入后同时看钱和额度窗口 | 〔一手〕dev 分支 `packages/brain/brain/src/contract.ts`；`overall.md` §9.2 |
 | 用量与失败 | `turn.completed.usage` 必填；SDK 估价只记不算；`context_exceeded` 是换新信号；`cancelled` 不当成可重试去换下一家；`FailureCategory` 为 `retryable / timeout / auth / refused / quota / process_exit / context_exceeded / cancelled` | 〔一手〕dev 分支 `packages/brain/brain/src/contract.ts`；〔一手〕`four-layers.md` §4 |
 | 增量、批号与工具详情 | `delta` / `summary` 按条目累计；`final` 时 delta 可为空。同次模型输出的并行调用共享从 1 递增的批号，判不出留空；`ToolCallDetail` 按 `type` 判别为 `shell{command,cwd?}`、`read{path}`、`edit{path,unifiedDiff?}`、`write{path}`、`search{query}`、`fetch{url}`、`other` | 〔一手〕dev 分支 `packages/brain/brain/src/contract.ts` |
-| 生命周期 | 退出即报 `session.exited` 或 `turn.failed`；中断与关闭幂等；取消失败进入 `stopping` 并拒绝新回合，直到取消成功；关闭时收尾进程、给未结束子 agent 补 `aborted`；不支持的送达语义恒回 `unsupported` | 〔一手〕dev 分支 `packages/brain/brain/src/provider.ts`、`packages/brain/brain/src/session.ts` |
-| 人设注入 | Claude 对实例会话、想事、整理用 system_prompt，对干活用 preset_append；deepseek 对实例会话用预设的人设行 complete；具体提供方步骤用真 CLI 验证 | 〔一手〕`01-agent-cli.md` §4.2、§4.7；决策 33；`06-growth.md` §4.3；`four-layers.md` §2.16 |
+| 生命周期 | 退出即报 `session.exited` 或 `turn.failed`；中断与关闭幂等；原生中断确认即可，只收尾调用时捕获的回合，ACP 通知则须等对应回合终止；取消失败进入 `stopping` 并拒绝新回合，直到取消成功；关闭时收尾进程、给未结束子 agent 补 `aborted`；不支持的送达语义恒回 `unsupported` | 〔一手〕dev 分支 `packages/brain/brain/src/provider.ts`、`packages/brain/brain/src/session.ts` |
+| 人设注入 | Claude 对实例会话、想事、整理用 system_prompt，对干活用 preset_append；deepseek 各种会话用进程级 personaPrefix，notes 走 agent 作用域，预设没有人格行／complete 段；具体提供方步骤用真 CLI 验证 | 〔一手〕`01-agent-cli.md` §4.2、§4.7；决策 33；`06-growth.md` §4.3；`four-layers.md` §2.16 |
 | 能力与人设 | `scripted` 只给假提供方，产品提供方不用；人设每次拉起与续接都带上，缺省的会话种类注入方式按 instance；自带压缩 `always_on` 的提供方不接 `compaction: 'off'` 会话 | 〔一手〕dev 分支 `packages/brain/brain/src/contract.ts`、`packages/brain/brain/src/index.ts`；〔一手〕`four-layers.md` §2.16、`06-growth.md` §4.3 |
+
+| 新契约项 | 当前规则 | 依据 |
+| --- | --- | --- |
+| home 与配置写法 | sessionHome 必填；per-session 的 home 为 `<brains>/<impl>/<sessionId>/`，续接句柄记 home 并校验在 impl 下；per-member 共用 `<brains>/<impl>/`。writeMemberConfig 可选，缺省只建空目录，公共层不写厂商分支 | 〔一手〕dev `packages/brain/brain/src/provider.ts:149`、`:158`；`packages/brain/brain/src/contract.ts:204` |
+| 图片 blob | TurnInput 的 image 引内容寻址 blob，BrainLaunchContext 继承 BrainBlobReader，以 readBlob 读字节，不把本机文件路径当公开协议 | 〔一手〕dev `packages/brain/brain/src/contract.ts:216`、`packages/brain/brain/src/provider.ts:43` |
+| 模式／模型 | Meta.modeSwitch 与 modeId?；availableModes/currentMode/setMode 按能力调用，未知模式拒绝；ModeChange 明示 now／next_step／next_turn，事件按实际状态变化去重；setModel 成功更新视图与 model_changed | 〔一手〕dev `packages/brain/brain/src/contract.ts:352`、`:489`、`packages/brain/brain/src/provider.ts:127`；`packages/brain/brain-shared/src/session.ts:657` |
+| 结构化问答 | questions 恰好在 category:question 存在且非空，answers 只随问答允许类答复；每题恰好作答、单选至多一个；按问题号原样保留 selected/custom，厂商 codec 无法编码就 invalid_input 且保留 pending | 〔一手〕dev `packages/brain/brain/src/contract.ts:302`、`:331`、`:462`、`:554`；`packages/brain/brain-shared/src/session.ts:309`、`:475` |
+| 子 agent 跨回合 | 父回合 terminal 只清父条目／父权限；子请求保留到答复或 child.ended；相同 childId 可 ended 后再 started；已收尾父回合的迟到条目不发布，取消不能提前结束新回合条目 | 〔一手〕dev `packages/brain/brain/src/contract.ts:378`；`packages/brain/brain-shared/src/session.ts:638`、`:732`；本机记录 06 N2 |
+| 子审批事实 | childId、工具 args、title／description 随请求上送主人，父 agent 不能代批；deepseek 选 delegatedApproval:forward，底座默认 reject | 〔一手〕dev `packages/acp/acp/src/updates.ts:74`、`packages/bundle/deepseek-app/cordis.patch.yml:48`；本机记录 06 N3 |
+| CLI 自开回合的现象 | deepseek 后台子结果可触发提供方自开的 turn.started／terminal；公共句柄已有 activeTurn 互斥，期间 startTurn 返回 brain.turn_active。是否确立为对外规范待主人定，不把代码现象视为新增产品决定 | 〔一手〕dev `packages/brain/brain-deepseek/src/session.ts:80`、`packages/brain/brain/src/session.ts:605`；handoff 待定 11 |
+| G1／G4 计划补 | 当前 interrupted／failed 没 usage，update 不累加消费；watchdogMs 只有声明，API 等待超时不是整轮看门狗。G1 已知取消／失败用量幂等结算与 G4 公共回合看门狗作为独立小活现在补，未实现 | 〔一手〕dev `packages/brain/brain/src/contract.ts:397`、`:487`、`packages/brain/brain/src/session.ts:473`、`:610`；handoff 决策 61 |
+| G2／G3 计划补 | 当前无会话级父 pending 生命周期，usage.update 无 childId；跨回合待答与实时子计量接 Codex 时补，字段与结算口径待独立设计 | 〔一手〕dev `packages/brain/brain/src/contract.ts:462`、`:487`、`packages/brain/brain/src/session.ts:529`；Codex 适配评估 §6 |
+
+本节是现有契约摘要；G1–G4 的建议字段不混入上方已有类型。外部 CLI 空壳子配置、Key 与同 CLI 多提供方按 `01-agent-cli.md` §4.6／§4.10；credential-ref、问题补充文字标志与 ephemeral 逐会话入口都未加入现有 schema。依据：〔一手〕handoff 决策 57–61、任务书 03；dev `packages/brain/brain/src/contract.ts:149`。
 
 有效绑定由 roster 的大脑配置给出：每个成员 × 会话种类（想事可按立场 / 出主意分）一份 `{ impl, model?, fallback: impl[] }`，实例会话与活一样可任选提供方、默认 deepseek CLI（决策 43、46），由 minds 读出后传给 brains；适配器配置只放适配器级参数。搭第二层前，由调用方直接给归属、人设、预算、收尾工具等配置；经历流、minds、toolport、tasks、guard 与跨重启恢复、孤儿清理在第二层补，当前服务在内存登记并发出 `brain.*.v1` Cordis 事件。依据：〔一手〕主人推进决定（handoff 决策 47）；〔一手〕dev 分支 `packages/brain/brain/src/index.ts`、`packages/bundle/brain-cli/src/index.ts`。
 

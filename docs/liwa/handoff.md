@@ -1,6 +1,6 @@
 # 交接文档
 
-更新：2026-11-03。给接手的主对话（新会话）用：读完这份就能接着安排活，不必翻原对话。接手顺序：先读“怎么协作”与“现状”，再读“下一步的活”，开发前核对“仓库状态”中的 dsh-base、dev 与 worktree，其余按需。
+更新：2026-11-05。给接手的主对话（新会话）用：读完这份就能接着安排活，不必翻原对话。接手顺序：先读“怎么协作”与“现状”，再读“下一步的活”，开发前核对“仓库状态”中的 dsh-base、dev 与 worktree，其余按需。
 
 ## 整体结论速览
 
@@ -8,8 +8,8 @@
 - **她的抽象**：一个生命的九个部分：身、感、念、思、意、忆、行、长、能；两个运行时概念：在场（她在某个地方的出现）、手上的事。原则：判断归她，边界归你，身体归代码；规则打底，模型定调；行为来自意愿，每件事带理由。
 - **方案**：以 DeepSeek Harness（DSH）源码为底座，fork 后独立、破坏性重写（决策 36），主分支为 `dsh-base`，新开发在基于它的 `dev` 分支；技术栈随底座（TypeScript + Node 24、cordis 插件、React 网页、Electron 桌面）；所有用脑都走第四层的 agent CLI（自建默认 agent `deepseek`、Claude Code、Codex、通用 ACP），统一用灵鲸自己的契约（决策 46）；Paseo 的大脑适配器与编排能力尽量迁过来，OpenClaw 只作参考。
 - **整体架构**：`docs/liwa/architecture/overall.md`（18 节）加图页 `docs/liwa/architecture/overall.html`；第二层设计在 `docs/liwa/architecture/four-layers.md`（决策 42、43）。四层骨架：对外适配层 / 成员层 / 干活层 / agent CLI 集成层，第二层和第三层都经第四层开会话。本体是她的身体和神经系统，不是脑子：共用层（self、body、memory、people、skills、roster、will、attention、journal、guard）+ 按人分的实例（主人一个常驻；独处按需；V2 起每人、每群各一个），每个实例一个实例会话加它自己的第三层；四种活：干活、想事、她自己的事、整理。代码不读懂话、不替她选择；身每分钟一跳、不调模型、确定性可回放。
-- **进度**：产品定义、人物画像、整体架构、05 记忆系统、00 插件机制底座、00 协议规范、工程约定、路线图与 01 agent CLI 接入已确认；四层设计已过三份评审，06 成长系统草稿待主人确认。第一批裁剪已合入并推送 `dsh-base f0a90e46`；第四层第 1 步公共层已在 dev `fbb36685` 实现，另有网页测试等待修复 `7f69b6da`，dev 未推送。依据：〔一手〕本轮任务书、分支提交与 dev `packages/brain/brain/src/index.ts`。
-- **接着做什么**：在 dev 按“公共层 → deepseek 独立 CLI → 常驻会话与 Paseo 终端命令 → Claude → Codex”推进，各步用真 CLI 验收；先完成标准 Paseo 流程机制，经历流与用脑调度等搭第二层时补（决策 47、48、54）。依据：〔一手〕主人原话，见决策表。
+- **进度**：产品定义、人物画像、整体架构、05 记忆系统、00 插件机制底座、00 协议规范、工程约定、路线图与 01 agent CLI 接入已确认；四层设计已过三份评审，06 成长系统草稿待主人确认。第一批裁剪已合入并推送 `dsh-base f0a90e46`；第四层第 1、2 步及两轮修复已完成，dev HEAD `2eca7d13`，已 rebase 到 `dsh-base 00e21375`、未推送；第 3 步设计进行中。依据：〔一手〕任务书 03、本地 Git 提交及 dev `packages/brain/brain/src/index.ts:1`。
+- **接着做什么**：第 3 步设计常驻会话与 Paseo 终端命令；G1 取消／失败用量与 G4 回合看门狗作为公共层独立小活现在补；第 4、5 步接本机 Claude Code、Codex，功能达到与 Paseo 同等水平，G2、G3 随 Codex 补。经历流与用脑调度等搭第二层时补（决策 47、48、54、56、61）。依据：〔一手〕任务书 03 与主人 11-05 决定。
 - **对话记录**：`docs/liwa/conversations/` 是文字版；原始 jsonl 与子任务日志只放本机、不得进入公开仓库。
 - **开发工作区**：主分支 `dsh-base` 的当前工作区统一维护文档与代码：灵鲸文档在 `docs/liwa/`，底座自带文档在 `docs/` 其余位置；代码开发在 `../liwa-dev`（dev）；main 已不再使用，旧的自研内核代码留在 main 的历史里；mac mini 为当前开发机器。所有确定的需求、架构必须写进仓库文档。依据：〔一手〕本轮任务书与本地 worktree 登记。
 
@@ -32,59 +32,58 @@
 
 ## 怎么协作（决策 34、52）
 
-主人定的分工：**主对话只跟主人对话、安排活、汇报**，不自己写方案和代码；**设计 agent** 出方案（Fable 5.1 或 Opus 5.5）；**实现 agent** 写代码（复杂任务用 Opus 5.5，范围小、改法明确的经 Paseo 派 Codex 或 GLM）；Claude agent 一次只派一个，不并发；重要稿子另请独立评审。依据：〔一手〕主人 2026-11-02 原话，见决策 52。
+主人定的分工：主对话只做总调度（对话、任务书、派活、复核、汇报）；设计、实现与文档等活交 Codex（Paseo `codex-opencodebay`），简单活交 GLM（`glm-opencodebay`）。任务书与交回放本机桌面的《灵鲸工作记录》，按编号存放；公开仓库只收去敏后的设计与研究结论。依据：〔一手〕主人 2026-11-05 决定，待写回清单第 2 条。
 
-| 角色 | 谁 | 做什么 | 不做什么 |
+| 角色 | 谁 | 做什么 | 边界 |
 | --- | --- | --- | --- |
-| 主对话 | 新会话（Opus 5.5） | 读本文接手；把活拆成任务书派给 agent；收活后自己复核一遍，再用通俗的话（配例子）给主人讲；把主人定下的事写进本文与对应文档；征得同意后提交推送 | 不自己长篇写方案或代码（状态行、错字这类小改除外）；不替主人做决定；主人没同意不提交 |
-| 设计 agent | Agent 工具，`model: "fable"` 或 `"opus"` | 读指定文档与调研，写模块文档（轻量版 150–300 行，写法按 `architecture/README.md`）或改设计；末尾给"一页结论 + 关键取舍 + 要主人定的点" | 不写代码；不改已确认文档的结论（只能写"建议改哪、为什么"）；不开子 agent |
-| 实现 agent | 复杂任务用 Agent 工具 `model: "opus"`；简单任务经 Paseo 用 Codex / GLM | 按已确认的文档写代码与测试，跑 `pnpm run ci`，交回"改了哪些文件、测试原文、没做的事、风险" | 不改设计（发现设计有问题就停下写明，让主对话去问）；不提交 git；不开子 agent；不装 catalog 之外的依赖 |
-| 评审 | Codex CLI、Fable、Opus 各一 | 对重要稿子独立评审，报告进 `docs/liwa/research/`，处理结果记在本文"评审意见的处理" | — |
+| 总调度 | 主对话 | 与主人对话、编任务书、派活、独立复核、结论先行汇报；安排把已定结论写回文档 | 不替主人拍板；提交、推送逐次征得同意 |
+| 设计／实现／文档 | Paseo `codex-opencodebay` | 按任务书范围出方案、改代码或文档，交回依据、检查原文、未做项和风险 | 不开子 agent、不提交 git、不加未同意的依赖、不碰 node_modules |
+| 简单活 | Paseo `glm-opencodebay` | 做范围小、改法明确的任务 | 同上；跨模块取舍交主对话问主人 |
+| 独立复核 | 单独派的复核会话 | 看范围、依据与真实检查结果，列必须修／建议修／待定 | 不把实现交回直接当验证证据 |
 
 **派活的规矩**
 
-- Claude agent 用 Agent 工具，`subagent_type: general-purpose`，按上表给 `model`；一次只派一个，不并发。`run_in_background` 之后等通知，不要轮询。依据：〔一手〕主人原话：“别并发了，我们的token可能撑不住，一些简答的任务你可以让codex或者glm去做”（决策 52）。
-- 简单的实现任务（范围小、改法明确、风险低）经 Paseo 派给 Codex 或 GLM（主人 2026-11-02 定，省 Claude 额度）：`paseo run --provider codex-opencodebay --mode full-access --cwd <工作目录> --no-wait "<任务书>"`，或 `--provider glm-opencodebay`；`paseo wait <id>` 等完成，`paseo logs <id>` 看交回。跨模块、要取舍、碰安全或主人数据的仍派 Opus。需要隔离文件改动时另开 worktree；Claude agent 仍串行。
-- 任务书是 agent 唯一的上下文，必须写全：目标与验收；要读的文件（路径 + 节号）；硬规则；产出格式；改动范围（只许动哪些目录）。
-- 每个 agent 的硬规则：全程中文；文档只存最新方案、不留历史措辞；每个设计点带依据并标〔一手〕〔二手〕〔推理〕；遵守 `docs/liwa/engineering.md` §9 及任务书写全的主人全局原则（改在根上、不叠兼容层、每样东西唯一归属、模块间只走 API；mac mini 无 `~/.claude/CLAUDE.md`）；代码要过 `pnpm run ci`（命令见"环境与工具注意事项"）；不碰 `node_modules`、不提交 git、不开子 agent；原始对话日志与凭据不进仓库（公开仓库）。
-- 收活时主对话要做的：核对产出是否在范围内、测试原文是否真的跑了、设计点有没有裸奔的〔推理〕；把"要主人定的点"整理成一页给主人；主人定了的写进"已定的决策"。
-- 顺序：设计 agent 出文档 → 主对话给主人一页结论 → 主人确认、文档标"已确认" → 实现 agent 写代码 → 主对话复核 CI 与范围 → 征得同意后提交。
+- 通过 Paseo 派活，例如 `paseo run --provider codex-opencodebay --mode full-access --cwd <工作目录> --no-wait "<任务书>"`；简单活选 `glm-opencodebay`。用 `paseo wait <id>` 等完成，`paseo logs <id>` 读交回；长任务要主动汇报进展。依据：〔一手〕主人 11-05 分工与 Paseo 命令约定。
+- 任务书是执行者的上下文，写全目标与验收、先读文件和节号、允许改动范围、硬规则、产出路径；分清只读评估、设计、实现与复核。独立设计按主人指定顺序，不抢先写迁移方案。依据：〔一手〕任务书 03 与主人全局原则摘要。
+- 全程中文；先结论、讲人话、配例子；设计点标〔一手〕文件:行、〔二手〕、〔推理〕；文档只存最新方案。遵守全局原则：改在根上、不叠兼容层、单一职责、每样东西唯一归属、模块间只走 API；继承代码不为风格大面积重写。依据：〔一手〕根 `AGENTS.md:15`、主人原则与本任务要求。
+- 检查按根 `AGENTS.md` 的“检查”和任务书选，不使用不存在的 `pnpm run ci`；代码任务声称完成前须在最新构建产物后跑 `build:check` 或直接 `build`。非交互 shell 先 `export PATH="$HOME/.local/share/fnm/aliases/default/bin:$PATH"`，检查去掉六个代理变量与无关凭据。依据：〔一手〕根 `AGENTS.md:59`、任务书 03。
+- 不许 REPL 自动回显对象；打印环境信息前过滤 KEY / TOKEN / SECRET；不需要密钥的任务不给密钥。原始对话日志、本机配置、绝对路径、用户名、凭据不进公开仓库。依据：〔一手〕任务书 03 的硬规则。
+- 收活后主对话核对文件范围、检查是否真跑、依据是否支持结论，给主人整理要定的点；主人确认后写进决策表与对应文档，提交推送另行征得同意。依据：〔一手〕主人协作规则。
 
-**任务书模板**（复制后填空）
+**任务书模板**
 
+```text
+任务编号与类型：<只读评估 | 设计 | 实现 | 复核>；工作目录与分支：<相对目录、分支、预期 HEAD>。
+目标与验收：<可核对的结果>；先读：<文件:节号>；只许改：<文件清单>。
+硬规则：全程中文、只存最新方案、每个设计点标依据；改在根上、模块间只走 API、每样东西唯一归属。
+不提交、不推送、不开子 agent、不加未同意依赖、不碰 node_modules；公开仓库不含个人路径、用户名、凭据与原始对话。
+检查：<按改动与任务要求列实际命令>；先设置 Node PATH，去掉六个代理变量与无关凭据。
+输出限制：REPL 不自动回显对象；环境信息先过滤 KEY / TOKEN / SECRET；无需密钥的任务不用密钥。
+交回：本机《灵鲸工作记录》/<编号-交回-名称>.md；开工先建提纲，每完成一块写入结论、文件、检查原文、风险与待定。
 ```
-你是灵鲸（Liwa）项目的 <设计|实现> agent。工作目录 <相对工作目录>，公开仓库，分支 <dsh-base 主分支 | dev 开发>。
-目标：<一句话>。验收：<可检查的条件>。
-先读：docs/liwa/handoff.md 的"怎么协作""现状""环境与工具注意事项"；<具体文件与节号>。
-只许改：<目录或文件清单>。不许：改已确认文档的结论、提交 git、开子 agent、装 catalog 之外的依赖、碰 node_modules。
-硬规则：全程中文；只存最新方案；每个设计点标〔一手〕〔二手〕〔推理〕；遵守 docs/liwa/engineering.md §9 和任务书列出的主人全局原则；代码跑 pnpm run ci（先 export PATH="$HOME/.local/share/fnm/aliases/default/bin:$PATH"；检查时去掉代理与无关凭据环境变量）。不许 REPL 自动回显对象；打印环境信息前过滤 KEY / TOKEN / SECRET；不需要密钥的任务不给密钥。
-交回：<设计：文档路径 + 一页结论 + 关键取舍表 + 要主人定的点 ｜ 实现：改动文件清单 + 测试与 CI 原文 + 没做的事 + 风险>。
-```
 
-## 现状（2026-11-03）
+## 现状（2026-11-05）
 
-- **代码底座与裁剪**：`dsh-base` HEAD `f0a90e46`，第一批裁剪已合入并推送。基础改造包含品牌、去额外上报、Apple 芯片 Mac 本机打包、删除账号登录、构建产物去本机路径；裁剪删除全部 GitHub 工作流、Python SDK、上报残留包及接线，SSH 打包排除规则已生效。7 项检查、网页快照组、SSH helper、桌面打包与真机对话、真 Chrome 对话均已执行；持续失败及相关偶发失败均在未裁剪底座复现，属既有问题，不能称全部测试全绿。依据：〔一手〕`prune-report.md` 验收交回与本地分支记录。
-- **裁剪验收摘要**：build、lint、typecheck、test:snapshot、hygiene、doc-sync 通过；test 剩 Windows 可执行文件搜索断言，网页组有缺浏览器、布局与时序等基线失败；SSH helper 8 类检查全过；桌面与 Chrome 均完成真实 DeepSeek 对话。桌面首次采集有一条资源错误，重载复查为零；Chrome 对话控制台与失败请求为零。没有刷新快照或降低门槛。远端 `liwa-prune` 已删，本地分支与 `../liwa-prune` worktree 还在，可以清理。依据：〔一手〕`prune-report.md` 验收交回；〔一手〕本轮任务书与本地分支记录。
-- **新开发分支 dev**：工作区 `../liwa-dev`，基于 `dsh-base f0a90e46`，有两个提交：`fbb36685` 完成第四层公共层（`@liwa/brain` 契约与 `ctx.brains`、`@liwa/brain-shared` 迁入 35 个 Paseo 共享文件、`@liwa/brain-testkit`、`@liwa/brain-cli` 与 `liwa brain list / probe / run`，`ctx.brains` 挂进 web 与 headless）；`7f69b6da` 修复底座原有网页测试的偶发等待失败。dev 尚未推送。依据：〔一手〕dev 提交与 `packages/brain/brain/src/index.ts`、`packages/brain/brain-shared/NOTICE`、`packages/bundle/brain-cli/src/startup.ts`。
-- **dev 验收**：rebase 到裁剪后的底座完成；7 项检查已跑齐，单元测试剩与 dsh-base 相同的 Windows 路径失败，网页整组仍有已对照的基线失败；`question-composer` 等各条描述自己的滚动时间线稳定后再断言，专项 11/11 通过，修复后未重跑网页整组。brain 与 CLI 专项 235 通过、3 跳过，真 Chrome 无插件加载失败、控制台与页面错误为零；此轮 Chrome 没发消息，不把它当真实模型对话验收。依据：〔一手〕`rebase-report.md` 验收交回、dev `apps/web/tests/question-composer.e2e.ts` 与提交 `7f69b6da`。
-- **这一阶段的落法**：先完成标准 Paseo 流程机制；经历流、minds、toolport、tasks、guard、跨重启恢复与孤儿清理等搭第二层时补。会话暂在 `ctx.brains` 内存登记并发出 `brain.*.v1` 事件，`openChildTask` 暂以 `brain.not_implemented` 拒绝；网页对话仍走进程内老路，界面改走公共层在第二层做。依据：〔一手〕主人原话（决策 47）；dev `packages/brain/brain/src/{index,views,session}.ts`。
-- **Paseo 来源**：上游 `getpaseo/paseo` 克隆在 `../paseo-upstream`，固定 `8018231a`（0.15.0-beta.1）；Helm 是主人基于 Paseo 0.11.1 改的 Helm 产品，不作迁移来源。依据：〔一手〕主人选择与本轮任务书；dev `packages/brain/brain-shared/NOTICE`。
-- **主人叫停的清理**：Windows / Linux 运行代码与闲置包不继续删除（决策 45）；清单 `research/2026-11-02-dsh-idle-packages.md` 留作迁移参考。
-- **已确认的文档**：`product.md`、`portrait.md`、`architecture/overall.md`、`architecture/four-layers.md`、`architecture/modules/05-memory.md`、`00-plugin-kernel.md`、`00-contracts.md`、`01-agent-cli.md`、`engineering.md`、`roadmap.md`；状态表在 `architecture/README.md`。00 插件机制与协议规范保留契约意图，落地用 DSH 底座；第四层接口以 00 §5.1、01 和 dev 源码为据，模型可省按决策 53 在第 2 步落实。其他文档的相关同步见 01 §14 与四层设计 §8。
-- **待主人确认**：`architecture/modules/06-growth.md` 草稿。四点：① `growth.engine` 多三对方法（日记、做法提取、“今天注意”）；② `renderPersona` 标 pure；③ self 自我第一层以结构化形式交给引擎；④ `persona.rendered.v1` 按单写者原则建议写进 `member:<id>` 并带会话号。
-- **文档与代码归属**：dsh-base 是主分支，灵鲸文档在 `docs/liwa/`，底座自带文档在 `docs/` 其余位置；main 已不再使用，旧的自研内核代码留在 main 的历史里；新实现一律在 dev。设计点必须有依据，经主人确认后文档即 spec。依据：〔一手〕主人本轮文档归位决定。
+- **代码底座与工作区**：主分支 `dsh-base` HEAD `00e21375`，包含第一批裁剪与 `docs/liwa/`；开发在 `../liwa-dev` 的 dev，HEAD `2eca7d13`，已 rebase 到上述主分支、未推送。当前文档写回留在 dsh-base 工作区，未提交。`../liwa` 的 main 不再使用，目录保留；`liwa-prune` 本地分支与工作目录均已删除。依据：〔一手〕任务书 03、待写回清单第 1／4 条、本地 Git 核对。
+- **第 1 步已完成**：`@liwa/brain` 契约、`ctx.brains`、35 个 Paseo 共享文件、`@liwa/brain-testkit`、`@liwa/brain-cli`；提供 `liwa brain list / probe / run`，web 与 headless 已装配公共层。依据：〔一手〕dev `1dfae070`；`packages/brain/brain/src/index.ts:1`、`packages/brain/brain-shared/NOTICE:14`。
+- **第 2 步已完成**：`brain-acp` + `deepseek-app` + `brain-deepseek`；每会话一个 `liwa --profile deepseek`，ACP v1 + `_liwa/steer`、`usage`、`children`；源码／产物启动、同目录续接、五种预设、原生工具限制、规矩／本事／压缩策略、图片、结构化问答、切模型与 `default` / `plan` 模式已落地。子审批带 `childId`、工具入参与理由直达主人；deepseek 选 `subagent.delegatedApproval: forward`，网页默认仍为 reject。取消只收尾捕获的回合，后台子 agent 可跨回合，答案不可编码就拒绝并保持待答。依据：〔一手〕dev `2eca7d13`；`packages/bundle/deepseek-app/cordis.patch.yml:48`、`packages/brain/brain/src/contract.ts:302`、`packages/brain/brain-shared/src/session.ts:309`；本机记录 02 §5、04、06、07。
+- **第 2 步验收**：两轮修复后 build、lint、typecheck、test:snapshot、hygiene、doc-sync 通过；test 为 `47748 passed`、3 条既有失败（时区 2、Windows 路径 1）。deepseek 契约 23/23，真模型 e2e 11/11（无重试），Chrome 与 CLI 实测通过；网页组仍有底座基线失败，不称全绿。07 复核确认 N1–N3 与三条建议修有效；问答 codec 的覆盖率经补测达语句／分支／函数／行 100%，专项 22/22、相关测试 367 过 11 跳过。依据：〔一手〕本机记录 06 §4、07 §2–5、08 覆盖率补齐交回；dev `packages/brain/brain-acp/tests/elicitation.spec.ts:1`。本次 rebase 后 build、lint、typecheck、快照、doc-sync 通过；test 为 47769 过、1 条既有 Windows 路径失败，时区两条通过；hygiene 为 21 门过、vendor rescope 一门失败，四篇文档／8 行在 dsh-base 00e21375 未修改内容同样命中，详见任务 03 交回。
+- **性能实测**：第 2 步源码启动中位 736 ms／315 MB，构建产物 490 ms／265 MB；两轮修复测量同量级（最终 744 ms／316 MB、496 ms／264 MB），steer RPC 中位 1 ms、工具结束到下一步约 24 ms、取消中位 3 ms，真模型取消 6 ms。11-05 同时开 10 个 deepseek 进程，实际总占用约 2.37 GB、每个约 237 MB；这是不同负载的并发观测，不能替代单进程 RSS 测量。依据：〔一手〕本机记录 02 §6C、06 §4.7、任务书 03 的 11-05 实测数字。
+- **当前边界**：会话内存登记并发出 `brain.*.v1`，`openChildTask` 仍回 `brain.not_implemented`；网页对话走进程内路径。经历流、minds、toolport、tasks、guard、跨重启恢复与孤儿清理等搭第二层时补。deepseek 无原生 next_turn 队列，声明 false，由上层回合边界投递；子 agent 逐条时间线尚不输出。依据：〔一手〕决策 47；dev `packages/brain/brain-deepseek/src/provider.ts:64`、`packages/brain/brain/src/index.ts:382`；本机记录 06 §6。
+- **适配评估已完成**：Claude Code／Codex 均按“新增提供方包＋正常装配”接，公共层 G1–G4 按决策 61 补；研究报告在 `research/2026-11-05-claude-code-adaptation.md` 与 `research/2026-11-05-codex-adaptation.md`，静态证据不等于真 CLI 验收。依据：〔一手〕两报告 §6、§8；主人 11-05 决定。
+- **Paseo 与文档**：来源只取同级 `../paseo-upstream` 的 `8018231a`，不用 Helm。已确认 `product.md`、`portrait.md`、overall、four-layers、05-memory、00-plugin-kernel、00-contracts、01-agent-cli、engineering、roadmap；`06-growth.md` 四点草稿仍待主人确认。Windows／Linux 与闲置包不继续裁剪。依据：〔一手〕决策 45、49 与本任务先读要求。
 
 ## 下一步的活（第四层 V1：标准 Paseo 流程机制）
 
-按主人定的顺序在 dev 推进，各步用真 CLI 验收；到第 ⑤ 步第一版第三、四层基础搭完。依据：〔一手〕主人原话，见决策 47、48、54。
+按主人顺序推进，各步用真 CLI 验收；第 4、5 步接入后的功能达到与 Paseo 同等水平；灵鲸全局 home、本事、MCP、插件配置机制以后再加。依据：〔一手〕主人 11-05 决定（决策 56）。
 
-1. **① 公共层：已完成**。`@liwa/brain`、`@liwa/brain-shared`、`@liwa/brain-testkit`、`@liwa/brain-cli`，结果见“现状”。依据：〔一手〕dev `fbb36685`。
-2. **② 内置 agent 做成独立进程的 deepseek CLI**。实现 `brain-acp` + `deepseek-app` + `brain-deepseek`，每会话一个 `liwa --profile deepseek` 进程；同时将 `SessionConfig.model` 改可选，`liwa brain run` 省略 `--model` 不传占位值，由 CLI 采用自己的默认模型；将 `brain-shared` 中灵鲸自写的进程桥移出放宽类型检查的范围。依据：〔一手〕主人第 1 步验收后决定（决策 53）；dev `packages/brain/brain/src/contract.ts`、`packages/bundle/brain-cli/src/index.ts`、`packages/brain/brain-shared/{src/process.ts,tsconfig.json}`。
-3. **③ 常驻进程托管会话与终端命令**。借鉴 Paseo 的 `run / ls / logs / attach / send / wait / stop / inspect / permit / delete / archive / provider / usage`，以及 `start / status / restart`；会话由常驻进程持有，不再依赖一次性命令的内存。依据：〔一手〕主人终端命令集决定（决策 54）。
-4. **④ 接 Paseo Claude 适配器**。从上游固定提交迁入，按 01 的适配与配置隔离规则接公共层。依据：〔一手〕主人推进顺序（决策 48、49）；`architecture/modules/01-agent-cli.md` §4.2。
-5. **⑤ 接 Paseo Codex 适配器**。同一上游提交与迁移方式；完成后第一版第三、四层基础搭完。依据：〔一手〕主人推进顺序（决策 48、49）；`architecture/modules/01-agent-cli.md` §4.3。
+1. **① 公共层、② deepseek 独立 CLI：已完成**，实现与验证见“现状”；模型可省、进程桥归 `@liwa/brain`、自写严格代码与 Paseo 拷贝项目分开。依据：〔一手〕dev `1dfae070`、`2eca7d13`；`packages/brain/brain/src/provider.ts:149`。
+2. **公共层独立小活：现在补 G1、G4**。G1 补取消／失败回合已知用量的幂等结算；G4 落实整轮看门狗，取消只针对捕获的回合，失败保持 stopping；两家共用，单独回归三类提供方。具体字段和并发实现需独立设计／复核。依据：〔一手〕决策 61；两份适配评估 §6；〔推理〕最小实现面。
+3. **③ 常驻会话与 Paseo 终端命令：设计进行中**。宿主持有会话、待审批与进程；命令借鉴 `run / ls / logs / attach / send / wait / stop / inspect / permit / delete / archive / provider / usage` 及 `start / status / restart`。本任务只记录状态，不写第 3 步方案。依据：〔一手〕决策 54、任务书 03／04 分工。
+4. **④ Claude Code**。新增 `brain-claude-code`，SDK `0.3.263` 显式用本机真实 `claude`，首版 Key、多提供方并行、空壳子配置；版本下限、#35／#36、问答表达与用量口径要真机验证。依据：〔一手〕决策 55–60；Claude Code 适配评估 §2、§4、§8。
+5. **⑤ Codex**。新增 `brain-codex`，PATH 真实 `codex app-server`；只干活与查资料，原生工具按自己的沙箱／审批，次数不承诺硬限；补 G2 跨回合待答与 G3 子线程实时用量，先核实父子口径。依据：〔一手〕决策 59–61；Codex 适配评估 §4、§6、§8。
 
-**之后搭第二层**：再增补经历流、minds 用脑调度、toolport、tasks、guard、跨重启恢复、孤儿清理与网页接公共层。01 §9 中依赖这些能力的验收到时补；提供方本身的真实 CLI 能力逐步验，不把第 1 步的假提供方测试当成真实提供方验收。相关设计同步限于各任务授权范围，跨模块有取舍先交主人定。依据：〔一手〕主人原话（决策 47）；第 1 步 `t1-report.md` §5、§8。
+之后搭第二层时补经历流、用脑调度、toolport、tasks、guard、恢复／清孤儿与网页接公共层；依赖这些能力的 A1–A5 验收到相应阶段补，假 CLI 契约不能代替真实提供方验收。依据：〔一手〕决策 47；`architecture/modules/01-agent-cli.md` §9。
 
 ## 文档约定
 
@@ -141,15 +140,22 @@
 | 43 | 四层设计评审后的主人决定（2026-11-01） | 三份独立评审（Codex 26 条、Fable 40 条、Opus 35 条，`research/2026-11-01-review-four-layers-*.md`）结论一致：骨架立得住，问题在细节没闭合。主人定："你在微信、QQ 上的权限要不要分级 这个不做分级，不考虑被盗"；"我们都说了全部使用各方的agent cli里边具体用哪个模型，我们自己配置，并不一定是claude 的官方的"，追问后选"实例会话和第三层一样可任选一家"；其余"听你的"。落实（`four-layers.md`）：① 实例会话和第三层的活都经第四层开会话，可任选提供方（底座自带 agent 默认，Claude Code、Codex、ACP 可选），模型自己配；第四层契约补送达语义（下一步可见 / 只在下一回合可见 / 取消）、能力声明、回合预算，提供方不支持的语义由本体的持久待投递队列在回合边界补；分层规则改为"第二层和第三层都用第四层"，取代决策 42 的"只有第三层用第四层"，也取代决策 6 里"在场 = Claude Code 外壳 + DeepSeek"的默认（实例会话默认底座自带 agent，经配置接 DeepSeek）；② 主人实例在任何平台都是完整权限，推翻 `overall.md` §11.2 与决策 25 M2 的外部渠道身份分级，接受"主人账号被盗等于主人本人"的风险（仍受总闸与单次限额）；③ 想事活只看派它的实例的受众，全部受众只留夜里整理，独处实例按"主人可知 + 公开"召回；"谁能知道"由代码按来源盖章，受众核对不符就拒绝投递、交回她重写；④ 选择后冲动消退取代不应期（选了不说就冷却一阵，留成心事就转成心事不再催；数值待 M4 调）；⑤ 出站内容检查删掉后的残余风险接受，用结构兜（说动作事实要引用完成回执号、答应的事要有承诺号、夜里自查）；⑥ 群实例不用代码比对内容，改为她自己隔一阵抬头看一眼，每群日预算；⑦ 代码替她说的固定文案只留"大脑不可用""漏回复兜底"两处例外。评审里其余问题按设计内修复落实（稳定的实例编号与会话代次、回收前持久化未处理消息、查冲突与写入一步完成、长期决定成员级排队、权限按触发事件的真实发送者推出、替主人的活一律归主人实例、早晨给主人实例起一轮、她给自己定时的 `remind`、召回改回受众语义并保留 `product.md` §6.4、底座会话日志由灵鲸管理并随删除一起删等），逐条处理见 `research/2026-11-01-review-four-layers-handling.md` |
 | 44 | 打包与发布改为 Apple 芯片 Mac 本机打包（2026-11-02） | 主人选：平台只要 Apple 芯片的 Mac（MacBook M1 Pro、mac mini M4）；本机打包、不发布，不签名公证、不自动更新、不发 npm；App 名称不分语言统一叫 Liwa，bundle id `com.wolffycode.liwa`，链接协议 `liwa://`（不再和主人在用的 DeepSeek Harness 官方客户端抢 `dsh://`）；Python SDK 与 SSH helper 先保留，只删它们的发布部分，留不留等裁剪时定；打出的 Liwa.app 先不装进 系统应用目录。落实：删掉 Intel Mac 与 Windows 打包、签名、安装器，公证、自动更新（含界面入口）、各类上传与 npm 发布，以及 11 个打包发布类工作流（检查类保留）；官方插件详情不再按 `@liwa` 名字从 npm CDN 拉取，改读本机工作区（`@liwa` 在 npm 上无人注册，防抢注）；Perplexity、Exa、HTTP 抓取的 UA 统一取自 `@liwa/llm`。已推送：`dsh-base` 提交 `541054f8`、`169918f3`；实机打包 Liwa.app、flash 对话正常，前后 `dsh://` 仍归 `com.deepseek.dsh`、官方客户端数据未动。DeepSeek 账号登录：主人定"那就直接把登录相关的删除吧"（软件暂时不需要登录能力），账号服务、平台对接、账号模型路由、账号接口、账号设置页整包删除，联网搜索、模型选择、聊天错误提示里的账号分支一并删掉，桌面内嵌登录页与 `window.dsh` 桥删除，首次引导与桌面欢迎页只剩"添加 API Key"，侧栏底部账号菜单换成"设置"按钮；旧配置里指向已删插件的条目加载时跳过。已推送：`dsh-base` 提交 `939cd4c0`；网页与打包 App 实测 API Key 对话正常、无登录入口 |
 | 45 | 裁剪到第一批为止（2026-11-02） | 主人选：GitHub 工作流全删、只靠本机检查；删 Python SDK，SSH helper 保留 macOS 版，Windows / Linux 运行代码与闲置包不继续删除。第一批删除全部工作流与专用脚本测试、Python SDK、上报残留包及接线，SSH 打包排除规则已生效；已合入并推送 `dsh-base f0a90e46`，要求的验收全部执行，持续失败属未裁剪底座已有问题。闲置包清单 `research/2026-11-02-dsh-idle-packages.md` 留作迁移参考；构建产物去构建机路径已在底座落实。依据：〔一手〕主人本轮任务书、`prune-report.md` 验收交回 |
-| 46 | 第四层 agent CLI 集成层确认（2026-11-02） | 主人原话："设计当前代码和第四层的代码接入，第一版本直接入claude cli和codex cli同时将deepseek默认的这个agent下沉成自建默认agent cli,然后设计第三层和第四层的接入方案和第四层的设计方案，应该怎么走paseo中迁移，迁移范围，和迁移过来后的设计方案"。设计 `architecture/modules/01-agent-cli.md`（已确认，图页 `01-agent-cli.html`），主人定：自建默认 agent"第一版就做成独立的 CLI"（`liwa --profile deepseek`，ACP v1 + `_liwa/*` 扩展方法补上 steer）、"每个会话一个"进程、提供方"应该叫deepseek"（另两个 `claude`、`codex`，通用 `acp` V1 也做）；子任务"所有的子任务，也走paseo的方式，默认走自己的agent子机制，然后通过paseo可以调用其他cli的子agent"（默认走自建 agent 的子会话，跨 CLI 经 `spawn` 开第三层子活）；Claude / Codex 原生子 agent "干活的活里放开，只观察"；外部 CLI "接入我们这里的什么都读取，完全遵守我们这里的规则，不读取全局的那些配置"（每成员一份灵鲸生成的配置目录，被干活仓库的 CLAUDE.md / AGENTS.md 在干活、查资料时读、灵鲸规矩优先）；"paseo的能力尽量迁移过来"（固定 `getpaseo/paseo@8018231a`，原地改 + NOTICE，逐项盘点见 01 附录 A）；底座的四个外部一次性委派删、进程内子会话留；具体 CLI 能力按 01 §10 实测，公共层已在 dev 完成。本条细化决策 28、33 的第四层落法 |
+| 46 | 第四层 agent CLI 集成层确认（2026-11-02） | 主人原话："设计当前代码和第四层的代码接入，第一版本直接入claude cli和codex cli同时将deepseek默认的这个agent下沉成自建默认agent cli,然后设计第三层和第四层的接入方案和第四层的设计方案，应该怎么走paseo中迁移，迁移范围，和迁移过来后的设计方案"。设计 `architecture/modules/01-agent-cli.md`（已确认，图页 `01-agent-cli.html`），主人定：自建默认 agent"第一版就做成独立的 CLI"（`liwa --profile deepseek`，ACP v1 + `_liwa/*` 扩展方法补上 steer）、"每个会话一个"进程、提供方"应该叫deepseek"（另两个 `claude`、`codex`，通用 `acp` V1 也做）；子任务"所有的子任务，也走paseo的方式，默认走自己的agent子机制，然后通过paseo可以调用其他cli的子agent"（默认走自建 agent 的子会话，跨 CLI 经 `spawn` 开第三层子活）；Claude / Codex 原生子 agent "干活的活里放开，只观察"；外部 CLI "接入我们这里的什么都读取，完全遵守我们这里的规则，不读取全局的那些配置"（每成员／提供方实例一份灵鲸生成的配置目录；项目文档由灵鲸受控读取后注入，CLI 自带配置、钩子、本事与插件不加载，决策 58）；"paseo的能力尽量迁移过来"（固定 `getpaseo/paseo@8018231a`，原地改 + NOTICE，逐项盘点见 01 附录 A）；底座的四个外部一次性委派删、进程内子会话留；具体 CLI 能力按 01 §10 实测，公共层已在 dev 完成。本条细化决策 28、33 的第四层落法 |
 | 47 | 先完成标准 Paseo 流程机制 | 主人原话：“按照我说的先实现我们先把标准的paseo的流程机制弄完，后边再搭建第二层的时候，再增补经历流和用脑调度等”。落实：经历流、minds、toolport、tasks、guard、跨重启恢复与孤儿清理等搭第二层时补；本阶段会话内存登记并发出 `brain.*.v1`，网页对话仍走进程内路径，界面接公共层留到第二层。依据：〔一手〕主人原话；dev `packages/brain/brain/src/{index,views}.ts` |
 | 48 | 公共层与 CLI 的推进顺序 | 主人原话：“1 抽象出来agent cli的功能能力，1将内置的agent机制改成deepseek cli的机制，2接入paseo claude cli 3接入paseo codex cli”；“第三层和第四层都是我们的公共层，先把公共层做好，再说上层的事情”。落实：① 公共层（已完成）→ ② deepseek 独立 CLI → ③ 常驻进程托管会话与 Paseo 终端命令集 → ④ Claude → ⑤ Codex，各步用真 CLI 验收，到 ⑤ 第一版第三、四层基础搭完。依据：〔一手〕主人原话与本轮任务书 |
 | 49 | Paseo 迁移来源选上游 | 主人在“helm 的 main（0.11.1）/ 上游 8018231a”之间选“上游 8018231a”。落实：迁移只取 `getpaseo/paseo@8018231a`（0.15.0-beta.1），本地参考 `../paseo-upstream`；Helm 是主人基于 Paseo 0.11.1 改的产品，不作迁移来源。依据：〔一手〕主人选择；dev `packages/brain/brain-shared/NOTICE` |
-| 50 | 基于 dsh-base 新建 dev | 主人决定：基于 dsh-base 新建开发分支 `dev`。落实：`../liwa-dev` 基于 `f0a90e46`，已有 `fbb36685` 公共层与 `7f69b6da` 网页测试等待修复，尚未推送；灵鲸设计文档在主分支 dsh-base 的 `docs/liwa/` 维护。依据：〔一手〕主人决定与本地 Git 分支、提交、worktree 登记 |
-| 51 | 第一批裁剪由 Codex 监管并合并 | 主人原话：“那让liwa-prune继续，但是这个不是你来监管，让codex去监管，弄完后合并到dsh-base”。落实：裁剪验收已完成，结果见“现状”，已合入并推送 `dsh-base f0a90e46`；远端 liwa-prune 已删，本地分支与 worktree 可清理。依据：〔一手〕主人原话、本轮任务书、`prune-report.md` 验收交回与本地分支登记 |
-| 52 | Claude agent 串行，简单活交 Codex / GLM | 主人原话：“别并发了，我们的token可能撑不住，一些简答的任务你可以让codex或者glm去做”。落实：Claude agent 一次只派一个，不并发；范围小、改法明确的经 Paseo 派 Codex 或 GLM，命令见“怎么协作”；长任务每 5 分钟汇报一次。依据：〔一手〕主人原话 |
-| 53 | 第 1 步验收后的四点落实 | 主人原话：“按照你建议”。确认的四点：① 随附 profile 名 `brain`、组合包 `@liwa/brain-cli`；② `--model` 可省，省略用所用 CLI 的默认模型，`SessionConfig.model` 可选、不传占位值；③ 第 1 步 12 处设计差异全部写回 00 / 01；④ 时间线代码归 brain-shared，网关直接引用。落实：①④ 已在 dev，第 1 步差异写入 `00-contracts.md` §5.1 与 `01-agent-cli.md` §2、§3、§4.9、附录 A；② 第 2 步改代码，同时将自写进程桥移出放宽类型检查的范围。依据：〔一手〕主人答复及本轮任务书；dev `packages/bundle/brain-cli/cordis.patch.yml`、`packages/brain/brain-shared/NOTICE`、`packages/brain/brain/src/contract.ts` |
+| 50 | 基于 dsh-base 新建 dev | 主人决定：基于 dsh-base 新建开发分支 `dev`。落实：`../liwa-dev` 基于 `dsh-base 00e21375`，HEAD `2eca7d13`，含公共层、网页测试等待与第 2 步独立 CLI，尚未推送；灵鲸设计文档在主分支 dsh-base 的 `docs/liwa/` 维护。依据：〔一手〕主人决定与本地 Git 分支、提交、worktree 登记 |
+| 51 | 第一批裁剪由 Codex 监管并合并 | 主人原话：“那让liwa-prune继续，但是这个不是你来监管，让codex去监管，弄完后合并到dsh-base”。落实：裁剪验收已完成，结果见“现状”，已合入并推送 `dsh-base f0a90e46`；liwa-prune 的远端、本地分支与 worktree 均已删除。依据：〔一手〕主人原话、本轮任务书、`prune-report.md` 验收交回与本地分支登记 |
+| 52 | 主对话总调度，活交 Codex／GLM | 主对话负责对话、任务书、派活、复核、汇报；设计／实现／文档交 Paseo `codex-opencodebay`，简单活交 `glm-opencodebay`，任务书与交回在本机《灵鲸工作记录》按编号存放。长任务持续汇报。依据：〔一手〕主人 11-05 决定，待写回清单第 2 条 |
+| 53 | 第 1 步验收后的四点落实 | 主人原话：“按照你建议”。确认的四点：① 随附 profile 名 `brain`、组合包 `@liwa/brain-cli`；② `--model` 可省，省略用所用 CLI 的默认模型，`SessionConfig.model` 可选、不传占位值；③ 第 1 步 12 处设计差异全部写回 00 / 01；④ 时间线代码归 brain-shared，网关直接引用。落实：①④ 已在 dev，第 1 步差异写入 `00-contracts.md` §5.1 与 `01-agent-cli.md` §2、§3、§4.9、附录 A；② 已在第 2 步落实，同时自写进程桥归严格编译的 `@liwa/brain/src/process.ts`。依据：〔一手〕主人答复及本轮任务书；dev `packages/bundle/brain-cli/cordis.patch.yml`、`packages/brain/brain-shared/NOTICE`、`packages/brain/brain/src/contract.ts` |
 | 54 | 终端命令集借鉴 Paseo | 主人原话：“你的终端命令合集暂时借鉴paseo的终端命令合集哈”。落实为推进第 ③ 步：常驻进程托管会话，提供 `run / ls / logs / attach / send / wait / stop / inspect / permit / delete / archive / provider / usage` 及 `start / status / restart`；各步用真 CLI 验收。依据：〔一手〕主人原话与本轮任务书 |
+| 55 | 提供方包命名 | 能力前缀保留 `brain-`，实现用产品全名：`brain-claude-code`、`brain-codex`、`brain-deepseek`、`brain-acp`；不用 `*-cli-sdk`，能力名仍为 brain。依据：〔一手〕主人 11-05 决定，待写回清单第 3 条 |
+| 56 | 接入功能目标 | 第 4、5 步完成后 Claude Code、Codex 接入达到与 Paseo 同等功能水平；以后再加灵鲸自己的全局 home 配置、本事、MCP、插件配置机制。依据：〔一手〕主人 11-05 决定，清单第 6 条 |
+| 57 | Key 与同 CLI 多提供方 | Claude Code、Codex 首版均走 Key；同一个 CLI 能配置多个提供方并同时运行。同一提供方插件在 `cordis.yml` 多行装配，每行独立 `impl`；模型列表、标签、环境、禁用工具与二进制覆盖按实例归属。Key 用凭据引用是推荐，细节待第 4 步主人确认。依据：〔一手〕清单第 7 条；`paseo@8018231a:public-docs/custom-providers.zh-CN.md:1` |
+| 58 | 外部 CLI 空壳子 | CLI 自带全局／项目配置、钩子、本事、插件一律不加载；规矩、项目 CLAUDE.md / AGENTS.md 内容与 MCP 均由灵鲸注入；Codex 另给隔离 HOME。真机探针证明不了隔离就停下来问主人，不静默放宽。依据：〔一手〕清单第 8 条；两份适配评估 §5 |
+| 59 | Codex 能力边界与 Paseo 一致 | V1 只干活与查资料，原生工具交其自身沙箱与审批；推理次数、工具次数不承诺硬限。不能用 item 条目计数冒充模型请求数，也不能把 on-request 说成每个工具都经本体。依据：〔一手〕清单第 9 条；Codex 适配评估 §4.1 |
+| 60 | 使用本机真实 CLI | Claude SDK 显式指向受管解析的本机 `claude`，不用 SDK 自带的 2.1.263；Codex 用 PATH 上真实 `codex`。本机评估版本 Claude Code 2.1.318、Codex 0.163.0，正式最低支持版本以真机验收结果另定。依据：〔一手〕清单第 10 条；两份适配评估 §2 |
+| 61 | 公共层补口安排 | G1 回合取消／失败漏记已知用量、G4 整轮看门狗未落实，作为独立小活现在补；G2 跨回合待答、G3 子线程实时用量带 childId 接 Codex 时补。当前代码未具备这些保证，具体字段、后台总量结算与时序方案独立评审，不按提供方名字加分支。依据：〔一手〕任务书 03；Claude Code／Codex 适配评估 §6；dev `packages/brain/brain/src/contract.ts:397`、`packages/brain/brain/src/session.ts:473` |
 
 ## 评审意见的处理
 
@@ -268,8 +274,25 @@
 - **分发前要处理的打包遗留**（2026-11-02）：前端构建产物与 SSH helper 产物已不带构建机路径（`dsh-base` `cef138ef`、`15ae8e46`）；Python SDK 运行时已随第一批裁剪合入 `dsh-base f0a90e46` 删除；SSH 打包排除规则已在底座生效。还剩：刚打好的 Liwa.app 头一两次启动时欢迎页偶发自己关掉或没弹出，原因未查明。
 - **第四层新冒出的待定点**（`01-agent-cli.md` §12 末尾，找主人过目）：想事活要不要也放开原生子 agent；原生子 agent 不带人设，算不算决策 5 的例外；每会话一个 `liwa` 进程的启动延迟能不能接受（探针时实测）。
 - **需要主人同意的操作**：06 成长系统草稿的四点（见"现状"）；转写小凌的讲解视频（要装 ffmpeg 和中文语音识别，不做也不影响架构）。提交推送逐次征得同意。
-- **凭据事件后续**：两个 Key 的轮换待主人处理；本机 Codex 会话记录里的两个密钥值是否替换为 `***`，待主人定。依据：〔一手〕本轮任务书与 `prune-report.md`。
-- **dev 推送时间**：dev 已有两个提交但尚未推送，何时推送待主人定。依据：〔一手〕本轮任务书与本地分支登记。
+
+- **dev 推送时间**：dev 已有三个提交、rebase 完成但尚未推送，何时推送待主人定。依据：〔一手〕本轮任务书与本地分支登记。
+
+以下均为待定，不作为已批准范围；编号对应本机《灵鲸接手说明》第四节。依据：〔一手〕任务书 03 指定保留第 4–12、14 项。
+
+| 项 | 待定 | 推荐与理由 | 依据 |
+| --- | --- | --- | --- |
+| 4 | `subagent-acp`、`subagent-liwa-sdk` 的删除时点 | 先留，跨 CLI 子活与回报通路做好再删，当前 `openChildTask` 尚不可用 | 〔一手〕dev `packages/brain/brain/src/index.ts:382`；〔推理〕避免丢委派能力 |
+| 5 | 模型目录与诊断入口是否纳入第 3 步 | 推荐第 3 步补；已有底层方法，仍缺面向终端的公共入口 | 〔一手〕本机记录 02 §7；〔推理〕 |
+| 6 | deepseek ACP 斜杠命令 | 推荐第 3 步接 `/goal`、`/plan`、`/compact`，已有对应工具／模式／压缩能力，但命令目录未接 | 〔一手〕本机记录 04 §7；〔推理〕 |
+| 7 | 非图片附件 | 推荐第 3 步补文件块；当前只支持文本、灵鲸块、图片 | 〔一手〕dev `packages/brain/brain/src/contract.ts:224`；〔推理〕 |
+| 8 | deepseek 子 agent 逐条时间线 | 推荐主控台子 agent 面板时做；当前只有生命周期、用量、权限与父回报 | 〔一手〕本机记录 06 §6、07 §3；〔推理〕 |
+| 9 | 网页子 agent 提权转给主人 | 推荐网页改走公共层时统一；网页默认 reject，deepseek 为 forward | 〔一手〕dev `packages/bundle/deepseek-app/cordis.patch.yml:48`；本机记录 04 §7；〔推理〕 |
+| 10 | 第一版“本会话允许” | 推荐保留，由 Claude Code／Codex 兑现；ACP 没有这一级，不伪造选项 | 〔一手〕两份适配评估 §4；本机记录 04 §7；〔推理〕 |
+| 11 | CLI 自开回合的使用约定 | 推荐在 00 明确：它运行时 `startTurn` 回 `brain.turn_active`，可 deliver 或先 cancel；00 当前只据代码说明现象，是否确立为规范待定 | 〔一手〕本机记录 04 §6、06 §6；dev `packages/brain/brain/src/session.ts:605`；〔推理〕 |
+| 12 | 问题能否填补充文字的显式标志 | 推荐接 Claude Code 时设计；Codex 的 isOther 与 notes 不等价，不能直接映射为一个布尔，需按提供方真实表达能力区分 | 〔一手〕本机记录 06 §6；Codex 适配评估 §4.2；〔推理〕 |
+| 14 | 两个 Key 轮换、已留本机会话记录是否替换为 `***` | 推荐由主人处理或明确授权；本任务不读取凭据与个人记录 | 〔一手〕接手说明第四节第 14 条、任务书 03；〔推理〕 |
+
+另待第 4、5 步确认：Key 的 `credential-ref` 细节与存储归属；CLI 正式最低版本；Claude 问答不可编码组合的产品行为；Codex ephemeral 是提供方实例选择还是逐会话字段；⑪ 父子总量口径。认证首版 Key、空壳子隔离、Codex 软预算边界已经由决策 57–60 确定，不列为待定。依据：〔一手〕任务书 03、待写回清单第 7 条；两份适配评估 §4、§10。
 
 ## 模块阶段的调研起点
 
@@ -292,7 +315,7 @@
 - **下载与代理**：下载走本机代理，命令前加 `HTTPS_PROXY=http://127.0.0.1:7897 HTTP_PROXY=http://127.0.0.1:7897`；Node 下载器按需加 `NODE_USE_ENV_PROXY=1`。Claude Code shell 默认代理变量在跑检查时去掉；检查与本机 HTTP 测试不继承下载代理和无关凭据。依据：〔一手〕本轮任务书、`prune-report.md`、`rebase-report.md`。
 - **Electron 下载**：打包下载器即使命中缓存也会直连 GitHub 取校验和；可令 `ELECTRON_MIRROR` 指向本机临时 HTTP 服务，提供已下载的官方归档与官方校验和，完成后停服务。依据：〔一手〕`prune-report.md` 验收交回。
 - **GitHub 与论文**：读 GitHub 优先 curl raw 地址，保存到临时目录，不执行下载内容；API 未认证有频率限制。论文可查 arXiv API。macOS 没有 timeout 命令；zsh 不用小写 path 当变量名。
-- **本机检查**：`pnpm run ci`，不是 pnpm 内置的 `pnpm ci`；非交互 shell 先 `export PATH="$HOME/.local/share/fnm/aliases/default/bin:$PATH"`，或 `fnm exec --using=.node-version -- pnpm run ci`。单包检查在仓库根用 `pnpm exec vitest run <测试文件>` / `pnpm exec tsc --noEmit -p <包的 tsconfig>`，不要在包目录里 `npx tsc`。
+- **本机检查**：按根 `AGENTS.md` 与任务书选实际检查命令；文档跑 `pnpm run doc-sync`，代码按改动验证，不存在统一 `pnpm run ci`。非交互 shell 先 `export PATH="$HOME/.local/share/fnm/aliases/default/bin:$PATH"`。单包检查在仓库根用 `pnpm exec vitest run <测试文件>` / `pnpm exec tsc --noEmit -p <包的 tsconfig>`，不要在包目录里 `npx tsc`。
 - **官方客户端与全局原则**：mac mini 安装着系统应用目录里的 `DeepSeek Harness.app`，其 `~/.dsh` 与官方客户端任何状态测试一律不碰。mac mini 无 `~/.claude/CLAUDE.md`，主人全局原则仍在 MacBook；任务书要直接写全原则，不要求读取不存在的文件。依据：〔一手〕本轮任务书、`rebase-report.md`。
 - **网页验证**：首次会弹“预览版说明”，等它出现再点继续；输入框是 Lexical contenteditable，页面有长连接，不等 networkidle。真实浏览器验证使用临时 `LIWA_HOME`。依据：〔一手〕`prune-report.md`、`rebase-report.md`。
 - **凭据事件**：2026-11-02 Codex 验收桌面 App 时，调试 REPL 自动回显对象，将进程环境里的 DeepSeek API Key 与 OpenCodeBay 的 Key 打进会话输出，随对话内容经 OpenCodeBay 中转到上游模型服务，并留在本机 Codex 会话记录里；没有进入仓库。建议主人轮换两个 Key，待主人处理。之后任务书必须要求：不许 REPL 自动回显对象；打印环境信息前过滤 KEY / TOKEN / SECRET；不需要密钥的任务不给密钥。依据：〔一手〕本轮任务书与 `prune-report.md` 凭据事件交回。
@@ -309,7 +332,7 @@
 - 用户自己提的方案要先评审合不合理再采纳（用户原话："这个只是我说的，不代表就要这么设计，你应该评审我的是否合理"）。
 - 讲得太技术时用户会说"没看懂"：用直白的话、配具体例子；用户偏好图和页面胜过大段文字。
 - 外部灵感来源（如抖音小凌）只作参照，设计依据以开源代码和论文为主；游戏机制只借身体层，不当标准。
-- 在意 token 开销：Claude agent 一次只派一个，不并发；范围小、改法明确的任务经 Paseo 交 Codex / GLM。主对话只对话与派活、重要稿子独立评审，分工见“怎么协作”。依据：〔一手〕主人原话（决策 52）。
+- 在意 token 开销：主对话只做总调度，活经 Paseo 交 Codex，简单活交 GLM；重要产出独立复核，分工见“怎么协作”。依据：〔一手〕主人 11-05 决定，清单第 2 条。
 - 名字、人设内容是用户自己的事：软件名已定（灵鲸 / LingWhale / Liwa）；人设名由用户在出生设定里起。
 - 长任务在跑时，主人要每 5 分钟听一次进展（2026-11-02 起）：用定时任务，结论先行、说清在哪一步、还剩什么；发现卡住（几十分钟无动静、下载断了）要主动查、主动处理，不要干等。
 - 讲设计时主人要看完整的流程图：做成本地单文件 HTML（离线能开），放在主人桌面；要进仓库的另放一份到 `docs/` 里。
@@ -318,11 +341,11 @@
 ## 仓库状态
 
 - 远端 `git@github.com:WolffyCode/liwa.git`，公开仓库；不提交原始对话日志、本机配置、凭据或本机绝对路径。dsh-base 是主分支，灵鲸文档在 `docs/liwa/`，底座自带文档在 `docs/` 其余位置；main 已不再使用，dev 是新开发分支。依据：〔一手〕本地 Git 分支与 worktree 登记、本轮任务书。
-- **main**：已不再使用；旧的自研内核代码留在 main 的历史里。文档修改与代码实现分别派活。依据：〔一手〕主人本轮文档归位决定。
-- **dsh-base**：当前工作区（`../liwa-dsh`），主分支，灵鲸文档在 `docs/liwa/`，底座自带文档在 `docs/` 其余位置；HEAD `f0a90e46`，已推送，包含第一批裁剪；原样 DSH 快照为 `982347c`，可用 `git show 982347c:<路径>` 只读查看。与 main 历史独立。
-- **dev**：`../liwa-dev`，基于 `f0a90e46`，HEAD `7f69b6da`；两个提交依次为 `fbb36685` 公共层、`7f69b6da` 网页测试等待修复；尚未推送。新代码一律在 dev 写。
-- **liwa-prune**：远端分支已删，本地分支与 `../liwa-prune` worktree 仍在，指向 `f0a90e46`，可以清理；不再作为待合并开发线。
+- **main**：同级 `../liwa`，已不再使用，目录先保持不动；它的 `.git` 是多个工作目录共用的仓库本体，不能直接删。自研内核代码留在 main 历史里。依据：〔一手〕待写回清单第 4 条。
+- **dsh-base**：当前工作区（`../liwa-dsh`），主分支，灵鲸文档在 `docs/liwa/`，底座自带文档在 `docs/` 其余位置；HEAD `00e21375`，包含第一批裁剪与灵鲸文档；本任务文档改动未提交、未推送；原样 DSH 快照为 `982347c`，可用 `git show 982347c:<路径>` 只读查看。与 main 历史独立。
+- **dev**：`../liwa-dev`，基于 `dsh-base 00e21375`，HEAD `2eca7d13`；三个提交依次为 `1dfae070` 公共层、`4fc6bd5b` 网页测试等待修复、`2eca7d13` 第 2 步与两轮修复；工作区干净、尚未推送。新代码一律在 dev 写。依据：〔一手〕本次 rebase 与 `git range-diff`。
+- **liwa-prune**：远端、本地分支与工作目录均已删除。依据：〔一手〕待写回清单第 4 条。
 - **依赖与 hooks**：各代码 worktree 在根目录 `pnpm install`；安装脚本会设置 worktree 独立的 liwa-hooks，有时也写共用 Git hooks。main 无 lefthook，安装后检查共用的 pre-commit / pre-merge-commit / pre-push，避免代码分支 hooks 干扰文档分支；不改各 worktree 独立 hooks。依据：〔一手〕`rebase-report.md` 与现有安装约定。
-- **验证要求**：代码改动跑齐 7 项（build、lint、typecheck、test、test:snapshot、hygiene、doc-sync）、网页快照组 `pnpm run test:web:built`、真 Chrome 或 App；检查时去掉代理与无关凭据环境变量。Playwright 按当前锁定版本安装 chromium-headless-shell；真实模型验收时，DeepSeek API Key 只经环境变量 `DEEPSEEK_API_KEY` 交给需要它的进程，不落盘、不进日志和截图，测试用临时 `LIWA_HOME`；mac mini 上 Key 在 `~/.paseo/config.json` 的 `agents.providers.deepseek.env.ANTHROPIC_AUTH_TOKEN`，用命令替换直接注入（命令文本里只出现取值逻辑），任何时候都不打印它的值。依据：〔一手〕主人验收要求与 `prune-report.md`、`rebase-report.md`。
+- **验证要求**：按根 `AGENTS.md` 与任务书选检查；要求七项时依次跑 build、lint、typecheck、test、test:snapshot、hygiene、doc-sync。网页相关改动另跑网页快照组与真 Chrome 或 App；本次 rebase 只合文档和检查脚本，不跑 test:web:built；检查时去掉代理与无关凭据环境变量。Playwright 按当前锁定版本安装 chromium-headless-shell；真实模型验收时，DeepSeek API Key 只经环境变量 `DEEPSEEK_API_KEY` 交给需要它的进程，不落盘、不进日志和截图，测试用临时 `LIWA_HOME`；mac mini 上 Key 在 `~/.paseo/config.json` 的 `agents.providers.deepseek.env.ANTHROPIC_AUTH_TOKEN`，用命令替换直接注入（命令文本里只出现取值逻辑），任何时候都不打印它的值。依据：〔一手〕主人验收要求与 `prune-report.md`、`rebase-report.md`。
 - **数据与应用**：默认数据 `~/.liwa`（`LIWA_HOME` 可改）；官方客户端 `DeepSeek Harness.app` 与 `~/.dsh` 一律不碰。Liwa.app 是 `com.wolffycode.liwa` / `liwa://`，测试不放进系统应用目录，测试后用 lsregister 注销；`dsh://` 应仍归 `com.deepseek.dsh`。依据：〔一手〕`prune-report.md`。
 - **设计与代码入口**：接手先读 `docs/liwa/handoff.md`；灵鲸设计读主分支 dsh-base 的 `docs/liwa/`，底座文档读 `docs/` 其余位置，开发中的实现从 dev 读；main 已不再使用，旧的自研内核代码留在 main 的历史里。Paseo 迁移来源只读 `../paseo-upstream` 的 `8018231a`，不用 Helm；MacBook 副本不作为当前开发状态。依据：〔一手〕主人推进与迁移来源决定（决策 49、50）。

@@ -90,7 +90,7 @@
 
 ## 2 阶段一：设计收尾（约 2 周）
 
-**执行顺序（2026-10-28 定，决策 30）：先定插件机制和协议规范，再长模块。** 1.5 → 2.1（`contracts` 的 manifest 与第一批槽位契约、`kernel`、`profiles/m0-terminal.yml`）→ 1.7 m0 终端能跑（journal 最小版、procs、底座自带 agent 提供方（默认；从 Paseo 剥出的 `brain-claude` 可选）、minds 与 context 最小版（主人实例的实例会话、投递器最小版）、toolport 的 `reply` 与 `inner`、gateway 最小版、`cli` 终端客户端、静态人设文件）→ 1.3 探针直接跑在 m0 上 → 1.2、1.4 的文档与 M1 其余步骤并行 → 2.6 的最小主控台就是"demo 网页能跑"。每个后续模块按"契约进 contracts → 轻量文档 → 实现与测试 → 装进 profile"推进。
+**执行顺序（2026-10-28 定，决策 30）：先定插件机制和协议规范，再长模块。** 1.5 → 2.1（`contracts` 的 manifest 与第一批槽位契约、`kernel`、`profiles/m0-terminal.yml`）→ 1.7 m0 终端能跑（journal 最小版、procs、底座自带 agent 提供方（默认；从 Paseo 剥出的 `brain-claude-code` 可选）、minds 与 context 最小版（主人实例的实例会话、投递器最小版）、toolport 的 `reply` 与 `inner`、gateway 最小版、`cli` 终端客户端、静态人设文件）→ 1.3 探针直接跑在 m0 上 → 1.2、1.4 的文档与 M1 其余步骤并行 → 2.6 的最小主控台就是"demo 网页能跑"。每个后续模块按"契约进 contracts → 轻量文档 → 实现与测试 → 装进 profile"推进。
 
 | # | 步骤 | 具体做什么 | 产出 | 估时 | 服务目标 |
 | --- | --- | --- | --- | --- | --- |

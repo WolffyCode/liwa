@@ -100,7 +100,7 @@
     - { id: brain-acp, as: opencode, package: "@liwa/plugin-brain-acp", config: { cli: opencode } }
   ```
 
-- **impl 名 = `as ?? manifest.provides[槽位].impl`**。上例两份实例在 `brain.provider` 上的 impl 分别是 `gemini`、`opencode`；`brain-claude` 没有 `as`，impl 仍是 manifest 里的 `claude`。impl 在槽位内唯一（第 1 阶段按实例核对）。roster 的大脑配置绑 `{ impl: 'gemini' }`，`liwa brain set` 列出的候选就是这些 impl。
+- **impl 名 = `as ?? manifest.provides[槽位].impl`**。上例两份实例在 `brain.provider` 上的 impl 分别是 `gemini`、`opencode`；`brain-claude-code` 没有 `as`，impl 仍是 manifest 里的 `claude`。impl 在槽位内唯一（第 1 阶段按实例核对）。roster 的大脑配置绑 `{ impl: 'gemini' }`，`liwa brain set` 列出的候选就是这些 impl。
 - patch 的 `replace` / `disable` / `enable` 的 `id` 指**实例 id**；`insert` 的 `as` 规则同 profile。
 - `KernelContext` 暴露 `instanceId`、`pluginId`、`impls: Readonly<Partial<Record<SlotName, ImplId>>>`；`ctx.slots.provide(slot, instance)` **不再传 impl**，kernel 按上面的规则填（插件不可能登记错名字）。
 - 以实例 id 为键的：日志 child 绑定 `{ plugin, instance }`、`ctx.rng = root.fork('plugin:' + instanceId)`、`AsyncLocalStorage` 的 store、崩溃计数、禁用、`EntryPlan.id`、`kernel.started.v1.plugins[]`。
@@ -138,8 +138,8 @@ export const plugin = definePlugin({
 id: m0-terminal                             # 必须等于文件名；^[a-z][a-z0-9-]{0,40}$
 stage: m0
 plugins:                                    # 有序；required 条目只允许 config，带 package 即拒绝；同一实例 id 出现两次即拒绝
-  - id: brain-claude
-    package: "@liwa/plugin-brain-claude"
+  - id: brain-claude-code
+    package: "@liwa/plugin-brain-claude-code"
     config: { maxTurns: 100 }
 memberDefaults:                             # 全体成员的部署默认；作用域键是 '*'（MEMBER_DEFAULT_SCOPE），不和任何成员 id 相撞
   slots:
@@ -152,7 +152,7 @@ memberDefaults:                             # 全体成员的部署默认；作�
 ### 4.2 patch
 
 ```yaml
-- replace: { id: brain-claude, config: { maxTurns: 50 } }       # 整个 config 替换，不深合并
+- replace: { id: brain-claude-code, config: { maxTurns: 50 } }       # 整个 config 替换，不深合并
 - disable: { id: ability-embed-local, reason: "crash: 连续崩溃 3 次自动禁用" }   # reason 可选，只用于展示
 - enable:  { id: ability-embed-local }
 - bind:    { slot: memory.engine, binding: default }              # 写入 '*' 作用域；带 member: 则按成员覆盖
@@ -226,8 +226,8 @@ SIGTERM 或主人"排空后重启"→ `shutdown(reason)`：
 ### 5.5 ready / drain 的顺序：服务边加槽位边
 
 - 图的节点是实例；边有两种：**服务边**（required 的 `inject`：消费方 → 提供方）和**槽位边**（提供某槽位的实例 → `SLOT_DEFS[槽位].consumedBy` 列出的每个在装服务：提供方 → 消费方）。两种边都是静态信息：前者来自 `PluginDef.inject`，后者来自 manifest `provides` 与 contracts 的 `consumedBy` 表，第 1 阶段就能建完并查环。
-- **ready 顺序**：被依赖者先。按"提供方在消费方之前"做拓扑排序；同级平局按层表从低到高（基础 → 守护 → 资源 → 账本 → 运行 → 编排 → 接入），builtin 视为它所填槽位消费方的下一层，再按 profile 顺序。所以 procs → brain-claude → brains → minds → … → toolport → gateway；gateway 没有依赖它的节点，固定排在最后（开门）。
-- **drain 顺序**：ready 的严格逆序：gateway 先关门，…，brain-claude 最后排空。dispose 仍按挂载逆序（§5.2 第 3 步），两者不同是因为 dispose 受 cordis 的释放约束而 drain 不受。
+- **ready 顺序**：被依赖者先。按"提供方在消费方之前"做拓扑排序；同级平局按层表从低到高（基础 → 守护 → 资源 → 账本 → 运行 → 编排 → 接入），builtin 视为它所填槽位消费方的下一层，再按 profile 顺序。所以 procs → brain-claude-code → brains → minds → … → toolport → gateway；gateway 没有依赖它的节点，固定排在最后（开门）。
+- **drain 顺序**：ready 的严格逆序：gateway 先关门，…，brain-claude-code 最后排空。dispose 仍按挂载逆序（§5.2 第 3 步），两者不同是因为 dispose 受 cordis 的释放约束而 drain 不受。
 - 建图时把槽位边当普通边查环：一个 builtin 若 `inject` 了它所填槽位的消费方或更上层的服务，就会成环，第 1 阶段致命并点名。
 
 ### 5.6 崩溃、启动失败计数与安全模式（组合根 `apps/liwa`）

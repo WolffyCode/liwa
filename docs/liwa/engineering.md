@@ -91,7 +91,7 @@ liwa/
 
 | 插件包 | 槽位 · impl | runtime | 建于 |
 | --- | --- | --- | --- |
-| `brain-claude` | `brain.provider` · claude（Paseo 摘） | in-process | m0 |
+| `brain-claude-code` | `brain.provider` · claude（Paseo 摘） | in-process | m0 |
 | `brain-codex` | `brain.provider` · codex（Paseo 摘） | in-process | V1.0 冒烟；V1.1 全验证 |
 | `brain-acp` | `brain.provider` · acp，`multiInstance`（Paseo 摘，不验收） | in-process | V1.0 |
 | `brain-replay` | `brain.provider` · replay：录放大脑，测试与 L1 回放用 | in-process | m0 |
@@ -224,7 +224,7 @@ core 内的层表同时约束 import（dependency-cruiser）与 required 之间�
 | --- | --- | --- |
 | `AgentClient` / `AgentSession` 类型 | `contracts/slots/brain.provider.ts` | 裁剪成契约（方法描述 + 句柄 + 事件），不照搬 |
 | `agent-sdk-types.ts` | `lib/brain-shared/src/paseo/` | 原样保留；每个适配器的 `src/adapter.ts` 把 Paseo 类型映射到灵鲸契约 |
-| `providers/claude/` | `plugins/brain-claude/src/paseo/` | 照搬；改人设注入、内核工具注入与批结束钩子、`settingSources`、自动压缩、数据目录；进程经 `procs.spawn` |
+| `providers/claude/` | `plugins/brain-claude-code/src/paseo/` | 照搬；改人设注入、内核工具注入与批结束钩子、`settingSources`、自动压缩、数据目录；进程经 `procs.spawn` |
 | `codex-app-server-agent.ts` + `codex/` | `plugins/brain-codex/src/paseo/` | 照搬；断开 workspace-git，每成员 `CODEX_HOME`，进程经 `procs.spawn` |
 | `acp-agent.ts`、`generic-acp-agent.ts`、`acp-options.ts` | `plugins/brain-acp/src/paseo/` | 照搬；补人设注入退路（指令文件 / 前缀） |
 | provider-launch-config、notices、options、refresh-deadline、session-import、工具调用归一 | `lib/brain-shared/src/paseo/` | 照搬；不摘 `utils/spawn`、tree-kill（进程归 procs） |
@@ -317,7 +317,7 @@ core 内的层表同时约束 import（dependency-cruiser）与 required 之间�
 ## 10 开发流程
 
 - 分支：`dsh-base` 是主分支，灵鲸文档在 `docs/liwa/`，底座自带文档在 `docs/` 其余位置；`main` 已不再使用，旧的自研内核代码留在 main 的历史里。每个实现任务一个分支，合并前过本机 CI；提交与推送前征得主人同意。依据：〔一手〕主人本轮文档归位决定。
-- 实现顺序（决策 30、35）：**先定插件机制和协议规范，再长模块**。① kernel-0 全部（`00-plugin-kernel.md` §13）+ contracts 机制层 + `testkit` + `client` 骨架 + `profiles/m0-terminal.yml`；② m0 终端能跑：journal 最小版、procs、`brain-claude`（从 Paseo 剥）、`brain-replay`、minds 与 context 最小版、toolport 的 `reply` 与 `inner`、gateway 最小版、`cli` 的 `liwa` 命令、`persona-template-default`；③ 第 0 步探针直接跑在 m0 上（`replay/src/probe/`）；④ demo 网页 = M1 的最小主控台；⑤ 之后每个模块按"契约进 contracts → 轻量文档 → 实现与测试 → 装进 profile"独立推进；IPC 宿主（kernel-1）等第一个真正的进程外插件。
+- 实现顺序（决策 30、35）：**先定插件机制和协议规范，再长模块**。① kernel-0 全部（`00-plugin-kernel.md` §13）+ contracts 机制层 + `testkit` + `client` 骨架 + `profiles/m0-terminal.yml`；② m0 终端能跑：journal 最小版、procs、`brain-claude-code`（从 Paseo 剥）、`brain-replay`、minds 与 context 最小版、toolport 的 `reply` 与 `inner`、gateway 最小版、`cli` 的 `liwa` 命令、`persona-template-default`；③ 第 0 步探针直接跑在 m0 上（`replay/src/probe/`）；④ demo 网页 = M1 的最小主控台；⑤ 之后每个模块按"契约进 contracts → 轻量文档 → 实现与测试 → 装进 profile"独立推进；IPC 宿主（kernel-1）等第一个真正的进程外插件。
 - 实现任务计划写入 `docs/liwa/plans/v1.0.md`（尚未创建），每个任务不超过一天、带测试与完成标准；做完更新对应模块文档的"实现备注"段。
 - 命令：`pnpm liwa <命令>`（开发期直跑 `packages/cli`）、`pnpm run ci`、`pnpm test:contract`、`pnpm contracts:export`；启停、装配树、备份、探针、回放都经 `liwa`（`pnpm ci` 是 pnpm 内置的干净安装命令，跑不到我们的脚本）。非交互 shell 里 `node` 会解析到 Homebrew 的 26，用 `fnm exec --using=.node-version -- pnpm run ci`。
 
