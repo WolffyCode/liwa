@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>灵鲸常驻宿主与终端命令</title>
+<meta name="description" content="已确认的第 3 步设计：唯一底座、本机宿主、minds 所有权、run attach permit restart 与 JSON/JSONL 提交。">
+<style>
+:root{
+  --bg:#f6f4ef; --fg:#1f2328; --muted:#5b6470; --card:#ffffff; --line:#d9d4c7; --accent:#1f6f8b; --accent-2:#b4532a; --nav-bg:#ebe7dd; --code-bg:#efece4; --th-bg:#efece4; --warn:#8a5a00;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15181c; --fg:#e6e3dc; --muted:#a3a89f; --card:#1e2227; --line:#3a4048; --accent:#7cc1d8; --accent-2:#e8966e; --nav-bg:#1a1e23; --code-bg:#262b31; --th-bg:#262b31; --warn:#e3b35c;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15181c; --fg:#e6e3dc; --muted:#a3a89f; --card:#1e2227; --line:#3a4048; --accent:#7cc1d8; --accent-2:#e8966e; --nav-bg:#1a1e23; --code-bg:#262b31; --th-bg:#262b31; --warn:#e3b35c;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;font-size:16px;line-height:1.7}
+a{color:var(--accent)}
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:100vh}
+nav{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;background:var(--nav-bg);border-right:1px solid var(--line);padding:20px 16px}
+nav h1{font-size:18px;margin:0 0 4px}
+nav .sub{font-size:12px;color:var(--muted);margin:0 0 16px}
+nav ol{list-style:none;margin:0;padding:0}
+nav li{margin:0 0 6px}
+nav a{text-decoration:none;color:var(--fg);display:block;padding:4px 8px;border-radius:6px;font-size:14px}
+nav a:hover{background:var(--card)}
+nav .legend{margin-top:20px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+main{padding:28px 32px 80px;max-width:none}
+section{margin:0 0 56px}
+h2{font-size:26px;margin:0 0 6px;padding-top:8px;border-bottom:2px solid var(--accent);padding-bottom:6px}
+h3{font-size:19px;margin:28px 0 8px;color:var(--accent)}
+p.lead{color:var(--muted);margin:4px 0 16px}
+.figure{background:#ffffff;border:1px solid var(--line);border-radius:10px;padding:18px 20px 10px;margin:14px 0 20px;overflow-x:auto}
+.figure .cap{font-size:13px;color:#4a5560;margin:6px 0 0;font-family:inherit}
+.figure svg{display:block;max-width:100%;height:auto}
+pre.mermaid{margin:0;background:transparent;color:#1f2328}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:10px 0 18px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:8px 10px;vertical-align:top;text-align:left}
+th{background:var(--th-bg)}
+code{background:var(--code-bg);padding:1px 5px;border-radius:4px;font-size:.92em;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card h4{margin:0 0 6px;font-size:16px}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin-left:6px}
+.note{border-left:4px solid var(--accent-2);padding:8px 14px;background:var(--card);border-radius:0 8px 8px 0;margin:12px 0}
+.warn{color:var(--warn)}
+footer{color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:12px}
+@media (max-width:1100px){
+  .layout{grid-template-columns:1fr}
+  nav{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}
+  nav ol{display:flex;flex-wrap:wrap;gap:4px 12px}
+  main{padding:20px 16px 60px}
+}
+</style>
+</head>
+<body><div class="layout"><nav><h1>灵鲸常驻宿主</h1><p class="sub">已确认 · 计划实施 · 2026-11-05</p><ol><li><a href="#overview">1 总图：唯一后端与所有者</a></li>
+<li><a href="#run">2 run：接受输入与运行分开</a></li>
+<li><a href="#attach">3 attach：快照与增量共用切点</a></li>
+<li><a href="#permit">4 permit：主人回答精确请求</a></li>
+<li><a href="#restart">5 restart：先停稳，再恢复候选</a></li>
+<li><a href="#commit">6 JSON 与 JSONL：无跨文件事务的提交</a></li></ol><div class="legend"><a href="01-brain-host.md">模块文档</a><br><a href="01-agent-cli.html">agent CLI 图页</a><br><a href="02-minds.md">minds 唯一数据与状态</a></div></nav><main><p class="note"><b>推进顺序：④ Claude Code＋G1 → ③宿主 → ⑤ Codex＋G2/G3。</b>G4 与 JSON 严格读取是③前置；Claude 先用现有公共层与一次性 brain run 真机验收，宿主随后以 DeepSeek、Claude 两个真提供方加假 CLI 验。图示是计划，不代表代码已实现。〔一手〕handoff 决策 65、66。</p><section id="overview"><h2>1 总图：唯一后端与所有者</h2><p class="lead">服务外壳、RPC、鉴权、配置、插件、JSON 和 JSONL 都复用底座；minds 是唯一会话运行所有者。</p><div class="figure"><pre class="mermaid">
+flowchart TB
+  C["本机 liwa brain&lt;br/&gt;短命 CLI"] &lt;--&gt;|"现有 Cookie / RPC / Mux"| H["brain-host profile&lt;br/&gt;锁 · ready · drain"]
+  H &lt;--&gt;|"业务 API"| M["minds 最小 direct&lt;br/&gt;登记 · 代次 · 回合 · 投递 · 待答"]
+  M &lt;--&gt;|"会话 API / 事实"| B["ctx.brains + provider&lt;br/&gt;能力 · 句柄 · G1/G4"]
+  B &lt;--&gt;|"stdio / SDK"| P["每会话一个 CLI 进程&lt;br/&gt;DeepSeek / Claude / Codex"]
+  B --&gt; S["底座 subprocess&lt;br/&gt;出生身份 · scope · waitForExit"]
+  S --&gt; P
+  M --&gt; J["storage-domain + storage-json&lt;br/&gt;agent / operation 逐条 JSON"]
+  M --&gt; L["session-persistence-jsonl&lt;br/&gt;唯一会话事件日志"]
+  S --&gt; R["storage-json / per-record&lt;br/&gt;受管进程逐条台账"]
+  C -.-&gt;|"断开只释放读者"| H
+</pre><p class="cap">数据／生命周期：02-minds.md §2/§4.0；provider：01-agent-cli.md §2.1/§4.12。〔一手〕handoff 决策 62、65；〔推理〕装配。</p></div></section>
+<section id="run"><h2>2 run：接受输入与运行分开</h2><p class="lead">终端退出不结束会话；accepted 只承诺宿主已持久收下。</p><div class="figure"><pre class="mermaid">
+sequenceDiagram
+  participant C as 本机 CLI
+  participant H as 宿主 API
+  participant M as minds
+  participant S as 底座存储
+  participant B as brains / subprocess
+  participant P as 真实 CLI
+  C-&gt;&gt;H: run(operationId, impl, 输入)
+  H-&gt;&gt;M: 经过校验的业务请求
+  M-&gt;&gt;S: 操作/agent JSON intent
+  M-&gt;&gt;S: 输入事件 JSONL append + flush
+  M-&gt;&gt;S: agent checkpoint 与回执
+  M--&gt;&gt;C: accepted(agentId, operationId)
+  Note over C,M: no-wait 可退出，任务 owner 留宿主
+  M-&gt;&gt;B: 先接持久 sink，再创建本代
+  B-&gt;&gt;S: 启动 intent / 出生身份 / owner 引用 durable
+  B-&gt;&gt;P: 放行启动并提交回合
+  P--&gt;&gt;B: 原生回合 / 句柄 / 权限 / 用量
+  B--&gt;&gt;M: 统一 BrainEvent / 持久观察
+  M-&gt;&gt;S: 日志 durable，状态 JSON 对齐
+  M--&gt;&gt;C: 完成或权限检查点
+</pre><p class="cap">01-brain-host.md §5.1；02-minds.md §2.6。〔一手〕packages/brain/brain/src/index.ts:491；〔推理〕计划时序。</p></div></section>
+<section id="attach"><h2>3 attach：快照与增量共用切点</h2><p class="lead">先订阅并捕获 H，再回放历史；状态必须是 stateAtH。</p><div class="figure"><pre class="mermaid">
+sequenceDiagram
+  participant C as 本机 CLI
+  participant H as 宿主流
+  participant M as minds 提交观察
+  participant L as JSONL
+  C-&gt;&gt;H: follow(agentId, afterCursor)
+  H-&gt;&gt;M: 原子安装订阅，取得 H + stateAtH
+  H-&gt;&gt;L: 读取 (after, H]
+  Note over H,M: 读历史期间缓存所有大于 H 的事件
+  L--&gt;&gt;H: 已提交历史
+  H--&gt;&gt;C: 历史 + H 对应状态
+  H--&gt;&gt;C: 按序发送大于 H 的增量
+  C-&gt;&gt;C: 处理后推进 cursor，重复 seq 去重
+  Note over C,H: 缓冲满明确 resync；过期 cursor 明确失败
+  C--xH: 断开
+  Note over M,L: 任务与持久写入继续
+</pre><p class="cap">01-brain-host.md §4.4/§5.2。〔一手〕packages/api/session-controller/README.md:38；〔推理〕切点协议。</p></div></section>
+<section id="permit"><h2>4 permit：主人回答精确请求</h2><p class="lead">父模型不能代批；响应结果不明必须保留事实，旧 RPC 不跨重启复活。</p><div class="figure"><pre class="mermaid">
+sequenceDiagram
+  participant P as 原生 CLI
+  participant B as provider / brains
+  participant M as minds
+  participant S as JSON / JSONL
+  participant C as 主人终端
+  P-&gt;&gt;B: 原生权限或问题
+  B-&gt;&gt;M: request(sessionId, gen, requestId, childId)
+  M-&gt;&gt;S: 请求事件 flush，pending JSON
+  M--&gt;&gt;C: 选项、问题和调用事实
+  C-&gt;&gt;M: 精确键 + optionId / answers / operationId
+  M-&gt;&gt;S: responding intent durable
+  M-&gt;&gt;B: 应用答案
+  B-&gt;&gt;P: 原生响应
+  P--&gt;&gt;B: 应用确认
+  B--&gt;&gt;M: resolved
+  M-&gt;&gt;S: resolved flush + JSON 对齐
+  M--&gt;&gt;C: 已应用回执
+  Note over M,B: G2 在⑤接通&lt;br/&gt;后续输入走队列
+</pre><p class="cap">01-brain-host.md §5.3；02-minds.md §4.0。〔一手〕packages/brain/brain/src/session.ts:658；〔推理〕持久协调。</p></div></section>
+<section id="restart"><h2>5 restart：先停稳，再恢复候选</h2><p class="lead">默认续跑合格的原 running；idle、initializing、归档、无句柄或结果不明不自动运行。</p><div class="figure"><pre class="mermaid">
+sequenceDiagram
+  participant C as 本机 CLI
+  participant H as 旧宿主
+  participant M as minds / 存储
+  participant B as 受管进程
+  participant X as 短命替换载体
+  participant N as 新宿主
+  C-&gt;&gt;H: restart(operationId)
+  H-&gt;&gt;M: 保存 running recovery intent
+  H-&gt;&gt;H: 停准入并 drain
+  H-&gt;&gt;B: cancel / 终止范围 / waitForExit
+  B--&gt;&gt;H: 确认全范围退出
+  H-&gt;&gt;M: flush 并关闭持久句柄
+  H-&gt;&gt;H: 退出，释放内核锁
+  X-&gt;&gt;N: 经同一 profile 启动
+  N-&gt;&gt;N: 拿锁，新的 bootId
+  N-&gt;&gt;M: 严格读 JSON，补日志切点，核对旧进程
+  N--&gt;&gt;C: ready 与逐会话恢复状态分开
+  N-&gt;&gt;M: 合格候选新代 resume + durable 继续输入
+  Note over H,X: 未停稳不启动替身；CLI 断开不丢已接受操作
+</pre><p class="cap">01-brain-host.md §4.2/§5.4；02-minds.md §4.0。〔一手〕paseo-upstream@8018231a:docs/agent-lifecycle.md:17；〔推理〕载体。</p></div></section>
+<section id="commit"><h2>6 JSON 与 JSONL：无跨文件事务的提交</h2><p class="lead">单个 JSON 原子写不等于多记录事务；恢复沿同一 operationId 补齐，不重做已确认副作用。</p><div class="figure"><pre class="mermaid">
+flowchart TB
+  I["1 操作 / agent JSON intent durable&lt;br/&gt;稳定 operationId 与 agentId"] --&gt; L["2 JSONL append + flush&lt;br/&gt;opId · gen · 完整事实"]
+  L --&gt; J["3 agent JSON checkpoint&lt;br/&gt;recordRevision / appliedLogSeq"]
+  J --&gt; A["4 操作回执与 committed 切点&lt;br/&gt;控制事件到此才对外发布"]
+  A --&gt; D["5 dispatching intent durable&lt;br/&gt;然后调用 provider"]
+  D --&gt; K{"收到明确确认？"}
+  K --&gt;|"是"| F["记录 applied / turnId&lt;br/&gt;发布结果"]
+  K --&gt;|"否"| U["unknown&lt;br/&gt;停止依赖，核对后再处理"]
+  L -.-&gt;|"日志在前、JSON 落后"| R["重启按日志补摘要&lt;br/&gt;不重投已发送输入"]
+  I -.-&gt;|"日志尚未提交"| Q["同 operation 补 admission 或失败&lt;br/&gt;不再分配 agent"]
+</pre><p class="cap">唯一定义：02-minds.md §2.6。〔一手〕packages/storage/storage-json/README.zh.md:76、packages/storage/storage-domain/README.md:147；〔推理〕提交协议。</p></div></section><footer>图由 01-brain-host.md、02-minds.md 与 01-agent-cli.md 派生；只编辑本页源，用 docs/liwa/scenarios/build.py 生成同目录 HTML。</footer></main></div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+(function () {
+  // 多张图的箭头 marker 同名，生成后逐图改成唯一 id，免得都指向第一张图的定义
+  function uniqueMarkers() {
+    document.querySelectorAll('pre.mermaid svg').forEach(function (svg, n) {
+      var prefix = 'd' + n + '-';
+      var map = {};
+      svg.querySelectorAll('marker[id]').forEach(function (m) { map[m.id] = prefix + m.id; m.id = prefix + m.id; });
+      if (!Object.keys(map).length) return;
+      svg.querySelectorAll('*').forEach(function (el) {
+        ['marker-start', 'marker-end', 'marker-mid'].forEach(function (a) {
+          var v = el.getAttribute(a);
+          if (!v) return;
+          var m = v.match(/url\(#([^)]+)\)/);
+          if (m && map[m[1]]) el.setAttribute(a, 'url(#' + map[m[1]] + ')');
+        });
+      });
+    });
+  }
+  if (!window.mermaid) return;
+  mermaid.initialize({
+  startOnLoad: false,
+  securityLevel: 'loose',
+  theme: 'base',
+  themeVariables: {
+    fontFamily: '-apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+    fontSize: '15px',
+    primaryColor: '#f3f1ea', primaryTextColor: '#1f2328', primaryBorderColor: '#8a8f98',
+    lineColor: '#4a5560', secondaryColor: '#e3f1f6', tertiaryColor: '#fbefe6',
+    clusterBkg: '#fafaf7', clusterBorder: '#c8c3b6',
+    actorBkg: '#e3f1f6', actorBorder: '#1f6f8b', actorTextColor: '#10303c',
+    signalColor: '#1f2328', signalTextColor: '#1f2328',
+    noteBkgColor: '#fff6e5', noteBorderColor: '#d9a441', noteTextColor: '#3d2e00',
+    activationBkgColor: '#e3f1f6', activationBorderColor: '#1f6f8b',
+    labelBoxBkgColor: '#efece4', labelBoxBorderColor: '#8a8f98', labelTextColor: '#1f2328', loopTextColor: '#1f2328',
+    edgeLabelBackground: '#ffffff'
+  },
+  flowchart: { htmlLabels: true, useMaxWidth: false, curve: 'basis', nodeSpacing: 34, rankSpacing: 46, padding: 12, subGraphTitleMargin: { top: 8, bottom: 12 } },
+  sequence: { useMaxWidth: false, mirrorActors: false, actorMargin: 24, messageMargin: 30, boxMargin: 10, noteMargin: 10, width: 135, height: 48, wrap: true, actorFontSize: 15, messageFontSize: 14, noteFontSize: 14 }
+  });
+  mermaid.run({ querySelector: 'pre.mermaid', suppressErrors: true }).then(uniqueMarkers, uniqueMarkers);
+})();
+</script>
+</body>
+</html>

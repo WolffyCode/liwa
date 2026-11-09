@@ -62,7 +62,7 @@ footer{color:var(--muted);font-size:13px;border-top:1px solid var(--line);paddin
 <div class="layout">
 <nav>
   <h1>灵鲸第四层</h1>
-  <p class="sub">agent CLI 集成层 · 接入设计流程图 · 2026-11-02 确认稿</p>
+  <p class="sub">agent CLI 集成层 · 接入设计流程图 · 2026-11-05 已确认设计</p>
   <ol>
     <li><a href="#s1">1 四层总览</a></li>
     <li><a href="#s2">2 第四层内部结构</a></li>
@@ -72,15 +72,16 @@ footer{color:var(--muted);font-size:13px;border-top:1px solid var(--line);paddin
     <li><a href="#s6">6 Paseo 迁移地图</a></li>
     <li><a href="#s7">7 包划分与进程模型</a></li>
     <li><a href="#s8">8 第一版范围与验收</a></li>
-    <li><a href="#s9">9 已定的点与新待定</a></li>
+    <li><a href="#s9">9 已定的点与待实测</a></li>
+    <li><a href="01-brain-host.html">常驻宿主与终端流程图</a></li>
   </ol>
-  <div class="legend">配套文档：<code>docs/liwa/architecture/modules/01-agent-cli.md</code><br>底座 <code>dsh-base ad4e3c50</code> · Paseo <code>8018231a</code>（0.15.0-beta.1）</div>
+  <div class="legend">配套文档：<code>docs/liwa/architecture/modules/01-agent-cli.md</code><br>底座 <code>develop / release</code> · Paseo <code>8018231a</code>（0.15.0-beta.1）</div>
 </nav>
 <main>
 
 <section id="s1">
 <h2>1 四层总览：第四层在哪</h2>
-<p class="note">本页与 01-agent-cli.md 对齐到 2026-11-05：第 1、2 步已实现，其余图示为目标机制；G1–G4 均待补，不能把“看门狗”标注当已实现。依据与待定以 Markdown 正文为准。</p>
+<p class="note">本页与 01-agent-cli.md 对齐到 2026-11-05：第 1、2 步已实现，宿主设计已定、计划接口尚未实现。推进④ Claude Code＋G1 → ③常驻宿主（G4／JSON 严格读取前置）→ ⑤ Codex＋G2/G3；不能把图中看门狗当已实现。依据与待定以 Markdown 正文为准。</p>
 <p class="lead">她按"在和谁相处"分成几个实例（第二层），每件活一个会话加一个目录（第三层），两层都不直接碰任何 agent 程序：开会话、送达、取消、权限、用量全经第四层。第四层对外只有一个 <code>ctx.brains</code> 服务和一份 <code>brain.provider</code> 契约；四个提供方都是独立进程的 CLI，每个会话一个进程。自建默认 agent 的提供方叫 <code>deepseek</code>（它是底座自带 agent 下沉成的 CLI），和 <code>claude</code>、<code>codex</code>、<code>acp</code> 并列。</p>
 <div class="figure">
 <pre class="mermaid">
@@ -697,7 +698,7 @@ flowchart LR
     P8["schedule/cron.ts · worktree 命令 · .worktreeinclude<br/>checkout diff · file-observer"]
     P9["speech/ + dictation/ ≈ 6 900"]
     P10["finish-subscriptions · idle-runtime-cleanup · restart-recovery<br/>create-agent · mcp-server + paseo-tools"]
-    PX["不迁：agent-manager 5 794 · provider-registry · agent-storage(JSON)<br/>agent-messages · managed-processes · terminal · browser-tools<br/>plugins 平台 · hub / relay / connected-hosts · session(WebSocket)<br/>opencode / pi / omp 适配器 · 客户端与 App"]
+    PX["按功能借规则，不整迁：agent-manager · provider-registry · agent-storage 实现<br/>agent-messages · managed-processes · terminal · browser-tools<br/>plugins 平台 · session(WebSocket)<br/>hub / relay / connected-hosts：多端阶段走 VPS<br/>opencode / pi / omp 适配器 · 客户端与 App"]
   end
   subgraph LW["灵鲸"]
     direction TB
@@ -709,8 +710,8 @@ flowchart LR
     Q6["gateway 07（时间线投影）"]
     Q7["job-trigger-time · workspace · console 08"]
     Q8["ability-speech-local 09（V1.1）"]
-    Q9["迁规则：写进 02 / 03 / tasks / toolport 的文档<br/>至少一次 · 先记意图 · 1 小时回收<br/>running→closed · 幂等键 · 按提供方过滤工具"]
-    QX["理由：以 CLI 转录为真相 · agent 自管 agent<br/>JSON 文件 · 多主机<br/>或底座已有：cordis 插件 · tool-terminal<br/>browser-use · @liwa/subprocess"]
+    Q9["迁规则：写进 02 / 03 / tasks / toolport 的文档<br/>至少一次 · 先记意图 · 1 小时回收<br/>先存 running intent · 再修旧状态 · 默认续跑合格候选<br/>幂等键 · 按提供方过滤工具"]
+    QX["理由：以 CLI 转录为真相 · agent 自管 agent<br/>自建 fs 存储 · 第二套后端<br/>或底座已有：cordis 插件 · tool-terminal<br/>browser-use · @liwa/subprocess"]
   end
   P1 & P5 --> Q1
   P2 --> Q2
@@ -778,23 +779,24 @@ flowchart TB
 
 <section id="s8">
 <h2>8 第一版范围与验收</h2>
-<p class="lead">第 1、2 步完成，第 3 步设计中；第 4、5 步接入后与 Paseo 同等功能。Claude Code / Codex 首版 Key；同一插件多行独立 impl、标签/模型/环境/工具策略/二进制覆盖，可并行运行；credential-ref 建议待主人确认。以后再加灵鲸全局 home、本事、MCP、插件配置机制。〔一手〕handoff 决策 55–60。</p>
+<p class="lead">第 1、2 步已有实现；④ Claude＋G1 → ③常驻宿主 → ⑤ Codex＋G2/G3。③设计已定，G4 与 JSON 严格读取为前置；宿主验收用 DeepSeek、Claude 两个真提供方加假 CLI。Claude Code / Codex 首版 Key；同一插件多行独立 impl、标签/模型/环境/工具策略/二进制覆盖，可并行运行；credential-ref 已定，值仅临用注入。以后再加灵鲸全局 home、本事、MCP、插件配置机制。〔一手〕handoff 决策 55–66。</p>
 <table>
 <tr><th>公共缺口</th><th>当前事实与安排</th></tr>
-<tr><td>G1</td><td>取消/失败已知支出未结算；现在独立小活补幂等终值结算，不把 update 累计快照盲加。</td></tr>
-<tr><td>G4</td><td>watchdogMs 尚未实现整轮计时；现在独立补，只取消捕获轮，失败保持 stopping。</td></tr>
+<tr><td>G1</td><td>取消/失败已知支出未结算；随第④步 Claude 补幂等终值结算，不把 update 累计快照盲加。</td></tr>
+<tr><td>G4</td><td>watchdogMs 尚未实现整轮计时；第③步前完成，只取消捕获轮，失败保持 stopping。</td></tr>
 <tr><td>G2 / G3</td><td>跨回合父 pending、实时 usage.update.childId 尚缺；随 Codex 补，先测父子总量口径。〔一手〕01 §4.11、两评估 §6、handoff 决策 61。</td></tr>
 </table>
-<div class="note">下方是目标验收，经历流、toolport、跨 CLI 子活、恢复/清孤儿依赖第二层后补；不能把目标图当已有实现。deepseek 契约 23/23、真模型 11/11 无重试已验；并发十进程约 2.37 GB、平均237 MB；源码启动约0.74秒/316 MB，构建约0.50秒/264 MB，口径不同。〔一手〕记录06/07/08、任务书03、01 §7/9。</div>
+<div class="note">下方按阶段验收：④验 Claude provider 与 G1；③验最小 direct、跨命令托管、恢复与孤儿对账；完整 journal/context/toolport/tasks 按第二层阶段验。当前 deepseek 的既有验收与资源观测见 01 §7/§9，不能把目标能力当已有实现。〔一手〕handoff 决策 66；〔二手〕01 §7 的既有验收结果。</div>
 <div class="cols">
-  <div class="card"><h4>m0</h4><code>@liwa/brain</code> + <code>brain-acp</code>（SDK 1.4）+ <code>brain-deepseek</code> + <code>deepseek-app</code>；实例预设与 <code>reply / no_reply / inner</code>；<code>_liwa/steer</code>；契约测试与回环编解码；<code>liwa brain list|probe</code>。</div>
+  <div class="card"><h4>m0</h4><code>@liwa/brain</code> + <code>brain-acp</code>（SDK 1.4）+ <code>brain-deepseek</code> + <code>deepseek-app</code>；实例预设与 <code>reply / no_reply / inner</code>；<code>_liwa/steer</code>；契约测试与回环编解码；<code>liwa brain provider ls/diagnostic</code>（③计划）；④可先用当前一次性 <code>brain run</code>。</div>
   <div class="card"><h4>V1.0</h4><code>brain-claude-code</code> 全验证（实例、想事、整理、干活）；<code>brain-codex</code> 干活与查资料；五个预设；子 agent 路①（三家的观察）与路②；配置目录生成；备用提供方切换；Paseo 代码与 NOTICE 进仓。</div>
   <div class="card"><h4>V1.1</h4>Codex 当实例会话；<code>dynamicTools</code>；Claude 订阅额度窗口；预热空闲 <code>deepseek</code> 进程；离线预审；别家 ACP CLI 验证；主控台的子 agent 面板。</div>
 </div>
+<p class="note">第④步先验 Claude provider＋G1，不依赖宿主；A2 的跨命令托管、kill-9 对账与恢复在第③步验，完整 toolport/tasks/实例子项按第二层阶段验。〔一手〕handoff 决策 66。</p>
 <table>
-<tr><th style="width:60px">#</th><th>怎么算接通（真实 CLI，受管 Key 注入，凭据引用待定）</th></tr>
+<tr><th style="width:60px">#</th><th>怎么算接通（真实 CLI，受管 Key 与已定凭据引用）</th></tr>
 <tr><td>A1</td><td><b>brain-deepseek</b>：本体为主人实例拉起真 <code>liwa --profile deepseek</code>（<code>LIWA_HOME</code> 在该会话目录、<code>~/.liwa</code> 无新文件）→ <code>liwa chat</code> 一句话 → <code>session/new</code> 带 <code>_meta.liwa</code> → 事件 <code>brain.session.opened → turn.started → tool.called(reply, inner 同批) → turn.completed{concludedBy: reply, usage 非空, inferences = 1}</code>；第 4 步被 <code>agent/pre-step</code> 拒；主人追加一句经 <code>_liwa/steer</code> 在下一步可见；杀本体重启 → 清孤儿 → 同一目录重拉 → <code>session/resume</code> 成功、身份探针答对。</td></tr>
-<tr><td>A2</td><td><b>brain-claude-code</b>：真 <code>claude</code>（评估版 2.1.318，正式下限待定）开一件想事活（自定义 systemPrompt、<code>仅灵鲸受控来源</code>、<code>CLAUDE_CONFIG_DIR</code> 在成员目录、<code>tools []</code>），<code>conclude</code> 经 MCP 到 toolport；<code>maxTurns=3</code> 第 4 次主循环推理不发生（不含子/helper 总预算）；<code>~/.claude/projects</code> 无新文件；<code>kill -9</code> 本体后 <code>claude</code> 进程被下次启动清掉；steer 在下一步可见。</td></tr>
+<tr><td>A2</td><td><b>brain-claude-code</b>：真 <code>claude</code>（评估版 2.1.318，正式下限待定）开一件想事活（自定义 systemPrompt、<code>仅灵鲸受控来源</code>、<code>CLAUDE_CONFIG_DIR</code> 在成员目录、<code>tools []</code>），<code>conclude</code> 经 MCP 到 toolport；<code>maxTurns=3</code> 第 4 次主循环推理不发生（不含子/helper 总预算）；<code>~/.claude/projects</code> 无新文件；宿主 <code>kill -9</code>／孤儿对账子项在第③步验；steer 在下一步可见。</td></tr>
 <tr><td>A3</td><td><b>brain-codex</b>：真 <code>codex app-server</code> 开一件干活活（<code>developerInstructions</code>、<code>CODEX_HOME</code> 在成员目录、<code>workspace-write</code> 限 worktree、读到灵鲸注入的项目 <code>AGENTS.md</code> 内容、独立 HOME）；<code>report</code> 经 MCP 到 toolport；写 worktree 外触发 <code>requestApproval</code> → <code>permission.request</code> → 拒绝后回合继续；<code>turn/steer</code> 次步可见；<code>tokenUsage</code> 进 <code>brain_usage</code>。</td></tr>
 <tr><td>A4</td><td><b>子 agent</b>：<code>deepseek</code> 上的干活活调 <code>subagent</code> 开子会话、子结束结果回到父的下一步、<code>brain_child</code> 与用量归父；Claude 上的干活活用 <code>Agent</code> 工具开一个子 agent → <code>child.started / ended</code> 出现在 <code>task:&lt;id&gt;</code> 流、用量记在父活、<code>cancel(owner)</code> 时子 agent 被 <code>stopTask</code>；同一活调 <code>spawn(codex, 交接包)</code> 开子活、子活 <code>report</code> 回到父活、父活结束级联停掉子活；子 agent 的一次权限请求直推主人而不是父。</td></tr>
 <tr><td>A5</td><td><b>切换</b>：roster 把主人实例从 <code>deepseek</code> 改成 <code>claude</code> → 空闲换代 → 上下文从账本重建 → 身份探针通过 → 再改回。</td></tr>
@@ -804,7 +806,7 @@ flowchart TB
 </section>
 
 <section id="s9">
-<h2>9 已定的点与新待定</h2>
+<h2>9 已定的点与待实测</h2>
 <table>
 <tr><th style="width:40px">#</th><th style="width:240px">点</th><th>定了什么（以 handoff 决策 55–61 与本文为准）</th></tr>
 <tr><td>1</td><td>自建默认 agent 的形态</td><td>第一版就是独立进程的 CLI，<code>liwa --profile deepseek</code>，和 Claude Code、Codex 同形</td></tr>
@@ -822,8 +824,8 @@ flowchart TB
 <tr><td>13</td><td>内核工具到 CLI</td><td>V1 toolport HTTP MCP，三家一个端点</td></tr>
 <tr><td>14</td><td>待实测项</td><td>先派一个探针任务跑完十一项，结果决定 <code>Meta</code> 的真值</td></tr>
 </table>
-<div class="note"><b>待定</b>：模型目录/诊断、斜杠命令、非图片附件、子逐条时间线、网页子审批、会话允许、CLI 自开回合规范、补充文字标志见 handoff 待定表；credential-ref 细节、正式最低版本、ephemeral 选择与 hard_limit 子清理策略待主人定。推荐和理由见 01 对应节，不算已批准。〔一手〕任务书 03、旧接手说明第四节 4–12/14。</div>
-<footer>本页由设计 agent 生成，内联 SVG、无外部资源；源文件是同目录的 <code>01-agent-cli.src.html</code>，用 <code>docs/liwa/scenarios/build.py</code> 生成；图的名词与 <code>four-layers.md</code>、<code>overall.md</code>、<code>02-minds.md</code> 一致。</footer>
+<div class="note"><b>宿主已定方案</b>：<a href="01-brain-host.html">brain-host 图页</a>与<a href="01-brain-host.md">模块文档</a>定义本机装配、命令与协议；登记／代次／回合／投递／待答只归 minds，agent 与进程逐条 JSON、日志 JSONL；默认自动续跑合格 running、send interrupt、wait 权限检查点、stop 当前轮，scope all 完整停稳。模型／诊断、ACP 命令、文件块、凭据引用已定。正式最低版本、真实隔离／计量、ephemeral 与完整第二层尚未定的领域策略按正文核验。〔一手〕handoff 决策 62–66；〔推理〕派生图示。</div>
+<footer>本页由设计 agent 生成，内联 SVG、无外部资源；源文件是同目录的 <code>01-agent-cli.src.html</code>，用 <code>docs/liwa/scenarios/build.py</code> 生成；宿主时序见 <code>01-brain-host.html</code>；图的名词与 <code>four-layers.md</code>、<code>overall.md</code>、<code>02-minds.md</code> 一致。</footer>
 </section>
 
 </main>
