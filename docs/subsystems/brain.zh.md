@@ -16,7 +16,9 @@
 
 ## 提供方
 
-随包两个提供方。[`deepseek`](../../packages/brain/brain-deepseek/README.zh.md) 把灵鲸自己的 agent 作为每个会话一个 `liwa --profile deepseek` 进程（[`deepseek-app`](../../packages/bundle/deepseek-app/README.zh.md)）运行在该会话自己的 home 里，说 ACP 加 `_liwa` 扩展：下一步插话、服务端用量、子 agent 记录，以及 `session/new` 的 `_meta.liwa` 里的会话种类、预算、说明与模型。[`acp`](../../packages/brain/brain-acp/README.zh.md) 经 Paseo 的 ACP 客户端接任何别的 ACP agent CLI，每家 CLI 一行配置。两者都是 `web`、`headless`、`brain` 三个 bundle 里的插件行（`acp` 那一行配好之前关着），所以 profile 在配置里就能换掉或去掉它们。`deepseek` 进程经 `ctx.acpExtensions` 扩展底座的 ACP 服务器，它的接口列在下面。
+现有三家提供方。[`deepseek`](../../packages/brain/brain-deepseek/README.zh.md) 每会话运行一个 `liwa --profile deepseek` 进程，说 ACP 加 `_liwa` 扩展。[`acp`](../../packages/brain/brain-acp/README.zh.md) 通过 Paseo 客户端接其他 ACP CLI。[`claude-code`](../../packages/brain/brain-claude-code/README.zh.md) 用官方 SDK 与显式解析的本机 Claude 二进制，各实例有独立凭据引用和生成的成员配置。Claude 只接干活会话，真实 CLI 验收留给 A2。三家都装配在 `web`、`headless`、`brain`，ACP 与 Claude 示例行默认关闭。`deepseek` 进程经下面的 `ctx.acpExtensions` 扩展底座 ACP 服务。
+
+成功回合带用量；失败和中断回合可带已观测支出。第一个终止结果只结算一次。提供方快照和子分项不重复加同一笔消费，缺失的终止用量保持未知。
 
 ## 登记
 

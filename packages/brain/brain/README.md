@@ -53,9 +53,33 @@ session.subscribe(event => { /* BrainEvent */ })
 const { turnId } = await session.startTurn({ blocks: [{ kind: 'text', text: 'hello' }] })
 ```
 
-`model` is optional: without it the provider's CLI uses its own default, and no placeholder is passed. `modeId` opens the session in one of the provider's session modes. Before opening, four checks run: a provider whose compaction is `always_on` refuses `compaction: 'off'`; a provider with irremovable native tools (`meta.nativeTools`) refuses `nativeToolPolicy: 'none'`; a provider without modes (`meta.modeSwitch`) refuses `modeId`; native child agents are switched off for every kind except `work` and the change is recorded in the session's `adjustments`. Everything else in the configuration — native tools, compaction, repository documents, rules, skills, `env`, MCP `alwaysLoad` — is the provider's to carry out, and a combination it cannot honour fails `createSession`. The session closes with the context passed as owner.
+`model` is optional: without it the provider's CLI uses its own default, and no placeholder is passed. `modeId` opens the session in one of the provider's session modes. `thinking` picks one of the model's thinking options when the provider lists any; otherwise the model's default applies. `plugins`, `hooks` and `instructions` are the session's share of the agent configuration (Claude shapes, see below). Before opening, five checks run: a provider whose compaction is `always_on` refuses `compaction: 'off'`; a provider with irremovable native tools (`meta.nativeTools`) refuses `nativeToolPolicy: 'none'`; a provider without modes (`meta.modeSwitch`) refuses `modeId`; a provider whose `meta.agentConfig` says it cannot load plugins, hooks or instructions refuses a session that carries them; native child agents are switched off for every kind except `work` and the change is recorded in the session's `adjustments`. Everything else in the configuration — native tools, compaction, repository documents, rules, skills, `env`, MCP `alwaysLoad` — is the provider's to carry out, and a combination it cannot honour fails `createSession`. The session closes with the context passed as owner.
 
 An image block references bytes stored first: `const blob = await ctx.brains.blobs.put(bytes, 'image/png')`, then `{ kind: 'image', blob }`. The store is a content-addressed directory; providers read the bytes back through the launch context's `readBlob`, which checks size and hash.
+
+### Global agent configuration set
+
+What an agent CLI brings into a session beyond the instance row lives in one global set under the Liwa home, `$LIWA_HOME/agents/agents.yml`, in Claude Code's own shapes: a skill is a directory with `SKILL.md`, a plugin a directory with `.claude-plugin/plugin.json`, a hook a `settings.json` command hook, an MCP server the `.mcp.json` server shape, an instruction a Markdown file. Every entry has a name and an optional `applyTo` list of instance names; `instances.<impl>` adds `use` and `disable` lists, and a directory file `dirs/<sha256 of the absolute path>.yml` (with the `path` inside) adjusts the selection per instance for one working directory. Relative paths resolve against the set's root; `${VAR}` in MCP urls, headers and env is replaced from the environment and a missing variable fails the load, so tokens never sit in the file.
+
+```yaml
+version: 1
+skills:
+  review: { dir: skills/review }
+  release: { dir: skills/release, applyTo: [claude-reclaude] }
+mcpServers:
+  docs: { type: http, url: https://mcp.example.test/docs, headers: { Authorization: 'Bearer ${DOCS_TOKEN}' } }
+plugins:
+  reviewer: { dir: plugins/reviewer }
+hooks:
+  audit: { event: PreToolUse, matcher: Bash, hooks: [{ type: command, command: /srv/liwa/hooks/audit-bash.sh }] }
+instructions:
+  house: { file: instructions/house-style.md }
+instances:
+  claude-reclaude: { disable: [docs] }
+  codex-main: { use: [release] }
+```
+
+`loadAgentsConfig(root)` reads the set (an absent file is an empty set), `loadDirectoryConfig(root, cwd)` the directory file, and `resolveAgentConfig(config, { impl, directory })` picks the entries for one instance: the default is every entry whose `applyTo` is absent or names the instance; `use` at either level adds by name, a name disabled at either level stays out whatever any `use` says, and a name that is not in the set fails. Both files are strict: an unknown key fails the load, and the directory file only selects, it cannot add entries. The result is session-shaped: skills to copy with `materializeSkills` into one `skillsDir`, `mcpServers`, `plugins`, `hooks` grouped by event, and the instruction files joined into one `instructions` text. Skills and MCP servers with the same name in the instance row and the session fail at open; hooks append per event; instructions sit after the rules and before the repository document. The repository's own `.claude/` and `.mcp.json` are never executed, and the directory file lives only under the Liwa home.
 
 ### Drive and observe it
 
@@ -63,7 +87,7 @@ An image block references bytes stored first: `const blob = await ctx.brains.blo
 
 `respondToPermission` accepts only pending requests. A request's `category` tells tool approvals, plan approvals, mode approvals, and questions apart; a question carries typed `questions`, and an allowing answer to it must carry `answers` keyed by question id (`{ selected, custom? }`, checked before the provider sees it). The visible options are one-shot (`allow_once`, `allow_session`, `deny_once`, `cancel`); a parent agent never answers its children's requests — they reach the owner with their `childId`.
 
-`setModel(model)` and `setMode(modeId)` work when the provider declares `modelSwitch` / `modeSwitch`, refuse a closed or stopping session, and update `view().model` / `view().modeId` with a `session.model_changed` / `session.mode_changed` event; `setMode` says whether the mode applies now, at the next step, or at the next turn. `availableModes()` and `currentMode()` read the provider's modes.
+`setModel(model)`, `setThinking(thinking)` and `setMode(modeId)` work when the provider declares `modelSwitch` / `thinkingSwitch` / `modeSwitch`, refuse a closed or stopping session, and update `view().model` / `view().thinking` / `view().modeId` with a `session.model_changed` / `session.thinking_changed` / `session.mode_changed` event; `setThinking` only works between turns and refuses an option the current model does not list; `setMode` says whether the mode applies now, at the next step, or at the next turn. `availableModes()` and `currentMode()` read the provider's modes.
 
 A provider's child agents are session-scoped: their items carry `childId` and the turn that started them, and they keep arriving after that turn ended (a background child), never borrowing a later turn. A provider may start a turn of its own (a background child's result wakes the CLI); it arrives as an ordinary `turn.started` without `startTurn`.
 

@@ -28,6 +28,7 @@ import type {
 } from './views.ts'
 
 export { BrainBlobStore, type BrainBlobReader } from './blobs.ts'
+export * from './agents-config/index.ts'
 export * from './brand.ts'
 export * from './contract.ts'
 export * from './errors.ts'
@@ -456,6 +457,17 @@ export class BrainRegistry extends Service {
     }
     if (config.modeId !== undefined && !record.meta.modeSwitch) {
       throw new BrainError('invalid_input', 'brain.mode_switch_unsupported', `brain provider ${record.impl} has no session modes; open the session without modeId`)
+    }
+    const wantsPlugins = (config.plugins?.length ?? 0) > 0
+    const wantsHooks = Object.keys(config.hooks ?? {}).length > 0
+    const wantsInstructions = (config.instructions ?? '').trim() !== ''
+    const unsupported = [
+      wantsPlugins && !record.meta.agentConfig.plugins ? 'plugins' : undefined,
+      wantsHooks && !record.meta.agentConfig.hooks ? 'hooks' : undefined,
+      wantsInstructions && !record.meta.agentConfig.instructions ? 'instructions' : undefined,
+    ].filter(item => item !== undefined)
+    if (unsupported.length > 0) {
+      throw new BrainError('invalid_input', 'brain.agent_config_unsupported', `brain provider ${record.impl} does not load ${unsupported.join(', ')}; drop them from the session config`)
     }
     if (config.childPolicy.native && config.mindKind !== 'work') {
       config = { ...config, childPolicy: { ...config.childPolicy, native: false } }

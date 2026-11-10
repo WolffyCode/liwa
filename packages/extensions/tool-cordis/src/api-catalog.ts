@@ -5569,7 +5569,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'BrainCommand',
-    declaration: 'export type BrainCommand = {\n    command: \'list\';\n    json: boolean;\n} | {\n    command: \'probe\';\n    impl: string;\n    json: boolean;\n} | {\n    command: \'run\';\n    provider: string;\n    prompt: string;\n    model?: string;\n    cwd?: string;\n    mode?: string;\n    permit: PermitPolicy;\n    images: string[];\n    member?: string;\n    mindKind?: (typeof RUN_MIND_KINDS)[number];\n    json: boolean;\n};',
+    declaration: 'export type BrainCommand = {\n    command: \'list\';\n    json: boolean;\n} | {\n    command: \'probe\';\n    impl: string;\n    json: boolean;\n} | {\n    command: \'run\';\n    provider: string;\n    prompt: string;\n    model?: string;\n    cwd?: string;\n    mode?: string;\n    thinking?: string;\n    permit: PermitPolicy;\n    images: string[];\n    member?: string;\n    mindKind?: (typeof RUN_MIND_KINDS)[number];\n    json: boolean;\n};',
   },
   {
     name: 'BrainEvent',
@@ -5617,7 +5617,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'BrainProviderSession',
-    declaration: 'export interface BrainProviderSession {\n    readonly id: string | null;\n    subscribe(listener: (event: BrainEvent) => void): () => void;\n    startTurn(input: TurnInput): Promise<{\n        turnId: TurnId;\n    }>;\n    deliver(input: TurnInput, options: DeliverOptions): Promise<DeliverResult>;\n    cancel(options: CancelOptions): Promise<void>;\n    respondToPermission(requestId: PermissionRequestId, response: PermissionResponse): Promise<void>;\n    persistence(): ResumeHandle | null;\n    canStopRuntime?(): Promise<boolean>;\n    setModel?(model: string): Promise<void>;\n    availableModes?(): Promise<BrainMode[]>;\n    currentMode?(): Promise<string | null>;\n    setMode?(modeId: string): Promise<ModeChange>;\n    close(): Promise<void>;\n}',
+    declaration: 'export interface BrainProviderSession {\n    readonly id: string | null;\n    subscribe(listener: (event: BrainEvent) => void): () => void;\n    startTurn(input: TurnInput): Promise<{\n        turnId: TurnId;\n    }>;\n    deliver(input: TurnInput, options: DeliverOptions): Promise<DeliverResult>;\n    cancel(options: CancelOptions): Promise<void>;\n    respondToPermission(requestId: PermissionRequestId, response: PermissionResponse): Promise<void>;\n    persistence(): ResumeHandle | null;\n    canStopRuntime?(): Promise<boolean>;\n    setModel?(model: string): Promise<void>;\n    setThinking?(thinking: string): Promise<void>;\n    availableModes?(): Promise<BrainMode[]>;\n    currentMode?(): Promise<string | null>;\n    setMode?(modeId: string): Promise<ModeChange>;\n    close(): Promise<void>;\n}',
   },
   {
     name: 'BrainProviderUnavailableRecord',
@@ -5629,7 +5629,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'BrainSession',
-    declaration: 'export interface BrainSession {\n    readonly id: BrainSessionId;\n    readonly impl: ImplId;\n    readonly config: SessionConfig;\n    readonly state: BrainSessionState;\n    readonly activeTurnId: TurnId | undefined;\n    startTurn(input: TurnInput): Promise<{\n        turnId: TurnId;\n    }>;\n    deliver(input: TurnInput, options: DeliverOptions): Promise<DeliverResult>;\n    cancel(options: CancelOptions): Promise<void>;\n    respondToPermission(requestId: PermissionRequestId, response: PermissionResponse): Promise<void>;\n    setModel(model: string): Promise<void>;\n    availableModes(): Promise<BrainMode[]>;\n    currentMode(): Promise<string | null>;\n    setMode(modeId: string): Promise<ModeChange>;\n    persistence(): ResumeHandle | null;\n    canStopRuntime(): Promise<boolean>;\n    close(reason?: BrainCloseReason): Promise<void>;\n    subscribe(listener: (event: BrainEvent) => void): () => void;\n    events(signal?: AbortSignal): AsyncIterable<BrainEvent>;\n    usage(): Usage;\n    children(): BrainChildView[];\n    pendingPermissions(): BrainEventOf<\'permission.request\'>[];\n    view(): BrainSessionView;\n}',
+    declaration: 'export interface BrainSession {\n    readonly id: BrainSessionId;\n    readonly impl: ImplId;\n    readonly config: SessionConfig;\n    readonly state: BrainSessionState;\n    readonly activeTurnId: TurnId | undefined;\n    startTurn(input: TurnInput): Promise<{\n        turnId: TurnId;\n    }>;\n    deliver(input: TurnInput, options: DeliverOptions): Promise<DeliverResult>;\n    cancel(options: CancelOptions): Promise<void>;\n    respondToPermission(requestId: PermissionRequestId, response: PermissionResponse): Promise<void>;\n    setModel(model: string): Promise<void>;\n    setThinking(thinking: string): Promise<void>;\n    availableModes(): Promise<BrainMode[]>;\n    currentMode(): Promise<string | null>;\n    setMode(modeId: string): Promise<ModeChange>;\n    persistence(): ResumeHandle | null;\n    canStopRuntime(): Promise<boolean>;\n    close(reason?: BrainCloseReason): Promise<void>;\n    subscribe(listener: (event: BrainEvent) => void): () => void;\n    events(signal?: AbortSignal): AsyncIterable<BrainEvent>;\n    usage(): Usage;\n    children(): BrainChildView[];\n    pendingPermissions(): BrainEventOf<\'permission.request\'>[];\n    view(): BrainSessionView;\n}',
   },
   {
     name: 'BrainSessionClosedRecord',
@@ -5649,7 +5649,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'BrainSessionView',
-    declaration: 'export interface BrainSessionView {\n    sessionId: BrainSessionId;\n    impl: ImplId;\n    member: MemberId;\n    mindKind: MindKind;\n    owner: SessionOwner;\n    model?: string;\n    modeId?: string;\n    configDir: string;\n    homeDir: string;\n    state: BrainSessionState;\n    openedAt: string;\n    resumedFrom?: ResumeHandle;\n    adjustments: string[];\n    closedAt?: string;\n    closeReason?: BrainCloseReason;\n}',
+    declaration: 'export interface BrainSessionView {\n    sessionId: BrainSessionId;\n    impl: ImplId;\n    member: MemberId;\n    mindKind: MindKind;\n    owner: SessionOwner;\n    model?: string;\n    modeId?: string;\n    thinking?: string;\n    configDir: string;\n    homeDir: string;\n    state: BrainSessionState;\n    openedAt: string;\n    resumedFrom?: ResumeHandle;\n    adjustments: string[];\n    closedAt?: string;\n    closeReason?: BrainCloseReason;\n}',
   },
   {
     name: 'BrainUsageRecord',
@@ -6512,10 +6512,6 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface HookFailure {\n    readonly kind: \'throw\' | \'timeout\';\n    readonly message: string;\n}',
   },
   {
-    name: 'HookMatcher',
-    declaration: 'export type HookMatcher = Readonly<Record<string, MatcherValue>>;',
-  },
-  {
     name: 'HookNext',
     declaration: 'export interface HookNext<E, R> {\n    (e: E): Promise<R>;\n    readonly signal: AbortSignal;\n    readonly origin: HookOrigin;\n    readonly budget: HookBudget;\n    to(e: E, tier: ModTier): Promise<R>;\n    readonly error?: HookFailure;\n    readonly called?: boolean;\n}',
   },
@@ -7014,10 +7010,6 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'MarketVersion',
     declaration: 'export interface MarketVersion {\n    readonly version: string;\n    readonly publishTimestamp: number;\n    readonly source: MarketSource;\n    readonly engines: MarketEngines;\n}',
-  },
-  {
-    name: 'MatcherValue',
-    declaration: 'export type MatcherValue = string | number | boolean | null | RegExp | readonly (string | number | boolean | null)[];',
   },
   {
     name: 'McpResourceProvider',

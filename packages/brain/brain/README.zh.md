@@ -53,9 +53,33 @@ session.subscribe(event => { /* BrainEvent */ })
 const { turnId } = await session.startTurn({ blocks: [{ kind: 'text', text: 'hello' }] })
 ```
 
-`model` 可省：不给时由提供方的 CLI 用它自己的默认模型，不传占位值。`modeId` 让会话一开就处在提供方的某个会话模式。开会话前做四项核对：压缩 `always_on` 的提供方不接 `compaction: 'off'`；原生工具去不掉（`meta.nativeTools`）的提供方不接 `nativeToolPolicy: 'none'`；没有模式（`meta.modeSwitch`）的提供方不接 `modeId`；除 `work` 外的会话种类一律关掉原生子 agent，并把这次改动记进会话的 `adjustments`。配置里其余的——原生工具、压缩、仓库指令、规矩、本事、`env`、MCP 的 `alwaysLoad`——由提供方落实，做不到的组合让 `createSession` 失败。会话随作为归属方传入的上下文关闭。
+`model` 可省：不给时由提供方的 CLI 用它自己的默认模型，不传占位值。`modeId` 让会话一开就处在提供方的某个会话模式。`thinking` 在提供方给该模型列了档位时选一档，不给就用该模型的默认档。`plugins`、`hooks`、`instructions` 是这一场会话分到的 agent 配置（Claude 形状，见下）。开会话前做五项核对：压缩 `always_on` 的提供方不接 `compaction: 'off'`；原生工具去不掉（`meta.nativeTools`）的提供方不接 `nativeToolPolicy: 'none'`；没有模式（`meta.modeSwitch`）的提供方不接 `modeId`；`meta.agentConfig` 说装不了插件、钩子或指令的提供方不接带着它们的会话；除 `work` 外的会话种类一律关掉原生子 agent，并把这次改动记进会话的 `adjustments`。配置里其余的——原生工具、压缩、仓库指令、规矩、本事、`env`、MCP 的 `alwaysLoad`——由提供方落实，做不到的组合让 `createSession` 失败。会话随作为归属方传入的上下文关闭。
 
 图片块引用先存好的字节：`const blob = await ctx.brains.blobs.put(bytes, 'image/png')`，再写 `{ kind: 'image', blob }`。存储是一个按内容寻址的目录；提供方经启动上下文的 `readBlob` 读回字节，读时核对大小与哈希。
+
+### 全局 agent 配置集
+
+一个 agent CLI 开会话时除实例行之外还带什么，放在灵鲸 home 下的一个全局集里：`$LIWA_HOME/agents/agents.yml`，形状照 Claude Code：本事是带 `SKILL.md` 的目录，插件是带 `.claude-plugin/plugin.json` 的目录，钩子是 `settings.json` 的命令钩子，MCP 服务器是 `.mcp.json` 的服务器形状，指令是 Markdown 文件。每条都有名字，可带 `applyTo` 列出适用的实例名；`instances.<impl>` 给 `use` 与 `disable` 两张名单；目录级文件 `dirs/<绝对路径的 sha256>.yml`（里面记着 `path`）为一个工作目录按实例再调整。相对路径按集的根目录解析；MCP 的 url、headers、env 里的 `${VAR}` 从环境替换，变量缺失装载即报，令牌不落在文件里。
+
+```yaml
+version: 1
+skills:
+  review: { dir: skills/review }
+  release: { dir: skills/release, applyTo: [claude-reclaude] }
+mcpServers:
+  docs: { type: http, url: https://mcp.example.test/docs, headers: { Authorization: 'Bearer ${DOCS_TOKEN}' } }
+plugins:
+  reviewer: { dir: plugins/reviewer }
+hooks:
+  audit: { event: PreToolUse, matcher: Bash, hooks: [{ type: command, command: /srv/liwa/hooks/audit-bash.sh }] }
+instructions:
+  house: { file: instructions/house-style.md }
+instances:
+  claude-reclaude: { disable: [docs] }
+  codex-main: { use: [release] }
+```
+
+`loadAgentsConfig(root)` 读全局集（没有文件就是空集），`loadDirectoryConfig(root, cwd)` 读目录级文件，`resolveAgentConfig(config, { impl, directory })` 为一个实例选条目：默认是 `applyTo` 省略或点名了它的全部条目；任一级的 `use` 按名加，任一级 `disable` 过的名字不管哪级 `use` 都不放回来；引用集里没有的名字报错。两个文件都是严格的：未知的键装载即报，目录级文件只做选择、不能新增条目。结果就是会话形状的：本事用 `materializeSkills` 拷成一个 `skillsDir`，`mcpServers`、`plugins`、按事件分组的 `hooks`，指令文件连成一段 `instructions`。实例行与会话里同名的本事、MCP 服务器在开会话时报错；钩子按事件追加；指令放在规矩之后、仓库指令之前。仓库自带的 `.claude/`、`.mcp.json` 永远不执行，目录级文件只在灵鲸 home 下。
 
 ### 驱动与观察
 
@@ -63,7 +87,7 @@ const { turnId } = await session.startTurn({ blocks: [{ kind: 'text', text: 'hel
 
 `respondToPermission` 只接受待答的请求。请求的 `category` 分开工具审批、计划审批、模式审批与提问；提问带有类型的 `questions`，允许类的答复必须带以问题号为键的 `answers`（`{ selected, custom? }`，交给提供方之前先核对）。可见选项是一次性的（`allow_once`、`allow_session`、`deny_once`、`cancel`）；父 agent 从不代答子 agent 的请求——它们带着 `childId` 到达主人。
 
-提供方声明了 `modelSwitch` / `modeSwitch` 时，`setModel(model)` 与 `setMode(modeId)` 才可用；关闭或停止中的会话拒绝；成功后 `view().model` / `view().modeId` 更新，并发 `session.model_changed` / `session.mode_changed`；`setMode` 说明模式是立刻、下一步还是下一回合生效。`availableModes()` 与 `currentMode()` 读提供方的模式。
+提供方声明了 `modelSwitch` / `thinkingSwitch` / `modeSwitch` 时，`setModel(model)`、`setThinking(thinking)` 与 `setMode(modeId)` 才可用；关闭或停止中的会话拒绝；成功后 `view().model` / `view().thinking` / `view().modeId` 更新，并发 `session.model_changed` / `session.thinking_changed` / `session.mode_changed`；`setThinking` 只能在回合之间，当前模型没列的档位拒绝；`setMode` 说明模式是立刻、下一步还是下一回合生效。`availableModes()` 与 `currentMode()` 读提供方的模式。
 
 提供方的子 agent 是会话级的：它们的条目带 `childId` 与开它的那个回合，那个回合结束后照常到达（后台子 agent），不借用后来的回合。提供方可以自己开一个回合（后台子 agent 的结果叫醒了 CLI），它作为普通的 `turn.started` 到达，没有对应的 `startTurn`。
 

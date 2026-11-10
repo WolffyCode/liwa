@@ -1,0 +1,35 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types",
+    "tsBuildInfoFile": "lib/tsconfig.paseo.tsbuildinfo",
+    // src/paseo/ is upstream Paseo source kept as copied; Paseo compiles it without these two
+    // checks, so this project matches the upstream options instead of rewriting the copies.
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false
+  },
+  "include": [
+    "src/paseo"
+  ],
+  "references": [
+    {
+      "path": "../../../vendor/cosmokit"
+    },
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../brain"
+    },
+    {
+      "path": "../brain-shared"
+    },
+    {
+      "path": "../brain-shared/tsconfig.paseo.json"
+    },
+    {
+      "path": "../../subprocess/subprocess"
+    }
+  ]
+}

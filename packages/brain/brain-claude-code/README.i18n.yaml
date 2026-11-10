@@ -1,0 +1,43 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/brain/brain-claude-code/README.md
+/:
+  en: cb46c00fc3992868
+  zh: 74e026c0c603904d
+/liwa-brain-claude-code:
+  en: f4764404822e4fd0
+  zh: 4e54372f5cc0cc8c
+/liwa-brain-claude-code/summary:
+  en: 282079e5f6cc9596
+  zh: 226b0e02faab3423
+/liwa-brain-claude-code/table-of-contents:
+  en: fe1ecb09a73d1c7a
+  zh: 57488629c9a54c40
+/liwa-brain-claude-code/use-this-package:
+  en: 1e9079b74a0b5a1f
+  zh: 8b7b6aa0372cd1ab
+/liwa-brain-claude-code/understand-the-implementation:
+  en: bfe1717ac1cc2176
+  zh: 978d3b541c90f3d1
+/liwa-brain-claude-code/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/liwa-brain-claude-code/model-experience/work-session-instructions-and-tools:
+  en: 2e056e0af8354290
+  zh: 565df7d1ff733858
+/liwa-brain-claude-code/model-experience/work-session-instructions-and-tools/what-the-model-sees:
+  en: 5866b0772083e62f
+  zh: d45b204138321f9c
+/liwa-brain-claude-code/model-experience/work-session-instructions-and-tools/token-effect:
+  en: 1ad177b89db1e279
+  zh: dcf85b5039324359
+/liwa-brain-claude-code/model-experience/work-session-instructions-and-tools/kv-cache-effect:
+  en: f600e449c351f612
+  zh: 99aea0f105f2b91f
+/liwa-brain-claude-code/known-limitations-and-deferred-work:
+  en: ea0778bc15c529db
+  zh: 973ebd006ba9a831
+/liwa-brain-claude-code/known-limitations-and-deferred-work/dev-note:
+  en: d585e9a02fea8dfc
+  zh: fcdab02b70aa77ca

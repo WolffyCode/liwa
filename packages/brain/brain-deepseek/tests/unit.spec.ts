@@ -11,6 +11,7 @@ import {
   liwaSessionMeta, resolveLiwaLauncher, runsFromSource, sessionPatchRows, writeRules, writeSessionPatch,
 } from '../src/index.ts'
 import { INSTALL_ANCHOR } from './fixtures/provider.ts'
+import { sessionInstructions } from '../src/session-patch.ts'
 
 const settings = { provider: 'deepseek-official', apiKeyEnv: 'DEEPSEEK_API_KEY', presetPrefix: 'deepseek-', instructionsMaxBytes: 65_536 }
 
@@ -167,4 +168,12 @@ describe('deepseek _liwa client codec', () => {
       { kind: 'turn.interrupted', turnId: 'auto2', reason: 'cancelled' },
     ])
   })
+})
+
+it('joins the rules and the session instructions into one instruction document', () => {
+  const base = SessionConfigSchema.parse(sampleSessionConfig('/w'))
+  expect(sessionInstructions({ ...base, rules: 'RULES', instructions: 'MORE' })).toBe('RULES\n\nMORE')
+  expect(sessionInstructions({ ...base, rules: '', instructions: 'MORE' })).toBe('MORE')
+  expect(sessionInstructions({ ...base, rules: 'RULES' })).toBe('RULES')
+  expect(sessionInstructions({ ...base, rules: ' ', instructions: ' ' })).toBe('')
 })

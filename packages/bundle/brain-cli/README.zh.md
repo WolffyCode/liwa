@@ -38,11 +38,11 @@ liwa plugin --profile brain add <provider-package>
 ```text
 liwa brain list [--json]
 liwa brain probe <impl> [--json]
-liwa brain run --provider <impl> [--model <m>] [--mode <mode>] [--cwd <dir>] [--permit ask|allow-once|allow-session|deny]
+liwa brain run --provider <impl> [--model <m>] [--mode <mode>] [--thinking <option>] [--cwd <dir>] [--permit ask|allow-once|allow-session|deny]
                [--image <file>]... [--member <name>] [--mind <kind>] [--json] "<prompt>"
 ```
 
-`list` 探测每个已登记的提供方并打一张表；提供方不可用时 `probe` 以 1 退出。`run` 准备成员配置目录，用命令给的值与执行行的回合预算开会话，事件打到 stdout、会话说明打到 stderr，回合正常结束时以 0 退出。`--mode` 是提供方的会话模式，同 `paseo run`（`deepseek` 有 `plan` 与 `default`）。`--permit` 决定怎么答权限请求与提问：`ask` 在终端里问（终端上的默认），允许类策略给每个问题答它的第一个选项，`deny`（其他情况的默认）谢绝。`--image` 给提示词附一个 png、jpeg、webp 或 gif 文件。测试用的脚本提供方经显式覆盖文件加入：
+`list` 探测每个已登记的提供方并打一张表；提供方不可用时 `probe` 以 1 退出。`run` 准备成员配置目录，用命令给的值与执行行的回合预算开会话，事件打到 stdout、会话说明打到 stderr，回合正常结束时以 0 退出。`--mode` 是提供方的会话模式，同 `paseo run`（`deepseek` 有 `plan` 与 `default`）。`--thinking` 在提供方给所选模型列了档位时选一档。开会话前，`run` 读本行 `agentsRoot`（`$LIWA_HOME/agents`）下的全局 agent 配置集和 `--cwd` 的目录级文件，为该提供方选出条目，把本事拷进临时目录，再把本事、MCP 服务器、插件、钩子、指令交给会话，往 stderr 打一行 `agent config for <impl>: …`，会话关闭后删掉临时目录。`--permit` 决定怎么答权限请求与提问：`ask` 在终端里问（终端上的默认），允许类策略给每个问题答它的第一个选项，`deny`（其他情况的默认）谢绝。`--image` 给提示词附一个 png、jpeg、webp 或 gif 文件。测试用的脚本提供方经显式覆盖文件加入：
 
 ```text
 liwa brain --patch apps/cli/tests/profiles/brain/scripted-provider.patch.yml run --provider fake "hello"

@@ -38,6 +38,7 @@ export type BrainCommand =
     cwd?: string
     /** 提供方的会话模式（Paseo `--mode`，例如 deepseek 的 `plan`）；省略即提供方默认模式。 */
     mode?: string
+    thinking?: string
     /** 权限请求与问答的应答策略。 */
     permit: PermitPolicy
     /** 附在提示词后的图片文件。 */
@@ -100,6 +101,7 @@ Examples:
     .option('--model <model>', 'model id handed to the provider (default: the provider CLI\'s own default model)')
     .option('--cwd <dir>', 'working directory of the session (default: the current directory)')
     .option('--mode <mode>', 'provider-specific session mode, e.g. plan or default (default: the provider\'s default mode)')
+    .option('--thinking <option>', 'thinking option of the chosen model, e.g. high or off (default: the model\'s default)')
     .addOption(new Option('--permit <policy>', 'how permission requests and questions are answered (default: ask on a terminal, deny otherwise)')
       .choices([...PERMIT_POLICIES]))
     .option('--image <file>', 'attach an image (png, jpeg, webp, gif) to the prompt; repeatable', (file: string, files: string[]) => [...files, file], [] as string[])
@@ -112,6 +114,7 @@ Examples:
     model?: string
     cwd?: string
     mode?: string
+    thinking?: string
     permit?: PermitPolicy
     image: string[]
     member?: string
@@ -131,6 +134,7 @@ Examples:
       ...(options.model === undefined ? {} : { model: options.model }),
       ...(options.cwd === undefined ? {} : { cwd: options.cwd }),
       ...(options.mode === undefined ? {} : { mode: options.mode }),
+      ...(options.thinking === undefined ? {} : { thinking: options.thinking }),
       permit: options.permit ?? (interactive ? 'ask' : 'deny'),
       images: options.image,
       ...(options.member === undefined ? {} : { member: options.member }),

@@ -80,6 +80,8 @@ export function genericAcpMeta(command: string): Meta {
     budget: { inferences: false, toolCalls: false, concludeOn: false },
     usage: 'tokens',
     personaInjection: { instance: 'file' },
+    agentConfig: { plugins: false, hooks: false, instructions: false },
+    thinkingSwitch: false,
     runtime: 'subprocess',
     transport: 'acp',
     kernelTools: ['mcp-stdio', 'mcp-http'],

@@ -43,6 +43,7 @@
   "dependencies": {
     "@liwa/brain": "workspace:*",
     "@liwa/brain-acp": "workspace:*",
+    "@liwa/brain-claude-code": "workspace:*",
     "@liwa/brain-deepseek": "workspace:*",
     "@liwa/cmdline": "workspace:*",
     "@liwa/schemastery": "workspace:~",

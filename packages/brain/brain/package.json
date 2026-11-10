@@ -32,6 +32,7 @@
     "@liwa/brand": "workspace:*",
     "@liwa/schemastery": "workspace:~",
     "@liwa/util-values": "workspace:*",
+    "js-yaml": "^4.3.2",
     "zod": "4.4.3"
   },
   "peerDependencies": {
@@ -42,6 +43,7 @@
     "@liwa/brain-testkit": "workspace:*",
     "@liwa/cordis": "workspace:~",
     "@liwa/subprocess": "workspace:*",
-    "@liwa/subprocess-local": "workspace:*"
+    "@liwa/subprocess-local": "workspace:*",
+    "@types/js-yaml": "^4.0.9"
   }
 }

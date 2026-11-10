@@ -16,7 +16,9 @@ Permission requests say what they are (tool, plan, mode, question); a question c
 
 ## Providers
 
-Two providers ship. [`deepseek`](../../packages/brain/brain-deepseek/README.md) runs Liwa's own agent as one `liwa --profile deepseek` process ([`deepseek-app`](../../packages/bundle/deepseek-app/README.md)) per session, in that session's own home, and speaks ACP plus the `_liwa` extension: next-step steering, server-side usage, child-agent records, and the session's kind, budgets, notes, and model in `session/new`'s `_meta.liwa`. [`acp`](../../packages/brain/brain-acp/README.md) connects any other ACP agent CLI through Paseo's ACP client, one configuration row per CLI. Both are plugin rows in the `web`, `headless`, and `brain` bundles (the `acp` row is off until configured), so a profile swaps or drops them in configuration. The `deepseek` process extends the base's ACP server through `ctx.acpExtensions`, whose surface is listed below.
+Three providers ship. [`deepseek`](../../packages/brain/brain-deepseek/README.md) runs Liwa's own agent as one `liwa --profile deepseek` process per session, speaking ACP plus the `_liwa` extension. [`acp`](../../packages/brain/brain-acp/README.md) connects other ACP CLIs through Paseo's client. [`claude-code`](../../packages/brain/brain-claude-code/README.md) uses the official SDK and an explicitly resolved local Claude binary, with independent credential references and generated member configuration. Claude accepts work sessions; real CLI verification remains A2. All three are plugin rows in `web`, `headless` and `brain`; ACP and Claude examples are disabled until configured. The `deepseek` process extends the base ACP server through `ctx.acpExtensions`, listed below.
+
+Completed turns carry usage; interrupted and failed turns may carry observed spending. The first terminal result settles a turn once. Provider snapshots and child breakdowns do not add the same consumption again; absent terminal usage remains unknown.
 
 ## Records
 

@@ -1,0 +1,49 @@
+@liwa/brain-claude-code — 第三方来源声明
+
+本包 src/paseo/ 下的文件拷自 Paseo：
+  Upstream: https://github.com/getpaseo/paseo
+  Commit:   8018231a00a6b45ed6cda1856f954ba14b4824c0
+  Version:  0.15.0-beta.1
+  License:  Apache-2.0
+  License text: https://www.apache.org/licenses/LICENSE-2.0
+  Copyright (c) 2025-present Mohamed Boudra
+
+上游没有 NOTICE 文件。每个文件第一行注明来源路径，业务差异在原位置以“灵鲸改”说明。
+本包 src/*.ts 与 tests/ 是灵鲸适配、策略与测试代码，MIT；process.ts 从本仓库一次性 Claude 提供方移植。
+
+路径对照：packages/server/src/server/agent/providers/claude/ → src/paseo/agent/providers/claude/。
+
+全部文件的共同改动（"只改了导入路径"的文件只含这些）：
+  - 相对导入的后缀 .js 改成 .ts（本仓库约定）。
+  - 上游同目录之外的模块已在 @liwa/brain-shared 的 src/paseo/ 下，改成从 @liwa/brain-shared/paseo/<上游路径> 导入；
+    @getpaseo/protocol/<x> 同样改成 brain-shared 的对应子路径。
+  - import type { Logger } from "pino" 换成 @liwa/brain-shared 的 PaseoLogger（接在 cordis logger 上的同形接口）。
+  - 文件头加一行来源注释。
+  - src/paseo/ 用单独的 tsconfig.paseo.json，关掉 noUncheckedIndexedAccess 与 exactOptionalPropertyTypes，
+    与上游的编译选项一致，以免改写拷贝。
+
+逐文件处置（除特别说明外，保留原业务逻辑，只改共同导入与来源头）：
+  agent.ts — 删除客户端目录探测、全局认证诊断、外部会话导入、feature UI 与 fast mode 接线（主人 2026-11-10 定不做）、SDK 自定义 agents 入口（不做）、回滚、Paseo 附件；保留会话、流、原生恢复与子观察。进程改注入受管桥；SDK 策略显式传入；开放 default/plan/acceptEdits/auto、不开放 bypassPermissions/dontAsk；计划批准不扩权；切模型/模式发事件；thinking 档位由适配层按模型目录落成 SDK 选项、回合间切档靠 requestQueryRestart 重启 Query（Paseo 的 setThinkingOption 不迁）；system/api_retry 的 401/403 立即 turn_failed 并打断重试、其余状态只记日志；取消撤输入且不吞错，等原生结果结算；子权限等待稳定声明，超时拒绝而不生成替代身份，close/abort 释放等待；CLI 报告会话不存在时本代永久不可用，关闭传输并回收受管进程；stderr/控制错误/失败消息接适配层秘密脱敏；增量工具 JSON 收齐才发布唯一工具开始事件；删除不再使用的原生等待与局部 JSON 更新写法；提供原始帧、Query/回合开始与钩子策略出口。
+  hooks.ts — 共同导入与来源头。
+  interrupt-placeholder.ts — 仅来源头。
+  model-manifest.ts — 只留版本解析，删除模型目录、产品思考档与别名表。
+  models.ts — 只留原生模型名归一化，不扫描设置、不猜上下文窗口。
+  options.ts — 共同导入与来源头；公开策略由严格 config.ts 构造，不向用户开放原生覆盖。
+  partial-json.ts — 未保留；公共工具开始事件要求完整 JSON，agent.ts 收齐后解析，不再使用不完整 JSON 猜测。
+  project-dir.ts — 缺少显式 configDir 就失败，不回退用户全局目录。
+  query.ts — 删除 Paseo env/spawn，使用注入的受管 spawn，保留官方 SDK 唯一入口，只在打开本机 Query 时动态加载，默认关闭的网页部署不装载原生 SDK。
+  runtime-safety.ts — 在原 roster 与待通知规则上补 task_started 名单与按原因停止的原生任务出口。
+  sidechain-tracker.ts — 共同导入与来源头。
+  subagent-handback.ts — 仅来源头。
+  task-notification-tool-call.ts — 共同导入与来源头。
+  task-state.ts — 共同导入与来源头。
+  tool-call-detail-parser.ts — 共同导入与来源头。
+  tool-call-mapper.ts — 共同导入与来源头。
+  transcript-history.ts — 共同导入与来源头；只由隔离 config 根的恢复路径调用。
+  subagents/live-source.ts — 增加 task_id 到稳定 canonical id 的查询，供子权限归属使用。
+  subagents/observation.ts — 共同导入与来源头。
+  subagents/presentation.ts — 模型直接展示原生名，不依赖产品目录。
+  subagents/replay-source.ts — 共同导入与来源头。
+  subagents/task-status.ts — 共同导入与来源头。
+  subagents/workflow-output.ts — 读取前校验路径与链接都在隔离成员根内；临时输出通过 TMPDIR 归入成员根。
+  subagents/workflow-replay-source.ts — 共同导入与来源头。

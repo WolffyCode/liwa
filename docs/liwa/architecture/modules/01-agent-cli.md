@@ -286,12 +286,12 @@ Paseo 自定义提供方的 extends(claude/codex/acp)、label、env、models、d
 
 | 缺口 | 当前事实 | 安排／待设计的补法 | 依据 |
 | --- | --- | --- | --- |
-| G1 取消／失败用量 | 只有 completed 累加 token／inferences，interrupted／failed 无 usage；update 仅保留观测快照，总量漏已知支出 | 随④ Claude 一起补；计划可选 terminal.usage＋按回合幂等结算与 shared 透传，不伪装 completed、不盲加累计快照；字段待独立设计 | 〔一手〕`packages/brain/brain/src/contract.ts:397`、`src/session.ts:473`；两评估 §6；〔推理〕补法 |
+| G1 取消／失败用量 | 已实现（随④ Claude）：interrupted／failed 可带已知 usage；首个终止结果按回合幂等结算；update 不盲加 token，子分项不重算；未观测到的异常消费仍未知 | 已落实在公共层与 Claude 提供方；回归 scripted／ACP／deepseek 过 | 〔一手〕`packages/brain/brain/src/contract.ts:397`、`src/session.ts:529`、`packages/brain/brain-shared/src/session.ts:626` |
 | G2 会话级待答 | 父回合终止清父 pending，idle 父请求拒绝，Paseo followUpPrompt 未消费；承载不了 Codex 跨回合异步问题／计划审批 | 随⑤ Codex 补；计划会话级生命周期，答复后的回合另经正常准入；不伪装成子 agent、不延迟真实 terminal | 〔一手〕Codex 评估 §6；`packages/brain/brain/src/session.ts:529`；〔推理〕补法 |
 | G3 实时子用量 | usage.update 没 childId，只有 child.ended 带分项，不能逐通知写子归属 | 随⑤ Codex 补，先测⑪；快照／消费增量／父总量与子分项的唯一结算口径需确定，后台跨父 terminal 支出不借新回合归账 | 〔一手〕`packages/brain/brain/src/contract.ts:487`、`src/views.ts:124`；Codex 评估 §6；〔推理〕补法 |
 | G4 回合看门狗 | watchdogMs 只有配置，当前 API call 超时不是整轮计时 | 作为③宿主前置落实公共职责；每回合定时器只取消捕获轮，terminal／close 清理，取消失败维持 stopping，不影响后来新轮 | 〔一手〕`packages/brain/brain/src/contract.ts:168`、`src/session.ts:205`；Codex 评估 §6；〔推理〕补法 |
 
-四项当前均未实现；G1 随④、G4 在③前、G2/G3 随⑤（决策 66）；G1／G4 是两家共用缺口，不在 Codex 包再建另一套机制。每项需回归现有 scripted／ACP／deepseek，验证终止去重、跨回合 pending、子分项不重算和旧 timer 不取消新回合。是否增加问题补充文字标志、ephemeral 逐会话选择另列待定，不混成已批准字段。依据：〔一手〕handoff 决策 61；两评估 §6；〔推理〕验证要求。
+G1 已实现；G4 在③前、G2/G3 随⑤（决策 66），三项尚未实现；G1／G4 是两家共用缺口，不在 Codex 包再建另一套机制。每项需回归现有 scripted／ACP／deepseek，验证终止去重、跨回合 pending、子分项不重算和旧 timer 不取消新回合。是否增加问题补充文字标志、ephemeral 逐会话选择另列待定，不混成已批准字段。依据：〔一手〕handoff 决策 61；两评估 §6；〔推理〕验证要求。
 
 ### 4.12 第 3 步的提供方义务与窄补口（计划）
 

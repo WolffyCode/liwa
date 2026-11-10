@@ -177,26 +177,28 @@ Usage: liwa brain run [options] <prompt...>
 open one session in this process, stream its events, run one turn, and close it
 
 Arguments:
-  prompt             the prompt; multiple words are joined by spaces
+  prompt               the prompt; multiple words are joined by spaces
 
 Options:
-  --provider <impl>  provider implementation name
-  --model <model>    model id handed to the provider (default: the provider
-                     CLI's own default model)
-  --cwd <dir>        working directory of the session (default: the current
-                     directory)
-  --mode <mode>      provider-specific session mode, e.g. plan or default
-                     (default: the provider's default mode)
-  --permit <policy>  how permission requests and questions are answered
-                     (default: ask on a terminal, deny otherwise) (choices:
-                     "ask", "allow-once", "allow-session", "deny")
-  --image <file>     attach an image (png, jpeg, webp, gif) to the prompt;
-                     repeatable (default: [])
-  --member <name>    member that owns the session (default: cli)
-  --mind <kind>      session kind (default: work) (choices: "instance", "work",
-                     "think", "own", "tidy")
-  --json             print each event as one JSON line
-  -h, --help         show this help
+  --provider <impl>    provider implementation name
+  --model <model>      model id handed to the provider (default: the provider
+                       CLI's own default model)
+  --cwd <dir>          working directory of the session (default: the current
+                       directory)
+  --mode <mode>        provider-specific session mode, e.g. plan or default
+                       (default: the provider's default mode)
+  --thinking <option>  thinking option of the chosen model, e.g. high or off
+                       (default: the model's default)
+  --permit <policy>    how permission requests and questions are answered
+                       (default: ask on a terminal, deny otherwise) (choices:
+                       "ask", "allow-once", "allow-session", "deny")
+  --image <file>       attach an image (png, jpeg, webp, gif) to the prompt;
+                       repeatable (default: [])
+  --member <name>      member that owns the session (default: cli)
+  --mind <kind>        session kind (default: work) (choices: "instance",
+                       "work", "think", "own", "tidy")
+  --json               print each event as one JSON line
+  -h, --help           show this help
 ```
 
 <a id="liwa-deepseek"></a>

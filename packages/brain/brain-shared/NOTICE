@@ -56,3 +56,5 @@ src/paseo/agent/providers/diagnostic-utils.ts（← agent/providers/diagnostic-u
   agent/providers/resume-process-cwd.ts、agent/providers/provider-image-output.ts、agent/providers/jsonl-frame-decoder.ts、
   protocol/tool-name-normalization.ts、protocol/agent-message.ts、protocol/path-utils.ts、protocol/timeline-turn.ts、
   protocol/timeline-identity.ts、utils/promise-timeout.ts、utils/path.ts、utils/string-command-shell.ts
+
+灵鲸 G1：agent/agent-sdk-types.ts 的 turn_failed 与 turn_canceled 增加可选 AgentUsage，供共享会话映射透传已知异常回合消费；不含提供方分支。

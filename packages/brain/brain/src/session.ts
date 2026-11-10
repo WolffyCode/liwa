@@ -66,6 +66,13 @@ export interface BrainSession {
    */
   setModel(model: string): Promise<void>
   /**
+   * 换后续回合的 thinking 档位。提供方声明 `Meta.thinkingSwitch` 才行；生效后 `view().thinking` 变成新档位，订阅者收到
+   * `session.thinking_changed`。
+   * @param thinking - 档位号。
+   * @throws {BrainError} `unavailable`（不支持或会话已关）、`conflict`（回合进行中或停止中）、`invalid_input`（当前模型没有这一档）、`timeout`。
+   */
+  setThinking(thinking: string): Promise<void>
+  /**
    * 这个会话能切的模式。
    * @returns 模式；提供方不支持模式或这个会话没有可切的模式时为空数组。
    */
@@ -332,6 +339,7 @@ export class ManagedBrainSession implements BrainSession {
   private readonly pending = new Map<PermissionRequestId, BrainEventOf<'permission.request'>>()
   private readonly childViews = new Map<ChildId, BrainChildView>()
   private readonly processes = new Map<BrainProcessId, OwnedProcess>()
+  private readonly settledUsageTurns = new Set<TurnId>()
   private readonly totals: Usage = {}
   private readonly record: BrainSessionView
   private closing: Promise<void> | undefined
@@ -360,6 +368,7 @@ export class ManagedBrainSession implements BrainSession {
       state: 'open',
       openedAt: new Date().toISOString(),
       ...(init.config.modeId === undefined ? {} : { modeId: init.config.modeId }),
+      ...(init.config.thinking === undefined ? {} : { thinking: init.config.thinking }),
       ...(init.resumedFrom === undefined ? {} : { resumedFrom: init.resumedFrom }),
       adjustments: [...init.adjustments],
     }
@@ -471,13 +480,10 @@ export class ManagedBrainSession implements BrainSession {
         this.activeTurn = event.turnId
         break
       case 'turn.completed':
-        this.endTurn(event.turnId)
-        accumulateUsage(this.totals, event.usage)
-        this.host.usage(this.usageRecord('turn', event.usage, event.turnId))
-        break
       case 'turn.interrupted':
       case 'turn.failed':
         this.endTurn(event.turnId)
+        this.settleTurnUsage(event.turnId, event.usage)
         break
       case 'session.exited':
         this.activeTurn = undefined
@@ -504,6 +510,10 @@ export class ManagedBrainSession implements BrainSession {
         if (this.record.model === event.model) return
         this.record.model = event.model
         break
+      case 'session.thinking_changed':
+        if (this.record.thinking === event.thinking) return
+        this.record.thinking = event.thinking
+        break
       case 'session.mode_changed':
         if (event.modeId === (this.record.modeId ?? null) && event.availableModes === undefined) return
         if (event.modeId === null) delete this.record.modeId
@@ -524,6 +534,15 @@ export class ManagedBrainSession implements BrainSession {
     }
     this.fanOut(event)
     if (event.kind === 'session.exited') void this.close('process_exit')
+  }
+
+  /** G1：终止结果只结算一次；usage.update 是快照，子分项不再计入总额。 */
+  private settleTurnUsage(turnId: TurnId, usage: Usage | undefined): void {
+    if (this.settledUsageTurns.has(turnId)) return
+    this.settledUsageTurns.add(turnId)
+    if (usage === undefined) return
+    accumulateUsage(this.totals, usage)
+    this.host.usage(this.usageRecord('turn', usage, turnId))
   }
 
   private endTurn(turnId: TurnId): void {
@@ -713,6 +732,16 @@ export class ManagedBrainSession implements BrainSession {
     // 提供方没有先报这次变化时由句柄补报，保证换成功之后状态可观察。
     this.record.model = model
     this.fanOut({ kind: 'session.model_changed', model })
+  }
+
+  /** @inheritdoc */
+  async setThinking(thinking: string): Promise<void> {
+    const setThinking = this.requireSwitch('setThinking', this.meta.thinkingSwitch, provider => provider.setThinking?.bind(provider), 'brain.thinking_switch_unsupported')
+    if (thinking === '') throw new BrainError('invalid_input', 'brain.thinking_empty', 'setThinking needs a thinking option id')
+    await within(setThinking(thinking), this.host.timeouts.callMs, `${this.impl} setThinking`)
+    if (this.currentState === 'closed' || this.record.thinking === thinking) return
+    this.record.thinking = thinking
+    this.fanOut({ kind: 'session.thinking_changed', thinking })
   }
 
   /** @inheritdoc */

@@ -122,6 +122,19 @@ function open(meta: Meta = META): { fake: FakePaseoSession; session: PaseoBrainS
 }
 
 describe('PaseoBrainSession', () => {
+  it.each(['turn_failed', 'turn_canceled'] as const)('passes optional terminal usage for %s and omits it when absent', async (type) => {
+    for (const usage of [undefined, { inputTokens: 10, outputTokens: 3 }]) {
+      const { fake, session, events } = open()
+      const { turnId } = await session.startTurn(textInput('go'))
+      const fields = usage === undefined ? {} : { usage }
+      if (type === 'turn_failed') fake.push({ type, provider: 'fake', turnId, error: 'failed', ...fields })
+      else fake.push({ type, provider: 'fake', turnId, reason: 'cancelled', ...fields })
+      const terminal = events.at(-1)
+      if (usage === undefined) expect(terminal).not.toHaveProperty('usage')
+      else expect(terminal).toHaveProperty('usage.tokens', { input: 10, output: 3 })
+    }
+  })
+
   it('maps a streamed turn: message items finalize, tool calls pair, usage maps', async () => {
     const { fake, session, events } = open()
     const { turnId } = await session.startTurn(textInput('hi'))

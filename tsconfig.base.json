@@ -414,6 +414,7 @@
       "@liwa/bash-sandbox": ["./packages/shell/bash-sandbox/src"],
       "@liwa/brain": ["./packages/brain/brain/src"],
       "@liwa/brain-acp": ["./packages/brain/brain-acp/src"],
+      "@liwa/brain-claude-code": ["./packages/brain/brain-claude-code/src"],
       "@liwa/brain-cli": ["./packages/bundle/brain-cli/src"],
       "@liwa/brain-deepseek": ["./packages/brain/brain-deepseek/src"],
       "@liwa/brain-shared": ["./packages/brain/brain-shared/src"],

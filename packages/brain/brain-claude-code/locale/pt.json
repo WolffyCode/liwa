@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Provedor Claude Code",
+    "description": "Executa sessões de trabalho com a CLI local do Claude Code, configuração de membro isolada e uma referência de credenciais por provedor."
+  }
+}

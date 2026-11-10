@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Claude Code 大脑提供方",
+    "description": "以本机 Claude Code CLI 干活；每个实例行带自己的明文 env（Key、地址、模型别名）、本事、MCP 服务器、插件与钩子，运行在隔离的成员配置里。"
+  }
+}

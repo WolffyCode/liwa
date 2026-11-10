@@ -68,6 +68,7 @@
     "@liwa/app-boot": "workspace:*",
     "@liwa/brain": "workspace:*",
     "@liwa/brain-acp": "workspace:*",
+    "@liwa/brain-claude-code": "workspace:*",
     "@liwa/brain-deepseek": "workspace:*",
     "@liwa/client-connection": "workspace:*",
     "@liwa/client-file-upload": "workspace:*",

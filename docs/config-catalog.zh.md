@@ -460,7 +460,7 @@ export type Config = LocalConfig
 ## `@liwa/brain`
 
 - `inject`: `subprocess`
-- `source`: [`packages/brain/brain/src/index.ts:104`](../packages/brain/brain/src/index.ts)
+- `source`: [`packages/brain/brain/src/index.ts:105`](../packages/brain/brain/src/index.ts)
 
 ```ts config-catalog
 /** `ctx.brains` 的配置。 */
@@ -509,13 +509,117 @@ export type AcpVendor = (typeof ACP_VENDORS)[number]
 ```
 <!-- END GENERATED config-catalog:@liwa/brain-acp -->
 
+<!-- BEGIN GENERATED config-catalog:@liwa/brain-claude-code -->
+<a id="liwabrain-claude-code"></a>
+
+## `@liwa/brain-claude-code`
+
+- `inject`: `brains`
+- `source`: [`packages/brain/brain-claude-code/src/config.ts:13`](../packages/brain/brain-claude-code/src/config.ts)
+
+```ts config-catalog
+/** 一行配置就是一个独立提供方；认证与地址像 Paseo 的自定义提供方一样直接写在 env 里。 */
+export interface Config {
+  /** 提供方唯一实现名，多行配置必须不同。 */
+  impl: string
+  /** 给人看的实例名称。 */
+  label: string
+  /** PATH 命令名或外部 Claude 可执行文件绝对路径。 */
+  binary: string
+  /** 跟在可执行文件后、SDK 参数前的固定参数（包装脚本、容器入口等）；探测 `--version` 时同样带上。 */
+  binaryArgs: string[]
+  /** 子进程部署变量（明文）：必须且只能含 ANTHROPIC_API_KEY 与 ANTHROPIC_AUTH_TOKEN 之一，可含 ANTHROPIC_BASE_URL、模型别名、超时等；不能覆写隔离与会话策略。 */
+  env: Record<string, string>
+  /** 允许的模型，必须且只能指定一个默认模型。 */
+  models: InstanceModel[]
+  /** 此实例额外禁止的原生工具。 */
+  disallowedTools: string[]
+  /** 实例自带的本事目录（绝对路径）；与会话的 skillsDir 一起装进同一个快照插件，同名本事报错。 */
+  skills: string
+  /** 实例自带的 MCP 服务器；与会话的 mcpServers 合并，同名报错，`liwa` 留给内核工具。 */
+  mcpServers: Record<string, InstanceMcpServer>
+  /** 实例装载的本地插件目录（绝对路径，须含 .claude-plugin/plugin.json）。 */
+  plugins: string[]
+  /** 实例的 settings 格式 hooks（只收 command 钩子），经 CLI 的 --settings 层生效，与 CLI 自带配置无关。 */
+  hooks: Record<string, InstanceHookMatcher[]>
+  /** 取消确认与子身份声明的等待上限（毫秒）。 */
+  controlTimeoutMs: number
+  /** 仅运行 --version 的等待上限（毫秒）。 */
+  probeTimeoutMs: number
+  /** 受管进程终止阶梯的宽限期（毫秒）。 */
+  graceMs: number
+  /** 完整追加指令的 UTF-8 字节上限；超出拒绝，不截断。 */
+  instructionsMaxBytes: number
+}
+
+/** 实例允许的一个模型。 */
+export interface InstanceModel {
+  /** 发给 CLI 的模型 id，实例内唯一。 */
+  id: string
+  /** 给人看的模型名。 */
+  label: string
+  /** 省略会话模型时使用；列表必须恰好一个。 */
+  isDefault: boolean
+  /** 本模型可选的 thinking 档位；空表示交给 CLI 默认，会话也不能选。 */
+  thinkingOptions: ThinkingOption[]
+}
+
+/** 实例行里的一台 MCP 服务器：stdio 要 command，http／sse 要 url。 */
+export interface InstanceMcpServer {
+  /** 传输方式：本地进程 stdio，或远端 http／sse。 */
+  type: 'stdio' | 'http' | 'sse'
+  /** stdio 服务器的可执行文件或命令名。 */
+  command?: string
+  /** stdio 服务器的命令参数。 */
+  args?: string[]
+  /** stdio 服务器进程的额外环境变量。 */
+  env?: Record<string, string>
+  /** http／sse 服务器的地址，必须是 http(s)。 */
+  url?: string
+  /** http／sse 请求附带的头。 */
+  headers?: Record<string, string>
+}
+
+/** settings.hooks 的一个匹配组。 */
+export interface InstanceHookMatcher {
+  /** 匹配工具名等的模式（如 `Bash`）；省略匹配该事件的全部。 */
+  matcher?: string
+  /** 匹配时按顺序执行的钩子，至少一条。 */
+  hooks: InstanceHook[]
+}
+
+/** 一个模型可选的 thinking 档位。 */
+export interface ThinkingOption {
+  /** 档位号：`off` 关掉，`low`…`max` 是 effort，`ultracode` 是 xhigh 加 CLI 的 ultracode 设置。 */
+  id: ThinkingOptionId
+  /** 给人看的档位名。 */
+  label: string
+  /** 会话没选档位时用它；一个模型至多一个。 */
+  isDefault: boolean
+}
+
+/** settings.hooks 里的一条命令钩子。 */
+export interface InstanceHook {
+  /** 只收 CLI 的 command 钩子。 */
+  type: 'command'
+  /** 钩子要跑的 shell 命令。 */
+  command: string
+  /** 钩子超时（秒）；省略用 CLI 默认。 */
+  timeout?: number
+}
+
+/** 一个 thinking 档位号。 */
+export type ThinkingOptionId = (typeof THINKING_OPTION_IDS)[number]
+```
+<!-- END GENERATED config-catalog:@liwa/brain-claude-code -->
+
 <!-- BEGIN GENERATED config-catalog:@liwa/brain-cli -->
 <a id="liwabrain-cli"></a>
 
 ## `@liwa/brain-cli`
 
 - `inject`: `brains` · `brainStartup`
-- `source`: [`packages/bundle/brain-cli/src/index.ts:32`](../packages/bundle/brain-cli/src/index.ts)
+- `source`: [`packages/bundle/brain-cli/src/index.ts:33`](../packages/bundle/brain-cli/src/index.ts)
 
 ```ts config-catalog
 /** `run` 开会话时用的回合预算与会话缺省值（以后由 minds 与 roster 给）。 */
@@ -528,6 +632,8 @@ export interface Config {
   watchdogMs: number
   /** 成功调用即结束回合的工具。 */
   concludeOn: string[]
+  /** 全局 agent 配置集的根目录（`$LIWA_HOME/agents`）；空串表示不读。 */
+  agentsRoot: string
 }
 ```
 <!-- END GENERATED config-catalog:@liwa/brain-cli -->

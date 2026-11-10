@@ -45,6 +45,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 |---|---|---|
 | `@liwa/brain` | yes | Brain-provider capability seam (ctx.brains): the agent CLI contract, provider registration, and wrapped sessions with usage, process, and child-agent records |
 | `@liwa/brain-acp` | yes | Generic Agent Client Protocol brain provider: Paseo's ACP client (moved to ACP SDK 1.4) registered into ctx.brains, with Paseo's vendor shims as configuration |
+| `@liwa/brain-claude-code` | yes | Claude Code CLI brain provider with isolated member configuration, Paseo-style plaintext env per instance, managed SDK processes, structured approvals and cumulative usage accounting |
 | `@liwa/brain-deepseek` | yes | The deepseek brain provider: Liwa's own agent as a per-session `liwa --profile deepseek` CLI process, driven over ACP with the _liwa extension and registered into ctx.brains |
 
 ## browser-use

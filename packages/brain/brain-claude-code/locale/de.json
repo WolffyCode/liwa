@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Claude-Code-Anbieter",
+    "description": "Arbeitsaufgaben mit der lokal installierten Claude-Code-CLI ausführen, mit isolierter Mitgliedskonfiguration und einer eigenen Zugangsdatenreferenz pro Anbieter."
+  }
+}

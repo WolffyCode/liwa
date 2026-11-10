@@ -54,7 +54,7 @@ export type ScriptStep =
 export interface ScriptedTurn {
   /** 依次执行的步骤。 */
   steps: ScriptStep[]
-  /** `turn.completed` 带的用量；省略时按输入与输出的字数估一个 token 数。 */
+  /** 显式给出时所有终止结果都带的用量；省略时仅 completed 按字数估计，失败与取消不编造消费。 */
   usage?: Usage
 }
 
@@ -103,12 +103,14 @@ export const SCRIPTED_META: Meta = {
   permissionHook: true,
   rollback: false,
   modelSwitch: true,
+  thinkingSwitch: false,
   modeSwitch: true,
   delivery: { nextStep: true, nextTurn: true, cancelKeepsQueue: true },
   compaction: 'none',
   budget: { inferences: false, toolCalls: false, concludeOn: false },
   usage: 'tokens',
   personaInjection: { instance: 'system_prompt' },
+  agentConfig: { plugins: true, hooks: true, instructions: true },
   runtime: 'subprocess',
   transport: 'scripted',
   kernelTools: ['mcp-http'],
@@ -378,6 +380,7 @@ export class ScriptedBrainProvider implements BrainProvider {
 
 /** 正在跑的回合。 */
 interface RunningTurn {
+  usage?: Usage
   turnId: TurnId
   abort: AbortController
   /** 已收下、还没在某一步边界露面的插话。 */
@@ -501,6 +504,7 @@ class ScriptedSession implements BrainProviderSession {
     this.turn = turn
     this.emit({ kind: 'turn.started', turnId: turn.turnId })
     const script = this.init.script(prompt, turnNumber)
+    if (script.usage !== undefined) turn.usage = script.usage
     void this.run(turn, prompt, script).catch((error: unknown) => {
       this.init.launch.logger.warn(`scripted session ${this.id}: turn failed unexpectedly: ${String(error)}`)
     })
@@ -512,7 +516,7 @@ class ScriptedSession implements BrainProviderSession {
     if (this.turn !== turn) return
     this.turn = undefined
     if (outcome.kind === 'failed') {
-      this.emit({ kind: 'turn.failed', turnId: turn.turnId, category: outcome.category, message: outcome.message, retryable: outcome.category === 'retryable' })
+      this.emit({ kind: 'turn.failed', turnId: turn.turnId, category: outcome.category, message: outcome.message, retryable: outcome.category === 'retryable', ...(script.usage === undefined ? {} : { usage: script.usage }) })
     } else if (outcome.kind === 'interrupted' || turn.abort.signal.aborted) {
       // 已由 cancel 发过 turn.interrupted。
       return
@@ -848,7 +852,7 @@ class ScriptedSession implements BrainProviderSession {
     turn.wake?.()
     for (const child of turn.children) this.emit({ kind: 'child.ended', childId: child, stopReason: 'cancelled', usage: {} })
     turn.children.clear()
-    this.emit({ kind: 'turn.interrupted', turnId: turn.turnId, reason })
+    this.emit({ kind: 'turn.interrupted', turnId: turn.turnId, reason, ...(turn.usage === undefined ? {} : { usage: turn.usage }) })
   }
 
   respondToPermission(requestId: PermissionRequestId, response: PermissionResponse): Promise<void> {

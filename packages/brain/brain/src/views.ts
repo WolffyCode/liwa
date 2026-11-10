@@ -73,6 +73,8 @@ export interface BrainSessionView {
   model?: string
   /** 当前所选的会话模式：开会话时指定的，或之后 `setMode` / 提供方报的；省略即提供方的默认模式。 */
   modeId?: string
+  /** 当前所选的 thinking 档位：开会话时指定的，或之后 `setThinking` 的；省略即模型默认档。 */
+  thinking?: string
   /** 成员配置目录。 */
   configDir: string
   /** 提供方 home。 */

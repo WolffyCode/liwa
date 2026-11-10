@@ -32,6 +32,7 @@ The following packages carry upstream source files copied in place rather than i
 | Package | Upstream | Commit | License |
 | --- | --- | --- | --- |
 | [packages/brain/brain-acp](packages/brain/brain-acp/NOTICE) | https://github.com/getpaseo/paseo | `8018231a00a6b45ed6cda1856f954ba14b4824c0` | Apache-2.0 |
+| [packages/brain/brain-claude-code](packages/brain/brain-claude-code/NOTICE) | https://github.com/getpaseo/paseo | `8018231a00a6b45ed6cda1856f954ba14b4824c0` | Apache-2.0 |
 | [packages/brain/brain-shared](packages/brain/brain-shared/NOTICE) | https://github.com/getpaseo/paseo | `8018231a00a6b45ed6cda1856f954ba14b4824c0` | Apache-2.0 |
 
 ## Runtime npm dependencies
@@ -103,6 +104,7 @@ External packages installed for runtime use or embedded in distributed Host or b
 | [`katex`](https://github.com/KaTeX/KaTeX) | MIT |
 | [`koffi`](https://github.com/Koromix/koffi) | MIT |
 | [`lexical`](https://github.com/facebook/lexical) | MIT |
+| [`lru-cache`](https://github.com/isaacs/node-lru-cache) | BlueOak-1.0.0 |
 | [`mdast-util-from-markdown`](https://github.com/syntax-tree/mdast-util-from-markdown) | MIT |
 | [`mdast-util-gfm`](https://github.com/syntax-tree/mdast-util-gfm) | MIT |
 | [`mdast-util-math`](https://github.com/syntax-tree/mdast-util-math) | MIT |

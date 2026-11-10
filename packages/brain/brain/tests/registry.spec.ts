@@ -8,7 +8,7 @@ import {
   SCRIPTED_META, ScriptedBrainProvider, echoAnswers, recordEvents, sampleSessionConfig, solidPng, textInput,
 } from '@liwa/brain-testkit'
 import BrainRegistry, {
-  BrainBlobStore, BrainError, BrainEventSchema, BrainSessionId, ImplId, MemberId, PermissionRequestId, RULES_PRECEDENCE,
+  BrainBlobStore, BrainError, BrainEventSchema, BrainSessionId, ChildId, ImplId, MemberId, PermissionRequestId, RULES_PRECEDENCE,
   checkPermissionAnswers, homeDirFor, memberMcpServers, mergeLaunchEnv, replaceSkills, resolveBlobsDir, rulesDocument,
   type BrainEvent, type BrainProcessView, type BrainProvider, type BrainProviderSession, type BrainSessionClosedRecord,
   type BrainUsageRecord, type BrainSessionView, type BrainChildView,
@@ -52,6 +52,49 @@ describe('ctx.brains', () => {
 
   const cfg = (overrides: Parameters<typeof sampleSessionConfig>[1] = {}): ReturnType<typeof sampleSessionConfig> =>
     sampleSessionConfig(fixture.root, overrides)
+
+
+  it.each(['turn.completed', 'turn.interrupted', 'turn.failed'] as const)('settles %s usage once without counting updates or child detail twice', async (kind) => {
+    const backing = new ScriptedBrainProvider({ process: false, script: () => ({ steps: [{ kind: 'hold' }] }) })
+    let emit: (event: BrainEvent) => void = () => { throw new Error('not subscribed') }
+    const create = backing.createSession.bind(backing)
+    backing.createSession = async (config, launch) => {
+      const native = await create(config, launch)
+      const subscribe = native.subscribe.bind(native)
+      native.subscribe = (listener) => { emit = listener; return subscribe(listener) }
+      return native
+    }
+    fixture.ctx.brains.register(backing)
+    const session = await fixture.ctx.brains.createSession(fixture.ctx, { impl: FAKE, cfg: cfg() })
+    const { turnId } = await session.startTurn(textInput('hold'))
+    const usage = { tokens: { input: 100, output: 20, cacheRead: 3, cacheWrite: 4 }, inferences: 2, providerReportedCostUsd: 0.4 }
+    emit({ kind: 'usage.update', turnId, usage })
+    expect(session.usage()).toEqual({})
+    const childId = ChildId('usage-detail-child')
+    emit({ kind: 'child.started', childId, childKind: 'native-child', label: 'worker', provider: FAKE, turnId })
+    emit({ kind: 'child.ended', childId, stopReason: 'completed', usage })
+    expect(session.usage()).toEqual({})
+    const terminal: BrainEvent = kind === 'turn.failed'
+      ? { kind, turnId, category: 'retryable', message: 'failed', retryable: true, usage }
+      : kind === 'turn.interrupted' ? { kind, turnId, reason: 'cancelled', usage } : { kind, turnId, usage }
+    expect(BrainEventSchema.parse(terminal)).toMatchObject({ usage })
+    emit(terminal)
+    emit(terminal)
+    emit({ kind: 'turn.completed', turnId, usage })
+    expect(session.usage()).toMatchObject(usage)
+    expect(payloads<BrainUsageRecord>(fixture, 'brain.usage.v1').filter(record => record.source === 'turn')).toHaveLength(1)
+  })
+
+  it('keeps terminals without usage backward compatible and does not invent spending from an update', async () => {
+    fixture.ctx.brains.register(new ScriptedBrainProvider({ process: false, script: () => ({ steps: [{ kind: 'usage', usage: { tokens: { input: 100, output: 20 } } }, { kind: 'fail', category: 'retryable', message: 'failure' }] }) }))
+    const session = await fixture.ctx.brains.createSession(fixture.ctx, { impl: FAKE, cfg: cfg() })
+    const recorder = recordEvents(session)
+    await session.startTurn(textInput('go'))
+    const terminal = await recorder.waitForKind('turn.failed')
+    expect(terminal).not.toHaveProperty('usage')
+    expect(session.usage().tokens).toBeUndefined()
+    expect(payloads<BrainUsageRecord>(fixture, 'brain.usage.v1').filter(record => record.source === 'turn')).toHaveLength(0)
+  })
 
   it('registers, lists, describes, and releases providers', async () => {
     const { ctx } = fixture
@@ -495,5 +538,50 @@ describe('ctx.brains', () => {
     expect(mergeLaunchEnv('x', { KEY: 'k' }, { EXTRA: 'e' })).toEqual({ EXTRA: 'e', KEY: 'k' })
     expect(mergeLaunchEnv('x', { KEY: 'k' }, undefined)).toEqual({ KEY: 'k' })
     expect(() => mergeLaunchEnv('x', { KEY: 'k' }, { KEY: 'other' })).toThrow(/KEY/)
+  })
+})
+
+describe('agent configuration capabilities', () => {
+  it('refuses plugins, hooks and instructions a provider does not load, before opening anything', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'liwa-brains-caps-'))
+    const ctx = new Context()
+    try {
+      await ctx.plugin(LocalSubprocessRuntime)
+      await ctx.plugin(BrainRegistry, { membersRoot: join(root, 'members'), callTimeoutMs: 2_000, closeTimeoutMs: 5_000 })
+      const agentConfig = { plugins: false, hooks: false, instructions: false }
+      ctx.brains.register(new ScriptedBrainProvider({ process: false, meta: { agentConfig } }))
+      const base = sampleSessionConfig(root)
+      for (const extra of [
+        { plugins: ['/srv/plugin'] },
+        { hooks: { PreToolUse: [{ hooks: [{ type: 'command' as const, command: 'echo' }] }] } },
+        { instructions: 'be brief' },
+      ]) {
+        await expect(ctx.brains.createSession(ctx, { impl: FAKE, cfg: { ...base, ...extra } })).rejects.toMatchObject({ code: 'brain.agent_config_unsupported' })
+      }
+      const session = await ctx.brains.createSession(ctx, { impl: FAKE, cfg: { ...base, plugins: [], hooks: {}, instructions: '   ' } })
+      await session.close()
+    } finally {
+      await ctx.fiber.dispose()
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('thinking switch capability', () => {
+  it('refuses setThinking on a provider that does not declare thinkingSwitch', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'liwa-brains-thinking-'))
+    const ctx = new Context()
+    try {
+      await ctx.plugin(LocalSubprocessRuntime)
+      await ctx.plugin(BrainRegistry, { membersRoot: join(root, 'members'), callTimeoutMs: 2_000, closeTimeoutMs: 5_000 })
+      ctx.brains.register(new ScriptedBrainProvider({ process: false }))
+      const session = await ctx.brains.createSession(ctx, { impl: FAKE, cfg: sampleSessionConfig(root, { thinking: 'high' }) })
+      expect(session.view().thinking).toBe('high')
+      await expect(session.setThinking('off')).rejects.toMatchObject({ code: 'brain.thinking_switch_unsupported' })
+      await session.close()
+    } finally {
+      await ctx.fiber.dispose()
+      await rm(root, { recursive: true, force: true })
+    }
   })
 })

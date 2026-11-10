@@ -429,6 +429,8 @@
     { "path": "./packages/brain/brain" },
     { "path": "./packages/brain/brain-shared" },
     { "path": "./packages/brain/brain-shared/tsconfig.paseo.json" },
+    { "path": "./packages/brain/brain-claude-code" },
+    { "path": "./packages/brain/brain-claude-code/tsconfig.paseo.json" },
     { "path": "./packages/brain/brain-acp" },
     { "path": "./packages/brain/brain-acp/tsconfig.paseo.json" },
     { "path": "./packages/brain/brain-deepseek" },

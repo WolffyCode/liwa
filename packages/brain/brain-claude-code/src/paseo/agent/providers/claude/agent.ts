@@ -1,0 +1,5558 @@
+// 来源：getpaseo/paseo@8018231a00a6b45ed6cda1856f954ba14b4824c0（Apache-2.0）packages/server/src/server/agent/providers/claude/agent.ts；改动见包内 NOTICE。
+import type { SpawnedProcess } from "@anthropic-ai/claude-agent-sdk";
+import {
+type AgentDefinition,
+type CanUseTool,
+type McpServerConfig as ClaudeSdkMcpServerConfig,
+type PermissionMode,
+type PermissionResult,
+type PermissionUpdate,
+type Query,
+type SDKMessage,
+type SDKPartialAssistantMessage,
+type SDKResultMessage,
+type SDKSystemMessage,
+type SDKUserMessage,
+} from "@anthropic-ai/claude-agent-sdk";
+import type { PaseoLogger as Logger } from "@liwa/brain-shared";
+import { limitAgentTimelineItemContent } from "@liwa/brain-shared/paseo/agent/agent-timeline-content";
+import { normalizeProviderReplayTimestamp } from "@liwa/brain-shared/paseo/agent/provider-history-timestamps";
+import type { ProviderSubagentStatus } from "@liwa/brain-shared/paseo/agent/provider-subagents/store";
+import {
+isProviderImageMarkdown,
+materializeProviderImage,
+renderProviderImageOutputAsAssistantMarkdown,
+type ProviderImageOutput,
+} from "@liwa/brain-shared/paseo/agent/providers/provider-image-output";
+import { appendOrReplaceGrowingAssistantMessage,runProviderTurn } from "@liwa/brain-shared/paseo/agent/providers/provider-runner";
+import { randomUUID } from "node:crypto";
+import fs,{ promises } from "node:fs";
+import path from "node:path";
+import { setImmediate } from "node:timers/promises";
+import { BrainError } from "@liwa/brain";
+import { isClaudeInterruptPlaceholderText } from "./interrupt-placeholder.ts";
+import {
+getClaudeContextWindowMaxTokens,
+normalizeClaudeRuntimeModelId,
+} from "./models.ts";
+import {
+applyClaudeToolPolicy,
+type ClaudeProviderOptions
+} from "./options.ts";
+import { claudeConfigDir,claudeTranscriptPath } from "./project-dir.ts";
+import { claudeQuery,type ClaudeOptions,type ClaudeQueryContext, type ClaudeQueryFactory } from "./query.ts";
+import { ClaudeRuntimeSafety } from "./runtime-safety.ts";
+import { ClaudeSidechainTracker } from "./sidechain-tracker.ts";
+import { readClaudeSubagentHandback } from "./subagent-handback.ts";
+import {
+ClaudeTaskProtocolSource,
+type ClaudeHookObservationInput,
+} from "./subagents/live-source.ts";
+import { foldSubagentObservations,type SubagentObservation } from "./subagents/observation.ts";
+import { observeReplaySubagents,type ClaudeReplayParentFacts } from "./subagents/replay-source.ts";
+import { mapTaskStatus } from "./subagents/task-status.ts";
+import { readClaudeWorkflowResultFile } from "./subagents/workflow-output.ts";
+import { observeReplayWorkflows } from "./subagents/workflow-replay-source.ts";
+import {
+mapTaskNotificationSystemRecordToToolCall,
+mapTaskNotificationUserContentToToolCall,
+readTaskNotificationFromHistoryRecord,
+readTaskNotificationToolUseIdFromHistoryRecord,
+} from "./task-notification-tool-call.ts";
+import { ClaudeTaskState } from "./task-state.ts";
+import {
+mapClaudeCanceledToolCall,
+mapClaudeCompletedToolCall,
+mapClaudeFailedToolCall,
+mapClaudeRunningToolCall,
+} from "./tool-call-mapper.ts";
+import { withClaudeReplayHistory,type ClaudeReplayHistory } from "./transcript-history.ts";
+
+import {
+getAgentStreamEventTurnId,
+type AgentCapabilityFlags,
+type AgentMetadata,
+type AgentMode,
+type AgentPermissionAction,
+type AgentPermissionRequest,
+type AgentPermissionRequestKind,
+type AgentPermissionResponse,
+type AgentPermissionUpdate,
+type AgentPersistenceHandle,
+type AgentPromptInput,
+type AgentRunOptions,
+type AgentRunResult,
+type AgentRuntimeInfo,
+type AgentSession,
+type AgentSessionConfig,
+type AgentSlashCommand,
+type AgentStreamEvent,
+type AgentTimelineItem,
+type AgentUsage, type AgentUsageSession,
+type McpServerConfig,
+type SteerActiveTurnOptions,
+type SteerResult,
+type ToolCallDetail
+} from "@liwa/brain-shared/paseo/agent/agent-sdk-types";
+import {
+createProviderEnv,
+type ProviderRuntimeSettings
+} from "@liwa/brain-shared/paseo/agent/provider-launch-config";
+import { composeSystemPromptParts } from "@liwa/brain-shared/paseo/agent/system-prompt";
+import { withTimeout } from "@liwa/brain-shared/paseo/utils/promise-timeout";
+// 灵鲸改：项目文档由提供方读成提示词，不加载任何 CLI settings 来源。
+const CLAUDE_SETTING_SOURCES: NonNullable<ClaudeOptions["settingSources"]> = [];
+
+function readNonEmptyString(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
+}
+
+export function normalizeClaudeAskUserQuestionRequestInput(
+  toolName: string,
+  input: AgentMetadata,
+): AgentMetadata {
+  if (toolName !== "AskUserQuestion" || !Array.isArray(input.questions)) {
+    return input;
+  }
+
+  // Claude Code's AskUserQuestion schema says "Other" is host-provided, not a
+  // model-supplied option. Paseo's shared question UI uses allowOther for that
+  // freeform answer path.
+  return {
+    ...input,
+    questions: input.questions.map((item) => {
+      if (!isMetadata(item)) {
+        return item;
+      }
+      return {
+        ...item,
+        allowOther: true,
+      };
+    }),
+  };
+}
+
+function stripClaudeAskUserQuestionUiMetadata(input: AgentMetadata): AgentMetadata {
+  if (!Array.isArray(input.questions)) {
+    return input;
+  }
+
+  return {
+    ...input,
+    questions: input.questions.map((item) => {
+      if (!isMetadata(item) || !("allowOther" in item)) {
+        return item;
+      }
+      const itemForClaude: AgentMetadata = { ...item };
+      delete itemForClaude.allowOther;
+      return itemForClaude;
+    }),
+  };
+}
+
+/**
+ * The answers this response will actually deliver, keyed by full question text,
+ * or null when there is no question list and answers map to work from.
+ *
+ * Shared by the normalizer and by the check that rejects an undeliverable
+ * answer, so the two can never disagree about what "deliverable" means.
+ */
+function resolveClaudeAskUserQuestionAnswers(
+  updatedInput: AgentMetadata | undefined,
+  fallbackInput: AgentMetadata | undefined,
+): Record<string, string> | null {
+  const fallback = isMetadata(fallbackInput) ? fallbackInput : {};
+  const base = isMetadata(updatedInput) ? updatedInput : {};
+  const questions =
+    (Array.isArray(base.questions) ? base.questions : null) ??
+    (Array.isArray(fallback.questions) ? fallback.questions : null);
+  const answers = isMetadata(base.answers) ? base.answers : null;
+
+  if (!questions || !answers) {
+    return null;
+  }
+
+  const normalizedAnswers: Record<string, string> = {};
+  for (const item of questions) {
+    const question = isMetadata(item) ? item : null;
+    if (!question) {
+      continue;
+    }
+
+    const questionText = readNonEmptyString(question.question);
+    if (!questionText) {
+      continue;
+    }
+
+    const header = readNonEmptyString(question.header);
+    const answer =
+      readNonEmptyString(answers[questionText]) ??
+      (header ? readNonEmptyString(answers[header]) : null);
+    if (answer) {
+      normalizedAnswers[questionText] = answer;
+    }
+  }
+
+  return normalizedAnswers;
+}
+
+export function normalizeClaudeAskUserQuestionUpdatedInput(
+  updatedInput: AgentMetadata | undefined,
+  fallbackInput: AgentMetadata | undefined,
+): AgentMetadata {
+  const fallback = isMetadata(fallbackInput) ? fallbackInput : {};
+  const base = isMetadata(updatedInput) ? updatedInput : {};
+  // Paseo's shared question UI serializes answers by question header, but Claude's
+  // AskUserQuestion tool expects answer keys to match the full question text. Merge
+  // the original request payload back in so provider callbacks that only return
+  // `{ answers }` still satisfy Claude's full tool input schema.
+  const merged = stripClaudeAskUserQuestionUiMetadata({ ...fallback, ...base });
+  const normalizedAnswers = resolveClaudeAskUserQuestionAnswers(updatedInput, fallbackInput);
+
+  if (!normalizedAnswers || Object.keys(normalizedAnswers).length === 0) {
+    return merged;
+  }
+
+  return {
+    ...merged,
+    answers: normalizedAnswers,
+  };
+}
+
+class ClaudeQuestionAnswerRequiredError extends Error {
+  readonly code = "question_answer_required" as const;
+
+  constructor(readonly requestId: string) {
+    super(
+      `Permission request '${requestId}' requires updatedInput.answers keyed by a ` +
+        `question's full text or header, with a non-empty string value. ` +
+        `The request is still pending; retry with that shape.`,
+    );
+    this.name = "ClaudeQuestionAnswerRequiredError";
+  }
+}
+
+function assertClaudeQuestionAnswerDeliverable(
+  request: AgentPermissionRequest,
+  response: AgentPermissionResponse,
+): void {
+  if (request.kind !== "question" || response.behavior !== "allow") {
+    return;
+  }
+  const answers = resolveClaudeAskUserQuestionAnswers(response.updatedInput, request.input);
+  if (!answers || Object.keys(answers).length === 0) {
+    throw new ClaudeQuestionAnswerRequiredError(request.id);
+  }
+}
+
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function toObjectRecord(value: unknown): Record<string, unknown> | undefined {
+  return isObjectRecord(value) ? value : undefined;
+}
+
+function isUnknownArray(value: unknown): value is readonly unknown[] {
+  return Array.isArray(value);
+}
+
+function isImageMimeType(
+  value: string,
+): value is "image/jpeg" | "image/png" | "image/gif" | "image/webp" {
+  return (
+    value === "image/jpeg" ||
+    value === "image/png" ||
+    value === "image/gif" ||
+    value === "image/webp"
+  );
+}
+
+type TurnState = "idle" | "foreground" | "autonomous";
+
+interface EventIdentifiers {
+  taskId: string | null;
+  parentMessageId: string | null;
+  messageId: string | null;
+}
+
+interface AutonomousTurnState {
+  id: string;
+}
+
+interface AsyncMessageInput<T> {
+  push: (item: T) => void;
+  end: () => void;
+  iterable: AsyncIterable<T>;
+}
+
+interface ClaudeReplayOwnership {
+  restoredIds: ReadonlySet<string>;
+  toolOwners: ReadonlyMap<string, string>;
+  /** The parent's Task calls, keyed by tool-call id, so their cards replay labeled as they were live. */
+  subagentToolCalls: ReadonlyMap<string, ClaudeSubagentCardFacts>;
+}
+
+interface ClaudeSubagentCardFacts {
+  title?: string;
+  description?: string;
+}
+
+interface PersistedTimelineEntry {
+  item: AgentTimelineItem;
+  timestamp?: string;
+}
+
+const CLAUDE_CAPABILITIES: AgentCapabilityFlags = {
+  supportsStreaming: true,
+  supportsSessionPersistence: true,
+  supportsSessionListing: true,
+  supportsDynamicModes: true,
+  supportsMcpServers: true,
+  supportsReasoningStream: true,
+  supportsToolInvocations: true,
+  supportsRewindConversation: false,
+  supportsRewindFiles: false,
+  supportsRewindBoth: false,
+};
+
+// 灵鲸改：不开放 bypassPermissions 与 dontAsk（设计 §4.2 禁 bypass）；其余四个与 Paseo 同形，计划批准回到 default。
+const DEFAULT_MODES: AgentMode[] = [
+  { id: "default", label: "Default", description: "Prompts for permission the first time a tool is used" },
+  { id: "plan", label: "Plan", description: "Analyze the codebase without executing tools or edits" },
+  { id: "acceptEdits", label: "Accept File Edits", description: "Automatically approves edit-focused tools without prompting" },
+  { id: "auto", label: "Auto", description: "Uses a model classifier to review permission prompts automatically" },
+];
+
+const VALID_CLAUDE_MODES = new Set(DEFAULT_MODES.map((mode) => mode.id));
+
+const CLAUDE_ROOT_ONLY_COMMANDS = new Set([
+  "clear",
+  "compact",
+  "context",
+  "debug",
+  "extra-usage",
+  "heapdump",
+  "init",
+  "loop",
+  "schedule",
+  "usage",
+]);
+const INTERRUPT_TOOL_USE_PLACEHOLDER = "[Request interrupted by user for tool use]";
+const NO_RESPONSE_REQUESTED_PLACEHOLDER = "No response requested.";
+const STEER_SUPERSEDED_PERMISSION_MESSAGE =
+  "The user answered with a message instead of approving. Their message follows.";
+
+interface SlashCommandInvocation {
+  commandName: string;
+  args?: string;
+  rawInput: string;
+}
+
+function classifyClaudeSlashCommand(commandName: string): AgentSlashCommand["kind"] {
+  // Claude exposes commands and skills as one flat SDK list, without structured source
+  // metadata. Keep obvious root-only/session controls out of inline autocomplete and
+  // treat the rest as skills; the worst failure mode is an inert inline suggestion.
+  return CLAUDE_ROOT_ONLY_COMMANDS.has(commandName) ? "command" : "skill";
+}
+
+type ClaudeAgentConfig = Omit<AgentSessionConfig, "providerOptions"> & {
+  provider: "claude";
+  providerOptions: ClaudeProviderOptions;
+};
+
+export interface ClaudeContentChunk {
+  type: string;
+  [key: string]: unknown;
+}
+
+interface ClaudeAgentSessionOptions {
+  // 灵鲸改：秘密仅在适配边界解析；原生错误/日志共用该边界。
+  diagnostics: { redact(text: string): string; protect<T>(operation: () => Promise<T>): Promise<T> };
+  defaults?: { agents?: Record<string, AgentDefinition> };
+  runtimeSettings?: ProviderRuntimeSettings;
+  handle?: AgentPersistenceHandle;
+  agentId?: string;
+  launchEnv?: Record<string, string>;
+  persistSession?: boolean;
+  logger: Logger;
+  queryFactory?: ClaudeQueryFactory;
+  resolveBinary: () => Promise<string>;
+  controlTimeoutMs: number;
+  sdkOptions: ClaudeOptions;
+  spawn: ClaudeQueryContext["spawn"];
+  onMessage?: (message: SDKMessage, turnId: string | undefined) => void;
+  onQuery?: () => void;
+  onTurn?: () => void;
+  disposeProcess: (child: SpawnedProcess) => Promise<void>;
+}
+
+function resolvePathEnvKey(): "Path" | "PATH" | null {
+  if (process.env["Path"] !== undefined) return "Path";
+  if (process.env["PATH"] !== undefined) return "PATH";
+  return null;
+}
+
+function errorToMessageString(error: unknown): string {
+  if (typeof error === "string") return error;
+  if (error instanceof Error) return error.message;
+  return "";
+}
+
+/**
+ * Claude opens every main-session turn with system/init and closes it with exactly one result:
+ * a prompt, a wake-up after background work, a slash command, an API error. Background subagents
+ * never emit either on the main stream.
+ */
+function isClaudeTurnInit(message: SDKMessage): boolean {
+  return message.type === "system" && message.subtype === "init";
+}
+
+function firstStringField(
+  input: Record<string, unknown>,
+  primaryKey: string,
+  secondaryKey: string,
+): string | undefined {
+  const primary = input[primaryKey];
+  if (typeof primary === "string") return primary;
+  const secondary = input[secondaryKey];
+  if (typeof secondary === "string") return secondary;
+  return undefined;
+}
+
+function extractSessionIdRaw(msg: {
+  session_id?: unknown;
+  sessionId?: unknown;
+  session?: { id?: unknown } | null;
+}): string {
+  if (typeof msg.session_id === "string") return msg.session_id;
+  if (typeof msg.sessionId === "string") return msg.sessionId;
+  if (typeof msg.session?.id === "string") return msg.session.id;
+  return "";
+}
+
+interface ClaudeOptionsLogSummary {
+  cwd: string | null;
+  permissionMode: string | null;
+  model: string | null;
+  includePartialMessages: boolean;
+  settingSources: string[];
+  enableFileCheckpointing: boolean;
+  hasResume: boolean;
+  maxThinkingTokens: number | null;
+  hasEnv: boolean;
+  envKeyCount: number;
+  hasMcpServers: boolean;
+  mcpServerNames: string[];
+  systemPromptMode: "none" | "string" | "preset" | "custom";
+  systemPromptPreset: string | null;
+  hasCanUseTool: boolean;
+  hasSpawnOverride: boolean;
+  hasStderrHandler: boolean;
+  pathToClaudeCodeExecutable: string | null;
+  persistSession: boolean | null;
+  fastMode: boolean | null;
+}
+
+const MAX_RECENT_STDERR_CHARS = 4000;
+const STDERR_FLUSH_WAIT_MS = 150;
+const STDERR_FLUSH_POLL_INTERVAL_MS = 10;
+
+function summarizeClaudeOptionsForLog(options: ClaudeOptions): ClaudeOptionsLogSummary {
+  const systemPromptRaw = options.systemPrompt;
+  const systemPromptSummary = (() => {
+    if (!systemPromptRaw) {
+      return { mode: "none" as const, preset: null };
+    }
+    if (typeof systemPromptRaw === "string") {
+      return { mode: "string" as const, preset: null };
+    }
+    const prompt = toObjectRecord(systemPromptRaw);
+    const promptType = typeof prompt?.type === "string" ? prompt.type : "custom";
+    return {
+      mode: promptType === "preset" ? ("preset" as const) : ("custom" as const),
+      preset: typeof prompt?.preset === "string" && prompt.preset.length > 0 ? prompt.preset : null,
+    };
+  })();
+  const mcpServerNames = options.mcpServers ? Object.keys(options.mcpServers).sort() : [];
+
+  return {
+    cwd: typeof options.cwd === "string" ? options.cwd : null,
+    permissionMode: typeof options.permissionMode === "string" ? options.permissionMode : null,
+    model: typeof options.model === "string" ? options.model : null,
+    includePartialMessages: options.includePartialMessages === true,
+    settingSources: Array.isArray(options.settingSources) ? options.settingSources : [],
+    enableFileCheckpointing: options.enableFileCheckpointing === true,
+    hasResume: typeof options.resume === "string" && options.resume.length > 0,
+    maxThinkingTokens:
+      typeof options.maxThinkingTokens === "number" ? options.maxThinkingTokens : null,
+    hasEnv: !!options.env,
+    envKeyCount: Object.keys(options.env ?? {}).length,
+    hasMcpServers: mcpServerNames.length > 0,
+    mcpServerNames,
+    systemPromptMode: systemPromptSummary.mode,
+    systemPromptPreset: systemPromptSummary.preset,
+    hasCanUseTool: typeof options.canUseTool === "function",
+    hasSpawnOverride: typeof options.spawnClaudeCodeProcess === "function",
+    hasStderrHandler: typeof options.stderr === "function",
+    pathToClaudeCodeExecutable:
+      typeof options.pathToClaudeCodeExecutable === "string"
+        ? options.pathToClaudeCodeExecutable
+        : null,
+    persistSession: typeof options.persistSession === "boolean" ? options.persistSession : null,
+    fastMode: readClaudeFastModeSetting(options.settings),
+  };
+}
+
+function isToolResultTextBlock(value: unknown): value is { type: "text"; text: string } {
+  return (
+    !!value &&
+    typeof value === "object" &&
+    (value as { type?: unknown }).type === "text" &&
+    typeof (value as { text?: unknown }).text === "string"
+  );
+}
+
+function normalizeForDeterministicString(value: unknown, seen: WeakSet<object>): unknown {
+  if (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return value;
+  }
+  if (typeof value === "bigint") {
+    return value.toString();
+  }
+  if (typeof value === "function") {
+    return "[function]";
+  }
+  if (typeof value === "symbol") {
+    return value.toString();
+  }
+  if (typeof value === "undefined") {
+    return "[undefined]";
+  }
+  if (Array.isArray(value)) {
+    return value.map((entry) => normalizeForDeterministicString(entry, seen));
+  }
+  if (typeof value === "object") {
+    const objectValue = value;
+    if (seen.has(objectValue)) {
+      return "[circular]";
+    }
+    seen.add(objectValue);
+    const record = toObjectRecord(value);
+    if (!record) {
+      seen.delete(objectValue);
+      return "[invalid]";
+    }
+    const normalized: Record<string, unknown> = {};
+    for (const key of Object.keys(record).sort()) {
+      normalized[key] = normalizeForDeterministicString(record[key], seen);
+    }
+    seen.delete(objectValue);
+    return normalized;
+  }
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  return "[unsupported]";
+}
+
+function deterministicStringify(value: unknown): string {
+  if (typeof value === "undefined") {
+    return "";
+  }
+  try {
+    const normalized = normalizeForDeterministicString(value, new WeakSet<object>());
+    if (typeof normalized === "string") {
+      return normalized;
+    }
+    return JSON.stringify(normalized);
+  } catch {
+    if (typeof value === "string") {
+      return value;
+    }
+    if (typeof value === "number" || typeof value === "boolean") {
+      return String(value);
+    }
+    return "[unserializable]";
+  }
+}
+
+function coerceToolResultContentToString(content: unknown): string {
+  if (typeof content === "string") {
+    return content;
+  }
+  if (Array.isArray(content) && content.every((block) => isToolResultTextBlock(block))) {
+    return content.map((block) => block.text).join("");
+  }
+  return deterministicStringify(content);
+}
+
+function toBase64ImageOutput(block: unknown): ProviderImageOutput | null {
+  const record = toObjectRecord(block);
+  if (!record || record.type !== "image") {
+    return null;
+  }
+  const source = toObjectRecord(record.source);
+  if (!source || source.type !== "base64" || typeof source.data !== "string") {
+    return null;
+  }
+  return {
+    data: source.data,
+    mimeType: typeof source.media_type === "string" ? source.media_type : null,
+  };
+}
+
+// Claude returns images inside tool_result content as base64 Anthropic blocks. Left in place they
+// reach coerceToolResultContentToString, which JSON.stringifies the whole array — dumping base64
+// into the tool output. We pull those blocks out to render them as image markdown and leave a
+// "[image]" placeholder so image-only results still produce non-empty output.
+function splitClaudeToolResultImages(content: unknown): {
+  images: ProviderImageOutput[];
+  text: unknown;
+} {
+  if (!Array.isArray(content)) {
+    return { images: [], text: content };
+  }
+  const images: ProviderImageOutput[] = [];
+  const text = content.map((block) => {
+    const image = toBase64ImageOutput(block);
+    if (image) {
+      images.push(image);
+      return { type: "text", text: "[image]" };
+    }
+    return block;
+  });
+  return { images, text };
+}
+
+function normalizeClaudeTranscriptText(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : null;
+}
+
+function isClaudeNoResponsePlaceholderText(value: unknown): boolean {
+  return normalizeClaudeTranscriptText(value) === NO_RESPONSE_REQUESTED_PLACEHOLDER;
+}
+
+const LOCAL_COMMAND_STDOUT_PATTERN =
+  /^\s*<local-command-stdout>[\s\S]*<\/local-command-stdout>\s*$/;
+const CLAUDE_COMMAND_MESSAGE_PATTERN = /<command-message>([\s\S]*?)<\/command-message>/;
+const CLAUDE_COMMAND_ARGS_PATTERN = /<command-args>([\s\S]*?)<\/command-args>/;
+const CLAUDE_COMMAND_NAME_PATTERN = /<command-name>([\s\S]*?)<\/command-name>/;
+
+function isClaudeLocalCommandStdout(value: unknown): boolean {
+  const normalized = normalizeClaudeTranscriptText(value);
+  return normalized !== null && LOCAL_COMMAND_STDOUT_PATTERN.test(normalized);
+}
+
+function isClaudeTranscriptNoiseText(value: unknown): boolean {
+  return (
+    isClaudeInterruptPlaceholderText(value) ||
+    isClaudeNoResponsePlaceholderText(value) ||
+    isClaudeLocalCommandStdout(value)
+  );
+}
+
+function collectClaudeTextContentParts(content: unknown): string[] {
+  if (typeof content === "string") {
+    const normalized = normalizeClaudeTranscriptText(content);
+    return normalized ? [normalized] : [];
+  }
+
+  if (!isUnknownArray(content)) {
+    return [];
+  }
+
+  const parts: string[] = [];
+  for (const block of content) {
+    const blockRecord = toObjectRecord(block);
+    if (!blockRecord) {
+      continue;
+    }
+    const text = normalizeClaudeTranscriptText(blockRecord.text);
+    if (text) {
+      parts.push(text);
+      continue;
+    }
+    const input = normalizeClaudeTranscriptText(blockRecord.input);
+    if (input) {
+      parts.push(input);
+    }
+  }
+
+  return parts;
+}
+
+function isClaudeTranscriptNoiseContent(content: unknown): boolean {
+  const parts = collectClaudeTextContentParts(content);
+  return parts.length > 0 && parts.every((part) => isClaudeTranscriptNoiseText(part));
+}
+
+export function extractUserMessageText(content: unknown): string | null {
+  if (typeof content === "string") {
+    const normalized = content.trim();
+    if (!normalized || isClaudeTranscriptNoiseText(normalized)) {
+      return null;
+    }
+    return normalizeClaudeUserPromptText(normalized);
+  }
+
+  if (!Array.isArray(content)) {
+    return null;
+  }
+
+  const parts: string[] = [];
+  for (const block of content) {
+    if (!block || typeof block !== "object") {
+      continue;
+    }
+    const text = typeof block.text === "string" ? block.text : undefined;
+    if (text && text.trim()) {
+      const trimmed = text.trim();
+      if (!isClaudeTranscriptNoiseText(trimmed)) {
+        const normalized = normalizeClaudeUserPromptText(trimmed);
+        if (normalized) {
+          parts.push(normalized);
+        }
+      }
+      continue;
+    }
+    const input = typeof block.input === "string" ? block.input : undefined;
+    if (input && input.trim()) {
+      const trimmed = input.trim();
+      if (!isClaudeTranscriptNoiseText(trimmed)) {
+        const normalized = normalizeClaudeUserPromptText(trimmed);
+        if (normalized) {
+          parts.push(normalized);
+        }
+      }
+    }
+  }
+
+  if (parts.length === 0) {
+    return null;
+  }
+
+  const combined = parts.join("\n\n").trim();
+  return combined.length > 0 ? combined : null;
+}
+
+interface PendingPermission {
+  request: AgentPermissionRequest;
+  resolve: (result: PermissionResult) => void;
+  reject: (error: Error) => void;
+  cleanup?: () => void;
+}
+
+type ToolUseClassification = "generic" | "command" | "file_change";
+interface ToolUseCacheEntry {
+  id: string;
+  name: string;
+  server: string;
+  classification: ToolUseClassification;
+  started: boolean;
+  commandText?: string;
+  files?: { path: string; kind: string }[];
+  input?: AgentMetadata | null;
+}
+function isMetadata(value: unknown): value is AgentMetadata {
+  return typeof value === "object" && value !== null;
+}
+
+function createDefaultToolUseCacheEntry(id: string, block: ClaudeContentChunk): ToolUseCacheEntry {
+  const nameFromBlock =
+    typeof block.name === "string" && block.name.length > 0 ? block.name : "tool";
+  let server: string;
+  if (typeof block.server === "string" && block.server.length > 0) {
+    server = block.server;
+  } else if (typeof block.name === "string" && block.name.length > 0) {
+    server = block.name;
+  } else {
+    server = "tool";
+  }
+  return {
+    id,
+    name: nameFromBlock,
+    server,
+    classification: "generic",
+    started: false,
+  };
+}
+
+function readTrimmedString(value: unknown): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function isPermissionMode(value: string | undefined): value is PermissionMode {
+  return typeof value === "string" && VALID_CLAUDE_MODES.has(value);
+}
+
+function isTruthyEnvValue(value: string | undefined): boolean {
+  const normalized = value?.trim().toLowerCase();
+  return (
+    normalized !== undefined &&
+    normalized.length > 0 &&
+    normalized !== "0" &&
+    normalized !== "false" &&
+    normalized !== "no" &&
+    normalized !== "off"
+  );
+}
+
+function claudeAutoModeUnavailableOn(env: NodeJS.ProcessEnv): "Bedrock" | "Vertex" | null {
+  if (isTruthyEnvValue(env.CLAUDE_CODE_USE_BEDROCK)) {
+    return "Bedrock";
+  }
+  if (isTruthyEnvValue(env.CLAUDE_CODE_USE_VERTEX)) {
+    return "Vertex";
+  }
+  return null;
+}
+
+function assertClaudeModeCanRun(mode: PermissionMode, env: NodeJS.ProcessEnv): void {
+  if (mode !== "auto") {
+    return;
+  }
+  const transport = claudeAutoModeUnavailableOn(env);
+  if (transport === null) {
+    return;
+  }
+  throw new Error(
+    `Claude Auto mode requires the Anthropic API and is not supported when Claude Code uses ${transport}. Select another permission mode or unset the ${transport === "Bedrock" ? "CLAUDE_CODE_USE_BEDROCK" : "CLAUDE_CODE_USE_VERTEX"} environment variable.`,
+  );
+}
+
+export function toClaudeSdkMcpConfig(config: McpServerConfig): ClaudeSdkMcpServerConfig {
+  const eagerTools = config.alwaysLoad === true ? { alwaysLoad: true } : {};
+  switch (config.type) {
+    case "stdio":
+      return {
+        type: "stdio",
+        command: config.command,
+        args: config.args,
+        env: config.env,
+        ...eagerTools,
+      };
+    case "http":
+      return {
+        type: "http",
+        url: config.url,
+        headers: config.headers,
+        ...eagerTools,
+      };
+    case "sse":
+      return {
+        type: "sse",
+        url: config.url,
+        headers: config.headers,
+        ...eagerTools,
+      };
+  }
+  throw new Error("Unhandled MCP server config type");
+}
+
+function isClaudeContentChunk(value: unknown): value is ClaudeContentChunk {
+  return isMetadata(value) && typeof value.type === "string";
+}
+
+function isPermissionUpdate(value: AgentPermissionUpdate): value is PermissionUpdate {
+  if (!isMetadata(value)) {
+    return false;
+  }
+  const type = value.type;
+  if (type !== "addRules" && type !== "replaceRules" && type !== "removeRules") {
+    return false;
+  }
+  const rules = value.rules;
+  const behavior = value.behavior;
+  const destination = value.destination;
+  return Array.isArray(rules) && typeof behavior === "string" && typeof destination === "string";
+}
+
+function resolvePermissionKind(
+  toolName: string,
+  input: Record<string, unknown>,
+): AgentPermissionRequestKind {
+  if (toolName === "ExitPlanMode") return "plan";
+  if (toolName === "AskUserQuestion" && Array.isArray(input.questions)) {
+    return "question";
+  }
+  return "tool";
+}
+
+// Notification previews fall back to serializing the raw request input when a
+// permission request carries no title. For AskUserQuestion that fallback is the
+// whole question object, so the notification reads as JSON. Summarize the first
+// question the same way the OMP and Pi providers do for their ask_user
+// permissions.
+function buildClaudeQuestionPermissionSummary(
+  toolName: string,
+  input: AgentMetadata,
+): { title?: string; description?: string } {
+  if (toolName !== "AskUserQuestion" || !Array.isArray(input.questions)) {
+    return {};
+  }
+
+  const question = input.questions.find(isMetadata);
+  const title = typeof question?.question === "string" ? question.question.trim() : "";
+  if (!title) {
+    return {};
+  }
+
+  const labels = Array.isArray(question?.options)
+    ? question.options
+        .map((option) => {
+          if (typeof option === "string") return option.trim();
+          return isMetadata(option) && typeof option.label === "string" ? option.label.trim() : "";
+        })
+        .filter((label) => label.length > 0)
+    : [];
+
+  return labels.length > 0 ? { title, description: labels.join(" / ") } : { title };
+}
+
+function getClaudeModeLabel(modeId: PermissionMode): string {
+  return DEFAULT_MODES.find((mode) => mode.id === modeId)?.label ?? modeId;
+}
+
+function buildClaudePlanPermissionActions(
+  resumeMode: PermissionMode | null,
+): AgentPermissionAction[] {
+  const actions: AgentPermissionAction[] = [
+    {
+      id: "reject",
+      label: "Reject",
+      behavior: "deny",
+      variant: "danger",
+      intent: "dismiss",
+    },
+    {
+      id: "implement",
+      label: "Implement",
+      behavior: "allow",
+      variant: "primary",
+      intent: "implement",
+    },
+  ];
+
+  if (resumeMode === "bypassPermissions" || resumeMode === "auto") {
+    actions.push({
+      id: "implement_resume",
+      label: `Implement with ${getClaudeModeLabel(resumeMode)}`,
+      behavior: "allow",
+      variant: "secondary",
+      intent: "implement_resume",
+    });
+  }
+
+  return actions;
+}
+
+interface TimelineFragment {
+  kind: "assistant" | "reasoning";
+  text: string;
+}
+
+interface TimelineMessageState {
+  id: string;
+  assistantText: string;
+  reasoningText: string;
+  emittedAssistantLength: number;
+  emittedReasoningLength: number;
+  stopped: boolean;
+}
+
+class TimelineAssembler {
+  private readonly messages = new Map<string, TimelineMessageState>();
+  private readonly finalizedMessageIds = new Set<string>();
+  private readonly activeMessageByRun = new Map<string, string>();
+  private syntheticMessageCounter = 0;
+
+  consume(input: {
+    message: SDKMessage;
+    runId: string | null;
+    messageIdHint?: string | null;
+  }): AgentTimelineItem[] {
+    if (input.message.type === "assistant") {
+      return this.consumeAssistantMessage(input.message, input.runId, input.messageIdHint ?? null);
+    }
+    if (input.message.type === "stream_event") {
+      return this.consumeStreamEvent(input.message, input.runId, input.messageIdHint ?? null);
+    }
+    return [];
+  }
+
+  private consumeAssistantMessage(
+    message: SDKMessage & { type: "assistant" },
+    runId: string | null,
+    messageIdHint: string | null,
+  ): AgentTimelineItem[] {
+    const messageId =
+      this.readMessageIdFromAssistantMessage(message) ??
+      messageIdHint ??
+      this.resolveMessageId({ runId, createIfMissing: true, messageId: null });
+    if (!messageId) {
+      return [];
+    }
+    if (this.finalizedMessageIds.has(messageId)) {
+      return [];
+    }
+    const state = this.ensureMessageState(messageId, runId);
+    const fragments = this.extractFragments(message.message?.content);
+    return this.applyAbsoluteFragments(state, fragments);
+  }
+
+  private consumeStreamEvent(
+    message: SDKMessage & { type: "stream_event" },
+    runId: string | null,
+    messageIdHint: string | null,
+  ): AgentTimelineItem[] {
+    const event = toObjectRecord(message.event) ?? {};
+    const eventType = readTrimmedString(event.type);
+    const streamEventMessageId = this.readMessageIdFromStreamEvent(event) ?? messageIdHint;
+
+    if (eventType === "message_start") {
+      const messageId = this.resolveMessageId({
+        runId,
+        createIfMissing: true,
+        messageId: streamEventMessageId,
+      });
+      if (!messageId) {
+        return [];
+      }
+      this.ensureMessageState(messageId, runId);
+      return [];
+    }
+
+    if (eventType === "message_stop") {
+      const messageId = this.resolveMessageId({
+        runId,
+        createIfMissing: false,
+        messageId: streamEventMessageId,
+      });
+      if (!messageId) {
+        return [];
+      }
+      return this.finalizeMessage(messageId, runId);
+    }
+
+    if (eventType === "content_block_start") {
+      return this.consumeDeltaContent(event.content_block, runId, streamEventMessageId);
+    }
+
+    if (eventType === "content_block_delta") {
+      return this.consumeDeltaContent(event.delta, runId, streamEventMessageId);
+    }
+
+    return [];
+  }
+
+  private consumeDeltaContent(
+    content: unknown,
+    runId: string | null,
+    messageIdHint: string | null,
+  ): AgentTimelineItem[] {
+    const fragments = this.extractFragments(content);
+    if (fragments.length === 0) {
+      return [];
+    }
+    const messageId = this.resolveMessageId({
+      runId,
+      createIfMissing: true,
+      messageId: messageIdHint,
+    });
+    if (!messageId) {
+      return [];
+    }
+    const state = this.ensureMessageState(messageId, runId);
+    return this.appendFragments(state, fragments);
+  }
+
+  private appendFragments(
+    state: TimelineMessageState,
+    fragments: TimelineFragment[],
+  ): AgentTimelineItem[] {
+    for (const fragment of fragments) {
+      if (fragment.kind === "assistant") {
+        state.assistantText += fragment.text;
+      } else {
+        state.reasoningText += fragment.text;
+      }
+    }
+    return this.emitNewContent(state);
+  }
+
+  private applyAbsoluteFragments(
+    state: TimelineMessageState,
+    fragments: TimelineFragment[],
+  ): AgentTimelineItem[] {
+    const assistantText = fragments
+      .filter((fragment) => fragment.kind === "assistant")
+      .map((fragment) => fragment.text)
+      .join("");
+    const reasoningText = fragments
+      .filter((fragment) => fragment.kind === "reasoning")
+      .map((fragment) => fragment.text)
+      .join("");
+
+    if (assistantText.length > 0) {
+      if (!assistantText.startsWith(state.assistantText)) {
+        state.emittedAssistantLength = 0;
+      }
+      state.assistantText = assistantText;
+    }
+    if (reasoningText.length > 0) {
+      if (!reasoningText.startsWith(state.reasoningText)) {
+        state.emittedReasoningLength = 0;
+      }
+      state.reasoningText = reasoningText;
+    }
+    return this.emitNewContent(state);
+  }
+
+  private finalizeMessage(messageId: string, runId: string | null): AgentTimelineItem[] {
+    const state = this.messages.get(messageId);
+    if (!state) {
+      return [];
+    }
+    state.stopped = true;
+    const items = this.emitNewContent(state);
+    if (runId && this.activeMessageByRun.get(runId) === messageId) {
+      this.activeMessageByRun.delete(runId);
+    }
+    this.finalizedMessageIds.add(messageId);
+    this.messages.delete(messageId);
+    return items;
+  }
+
+  private emitNewContent(state: TimelineMessageState): AgentTimelineItem[] {
+    const items: AgentTimelineItem[] = [];
+    const nextAssistantText = state.assistantText.slice(state.emittedAssistantLength);
+    if (
+      nextAssistantText.length > 0 &&
+      nextAssistantText !== INTERRUPT_TOOL_USE_PLACEHOLDER &&
+      !isClaudeTranscriptNoiseText(nextAssistantText)
+    ) {
+      state.emittedAssistantLength = state.assistantText.length;
+      items.push({ type: "assistant_message", text: nextAssistantText, messageId: state.id });
+    }
+
+    const nextReasoningText = state.reasoningText.slice(state.emittedReasoningLength);
+    if (nextReasoningText.length > 0) {
+      state.emittedReasoningLength = state.reasoningText.length;
+      items.push({ type: "reasoning", text: nextReasoningText });
+    }
+    return items;
+  }
+
+  private ensureMessageState(messageId: string, runId: string | null): TimelineMessageState {
+    const existing = this.messages.get(messageId);
+    if (existing) {
+      existing.stopped = false;
+      if (runId) {
+        this.activeMessageByRun.set(runId, messageId);
+      }
+      return existing;
+    }
+    const created: TimelineMessageState = {
+      id: messageId,
+      assistantText: "",
+      reasoningText: "",
+      emittedAssistantLength: 0,
+      emittedReasoningLength: 0,
+      stopped: false,
+    };
+    this.messages.set(messageId, created);
+    if (runId) {
+      this.activeMessageByRun.set(runId, messageId);
+    }
+    return created;
+  }
+
+  private resolveMessageId(input: {
+    runId: string | null;
+    createIfMissing: boolean;
+    messageId: string | null;
+  }): string | null {
+    if (input.messageId) {
+      return input.messageId;
+    }
+    if (input.runId) {
+      const active = this.activeMessageByRun.get(input.runId);
+      if (active) {
+        return active;
+      }
+    }
+    if (!input.createIfMissing) {
+      return null;
+    }
+    const synthetic = `synthetic-message-${++this.syntheticMessageCounter}`;
+    if (input.runId) {
+      this.activeMessageByRun.set(input.runId, synthetic);
+    }
+    return synthetic;
+  }
+
+  private extractFragments(content: unknown): TimelineFragment[] {
+    if (typeof content === "string") {
+      if (content.length === 0) {
+        return [];
+      }
+      return [{ kind: "assistant", text: content }];
+    }
+    const blocks = Array.isArray(content) ? content : [content];
+    const fragments: TimelineFragment[] = [];
+    for (const rawBlock of blocks) {
+      if (!isClaudeContentChunk(rawBlock)) {
+        continue;
+      }
+      if (
+        (rawBlock.type === "text" || rawBlock.type === "text_delta") &&
+        typeof rawBlock.text === "string" &&
+        rawBlock.text.length > 0
+      ) {
+        fragments.push({ kind: "assistant", text: rawBlock.text });
+      }
+      if (
+        (rawBlock.type === "thinking" || rawBlock.type === "thinking_delta") &&
+        typeof rawBlock.thinking === "string" &&
+        rawBlock.thinking.length > 0
+      ) {
+        fragments.push({ kind: "reasoning", text: rawBlock.thinking });
+      }
+    }
+    return fragments;
+  }
+
+  private readMessageIdFromAssistantMessage(
+    message: SDKMessage & { type: "assistant" },
+  ): string | null {
+    const candidate = toObjectRecord(message);
+    const messageContainer = toObjectRecord(candidate?.message);
+    return (
+      readTrimmedString(candidate?.message_id) ?? readTrimmedString(messageContainer?.id) ?? null
+    );
+  }
+
+  private readMessageIdFromStreamEvent(event: Record<string, unknown>): string | null {
+    const messageContainer = toObjectRecord(event.message);
+    return readTrimmedString(event.message_id) ?? readTrimmedString(messageContainer?.id) ?? null;
+  }
+}
+
+function isSyntheticUserEntry(entry: unknown): boolean {
+  const candidate = toObjectRecord(entry);
+  if (!candidate) {
+    return false;
+  }
+  return (
+    candidate.isSynthetic === true || candidate.isMeta === true || Boolean(candidate.toolUseResult)
+  );
+}
+
+function isToolResultUserEntry(entry: unknown): boolean {
+  const candidate = toObjectRecord(entry);
+  if (!candidate) {
+    return false;
+  }
+  const message = toObjectRecord(candidate.message);
+  const content = message?.content;
+  return (
+    Array.isArray(content) && content.some((block) => toObjectRecord(block)?.type === "tool_result")
+  );
+}
+
+function isSyntheticHistoryUserEntry(entry: Record<string, unknown>): boolean {
+  return isSyntheticUserEntry(entry) && !isToolResultUserEntry(entry);
+}
+
+function firstTrimmedString(sources: readonly unknown[]): string | null {
+  for (const source of sources) {
+    const value = readTrimmedString(source);
+    if (value) {
+      return value;
+    }
+  }
+  return null;
+}
+
+export function readEventIdentifiers(message: SDKMessage): EventIdentifiers {
+  const root = toObjectRecord(message) ?? {};
+  const messageType = readTrimmedString(root.type);
+  const streamEvent = toObjectRecord(root.event);
+  const streamEventMessage = toObjectRecord(streamEvent?.message);
+  const messageContainer = toObjectRecord(root.message);
+
+  const messageIdFromUuid =
+    messageType === "user" || messageType === "assistant" || messageType === "system"
+      ? root.uuid
+      : undefined;
+
+  return {
+    taskId: firstTrimmedString([
+      root.task_id,
+      streamEvent?.task_id,
+      streamEventMessage?.task_id,
+      messageContainer?.task_id,
+    ]),
+    parentMessageId: firstTrimmedString([
+      root.parent_message_id,
+      streamEvent?.parent_message_id,
+      streamEventMessage?.parent_message_id,
+      messageContainer?.parent_message_id,
+    ]),
+    messageId: firstTrimmedString([
+      root.message_id,
+      streamEvent?.message_id,
+      streamEventMessage?.id,
+      streamEventMessage?.message_id,
+      messageContainer?.id,
+      messageContainer?.message_id,
+      messageIdFromUuid,
+    ]),
+  };
+}
+
+function extractContextWindowSize(
+  modelUsage: unknown,
+  modelId: string | null | undefined,
+): number | undefined {
+  const usageRecord = toObjectRecord(modelUsage);
+  if (!usageRecord) {
+    return undefined;
+  }
+
+  // modelUsage accumulates every model used in the session, including earlier turns
+  // and subagents. Only the active model describes this turn's context capacity.
+  const modelUsageEntry = modelId ? usageRecord[modelId] : undefined;
+  const contextWindow = toObjectRecord(modelUsageEntry)?.contextWindow;
+  return typeof contextWindow === "number" && Number.isFinite(contextWindow) && contextWindow > 0
+    ? contextWindow
+    : undefined;
+}
+
+interface StreamRequestInputUsage {
+  inputTokens: number;
+  cacheCreationInputTokens: number;
+  cacheReadInputTokens: number;
+}
+
+function readUsageCount(usage: Record<string, unknown>, key: string): number | undefined {
+  const value = usage[key];
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    return undefined;
+  }
+  return value;
+}
+
+function readStreamRequestInputUsage(
+  event: Record<string, unknown>,
+): StreamRequestInputUsage | undefined {
+  const usage = toObjectRecord(toObjectRecord(event.message)?.usage);
+  if (!usage) {
+    return undefined;
+  }
+  const inputTokens = readUsageCount(usage, "input_tokens");
+  if (inputTokens === undefined) {
+    return undefined;
+  }
+  return {
+    inputTokens,
+    cacheCreationInputTokens: readUsageCount(usage, "cache_creation_input_tokens") ?? 0,
+    cacheReadInputTokens: readUsageCount(usage, "cache_read_input_tokens") ?? 0,
+  };
+}
+
+/**
+ * The input counters on `message_delta.usage` are cumulative whole-request totals and are
+ * optional. Mirror the Anthropic SDK's MessageStream: a counter present on the delta replaces
+ * the `message_start` value, a missing counter keeps it. Translating gateways report
+ * `input_tokens: 0` on `message_start` and only know the real count by `message_delta`.
+ */
+function mergeStreamDeltaInputUsage(
+  current: StreamRequestInputUsage,
+  event: Record<string, unknown>,
+): StreamRequestInputUsage {
+  const usage = toObjectRecord(event.usage);
+  if (!usage) {
+    return current;
+  }
+  return {
+    inputTokens: readUsageCount(usage, "input_tokens") ?? current.inputTokens,
+    cacheCreationInputTokens:
+      readUsageCount(usage, "cache_creation_input_tokens") ?? current.cacheCreationInputTokens,
+    cacheReadInputTokens:
+      readUsageCount(usage, "cache_read_input_tokens") ?? current.cacheReadInputTokens,
+  };
+}
+
+function readStreamRequestOutputTokens(event: Record<string, unknown>): number | undefined {
+  const outputTokens = toObjectRecord(event.usage)?.output_tokens;
+  if (typeof outputTokens !== "number" || !Number.isFinite(outputTokens) || outputTokens < 0) {
+    return undefined;
+  }
+  return outputTokens;
+}
+
+function readLastUsageIteration(usage: unknown): Record<string, unknown> | undefined {
+  const iterations = toObjectRecord(usage)?.iterations;
+  if (!Array.isArray(iterations)) {
+    return undefined;
+  }
+  for (let index = iterations.length - 1; index >= 0; index -= 1) {
+    const candidate = toObjectRecord(iterations[index]);
+    if (candidate) {
+      return candidate;
+    }
+  }
+  return undefined;
+}
+
+function readUsageTokenTotal(usage: Record<string, unknown>): number | undefined {
+  const usageWithCacheCreation = usage as typeof usage & {
+    cache_creation_input_tokens?: unknown;
+  };
+  const inputTokens =
+    typeof usage.input_tokens === "number" && Number.isFinite(usage.input_tokens)
+      ? usage.input_tokens
+      : 0;
+  const cacheCreationInputTokens =
+    typeof usageWithCacheCreation.cache_creation_input_tokens === "number" &&
+    Number.isFinite(usageWithCacheCreation.cache_creation_input_tokens)
+      ? usageWithCacheCreation.cache_creation_input_tokens
+      : 0;
+  const cacheReadInputTokens =
+    typeof usage.cache_read_input_tokens === "number" &&
+    Number.isFinite(usage.cache_read_input_tokens)
+      ? usage.cache_read_input_tokens
+      : 0;
+  const outputTokens =
+    typeof usage.output_tokens === "number" && Number.isFinite(usage.output_tokens)
+      ? usage.output_tokens
+      : 0;
+  const total = inputTokens + cacheCreationInputTokens + cacheReadInputTokens + outputTokens;
+  return total > 0 ? total : undefined;
+}
+
+function readActiveUsageTokens(usage: unknown): number | undefined {
+  const activeUsage = readLastUsageIteration(usage);
+  return activeUsage ? readUsageTokenTotal(activeUsage) : undefined;
+}
+
+function readLegacyResultUsageTokens(usage: unknown): number | undefined {
+  const usageRecord = toObjectRecord(usage);
+  return usageRecord ? readUsageTokenTotal(usageRecord) : undefined;
+}
+
+function isClaudeSubagentToolName(name: string | undefined): boolean {
+  return name === "Task" || name === "Agent" || name === "Workflow";
+}
+
+function readClaudeParentToolUseId(message: SDKMessage): string | null {
+  if (!("parent_tool_use_id" in message)) {
+    return null;
+  }
+  // Claude Code's liveness tick for a tool still running after 30 s names that tool as its
+  // parent, so a long main-thread call would otherwise read as a subagent.
+  if (message.type === "tool_progress" && message.heartbeat === true) {
+    return null;
+  }
+  const parentToolUseId = (message as { parent_tool_use_id?: unknown }).parent_tool_use_id;
+  return typeof parentToolUseId === "string" && parentToolUseId.length > 0 ? parentToolUseId : null;
+}
+
+class ClaudeContextUsageState {
+  private contextWindowMaxTokens: number | undefined;
+  private streamRequestInputUsage: StreamRequestInputUsage | undefined;
+  private streamRequestOutputTokens: number | undefined;
+  private compactedContextWindowUsedTokens: number | undefined;
+  private completedResultTurns = 0;
+
+  constructor(initialContextWindowMaxTokens?: number) {
+    this.contextWindowMaxTokens = initialContextWindowMaxTokens;
+  }
+
+  beginTurn(): void {
+    this.streamRequestInputUsage = undefined;
+    this.streamRequestOutputTokens = undefined;
+    this.compactedContextWindowUsedTokens = undefined;
+  }
+
+  setInitialContextWindowMaxTokens(contextWindowMaxTokens: number | undefined): void {
+    this.contextWindowMaxTokens = contextWindowMaxTokens;
+  }
+
+  recordModelUsage(modelUsage: unknown, modelId: string | null | undefined): number | undefined {
+    const contextWindowMaxTokens = extractContextWindowSize(modelUsage, modelId);
+    if (contextWindowMaxTokens !== undefined) {
+      this.contextWindowMaxTokens = contextWindowMaxTokens;
+    }
+    return this.contextWindowMaxTokens;
+  }
+
+  buildStreamUsageEvent(event: unknown): AgentStreamEvent | null {
+    const streamEvent = toObjectRecord(event);
+    if (!streamEvent) {
+      return null;
+    }
+    const eventType = readTrimmedString(streamEvent.type);
+    if (eventType === "message_start") {
+      const inputUsage = readStreamRequestInputUsage(streamEvent);
+      if (!inputUsage) {
+        return null;
+      }
+      this.streamRequestInputUsage = inputUsage;
+      this.streamRequestOutputTokens = 0;
+    } else if (eventType === "message_delta") {
+      const outputTokens = readStreamRequestOutputTokens(streamEvent);
+      if (typeof outputTokens !== "number") {
+        return null;
+      }
+      this.streamRequestOutputTokens = outputTokens;
+      if (this.streamRequestInputUsage) {
+        this.streamRequestInputUsage = mergeStreamDeltaInputUsage(
+          this.streamRequestInputUsage,
+          streamEvent,
+        );
+      }
+    } else {
+      return null;
+    }
+
+    const usedTokens = this.streamUsedTokens();
+    if (usedTokens === undefined) {
+      return null;
+    }
+    return this.createUsageUpdatedEvent(usedTokens);
+  }
+
+  buildResultUsage(
+    message: SDKResultMessage,
+    modelId: string | null | undefined,
+  ): AgentUsage | undefined {
+    try {
+      if (!message.usage) {
+        return undefined;
+      }
+      const usage: AgentUsage = {
+        inputTokens: message.usage.input_tokens,
+        cachedInputTokens: message.usage.cache_read_input_tokens,
+        outputTokens: message.usage.output_tokens,
+        totalCostUsd: message.total_cost_usd,
+      };
+
+      const modelContextWindowMaxTokens = this.recordModelUsage(message.modelUsage, modelId);
+      if (this.contextWindowMaxTokens !== undefined) {
+        usage.contextWindowMaxTokens = this.contextWindowMaxTokens;
+      } else if (modelContextWindowMaxTokens !== undefined) {
+        usage.contextWindowMaxTokens = modelContextWindowMaxTokens;
+      }
+
+      const activeResultUsageTokens =
+        readActiveUsageTokens(message.usage) ??
+        (this.completedResultTurns === 0 ? readLegacyResultUsageTokens(message.usage) : undefined);
+      const usedTokens =
+        this.streamUsedTokens() ?? activeResultUsageTokens ?? this.compactedContextWindowUsedTokens;
+      if (usedTokens !== undefined) {
+        usage.contextWindowUsedTokens = usedTokens;
+      }
+      return usage;
+    } finally {
+      this.compactedContextWindowUsedTokens = undefined;
+      this.completedResultTurns += 1;
+    }
+  }
+
+  private streamUsedTokens(): number | undefined {
+    const inputUsage = this.streamRequestInputUsage;
+    if (!inputUsage || typeof this.streamRequestOutputTokens !== "number") {
+      return undefined;
+    }
+    const usedTokens =
+      inputUsage.inputTokens +
+      inputUsage.cacheCreationInputTokens +
+      inputUsage.cacheReadInputTokens +
+      this.streamRequestOutputTokens;
+    return usedTokens > 0 ? usedTokens : undefined;
+  }
+
+  private createUsageUpdatedEvent(contextWindowUsedTokens: number): AgentStreamEvent {
+    const usage: AgentUsage = {
+      contextWindowUsedTokens,
+    };
+    if (this.contextWindowMaxTokens !== undefined) {
+      usage.contextWindowMaxTokens = this.contextWindowMaxTokens;
+    }
+    return {
+      type: "usage_updated",
+      provider: "claude",
+      usage,
+    };
+  }
+
+  buildCompactionUsageEvent(postTokens: number | undefined): AgentStreamEvent {
+    this.streamRequestInputUsage = undefined;
+    this.streamRequestOutputTokens = undefined;
+    this.compactedContextWindowUsedTokens = postTokens;
+    const usage: AgentUsage = {};
+    if (this.contextWindowMaxTokens !== undefined) {
+      usage.contextWindowMaxTokens = this.contextWindowMaxTokens;
+    }
+    if (postTokens !== undefined) {
+      usage.contextWindowUsedTokens = postTokens;
+    }
+    return {
+      type: "usage_updated",
+      provider: "claude",
+      usage,
+    };
+  }
+}
+
+// 灵鲸改：公共契约适配器直接持有会话；删除 Paseo 的目录、导入、诊断认证与回滚产品入口。
+export class ClaudeAgentSession implements AgentSession {
+  readonly provider = "claude" as const;
+  readonly capabilities = CLAUDE_CAPABILITIES;
+
+  private readonly config: ClaudeAgentConfig;
+  private readonly launchEnv?: Record<string, string>;
+  private readonly agentId?: string;
+  private readonly defaults?: { agents?: Record<string, AgentDefinition> };
+  private readonly runtimeSettings?: ProviderRuntimeSettings;
+  private readonly persistSession?: boolean;
+  private readonly logger: Logger;
+  private readonly queryFactory?: ClaudeQueryFactory;
+  private readonly resolveBinary: () => Promise<string>;
+  private query: Query | null = null;
+  private openingQuery: Promise<Query> | null = null;
+  private readonly runtimeSafety = new ClaudeRuntimeSafety();
+  private processingSdkMessages = 0;
+  private readonly harnessEnvironment: Record<string, string>;
+  private readonly usageSessionKey = randomUUID();
+  private childProcess: SpawnedProcess | null = null;
+  private readonly adapter: ClaudeAgentSessionOptions;
+  private input: AsyncMessageInput<SDKUserMessage> | null = null;
+  /** The exact SDK query/input pair that owns the current foreground turn. */
+  private activeForegroundQuery: Query | null = null;
+  private activeForegroundInput: AsyncMessageInput<SDKUserMessage> | null = null;
+  /**
+   * Messages pushed into the live SDK input (steers, and a foreground turn's own prompt) whose
+   * command_lifecycle has not reached "started". Interrupting has to withdraw them, or the SDK
+   * dequeues one and resumes the turn we just stopped. SDK user UUIDs are provider-private; never
+   * let them escape the adapter boundary.
+   */
+  private readonly unstartedMessageUuids = new Set<string>();
+  /** Human steers whose text has not reached Claude yet and therefore supersede blocking cards. */
+  private readonly permissionClearingSteerUuids = new Set<string>();
+  private claudeSessionId: string | null;
+  private persistence: AgentPersistenceHandle | null;
+  private currentMode: PermissionMode;
+  private planResumeMode: PermissionMode | null = null;
+  private availableModes: AgentMode[] = DEFAULT_MODES;
+  private toolUseCache = new Map<string, ToolUseCacheEntry>();
+  private toolUseIndexToId = new Map<number, string>();
+  private toolUseInputBuffers = new Map<string, string>();
+  private subagentHandbackIds = new Set<string>();
+  private pendingPermissions = new Map<string, PendingPermission>();
+  private activeForegroundTurnId: string | null = null;
+  private autonomousTurn: AutonomousTurnState | null = null;
+  private readonly subscribers = new Set<(event: AgentStreamEvent) => void>();
+  private readonly timelineAssembler = new TimelineAssembler();
+  private readonly taskState = new ClaudeTaskState();
+  private readonly taskProtocolSource = new ClaudeTaskProtocolSource({
+    getToolInput: (toolUseId) => this.toolUseCache.get(toolUseId)?.input ?? null,
+    readWorkflowResult: (file) => readClaudeWorkflowResultFile(file, claudeConfigDir(this.harnessEnvironment)),
+  });
+  /**
+   * Subagent tool calls Claude has already answered while the child still runs, with the input
+   * they were launched with and the turn that answered them. A background child is answered at
+   * launch and streams its frames afterwards.
+   */
+  private readonly settledSubagentToolCalls = new Map<
+    string,
+    {
+      item: Extract<AgentTimelineItem, { type: "tool_call" }>;
+      input: AgentMetadata | null;
+      turnId: string | null;
+    }
+  >();
+  private readonly sidechainTracker = new ClaudeSidechainTracker({
+    getToolInput: (toolUseId) =>
+      this.toolUseCache.get(toolUseId)?.input ??
+      this.settledSubagentToolCalls.get(toolUseId)?.input ??
+      null,
+    // Releases that predate the task protocol announce nothing, so the tracker keeps deriving
+    // identity and status from frames for them. Detecting the capability beats comparing version
+    // strings: it reacts to what this session actually does.
+    isDescriptorOwnedElsewhere: () => this.taskProtocolSource.isActive,
+    // A background child streams its frames after Claude has already answered the call, so its
+    // card is rebuilt from the settled call: a running one would replace the settled, labeled card.
+    // Late card updates retain the turn that answered the call.
+    needsSyntheticParentToolCard: (toolUseId) =>
+      (this.toolUseCache.has(toolUseId) || this.settledSubagentToolCalls.has(toolUseId)) &&
+      this.taskProtocolSource.needsSyntheticParentToolCard(toolUseId),
+    getSettledParentToolCall: (toolUseId) => this.settledSubagentToolCalls.get(toolUseId)?.item,
+  });
+  private persistedHistory: PersistedTimelineEntry[] = [];
+  private persistedProviderSubagentEvents: Extract<
+    AgentStreamEvent,
+    { type: "provider_subagent" }
+  >[] = [];
+  private historyPending = false;
+  // Readiness never rejects; history/rebind failures are logged at their owning boundary.
+  private historyReady: Promise<void> | null = null;
+  private historySessionId: string | null = null;
+  private replayingHistory = false;
+  private turnState: TurnState = "idle";
+  private nextTurnOrdinal = 1;
+  private cachedRuntimeInfo: AgentRuntimeInfo | null = null;
+  private lastOptionsModel: string | null = null;
+  private lastRuntimeModel: string | null = null;
+  private compacting = false;
+  private compactionMarkerOpen = false;
+  private queryPumpPromise: Promise<void> | null = null;
+  private queryRestartNeeded = false;
+  private pendingInterruptAbort = false;
+  private lastResultTurnId: string | undefined;
+  private interruptInFlight: Promise<void> | null = null;
+  private interruptedResult: { turnId: string; resolve: () => void } | null = null;
+  /**
+   * Whether Claude's main session is inside one of its own turns: set by system/init and by a
+   * pushed message's command_lifecycle "started" (/compact works for seconds before its init),
+   * cleared by the turn's result or an idle session state. See observeMainTurnBracket.
+   */
+  private mainTurnInFlight = false;
+  private foregroundHasVisibleActivity = false;
+  private activeTurnHasAssistantText = false;
+  /**
+   * The reply Claude Code writes when a turn stops on an API error ("You've hit your session
+   * limit", "API Error: 529 ..."), held back until the result says whether the turn failed: a
+   * failed turn shows the same text as its error, so showing both would repeat it.
+   */
+  private withheldErrorReply: AgentTimelineItem[] = [];
+  private readonly contextUsage: ClaudeContextUsageState;
+  private userMessageIds: string[] = [];
+  private readonly emittedUserMessageIds = new Set<string>();
+  private pendingFreshSessionId: string | null = null;
+  private recentStderr = "";
+  private closed = false;
+  private resumeRejected = false;
+  // 灵鲸改：close 直接取消身份等待，不依赖 SDK 的回调取消时机。
+  private readonly lifetime = new AbortController();
+
+  constructor(config: ClaudeAgentConfig, options: ClaudeAgentSessionOptions) {
+    this.config = config;
+    this.adapter = options;
+
+    this.launchEnv = options.launchEnv;
+    this.agentId = options.agentId;
+    this.defaults = options.defaults;
+    this.runtimeSettings = options.runtimeSettings;
+    this.harnessEnvironment = this.buildSdkEnv();
+    this.persistSession = options.persistSession;
+    this.logger = options.logger.child({ agentId: this.agentId });
+    this.queryFactory = options.queryFactory;
+    this.resolveBinary = options.resolveBinary;
+
+    this.contextUsage = new ClaudeContextUsageState(
+      getClaudeContextWindowMaxTokens(this.config.model),
+    );
+    const handle = options.handle;
+
+    if (handle) {
+      if (!handle.sessionId) {
+        throw new Error("Cannot resume: persistence handle has no sessionId");
+      }
+      this.claudeSessionId = handle.sessionId;
+      this.persistence = handle;
+      this.historySessionId = handle.sessionId;
+    } else {
+      this.claudeSessionId = null;
+      this.persistence = null;
+    }
+
+    // Validate mode if provided
+    if (config.modeId && !VALID_CLAUDE_MODES.has(config.modeId)) {
+      const validModesList = Array.from(VALID_CLAUDE_MODES).join(", ");
+      throw new Error(
+        `Invalid mode '${config.modeId}' for Claude provider. Valid modes: ${validModesList}`,
+      );
+    }
+
+    this.currentMode = isPermissionMode(config.modeId) ? config.modeId : "default";
+    if (this.currentMode !== "plan") {
+      this.planResumeMode = this.currentMode;
+    }
+  }
+
+  get id(): string | null {
+    return this.claudeSessionId;
+  }
+
+  async getRuntimeInfo(): Promise<AgentRuntimeInfo> {
+    if (this.cachedRuntimeInfo) {
+      return { ...this.cachedRuntimeInfo };
+    }
+    const info: AgentRuntimeInfo = {
+      provider: "claude",
+      sessionId: this.claudeSessionId,
+      model: this.lastOptionsModel ?? this.config.model ?? null,
+      modeId: this.currentMode ?? null,
+      ...(this.lastRuntimeModel
+        ? {
+            extra: {
+              runtimeModel: this.lastRuntimeModel,
+            },
+          }
+        : {}),
+    };
+    this.cachedRuntimeInfo = info;
+    return { ...info };
+  }
+
+  async run(prompt: AgentPromptInput, options?: AgentRunOptions): Promise<AgentRunResult> {
+    const result = await runProviderTurn({
+      prompt,
+      runOptions: options,
+      startTurn: (p, o) => this.startTurn(p, o),
+      subscribe: (callback) => this.subscribe(callback),
+      getSessionId: () => this.claudeSessionId ?? "",
+      reduceFinalText: appendOrReplaceGrowingAssistantMessage,
+    });
+
+    this.cachedRuntimeInfo = {
+      provider: "claude",
+      sessionId: this.claudeSessionId,
+      model: this.lastOptionsModel,
+      modeId: this.currentMode ?? null,
+    };
+
+    if (!this.claudeSessionId) {
+      throw new Error("Session ID not set after run completed");
+    }
+
+    return result;
+  }
+
+  async startTurn(
+    prompt: AgentPromptInput,
+    options?: AgentRunOptions,
+  ): Promise<{ turnId: string }> {
+    await this.ensureHistoryReady();
+    if (this.closed || this.resumeRejected) {
+      throw new Error("Claude session is unavailable; open a new session after restoring native data");
+    }
+    if (this.interruptInFlight || this.activeForegroundTurnId) {
+      throw new Error("A foreground turn is active or stopping");
+    }
+
+    if (this.autonomousTurn) {
+      this.completeAutonomousTurn();
+    }
+
+    const sdkMessage = this.toSdkUserMessage(prompt);
+    const sdkUserMessageId =
+      typeof sdkMessage.uuid === "string" && sdkMessage.uuid.length > 0 ? sdkMessage.uuid : null;
+    const turnId = this.createTurnId("foreground");
+    this.activeForegroundTurnId = turnId;
+    this.foregroundHasVisibleActivity = false;
+    this.activeTurnHasAssistantText = false;
+    this.withheldErrorReply = [];
+    this.adapter.onTurn?.();
+    this.contextUsage.beginTurn();
+    this.transitionTurnState("foreground", "foreground turn started");
+    this.clearRecentStderr();
+    if (sdkUserMessageId) this.unstartedMessageUuids.add(sdkUserMessageId);
+
+    this.notifySubscribers({ type: "turn_started", provider: "claude" });
+
+    try {
+      await this.ensureQuery();
+      // 灵鲸改：启动期间取消只撤这次捕获的回合，不能在 query 就绪后重新推送旧输入。
+      if (this.activeForegroundTurnId !== turnId || this.closed || this.interruptInFlight) {
+        if (sdkUserMessageId) this.unstartedMessageUuids.delete(sdkUserMessageId);
+        return { turnId };
+      }
+      if (!this.input) {
+        throw new Error("Claude session input stream not initialized");
+      }
+      this.activeForegroundQuery = this.query;
+      this.activeForegroundInput = this.input;
+      this.startQueryPump();
+      this.input.push(sdkMessage);
+      setTimeout(() => {
+        if (this.activeForegroundTurnId === turnId) {
+          void this.emitSubmittedUserMessage(sdkMessage, turnId, options?.clientMessageId).catch(
+            (error: unknown) => {
+              this.logger.warn({ err: error }, "Failed to emit submitted Claude message");
+            },
+          );
+        }
+      }, 0);
+    } catch (error) {
+      if (sdkUserMessageId) this.unstartedMessageUuids.delete(sdkUserMessageId);
+      this.finishForegroundTurn(
+        this.buildTurnFailedEvent(error instanceof Error ? error.message : "Claude stream failed"),
+      );
+    }
+
+    return { turnId };
+  }
+
+  async steerActiveTurn(
+    prompt: AgentPromptInput,
+    options: SteerActiveTurnOptions,
+  ): Promise<SteerResult> {
+    if (this.resolveSlashCommandInvocation(prompt)) {
+      return { status: "unavailable" };
+    }
+    const activeTurnId = this.activeForegroundTurnId ?? this.autonomousTurn?.id;
+    if (this.compacting || activeTurnId !== options.expectedTurnId) {
+      return { status: "unavailable" };
+    }
+
+    // Capture both ends of the live SDK stream before creating or delivering the message. There
+    // is deliberately no await below: a finished A cannot make this input point at a later B.
+    const query = this.activeForegroundQuery;
+    const input = this.activeForegroundInput;
+    if (!query || !input || this.query !== query || this.input !== input) {
+      return { status: "unavailable" };
+    }
+    const message = this.toSdkUserMessage(prompt);
+    message.priority = "next";
+    if (
+      (this.activeForegroundTurnId ?? this.autonomousTurn?.id) !== options.expectedTurnId ||
+      this.activeForegroundQuery !== query ||
+      this.activeForegroundInput !== input ||
+      this.query !== query ||
+      this.input !== input
+    ) {
+      return { status: "unavailable" };
+    }
+    this.enqueueSteer(input, message, options.clearPendingPermissions === true);
+    return { status: "accepted", ...(message.uuid ? { providerMessageId: message.uuid } : {}) };
+  }
+
+  private enqueueSteer(
+    input: AsyncMessageInput<SDKUserMessage>,
+    message: SDKUserMessage,
+    clearPendingPermissions: boolean,
+  ): void {
+    const uuid = message.uuid;
+    if (uuid) this.unstartedMessageUuids.add(uuid);
+    if (uuid && clearPendingPermissions) {
+      this.permissionClearingSteerUuids.add(uuid);
+    }
+    try {
+      input.push(message);
+      if (clearPendingPermissions) {
+        this.denyPendingPermissionsSupersededBySteer();
+      }
+    } catch (error) {
+      if (uuid) {
+        this.unstartedMessageUuids.delete(uuid);
+        this.permissionClearingSteerUuids.delete(uuid);
+      }
+      throw error;
+    }
+  }
+
+  subscribe(callback: (event: AgentStreamEvent) => void): () => void {
+    this.subscribers.add(callback);
+    return () => {
+      this.subscribers.delete(callback);
+    };
+  }
+
+  // 灵鲸改：取消原因由契约适配器决定；停止用原生 task_id，不用公开 childId。
+  async stopTasks(): Promise<void> {
+    const query = this.query;
+    if (!query) return;
+    for (const taskId of this.runtimeSafety.tasksToStop()) await this.adapter.diagnostics.protect(() => query.stopTask(taskId));
+  }
+
+  /** 灵鲸改：回合之间改了 SDK 选项（如 thinking 档位）后，下一回合换新 Query。 */
+  requestQueryRestart(): void {
+    this.queryRestartNeeded = true;
+  }
+
+  /** 灵鲸改：有前台回合在跑、在停，或自治回合开着。 */
+  isBusy(): boolean {
+    return Boolean(this.activeForegroundTurnId) || Boolean(this.autonomousTurn) || this.interruptInFlight !== null;
+  }
+
+  async interrupt(): Promise<void> {
+    if (this.interruptInFlight) return this.interruptInFlight;
+    const operation = this.performInterrupt();
+    this.interruptInFlight = operation;
+    try { await operation; } finally {
+      if (this.interruptInFlight === operation) this.interruptInFlight = null;
+    }
+  }
+
+  private async performInterrupt(): Promise<void> {
+    // 灵鲸改：不在控制请求成功前收尾；失败向公共层传播，保留 stopping。
+    const captured = this.activeForegroundTurnId ?? this.autonomousTurn?.id;
+    await this.interruptActiveTurn();
+    if (captured && (this.activeForegroundTurnId ?? this.autonomousTurn?.id) === captured) {
+      this.rejectAllPendingPermissions(new Error("Permission request canceled"));
+      if (this.activeForegroundTurnId) this.finishForegroundTurn({ type: "turn_canceled", provider: "claude", reason: "Interrupted" });
+      else this.dispatchEvents([{ type: "turn_canceled", provider: "claude", reason: "Interrupted" }]);
+    }
+  }
+
+  async *streamHistory(): AsyncGenerator<AgentStreamEvent> {
+    await this.ensureHistoryReady();
+    if (
+      !this.historyPending ||
+      (this.persistedHistory.length === 0 && this.persistedProviderSubagentEvents.length === 0)
+    ) {
+      return;
+    }
+    const history = this.persistedHistory;
+    const providerSubagentEvents = this.persistedProviderSubagentEvents;
+    this.persistedHistory = [];
+    this.persistedProviderSubagentEvents = [];
+    this.historyPending = false;
+    let replayed = 0;
+    for (const entry of history) {
+      if (++replayed % 32 === 0) await setImmediate();
+      yield {
+        type: "timeline",
+        item: entry.item,
+        provider: "claude",
+        timestamp: entry.timestamp,
+      };
+    }
+    yield* providerSubagentEvents;
+  }
+
+  async getAvailableModes(): Promise<AgentMode[]> {
+    return this.availableModes;
+  }
+
+  async getCurrentMode(): Promise<string | null> {
+    return this.currentMode ?? null;
+  }
+
+  async setMode(modeId: string): Promise<void> {
+    // Validate mode
+    if (!VALID_CLAUDE_MODES.has(modeId)) {
+      const validModesList = Array.from(VALID_CLAUDE_MODES).join(", ");
+      throw new Error(
+        `Invalid mode '${modeId}' for Claude provider. Valid modes: ${validModesList}`,
+      );
+    }
+
+    const normalized = isPermissionMode(modeId) ? modeId : "default";
+    assertClaudeModeCanRun(normalized, this.harnessEnvironment);
+    const previousMode = this.currentMode;
+    const previousQuery = this.query;
+    const activeQuery = await this.ensureQuery(normalized);
+    try {
+      await this.adapter.diagnostics.protect(() => activeQuery.setPermissionMode(normalized));
+    } catch (error) {
+      // The query was launched in the rejected mode; relaunch in the current mode next time.
+      if (activeQuery !== previousQuery) this.queryRestartNeeded = true;
+      throw error;
+    }
+    if (normalized === "plan") {
+      if (previousMode !== "plan") {
+        this.planResumeMode = previousMode;
+      }
+    } else {
+      this.planResumeMode = normalized;
+    }
+    this.currentMode = normalized;
+    this.cachedRuntimeInfo = null;
+    // 灵鲸改：设置提交后发布变化，共享层只做通用映射。
+    this.pushEvent({ type: "mode_changed", provider: "claude", currentModeId: normalized, availableModes: this.availableModes });
+  }
+
+  async setModel(modelId: string | null): Promise<void> {
+    const normalizedModelId =
+      typeof modelId === "string" && modelId.trim().length > 0 ? modelId.trim() : null;
+    const activeQuery = await this.ensureQuery();
+    await this.adapter.diagnostics.protect(() => activeQuery.setModel(normalizedModelId ?? undefined));
+    this.config.model = normalizedModelId ?? undefined;
+
+    this.contextUsage.setInitialContextWindowMaxTokens(
+      getClaudeContextWindowMaxTokens(this.config.model),
+    );
+    this.lastOptionsModel = normalizedModelId ?? this.lastOptionsModel;
+    this.lastRuntimeModel = null;
+    this.cachedRuntimeInfo = null;
+    // Model change affects persistence metadata, so invalidate cached handle.
+    this.persistence = null;
+    this.pushEvent({ type: "model_changed", provider: "claude", runtimeInfo: await this.getRuntimeInfo() });
+  }
+
+  getPendingPermissions(): AgentPermissionRequest[] {
+    return Array.from(this.pendingPermissions.values()).map((entry) => entry.request);
+  }
+
+  /**
+   * Settle the original call immediately, before waiting for the SDK tool result.
+   * Plan resolution must use the native call ID so it cannot move past a follow-up.
+   */
+  private recordDeniedPermissionTimeline(
+    request: AgentPermissionRequest,
+    response: Extract<AgentPermissionResponse, { behavior: "deny" }>,
+  ): void {
+    if (request.kind === "tool") {
+      this.pushToolCall(
+        mapClaudeFailedToolCall({
+          name: request.name,
+          callId:
+            (typeof request.metadata?.toolUseId === "string" ? request.metadata.toolUseId : null) ??
+            request.id,
+          input: request.input ?? null,
+          output: null,
+          error: { message: response.message ?? "Permission denied" },
+        }),
+      );
+      return;
+    }
+    if (request.kind === "plan") {
+      this.pushToolCall(
+        mapClaudeFailedToolCall({
+          name: "ExitPlanMode",
+          callId: this.planToolCallId(request),
+          input: request.input,
+          error: response.message ?? "Permission denied",
+          metadata: { actionId: response.selectedActionId ?? "reject" },
+        }),
+      );
+    }
+  }
+
+  private planToolCallId(request: AgentPermissionRequest): string {
+    return typeof request.metadata?.toolUseId === "string"
+      ? request.metadata.toolUseId
+      : request.id;
+  }
+
+  private resolveDeniedPermission(
+    request: AgentPermissionRequest,
+    response: Extract<AgentPermissionResponse, { behavior: "deny" }>,
+  ): PermissionResult {
+    this.recordDeniedPermissionTimeline(request, response);
+    this.pushEvent({
+      type: "permission_resolved",
+      provider: "claude",
+      requestId: request.id,
+      resolution: response,
+    });
+    return {
+      behavior: "deny",
+      message: response.message ?? "Permission request denied",
+      interrupt: response.interrupt,
+    };
+  }
+
+  private denyPendingPermissionsSupersededBySteer(): void {
+    for (const [requestId, pending] of this.pendingPermissions) {
+      this.pendingPermissions.delete(requestId);
+      pending.cleanup?.();
+      pending.resolve(
+        this.resolveDeniedPermission(pending.request, {
+          behavior: "deny",
+          message: STEER_SUPERSEDED_PERMISSION_MESSAGE,
+        }),
+      );
+    }
+  }
+
+  async respondToPermission(requestId: string, response: AgentPermissionResponse): Promise<void> {
+    const pending = this.pendingPermissions.get(requestId);
+    if (!pending) {
+      throw new Error(`No pending permission request with id '${requestId}'`);
+    }
+
+    // Before the delete below, so a rejected answer leaves the request pending
+    // and answerable rather than consuming it for nothing. AgentManager only
+    // drops its own copy once this resolves, so both maps survive the throw.
+    assertClaudeQuestionAnswerDeliverable(pending.request, response);
+
+    if (response.behavior === "allow") {
+      if (pending.request.kind === "plan") {
+        const selectedActionId = response.selectedActionId;
+        // 灵鲸改：批准计划回到普通权限模式，不扩权为 acceptEdits。
+        await this.setMode("default");
+        this.pushToolCall(
+          mapClaudeCompletedToolCall({
+            name: "ExitPlanMode",
+            callId: this.planToolCallId(pending.request),
+            input: pending.request.input ?? null,
+            output: {
+              approved: true,
+              actionId: selectedActionId ?? "implement",
+            },
+          }),
+        );
+      }
+      const updatedInput =
+        pending.request.kind === "question"
+          ? normalizeClaudeAskUserQuestionUpdatedInput(
+              response.updatedInput,
+              pending.request.input ?? undefined,
+            )
+          : (response.updatedInput ?? pending.request.input ?? {});
+      const result: PermissionResult = {
+        behavior: "allow",
+        updatedInput,
+        updatedPermissions: this.normalizePermissionUpdates(response.updatedPermissions),
+      };
+      this.pendingPermissions.delete(requestId);
+      pending.cleanup?.();
+      pending.resolve(result);
+    } else {
+      this.pendingPermissions.delete(requestId);
+      pending.cleanup?.();
+      pending.resolve(this.resolveDeniedPermission(pending.request, response));
+      if (response.interrupt) await this.interrupt();
+      return;
+    }
+
+    this.pushEvent({
+      type: "permission_resolved",
+      provider: "claude",
+      requestId,
+      resolution: response,
+    });
+  }
+
+  describePersistence(): AgentPersistenceHandle | null {
+    if (this.resumeRejected) return null;
+    if (this.persistence) {
+      return this.persistence;
+    }
+    if (!this.claudeSessionId) {
+      return null;
+    }
+    const { providerOptions: _providerOptions, ...persistedConfig } = this.config;
+    this.persistence = {
+      provider: "claude",
+      sessionId: this.claudeSessionId,
+      nativeHandle: this.claudeSessionId,
+      metadata: { ...persistedConfig },
+    };
+    return this.persistence;
+  }
+
+  async canStopRuntime(): Promise<boolean> {
+    return (
+      !this.activeForegroundTurnId &&
+      !this.autonomousTurn &&
+      !this.mainTurnInFlight &&
+      this.unstartedMessageUuids.size === 0 &&
+      this.pendingPermissions.size === 0 &&
+      this.processingSdkMessages === 0 &&
+      this.runtimeSafety.canStopRuntime()
+    );
+  }
+
+  async close(): Promise<void> {
+    this.logger.trace(
+      {
+        agentId: this.agentId,
+        provider: "claude",
+        sessionId: this.claudeSessionId,
+        turnId: this.activeForegroundTurnId ?? this.autonomousTurn?.id ?? undefined,
+        turnState: this.turnState,
+        hasQuery: Boolean(this.query),
+        hasInput: Boolean(this.input),
+        hasActiveForegroundTurnId: Boolean(this.activeForegroundTurnId),
+      },
+      "provider.claude.session_close.start",
+    );
+    this.closed = true;
+    this.lifetime.abort();
+    await this.ensureHistoryReady();
+    if (this.openingQuery) {
+      try { await this.openingQuery; } catch (error) {
+        this.logger.debug({ err: error }, "Query opening failed during close; managed handles still get disposed");
+      }
+    }
+    this.rejectAllPendingPermissions(new Error("Claude session closed"));
+    this.subscribers.clear();
+    this.activeForegroundTurnId = null;
+    this.activeForegroundQuery = null;
+    this.activeForegroundInput = null;
+    this.autonomousTurn = null;
+    this.turnState = "idle";
+    this.sidechainTracker.clear();
+    this.settledSubagentToolCalls.clear();
+    this.taskProtocolSource.reset();
+    this.input?.end();
+    this.query?.close?.();
+    // close() already terminates the SDK query. Its control plane is no longer
+    // available; waiting for interrupt/return here delays our process-tree cleanup
+    // beyond the daemon's close deadline when the provider stops answering.
+    this.query = null;
+    this.input = null;
+    // Terminate the entire process tree (claude + MCP children) to prevent
+    // orphan accumulation. The SDK's internal cleanup may only kill the
+    // direct child process.
+    if (this.childProcess) {
+      await this.adapter.disposeProcess(this.childProcess);
+      this.childProcess = null;
+    }
+    await this.queryPumpPromise;
+    if (this.persistSession === false && this.claudeSessionId) {
+      // Claude Code currently ignores --no-session-persistence outside --print mode
+      // (see `claude --help`), so the SDK's persistSession=false is silently dropped
+      // in stream-json mode. Sweep the transcript ourselves so ephemeral runs
+      // (metadata generator, branch-name generator) don't show up as resumable.
+      const historyPath = await this.resolveHistoryPath(this.claudeSessionId);
+      if (historyPath) {
+        try {
+          await promises.rm(historyPath, { force: true });
+        } catch (error) {
+          this.logger.warn(
+            { err: error, historyPath, claudeSessionId: this.claudeSessionId },
+            "Failed to delete ephemeral Claude session transcript",
+          );
+        }
+      }
+    }
+    this.logger.trace(
+      {
+        agentId: this.agentId,
+        provider: "claude",
+        sessionId: this.claudeSessionId,
+        turnState: this.turnState,
+      },
+      "provider.claude.session_close.complete",
+    );
+  }
+
+  async listCommands(): Promise<AgentSlashCommand[]> {
+    const q = await this.ensureQuery();
+    const commands = await q.supportedCommands();
+    const commandMap = new Map<string, AgentSlashCommand>();
+    for (const cmd of commands) {
+      if (!commandMap.has(cmd.name)) {
+        commandMap.set(cmd.name, {
+          name: cmd.name,
+          description: cmd.description,
+          argumentHint: cmd.argumentHint,
+          kind: classifyClaudeSlashCommand(cmd.name),
+        });
+      }
+    }
+    return Array.from(commandMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  private resolveSlashCommandInvocation(prompt: AgentPromptInput): SlashCommandInvocation | null {
+    if (typeof prompt !== "string") {
+      return null;
+    }
+    const parsed = this.parseSlashCommandInput(prompt);
+    if (!parsed) {
+      return null;
+    }
+    return CLAUDE_ROOT_ONLY_COMMANDS.has(parsed.commandName)
+      ? parsed
+      : null;
+  }
+
+  private parseSlashCommandInput(text: string): SlashCommandInvocation | null {
+    const trimmed = text.trim();
+    if (!trimmed.startsWith("/") || trimmed.length <= 1) {
+      return null;
+    }
+    const withoutPrefix = trimmed.slice(1);
+    const firstWhitespaceIdx = withoutPrefix.search(/\s/);
+    const commandName =
+      firstWhitespaceIdx === -1 ? withoutPrefix : withoutPrefix.slice(0, firstWhitespaceIdx);
+    if (!commandName || commandName.includes("/")) {
+      return null;
+    }
+    const rawArgs =
+      firstWhitespaceIdx === -1 ? "" : withoutPrefix.slice(firstWhitespaceIdx + 1).trim();
+    return rawArgs.length > 0
+      ? { commandName, args: rawArgs, rawInput: trimmed }
+      : { commandName, rawInput: trimmed };
+  }
+
+  private rememberUserMessageId(messageId: string | null | undefined): void {
+    if (typeof messageId !== "string" || messageId.length === 0) {
+      return;
+    }
+    const last = this.userMessageIds[this.userMessageIds.length - 1];
+    if (last === messageId) {
+      return;
+    }
+    this.userMessageIds.push(messageId);
+  }
+
+  private rememberEmittedUserMessageId(messageId: string | null | undefined): void {
+    if (typeof messageId !== "string" || messageId.length === 0) {
+      return;
+    }
+    this.emittedUserMessageIds.add(messageId);
+  }
+
+  private async retireQuery(): Promise<void> {
+    const oldQuery = this.query;
+    if (!oldQuery) return;
+    const oldInput = this.input;
+    // Null out query/input BEFORE awaiting the old iterator's return so the
+    // old pump sees this.query !== activeQuery and skips failActiveTurns.
+    this.query = null;
+    this.input = null;
+    this.queryPumpPromise = null;
+    this.queryRestartNeeded = false;
+    // Ending the input retires the process on purpose. Detach first so its
+    // exit is not reported as a crash.
+    const retiredChild = this.childProcess;
+    this.childProcess = null;
+    if (retiredChild) this.failRunningRuntimeTasks();
+    oldInput?.end();
+    oldQuery.close?.();
+    try {
+      await oldQuery.return?.();
+    } catch {
+      /* ignore */
+    }
+    // Tree-kill the old process tree now that the SDK has cleaned up.
+    // If we skip this, MCP children of the previous claude process can
+    // survive as orphans when the session spawns a replacement query.
+    if (retiredChild) {
+      await this.adapter.disposeProcess(retiredChild);
+    }
+  }
+
+  // 灵鲸改：同时到来的模型/模式控制共用一次启动，避免两个 Query 争同一进程所有权。
+  private ensureQuery(launchMode: PermissionMode = this.currentMode): Promise<Query> {
+    if (this.openingQuery) return this.openingQuery;
+    const operation: Promise<Query> = this.adapter.diagnostics.protect(() => this.openQuery(launchMode)).finally(() => {
+      if (this.openingQuery === operation) this.openingQuery = null;
+    });
+    this.openingQuery = operation;
+    return operation;
+  }
+
+  private async openQuery(launchMode: PermissionMode): Promise<Query> {
+    await this.ensureHistoryReady();
+    if (this.closed || this.resumeRejected) throw new Error("Claude session is unavailable; open a new session after restoring native data");
+    // Controls use the running turn's query. Pending launch settings take effect
+    // after that turn finishes, when its active query handle has been cleared.
+    if (this.query && (!this.queryRestartNeeded || this.activeForegroundQuery === this.query)) {
+      return this.query;
+    }
+
+    if (this.queryRestartNeeded && this.query) {
+      await this.retireQuery();
+    }
+
+    // Preserve claudeSessionId across query recreation so buildOptions() passes
+    // resume: sessionId and the new query continues the existing conversation.
+    this.persistence = null;
+
+    const input = createAsyncMessageInput<SDKUserMessage>();
+    const options = await this.buildOptions(launchMode);
+    this.logger.debug({ options: summarizeClaudeOptionsForLog(options) }, "claude query");
+    this.input = input;
+    this.runtimeSafety.reset();
+    // A fresh Claude process has no turn of its own in flight.
+    this.mainTurnInFlight = false;
+    this.adapter.onQuery?.();
+    this.query = await claudeQuery(
+      { prompt: input.iterable, options },
+      {
+        spawn: this.adapter.spawn,
+        queryFactory: this.queryFactory,
+        onChildProcess: (child) => {
+          this.childProcess = child;
+          child.once("exit", (code, signal) => this.handleRuntimeExit(child, code, signal));
+        },
+      },
+    );
+    // Do not kick off background control-plane queries here. Methods like
+    // supportedCommands()/setPermissionMode() may execute immediately after
+    // ensureQuery() (for listCommands()/setMode()), and sharing the same query
+    // control plane can cause those calls to wait behind supportedModels().
+    return this.query;
+  }
+
+  private buildAppendedSystemPrompt(): string {
+    return (
+      composeSystemPromptParts(this.config.systemPrompt, this.config.daemonAppendSystemPrompt) ?? ""
+    );
+  }
+
+  usageSession(): AgentUsageSession | null {
+    if (this.closed) return null;
+    return {
+      provider: "claude",
+      ...(this.config.model === undefined ? {} : { model: this.config.model }),
+      env: this.harnessEnvironment,
+      sessionKey: this.usageSessionKey,
+    };
+  }
+
+  private buildSdkEnv() {
+    return createProviderEnv({
+      baseEnv: this.launchEnv ?? {},
+      overlays: [
+        // Makes the CLI announce session_state_changed, whose "idle" is the safety net that closes
+        // an autonomous turn (see consumeSessionStateChange).
+        { CLAUDE_CODE_EMIT_SESSION_STATE_EVENTS: "1" },
+      ],
+    });
+  }
+
+  private async buildOptions(permissionMode: PermissionMode): Promise<ClaudeOptions> {
+
+    const appendedSystemPrompt = this.buildAppendedSystemPrompt();
+    const providerOptions = applyClaudeToolPolicy(
+      this.config.providerOptions,
+      this.config.toolPolicy,
+    );
+
+    const sdkEnv = this.harnessEnvironment;
+    assertClaudeModeCanRun(permissionMode, sdkEnv);
+
+    const claudeBinary = await this.resolveBinary();
+    this.logger.debug(
+      {
+        claudeBinary,
+        pathEnvKey: resolvePathEnvKey(),
+        pathIncludesClaudeLocalBin: (process.env["Path"] ?? process.env["PATH"] ?? "")
+          .toLowerCase()
+          .includes("\\.local\\bin"),
+      },
+      "Resolved Claude executable",
+    );
+    const sessionBinding: Pick<ClaudeOptions, "resume" | "sessionId"> = {};
+    if (this.pendingFreshSessionId) {
+      sessionBinding.sessionId = this.pendingFreshSessionId;
+    } else if (this.claudeSessionId) {
+      sessionBinding.resume = this.claudeSessionId;
+    }
+
+    const base: ClaudeOptions = {
+      cwd: this.config.cwd,
+      includePartialMessages: true,
+      permissionMode,
+      // Dynamic mode switching can recreate the underlying Claude query. Keep the
+      // bypass launch capability available so later setPermissionMode("bypassPermissions")
+      // calls do not fail after a model/thinking/rewind-driven restart.
+      allowDangerouslySkipPermissions: false,
+      agents: this.defaults?.agents,
+      canUseTool: this.handlePermissionRequest,
+      pathToClaudeCodeExecutable: claudeBinary,
+      // Use Claude Code preset system prompt and load CLAUDE.md files
+      // Append provider-agnostic system prompts for agents.
+      systemPrompt: {
+        type: "preset",
+        preset: "claude_code",
+        append: appendedSystemPrompt,
+      },
+      settingSources: CLAUDE_SETTING_SOURCES,
+      stderr: (data: string) => {
+        this.captureStderr(data);
+        this.logger.error({ stderr: data.trim() }, "Claude Agent SDK stderr");
+      },
+      // Required for provider-level /rewind support.
+      enableFileCheckpointing: false,
+      // If we have a session ID from a previous query (e.g., after interrupt),
+      // resume that session to continue the conversation history.
+      ...sessionBinding,
+      ...providerOptions,
+      // Provider subagent panes render the child's nested transcript.
+      forwardSubagentText: true,
+      // Stop and replace abort only the main turn, like Esc in Claude Code, and background
+      // subagents keep running. Without this declaration an interrupt kills every one of them.
+      // Claude stops a helper itself with its TaskStop tool.
+      perTaskStopAffordance: true,
+      // 灵鲸改：只接受适配器构造的策略，保留原生子观察钩子。
+      ...this.adapter.sdkOptions,
+      hooks: this.combineHooks(),
+      ...(this.persistSession === undefined ? {} : { persistSession: this.persistSession }),
+      env: sdkEnv,
+    };
+
+    // 灵鲸改：重开 Query 沿用当前模式，不被最初会话快照覆盖。
+    base.permissionMode = permissionMode;
+    if (this.config.mcpServers) {
+      base.mcpServers = this.normalizeMcpServers(this.config.mcpServers);
+    }
+
+    if (this.config.model) {
+      base.model = this.config.model;
+    }
+    this.lastOptionsModel = base.model ?? null;
+    if (this.claudeSessionId && !this.pendingFreshSessionId) {
+      base.resume = this.claudeSessionId;
+    }
+    if (this.runtimeSettings?.disallowedTools?.length) {
+      base.disallowedTools = [
+        ...(base.disallowedTools ?? []),
+        ...this.runtimeSettings.disallowedTools,
+      ];
+    }
+    return base;
+  }
+
+  private normalizeMcpServers(
+    servers: Record<string, McpServerConfig>,
+  ): Record<string, ClaudeSdkMcpServerConfig> {
+    const result: Record<string, ClaudeSdkMcpServerConfig> = {};
+    for (const [name, config] of Object.entries(servers)) {
+      result[name] = toClaudeSdkMcpConfig(config);
+    }
+    return result;
+  }
+
+  private toSdkUserMessage(prompt: AgentPromptInput): SDKUserMessage {
+    const content: Array<
+      | { type: "text"; text: string }
+      | {
+          type: "image";
+          source: {
+            type: "base64";
+            media_type: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+            data: string;
+          };
+        }
+    > = [];
+    // Claude Code expands a slash command only when it is the last content block of the user
+    // message. buildAgentPrompt places the typed text ahead of images and rendered attachments,
+    // so a "/command" sent with a pasted link or a screenshot would otherwise reach the model as
+    // literal text instead of the command it names.
+    let typedSlashCommandIndex = -1;
+    if (Array.isArray(prompt)) {
+      for (const chunk of prompt) {
+        if (chunk.type === "text") {
+          // Attachments rendered as text always carry a mimeType; the composer's typed text does
+          // not. Only the typed block can be a slash command the user meant to invoke.
+          if (!("mimeType" in chunk) && this.parseSlashCommandInput(chunk.text)) {
+            typedSlashCommandIndex = content.length;
+          }
+          content.push({ type: "text", text: chunk.text });
+        } else if (chunk.type === "image") {
+          if (isImageMimeType(chunk.mimeType)) {
+            content.push({
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: chunk.mimeType,
+                data: chunk.data,
+              },
+            });
+          } else {
+            // 灵鲸改：不能编码的图片必须拒绝，不能悄悄丢掉一个输入块。
+            throw new BrainError("invalid_input", "brain.image_mime", `Claude accepts JPEG, PNG, GIF and WebP images; received ${chunk.mimeType}`);
+          }
+        } else {
+          throw new Error("Claude accepts only text and supported images");
+        }
+      }
+    } else {
+      content.push({ type: "text", text: prompt });
+    }
+    if (typedSlashCommandIndex >= 0 && typedSlashCommandIndex < content.length - 1) {
+      const [slashCommand] = content.splice(typedSlashCommandIndex, 1);
+      content.push(slashCommand);
+    }
+
+    const messageId = randomUUID();
+    this.rememberUserMessageId(messageId);
+
+    return {
+      type: "user",
+      message: {
+        role: "user",
+        content,
+      },
+      parent_tool_use_id: null,
+      uuid: messageId,
+      session_id: this.claudeSessionId ?? "",
+    };
+  }
+
+  private transitionTurnState(next: TurnState, reason: string): void {
+    if (this.turnState === next) {
+      return;
+    }
+    this.logger.debug({ from: this.turnState, to: next, reason }, "Claude turn state transition");
+    this.turnState = next;
+  }
+
+  private syncTurnState(reason: string): void {
+    if (this.activeForegroundTurnId) {
+      this.transitionTurnState("foreground", reason);
+      return;
+    }
+    if (this.autonomousTurn) {
+      this.transitionTurnState("autonomous", reason);
+      return;
+    }
+    this.transitionTurnState("idle", reason);
+  }
+
+  private isAbortError(message: SDKMessage): boolean {
+    const errors = "errors" in message && Array.isArray(message.errors) ? message.errors : [];
+    return errors.some((e: string) => /\baborted\b/i.test(e));
+  }
+
+  private buildTurnFailedEvent(
+    errorMessage: string,
+  ): Extract<AgentStreamEvent, { type: "turn_failed" }> {
+    const normalized = this.adapter.diagnostics.redact(errorMessage.trim() || "Claude run failed");
+    const exitCodeMatch = normalized.match(/\bcode\s+(\d+)\b/i);
+    const code = exitCodeMatch ? exitCodeMatch[1] : undefined;
+    const diagnostic = this.getRecentStderrDiagnostic();
+    return {
+      type: "turn_failed",
+      provider: "claude",
+      error: normalized,
+      ...(code ? { code } : {}),
+      ...(diagnostic ? { diagnostic } : {}),
+    };
+  }
+
+  private captureStderr(data: string): void {
+    const text = data.trim();
+    if (!text) {
+      return;
+    }
+    const combined = this.recentStderr ? `${this.recentStderr}\n${text}` : text;
+    this.recentStderr = combined.slice(-MAX_RECENT_STDERR_CHARS);
+  }
+
+  private clearRecentStderr(): void {
+    this.recentStderr = "";
+  }
+
+  private getRecentStderrDiagnostic(): string | undefined {
+    return this.recentStderr.trim() || undefined;
+  }
+
+  private async awaitRecentStderrAfterProcessExit(error: unknown): Promise<void> {
+    if (this.getRecentStderrDiagnostic()) {
+      return;
+    }
+    const message = errorToMessageString(error);
+    if (
+      !/\bprocess exited with code\b/i.test(message) &&
+      !/\bterminated by signal\b/i.test(message)
+    ) {
+      return;
+    }
+
+    const startedAt = Date.now();
+    while (!this.closed && !this.getRecentStderrDiagnostic()) {
+      if (Date.now() - startedAt >= STDERR_FLUSH_WAIT_MS) {
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, STDERR_FLUSH_POLL_INTERVAL_MS));
+    }
+  }
+
+  private createTurnId(owner: "foreground" | "autonomous"): string {
+    return `${owner}-turn-${this.nextTurnOrdinal++}`;
+  }
+
+  private isTerminalTurnEvent(event: AgentStreamEvent): boolean {
+    return (
+      event.type === "turn_completed" ||
+      event.type === "turn_failed" ||
+      event.type === "turn_canceled"
+    );
+  }
+
+  private shouldRecoverInterruptedQueryAbort(
+    error: unknown,
+    consecutiveRecoveries: number,
+  ): boolean {
+    if (consecutiveRecoveries >= 3) {
+      return false;
+    }
+    let message: string;
+    if (typeof error === "string") {
+      message = error;
+    } else if (error instanceof Error) {
+      message = `${error.message}\n${error.stack ?? ""}`;
+    } else {
+      message = JSON.stringify(error);
+    }
+    return message.toLowerCase().includes("request was aborted");
+  }
+
+  private finishForegroundTurn(
+    event: Extract<AgentStreamEvent, { type: "turn_completed" | "turn_failed" | "turn_canceled" }>,
+  ): void {
+    if (event.type === "turn_failed" || event.type === "turn_canceled") {
+      this.flushPendingToolCalls();
+    }
+    this.notifySubscribers(event);
+    this.activeForegroundTurnId = null;
+    this.activeForegroundQuery = null;
+    this.activeForegroundInput = null;
+    this.activeTurnHasAssistantText = false;
+    this.compactionMarkerOpen = false;
+    this.syncTurnState("foreground turn terminal");
+  }
+
+  private dispatchEvents(events: AgentStreamEvent[]): void {
+    let terminalSeen = false;
+    for (const event of events) {
+      this.notifySubscribers(event);
+      terminalSeen ||= this.isTerminalTurnEvent(event);
+    }
+
+    if (terminalSeen) {
+      this.compactionMarkerOpen = false;
+      if (this.activeForegroundTurnId) {
+        this.activeForegroundTurnId = null;
+        this.activeForegroundQuery = null;
+        this.activeForegroundInput = null;
+            this.activeTurnHasAssistantText = false;
+        this.syncTurnState("foreground turn terminal");
+      } else if (this.autonomousTurn) {
+        this.autonomousTurn = null;
+        this.activeForegroundQuery = null;
+        this.activeForegroundInput = null;
+        this.activeTurnHasAssistantText = false;
+        this.syncTurnState("autonomous turn terminal");
+      }
+    }
+  }
+
+  private startAutonomousTurn(): void {
+    if (this.autonomousTurn) {
+      return;
+    }
+    this.autonomousTurn = {
+      id: this.createTurnId("autonomous"),
+    };
+    this.activeForegroundQuery = this.query;
+    this.activeForegroundInput = this.input;
+    this.activeTurnHasAssistantText = false;
+    this.adapter.onTurn?.();
+    this.contextUsage.beginTurn();
+    this.notifySubscribers({ type: "turn_started", provider: "claude" });
+    this.syncTurnState("autonomous turn started");
+  }
+
+  private completeAutonomousTurn(): void {
+    if (!this.autonomousTurn) {
+      return;
+    }
+    this.notifySubscribers({ type: "turn_completed", provider: "claude" });
+    this.autonomousTurn = null;
+    this.activeForegroundQuery = null;
+    this.activeForegroundInput = null;
+    this.activeTurnHasAssistantText = false;
+    this.compactionMarkerOpen = false;
+    this.syncTurnState("autonomous turn completed");
+  }
+
+  private failActiveTurns(errorMessage: string): void {
+    const failure = this.buildTurnFailedEvent(errorMessage);
+    this.flushPendingToolCalls();
+    if (this.activeForegroundTurnId) {
+      this.finishForegroundTurn(failure);
+      return;
+    }
+    if (this.autonomousTurn) {
+      this.dispatchEvents([failure]);
+    }
+  }
+
+  // Background Bash shells, Monitor watches and workflows live inside the Claude
+  // Code process, so they die with it. When the process exits mid-turn the query
+  // pump reports it, but when it exits between turns nothing observes the death:
+  // the agent stays "idle" and the wake-back that would have continued the work
+  // never arrives.
+  private handleRuntimeExit(
+    child: SpawnedProcess,
+    code: number | null,
+    signal: NodeJS.Signals | null,
+  ): void {
+    if (this.closed || this.childProcess !== child) {
+      return;
+    }
+    this.childProcess = null;
+    this.logger.warn(
+      { agentId: this.agentId, code, signal },
+      "Claude runtime exited unexpectedly",
+    );
+    this.failRunningRuntimeTasks();
+    if (this.activeForegroundTurnId || this.autonomousTurn) {
+      // The pump is about to throw. It waits for stderr to flush and reports the
+      // real cause; reporting here first would replace that with a bare exit code
+      // and detach this.query, which is how the pump recognizes its own stream.
+      return;
+    }
+    // Drop the dead handles so the next write spawns a fresh process instead of
+    // failing against a dead transport forever.
+    this.query = null;
+    this.input = null;
+    this.dispatchEvents([
+      this.buildTurnFailedEvent(
+        `Claude stopped unexpectedly (${signal ? `signal ${signal}` : `exit code ${code ?? "unknown"}`}). Any background shells, monitors or other work it had running were terminated with it.`,
+      ),
+    ]);
+  }
+
+  private failRunningRuntimeTasks(): void {
+    this.dispatchEvents(
+      foldSubagentObservations(this.taskProtocolSource.failRunningTasks()).map(
+        (event): AgentStreamEvent => ({ type: "provider_subagent", provider: "claude", event }),
+      ),
+    );
+  }
+
+  private startQueryPump(): void {
+    if (this.closed || this.queryPumpPromise) {
+      return;
+    }
+
+    const pump = this.runQueryPump().catch((error) => {
+      this.logger.trace(
+        {
+          agentId: this.agentId,
+          provider: "claude",
+          sessionId: this.claudeSessionId,
+          turnId: this.activeForegroundTurnId ?? this.autonomousTurn?.id ?? undefined,
+          err: error,
+        },
+        "provider.claude.query_pump.exit_unexpected",
+      );
+    });
+
+    this.queryPumpPromise = pump;
+    void pump.finally(() => {
+      if (this.queryPumpPromise === pump) {
+        this.queryPumpPromise = null;
+      }
+    });
+  }
+
+  private async runQueryPump(): Promise<void> {
+    let activeQuery: Query;
+    try {
+      activeQuery = await this.ensureQuery();
+    } catch (error) {
+      this.logger.trace(
+        {
+          agentId: this.agentId,
+          provider: "claude",
+          sessionId: this.claudeSessionId,
+          turnId: this.activeForegroundTurnId ?? this.autonomousTurn?.id ?? undefined,
+          err: error,
+        },
+        "provider.claude.query_pump.init_failed",
+      );
+      this.failActiveTurns(error instanceof Error ? error.message : "Claude stream failed");
+      return;
+    }
+
+    let consecutiveInterruptAbortRecoveries = 0;
+    const logRawMessage = (message: SDKMessage): void => {
+      this.logger.trace(
+        {
+          agentId: this.agentId,
+          provider: "claude",
+          sessionId: this.claudeSessionId,
+          turnId: this.activeForegroundTurnId ?? this.autonomousTurn?.id ?? undefined,
+          messageType: message.type,
+          messageSubtype: "subtype" in message ? message.subtype : undefined,
+          messageUuid: "uuid" in message ? message.uuid : undefined,
+          rawEvent: message,
+        },
+        "provider.claude.raw_event",
+      );
+    };
+    const handlePumpedMessage = async (message: SDKMessage): Promise<boolean> => {
+      if (!this.ownsQuery(activeQuery)) return true;
+      this.processingSdkMessages++;
+      try {
+        this.adapter.onMessage?.(message, this.activeForegroundTurnId ?? this.autonomousTurn?.id);
+        if (message.type === "result") {
+          this.lastResultTurnId = this.activeForegroundTurnId ?? this.autonomousTurn?.id;
+          this.interruptedResult?.resolve();
+        }
+        this.runtimeSafety.observe(message);
+        logRawMessage(message);
+        consecutiveInterruptAbortRecoveries = 0;
+        if (await this.handleMissingResumedConversation(message, activeQuery)) return true;
+        if (!this.ownsQuery(activeQuery)) return true;
+        await this.routeSdkMessageFromPump(message);
+        return false;
+      } finally {
+        this.processingSdkMessages--;
+      }
+    };
+    const drainActiveQuery = async (): Promise<boolean> => {
+      for await (const message of activeQuery) {
+        if (await handlePumpedMessage(message)) {
+          return true;
+        }
+      }
+      return false;
+    };
+    try {
+      while (!this.closed && this.query === activeQuery) {
+        try {
+          if (await drainActiveQuery()) {
+            return;
+          }
+          if (!this.closed && this.query === activeQuery) {
+            this.failActiveTurns("Claude stream ended before terminal result");
+          }
+          return;
+        } catch (error) {
+          if (
+            !this.closed &&
+            this.query === activeQuery &&
+            this.shouldRecoverInterruptedQueryAbort(error, consecutiveInterruptAbortRecoveries)
+          ) {
+            consecutiveInterruptAbortRecoveries += 1;
+            this.logger.debug(
+              { recoveries: consecutiveInterruptAbortRecoveries },
+              "Recovering Claude query pump after interrupt abort",
+            );
+            continue;
+          }
+          if (!this.closed && this.query === activeQuery) {
+            await this.awaitRecentStderrAfterProcessExit(error);
+            this.failActiveTurns(error instanceof Error ? error.message : "Claude stream failed");
+          }
+          return;
+        }
+      }
+    } finally {
+      if (this.query === activeQuery) {
+        this.query = null;
+        this.input = null;
+      }
+    }
+  }
+
+  private shouldSuppressStaleResult(message: SDKMessage): boolean {
+    // Suppress stale results from interrupted requests. The cancel path already
+    // emitted the terminal event; this result is leftover from the killed API
+    // request. Consume the flag on ANY result so it doesn't linger.
+    if (message.type === "result" && this.pendingInterruptAbort) {
+      this.pendingInterruptAbort = false;
+      if (message.subtype !== "success") {
+        this.logger.debug("Suppressing stale non-success result from interrupted request");
+        return true;
+      }
+    }
+    if (message.type === "result" && message.subtype !== "success" && this.isAbortError(message)) {
+      this.logger.debug("Suppressing abort result by content");
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Claude's account of whether anything in the session is working, which is not the same as the
+   * main session working: Claude Code 2.1.280 stays "running" for as long as any background
+   * subagent is alive. So "running" never opens a turn.
+   *
+   * "idle" means nothing at all is running, so it closes an autonomous turn whatever opened it.
+   * It never closes a foreground turn: an idle can trail the previous turn and land just after a
+   * new send, and it must not end that send.
+   *
+   * Returns true when the frame was a state change, which is bookkeeping and never reaches the
+   * timeline.
+   */
+  private consumeSessionStateChange(message: SDKMessage): boolean {
+    if (message.type !== "system" || message.subtype !== "session_state_changed") {
+      return false;
+    }
+    if (message.state === "idle") {
+      this.mainTurnInFlight = false;
+      this.completeAutonomousTurn();
+    }
+    return true;
+  }
+
+  /** Tracks mainTurnInFlight from Claude's own turn brackets (isClaudeTurnInit). */
+  private observeMainTurnBracket(message: SDKMessage): void {
+    if (message.type === "result") {
+      this.mainTurnInFlight = false;
+      return;
+    }
+    if (isClaudeTurnInit(message)) {
+      this.mainTurnInFlight = true;
+      // A new turn has begun, so the interrupted one is over. An interrupt that landed after its
+      // turn had already ended gets no result, and the leftover flag would swallow this turn's.
+      this.pendingInterruptAbort = false;
+      return;
+    }
+    if (readClaudeCommandLifecycle(message)?.state === "started") {
+      this.mainTurnInFlight = true;
+    }
+  }
+
+  /**
+   * Only the main session's own turn start opens an autonomous turn. Everything a background
+   * subagent emits (its task frames, its own background jobs' notifications, rate limit events)
+   * arrives outside one, and no result would ever close a turn it opened.
+   */
+  private opensAutonomousTurn(message: SDKMessage): boolean {
+    return isClaudeTurnInit(message) && !this.activeForegroundTurnId;
+  }
+
+  private ownsQuery(query: Query): boolean {
+    return !this.closed && this.query === query;
+  }
+
+  private async routeSdkMessageFromPump(message: SDKMessage): Promise<void> {
+    if (this.consumeSessionStateChange(message)) {
+      return;
+    }
+    this.observeMainTurnBracket(message);
+    if (this.shouldSuppressStaleResult(message)) {
+      return;
+    }
+
+    const isForeground = Boolean(this.activeForegroundTurnId);
+    if (this.opensAutonomousTurn(message)) {
+      this.startAutonomousTurn();
+    }
+    if (!isForeground && !this.autonomousTurn && message.type === "result") {
+      return;
+    }
+
+    const turnId = this.activeForegroundTurnId ?? this.autonomousTurn?.id ?? null;
+    const identifiers = readEventIdentifiers(message);
+
+    this.logger.trace(
+      {
+        agentId: this.agentId,
+        provider: "claude",
+        sessionId: this.claudeSessionId,
+        turnId: turnId ?? undefined,
+        messageType: message.type,
+        identifiers,
+        rawEvent: message,
+      },
+      "provider.claude.parsed_event",
+    );
+
+    const events = await this.buildPumpedMessageEvents(message, identifiers.messageId, turnId);
+
+    if (events.length === 0) {
+      return;
+    }
+    if (
+      this.pendingInterruptAbort &&
+      message.type === "result" &&
+      events.some((event) => event.type === "turn_completed" || event.type === "turn_failed") &&
+      (!this.activeForegroundTurnId || !this.foregroundHasVisibleActivity)
+    ) {
+      this.pendingInterruptAbort = false;
+      this.logger.debug("Suppressing stale Claude interrupt terminal result");
+      return;
+    }
+    if (
+      events.some((event) => event.type === "timeline" && event.item.type === "assistant_message")
+    ) {
+      this.activeTurnHasAssistantText = true;
+    }
+    if (
+      this.activeForegroundTurnId &&
+      events.some(
+        (event) =>
+          event.type === "timeline" ||
+          event.type === "permission_requested" ||
+          event.type === "permission_resolved",
+      )
+    ) {
+      this.foregroundHasVisibleActivity = true;
+    }
+
+    this.dispatchEvents(events);
+  }
+
+  private async buildPumpedMessageEvents(
+    message: SDKMessage,
+    messageIdHint: string | null,
+    turnId: string | null,
+  ): Promise<AgentStreamEvent[]> {
+    const query = this.query;
+    const messageEvents = await this.translateMessageToEvents(message, {
+      suppressAssistantText: true,
+      suppressReasoning: true,
+    });
+    if (
+      this.closed ||
+      this.query !== query ||
+      (this.activeForegroundTurnId ?? this.autonomousTurn?.id ?? null) !== turnId
+    )
+      return [];
+    const assistantTimelineEvents = readClaudeParentToolUseId(message)
+      ? []
+      : this.timelineAssembler
+          .consume({
+            message,
+            runId: turnId,
+            messageIdHint,
+          })
+          .map(
+            (item) =>
+              ({
+                type: "timeline",
+                item,
+                provider: "claude",
+              }) satisfies AgentStreamEvent,
+          );
+
+    if (!readClaudeParentToolUseId(message)) {
+      if (message.type === "assistant" && message.error) {
+        this.withheldErrorReply.push(...assistantTimelineEvents.map((event) => event.item));
+        return messageEvents;
+      }
+      if (
+        message.type === "assistant" ||
+        message.type === "user" ||
+        message.type === "stream_event"
+      ) {
+        const released: AgentStreamEvent[] = [];
+        this.releaseWithheldErrorReply(released);
+        return [...released, ...messageEvents, ...assistantTimelineEvents];
+      }
+    }
+    return [...messageEvents, ...assistantTimelineEvents];
+  }
+
+  private async handleMissingResumedConversation(
+    message: SDKMessage,
+    activeQuery: Query,
+  ): Promise<boolean> {
+    const staleResumeError = this.readMissingResumedConversationError(message);
+    if (!staleResumeError) {
+      return false;
+    }
+
+    this.logger.warn(
+      {
+        error: staleResumeError,
+      },
+      "Claude resumed session no longer exists; invalidating persisted session",
+    );
+
+    // 灵鲸改：CLI 拒绝原生恢复后，本代永久不可用，不能继续沿旧句柄重试。
+    this.resumeRejected = true;
+    this.failActiveTurns(staleResumeError);
+    this.pushEvent(this.buildTurnFailedEvent("Claude resume failed; restore native data and open a new session"));
+    // Ending the input retires the process on purpose. Detach first so its exit
+    // is not reported as a crash.
+    const retiredChild = this.childProcess;
+    this.childProcess = null;
+    this.input?.end();
+    // 灵鲸改：当前就在 Query 消息泵内，不能等待自己的 iterator.return；直接关传输并收进程。
+    if (this.query === activeQuery) {
+      this.query = null;
+      this.input = null;
+    }
+    activeQuery.close();
+    // Tree-kill for the same reason the restart path does: MCP children of the
+    // retired claude process outlive it otherwise.
+    if (retiredChild) {
+      await this.adapter.disposeProcess(retiredChild);
+    }
+    this.persistence = null;
+    this.persistedHistory = [];
+    this.persistedProviderSubagentEvents = [];
+    this.historyPending = false;
+    this.cachedRuntimeInfo = null;
+    this.queryRestartNeeded = false;
+    this.autonomousTurn = null;
+    this.activeForegroundTurnId = null;
+    this.activeForegroundQuery = null;
+    this.activeForegroundInput = null;
+    this.syncTurnState("missing resumed conversation");
+    return true;
+  }
+
+  /**
+   * Interrupts Claude only when a turn of its main session is running. With nothing running there
+   * is nothing to stop but our own queued messages, so those are withdrawn instead: an interrupt
+   * would reach only background helpers (and kill them on a CLI that ignores
+   * perTaskStopAffordance), and no result would follow to consume pendingInterruptAbort.
+   */
+  private async interruptActiveTurn(claudeStartedTurn = this.mainTurnInFlight): Promise<void> {
+    const queryToInterrupt = this.query;
+    if (!queryToInterrupt || typeof queryToInterrupt.interrupt !== "function") {
+      this.logger.trace(
+        {
+          agentId: this.agentId,
+          provider: "claude",
+          sessionId: this.claudeSessionId,
+          turnId: this.activeForegroundTurnId ?? this.autonomousTurn?.id ?? undefined,
+        },
+        "provider.claude.interrupt.no_query",
+      );
+      return;
+    }
+    if (claudeStartedTurn) {
+      this.pendingInterruptAbort = true;
+      await this.withdrawUnstartedMessages(queryToInterrupt);
+    } else {
+      // Claude can dequeue a message for its next turn before announcing it started; withdrawing
+      // it is then a no-op, and only an interrupt stops it. Withdraw once: a prompt sent while
+      // this withdrawal was in flight belongs to the next turn.
+      if (await this.withdrawUnstartedMessages(queryToInterrupt)) return;
+      this.pendingInterruptAbort = true;
+    }
+    const turnId = this.activeForegroundTurnId ?? this.autonomousTurn?.id;
+    const settled = Promise.withResolvers<void>();
+    const waiter = turnId ? { turnId, resolve: settled.resolve } : null;
+    this.interruptedResult = waiter;
+    try {
+      await withTimeout(this.adapter.diagnostics.protect(() => queryToInterrupt.interrupt()), this.adapter.controlTimeoutMs, "Claude interrupt was not confirmed");
+      // 灵鲸改：有在途回合时等待原生 result，先收已知费用再发 terminal；超时保持停止不明。
+      if (waiter && this.lastResultTurnId !== waiter.turnId) await withTimeout(settled.promise, this.adapter.controlTimeoutMs, "Claude interrupted result was not received");
+    } finally {
+      if (this.interruptedResult === waiter) this.interruptedResult = null;
+    }
+
+  }
+
+  /**
+   * Interrupt means interrupt: a message Claude never started dies with the turn instead of
+   * resuming it. One already dequeued cannot be recalled, and does not need to be, since the
+   * interrupt kills it. Returns whether Claude confirmed every message withdrawn.
+   */
+  private async withdrawUnstartedMessages(query: Query): Promise<boolean> {
+    const uuids = [...this.unstartedMessageUuids];
+    if (uuids.length === 0) return true;
+    const cancelAsyncMessage = (query as Query & { cancelAsyncMessage?: (uuid: string) => Promise<boolean> }).cancelAsyncMessage;
+    if (!cancelAsyncMessage) throw new Error("Claude SDK cannot withdraw queued messages");
+    let withdrewAll = true;
+    for (const uuid of uuids) {
+      if (!(await this.adapter.diagnostics.protect(() => cancelAsyncMessage.call(query, uuid)))) withdrewAll = false;
+      this.unstartedMessageUuids.delete(uuid);
+      this.permissionClearingSteerUuids.delete(uuid);
+    }
+    return withdrewAll;
+  }
+
+  private async translateMessageToEvents(
+    message: SDKMessage,
+    options?: {
+      suppressAssistantText?: boolean;
+      suppressReasoning?: boolean;
+    },
+  ): Promise<AgentStreamEvent[]> {
+    const parentToolUseId = readClaudeParentToolUseId(message);
+    if (parentToolUseId) {
+      return this.translateSidechainFrameToEvents(message, parentToolUseId);
+    }
+
+    const events: AgentStreamEvent[] = [];
+    this.appendTaskStateEvent(message, events);
+
+    // Subagent identity and lifecycle are announced by Claude Code's task protocol, so they are
+    // read rather than inferred from sidechain frames. `task_started` precedes the child's first
+    // frame, so the descriptor exists before any timeline item lands on it.
+    const subagentObservations = this.taskProtocolSource.observe(message);
+    for (const event of foldSubagentObservations(subagentObservations)) {
+      events.push({ type: "provider_subagent", provider: "claude", event });
+    }
+    this.releaseFinishedSubagentToolCalls(subagentObservations);
+    for (const observation of subagentObservations) {
+      if (observation.kind !== "declared") continue;
+      if (!this.taskProtocolSource.needsSyntheticParentToolCard(observation.id)) continue;
+      const card = this.buildSubagentToolCallCard(observation);
+      if (card) events.push(card);
+    }
+    if (message.type !== "system") {
+      const sessionCapture = this.captureSessionIdFromMessage(message);
+      if (sessionCapture.notice) {
+        events.push({
+          type: "timeline",
+          provider: "claude",
+          item: sessionCapture.notice,
+        });
+      }
+      if (sessionCapture.threadStartedSessionId) {
+        events.push({
+          type: "thread_started",
+          provider: "claude",
+          sessionId: sessionCapture.threadStartedSessionId,
+        });
+      }
+    }
+
+    this.forgetStartedMessage(message);
+
+    switch (message.type) {
+      case "system":
+        this.appendSystemMessageEvents(message, events);
+        break;
+      case "user":
+        await this.appendUserMessageEvents(message, events);
+        this.appendSidechainResultEvents(message, events);
+        break;
+      case "assistant": {
+        const timelineItems = await this.mapBlocksToTimeline(message.message.content, {
+          suppressAssistantText: options?.suppressAssistantText ?? false,
+          suppressReasoning: options?.suppressReasoning ?? false,
+        });
+        for (const item of timelineItems) {
+          events.push({ type: "timeline", item, provider: "claude" });
+        }
+        this.appendSidechainResultEvents(message, events);
+        break;
+      }
+      case "stream_event":
+        await this.appendStreamEventEvents(message, events, options);
+        break;
+      case "result":
+        this.appendResultEvents(message, events);
+        break;
+      default:
+        break;
+    }
+
+    return events;
+  }
+
+  /**
+   * Once Claude has started a message, or cancelled it, there is nothing left to withdraw on
+   * interrupt.
+   */
+  private forgetStartedMessage(message: unknown): void {
+    const lifecycle = readClaudeCommandLifecycle(message);
+    if (!lifecycle || lifecycle.state === "queued") return;
+    this.unstartedMessageUuids.delete(lifecycle.commandUuid);
+    this.permissionClearingSteerUuids.delete(lifecycle.commandUuid);
+  }
+
+  private appendTaskStateEvent(message: SDKMessage, events: AgentStreamEvent[]): void {
+    const item = this.taskState.observe(message);
+    if (item) events.push({ type: "timeline", provider: "claude", item });
+  }
+
+  /**
+   * A frame from inside a subagent, routed to that child rather than the parent's transcript.
+   */
+  private translateSidechainFrameToEvents(
+    message: SDKMessage,
+    parentToolUseId: string,
+  ): AgentStreamEvent[] {
+    const canonicalSubagentId = this.taskProtocolSource.resolveSubagentId(parentToolUseId);
+    // Once a CLI announces its tasks it announces all of them, so a frame for one that was never
+    // declared is work the filter already rejected — a workflow child, ambient housekeeping, a
+    // grandchild announced in someone else's session. Attributing it anyway materializes exactly
+    // what the filter prevents: a nameless descriptor stuck running, plus a timeline no surface
+    // can open, both held for the session's lifetime.
+    if (this.taskProtocolSource.announcesTasks && !canonicalSubagentId) {
+      return [];
+    }
+    // The child's own frames are the only place its model appears; the task protocol does not
+    // announce it. Read per frame rather than snapshotting, since a provider can swap models
+    // mid-flight on overload or refusal fallback.
+    const runtimeEvents = foldSubagentObservations(
+      this.taskProtocolSource.observeSidechainFrame(
+        message,
+        canonicalSubagentId ?? parentToolUseId,
+      ),
+    ).map((event): AgentStreamEvent => ({ type: "provider_subagent", provider: "claude", event }));
+    const routedId = canonicalSubagentId ?? parentToolUseId;
+    const settled = this.settledSubagentToolCalls.get(routedId);
+    const sidechainEvents = this.sidechainTracker.handleMessage(message, routedId).map((event) => {
+      if (event.type === "timeline" && settled?.turnId) event.turnId = settled.turnId;
+      return event;
+    });
+    return [...runtimeEvents, ...sidechainEvents];
+  }
+
+  /**
+   * The Task card in the parent transcript, built from the declaration.
+   *
+   * The sidechain tracker also emits this card when it first sees the child, and the two
+   * collapse on the shared tool-call id. Emitting it at declaration matters because a
+   * backgrounded subagent produces no sidechain frames at all — verified on the wire — so the
+   * tracker never runs for one and its card would otherwise stay an unlabeled "Task".
+   */
+  private buildSubagentToolCallCard(
+    declaration: Extract<SubagentObservation, { kind: "declared" }>,
+  ): AgentStreamEvent | null {
+    // The launching sidechain already owns and renders this tool call. Mirroring it into the
+    // managed parent's transcript would flatten both the card and the child relationship.
+    if (declaration.parentSubagentId) return null;
+    const toolCall = mapClaudeRunningToolCall({
+      name: "Task",
+      callId: declaration.id,
+      input: null,
+      output: null,
+    });
+    if (!toolCall) return null;
+    return {
+      type: "timeline",
+      provider: "claude",
+      item: { ...toolCall, detail: buildClaudeSubagentCardDetail(declaration) },
+    };
+  }
+
+  private appendSidechainResultEvents(message: SDKMessage, events: AgentStreamEvent[]): void {
+    const content = toObjectRecord(toObjectRecord(message)?.message)?.content;
+    if (!Array.isArray(content)) return;
+    for (const block of content) {
+      const chunk = toObjectRecord(block);
+      if (chunk?.type !== "tool_result" || typeof chunk.tool_use_id !== "string") continue;
+      events.push(
+        ...this.sidechainTracker.finish(chunk.tool_use_id, chunk.is_error ? "failed" : "completed"),
+      );
+    }
+  }
+
+  private async emitSubmittedUserMessage(
+    message: Extract<SDKMessage, { type: "user" }>,
+    turnId: string,
+    clientMessageId?: string,
+  ): Promise<void> {
+    const events: AgentStreamEvent[] = [];
+    await this.appendUserMessageEvents(message, events);
+    if (this.activeForegroundTurnId !== turnId) return;
+    if (events.length === 0) {
+      return;
+    }
+    this.foregroundHasVisibleActivity = true;
+    for (const event of events) {
+      if (event.type === "timeline") {
+        const item =
+          event.item.type === "user_message" && clientMessageId
+            ? { ...event.item, clientMessageId }
+            : event.item;
+        this.notifySubscribers({ ...event, item, turnId });
+      } else {
+        this.notifySubscribers(event);
+      }
+    }
+  }
+
+  private appendSystemMessageEvents(
+    message: Extract<SDKMessage, { type: "system" }>,
+    events: AgentStreamEvent[],
+  ): void {
+    if (message.subtype === "init") {
+      const sessionUpdate = this.handleSystemMessage(message);
+      if (sessionUpdate.notice) {
+        events.push({
+          type: "timeline",
+          provider: "claude",
+          item: sessionUpdate.notice,
+        });
+      }
+      if (sessionUpdate.threadStartedSessionId) {
+        events.push({
+          type: "thread_started",
+          provider: "claude",
+          sessionId: sessionUpdate.threadStartedSessionId,
+        });
+      }
+      return;
+    }
+    if (message.subtype === "api_retry") {
+      // 灵鲸改：CLI 对 401/403 也按可重试错误退避十次（数分钟），用户只看到回合开始。认证失败立即结束回合并打断
+      // 重试；其余状态只记日志，由 CLI 自己重试。打断后 CLI 回的 error_during_execution result 是陈旧结果，照旧抑制。
+      const isAuthFailure = message.error_status === 401 || message.error_status === 403;
+      const retryFacts = {
+        agentId: this.agentId,
+        attempt: message.attempt,
+        maxRetries: message.max_retries,
+        retryDelayMs: message.retry_delay_ms,
+        status: message.error_status,
+        error: message.error,
+      };
+      if (!isAuthFailure) {
+        this.logger.warn(retryFacts, "provider.claude.api_retry");
+        return;
+      }
+      this.logger.error(retryFacts, "provider.claude.api_retry.authentication_failed");
+      if (!this.activeForegroundTurnId && !this.autonomousTurn) return;
+      events.push(...this.sidechainTracker.finishAll("failed"));
+      events.push(
+        this.buildTurnFailedEvent(
+          `Claude Code authentication failed (HTTP ${String(message.error_status)}: ${message.error}); check the instance ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN and ANTHROPIC_BASE_URL`,
+        ),
+      );
+      // 停止互斥：在 CLI 确认打断前，新回合必须被拒，不让旧 Query 的中断打到新输入。
+      const operation = this.interruptActiveTurn().catch((error: unknown) => {
+        this.logger.warn({ err: error, agentId: this.agentId }, "provider.claude.api_retry.interrupt_failed");
+      });
+      if (this.interruptInFlight === null) {
+        this.interruptInFlight = operation;
+        void operation.finally(() => {
+          if (this.interruptInFlight === operation) this.interruptInFlight = null;
+        });
+      }
+      return;
+    }
+    if (message.subtype === "status") {
+      // Claude Code reports a mode it switched to on its own, such as entering
+      // plan mode with the EnterPlanMode tool, through the status message.
+      if (
+        isPermissionMode(message.permissionMode) &&
+        this.observePermissionMode(message.permissionMode)
+      ) {
+        events.push({
+          type: "mode_changed",
+          provider: "claude",
+          currentModeId: this.currentMode,
+          availableModes: this.availableModes,
+        });
+      }
+      const status = toObjectRecord(message)?.status;
+      if (status === "compacting") {
+        this.compacting = true;
+        // Claude Code repeats this status every 30 seconds until the compaction
+        // finishes. Each repeat used to open its own marker, and the app only ever
+        // resolves one of them, so the rest stayed on "Compacting..." forever.
+        if (!this.compactionMarkerOpen) {
+          this.compactionMarkerOpen = true;
+          events.push({
+            type: "timeline",
+            item: { type: "compaction", status: "loading" },
+            provider: "claude",
+          });
+        }
+      }
+      return;
+    }
+    if (message.subtype === "compact_boundary") {
+      this.compactionMarkerOpen = false;
+      const compactMetadata = readCompactionMetadata(message);
+      events.push({
+        type: "timeline",
+        item: {
+          type: "compaction",
+          status: "completed",
+          trigger: compactMetadata?.trigger === "manual" ? "manual" : "auto",
+          preTokens: compactMetadata?.preTokens,
+        },
+        provider: "claude",
+      });
+      events.push(this.contextUsage.buildCompactionUsageEvent(compactMetadata?.postTokens));
+      return;
+    }
+    if (message.subtype === "task_notification") {
+      this.appendTaskNotificationEvents(message, events);
+      return;
+    }
+    if (message.subtype === "task_progress") {
+      return;
+    }
+  }
+
+  private appendTaskNotificationEvents(
+    message: Extract<SDKMessage, { type: "system"; subtype: "task_notification" }>,
+    events: AgentStreamEvent[],
+  ): void {
+    const taskUseId = message.tool_use_id;
+    const cachedTool = taskUseId ? this.toolUseCache.get(taskUseId) : undefined;
+    // The task protocol owns provider-subagent identity. Workflow launch results arrive before
+    // their terminal notification and clear toolUseCache, so the cache is only a fallback for
+    // older Claude streams which do not announce tasks.
+    if (
+      this.taskProtocolSource.isDeclaredTask(message.task_id) ||
+      isClaudeSubagentToolName(cachedTool?.name)
+    ) {
+      return;
+    }
+    const taskNotificationItem = mapTaskNotificationSystemRecordToToolCall(message);
+    const ownerSubagentId = this.taskProtocolSource.resolveTaskOwner(message.task_id, taskUseId);
+    if (taskNotificationItem && ownerSubagentId) {
+      events.push({
+        type: "provider_subagent",
+        provider: "claude",
+        event: { type: "timeline", id: ownerSubagentId, item: taskNotificationItem },
+      });
+      return;
+    }
+    if (taskNotificationItem) {
+      events.push({
+        type: "timeline",
+        item: taskNotificationItem,
+        provider: "claude",
+      });
+    }
+  }
+
+  private async appendUserMessageEvents(
+    message: Extract<SDKMessage, { type: "user" }>,
+    events: AgentStreamEvent[],
+  ): Promise<void> {
+    if (isSyntheticUserEntry(message)) {
+      return;
+    }
+    if (this.compacting) {
+      this.compacting = false;
+      return;
+    }
+    const messageId =
+      typeof message.uuid === "string" && message.uuid.length > 0 ? message.uuid : undefined;
+    if (messageId && this.emittedUserMessageIds.has(messageId)) {
+      return;
+    }
+    this.rememberUserMessageId(messageId);
+    this.rememberEmittedUserMessageId(messageId);
+    const content = message.message?.content;
+    const taskNotificationItem = mapTaskNotificationUserContentToToolCall({
+      content,
+      messageId,
+    });
+    if (taskNotificationItem) {
+      this.appendUserTaskNotificationEvent(taskNotificationItem, events);
+      return;
+    }
+    if (typeof content === "string" && content.length > 0) {
+      if (!isClaudeTranscriptNoiseText(content)) {
+        events.push({
+          type: "timeline",
+          item: {
+            type: "user_message",
+            text: content,
+            ...(messageId ? { messageId } : {}),
+          },
+          provider: "claude",
+        });
+      }
+      return;
+    }
+    if (Array.isArray(content)) {
+      await this.appendUserContentArrayEvents(content, messageId, events);
+    }
+  }
+
+  private appendUserTaskNotificationEvent(
+    item: Extract<AgentTimelineItem, { type: "tool_call" }>,
+    events: AgentStreamEvent[],
+  ): void {
+    const taskId = typeof item.metadata?.taskId === "string" ? item.metadata.taskId : undefined;
+    const toolUseId =
+      typeof item.metadata?.toolUseId === "string" ? item.metadata.toolUseId : undefined;
+    if (taskId && this.taskProtocolSource.isDeclaredTask(taskId)) return;
+    const ownerSubagentId = taskId
+      ? this.taskProtocolSource.resolveTaskOwner(taskId, toolUseId)
+      : undefined;
+    if (ownerSubagentId) {
+      events.push({
+        type: "provider_subagent",
+        provider: "claude",
+        event: { type: "timeline", id: ownerSubagentId, item },
+      });
+      return;
+    }
+    events.push({ type: "timeline", item, provider: "claude" });
+  }
+
+  private async appendUserContentArrayEvents(
+    content: ReadonlyArray<unknown>,
+    messageId: string | undefined,
+    events: AgentStreamEvent[],
+  ): Promise<void> {
+    const timelineItems = await this.mapBlocksToTimeline(content, {
+      textMessageType: "user_message",
+    });
+    for (const item of timelineItems) {
+      if (item.type === "user_message" && messageId && !item.messageId) {
+        events.push({
+          type: "timeline",
+          item: { ...item, messageId },
+          provider: "claude",
+        });
+        continue;
+      }
+      events.push({ type: "timeline", item, provider: "claude" });
+    }
+  }
+
+  private async appendStreamEventEvents(
+    message: Extract<SDKMessage, { type: "stream_event" }>,
+    events: AgentStreamEvent[],
+    options: { suppressAssistantText?: boolean; suppressReasoning?: boolean } | undefined,
+  ): Promise<void> {
+    const usageUpdatedEvent = this.contextUsage.buildStreamUsageEvent(message.event);
+    if (usageUpdatedEvent) {
+      events.push(usageUpdatedEvent);
+    }
+    const timelineItems = await this.mapPartialEvent(message.event, {
+      suppressAssistantText: options?.suppressAssistantText ?? false,
+      suppressReasoning: options?.suppressReasoning ?? false,
+    });
+    for (const item of timelineItems) {
+      events.push({ type: "timeline", item, provider: "claude" });
+    }
+  }
+
+  private appendResultEvents(
+    message: Extract<SDKMessage, { type: "result" }>,
+    events: AgentStreamEvent[],
+  ): void {
+    const usage = this.convertUsage(message);
+    // Claude Code reports a turn that stopped on an API error (a usage limit, an overloaded or
+    // rejected request) as `success` with `is_error`, carrying the error text in `result`.
+    if (message.subtype === "success" && message.is_error) {
+      const withheld = this.withheldErrorReply;
+      this.withheldErrorReply = [];
+      const resultText = typeof message.result === "string" ? message.result.trim() : "";
+      const withheldText = withheld
+        .map((item) => (item.type === "assistant_message" ? item.text : ""))
+        .join("\n")
+        .trim();
+      if (usage) events.push({ type: "usage_updated", provider: "claude", usage });
+      events.push(...this.sidechainTracker.finishAll("failed"));
+      events.push(this.buildTurnFailedEvent(resultText || withheldText || "Claude run failed"));
+      return;
+    }
+    const releasedErrorReply = this.withheldErrorReply.length > 0;
+    this.releaseWithheldErrorReply(events);
+    if (message.subtype === "success") {
+      events.push(...this.sidechainTracker.finishAll("completed"));
+      // Built-in slash commands (e.g. /voice, /usage, "Unknown command: …")
+      // run client-side in the Claude CLI with no model turn — output_tokens
+      // is 0 and the user-visible text is carried in `result`. Surface it only
+      // when the turn has not already emitted assistant text so zero-token
+      // accounting from provider gateways does not duplicate streamed output.
+      const resultText = typeof message.result === "string" ? message.result.trim() : "";
+      const outputTokens = message.usage?.output_tokens;
+      if (
+        resultText.length > 0 &&
+        outputTokens === 0 &&
+        !this.activeTurnHasAssistantText &&
+        !releasedErrorReply
+      ) {
+        events.push({
+          type: "timeline",
+          provider: "claude",
+          item: {
+            type: "assistant_message",
+            text: resultText,
+            messageId: message.uuid,
+          },
+        });
+      }
+      events.push({ type: "turn_completed", provider: "claude", usage });
+      return;
+    }
+    const errorMessage =
+      "errors" in message && Array.isArray(message.errors) && message.errors.length > 0
+        ? message.errors.join("\n")
+        : "Claude run failed";
+    if (usage) events.push({ type: "usage_updated", provider: "claude", usage });
+    events.push(...this.sidechainTracker.finishAll("failed"));
+    events.push(this.buildTurnFailedEvent(errorMessage));
+  }
+
+  private releaseWithheldErrorReply(events: AgentStreamEvent[]): void {
+    if (this.withheldErrorReply.length === 0) return;
+    for (const item of this.withheldErrorReply) {
+      events.push({ type: "timeline", item, provider: "claude" });
+    }
+    this.withheldErrorReply = [];
+  }
+
+  private createClaudeSessionChangedNotice(
+    oldSessionId: string,
+    newSessionId: string,
+  ): AgentTimelineItem {
+    return {
+      type: "assistant_message",
+      text: `Claude switched to a new session: ${oldSessionId} -> ${newSessionId}`,
+    };
+  }
+
+  private captureSessionIdFromMessage(message: SDKMessage): {
+    threadStartedSessionId: string | null;
+    notice: AgentTimelineItem | null;
+  } {
+    const msgRecord = toObjectRecord(message) ?? {};
+    const sessionId = extractSessionIdRaw({
+      session_id: msgRecord.session_id,
+      sessionId: msgRecord.sessionId,
+      session: isObjectRecord(msgRecord.session) ? { id: msgRecord.session.id } : null,
+    }).trim();
+    if (!sessionId) {
+      return { threadStartedSessionId: null, notice: null };
+    }
+    if (this.claudeSessionId === null) {
+      this.claudeSessionId = sessionId;
+      this.pendingFreshSessionId = null;
+      this.persistence = null;
+      return { threadStartedSessionId: sessionId, notice: null };
+    }
+    if (this.claudeSessionId === sessionId) {
+      this.pendingFreshSessionId = null;
+      return { threadStartedSessionId: null, notice: null };
+    }
+    const oldSessionId = this.claudeSessionId;
+    // Session ID changed mid-stream (e.g. a hook caused Claude to restart
+    // with a new session). Accept the new ID and continue — the turn should
+    // not be failed just because the underlying subprocess cycled.
+    this.logger.warn(
+      { existingSessionId: this.claudeSessionId, newSessionId: sessionId },
+      "Claude session ID changed in message; accepting new session",
+    );
+    this.claudeSessionId = sessionId;
+    this.pendingFreshSessionId = null;
+    this.persistence = null;
+    return {
+      threadStartedSessionId: sessionId,
+      notice: this.createClaudeSessionChangedNotice(oldSessionId, sessionId),
+    };
+  }
+
+  private handleSystemMessage(message: SDKSystemMessage): {
+    threadStartedSessionId: string | null;
+    notice: AgentTimelineItem | null;
+  } {
+    if (message.subtype !== "init") {
+      return { threadStartedSessionId: null, notice: null };
+    }
+
+    const msgRecord = toObjectRecord(message) ?? {};
+    const newSessionId = extractSessionIdRaw({
+      session_id: msgRecord.session_id,
+      sessionId: msgRecord.sessionId,
+      session: isObjectRecord(msgRecord.session) ? { id: msgRecord.session.id } : null,
+    }).trim();
+    if (!newSessionId) {
+      return { threadStartedSessionId: null, notice: null };
+    }
+    const existingSessionId = this.claudeSessionId;
+    let threadStartedSessionId: string | null = null;
+    let notice: AgentTimelineItem | null = null;
+
+    if (existingSessionId === null) {
+      this.claudeSessionId = newSessionId;
+      this.pendingFreshSessionId = null;
+      threadStartedSessionId = newSessionId;
+      this.logger.debug({ sessionId: newSessionId }, "Claude session ID set for the first time");
+    } else if (existingSessionId === newSessionId) {
+      this.pendingFreshSessionId = null;
+      this.logger.debug({ sessionId: newSessionId }, "Claude session ID unchanged (same value)");
+    } else {
+      // Session ID changed in an init message (e.g. a hook restarted Claude
+      // with a new session mid-turn). Accept the new ID and continue.
+      this.logger.warn(
+        { existingSessionId, newSessionId },
+        "Claude session ID changed in init message; accepting new session",
+      );
+      this.claudeSessionId = newSessionId;
+      this.pendingFreshSessionId = null;
+      threadStartedSessionId = newSessionId;
+      notice = this.createClaudeSessionChangedNotice(existingSessionId, newSessionId);
+    }
+    this.availableModes = DEFAULT_MODES;
+    this.observePermissionMode(message.permissionMode);
+    this.persistence = null;
+    if (message.model) {
+      const runtimeContextWindowMaxTokens = getClaudeContextWindowMaxTokens(message.model);
+      // Seed usage before the first result, including settings-resolved aliases.
+      // A repeated init for the same model must retain the SDK's reported limit.
+      if (message.model !== this.lastRuntimeModel && runtimeContextWindowMaxTokens !== undefined) {
+        this.contextUsage.setInitialContextWindowMaxTokens(runtimeContextWindowMaxTokens);
+      }
+      const normalizedRuntimeModel = normalizeClaudeRuntimeModelId(message.model);
+      this.logger.debug(
+        { runtimeModel: message.model, normalizedRuntimeModel },
+        "Captured runtime model from SDK init",
+      );
+      if (normalizedRuntimeModel) {
+        this.lastOptionsModel = normalizedRuntimeModel;
+      } else if (!this.lastOptionsModel) {
+        this.lastOptionsModel = this.config.model ?? null;
+      }
+      this.lastRuntimeModel = message.model;
+      this.cachedRuntimeInfo = null;
+    }
+    return { threadStartedSessionId, notice };
+  }
+
+  /** Records a mode Claude Code reports, returning whether it differs from the current one. */
+  private observePermissionMode(mode: PermissionMode): boolean {
+    const changed = this.currentMode !== mode;
+    this.currentMode = mode;
+    if (mode !== "plan") {
+      this.planResumeMode = mode;
+    }
+    return changed;
+  }
+
+  private readMissingResumedConversationError(message: SDKMessage): string | null {
+    if (message.type !== "result") return null;
+    if (message.subtype !== "error_during_execution") return null;
+    if (!this.claudeSessionId) {
+      return null;
+    }
+    const errors = "errors" in message && Array.isArray(message.errors) ? message.errors : [];
+    for (const entry of errors) {
+      if (typeof entry !== "string") {
+        continue;
+      }
+      const match = entry.match(/^No conversation found with session ID:\s*(.+)$/);
+      if (!match) {
+        continue;
+      }
+      if (match[1]?.trim() === this.claudeSessionId) {
+        return entry.trim();
+      }
+    }
+    return null;
+  }
+
+  private convertUsage(message: SDKResultMessage): AgentUsage | undefined {
+    return this.contextUsage.buildResultUsage(message, this.lastRuntimeModel ?? this.config.model);
+  }
+
+  // 灵鲸改：SDK 控制回调可能先于异步消息泵处理已收到的 task_started；等声明事件，不能靠事件循环延迟猜归属。
+  private async permissionChildIdentity(taskId: string, signal: AbortSignal): Promise<string> {
+    signal = AbortSignal.any([signal, this.lifetime.signal]);
+    signal.throwIfAborted();
+    const known = this.taskProtocolSource.canonicalIdForTask(taskId);
+    if (known) return known;
+    const declared = Promise.withResolvers<string>();
+    const unsubscribe = this.subscribe(() => {
+      const id = this.taskProtocolSource.canonicalIdForTask(taskId);
+      if (id) declared.resolve(id);
+    });
+    const abort = () => declared.reject(new Error("Claude permission request cancelled"));
+    signal.addEventListener("abort", abort, { once: true });
+    if (signal.aborted) abort();
+    try {
+      return await withTimeout(declared.promise, this.adapter.controlTimeoutMs, "Claude child identity announcement timed out");
+    } finally {
+      signal.removeEventListener("abort", abort);
+      unsubscribe();
+    }
+  }
+
+  private handlePermissionRequest: CanUseTool = async (
+    toolName,
+    input,
+    options,
+  ): Promise<PermissionResult> => {
+    const requestId = `permission-${randomUUID()}`;
+    const kind = resolvePermissionKind(toolName, input);
+    const requestInput = normalizeClaudeAskUserQuestionRequestInput(toolName, input);
+    const metadata: AgentMetadata = {};
+    // 灵鲸改：只发布已声明的稳定身份；超时原生审批直接拒绝，taskId 仅留诊断。
+    if (options.agentID) {
+      try {
+        metadata.childId = await this.permissionChildIdentity(options.agentID, options.signal);
+      } catch (error) {
+        this.logger.warn({ err: error, taskId: options.agentID }, "Claude child permission attribution failed");
+        return { behavior: "deny", message: "Child permission denied: no confirmed child announcement. Restart the child task and retry; inspect the provider diagnostic if this persists.", interrupt: options.signal.aborted || this.closed };
+      }
+    }
+    if (options.toolUseID) {
+      metadata.toolUseId = options.toolUseID;
+    }
+    if (toolName === "ExitPlanMode" && typeof input.plan === "string") {
+      metadata.planText = input.plan;
+    }
+    const toolDetail =
+      kind === "tool"
+        ? mapClaudeRunningToolCall({
+            name: toolName,
+            callId: options.toolUseID ?? requestId,
+            input,
+            output: null,
+          })?.detail
+        : undefined;
+
+    const request: AgentPermissionRequest = {
+      id: requestId,
+      provider: "claude",
+      name: toolName,
+      kind,
+      ...buildClaudeQuestionPermissionSummary(toolName, input),
+      input: requestInput,
+      detail: toolDetail,
+      suggestions: options.suggestions?.map((suggestion) => ({
+        ...suggestion,
+      })),
+      actions: kind === "plan" ? buildClaudePlanPermissionActions(this.planResumeMode) : undefined,
+      metadata: Object.keys(metadata).length ? metadata : undefined,
+    };
+
+    if (this.permissionClearingSteerUuids.size > 0) {
+      return this.resolveDeniedPermission(request, {
+        behavior: "deny",
+        message: STEER_SUPERSEDED_PERMISSION_MESSAGE,
+      });
+    }
+
+    return await new Promise<PermissionResult>((resolve, reject) => {
+      const cleanupFns: Array<() => void> = [];
+      const cleanup = () => {
+        while (cleanupFns.length) {
+          const fn = cleanupFns.pop();
+          try {
+            fn?.();
+          } catch {
+            // ignore cleanup errors
+          }
+        }
+      };
+
+      const abortHandler = () => {
+        this.pendingPermissions.delete(requestId);
+        cleanup();
+        this.pushEvent({
+          type: "permission_resolved",
+          provider: "claude",
+          requestId,
+          resolution: { behavior: "deny", message: "Permission request canceled" },
+        });
+        reject(new Error("Permission request aborted"));
+      };
+
+      if (options?.signal) {
+        if (options.signal.aborted) {
+          abortHandler();
+          return;
+        }
+        options.signal.addEventListener("abort", abortHandler, { once: true });
+        cleanupFns.push(() => options.signal?.removeEventListener("abort", abortHandler));
+      }
+
+      this.pendingPermissions.set(requestId, {
+        request,
+        resolve,
+        reject,
+        cleanup,
+      });
+      this.pushEvent({ type: "permission_requested", provider: "claude", request });
+    });
+  };
+
+  private enqueueTimeline(item: AgentTimelineItem) {
+    this.pushEvent({ type: "timeline", item, provider: "claude" });
+  }
+
+  private flushPendingToolCalls() {
+    for (const [id, entry] of this.toolUseCache) {
+      if (entry.started) {
+        this.pushToolCall(
+          mapClaudeCanceledToolCall({
+            name: entry.name,
+            callId: id,
+            input: entry.input ?? null,
+            output: null,
+          }),
+        );
+      }
+    }
+    this.toolUseCache.clear();
+    this.sidechainTracker.clear();
+    // The task protocol's routing table is session-scoped, so it is deliberately NOT reset here:
+    // the turn ended, the session did not. Wiping it would strand every task id the session still
+    // holds — a backgrounded child that settles after the interrupt would find no descriptor to
+    // land on, and ownership would flip back to the legacy tracker mid-session.
+    for (const event of foldSubagentObservations(
+      this.taskProtocolSource.cancelRunningForegroundTasks(),
+    )) {
+      this.pushEvent({ type: "provider_subagent", provider: "claude", event });
+    }
+  }
+
+  private pushToolCall(
+    item: Extract<AgentTimelineItem, { type: "tool_call" }> | null,
+    target?: AgentTimelineItem[],
+  ) {
+    if (!item) {
+      return;
+    }
+    if (target) {
+      target.push(item);
+      return;
+    }
+    this.enqueueTimeline(item);
+  }
+
+  private pushEvent(event: AgentStreamEvent) {
+    this.notifySubscribers(event);
+  }
+
+  /**
+   * Effort is reachable only through hooks.
+   *
+   * It appears nowhere on the message stream — verified by scanning every message type at depth
+   * — and the level Paseo requests is not necessarily the level that runs, because a model that
+   * does not support it is silently downgraded. A hook firing inside a subagent reports the
+   * active post-downgrade level alongside the subagent's `agent_id`.
+   *
+   * These are observation-only: they record what they see and always return an empty result, so
+   * they can never alter tool execution or turn control.
+   */
+  // 灵鲸改：SDK 自有钩子与子观察并存，不加载外部 hooks。
+  private combineHooks(): NonNullable<ClaudeOptions["hooks"]> {
+    const own = this.adapter.sdkOptions.hooks ?? {};
+    const observed = this.buildSubagentEffortHooks();
+    return {
+      ...own,
+      PreToolUse: [...(own.PreToolUse ?? []), ...(observed.PreToolUse ?? [])],
+      PostToolUse: [...(own.PostToolUse ?? []), ...(observed.PostToolUse ?? [])],
+      SubagentStop: [...(own.SubagentStop ?? []), ...(observed.SubagentStop ?? [])],
+    };
+  }
+
+  private buildSubagentEffortHooks(): NonNullable<ClaudeOptions["hooks"]> {
+    const observe = async (input: unknown): Promise<Record<string, never>> => {
+      try {
+        for (const event of foldSubagentObservations(
+          this.taskProtocolSource.observeHook(input as ClaudeHookObservationInput),
+        )) {
+          this.notifySubscribers({ type: "provider_subagent", provider: "claude", event });
+        }
+      } catch (error) {
+        this.logger.debug({ err: error }, "Failed to read subagent effort from hook");
+      }
+      return {};
+    };
+
+    // SubagentStart carries no effort (documented as absent for lifecycle hooks), so the value
+    // lands on the child's first tool use. SubagentStop covers a child that used no tools.
+    return {
+      PreToolUse: [{ hooks: [observe] }],
+      PostToolUse: [{ hooks: [observe] }],
+      SubagentStop: [{ hooks: [observe] }],
+    };
+  }
+
+  private notifySubscribers(event: AgentStreamEvent): void {
+    const turnId =
+      getAgentStreamEventTurnId(event) ?? this.activeForegroundTurnId ?? this.autonomousTurn?.id;
+    const tagged = turnId ? { ...event, turnId } : event;
+    this.logger.trace(
+      {
+        agentId: this.agentId,
+        provider: "claude",
+        sessionId: this.claudeSessionId,
+        turnId: getAgentStreamEventTurnId(tagged),
+        event: tagged,
+      },
+      "provider.claude.event_emit",
+    );
+    for (const callback of this.subscribers) {
+      try {
+        callback(tagged);
+      } catch (error) {
+        this.logger.warn({ err: error }, "Subscriber callback threw");
+      }
+    }
+  }
+
+  private normalizePermissionUpdates(
+    updates?: AgentPermissionUpdate[],
+  ): PermissionUpdate[] | undefined {
+    if (!updates || updates.length === 0) {
+      return undefined;
+    }
+    const normalized = updates.filter(isPermissionUpdate);
+    return normalized.length > 0 ? normalized : undefined;
+  }
+
+  private rejectAllPendingPermissions(error: Error) {
+    for (const [id, pending] of this.pendingPermissions) {
+      pending.cleanup?.();
+      pending.reject(error);
+      this.pendingPermissions.delete(id);
+      this.pushEvent({
+        type: "permission_resolved",
+        provider: "claude",
+        requestId: id,
+        resolution: { behavior: "deny", message: error.message },
+      });
+    }
+  }
+
+  ensureHistoryReady(): Promise<void> {
+    if (!this.historyReady) {
+      this.historyReady = this.historySessionId
+        ? this.loadPersistedHistory(this.historySessionId)
+        : Promise.resolve();
+    }
+    return this.historyReady;
+  }
+
+  private async loadPersistedHistory(sessionId: string): Promise<void> {
+    let historyPath: string | null = null;
+    this.replayingHistory = true;
+    try {
+      this.taskState.reset();
+      historyPath = await this.resolveHistoryPath(sessionId);
+      if (!historyPath || !(await transcriptExists(historyPath))) {
+        this.logger.info(
+          { sessionId, cwd: this.config.cwd, historyPath },
+          "No Claude transcript to load history from",
+        );
+        return;
+      }
+      await withClaudeReplayHistory(historyPath, async (history) => {
+        const replay = await this.ingestPersistedSidechains(history);
+        await this.ingestPersistedHistory(history.parentEntries, replay);
+      });
+    } catch (error) {
+      this.logger.warn(
+        { err: error, sessionId, historyPath },
+        "Failed to load Claude history from transcript",
+      );
+    } finally {
+      this.replayingHistory = false;
+    }
+  }
+
+  private async ingestPersistedHistory(
+    entries: Iterable<ClaudeHistoryEntry> | AsyncIterable<ClaudeHistoryEntry>,
+    replay: ClaudeReplayOwnership,
+  ): Promise<void> {
+    const timeline: PersistedTimelineEntry[] = [];
+    for await (const entry of entries) {
+      await this.ingestPersistedHistoryEntry(entry, timeline, replay);
+    }
+
+    if (timeline.length > 0) {
+      this.persistedHistory = [...this.persistedHistory, ...timeline];
+      this.historyPending = true;
+    }
+  }
+
+  private async ingestPersistedSidechains(
+    history: ClaudeReplayHistory,
+  ): Promise<ClaudeReplayOwnership> {
+    const parentFacts = await readClaudeReplayParentFacts(history.parentEntries);
+
+    // Replay produces the same observations the live task protocol produces, then folds them
+    // with the same function, so identity and status are derived once for both paths.
+    const subagents = [];
+    for (const subagent of history.subagents) {
+      subagents.push({
+        ...subagent,
+        parentFacts: await readClaudeReplayParentFacts(subagent.entries),
+      });
+    }
+    const subagentReplay = await observeReplaySubagents({
+      subagents,
+      parent: parentFacts,
+      convertEntry: (entry) => this.convertHistoryEntry(entry),
+    });
+    const observations = [
+      ...subagentReplay.observations,
+      ...(await observeReplayWorkflows({
+        workflows: history.workflows,
+        parentEntries: history.parentEntries,
+        entriesByRunId: history.workflowEntriesByRunId,
+        convertEntry: (entry) => this.convertHistoryEntry(entry),
+      })),
+    ];
+    this.taskProtocolSource.restore(subagentReplay.restored);
+    const restoredProviderSubagentIds = new Set(
+      observations
+        .filter((observation) => observation.kind === "declared")
+        .map((observation) => observation.id),
+    );
+    const replay = {
+      restoredIds: restoredProviderSubagentIds,
+      toolOwners: subagentReplay.toolOwners,
+      subagentToolCalls: parentFacts.toolCalls,
+    };
+    if (observations.length === 0) return replay;
+
+    for (const event of foldSubagentObservations(observations)) {
+      this.persistedProviderSubagentEvents.push({
+        type: "provider_subagent",
+        provider: "claude",
+        event,
+      });
+    }
+    this.historyPending = true;
+    return replay;
+  }
+
+  private async ingestPersistedHistoryEntry(
+    entry: ClaudeHistoryEntry,
+    timeline: PersistedTimelineEntry[],
+    replay: ClaudeReplayOwnership,
+  ): Promise<void> {
+    if (entry.isSidechain) {
+      return;
+    }
+    const notificationToolUseId = readTaskNotificationToolUseIdFromHistoryRecord(entry);
+    if (notificationToolUseId && replay.restoredIds.has(notificationToolUseId)) {
+      return;
+    }
+
+    const historyTimestamp = normalizeProviderReplayTimestamp(entry.timestamp);
+    const notificationOwner = notificationToolUseId
+      ? replay.toolOwners.get(notificationToolUseId)
+      : undefined;
+    if (notificationOwner) {
+      for (const item of await this.convertHistoryEntry(entry)) {
+        this.persistedProviderSubagentEvents.push({
+          type: "provider_subagent",
+          provider: "claude",
+          event: {
+            type: "timeline",
+            id: notificationOwner,
+            item,
+            timestamp: historyTimestamp ?? undefined,
+          },
+        });
+      }
+      return;
+    }
+    const taskSnapshot = this.taskState.observe(entry);
+    const items = [
+      ...(taskSnapshot ? [taskSnapshot] : []),
+      ...(await this.convertHistoryEntry(entry)).map((item) =>
+        labelReplayedSubagentCard(item, replay.subagentToolCalls),
+      ),
+    ];
+    const isVisibleUserEntry =
+      entry.type === "user" &&
+      typeof entry.uuid === "string" &&
+      !isSyntheticHistoryUserEntry(entry) &&
+      !isToolResultUserEntry(entry);
+    if (isVisibleUserEntry && typeof entry.uuid === "string") {
+      this.rememberUserMessageId(entry.uuid);
+    }
+    if (entry.type === "assistant" && typeof entry.uuid === "string") {
+    }
+
+    if (items.length > 0) {
+      for (const item of items) {
+        timeline.push({
+          item,
+          timestamp: historyTimestamp ?? undefined,
+        });
+      }
+    }
+  }
+
+  private async resolveHistoryPath(sessionId: string): Promise<string | null> {
+    const cwd = this.config.cwd;
+    if (!cwd) return null;
+    return claudeTranscriptPath({
+      cwd,
+      sessionId,
+      configDir: claudeConfigDir(this.harnessEnvironment),
+    });
+  }
+
+  private async convertHistoryEntry(entry: ClaudeHistoryEntry): Promise<AgentTimelineItem[]> {
+    return (
+      await convertClaudeHistoryEntry(entry, (content) => this.mapBlocksToTimeline(content))
+    ).map(limitAgentTimelineItemContent);
+  }
+
+  // Maps Claude content blocks into AgentTimelineItems.
+  //
+  // textMessageType controls what type text blocks emit:
+  //   - "assistant_message" (default): one item per text block (streaming granularity)
+  //   - "user_message": coalesces all text blocks into a single user_message
+  //     (matches extractUserMessageText semantics: trim each block, join with "\n\n")
+  //
+  // suppressAssistantText only applies when textMessageType is "assistant_message" — user text
+  // must never be suppressed since the TimelineAssembler only handles assistant text.
+  //
+  // NOTE: convertClaudeHistoryEntry uses extractUserMessageText directly instead of this function
+  // for user entries. Both paths must produce equivalent user_message items.
+  private async mapBlocksToTimeline(
+    content: string | ReadonlyArray<unknown>,
+    options?: {
+      textMessageType?: "assistant_message" | "user_message";
+      suppressAssistantText?: boolean;
+      suppressReasoning?: boolean;
+    },
+  ): Promise<AgentTimelineItem[]> {
+    const textMessageType = options?.textMessageType ?? "assistant_message";
+    const suppressText =
+      textMessageType === "assistant_message" && (options?.suppressAssistantText ?? false);
+    const suppressReasoning = options?.suppressReasoning ?? false;
+
+    if (typeof content === "string") {
+      if (
+        !content ||
+        content === INTERRUPT_TOOL_USE_PLACEHOLDER ||
+        isClaudeTranscriptNoiseText(content)
+      ) {
+        return [];
+      }
+      if (suppressText) {
+        return [];
+      }
+      return [{ type: textMessageType, text: content }];
+    }
+
+    const items: AgentTimelineItem[] = [];
+    // User SDK entries can arrive as multiple text blocks, but Paseo treats them as one message.
+    const userTextParts: string[] = [];
+    for (const block of content) {
+      if (!isClaudeContentChunk(block) || this.mapSubagentHandbackBlock(block, items)) {
+        continue;
+      }
+      await this.mapBlockToTimeline(block, {
+        items,
+        userTextParts,
+        textMessageType,
+        suppressText,
+        suppressReasoning,
+      });
+    }
+
+    if (textMessageType === "user_message" && userTextParts.length > 0) {
+      items.unshift({
+        type: "user_message",
+        text: userTextParts.join("\n\n"),
+      });
+    }
+
+    return items;
+  }
+
+  private appendTextBlockToTimeline(
+    block: ClaudeContentChunk,
+    context: {
+      items: AgentTimelineItem[];
+      userTextParts: string[];
+      textMessageType: "assistant_message" | "user_message";
+      suppressText: boolean;
+    },
+  ): void {
+    const { items, userTextParts, textMessageType, suppressText } = context;
+    const text = typeof block.text === "string" ? block.text : "";
+    if (!text || text === INTERRUPT_TOOL_USE_PLACEHOLDER || isClaudeTranscriptNoiseText(text)) {
+      return;
+    }
+    if (textMessageType === "user_message") {
+      const trimmed = text.trim();
+      if (trimmed) {
+        userTextParts.push(trimmed);
+      }
+      return;
+    }
+    if (!suppressText) {
+      items.push({ type: "assistant_message", text });
+    }
+  }
+
+  private async mapBlockToTimeline(
+    block: ClaudeContentChunk,
+    context: {
+      items: AgentTimelineItem[];
+      userTextParts: string[];
+      textMessageType: "assistant_message" | "user_message";
+      suppressText: boolean;
+      suppressReasoning: boolean;
+    },
+  ): Promise<void> {
+    switch (block.type) {
+      case "text":
+      case "text_delta":
+        this.appendTextBlockToTimeline(block, context);
+        break;
+      case "thinking":
+      case "thinking_delta":
+        if (typeof block.thinking === "string" && block.thinking && !context.suppressReasoning) {
+          context.items.push({ type: "reasoning", text: block.thinking });
+        }
+        break;
+      case "tool_use":
+      case "server_tool_use":
+      case "mcp_tool_use":
+        this.handleToolUseStart(block, context.items);
+        break;
+      case "tool_result":
+      case "mcp_tool_result":
+      case "web_fetch_tool_result":
+      case "web_search_tool_result":
+      case "code_execution_tool_result":
+      case "bash_code_execution_tool_result":
+      case "text_editor_code_execution_tool_result":
+        await this.handleToolResult(block, context.items);
+        break;
+      default:
+        break;
+    }
+  }
+
+  // A subagent's handback call is its final message, and the call's result is only an
+  // acknowledgement, so neither becomes a tool call.
+  private mapSubagentHandbackBlock(block: ClaudeContentChunk, items: AgentTimelineItem[]): boolean {
+    if (typeof block.tool_use_id === "string" && this.subagentHandbackIds.has(block.tool_use_id)) {
+      this.subagentHandbackIds.delete(block.tool_use_id);
+      return true;
+    }
+    const handback = readClaudeSubagentHandback(block);
+    if (!handback) {
+      return false;
+    }
+    this.subagentHandbackIds.add(handback.callId);
+    if (handback.report) {
+      items.push({ type: "assistant_message", text: handback.report });
+    }
+    return true;
+  }
+
+  private handleToolUseStart(block: ClaudeContentChunk, items: AgentTimelineItem[]): void {
+    const entry = this.upsertToolUseEntry(block);
+    if (!entry) {
+      return;
+    }
+    if (entry.started) {
+      return;
+    }
+    entry.started = true;
+    this.toolUseCache.set(entry.id, entry);
+    this.pushToolCall(
+      mapClaudeRunningToolCall({
+        name: entry.name,
+        callId: entry.id,
+        input: entry.input ?? this.normalizeToolInput(block.input) ?? null,
+        output: null,
+      }),
+      items,
+    );
+  }
+
+  private async handleToolResult(
+    block: ClaudeContentChunk,
+    items: AgentTimelineItem[],
+  ): Promise<void> {
+    const entry =
+      typeof block.tool_use_id === "string" ? this.toolUseCache.get(block.tool_use_id) : undefined;
+    const blockToolName = typeof block.tool_name === "string" ? block.tool_name : undefined;
+    const toolName = entry?.name ?? blockToolName ?? "tool";
+    const callId =
+      typeof block.tool_use_id === "string" && block.tool_use_id.length > 0
+        ? block.tool_use_id
+        : (entry?.id ?? null);
+
+    // Pull image blocks out of the result so base64 never reaches the tool output, and render each
+    // one as an assistant_message markdown image after the tool_call (matching how Codex emits).
+    const { images, text } = splitClaudeToolResultImages(block.content);
+    const output = this.buildToolOutput(text, block, entry);
+
+    const settledToolCall = block.is_error
+      ? mapClaudeFailedToolCall({
+          name: toolName,
+          callId,
+          input: entry?.input ?? null,
+          output: output ?? null,
+          error: { ...block, content: text },
+        })
+      : mapClaudeCompletedToolCall({
+          name: toolName,
+          callId,
+          input: entry?.input ?? null,
+          output: output ?? null,
+        });
+    this.pushToolCall(settledToolCall, items);
+    this.rememberSettledSubagentToolCall(settledToolCall, entry);
+
+    for (const image of images) {
+      const imageItem = await renderProviderImageOutputAsAssistantMarkdown(image, {
+        materialize: materializeProviderImage,
+      });
+      if (imageItem) {
+        items.push(imageItem);
+      }
+    }
+
+    if (typeof block.tool_use_id === "string") {
+      this.toolUseCache.delete(block.tool_use_id);
+    }
+  }
+
+  private rememberSettledSubagentToolCall(
+    item: Extract<AgentTimelineItem, { type: "tool_call" }> | null,
+    entry: ToolUseCacheEntry | undefined,
+  ): void {
+    const subagentId = item ? this.taskProtocolSource.resolveSubagentId(item.callId) : undefined;
+    if (!item || !subagentId) return;
+    this.settledSubagentToolCalls.set(subagentId, {
+      item,
+      input: entry?.input ?? null,
+      turnId: this.activeForegroundTurnId ?? this.autonomousTurn?.id ?? null,
+    });
+  }
+
+  /** A finished child streams no more frames, so its settled call has nothing left to update. */
+  private releaseFinishedSubagentToolCalls(observations: SubagentObservation[]): void {
+    for (const observation of observations) {
+      if (observation.kind === "status" && observation.status !== "running") {
+        this.settledSubagentToolCalls.delete(observation.id);
+        this.sidechainTracker.delete(observation.id);
+      }
+    }
+  }
+
+  private buildToolOutput(
+    content: unknown,
+    block: ClaudeContentChunk,
+    entry: ToolUseCacheEntry | undefined,
+  ): AgentMetadata | undefined {
+    if (block.is_error) {
+      return undefined;
+    }
+
+    const blockServer = typeof block.server === "string" ? block.server : undefined;
+    const blockToolName = typeof block.tool_name === "string" ? block.tool_name : undefined;
+    const server = entry?.server ?? blockServer ?? "tool";
+    const tool = entry?.name ?? blockToolName ?? "tool";
+    const coercedContent = coerceToolResultContentToString(content);
+    const input = entry?.input;
+
+    // Build structured result based on tool type
+    const structured = this.buildStructuredToolResult(server, tool, coercedContent, input);
+
+    if (structured) {
+      return structured;
+    }
+
+    // Fallback format - try to parse JSON first
+    const result: AgentMetadata = {};
+
+    if (coercedContent.length > 0) {
+      try {
+        // If content is a JSON string, parse it
+        result.output = JSON.parse(coercedContent);
+      } catch {
+        // If not JSON, return unchanged (no extra wrapping)
+        result.output = coercedContent;
+      }
+    }
+
+    // Preserve file changes tracked during tool execution
+    if (entry?.files?.length) {
+      result.files = entry.files;
+    }
+
+    return Object.keys(result).length > 0 ? result : undefined;
+  }
+
+  private isCommandExecutionTool(
+    normalizedServer: string,
+    normalizedTool: string,
+    input: AgentMetadata | null | undefined,
+  ): boolean {
+    if (
+      normalizedServer.includes("bash") ||
+      normalizedServer.includes("shell") ||
+      normalizedServer.includes("command")
+    ) {
+      return true;
+    }
+    if (
+      normalizedTool.includes("bash") ||
+      normalizedTool.includes("shell") ||
+      normalizedTool.includes("command")
+    ) {
+      return true;
+    }
+    return Boolean(input && (typeof input.command === "string" || Array.isArray(input.command)));
+  }
+
+  private static isFileWriteTool(normalizedTool: string): boolean {
+    return (
+      normalizedTool.includes("write") ||
+      normalizedTool === "write_file" ||
+      normalizedTool === "create_file"
+    );
+  }
+
+  private static isFileEditTool(normalizedTool: string): boolean {
+    return (
+      normalizedTool.includes("edit") ||
+      normalizedTool.includes("patch") ||
+      normalizedTool === "apply_patch" ||
+      normalizedTool === "apply_diff"
+    );
+  }
+
+  private static isFileReadTool(normalizedTool: string): boolean {
+    return (
+      normalizedTool.includes("read") ||
+      normalizedTool === "read_file" ||
+      normalizedTool === "view_file"
+    );
+  }
+
+  private buildStructuredToolResult(
+    server: string,
+    tool: string,
+    output: string,
+    input?: AgentMetadata | null,
+  ): AgentMetadata | undefined {
+    const normalizedServer = server.toLowerCase();
+    const normalizedTool = tool.toLowerCase();
+
+    if (this.isCommandExecutionTool(normalizedServer, normalizedTool, input)) {
+      const command = this.extractCommandText(input ?? {}) ?? "command";
+      return {
+        type: "command",
+        command,
+        output,
+        cwd: typeof input?.cwd === "string" ? input.cwd : undefined,
+      };
+    }
+
+    if (
+      ClaudeAgentSession.isFileWriteTool(normalizedTool) &&
+      input &&
+      typeof input.file_path === "string"
+    ) {
+      return {
+        type: "file_write",
+        filePath: input.file_path,
+        oldContent: "",
+        newContent: typeof input.content === "string" ? input.content : output,
+      };
+    }
+
+    if (
+      ClaudeAgentSession.isFileEditTool(normalizedTool) &&
+      input &&
+      typeof input.file_path === "string"
+    ) {
+      // Support both old_str/new_str and old_string/new_string parameter names
+      const oldContent = firstStringField(input, "old_str", "old_string");
+      const newContent = firstStringField(input, "new_str", "new_string");
+      const diff = firstStringField(input, "patch", "diff");
+      return {
+        type: "file_edit",
+        filePath: input.file_path,
+        diff,
+        oldContent,
+        newContent,
+      };
+    }
+
+    if (
+      ClaudeAgentSession.isFileReadTool(normalizedTool) &&
+      input &&
+      typeof input.file_path === "string"
+    ) {
+      return {
+        type: "file_read",
+        filePath: input.file_path,
+        content: output,
+      };
+    }
+
+    return undefined;
+  }
+
+  private updatePartialEventToolState(event: SDKPartialAssistantMessage["event"]): boolean {
+    if (event.type === "content_block_start") {
+      const block = isClaudeContentChunk(event.content_block) ? event.content_block : null;
+      if (
+        block?.type === "tool_use" &&
+        typeof event.index === "number" &&
+        typeof block.id === "string"
+      ) {
+        this.toolUseIndexToId.set(event.index, block.id);
+        this.toolUseInputBuffers.delete(block.id);
+        this.upsertToolUseEntry(block);
+        // 灵鲸改：公共 tool.started 只有一次，必须等 JSON 收齐才能发布 args。
+        return true;
+      }
+      return false;
+    }
+    if (event.type === "content_block_delta") {
+      const delta = isClaudeContentChunk(event.delta) ? event.delta : null;
+      if (delta?.type === "input_json_delta") {
+        const partialJson = typeof delta.partial_json === "string" ? delta.partial_json : undefined;
+        this.handleToolInputDelta(event.index, partialJson);
+        return true;
+      }
+      return false;
+    }
+    if (event.type === "content_block_stop" && typeof event.index === "number") {
+      const toolId = this.toolUseIndexToId.get(event.index);
+      if (toolId) {
+        const entry = this.toolUseCache.get(toolId);
+        const buffer = this.toolUseInputBuffers.get(toolId);
+        if (entry) {
+          if (buffer !== undefined) {
+            const input = this.normalizeToolInput(JSON.parse(buffer));
+            if (!input) throw new Error("Claude tool input must be a JSON object");
+            this.applyToolInput(entry, input);
+          }
+          this.pushToolCall(mapClaudeRunningToolCall({ name: entry.name, callId: toolId, input: entry.input ?? {}, output: null }));
+        }
+        this.toolUseIndexToId.delete(event.index);
+        this.toolUseInputBuffers.delete(toolId);
+      }
+    }
+    return false;
+  }
+
+  private async mapPartialEvent(
+    event: SDKPartialAssistantMessage["event"],
+    options?: {
+      suppressAssistantText?: boolean;
+      suppressReasoning?: boolean;
+    },
+  ): Promise<AgentTimelineItem[]> {
+    if (this.updatePartialEventToolState(event)) {
+      return [];
+    }
+
+    switch (event.type) {
+      case "content_block_start":
+        return isClaudeContentChunk(event.content_block)
+          ? await this.mapBlocksToTimeline([event.content_block], {
+              suppressAssistantText: options?.suppressAssistantText,
+              suppressReasoning: options?.suppressReasoning,
+            })
+          : [];
+      case "content_block_delta":
+        return isClaudeContentChunk(event.delta)
+          ? await this.mapBlocksToTimeline([event.delta], {
+              suppressAssistantText: options?.suppressAssistantText,
+              suppressReasoning: options?.suppressReasoning,
+            })
+          : [];
+      default:
+        return [];
+    }
+  }
+
+  private upsertToolUseEntry(block: ClaudeContentChunk): ToolUseCacheEntry | null {
+    const id = typeof block.id === "string" ? block.id : undefined;
+    if (!id) {
+      return null;
+    }
+    const existing = this.toolUseCache.get(id) ?? createDefaultToolUseCacheEntry(id, block);
+
+    if (typeof block.name === "string" && block.name.length > 0) {
+      existing.name = block.name;
+    }
+    if (typeof block.server === "string" && block.server.length > 0) {
+      existing.server = block.server;
+    } else if (!existing.server) {
+      existing.server = existing.name;
+    }
+
+    if (
+      block.type === "tool_use" ||
+      block.type === "mcp_tool_use" ||
+      block.type === "server_tool_use"
+    ) {
+      const input = this.normalizeToolInput(block.input);
+      if (input) {
+        this.applyToolInput(existing, input);
+      }
+    }
+
+    this.toolUseCache.set(id, existing);
+    return existing;
+  }
+
+  private handleToolInputDelta(index: number | undefined, partialJson: string | undefined): void {
+    if (typeof index !== "number" || typeof partialJson !== "string") {
+      return;
+    }
+    const toolId = this.toolUseIndexToId.get(index);
+    if (!toolId) {
+      return;
+    }
+    const buffer = (this.toolUseInputBuffers.get(toolId) ?? "") + partialJson;
+    this.toolUseInputBuffers.set(toolId, buffer);
+  }
+
+  private normalizeToolInput(input: unknown): AgentMetadata | null {
+    if (!isMetadata(input)) {
+      return null;
+    }
+    return input;
+  }
+
+  private applyToolInput(entry: ToolUseCacheEntry, input: AgentMetadata): void {
+    entry.input = input;
+    if (this.isCommandTool(entry.name, input)) {
+      entry.classification = "command";
+      entry.commandText = this.extractCommandText(input) ?? entry.commandText;
+    } else {
+      const files = this.extractFileChanges(input);
+      if (files?.length) {
+        entry.classification = "file_change";
+        entry.files = files;
+      }
+    }
+  }
+
+  private isCommandTool(name: string, input: AgentMetadata): boolean {
+    const normalized = name.toLowerCase();
+    if (
+      normalized.includes("bash") ||
+      normalized.includes("shell") ||
+      normalized.includes("terminal") ||
+      normalized.includes("command")
+    ) {
+      return true;
+    }
+    if (typeof input.command === "string" || Array.isArray(input.command)) {
+      return true;
+    }
+    return false;
+  }
+
+  private extractCommandText(input: AgentMetadata): string | undefined {
+    const command = input.command;
+    if (typeof command === "string" && command.length > 0) {
+      return command;
+    }
+    if (Array.isArray(command)) {
+      const tokens = command.filter((value): value is string => typeof value === "string");
+      if (tokens.length > 0) {
+        return tokens.join(" ");
+      }
+    }
+    if (typeof input.description === "string" && input.description.length > 0) {
+      return input.description;
+    }
+    return undefined;
+  }
+
+  private extractFileChanges(input: AgentMetadata): { path: string; kind: string }[] | undefined {
+    if (typeof input.file_path === "string" && input.file_path.length > 0) {
+      const relative = this.relativizePath(input.file_path);
+      if (relative) {
+        return [{ path: relative, kind: this.detectFileKind(input.file_path) }];
+      }
+    }
+    if (typeof input.patch === "string" && input.patch.length > 0) {
+      const files = this.parsePatchFileList(input.patch);
+      if (files.length > 0) {
+        return files.map((entry) => ({
+          path: this.relativizePath(entry.path) ?? entry.path,
+          kind: entry.kind,
+        }));
+      }
+    }
+    if (Array.isArray(input.files)) {
+      const files: { path: string; kind: string }[] = [];
+      for (const value of input.files) {
+        if (typeof value === "string" && value.length > 0) {
+          files.push({
+            path: this.relativizePath(value) ?? value,
+            kind: this.detectFileKind(value),
+          });
+        }
+      }
+      if (files.length > 0) {
+        return files;
+      }
+    }
+    return undefined;
+  }
+
+  private detectFileKind(filePath: string): string {
+    // A historical target may be on an unreachable mount; its current state says nothing
+    // about whether the past operation created or updated it.
+    if (this.replayingHistory) {
+      return "update";
+    }
+    try {
+      return fs.existsSync(filePath) ? "update" : "add";
+    } catch {
+      return "update";
+    }
+  }
+
+  private relativizePath(target?: string): string | undefined {
+    if (!target) {
+      return undefined;
+    }
+    const cwd = this.config.cwd;
+    if (cwd && target.startsWith(cwd)) {
+      const relative = path.relative(cwd, target);
+      return relative.length > 0 ? relative : path.basename(target);
+    }
+    return target;
+  }
+
+  private parsePatchFileList(patch: string): { path: string; kind: string }[] {
+    const files: { path: string; kind: string }[] = [];
+    const seen = new Set<string>();
+    for (const line of patch.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      let kind: string | null = null;
+      let parsedPath: string | null = null;
+      if (trimmed.startsWith("*** Add File:")) {
+        kind = "add";
+        parsedPath = trimmed.replace("*** Add File:", "").trim();
+      } else if (trimmed.startsWith("*** Delete File:")) {
+        kind = "delete";
+        parsedPath = trimmed.replace("*** Delete File:", "").trim();
+      } else if (trimmed.startsWith("*** Update File:")) {
+        kind = "update";
+        parsedPath = trimmed.replace("*** Update File:", "").trim();
+      }
+      if (kind && parsedPath && !seen.has(`${kind}:${parsedPath}`)) {
+        seen.add(`${kind}:${parsedPath}`);
+        files.push({ path: parsedPath, kind });
+      }
+    }
+    return files;
+  }
+}
+
+function hasToolLikeBlock(block?: ClaudeContentChunk | null): boolean {
+  if (!block || typeof block !== "object") {
+    return false;
+  }
+  const type = typeof block.type === "string" ? block.type.toLowerCase() : "";
+  return type.includes("tool");
+}
+
+function readCompactionMetadata(
+  source: unknown,
+): { trigger?: string; preTokens?: number; postTokens?: number } | null {
+  const sourceRecord = toObjectRecord(source);
+  if (!sourceRecord) {
+    return null;
+  }
+  const candidates = [
+    sourceRecord.compact_metadata,
+    sourceRecord.compactMetadata,
+    sourceRecord.compactionMetadata,
+  ];
+  for (const candidate of candidates) {
+    const metadata = toObjectRecord(candidate);
+    if (!metadata) {
+      continue;
+    }
+    const trigger = typeof metadata.trigger === "string" ? metadata.trigger : undefined;
+    const preTokensRaw = metadata.preTokens ?? metadata.pre_tokens;
+    const preTokens = typeof preTokensRaw === "number" ? preTokensRaw : undefined;
+    const postTokensRaw = metadata.postTokens ?? metadata.post_tokens;
+    const postTokens = typeof postTokensRaw === "number" ? postTokensRaw : undefined;
+    return { trigger, preTokens, postTokens };
+  }
+  return null;
+}
+
+function normalizeHistoryBlocks(content: unknown): ClaudeContentChunk[] | null {
+  if (Array.isArray(content)) {
+    const blocks = content.filter((entry) => isClaudeContentChunk(entry));
+    return blocks.length > 0 ? blocks : null;
+  }
+  if (isClaudeContentChunk(content)) {
+    return [content];
+  }
+  return null;
+}
+
+/** The parent's card for a subagent, labeled with its type and task. */
+function buildClaudeSubagentCardDetail(
+  facts: ClaudeSubagentCardFacts,
+): Extract<ToolCallDetail, { type: "sub_agent" }> {
+  return {
+    type: "sub_agent",
+    ...(facts.title ? { subAgentType: facts.title } : {}),
+    ...(facts.description ? { description: facts.description } : {}),
+    // COMPAT(subagent-log): remove after 2027-04-30.
+    log: "",
+    actions: [],
+  };
+}
+
+/**
+ * Live, a Task call's card is built from the task protocol's declaration. Replay has no task
+ * protocol, so the generic tool mapper leaves the card unlabeled; label it from the same facts.
+ */
+function labelReplayedSubagentCard(
+  item: AgentTimelineItem,
+  subagentToolCalls: ReadonlyMap<string, ClaudeSubagentCardFacts>,
+): AgentTimelineItem {
+  if (item.type !== "tool_call") return item;
+  const facts = subagentToolCalls.get(item.callId);
+  if (!facts) return item;
+  return { ...item, detail: buildClaudeSubagentCardDetail(facts) };
+}
+
+/**
+ * Collect what the parent transcript knows about its Task calls, in the shape the shared replay
+ * source consumes. The agentId scrape is kept only as a fallback for sessions recorded before
+ * Claude Code wrote the meta sidecar.
+ */
+async function readClaudeReplayParentFacts(
+  entries: Iterable<ClaudeHistoryEntry> | AsyncIterable<ClaudeHistoryEntry>,
+): Promise<ClaudeReplayParentFacts> {
+  const toolCalls = new Map<string, { title?: string; description?: string }>();
+  const linksByAgentId = new Map<string, { toolCallId: string }>();
+  const outcomes: Map<string, { status: ProviderSubagentStatus }> = new Map();
+  for await (const entry of entries) {
+    const notification = readTaskNotificationFromHistoryRecord(entry);
+    const status = mapTaskStatus(notification?.status ?? undefined);
+    if (notification?.toolUseId && status) {
+      outcomes.set(notification.toolUseId, { status });
+    }
+    const content = toObjectRecord(entry.message)?.content;
+    if (!Array.isArray(content)) continue;
+    for (const value of content) {
+      const block = toObjectRecord(value);
+      const declaration = readClaudeReplayTaskDeclaration(entry.type, block);
+      if (declaration) toolCalls.set(declaration.id, declaration.identity);
+      if (
+        entry.type !== "user" ||
+        block?.type !== "tool_result" ||
+        typeof block.tool_use_id !== "string"
+      )
+        continue;
+      if (toObjectRecord(entry.toolUseResult)?.status !== "async_launched")
+        outcomes.set(block.tool_use_id, {
+          status: block.is_error === true ? "failed" : "completed",
+        });
+      const agentId = readLegacyClaudeSubagentId(block.content);
+      if (agentId)
+        linksByAgentId.set(agentId, {
+          toolCallId: block.tool_use_id,
+        });
+    }
+  }
+  return {
+    toolCalls,
+    linksByAgentId,
+    outcomesByToolCallId: new Map([...outcomes].filter(([id]) => toolCalls.has(id))),
+  };
+}
+
+function readClaudeReplayTaskDeclaration(
+  entryType: unknown,
+  block: Record<string, unknown> | undefined,
+): {
+  id: string;
+  identity: { title?: string; description?: string };
+} | null {
+  if (
+    entryType !== "assistant" ||
+    block?.type !== "tool_use" ||
+    (block.name !== "Task" && block.name !== "Agent") ||
+    typeof block.id !== "string"
+  )
+    return null;
+  const input = toObjectRecord(block.input);
+  const title = readNonEmptyString(input?.name) ?? readNonEmptyString(input?.subagent_type);
+  const description = readNonEmptyString(input?.description);
+  return {
+    id: block.id,
+    identity: { ...(title ? { title } : {}), ...(description ? { description } : {}) },
+  };
+}
+
+function readLegacyClaudeSubagentId(content: unknown): string | undefined {
+  return /agentId:\s*([\w-]+)/.exec(JSON.stringify(content))?.[1];
+}
+
+interface ClaudeHistoryEntry {
+  type?: unknown;
+  subtype?: unknown;
+  isCompactSummary?: unknown;
+  isSidechain?: unknown;
+  agentId?: unknown;
+  timestamp?: unknown;
+  uuid?: unknown;
+  message?: { content?: unknown; [key: string]: unknown };
+  [key: string]: unknown;
+}
+
+async function mapAssistantHistoryBlocksWithMessageId(
+  entry: ClaudeHistoryEntry,
+  content: string | ClaudeContentChunk[],
+  mapBlocks: (
+    content: string | ClaudeContentChunk[],
+  ) => AgentTimelineItem[] | Promise<AgentTimelineItem[]>,
+): Promise<AgentTimelineItem[]> {
+  const items = await mapBlocks(content);
+  const assistantMessageId =
+    typeof entry.uuid === "string" && entry.uuid.length > 0 ? entry.uuid : null;
+  if (!assistantMessageId) {
+    return items;
+  }
+  for (const item of items) {
+    if (item.type === "assistant_message" && !item.messageId) {
+      item.messageId = assistantMessageId;
+    }
+  }
+  return items;
+}
+
+function convertClaudeHistoryEntryPreamble(
+  entry: ClaudeHistoryEntry,
+): { shortCircuit: AgentTimelineItem[] } | { proceed: { content: unknown } } {
+  if (entry.type === "system" && entry.subtype === "compact_boundary") {
+    const compactMetadata = readCompactionMetadata(entry);
+    return {
+      shortCircuit: [
+        {
+          type: "compaction",
+          status: "completed",
+          trigger: compactMetadata?.trigger === "manual" ? "manual" : "auto",
+          preTokens: compactMetadata?.preTokens,
+        },
+      ],
+    };
+  }
+
+  const taskNotificationItem = mapTaskNotificationSystemRecordToToolCall(entry);
+  if (taskNotificationItem) {
+    return { shortCircuit: [taskNotificationItem] };
+  }
+
+  if (entry.isCompactSummary) {
+    return { shortCircuit: [] };
+  }
+  if (entry.type === "user" && isSyntheticHistoryUserEntry(entry)) {
+    return { shortCircuit: [] };
+  }
+  const steeredPrompt = readSteeredPromptHistoryItem(entry);
+  if (steeredPrompt) {
+    return { shortCircuit: [steeredPrompt] };
+  }
+  // Only user and assistant records are conversation turns. Claude Code 2.1.x also journals each
+  // API request as `api-request-blob` records whose message replays the system context.
+  if (entry.type !== "user" && entry.type !== "assistant") {
+    return { shortCircuit: [] };
+  }
+
+  const message = entry?.message;
+  if (!message || !("content" in message)) {
+    return { shortCircuit: [] };
+  }
+
+  const content = message.content;
+  if (
+    (entry.type === "user" || entry.type === "assistant") &&
+    isClaudeTranscriptNoiseContent(content)
+  ) {
+    return { shortCircuit: [] };
+  }
+
+  return { proceed: { content } };
+}
+
+function isProviderImageMessage(item: AgentTimelineItem): boolean {
+  return item.type === "assistant_message" && isProviderImageMarkdown(item.text);
+}
+
+/**
+ * A message steered into a running turn. Claude Code gives it no user entry: it records a
+ * queued_command attachment in prompt mode, under the uuid Paseo minted for the message, which is
+ * also what a rewind to it resolves. The other modes carry task notifications, not user messages.
+ */
+function readSteeredPromptHistoryItem(entry: ClaudeHistoryEntry): AgentTimelineItem | null {
+  if (entry.type !== "attachment") return null;
+  const attachment = toObjectRecord(entry.attachment);
+  if (attachment?.type !== "queued_command" || attachment.commandMode !== "prompt") return null;
+  const text = extractUserMessageText(attachment.prompt);
+  if (!text) return null;
+  const messageId = readTrimmedString(attachment.source_uuid);
+  return { type: "user_message", text, ...(messageId ? { messageId } : {}) };
+}
+
+export async function convertClaudeHistoryEntry(
+  entry: ClaudeHistoryEntry,
+  mapBlocks: (
+    content: string | ClaudeContentChunk[],
+  ) => AgentTimelineItem[] | Promise<AgentTimelineItem[]>,
+): Promise<AgentTimelineItem[]> {
+  const preamble = convertClaudeHistoryEntryPreamble(entry);
+  if ("shortCircuit" in preamble) {
+    return preamble.shortCircuit;
+  }
+  const { content } = preamble.proceed;
+  const normalizedBlocks = normalizeHistoryBlocks(content);
+  const contentValue = typeof content === "string" ? content : normalizedBlocks;
+  const hasToolBlock = normalizedBlocks?.some((block) => hasToolLikeBlock(block)) ?? false;
+  const userMessageId =
+    entry.type === "user" && typeof entry.uuid === "string" && entry.uuid.length > 0
+      ? entry.uuid
+      : null;
+
+  if (entry.type === "user") {
+    const userTaskNotificationItem = mapTaskNotificationUserContentToToolCall({
+      content,
+      messageId: userMessageId,
+      notificationId: typeof entry.notificationId === "string" ? entry.notificationId : undefined,
+    });
+    if (userTaskNotificationItem) {
+      return [userTaskNotificationItem];
+    }
+  }
+
+  const timeline: AgentTimelineItem[] = [];
+
+  if (entry.type === "user") {
+    const text = extractUserMessageText(content);
+    if (text) {
+      timeline.push({
+        type: "user_message",
+        text,
+        ...(userMessageId ? { messageId: userMessageId } : {}),
+      });
+    }
+  }
+
+  if (hasToolBlock && normalizedBlocks) {
+    const mapped = await mapBlocks(normalizedBlocks);
+    if (entry.type === "user") {
+      // tool_result handling (handleToolResult) emits image markdown as an assistant_message
+      // alongside the tool_call. User-entry text blocks also map to assistant_message in this path
+      // and must stay suppressed, so keep tool_calls plus only the image assistant_messages.
+      const toolItems = mapped.filter(
+        (item) => item.type === "tool_call" || isProviderImageMessage(item),
+      );
+      return timeline.length ? [...timeline, ...toolItems] : toolItems;
+    }
+    return mapped;
+  }
+
+  if (entry.type === "assistant" && contentValue) {
+    return await mapAssistantHistoryBlocksWithMessageId(entry, contentValue, mapBlocks);
+  }
+
+  return timeline;
+}
+
+function createAsyncMessageInput<T>(): AsyncMessageInput<T> {
+  const queue: T[] = [];
+  const resolvers: Array<(value: IteratorResult<T, void>) => void> = [];
+  let closed = false;
+
+  return {
+    push(item: T) {
+      if (closed) {
+        return;
+      }
+      const resolve = resolvers.shift();
+      if (resolve) {
+        resolve({ value: item, done: false });
+        return;
+      }
+      queue.push(item);
+    },
+    end() {
+      closed = true;
+      while (resolvers.length > 0) {
+        const resolve = resolvers.shift();
+        resolve?.({ value: undefined, done: true });
+      }
+    },
+    iterable: {
+      [Symbol.asyncIterator](): AsyncIterator<T, void> {
+        return {
+          next: (): Promise<IteratorResult<T, void>> => {
+            if (queue.length > 0) {
+              const value = queue.shift();
+              if (value !== undefined) {
+                return Promise.resolve({ value, done: false });
+              }
+            }
+            if (closed) {
+              return Promise.resolve({ value: undefined, done: true });
+            }
+            return new Promise<IteratorResult<T, void>>((resolve) => {
+              resolvers.push(resolve);
+            });
+          },
+        };
+      },
+    },
+  };
+}
+
+
+
+interface ClaudeCommandLifecycle {
+  commandUuid: string;
+  /** "cancelled" is terminal too: API errors, interrupts and "now" pre-emption end a message. */
+  state: "queued" | "started" | "completed" | "cancelled";
+}
+
+/** Runtime-only Claude frames are validated here because the SDK's public union omits them. */
+function readClaudeCommandLifecycle(message: unknown): ClaudeCommandLifecycle | null {
+  const record = toObjectRecord(message);
+  if (record?.type !== "command_lifecycle") return null;
+  if (
+    typeof record.command_uuid !== "string" ||
+    !["queued", "started", "completed", "cancelled"].includes(String(record.state))
+  ) {
+    return null;
+  }
+  return {
+    commandUuid: record.command_uuid,
+    state: record.state as ClaudeCommandLifecycle["state"],
+  };
+}
+
+async function transcriptExists(file: string): Promise<boolean> {
+  try {
+    await fs.promises.access(file);
+    return true;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return false;
+    throw error;
+  }
+}
+
+function readClaudeFastModeSetting(settings: ClaudeOptions["settings"]): boolean | null {
+  if (!settings || typeof settings === "string") {
+    return null;
+  }
+  return typeof settings.fastMode === "boolean" ? settings.fastMode : null;
+}
+
+function normalizeClaudeUserPromptText(text: string): string | null {
+  const normalized = text.trim();
+  if (!CLAUDE_COMMAND_MESSAGE_PATTERN.test(normalized)) {
+    return normalized || null;
+  }
+
+  const command = readClaudeCommandPromptName(normalized);
+  if (!command) {
+    return null;
+  }
+
+  const commandArgs = normalized.match(CLAUDE_COMMAND_ARGS_PATTERN)?.[1]?.trim();
+  if (commandArgs) {
+    return `${command} ${commandArgs}`;
+  }
+
+  return command;
+}
+
+function readClaudeCommandPromptName(text: string): string | null {
+  const commandName = text.match(CLAUDE_COMMAND_NAME_PATTERN)?.[1]?.trim();
+  if (commandName) {
+    return commandName.startsWith("/") ? commandName : `/${commandName}`;
+  }
+
+  const commandMessage = text.match(CLAUDE_COMMAND_MESSAGE_PATTERN)?.[1]?.trim();
+  if (!commandMessage) {
+    return null;
+  }
+  return commandMessage.startsWith("/") ? commandMessage : `/${commandMessage}`;
+}

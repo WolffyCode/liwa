@@ -626,7 +626,7 @@ export class PaseoBrainSession implements BrainProviderSession {
       case 'turn_canceled': {
         const turnId = this.turnOf(event.turnId)
         if (turnId === undefined) return
-        this.endTurn({ kind: 'turn.interrupted', turnId, reason: event.reason })
+        this.endTurn({ kind: 'turn.interrupted', turnId, reason: event.reason, ...(event.usage === undefined ? {} : { usage: this.turnUsage(turnId, event.usage) }) })
         return
       }
       case 'turn_failed':
@@ -695,6 +695,7 @@ export class PaseoBrainSession implements BrainProviderSession {
     this.endTurn({
       kind: 'turn.failed',
       turnId,
+      ...(event.usage === undefined ? {} : { usage: this.turnUsage(turnId, event.usage) }),
       category,
       message: event.error,
       retryable,

@@ -1,11 +1,12 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from '@liwa/cordis'
 import { internals as cmdlineInternals, provideCmdline } from '@liwa/cmdline'
 import LocalSubprocessRuntime from '@liwa/subprocess-local'
-import BrainRegistry, { TurnId } from '@liwa/brain'
+import BrainRegistry, { TurnId, directoryConfigPath } from '@liwa/brain'
 import * as scriptedProvider from '@liwa/brain-testkit/plugin'
+import { resolveRunSession } from '../src/index.ts'
 import { echoAnswers, solidPng } from '@liwa/brain-testkit'
 import { afterEach, describe, expect, it } from 'vitest'
 import * as runner from '../src/index.ts'
@@ -24,8 +25,16 @@ afterEach(async () => {
   for (const cleanup of cleanups.splice(0).reverse()) await cleanup()
 })
 
-async function brain(args: string[], options: { tty?: boolean; answers?: string[]; provider?: boolean } = {}): Promise<Run> {
+interface BrainOptions {
+  tty?: boolean
+  answers?: string[]
+  provider?: boolean
+  setup?: (root: string) => Promise<void>
+}
+
+async function brain(args: string[], options: BrainOptions = {}): Promise<Run> {
   const root = await mkdtemp(join(tmpdir(), 'liwa-brain-cli-'))
+  await options.setup?.(root)
   const ctx = new Context()
   const out: string[] = []
   const err: string[] = []
@@ -53,7 +62,7 @@ async function brain(args: string[], options: { tty?: boolean; answers?: string[
   await ctx.plugin(BrainRegistry, { membersRoot: join(root, 'members') })
   if (options.provider !== false) await ctx.plugin(scriptedProvider, { impl: 'fake', process: true, stepDelayMs: 0 })
   await ctx.plugin(startup)
-  void ctx.plugin(runner, { maxInferencesPerTurn: 8, maxToolCallsPerTurn: 16, watchdogMs: 60_000, concludeOn: ['report'] })
+  void ctx.plugin(runner, { maxInferencesPerTurn: 8, maxToolCallsPerTurn: 16, watchdogMs: 60_000, concludeOn: ['report'], agentsRoot: join(root, 'agents') })
   const code = await exited
   return { code, stdout: out.join(''), stderr: err.join('') }
 }
@@ -124,6 +133,8 @@ describe('liwa brain', () => {
     const wrong = await brain(['run', '--provider', 'fake', '--image', join(root, 'notes.txt'), 'image please'])
     expect(wrong.code).toBe(1)
     expect(wrong.stderr).toContain('use a .png')
+    const thinking = await brain(['run', '--provider', 'fake', '--thinking', 'high', 'hi'])
+    expect(thinking.code).toBe(0)
     const badMode = await brain(['run', '--provider', 'fake', '--mode', 'bypass', 'hi'])
     expect(badMode.code).toBe(1)
     expect(badMode.stderr).toContain('has no mode bypass')
@@ -169,4 +180,53 @@ describe('liwa brain helpers', () => {
     expect(lines.every(line => !line.includes('\n'))).toBe(true)
     expect(lines[3]).toContain('concludedBy=report')
   })
+})
+
+it('hands --thinking to the session configuration', () => {
+  const budget = { maxInferencesPerTurn: 1, maxToolCallsPerTurn: 1, watchdogMs: 1, concludeOn: ['report'], agentsRoot: '' }
+  expect(resolveRunSession({ command: 'run', provider: 'fake', prompt: 'hi', permit: 'deny', images: [], json: false, thinking: 'high' }, budget, '/tmp/config').thinking).toBe('high')
+  expect(resolveRunSession({ command: 'run', provider: 'fake', prompt: 'hi', permit: 'deny', images: [], json: false }, budget, '/tmp/config')).not.toHaveProperty('thinking')
+})
+
+it('fills the session from the resolved agent configuration', () => {
+  const budget = { maxInferencesPerTurn: 1, maxToolCallsPerTurn: 1, watchdogMs: 1, concludeOn: ['report'], agentsRoot: '' }
+  const agents = { skillsDir: '/snap/skills', mcpServers: { docs: { type: 'http' as const, url: 'https://x.invalid' } }, plugins: ['/p'], hooks: { SessionStart: [{ hooks: [{ type: 'command' as const, command: 'echo' }] }] }, instructions: 'HOUSE' }
+  const session = resolveRunSession({ command: 'run', provider: 'fake', prompt: 'hi', permit: 'deny', images: [], json: false }, budget, '/tmp/config', agents)
+  expect(session).toMatchObject({ skillsDir: '/snap/skills', mcpServers: agents.mcpServers, plugins: ['/p'], hooks: agents.hooks, instructions: 'HOUSE' })
+})
+
+it('reads the global agent configuration set and the directory file for the chosen provider and reports what it resolved', async () => {
+  const agentsFile = 'version: 1\nskills:\n  greet: { dir: skills/greet }\n  other: { dir: skills/greet, applyTo: [someone-else] }\nmcpServers:\n  docs: { type: http, url: https://docs.invalid }\ninstructions:\n  house: { file: instructions/house.md }\n'
+  const setup = async (root: string): Promise<void> => {
+    await mkdir(join(root, 'agents', 'skills', 'greet'), { recursive: true })
+    await writeFile(join(root, 'agents', 'skills', 'greet', 'SKILL.md'), '---\nname: greet\n---\nsay hi\n')
+    await mkdir(join(root, 'agents', 'instructions'), { recursive: true })
+    await writeFile(join(root, 'agents', 'instructions', 'house.md'), 'HOUSE\n')
+    await writeFile(join(root, 'agents', 'agents.yml'), agentsFile)
+  }
+  const result = await brain(['run', '--provider', 'fake', 'hi'], { setup })
+  expect(result.code).toBe(0)
+  expect(result.stderr).toMatch(/agent config for fake: skills=\[greet\] mcp=\[docs\] plugins=\[\] hooks=\[\] instructions=5 bytes/)
+  const withDirectory = await brain(['run', '--provider', 'fake', 'hi'], {
+    setup: async (root) => {
+      await setup(root)
+      const file = directoryConfigPath(join(root, 'agents'), process.cwd())
+      await mkdir(join(root, 'agents', 'dirs'), { recursive: true })
+      await writeFile(file, `version: 1\npath: ${process.cwd()}\ninstances:\n  fake: { disable: [docs, greet] }\n`)
+    },
+  })
+  expect(withDirectory.code).toBe(0)
+  expect(withDirectory.stderr).toMatch(/agent config for fake: skills=\[\] mcp=\[\]/)
+  const broken = await brain(['run', '--provider', 'fake', 'hi'], {
+    setup: async (root) => {
+      await mkdir(join(root, 'agents', 'skills', 'empty'), { recursive: true })
+      await writeFile(join(root, 'agents', 'agents.yml'), 'version: 1\nskills:\n  empty: { dir: skills/empty }\n')
+    },
+  })
+  expect(broken.code).toBe(1)
+  expect(broken.stderr).toContain('SKILL.md')
+})
+
+it('prints a thinking change as one line', () => {
+  expect(runner.formatEvent({ kind: 'session.thinking_changed', thinking: 'off' })).toMatch(/^session\.thinking_changed\s+off$/)
 })

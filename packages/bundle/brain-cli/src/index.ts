@@ -7,14 +7,15 @@
  */
 
 import { randomUUID } from 'node:crypto'
-import { readFile } from 'node:fs/promises'
-import { extname, resolve } from 'node:path'
+import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { extname, join, resolve } from 'node:path'
 import type { Context } from '@liwa/cordis'
 import z from '@liwa/schemastery'
 import {
-  BrainError, ImplId, MemberId,
-  type BrainEvent, type BrainEventOf, type BrainProbeResult, type BrainSession, type MindKind, type PermissionAnswer,
-  type PermissionOption, type PermissionResponse, type SessionConfigInput, type TurnInput,
+  BrainError, ImplId, MemberId, loadAgentsConfig, loadDirectoryConfig, materializeSkills, resolveAgentConfig,
+  type BrainEvent, type BrainEventOf, type BrainProbeResult, type BrainSession, type Hooks, type McpServer, type MindKind,
+  type PermissionAnswer, type PermissionOption, type PermissionResponse, type SessionConfigInput, type TurnInput,
 } from '@liwa/brain'
 // 空的类型导入带来 loader 与 cmdline 的 Context 合并（等装配完成、读退出请求）。
 import type {} from '@liwa/cordis-plugin-loader'
@@ -38,6 +39,8 @@ export interface Config {
   watchdogMs: number
   /** 成功调用即结束回合的工具。 */
   concludeOn: string[]
+  /** 全局 agent 配置集的根目录（`$LIWA_HOME/agents`）；空串表示不读。 */
+  agentsRoot: string
 }
 
 export const Config: z<Config> = z.object({
@@ -45,6 +48,7 @@ export const Config: z<Config> = z.object({
   maxToolCallsPerTurn: z.natural().min(1).default(64),
   watchdogMs: z.natural().min(1).default(600_000),
   concludeOn: z.array(z.string()).default(['report']),
+  agentsRoot: z.string().default(''),
 })
 
 /** 进程侧的效果：输出流与启动器的退出请求。 */
@@ -57,14 +61,25 @@ interface BrainCliIo {
 
 type RunCommand = Extract<BrainCommand, { command: 'run' }>
 
+/** `run` 从全局 agent 配置集为这家实例选出并物化的东西。 */
+export interface RunAgents {
+  /** 物化好的本事目录；空串表示没有本事。 */
+  skillsDir: string
+  mcpServers: Record<string, McpServer>
+  plugins: string[]
+  hooks: Hooks
+  instructions: string
+}
+
 /**
  * `run` 的请求解析成完整的会话配置：命令行没给的项在这里显式取缺省值。
  * @param command - `run` 命令。
  * @param config - 插件配置里的回合预算。
  * @param configDir - `prepareConfigDir` 给的成员配置目录。
+ * @param agents - 全局 agent 配置集为这家实例选出的配置；没有根目录时省略。
  * @returns 会话配置输入。
  */
-export function resolveRunSession(command: RunCommand, config: Config, configDir: string): SessionConfigInput {
+export function resolveRunSession(command: RunCommand, config: Config, configDir: string, agents?: RunAgents): SessionConfigInput {
   const mindKind: MindKind = command.mindKind ?? 'work'
   return {
     member: command.member ?? 'cli',
@@ -77,6 +92,7 @@ export function resolveRunSession(command: RunCommand, config: Config, configDir
     // 不给 --model 就不传模型，所用 CLI 用它自己的默认模型（不传占位值）。
     ...(command.model === undefined ? {} : { model: command.model }),
     ...(command.mode === undefined ? {} : { modeId: command.mode }),
+    ...(command.thinking === undefined ? {} : { thinking: command.thinking }),
     limits: {
       maxInferencesPerTurn: config.maxInferencesPerTurn,
       maxToolCallsPerTurn: config.maxToolCallsPerTurn,
@@ -87,9 +103,56 @@ export function resolveRunSession(command: RunCommand, config: Config, configDir
     compaction: 'provider',
     configDir,
     rules: '',
-    skillsDir: '',
+    skillsDir: agents?.skillsDir ?? '',
+    ...(agents === undefined || Object.keys(agents.mcpServers).length === 0 ? {} : { mcpServers: agents.mcpServers }),
+    ...(agents === undefined || agents.plugins.length === 0 ? {} : { plugins: agents.plugins }),
+    ...(agents === undefined || Object.keys(agents.hooks).length === 0 ? {} : { hooks: agents.hooks }),
+    ...(agents === undefined || agents.instructions === '' ? {} : { instructions: agents.instructions }),
     projectDocs: true,
     childPolicy: { native: mindKind === 'work', maxDepth: 1, maxConcurrent: 4, crossCli: [] },
+  }
+}
+
+/**
+ * 读全局 agent 配置集，为这家实例选出配置并把本事物化到临时目录；根为空串时不读。
+ * @param root - 全局集根目录。
+ * @param impl - 提供方实例名。
+ * @param cwd - 会话工作目录（决定目录级配置）。
+ * @param io - 打一行"选出了什么"到 stderr。
+ * @returns 选出的配置与释放临时目录的函数；没有根目录时 `undefined`。
+ */
+async function resolveRunAgents(
+  root: string, impl: string, cwd: string, io: Pick<BrainCliIo, 'stderr'>,
+): Promise<{ agents: RunAgents; dispose: () => Promise<void> } | undefined> {
+  if (root === '') return undefined
+  const config = await loadAgentsConfig(root)
+  const directory = await loadDirectoryConfig(root, cwd)
+  const resolved = await resolveAgentConfig(config, { impl, ...(directory === undefined ? {} : { directory }) })
+  let skillsDir = ''
+  if (resolved.skills.length > 0) {
+    skillsDir = await mkdtemp(join(tmpdir(), 'liwa-brain-skills-'))
+    try {
+      await materializeSkills(resolved.skills, skillsDir)
+    } catch (error) {
+      await rm(skillsDir, { recursive: true, force: true })
+      throw error
+    }
+  }
+  const summary = [
+    `skills=[${resolved.skills.map(skill => skill.name).join(',')}]`,
+    `mcp=[${Object.keys(resolved.mcpServers).join(',')}]`,
+    `plugins=[${resolved.plugins.join(',')}]`,
+    `hooks=[${Object.keys(resolved.hooks).join(',')}]`,
+    `instructions=${Buffer.byteLength(resolved.instructions)} bytes`,
+  ]
+  io.stderr.write(`liwa: agent config for ${impl}: ${summary.join(' ')}\n`)
+  return {
+    agents: {
+      skillsDir, mcpServers: resolved.mcpServers, plugins: resolved.plugins, hooks: resolved.hooks, instructions: resolved.instructions,
+    },
+    dispose: async () => {
+      if (skillsDir !== '') await rm(skillsDir, { recursive: true, force: true })
+    },
   }
 }
 
@@ -140,6 +203,8 @@ export function formatEvent(event: BrainEvent): string {
       return `${label} ${String(event.modeId)}`
     case 'session.model_changed':
       return `${label} ${event.model}`
+    case 'session.thinking_changed':
+      return `${label} ${event.thinking}`
   }
 }
 
@@ -307,13 +372,26 @@ async function runProbe(ctx: Context, command: Extract<BrainCommand, { command: 
  */
 async function runSession(ctx: Context, command: RunCommand, config: Config, io: BrainCliIo): Promise<number> {
   const impl = ImplId(command.provider)
+  const resolvedAgents = await resolveRunAgents(config.agentsRoot, impl, resolve(command.cwd ?? process.cwd()), io)
+  try {
+    return await runSessionWith(ctx, command, config, io, resolvedAgents?.agents)
+  } finally {
+    await resolvedAgents?.dispose()
+  }
+}
+
+async function runSessionWith(
+  ctx: Context, command: RunCommand, config: Config, io: BrainCliIo, agents: RunAgents | undefined,
+): Promise<number> {
+  const impl = ImplId(command.provider)
   const configDir = await ctx.brains.prepareConfigDir(MemberId(command.member ?? 'cli'), impl, {
     rules: '',
-    skillsDir: '',
+    skillsDir: agents?.skillsDir ?? '',
     projectDocs: true,
     ...(command.model === undefined ? {} : { model: command.model }),
+    ...(agents === undefined || Object.keys(agents.mcpServers).length === 0 ? {} : { mcpServers: agents.mcpServers }),
   })
-  const session: BrainSession = await ctx.brains.createSession(ctx, { impl, cfg: resolveRunSession(command, config, configDir) })
+  const session: BrainSession = await ctx.brains.createSession(ctx, { impl, cfg: resolveRunSession(command, config, configDir, agents) })
   io.stderr.write(`liwa: brain session ${session.id} opened on ${impl} (home ${session.view().homeDir})\n`)
   let answering = Promise.resolve()
   // 回合的终止事件可能早于 startTurn 返回，先按回合号记下。

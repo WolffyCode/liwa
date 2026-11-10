@@ -63,7 +63,7 @@ export function sessionPatchRows(config: SessionConfig, settings: SessionPatchSe
   if (config.model !== undefined) {
     rows.push({ id: 'agent-default-model', config: { provider: settings.provider, model: config.model } })
   }
-  const instructions = config.projectDocs || config.rules.trim() !== ''
+  const instructions = config.projectDocs || sessionInstructions(config) !== ''
   rows.push({
     id: 'agent-instructions',
     disabled: !instructions,
@@ -103,6 +103,15 @@ export async function writeSessionPatch(homeDir: string, config: SessionConfig, 
   const header = '# Written by @liwa/brain-deepseek for this session; rewritten at every launch.\n'
   await writeFile(path, `${header}${JSON.stringify(sessionPatchRows(config, settings), null, 2)}\n`)
   return path
+}
+
+/**
+ * 规矩加这一场会话的指令片段，合成一份用户级指令正文（规矩在前，空行相连）。
+ * @param config - 会话配置。
+ * @returns 正文；两者都空时为空串。
+ */
+export function sessionInstructions(config: Pick<SessionConfig, 'rules' | 'instructions'>): string {
+  return [config.rules, config.instructions ?? ''].map(text => text.trim()).filter(text => text !== '').join('\n\n')
 }
 
 /**

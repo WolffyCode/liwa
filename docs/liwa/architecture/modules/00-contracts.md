@@ -248,8 +248,8 @@ type ModeChange = { modeId: string; appliesAt: 'now' | 'next_step' | 'next_turn'
 type BrainEvent =
   | { kind: 'turn.started'; turnId: TurnId }
   | { kind: 'turn.completed'; turnId: TurnId; usage: Usage; concludedBy?: string }
-  | { kind: 'turn.interrupted'; turnId: TurnId; reason?: string }
-  | { kind: 'turn.failed'; turnId: TurnId; category: FailureCategory; message: string; retryable: boolean; code?: string; diagnostic?: string }
+  | { kind: 'turn.interrupted'; turnId: TurnId; reason?: string; usage?: Usage }
+  | { kind: 'turn.failed'; turnId: TurnId; usage?: Usage; category: FailureCategory; message: string; retryable: boolean; code?: string; diagnostic?: string }
   | { kind: 'session.exited'; category: FailureCategory; message: string }
   | { kind: 'session.compacted'; turnId?: TurnId; preTokens?: number; postTokens?: number }
   | { kind: 'process.exited'; pid?: number; code: number | null; signal: string | null }
@@ -313,10 +313,10 @@ interface BrainProviderSession {
 | 子 agent 跨回合 | 父回合 terminal 只清父条目／父权限；子请求保留到答复或 child.ended；相同 childId 可 ended 后再 started；已收尾父回合的迟到条目不发布，取消不能提前结束新回合条目 | 〔一手〕`packages/brain/brain/src/contract.ts:378`；`packages/brain/brain-shared/src/session.ts:638`、`:732`|
 | 子审批事实 | childId、工具 args、title／description 随请求上送主人，父 agent 不能代批；deepseek 选 delegatedApproval:forward，底座默认 reject | 〔一手〕`packages/acp/acp/src/updates.ts:74`、`packages/bundle/deepseek-app/cordis.patch.yml:48`|
 | CLI 自开回合的现象 | deepseek 后台子结果可触发提供方自开的 turn.started／terminal；公共句柄已有 activeTurn 互斥，期间 startTurn 返回 brain.turn_active。是否确立为对外规范待主人定，不把代码现象视为新增产品决定 | 〔一手〕`packages/brain/brain-deepseek/src/session.ts:80`、`packages/brain/brain/src/session.ts:605`；handoff 待定 11 |
-| G1／G4 计划补 | 当前 interrupted／failed 没 usage，update 不累加消费；watchdogMs 只有声明，API 等待超时不是整轮看门狗。G1 随④ Claude 做已知取消／失败用量幂等结算；G4 是③宿主前置，当前均未实现 | 〔一手〕`packages/brain/brain/src/contract.ts:397`、`:487`、`packages/brain/brain/src/session.ts:473`、`:610`；handoff 决策 61 |
+| G1 已实现／G4 待补 | interrupted／failed 可带已知 usage；首次终止按回合幂等结算，缺失表示未知，usage.update 不累加消费。watchdogMs 只有声明，API 等待超时不是整轮看门狗；G4 作为③宿主前置，尚未实现 | 〔一手〕`packages/brain/brain/src/contract.ts:397`、`:487`、`packages/brain/brain/src/session.ts:473`、`:610`；handoff 决策 61 |
 | G2／G3 计划补 | 当前无会话级父 pending 生命周期，usage.update 无 childId；跨回合待答与实时子计量随⑤ Codex 补，字段与结算口径待独立设计 | 〔一手〕`packages/brain/brain/src/contract.ts:462`、`:487`、`packages/brain/brain/src/session.ts:529`；Codex 适配评估 §6 |
 
-本节是现有契约摘要；下列计划接口与 G1–G4 字段不混入上方已有类型。外部 CLI 空壳子配置、Key 与同 CLI 多提供方按 `01-agent-cli.md` §4.6／§4.10；credential-ref 已定为采用底座引用，具体 provider 配置接线仍计划；问题补充文字标志与 ephemeral 逐会话入口不冒充现有 schema。依据：〔一手〕handoff 决策 57–61、任务书 03；`packages/brain/brain/src/contract.ts:149`。
+本节是现有契约摘要；G1 的异常终止用量已纳入上方类型，下列计划接口与 G2–G4 字段不混入上方已有类型。外部 CLI 空壳子配置、Key 与同 CLI 多提供方按 `01-agent-cli.md` §4.6／§4.10；credential-ref 已定为采用底座引用，具体 provider 配置接线仍计划；问题补充文字标志与 ephemeral 逐会话入口不冒充现有 schema。依据：〔一手〕handoff 决策 57–61、任务书 03；`packages/brain/brain/src/contract.ts:149`。
 
 有效绑定由 roster 的大脑配置给出：每个成员 × 会话种类（想事可按立场 / 出主意分）一份 `{ impl, model?, fallback: impl[] }`，实例会话与活一样可任选提供方、默认 deepseek CLI（决策 43、46），由 minds 读出后传给 brains；适配器配置只放适配器级参数。搭第二层前，由调用方直接给归属、人设、预算、收尾工具等配置；最小 direct minds、逐条 JSON、跨重启恢复与孤儿对账在③实现；完整 context/toolport/tasks/guard/journal 在第二层阶段实现，当前服务在内存登记并发出 `brain.*.v1` Cordis 事件。依据：〔一手〕主人推进决定（handoff 决策 47）；〔一手〕develop 源码 `packages/brain/brain/src/index.ts`、`packages/bundle/brain-cli/src/index.ts`。
 

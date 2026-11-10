@@ -126,6 +126,12 @@ export interface BrainProviderSession {
    */
   setModel?(model: string): Promise<void>
   /**
+   * 换后续回合的 thinking 档位（`Meta.thinkingSwitch` 为 true 时），只能在回合之间；生效后发 `session.thinking_changed`。
+   * 当前模型没有这一档以 `BrainError(invalid_input)` 拒绝，回合进行中以 `conflict` 拒绝。
+   * @param thinking - 档位号。
+   */
+  setThinking?(thinking: string): Promise<void>
+  /**
    * 列出这个会话能切的模式（`Meta.modeSwitch` 为 true 时）。
    * @returns 模式；这个会话没有可切的模式时为空数组。
    */

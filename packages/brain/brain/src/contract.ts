@@ -48,12 +48,16 @@ export type PersonaInjection = z.output<typeof PersonaInjectionSchema>
  */
 export const MetaSchema = z.strictObject({
   streaming: z.boolean(),
+  /** 会话配置里的插件目录、settings 格式钩子、指令片段，这家能不能落实；为 false 的项在开会话前被 `ctx.brains` 拒绝。 */
+  agentConfig: z.strictObject({ plugins: z.boolean(), hooks: z.boolean(), instructions: z.boolean() }),
   resume: z.boolean(),
   nativeTools: z.boolean(),
   permissionHook: z.boolean(),
   rollback: z.boolean(),
   /** 后续回合能不能换模型（`setModel`）。 */
   modelSwitch: z.boolean(),
+  /** 后续回合能不能换 thinking 档位（`setThinking`）。 */
+  thinkingSwitch: z.boolean(),
   /** 能不能列出、读取、切换会话模式（Paseo 的 modes；`availableModes` / `currentMode` / `setMode`）。 */
   modeSwitch: z.boolean(),
   /** 送达语义矩阵；为 false 的一项让对应的 `deliver` 恒回 `unsupported`。 */
@@ -121,6 +125,27 @@ export const McpSseServerSchema = z.object({
  * 工具搜索之后延迟加载；不延迟加载任何工具的提供方天然满足，保证不了的提供方在 `createSession` 时拒绝。
  */
 export const McpServerSchema = z.discriminatedUnion('type', [McpStdioServerSchema, McpHttpServerSchema, McpSseServerSchema])
+
+/** Claude Code 2.1.319（SDK 0.3.263）settings.hooks 认得的事件名；其他提供方按能力翻译或拒绝。 */
+export const HookEventSchema = z.enum([
+  'PreToolUse', 'PostToolUse', 'PostToolUseFailure', 'PostToolBatch', 'Notification', 'UserPromptSubmit', 'UserPromptExpansion',
+  'SessionStart', 'SessionEnd', 'Stop', 'StopFailure', 'SubagentStart', 'SubagentStop', 'PreCompact', 'PostCompact', 'PreModelSwitch',
+  'PostModelSwitch', 'PermissionRequest', 'PermissionDenied', 'Setup', 'TeammateIdle', 'TaskCreated', 'TaskCompleted', 'Elicitation',
+  'ElicitationResult', 'ConfigChange', 'WorktreeCreate', 'WorktreeRemove', 'InstructionsLoaded', 'CwdChanged', 'FileChanged',
+  'DirectoryAdded', 'MessageDisplay',
+])
+/** 一个钩子事件名。 */
+export type HookEvent = z.output<typeof HookEventSchema>
+/** 一条命令钩子（只收 Claude settings.hooks 的 command 型）。 */
+export const HookCommandSchema = z.strictObject({ type: z.literal('command'), command: z.string().min(1), timeout: z.number().int().positive().optional() })
+/** 一个匹配组：匹配上就按顺序跑它的钩子。 */
+export const HookMatcherSchema = z.strictObject({ matcher: z.string().optional(), hooks: z.array(HookCommandSchema).min(1) })
+/** 一个匹配组。 */
+export type HookMatcher = z.output<typeof HookMatcherSchema>
+/** 按事件分组的钩子（Claude settings.hooks 的形状）。 */
+export const HooksSchema = z.partialRecord(HookEventSchema, z.array(HookMatcherSchema))
+/** 按事件分组的钩子。 */
+export type Hooks = z.output<typeof HooksSchema>
 /** 一台 MCP 服务器。 */
 export type McpServer = z.output<typeof McpServerSchema>
 
@@ -162,6 +187,14 @@ export const SessionConfigSchema = z.object({
   model: z.string().min(1).optional(),
   /** 开会话时的会话模式（提供方 `availableModes()` 里的一个号）；省略即提供方的默认模式。 */
   modeId: z.string().min(1).optional(),
+  /** 所选模型的 thinking 档位（提供方实例在模型目录里列出的一个号）；省略即该模型的默认档，没列档位的模型交给 CLI 默认。 */
+  thinking: z.string().min(1).optional(),
+  /** 这一场会话额外装载的本地插件目录（Claude 形状，含 `.claude-plugin/plugin.json`）；提供方 `Meta.agentConfig.plugins` 为 false 时拒绝。 */
+  plugins: z.array(z.string().min(1)).optional(),
+  /** 这一场会话额外的命令钩子（Claude settings.hooks 形状）；`Meta.agentConfig.hooks` 为 false 时拒绝。 */
+  hooks: HooksSchema.optional(),
+  /** 这一场会话的指令片段（全局集与目录级选出的指令都并在这里），放在规矩之后、仓库指令之前；`Meta.agentConfig.instructions` 为 false 时拒绝。 */
+  instructions: z.string().optional(),
   /** 交给 CLI 进程的额外环境项；与提供方自己要注入的变量重名时 `createSession` 拒绝。 */
   env: z.record(z.string(), z.string()).optional(),
   /** 回合预算：推理次数、工具调用次数、看门狗。 */
@@ -394,10 +427,12 @@ export const BrainEventSchema = z.discriminatedUnion('kind', [
     /** 结束这个回合的收尾工具（有的话）。 */
     concludedBy: z.string().optional(),
   }),
-  z.object({ kind: z.literal('turn.interrupted'), turnId: TurnIdSchema, reason: z.string().optional() }),
+  z.object({ kind: z.literal('turn.interrupted'), turnId: TurnIdSchema, reason: z.string().optional(), usage: UsageSchema.optional() }),
   z.object({
     kind: z.literal('turn.failed'),
     turnId: TurnIdSchema,
+    /** 已知消费；缺失表示提供方未能观测，不填零。 */
+    usage: UsageSchema.optional(),
     category: FailureCategorySchema,
     message: z.string(),
     retryable: z.boolean(),
@@ -489,6 +524,8 @@ export const BrainEventSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('session.mode_changed'), modeId: z.string().nullable(), availableModes: z.array(BrainModeSchema).optional() }),
   /** 后续回合的模型变了。 */
   z.object({ kind: z.literal('session.model_changed'), model: z.string().min(1) }),
+  /** 会话所选的 thinking 档位变了（`setThinking` 的结果）。 */
+  z.object({ kind: z.literal('session.thinking_changed'), thinking: z.string().min(1) }),
   /** `turnId` 是开这个子 agent 的父回合（知道时）；它之后的条目都带这个 `childId`。 */
   z.object({
     kind: z.literal('child.started'),

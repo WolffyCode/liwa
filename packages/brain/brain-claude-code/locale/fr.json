@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Fournisseur Claude Code",
+    "description": "Exécute des sessions de travail avec la CLI Claude Code installée localement, une configuration isolée et une référence d’identifiants propre à chaque fournisseur."
+  }
+}

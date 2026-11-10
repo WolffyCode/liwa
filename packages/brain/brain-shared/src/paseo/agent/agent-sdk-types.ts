@@ -430,13 +430,15 @@ export type AgentStreamEvent =
     }
   | {
       type: "turn_failed";
+      // 灵鲸改（G1）：可观测的失败消费随终止结果结算。
+      usage?: AgentUsage;
       provider: AgentProvider;
       error: string;
       code?: string;
       diagnostic?: string;
       turnId?: string;
     }
-  | { type: "turn_canceled"; provider: AgentProvider; reason: string; turnId?: string }
+  | { type: "turn_canceled"; usage?: AgentUsage; provider: AgentProvider; reason: string; turnId?: string }
   | {
       type: "timeline";
       item: AgentTimelineItem;

@@ -17,7 +17,7 @@ import type { AgentLaunchContext, AgentSession, AgentSessionConfig } from '@liwa
 import { LIWA_METHODS, type LiwaSessionMeta } from '@liwa/deepseek-app'
 import { LiwaChannel, type DeepseekACPAgentClient } from './client.ts'
 import { DeepseekBrainSession } from './session.ts'
-import { writeRules, writeSessionPatch, type SessionPatchSettings } from './session-patch.ts'
+import { sessionInstructions, writeRules, writeSessionPatch, type SessionPatchSettings } from './session-patch.ts'
 
 /** 会话 home 下给 `LIWA_AGENTS_HOME` 的空目录：子进程不读主人的 `~/.agents`（01 §4.6 只读灵鲸管理的配置）。 */
 export const AGENTS_HOME_DIR = 'agents'
@@ -66,6 +66,8 @@ export const DEEPSEEK_META: Meta = {
   budget: { inferences: true, toolCalls: true, concludeOn: true },
   usage: 'tokens',
   personaInjection: { instance: 'system_prompt' },
+  agentConfig: { plugins: false, hooks: false, instructions: true },
+  thinkingSwitch: false,
   runtime: 'subprocess',
   transport: 'acp',
   kernelTools: ['mcp-http', 'mcp-stdio'],
@@ -174,7 +176,7 @@ export class DeepseekBrainProvider extends AcpBrainProvider {
     const agentsHome = join(launch.homeDir, AGENTS_HOME_DIR)
     await mkdir(agentsHome, { recursive: true })
     await writeSessionPatch(launch.homeDir, config, this.patch)
-    await writeRules(launch.homeDir, config.rules)
+    await writeRules(launch.homeDir, sessionInstructions(config))
     const owned = { ...await this.env.resolve(), LIWA_HOME: launch.homeDir, LIWA_AGENTS_HOME: agentsHome }
     return toPaseoLaunchContext(launch, mergeLaunchEnv(this.impl, owned, config.env))
   }

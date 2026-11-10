@@ -2300,6 +2300,9 @@ importers:
       '@liwa/util-values':
         specifier: workspace:*
         version: link:../../util/values
+      js-yaml:
+        specifier: ^4.3.2
+        version: 4.3.2
       zod:
         specifier: 4.4.3
         version: 4.4.3
@@ -2316,6 +2319,9 @@ importers:
       '@liwa/subprocess-local':
         specifier: workspace:*
         version: link:../../subprocess/subprocess-local
+      '@types/js-yaml':
+        specifier: ^4.0.9
+        version: 4.0.9
 
   packages/brain/brain-acp:
     dependencies:
@@ -2347,6 +2353,40 @@ importers:
       '@liwa/subprocess-local':
         specifier: workspace:*
         version: link:../../subprocess/subprocess-local
+
+  packages/brain/brain-claude-code:
+    dependencies:
+      '@anthropic-ai/claude-agent-sdk':
+        specifier: 0.3.263
+        version: 0.3.263(@anthropic-ai/sdk@0.129.0(zod@4.4.3))(@modelcontextprotocol/sdk@1.31.0(supports-color@9.4.0)(zod@4.4.3))(zod@4.4.3)
+      '@liwa/brain':
+        specifier: workspace:*
+        version: link:../brain
+      '@liwa/brain-shared':
+        specifier: workspace:*
+        version: link:../brain-shared
+      '@liwa/brand':
+        specifier: workspace:*
+        version: link:../../util/brand
+      '@liwa/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+      lru-cache:
+        specifier: 11.5.1
+        version: 11.5.1
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@liwa/brain-testkit':
+        specifier: workspace:*
+        version: link:../../test-support/brain-testkit
+      '@liwa/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@liwa/subprocess':
+        specifier: workspace:*
+        version: link:../../subprocess/subprocess
 
   packages/brain/brain-deepseek:
     dependencies:
@@ -2726,6 +2766,9 @@ importers:
       '@liwa/brain-acp':
         specifier: workspace:*
         version: link:../../brain/brain-acp
+      '@liwa/brain-claude-code':
+        specifier: workspace:*
+        version: link:../../brain/brain-claude-code
       '@liwa/brain-deepseek':
         specifier: workspace:*
         version: link:../../brain/brain-deepseek
@@ -2866,6 +2909,9 @@ importers:
       '@liwa/brain-acp':
         specifier: workspace:*
         version: link:../../brain/brain-acp
+      '@liwa/brain-claude-code':
+        specifier: workspace:*
+        version: link:../../brain/brain-claude-code
       '@liwa/brain-deepseek':
         specifier: workspace:*
         version: link:../../brain/brain-deepseek
@@ -3133,6 +3179,9 @@ importers:
       '@liwa/brain-acp':
         specifier: workspace:*
         version: link:../../brain/brain-acp
+      '@liwa/brain-claude-code':
+        specifier: workspace:*
+        version: link:../../brain/brain-claude-code
       '@liwa/brain-deepseek':
         specifier: workspace:*
         version: link:../../brain/brain-deepseek
@@ -24891,6 +24940,21 @@ snapshots:
 
   '@anthropic-ai/claude-agent-sdk-win32-x64@0.3.263':
     optional: true
+
+  '@anthropic-ai/claude-agent-sdk@0.3.263(@anthropic-ai/sdk@0.129.0(zod@4.4.3))(@modelcontextprotocol/sdk@1.31.0(supports-color@9.4.0)(zod@4.4.3))(zod@4.4.3)':
+    dependencies:
+      '@anthropic-ai/sdk': 0.129.0(zod@4.4.3)
+      '@modelcontextprotocol/sdk': 1.31.0(supports-color@9.4.0)(zod@4.4.3)
+      zod: 4.4.3
+    optionalDependencies:
+      '@anthropic-ai/claude-agent-sdk-darwin-arm64': 0.3.263
+      '@anthropic-ai/claude-agent-sdk-darwin-x64': 0.3.263
+      '@anthropic-ai/claude-agent-sdk-linux-arm64': 0.3.263
+      '@anthropic-ai/claude-agent-sdk-linux-arm64-musl': 0.3.263
+      '@anthropic-ai/claude-agent-sdk-linux-x64': 0.3.263
+      '@anthropic-ai/claude-agent-sdk-linux-x64-musl': 0.3.263
+      '@anthropic-ai/claude-agent-sdk-win32-arm64': 0.3.263
+      '@anthropic-ai/claude-agent-sdk-win32-x64': 0.3.263
 
   '@anthropic-ai/claude-agent-sdk@0.3.263(@anthropic-ai/sdk@0.93.0(zod@4.4.3))(@modelcontextprotocol/sdk@1.31.0(supports-color@9.4.0)(zod@4.4.3))(zod@4.4.3)':
     dependencies:

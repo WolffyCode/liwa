@@ -39,6 +39,36 @@
         impl: acp
         command: []
 
+    # Claude Code instances: one row per provider; key and endpoint go into env like Paseo custom providers.
+    - id: brain-claude-code
+      name: '@liwa/brain-claude-code'
+      disabled: true
+      config:
+        impl: claude-reclaude
+        label: Claude via reclaude
+        env:
+          ANTHROPIC_API_KEY: replace-with-the-reclaude-key
+          ANTHROPIC_BASE_URL: http://127.0.0.1:8080
+        models:
+          - id: sonnet
+            label: Sonnet
+            isDefault: true
+    - id: brain-claude-code-glm
+      name: '@liwa/brain-claude-code'
+      disabled: true
+      config:
+        impl: claude-glm
+        label: GLM via Claude Code
+        env:
+          ANTHROPIC_AUTH_TOKEN: replace-with-the-zai-key
+          ANTHROPIC_BASE_URL: https://api.z.ai/api/anthropic
+          API_TIMEOUT_MS: '3000000'
+        disallowedTools: [WebSearch]
+        models:
+          - id: glm-5-turbo
+            label: GLM 5 Turbo
+            isDefault: true
+
     # Reads its task and run options from the ordinary headlessStartup provider.
     - id: headless-runner
       name: '@liwa/headless'

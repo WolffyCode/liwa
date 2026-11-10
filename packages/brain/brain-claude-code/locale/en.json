@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Claude Code brain provider",
+    "description": "Runs work on the local Claude Code CLI; each instance row carries its own plaintext env (key, endpoint, model aliases), skills, MCP servers, plugins and hooks inside an isolated member configuration."
+  }
+}
