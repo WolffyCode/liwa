@@ -1,10 +1,10 @@
 # 02 用脑调度（minds、context、toolport）：direct、实例与活会话
 
-状态：**最小 direct 运行部分已确认，计划实施**（2026-11-05，handoff 决策 65、66）；完整实例／活上下文、toolport 等其余部分仍为草稿。minds 独占会话登记、代次、回合、投递与待答的状态机；brains 负责提供方及 watchdog 的技术执行；宿主装配、命令与协议见 [01-brain-host.md](01-brain-host.md)。推进为 ④ Claude Code＋G1 → ③ 宿主（G4／JSON 严格读取前置）→ ⑤ Codex＋G2/G3。〔一手〕主人 2026-11-05 定稿及顺序决定；`packages/brain/brain/src/provider.ts:77`。
+状态：**最小 direct 运行部分已确认，计划实施**（2026-11-05，handoff 决策 65、66）；完整实例／活上下文、toolport 等其余部分仍为草稿。minds 独占会话登记、代次、回合、投递与待答的状态机；brains 负责提供方表、探测与配置；G4 唯一计时在 minds 的回合包装；宿主装配、命令与协议见 [01-brain-host.md](01-brain-host.md)。推进为 ④ Claude Code＋G1 → ③ 宿主（G4／JSON 严格读取前置）→ ⑤ Codex＋G2/G3。〔一手〕主人 2026-11-05 定稿及顺序决定；`packages/brain/brain/src/provider.ts:77`。
 
 ## 0 一页结论
 
-- **minds 持有 direct、实例与活三种 owner 的唯一会话运行机制。** 第 3 步先实现主人 CLI 的最小 direct 部分，agentId/directId 稳定，每次运行时重建增 gen 并取得新 BrainSessionId；实例和活接同一个登记／queue／回合实现。〔一手〕handoff 决策 65；〔推理〕下文实现结构。
+- **minds 基于搬来的 AgentManager 持有 direct、实例与活三种 owner 的唯一会话运行机制。** 第 3 步先实现主人 CLI 的最小 direct 部分，agentId/directId 稳定，每次运行时重建增 gen 并由 minds 分配新 BrainSessionId；实例和活接同一个登记／queue／回合实现。〔一手〕handoff 决策 65；〔推理〕下文实现结构。
 - **进来的东西先进本体的持久待投递队列，再交给提供方。** 三种送达语义：下一步可见、只在下一回合可见、取消并重排；合批、排序、去重、至少送达一次都在队列里做完；提供方不支持的语义由队列在回合边界补；被中断回合已拿到的输入由本体放回，不依赖提供方的 inbox。权威是经历流 + 这个队列；底座的会话日志是第二份转录。
 - **上下文三层**：稳定前缀（人设十段所有实例逐字相同 + 末尾的实例说明）、最近对话（重建时从各地方流补 N 轮原文）、每轮前缀（从账本现拼、按受众裁、可替换不累积）。给想事活的是整份快照。
 - **toolport 按"实例种类 × 触发消息的发送者角色"在执行点裁工具，令牌按代次签发**，换代即作废；适配器不能自报身份。
@@ -16,11 +16,11 @@
 
 | 模块 | 管 | 不管（归谁） |
 | --- | --- | --- |
-| minds（运行层，`core/minds`） | direct、实例与活的登记、状态机、代次；持久待投递队列与投递器；回合生命周期、预算要求与超时结果处置、收尾检查；watchdog 技术计时／取消只在 brains；换新、回收、重建；会话与回合事件；给 gateway 的进程内实时信号 | 路由（attention，《2.2 实例的种类与路由》）；对外说话（outbox）；准入与名额（guard）；提供方与进程（brains、procs）；活的状态机与核验（tasks） |
+| minds（运行层，`packages/brain/minds`） | direct、实例与活的登记、状态机、代次；持久待投递队列与投递器；回合生命周期、预算要求与超时结果处置、收尾检查；watchdog 计时／取消在 minds 的回合包装；换新、回收、重建；会话与回合事件；给 gateway 的进程内实时信号 | 路由（attention，《2.2 实例的种类与路由》）；对外说话（outbox）；准入与名额（guard）；提供方与进程（brains、procs）；活的状态机与核验（tasks） |
 | context（运行层，`core/context`） | 稳定前缀、实例说明、最近对话、每轮前缀、想事活快照的装配；人设版本号；结构块的渲染与转义约定 | 人设内容与成长（self、06）；受众计算（people）；召回排序（memory） |
-| toolport（接入层，`core/toolport`） | 令牌签发、校验、收回；工具目录与 schema；按实例种类 × 发送者角色裁；同步执行与错误返回；工具调用事件；每回合的工具调用计数 | 投递与目标解析（outbox）；副作用协议（actions）；主人专属操作（gateway） |
+| toolport（接入层，`packages/brain/toolport`） | 令牌签发、校验、收回；工具目录与 schema；按实例种类 × 发送者角色裁；同步执行与错误返回；工具调用事件；每回合的工具调用计数 | 投递与目标解析（outbox）；副作用协议（actions）；主人专属操作（gateway） |
 
-最小 direct 依赖 brains、底座 storage-domain/json、session-persistence/projection，配置由现 profile／请求显式给值。完整第二层依赖方向按 `00-contracts.md` §4.2 的层表：toolport → minds / context / outbox；minds → context、brains、guard、journal；context → journal 与各账本的读 API。三者都不调模型、不读懂内容。
+最小 direct 依赖 brains、底座 storage-domain/json、session-persistence/projection，配置由现 profile／请求显式给值。完整第二层依赖方向按 `00-contracts.md` §4.2 的层表：toolport → minds / context / outbox；minds → context、brains、guard、journal；context → journal 与各账本的读 API。三者通过提供方执行模型工作，不自行发模型 API 请求、不读懂内容。核心采用 Paseo AgentManager 搬运加灵鲸增量；可开关或可替换的策略与能力独立成插件，私有数据结构与 overall §9.1 的内核机制留核心。重启续跑、闲置回收、结构化生成与 agent 工具贡献的包角色见 01 §4.9；finish-subscriptions 是核心投递可靠性的一部分，留在 minds。〔一手〕主人工作记录 19 §2.7、20 C11；〔推理〕范围判据。
 
 ## 2 数据
 
@@ -29,26 +29,13 @@
 | 表 | 字段 | 说明 |
 | --- | --- | --- |
 | `mind_instance` | instance_id、member、kind（`owner` / `solo` / `person` / `group` / `stranger`）、key（人、群或对话的编号）、state（`running` / `reclaiming` / `reclaimed` / `rebuilding`）、gen、session_id、provider{impl, model}、stable_version、persona_rendered_at、turns_in_gen、last_turn_at、pending_count、updated_pos | 一个 `(member, kind, key)` 只有一个实例；`instance_id` 永不变；主人实例永不 `reclaimed` |
-| `mind_session` | session_id、owner（`{directId}`、`{instanceId}` 或 `{taskId}`）、gen、kind（`MindKind`）、provider、stable_version、status（`open` / `closing` / `closed`）、close_reason、usage、opened_pos、closed_pos | 提供方句柄只在内存；owner 编号与 gen 定位逻辑代次，session_id 是 brains 返回的新不透明 id，不用作 JSON 文件键拼接 |
+| `mind_session` | session_id、owner（`{directId}`、`{instanceId}` 或 `{taskId}`）、gen、kind（`MindKind`）、provider、stable_version、status（`open` / `closing` / `closed`）、close_reason、usage、opened_pos、closed_pos | 提供方句柄只在内存；owner 编号与 gen 定位逻辑代次，session_id 是 minds 为本代受管 launch 分配的新不透明 id，不用作 JSON 文件键拼接 |
 | `mind_turn` | turn_id、session_id、initiator{kind: `person` / `system` / `task` / `direct`, principal}、trigger_events[]、handed[]（本回合拿到的队列项）、status（`running` / `completed` / `cancelled` / `failed`）、inferences、tool_calls、side_effects、concluded_by（结束工具名或空）、usage、started_pos、ended_pos | `side_effects` 是本回合已完成的、有后果的工具调用数，取消规则用它 |
-| `mind_delivery` | owner、event（要投的事件号）、semantics（`next_step` / `next_turn`）、chain（所属链的发起消息号，可空）、state（`pending` / `handed` / `consumed`）、handed_turn、attempts、queued_pos | 按 `(owner, event)` 去重；逻辑消费状态与 providerDispatch（queued/dispatching/accepted/unknown/cancelled）分别表达消费结果和传输事实，仍属同一队列；结果不明不重投 |
+| `mind_delivery` | owner、event（要投的事件号）、semantics（`next_step` / `next_turn`）、chain（所属链的发起消息号，可空）、state（`pending` / `handed` / `consumed` / `returned`）、handed_turn、attempts、queued_pos | 按 `(owner, event)` 去重；逻辑消费状态与 providerDispatch（queued/dispatching/accepted/unknown/cancelled）分别表达消费结果和传输事实，仍属同一队列；结果不明不重投 |
 
-### 2.2 事件（`contracts/events/minds.ts`，只有 contracts 能定义）
+### 2.2 事件（minds 追加到 SessionEventMap）
 
-流：实例会话的事件进 `instance:<instanceId>`，活会话的进 `task:<taskId>`，人设装载进 `member:<id>`，令牌拒绝进 `system`。`correlationId` = turnId；`causeId` = 触发回合的事件或 `turn.started` 的 pos。
-
-| 类型 | 载荷（信封外） | 载荷号（可删） |
-| --- | --- | --- |
-| `instance.opened.v1` / `instance.reclaimed.v1` | kind、key；reason、cursor | — |
-| `session.opened.v1` / `session.closed.v1` | gen、provider、stableVersion、recentTurns?；reason（`renew_context` / `renew_turns` / `stable_changed` / `stale` / `error` / `quality` / `nightly` / `reclaim` / `provider_switch` / `drain`）、cursor | — |
-| `turn.started.v1` / `turn.completed.v1` / `turn.cancelled.v1` / `turn.failed.v1` | initiator、triggerEvents、handed；usage、inferences、toolCalls、concludedBy；reason（`preempt` / `watchdog` / `hard_limit` / `pause` / `drain` / `restart` / `owner`）；category、message、retried | — |
-| `turn.output.v1` | itemId（模型最终文字，只进日志，`overall.md` §8 R1） | text |
-| `turn.quality.v1` | kind（`no_conclusion` / `reminder_sent` / `fallback_sent` / `loop` / `budget_hit`） | — |
-| `delivery.queued.v1` / `delivery.handed.v1` / `delivery.settled.v1` | event、semantics、chain；events[]、turnId、gen；turnId、outcome（`consumed` / `returned`） | — |
-| `tool.called.v1` | turnId、callId、tool、seqInTurn、batch?、ok、error?、durationMs、effectId? | args、result |
-| `context.built.v1` | turnId、stableVersion、chars{stable, notes, recent, prefix}、blocks[] | 每轮前缀原文 |
-| `persona.loaded.v1`（`member` 流） | version、chars、sections[] | 稳定前缀全文 |
-| `toolport.rejected.v1`（`system` 流） | reason（`bad_token` / `stale_gen` / `no_turn` / `not_in_set`）、tool | — |
+最小 direct 及托管 agent 的持久事实使用 `minds/timeline-row`、`minds/agent-stream`、`minds/agent-state`、`minds/delivery`、`minds/gen`、`minds/timeline-replacement`、`minds/model-input`，载荷与声明合并的唯一契约见 [00-contracts.md](00-contracts.md) §6.1。每 agent 一个逻辑 JSONL；实例／活的 journal 语义事件由这些事实投影到 `instance:<instanceId>`／`task:<taskId>`，不双写两个权威账本。稳定人设、每轮前缀、最终工具 schema、输入与结果必须可取回原文，不能只存 token 数。〔一手〕`packages/core/session/src/types.ts:287`；〔推理〕决策 67 C4。
 
 ### 2.3 最小 direct 的标识与状态
 
@@ -58,64 +45,109 @@
 | gen、sessionId | owner 代次与本代 BrainSession id | 重建／续接／换提供方产生新 gen、sessionId；原生 id 另存。〔一手〕[four-layers.md](../four-layers.md) §2.13；packages/brain/brain/src/index.ts:474 |
 | bootId | 本次宿主启动标识 | 识别过期连接描述／回调；不增加远端 host 注册 id、设备 id 或同步 revision。〔推理〕 |
 | operationId、deliveryId、turnId | 本机变更请求幂等号、输入投递号、提供方映射后的回合号 | 超时查询 operationId；同号不同请求报冲突；gen+turnId 防旧回调收掉新轮。〔二手〕docs/liwa/research/2026-11-05-codex-adaptation.md:366、370；〔推理〕 |
-| logId、seq、cursor | 逻辑 agent 的日志及持久切点 | seq 跨 gen 连续；cursor 带 logId/epoch/seq/过滤范围，本机 attach 重连使用，不是跨设备同步协议。〔一手〕packages/session/session-persistence/src/handle.ts:85；〔推理〕 |
+| logId、seq、cursor | 逻辑 agent 的日志及持久切点 | 日志 offset 跨 gen 连续，timeline row.seq 独立；cursor 带 logId/epoch/seq/过滤范围，本机 attach 重连使用，不是跨设备同步协议。〔一手〕packages/session/session-persistence/src/handle.ts:85；〔推理〕 |
 
 记录分别表达 `lifecycle=active/archived/deleting/deleted`、`runtime=absent/starting/live/stopping/closed/error/recovery_blocked`、当前前台回合、后台孩子／终端数量及 unknown、pending 数量、resume 是否可用；不能把“前台 idle”写成“全部后台已经停”。这里的枚举是 V1 内部业务值；线协议增加新取值时还需遵守 01-brain-host.md §3.2，不能直接把新枚举发给拒绝它的旧客户端。〔一手〕packages/brain/brain/src/views.ts:54；paseo-upstream@8018231a:docs/agent-lifecycle.md:55；〔二手〕docs/liwa/research/2026-11-05-claude-code-adaptation.md:329；docs/liwa/research/2026-11-05-codex-adaptation.md:361；〔推理〕。
 
 ### 2.4 最小 direct 的持久布局
 
-示例 `storage-json.root=$LIWA_HOME/brain-host/state`；领域声明 `layout:'per-record'`，路由到既有 `json`。布局选择在领域规范，不是 JSON 插件 Config 的开关。实际路径均进 Config。〔一手〕packages/storage/storage-json/README.zh.md:28、36、90；packages/storage/storage-domain/src/spec.ts:35、47；〔推理〕领域名。
+minds 声明领域 `name:'agent', version:1, layout:'per-record'`，路由到既有 json 后端。`minds.Config.storageRoot` 与 bundle 的 storage-json.root 解析为同一根，示例 `$LIWA_HOME/brain-host/state`；领域规范决定布局，后端 Config 决定物理 root，二者必须在装配时核对，不新造第二个文件存储。UUID agentId 满足 `SAFE_KEY_RE`，其他键采用 UUID 或对复合身份的 SHA-256，不使用 cwd、标题或带 `/` 的 owner 字符串作文件键。〔一手〕`packages/storage/storage-domain/src/spec.ts:35`、`packages/storage/storage-domain/src/domain.ts:59`、`packages/storage/storage-json/README.zh.md:90`；〔推理〕C3。
 
-| 数据 | 底座产生的示例路径 | 放什么与不放什么 | 唯一读写者 |
+| 数据／表 | 底座产生的示例路径 | 键与内容 | 唯一读写者 |
 | --- | --- | --- | --- |
-| agent 记录 | `state/agent/records/<agentId>.json` | 一 agent 一文件，跨 gen 保留当前记录；不每 token 增一文件，不每代再造一套 agent 登记 | minds 通过 `ctx.storageDomain` |
-| 操作／恢复 intent | `state/agent/operations/<operationId>.json` | 创建号到 agentId 的映射、有限步骤、回执、结果不明／删除进度；内容主体只存 blob/日志引用 | 同一 minds 服务 |
-| 受管进程台账 | `state/runtime/managed-processes/<recordId>.json` | 一受管进程／启动 intent 一文件；角色、owner、出生身份、退出／清理状态 | subprocess 的持久监管能力，经 storageDomain |
-| 宿主替换／故障控制 | `state/runtime/operations/<operationId>.json` | restart intent、目标 boot、替换结果；不含会话正文 | 宿主载体的控制服务 |
-| 事件日志 | `$LIWA_HOME/brain-host/events/` 下由 JSONL 后端决定的目录与版本文件 | 已提交输入、注入内容、回合／条目／权限／用量事实；是 logs/attach 真相 | minds 的日志写入者，经 sessionPersistence |
-| 连接描述 | `$LIWA_HOME/run/brain-host/` | 当前 boot、回环 endpoint；token 单独私有文件；稳定 lock inode | 底座宿主／Connection；不是配置数据库 |
-| 原生材料 | `<membersRoot>/<member>/brains/<impl>/…` | 原生转录／线程索引／稳定身份与本代材料；只是原生续接资料 | 提供方通过自身 API，清理见 §4.0 |
+| agents | `state/agent/agents/<agentId>.json` | UUID agentId；跨 gen 一条当前记录 | minds，经 storageDomain 的 KvTable |
+| finish-subscriptions | `state/agent/finish-subscriptions/<id>.json` | 订阅 UUID；callerAgentId、childAgentId、requireParentOwnership?；本机无 serverId 路由，重启合并同一 caller/child 的观察 | minds 的 FinishSubscriptionStore |
+| deliveries | `state/agent/deliveries/<deliveryId>.json` | SHA-256(JSON.stringify([owner种类,owner编号,eventId]))；不含 gen，使换代补投仍能去重；字段见 §4.2 | minds 的唯一投递器 |
+| operations | `state/agent/operations/<operationId>.json` | UUID；请求摘要、agentId、步骤、回执、unknown、清理进度 | 同一 minds 服务 |
+| 受管进程台账 | `state/runtime/managed-processes/<recordId>.json` | subprocess 的 intent／出生身份／范围／退出事实；minds 只存 processRefs | subprocess，经自己的领域 |
+| 宿主替换／故障控制 | `state/runtime/operations/<operationId>.json` | restart intent、目标 boot 与替换结果 | 宿主控制服务 |
+| 事件日志 | `$LIWA_HOME/brain-host/events/<logId>/`，文件名与版本由 JSONL 后端决定 | 每 agent 一个 SessionHandle；gen 是事件字段，不按 gen 新开日志 | minds，经 sessionPersistence |
+| 连接描述 | `$LIWA_HOME/run/brain-host/` | boot、回环 endpoint；私有管理 token 与稳定 lock inode | 底座宿主／Connection |
+| 原生材料 | `<membersRoot>/<member>/brains/<impl>/…` | 提供方转录／索引／每代快照，按 §4.0/01 §4.6 管理 | 提供方 API |
 
-JSON 物理文档是底座的 `{version,record}` 包装，不手工维护同名 `.json`、manifest 或副本；不为复刻 Paseo 的 cwd 子目录再包一层存储。Paseo 的两个参照是 `agents/{cwd}/{agentId}.json` 与 `runtime/managed-processes/{recordId}.json`，灵鲸保留“一条一文件”而服从底座 `<unit>/<table>/<key>.json` 布局。〔一手〕paseo-upstream@8018231a:docs/data-model.md:53、64、79；packages/storage/storage-json/README.zh.md:90；〔推理〕。
+`logId = SessionId('minds-' + agentId)`：小写 UUID 的完整值加固定前缀，不截断、不用 native id、不含 gen；恢复／reload 重开同一逻辑日志的 writer，不在旧 writer 未关闭时抢写。JSON 仍用底座 `{version,record}` 包装，不能复刻 Paseo `agents/{cwd}/` 子目录。〔一手〕`packages/session/session-persistence/src/handle.ts:57`、`packages/storage/storage-json/README.zh.md:90`；〔推理〕F3 派生规则。
 
 ### 2.5 agent 记录字段
 
-| 记录部分 | 必要字段 | 真相与恢复规则 |
+`STORED_AGENT_SCHEMA` 的每一项按下表冻结；根字段 `id` 就是 agentId，不另持久化一个同值 agentId。`workspaceId` 删除；Paseo `owner: AgentOwner` 改 `hostOwner`，灵鲸 `owner: SessionOwner` 表达 direct/instance/task 与 gen，二者不能混用。Paseo AgentOwner 原为 `{kind:'daemon',daemonId,executionId}`，灵鲸本步改为 `{bootId:BootId}`，不因 owner 存在就排除普通 direct 的重启恢复。〔一手〕Paseo `agent/agent-storage.ts:45`、`agent/agent-owner.ts:1`、`agent/restart-recovery/index.ts:13`；〔推理〕C3。
+
+| 字段 | 来源 | 冻结形状／约束 |
 | --- | --- | --- |
-| 身份与偏好 | agentId、owner/member、title/labels、cwd 原值与规范路径、createdAt、impl、requestedModel?、observedModel?、mode?、thinking?、mindKind | 当前配置的安全引用与已确认选择；省略 model 仍是 CLI 默认。改 cwd 不得偷偷换原生身份。〔一手〕packages/brain/brain/src/views.ts:60；〔推理〕 |
-| 当前运行代 | gen、sessionId?、bootId、runtime/foreground、当前 operation/turn、processRefs、lastActivityAt、lastError | minds 是生命周期所有者；brains 句柄只在内存。JSON 上一 boot 的 live 不是现在还活着的证明。〔二手〕docs/liwa/research/2026-11-05-claude-code-adaptation.md:328、338；〔推理〕 |
-| 安全配置与续接 | providerRevision、配置来源 revision、configRootRef、homeDir、非秘密覆盖；resume{impl,nativeHandle,非秘密定位 metadata,capturedSeq,可恢复性} | 完整 cfg 重新解析，Key/MCP token 不进 JSON；只有 persistence 非 null 才保存可恢复句柄。原生 id 延后产生要及时更新。〔二手〕docs/liwa/research/2026-11-05-claude-code-adaptation.md:330；docs/liwa/research/2026-11-05-codex-adaptation.md:362、363、365；〔推理〕 |
-| 待投递 | bounded pending delivery 引用、语义、wake、expectedGen/Turn、queued/dispatching/accepted/unknown、attempt | 输入内容在 JSONL/blob，JSON 存可调上限内的待投递索引；唯一队列在 minds，不与 native queue 双投。〔二手〕docs/liwa/research/2026-11-05-claude-code-adaptation.md:333；docs/liwa/research/2026-11-05-codex-adaptation.md:366；〔推理〕 |
-| 待答 | sessionId/gen/requestId、turnId?/childId?、lifetime、请求 eventSeq、pending/responding/unknown、responseOperationId? | 详细题目／调用事实按 eventSeq 读取；Promise/RPC 不落盘，旧代请求不能向新进程回复。G2 预留。〔二手〕docs/liwa/research/2026-11-05-claude-code-adaptation.md:335；docs/liwa/research/2026-11-05-codex-adaptation.md:368、369；〔推理〕 |
-| 孩子与用量摘要 | 活动 child 摘要／parentChildId、background unknown、累计已知结算、完整性、最近 quota/balance 引用 | 完整历史与分项在日志；JSON 只保当前摘要；父总量不与 child/update 重加。G1/G3 依赖统一接口。〔一手〕packages/brain/brain/src/views.ts:123；〔二手〕docs/liwa/research/2026-11-05-codex-adaptation.md:372；〔推理〕 |
-| 归档／清理 | archivedAt?、cleanupOperationId?、材料引用清单／清理进度、deleted tombstone | 只删本 agent 专属材料；跨 gen 共享同一原生 home 时不能删旧代目录把新代也破坏。〔二手〕docs/liwa/research/2026-11-05-claude-code-adaptation.md:332、337；docs/liwa/research/2026-11-05-codex-adaptation.md:373；〔推理〕 |
-| 持久协调 | recordRevision、appliedLogSeq、pendingMutation?、creationOperationId、restartRecovery? | 所有状态变更有明确提交步骤，见 §2.6；recordRevision 防本机并发旧读覆盖，不是分布式版本向量。〔推理〕 |
+| id | Paseo | AgentId，小写 UUID；agents 表键必须同值 |
+| provider | Paseo | ImplId 的字符串值；不另存 impl |
+| cwd | Paseo | 执行目录原值；规范路径用于查询，不由其猜 owner |
+| workspaceId | Paseo | 删除；工作区联动下一批 |
+| createdAt | Paseo | ISO 时间，恢复不重写 |
+| updatedAt | Paseo | 已提交元数据更新时间 |
+| lastActivityAt? | Paseo | ISO 时间，恢复不伪造活动 |
+| lastUserMessageAt? | Paseo | ISO 或 null |
+| title? | Paseo | string 或 null |
+| labels | Paseo | Record<string,string>；父标签 liwa.parent-agent-id；tab 标签删除 |
+| lastStatus | Paseo | initializing/idle/running/error/closed；恢复前先捕获 running 意图 |
+| resumeOnStartup? | Paseo | 一次恢复意图；禁用恢复消费它，不复活旧工作 |
+| lastModeId? | Paseo | string 或 null，包含原生侧切换 |
+| config? | Paseo + 灵鲸 | 仅非秘密的合并配置快照／内容引用；model/modeId/thinkingOptionId/featureValues/providerOptions/toolPolicy/systemPrompt/mcpServers 逐项过滤；人设等正文用日志/blob 引用；Key、headers token、kernelTools.token 不落此字段 |
+| launchEnv? | Paseo | 仅非秘密覆盖；认证与隔离值每次从当前配置解析，禁止复用旧秘密 |
+| runtimeInfo? | Paseo | provider/sessionId/model?/thinkingOptionId?/modeId?/extra?；extra 仅非秘密 JSON |
+| features? | Paseo | AgentFeature[]；Claude 不实现 fast mode/feature 接线 |
+| persistence? | Paseo | AgentPersistenceHandle 或 null：provider、sessionId、nativeHandle?、metadata?；metadata 只收可恢复定位／累计基线，不存 env 或 token |
+| lastError? | Paseo | 脱敏 string 或 null |
+| requiresAttention? | Paseo | boolean |
+| attentionReason? | Paseo | finished/error/permission 或 null |
+| attentionTimestamp? | Paseo | ISO 或 null |
+| internal? | Paseo | 内部 helper 不写公开 agents 表；不能被公共请求启用 |
+| archivedAt? | Paseo | ISO 或 null，归档与 runtime 关闭分开 |
+| hostOwner? | Paseo owner 改名 | {bootId:BootId}，宿主执行归属，不是灵鲸业务 owner |
+| gen | 灵鲸 | 正整数，每次重建／resume／reload／换提供方递增 |
+| bootId | 灵鲸 | 最后占有 runtime 的宿主；旧 boot 的 live 不是当前存活证明 |
+| member | 灵鲸 | MemberId |
+| mindKind | 灵鲸 | instance/work/think/own/tidy |
+| owner | 灵鲸 | SessionOwner：directId 或 instanceId 或 taskId，加 gen；必须与记录 gen 一致 |
+| sessionId? | 灵鲸 | 本代 BrainSessionId，与 native id 分开 |
+| lifecycle、runtime、foreground | 灵鲸 | §2.3 正交状态与捕获 turn/operation；不另立第二个 manager |
+| providerRevision、configRevision、configRootRef、homeDir | 灵鲸 | 不可变材料与来源引用；完整配置重新 resolve，home 必须属于该成员／impl |
+| resume? | 灵鲸 | {identityProbe:boolean,capturedSeq:SessionLogOffset,available:boolean}；约束 persistence 的使用，不存第二个原生句柄 |
+| processRefs | 灵鲸 | 受管进程台账引用，不复制出生身份 |
+| pendingDeliveryIds、pendingPermissions | 灵鲸 | 有上限的索引；pending 键含 gen/requestId、turnId?/childId?、eventSeq、lifetime、响应状态与 operation；Promise 不持久 |
+| children、usage、usageCompleteness | 灵鲸 | 当前活动／已知结算摘要；历史在 JSONL，子分项不重复计费 |
+| cleanupOperationId?、artifacts、tombstone? | 灵鲸 | 精确材料引用、清理进度、最小无正文删除回执 |
+| recordRevision、appliedLogSeq | 灵鲸 | 单写修订号／已投影逻辑日志切点；防旧快照覆盖新记录 |
+| pendingMutation?、creationOperationId、restartRecovery? | 灵鲸 | §2.6 协调步骤；恢复意图与副作用 unknown 分开 |
 
-受管进程字段由 [01-agent-cli.md](01-agent-cli.md) §2.1 定义，subprocess 通过其持久 API 单写；minds 只保存 processRefs 并调用公开核对／清理能力，不维护第二份台账。〔一手〕`packages/brain/brain/src/views.ts:30`；handoff 决策 62、65。
-
-01 的 `brain_provider/brain_process/brain_session/brain_child/brain_usage` 继续是公开观测形状，不变成五套独立 SQLite 表。provider 当前配置真相是 Cordis 行；会话／孩子／用量当前摘要放 agent JSON，历史读 JSONL，进程事实读逐条进程 JSON。关闭 brains 内存句柄不删除 agent 记录。〔一手〕[01-agent-cli.md](01-agent-cli.md) §2；packages/brain/brain/src/views.ts:1；〔推理〕。
+依据：〔一手〕Paseo `agent/agent-storage.ts:45`–`:80`；`packages/brain/brain/src/contract.ts:94`；灵鲸增量为〔推理〕，保持决策 62 的逐条 JSON 与现有 §2.6 的可恢复协调。进程台账字段只在 [01-agent-cli.md](01-agent-cli.md) §2.1 定义。
 
 ### 2.6 JSON 与 JSONL 的提交和恢复
 
-**能保证的是单个 JSON put 的持久原子发布，加上可恢复的有序操作；不声称 JSON、另一条 JSON 与 JSONL 有一个事务。** storage-json 的单文件写入做临时文件、fsync、rename、父目录 fsync；storage-domain 在一个领域内排写入链；跨记录仍由业务 owner 的操作状态机安排。所有文件只经这些 API，不在命令、provider 或宿主入口手写 rename/fsync。〔一手〕packages/storage/storage-json/README.zh.md:76；packages/storage/storage-domain/README.md:88、147；〔推理〕。
+`AgentStorage` 的公开方法保留，fs/cache/atomic-file 实现直接替换为一个领域的 `KvTable`；不在它外面再包一个自写 JSON 后端。所有方法的失败必须向调用方传播，flush 不能沿上游 `allSettled` 吞掉写失败。〔一手〕Paseo `agent/agent-storage.ts:99`–`:280`；`packages/storage/storage-domain/src/domain.ts:59`；〔推理〕C3。
 
-| 步骤 | 普通会话变更如何提交 | 崩溃后的唯一动作 |
+| AgentStorage 方法 | KvTable 落点 | 保证 |
 | --- | --- | --- |
-| ① durable intent | 固化 operationId、请求摘要、agentId、目标 revision/gen、内容引用；创建的 id 映射先存 operations；agent 记录记 pendingMutation | 没到提交点就是 preparing，不能当已执行；恢复在同一 operationId 下补步骤或明确失败，不分配第二 agent |
-| ② JSONL 提交事实 | 追加包含 opId、eventId、gen、实体变更后状态／输入事实的记录，再 flush | append 没 flush 不承诺 durable；重启读有效前缀核对 opId，已有事件就不重复追加 |
-| ③ 更新 agent JSON | 原子替换到新状态，推进 recordRevision、appliedLogSeq，完成 pendingMutation | 日志在前、JSON 落后就补投影；禁止反向把日志已发生事实回滚 |
-| ④ 回执 | 操作记录补回执；关键 JSON 与日志已一致才报 accepted/applied | 回执丢失按同 operationId 查询；若操作记录尚落后，可用 agent/log 中的同号事实补齐 |
-| ⑤ 外部投递 | 先把 dispatching intent 持久化，再调 provider；确认后记录 accepted/native turn 与后续结果 | intent 后、确认前崩溃是 unknown，不自动把同输入发第二次；后续恢复策略见 §6 |
+| initialize | storageDomain.open(spec)，保留私有 domain | 严格读取成功才 ready |
+| list／get | agents.entries／get | 返回 domain 权威内存视图；缺记录返回 null，不把损坏当缺失 |
+| listByProviderSession | entries 按 persistence.provider 与 sessionId/nativeHandle 过滤 | 可重建内存索引仅优化，不作第二真相 |
+| findByDaemonExecution → findByBootId | entries 按 hostOwner.bootId 过滤 | 改返回匹配记录数组；bootId 不是每 agent 唯一执行号，不能照原单条索引 |
+| listByWorkspace | 删除 | 本步没有 workspaceId |
+| upsert | agents.put(record.id,record) | await 即持久，冲突／删除闸门在唯一写序列中检查 |
+| beginDelete | agents.update 标 lifecycle=deleting 与 cleanupOperationId | 改为 Promise<void>，durable 删除 intent 后才允许后续删除；不是内存 Set |
+| remove | agents.delete | 上层完成清理并留操作回执后删除；错误传播；批量返回逐项结果 |
+| applySnapshot | agents.update；首次插入在串行创建路径用 put | 保留 archivedAt、resume intent、revision，禁止过期快照覆盖 |
+| setTitle | agents.update | 同槽位读改写，无 get 后 upsert 竞态 |
+| flush | 等本适配器捕获的在途写入并报告全部失败 | storage-json 每次 put 持久，不再定时重写全表 |
+| 批量释放订阅 | finish-subscriptions.deleteMany | 只用于该 API 声明的同域批操作；不把批量 agent 清理伪装成跨文件事务 |
 
-此表机制为〔推理〕；依据 packages/session/session-persistence/src/handle.ts:85、99；packages/storage/storage-domain/README.md:73、88；paseo-upstream@8018231a:docs/data-model.md:37。accepted 只表示输入已由宿主持久收下，不表示模型已看见；applied 才表示该控制动作的明确结果。run no-wait 之后 wait 必须能绑定正在排队／启动的 operation。
+**只保证单个 JSON put 的原子持久发布，JSON、另一条 JSON 与 JSONL 没有共同事务。** 每个 mutation 在 minds 的单 agent 生命周期通道里执行；domain 单写链不替代业务的多步骤协调。〔一手〕`packages/storage/storage-json/README.zh.md:76`、`packages/storage/storage-domain/src/domain.ts:8`；〔推理〕。
 
-事实分工只有一条读路：**ls/inspect 状态读取 agent JSON 的已核对记录，logs/attach 读取 JSONL；内存 domain 是这些 JSON 的加载视图，不是另一份持久索引。** 日志承载已发生的会话事实；agent 中这部分是带 appliedLogSeq 的物化摘要，过期时在开放变更前补追。创建、删除、进程启动的未完成 intent 归相应 JSON 控制记录；不能要求从对话日志凭空还原一个尚未建日志的进程。字段所有者公开业务 API，外部模块不直接开它的 domain。〔一手〕packages/storage/storage-domain/README.md:83、94；〔推理〕。
+| 步骤 | 提交 | 崩溃后动作 |
+| --- | --- | --- |
+| ① intent | operations 固化 operationId/requestHash/agentId/gen/revision/内容引用，agent 记 pendingMutation | 同 operation 恢复，不另建 agent |
+| ② JSONL | append 带 operationId/gen 的事实，再 flush | 核对有效前缀，同号事实不重复写 |
+| ③ agent JSON | update after，递增 recordRevision、appliedLogSeq，清 pendingMutation | 日志领先则补投影，不回滚已发生事实 |
+| ④ 回执／信号 | operation 写结果后发布 committedSeq；返回 accepted/applied | 响应丢失按 operationId 查询 |
+| ⑤ provider 投递 | 先 durable dispatching，再调用；确认后写 accepted/turn | 确认前崩溃是 unknown；不盲重投 |
 
-会话投影复用 session-projection：minds 注册单元，保留私有 detached Session 日志对象；独立 Session 不发 store 通知，flush 成功之后才发布该 cut 的 snapshot，失败隔离并从 durable 前缀重建。JSON 摘要由同一投影更新；查询不另做 fold。文字增量只批量追加 JSONL，不每个 token 重写 agent JSON；关键状态／权限／句柄变化及时落记录，lastActivity 的节流间隔进 Config。〔一手〕packages/core/session/src/index.ts:588、773；packages/session/session-projection/README.md:36、54、58；〔推理〕。
+append 只承诺有序可读，flush 才承诺跨崩溃；控制事件还要等关联 agent JSON 推进后才发布 committed cut，纯转录文字可在日志 flush 后发布。snapshot/follow 在一个观察点安装订阅并取 H/stateAtH，先回放 `(after,H]` 再发缓冲 `>H`，不能先读后订。JSON 摘要复用同一个 session-projection fold，坏域隔离，不另起一份状态推断。〔一手〕`packages/session/session-persistence/src/handle.ts:85`、`:99`、`packages/session/session-projection/README.md:58`；〔推理〕。
 
-批量 stop/archive/delete 是逐 agent 操作清单，返回每项结果，不使用一次 deleteMany 假装全有或全无。删除顺序为：durable intent → 停稳 → 精确原生清理 → 删除日志与专属 blob → 清空 agent 内容、保留最小 tombstone／操作回执；重启按步骤继续。尚未清理完成的对象必须有 JSON owner 可查；删除 metadata 不等于物理擦除系统备份。〔一手〕packages/storage/storage-json/README.zh.md:56、145；〔二手〕docs/liwa/research/2026-11-05-codex-adaptation.md:373；〔推理〕。
-
-对外发布切点与刚落盘的尾部分开：改变生命周期／权限／用量的事件，必须在关联 agent JSON 已推进后再发布 committedSeq；若日志先 durable 而 JSON 尚未更新，这段只供恢复读取，不能配旧状态发给 attach。纯转录文字不改变登记状态，可在 JSONL flush 后发布，agent 的历史 checkpoint/lastActivity 允许按声明的节奏落后；后续补追只推进摘要，不再次发布已给过的事件。单 agent 顺序发布不跨过尚未完成的控制提交。所有 processRefs／operationRefs 的目标缺失都需报告对账异常，不得把缺进程 JSON 当进程已退出；放行 CLI 前，进程记录与 owner 引用都须 durable。〔推理〕；〔一手〕packages/storage/storage-domain/README.md:73、147；packages/session/session-persistence/src/handle.ts:99。
+ls/inspect 读已核对 agent 记录，logs/attach 读 JSONL；缺 processRefs／operationRefs 目标必须报告对账异常，不当进程已死。删除顺序为 intent→完整停稳→provider 精确原生清理→日志与专属 blob 清理→agent 内容删除／最小 tombstone→回执；每项失败可续原 operation，不能跳过失败报完成。〔一手〕`packages/storage/storage-domain/src/domain.ts:8`；〔推理〕。
 
 ### 2.7 严格读取与查询规模
 
@@ -129,43 +161,67 @@ JSON 物理文档是底座的 `{version,record}` 包装，不手工维护同名 
 
 ## 3 接口
 
-本节是**计划接口**。最小 direct 的 run/list/inspect/send/wait/permit/reload/archive/delete 由 minds 的具体业务方法提供；状态定义在 §2.3–§2.7，终端语义见 [01-brain-host.md](01-brain-host.md) §3.1。当前 brain 契约仍仅接受 instance/task，direct 等计划补口见 [00-contracts.md](00-contracts.md) §5.1，不把下列设计当现有类型。〔一手〕`packages/brain/brain/src/contract.ts:149`；handoff 决策 65。
+`@liwa/minds` 以 Cordis `Service` 类提供 `ctx.minds`，持有一份 AgentManager；以下是 A′ 计划 API，非当前导出。完整 package/Config/inject/NOTICE 归 [01-agent-cli.md](01-agent-cli.md) §4.9；提供方表由 brains 供应，minds 注入 brains、storageDomain、sessionPersistence、sessionProjections、subprocess。minds 不 inject toolport；接入层 ready 后调用下层 `attachToolport`，返回释放函数并挂 effect。〔一手〕`packages/brain/brain/src/index.ts:191`、`docs/glossary.md:9`、[engineering.md](../../engineering.md) §5；〔推理〕C5/C11。
+
+### 3.1 AgentManager 方法组
+
+下列名称按 `paseo-upstream@8018231a:packages/server/src/server/agent/agent-manager.ts` 核对。方法保持上游输入／结果语义，涉及身份的公开参数改品牌类型；具体命令先过 §4.0 的准入与持久协调，不把内部方法直接作为未鉴权 RPC 暴露。〔一手〕该文件下列行号；〔推理〕接入约束。
+
+| 方法组 | public 方法 | 上游行 |
+| --- | --- | --- |
+| 提供方登记与可用性 | registerClient、updateProviderRegistry、getRegisteredProviderIds、listProviderAvailability、getProviderAvailability、listDraftCommands、listDraftFeatures、usageSession | 841–879、1175–1278 |
+| 观察与目录 | getMetricsSnapshot、hasInFlightRun、subscribe、subscriptionCount、listAgents、listRetiredInternalAgents、getAgent、getRetiredInternalAgent、notifyAgentState、notifyAgentRemoved | 981–1095、1283、1821、2380、3541 |
+| 创建／关闭／恢复 | createAgent、resumeAgentFromPersistence、reloadAgentSession、waitForAgentClose、getRuntimeCleanupCandidates、closeAgent | 1348、1426、1631、1288、1854、1911 |
+| 归档／元数据 | archiveAgent、archiveSnapshot、unarchiveSnapshot、unarchiveSnapshotByHandle、setTitle、setLabels、updateAgentMetadata、detachAgent | 1990、2438–2529、2271–2331 |
+| 模型／模式／能力 | setAgentMode、setAgentModel、setAgentThinkingOption、setAgentFeature | 2188–2257 |
+| 前台／自主回合 | runAgent、tryRunOutOfBand、streamAgent、replaceAgentRun、steerAgentRun、steerOrReplaceActiveTurn、waitForAgentRunStart、cancelAgentRun、waitForAgentEvent | 2580–2626、2782、2984–3050、3195、3347、3620 |
+| 权限 | getPendingPermissions、respondToPermission | 3453、3309 |
+| 时间线／回滚 | getTimeline、getTimelineRows、fetchTimeline、appendTimelineItem、emitLiveTimelineItem、hydrateTimelineFromProvider、rewind、deleteAgentState、deleteCommittedTimeline、getLastAssistantMessage | 1294–1310、2684–2709、3466–3554 |
+| 原生孩子 | listProviderSubagents、listProviderSubagentActivity、getProviderSubagent、fetchProviderSubagentTimeline | 1315–1339 |
+| 关停与持久化 | prepareForShutdown、flush、flushForShutdown | 895、5324、5333 |
+| 工具能力注入 | getPaseoToolPolicy；setMcpBaseUrl／setPaseoToolsEnabled／setPaseoToolCatalogFactory／getMcpAuthToken 由 attachToolport 的同一能力取代 | 891、899–905、963–973 |
+| 插件扩展点 | setAgentAttentionCallback／setAgentArchivedCallback 换同名语义 Cordis 事件；invalidatePluginSessions／reloadStalePluginSession／getPluginTools／executePluginTool 换 effect 登记与 opening 瀑布 | 883–887、907–955；§4.4 |
+| 删除的公开方法 | listImportableSessions、importProviderSession（外部导入不搬）；setAppendSystemPrompt（提供方只拼一次） | 1108、1538、977；00 §5.1 |
+
+`detachAgent` 代码留作内部能力，不进 CLI／agent 工具；`setAgentFeature` 的通用接口留，Claude fast mode/feature 接线不做。冷列表用 AgentDirectory 合并 listAgents 与存储，不调用 ensureAgentLoaded。〔一手〕主人工作记录 20 C6；Paseo `agent/directory.ts:1`。
+
+### 3.2 灵鲸增量与 toolport 登记
 
 ```ts
-interface Minds {                                                     // Services['minds']，required 之间的进程内 API
-  ensureInstance(req: { member: MemberId; kind: InstanceKind; key?: string }): Promise<{ instanceId: string; state: InstanceState }>;   // 幂等；只登记，不开会话
-  deliver(req: { to: { directId: string } | { instanceId: string } | { taskId: string }; events: EventId[]; semantics: 'next_step' | 'next_turn' | 'cancel';
-                 chain?: EventId; sender: Principal }): Promise<{ disposition: 'queued' | 'merged' | 'handed' | 'cancelled_and_queued' | 'deferred' }>;
-  renew(req: { instanceId: string; reason: RenewReason }): Promise<{ gen: number }>;      // 等空闲（或硬线）后回收 + 重建
-  reclaim(req: { instanceId: string; reason: 'idle' | 'owner' | 'drain' }): Promise<void>;
-  openTask(req: { taskId: string; member: MemberId; kind: Exclude<MindKind, 'instance'>; owner: { instanceId: string } | null; provider?: ImplId;
-                  tools: ToolDef[]; persona: PersonaSpec; leading: InputBlock[]; budget: TurnLimits; cwd: string }): Promise<{ sessionId: string; gen: number }>;
-  closeTask(req: { taskId: string; reason: 'ended' | 'stopped' | 'failed' }): Promise<void>;
-  cancelTurn(req: { owner: Owner; reason: 'watchdog' | 'pause' | 'preempt' | 'owner' | 'drain' }): Promise<void>;   // 幂等
-  get(owner: Owner): Promise<SessionView | null>;  list(): Promise<SessionView[]>;
-  current(owner: Owner): { turnId: string; gen: number; initiator: Initiator } | null;    // 同步；toolport 校验用
-  subscribe(cb: (signal: MindSignal) => void): Unsubscribe;                               // 回合状态、逐字增量、工具开始与结束；不进日志
+interface MindsIncrement {
+  attachToolport(port: {
+    issue(req: ToolTokenRequest): { token: string; endpoint: string; tools: ToolDef[] };
+    toolsFor(req: ToolSetRequest): ToolDef[];
+  }): () => void;
+  deliver(req: { to: Owner; events: EventId[]; semantics: 'next_step' | 'next_turn' | 'cancel';
+    chain?: EventId; sender: Principal; wake?: boolean; expectedGen?: number; expectedTurnId?: TurnId
+  }): Promise<{ disposition: 'queued' | 'merged' | 'handed' | 'cancelled_and_queued' | 'deferred' }>;
+  renew(req: { owner: Owner; reason: RenewReason }): Promise<{ gen: number }>;
+  reclaim(req: { owner: Owner; reason: 'idle' | 'owner' | 'drain' }): Promise<void>;
+  cancelTurn(req: { owner: Owner; reason: CancelReason; expectedGen: number; expectedTurnId: TurnId }): Promise<void>;
+  current(owner: Owner): { agentId: AgentId; turnId: TurnId; gen: number; initiator: Initiator } | null;
+  subscribe(cb: (signal: CommittedMindSignal) => void, options?: { agentId?: AgentId; after?: MindCursor }): () => void;
 }
-interface ContextAssembler {                                          // Services['context']
-  forSession(req: { member: MemberId; owner: Owner; kind: MindKind; instanceKind?: InstanceKind; recentTurns?: number }):
-    Promise<{ persona: { stable: string; notes: string; version: string }; stableVersion: string; leading: InputBlock[] }>;
-  forTurn(req: { owner: Owner; turnId: string; events: EventId[]; audience: AudienceRef }):
-    Promise<{ input: TurnInput; prefix: string; mind: MindContext; chars: Record<string, number> }>;   // prefix = 每轮前缀，可替换
-  snapshot(req: { instanceId: string; upTo: EventId; tokenBudget: number }): Promise<Snapshot>;        // 想事活；形状按《3.2 协议》
-  stableVersion(req: { member: MemberId; owner: Owner }): Promise<string>;
-  checkPersona(member: MemberId): Promise<{ ok: boolean; problems: { section: string; message: string }[] }>;
+interface Toolport {
+  register(tool: ToolDef & { handler: ToolHandler }): () => void;
+  issue(req: ToolTokenRequest): { token: string; endpoint: string; tools: ToolDef[] };
+  revoke(req: { agentId: AgentId; gen?: number }): void;
+  invoke(req: { token: string; tool: string; args: JsonValue; callId: CallId }): Promise<ToolResult>;
+  toolsFor(req: ToolSetRequest): ToolDef[];
 }
-interface Toolport {                                                  // Services['toolport']
-  issue(req: { owner: Owner; gen: number; member: MemberId; kind: MindKind; instanceKind?: InstanceKind }): { token: string; tools: ToolDef[] };   // 同 owner 的旧代次令牌同时作废
-  revoke(req: { owner: Owner }): void;
-  invoke(req: { token: string; tool: string; args: unknown; callId: string }): Promise<ToolResult>;    // 适配器的回调入口
-  toolsFor(req: { kind: MindKind; instanceKind?: InstanceKind; senderRole?: Role }): ToolDef[];
-}
-type Owner = { directId: string } | { instanceId: string } | { taskId: string }; // 计划：跨边界 id 使用品牌类型
-type TurnLimits = { maxInferencesPerTurn: number; maxToolCallsPerTurn: number; watchdogMs: number; hardLimitMs: number };
+type ToolTokenRequest = { agentId: AgentId; owner: SessionOwner; gen: number; member: MemberId;
+  kind: MindKind; instanceKind?: InstanceKind };
+type ToolSetRequest = { agentId: AgentId; gen: number; kind?: MindKind;
+  instanceKind?: InstanceKind; senderRole?: Role };
+type Owner = { directId: DirectId } | { instanceId: InstanceId } | { taskId: TaskId };
+type MindCursor = { logId: SessionId; epoch: string; seq: SessionLogOffset; filter: string };
 ```
 
-`deliver` 的调用方是编排层：attention（按《2.2 实例的种类与路由》定实例）、tasks（活的汇报）、scheduler（到期）、gateway（主人直连）。minds 不决定该进哪个实例。工具的参数 schema、错误返回按旧 m0 的 `reply` / `inner` 形状延续，全部工具的 zod 随各模块落（目录见《2.9 每个实例的工具集与权限》）。
+`deliver` 是从 `agent-messages/delivery.ts` 扩出的唯一队列，细节见 §4.2；`renew` 等空闲/硬线后执行 closeAgent + createAgent/resumeAgentFromPersistence 与 gen 提交；`reclaim` 包装 closeAgent 并等 subprocess 全范围退出；`cancelTurn` 以 captured gen/turn 包装 cancelAgentRun，并保留原因策略；`current` 读 ManagedAgent 与 initiator 的同步投影；`subscribe` 包装 Manager 订阅，但只在持久 committed cut 后对外发，另设 transient 读者收逐字片段。没有把上游非持久 callback 直接冒充耐久订阅。`openTask`／`closeTask` 是完整 tasks 阶段对 create-agent／closeAgent 的业务包装，不重新实现运行时。〔一手〕Paseo `agent/agent-manager.ts:1046`、`:1911`、`:3347`；〔推理〕C5。
+
+toolport.register 返回的 exact disposer 撤掉 schema 与 handler，重复 id 大声失败，登记跟随贡献插件 effect；`toolsFor` 从实时登记表按种类／权限筛选，`invoke` 在执行点重验，已卸载工具不能继续调用。MCP `mcp-server.ts` 的“灵鲸改”从这里取目录，不能在启动时 `createPaseoToolCatalog` 一次固化。attachToolport 同时只允许一个端点提供方，释放时撤其能力、吊销它签发的所有令牌；换代后 `issue` 自动使旧 `(agentId,gen)` 无效。〔一手〕`packages/core/tools/src/index.ts:128`；Paseo `agent/mcp-server.ts:31`；〔推理〕C11。
+
+context 的 `forSession`／`forTurn`／`snapshot`／`stableVersion`／`checkPersona` 保持上下文装配职责；签名与业务内容随完整第二层，不在 A′ 发明新的实现。`forTurn` 返回 TurnInput 与受众裁过的 prefix，所有实际输入先写 00 §6.1 的 model-input 再交提供方。〔一手〕[four-layers.md](../four-layers.md) §2.16；〔推理〕职责边界。
 
 ## 4 核心机制
 
@@ -187,13 +243,13 @@ type TurnLimits = { maxInferencesPerTurn: number; maxToolCallsPerTurn: number; w
 
 **等待不改变任务。** 默认 wait 到前台 idle/失败／权限检查点，权限仅是 needs_input；可显式等 terminal/quiescent，后者还看后台／queue／pending。no-wait 操作尚在 starting 时不能误返 idle；超时／断终端不 stop、不代答。状态只由 minds 给出，宿主没有第二套推断。〔一手〕`paseo-upstream@8018231a:packages/cli/src/commands/agent/wait.ts:108`；〔推理〕。
 
-**watchdog 唯一执行。** minds 传预算并处理业务后果，brains 的 G4 对捕获回合计时／取消；minds 不加同功能 timer。G1 随④ Claude，G4 是③前置；普通 Codex work 不要求推理／工具硬限，明确硬要求而 Meta=false 就拒绝。〔一手〕`packages/brain/brain/src/contract.ts:168`；handoff 决策 66；〔推理〕。
+**watchdog 唯一执行。** minds 传预算并处理业务后果，minds 的回合包装对捕获 (agentId,gen,turnId) 计时，调用 cancelAgentRun；brains 不再保留同功能 timer。G1 随④ Claude，G4 是③前置；普通 Codex work 不要求推理／工具硬限，明确硬要求而 Meta=false 就拒绝。〔一手〕`packages/brain/brain/src/contract.ts:168`；handoff 决策 66；〔推理〕。
 
 ### 4.1 实例会话的生命周期
 
 **编号与代次。** `instanceId` 由 `(成员, 种类, 键)` 决定，永不变；活的回报、心事、`remind`、队列项都指向它。每代会话一个新 `sessionId`，向提供方 `createSession` 时带 `owner: { instanceId, gen }`。不复用会话 id：底座同一 id 第二次以写模式打开会报 `SessionAlreadyOwnedError`〔一手，`docs/subsystems/persistence.zh.md`〕，而且底座 `dispose()` 是异步的〔一手，`packages/core/agent/src/index.ts` `AgentHandle.dispose`〕，复用 id 会撞上尚未释放的句柄。
 
-**权威与游标。** 权威是经历流 + `mind_delivery`；底座的 inbox 只是缓存（它本身持久，每次改动记一条 `agent/inbox/spliced`〔一手，`packages/core/agent/src/types.ts`〕，但 dispose 会清掉它，见下）。消费游标就是队列项的状态：`consumed` 表示那条事件被一个**已完成**的回合看过；`handed` 表示交给了某个回合但回合还没结束。重启或重建时，pending 与可确认未完成的 handed 按消费策略补投；providerDispatch=unknown 或副作用结果不明先对账，不盲重送。底座会话日志由灵鲸管目录（`overall.md` §6.4；`SessionPersistence` 没有删除接口〔一手，同上〕）：每代会话一个目录，放本体数据目录下；换代后旧目录过保留期删除；主人删除或抹掉内容时按事件号找出涉及的代次整目录删除；备份不含。
+**权威与游标。** 权威是经历流 + `mind_delivery`；底座的 inbox 只是缓存（它本身持久，每次改动记一条 `agent/inbox/spliced`〔一手，`packages/core/agent/src/types.ts`〕，但 dispose 会清掉它，见下）。消费游标就是队列项的状态：`consumed` 表示那条事件被一个**已完成**的回合看过；`handed` 表示交给了某个回合但回合还没结束。重启或重建时，pending 与可确认未完成的 handed 按消费策略补投；providerDispatch=unknown 或副作用结果不明先对账，不盲重送。逻辑会话日志由灵鲸经 sessionPersistence 管理，每 agent 一个日志，gen 是事件字段；换代不新建日志目录，保留／删除按整份逻辑日志与归属载荷实施。提供方原生转录另由提供方 API 精确清理，不把两者的目录混用。〔推理〕决策 67 F3。
 
 **状态机**：`running → reclaiming → reclaimed → rebuilding → running`；换新 = `reclaiming → rebuilding`，中间不停在 `reclaimed`。
 
@@ -205,7 +261,7 @@ type TurnLimits = { maxInferencesPerTurn: number; maxToolCallsPerTurn: number; w
 | 回收 ④ | 把本回合 `handed` 未 `consumed` 的队列项记 `delivery.settled{returned}`、回到 `pending`；记 `session.closed{cursor}` | 底座 `cancel` 带 `keepInbox` 也只保留未开始的输入，已被回合认领的不回 inbox〔一手，`agent-loop/src/agent.ts` `cancel`〕，放回只能由本体做 |
 | 回收 ⑤ | 关闭提供方会话（`close`，底座 `dispose()`）；`toolport.revoke`；标 `reclaimed` | — |
 | 重建 ① | 标 `rebuilding`；`gen + 1`；`context.forSession({ recentTurns })` 拿稳定前缀与"最近对话"块 | 重建从账本现取，不保留本体侧前缀快照 |
-| 重建 ② | `brains.createSession(cfg)`，cfg 带 `owner{instanceId, gen}`、人设、工具与新令牌、`limits`、`concludeOn`；标 `running`；记 `session.opened{gen}` | 预设只在创建时绑〔一手，`packages/preset/agent-preset/README.zh.md`："修改只影响之后创建的 Agent"〕 |
+| 重建 ② | `minds.createAgent(cfg)`，cfg 带 `owner{instanceId, gen}`、人设、工具与新令牌、`limits`、`concludeOn`；标 `running`；记 `session.opened{gen}` | 预设只在创建时绑〔一手，`packages/preset/agent-preset/README.zh.md`："修改只影响之后创建的 Agent"〕 |
 | 重建 ③ | 投递器把 `pending` 项按 `queued_pos` 补投：同一批合成一轮，此人链的先 | 至少送达一次；模型可能看到两遍，宁可重复不可丢〔推理〕 |
 
 回收条件：空闲 ∧ 队列空 ∧ 无在途动作 ∧ 闲置超过该种类的阈值（§4.7）。回收中到达的输入一律 `pending`。重建的触发：有 `pending` 的 `next_turn` 项且该实例允许被它唤醒（独处实例另受"主人实例最近 N 分钟无来往"的约束，《2.3 独处实例》）；没起的实例不收任何"下一步可见"的东西，低显著事实本来就不进队列，重建时从账本进前缀。
@@ -214,14 +270,35 @@ type TurnLimits = { maxInferencesPerTurn: number; maxToolCallsPerTurn: number; w
 
 回归测试（Springdrift 的三个症状〔一手，`layer2-landscape`〕）：不同时间的问候不同；换新后能提到之前的事；派活时知道手上活的状态。加"换新后不串实例"：重建前缀只按目标实例受众过滤。
 
+#### durable 时间线适配
+
+`timeline.ts` 实现已搬的 `AgentTimelineStore`，同一 agent 一个 `SessionHandle`，gen 只作为事件字段；原生转录目录仍按 §4.0 由提供方负责。`epoch = String(gen)`，冷读不换代；需要强制从原生历史整体重建时间线时先走受管换代并发布 replacement，禁止在旧回合继续运行时改 epoch。上游 epoch 是随机字符串，灵鲸在 seed/hydrate 的唯一入口原地改成代次字符串。〔一手〕`packages/brain/brain-shared/src/paseo/agent/agent-timeline-store.ts:36`、`agent-timeline-store-types.ts:6`；〔推理〕F3。
+
+| AgentTimelineStore 方法 | SessionHandle 落点／规则 |
+| --- | --- |
+| appendCommitted | 分配跨 gen 连续递增的 timeline row.seq，封装 minds/timeline-row；append 后 flush，再返回 row；不能由内存和 durable 各分配一个 seq |
+| fetchCommitted | read(offset,length) 后用同一 timeline projection 分页；按 epoch、direction、cursor、wholeTurns 选窗口；返回 staleCursor/reset/gap，不静默错接旧 epoch |
+| getLatestCommittedSeq | 读已提交 timeline 投影的最大 row.seq；空为 0，不用 JSONL 文件字节数 |
+| getCommittedRows／getLastItem／getLastAssistantMessage | 同一日志 read/fold 的行／最后条目／最后 assistant；冷读不 spawn provider |
+| bulkInsert | 追加导入快照／replacement 事实；历史回声保留原时间，不再次结算消费；输入 seq 冲突必须拒绝 |
+| updateCommittedRow | 追加 minds/timeline-replacement{replacesSeq:row.seq,rows:[row]}，投影用最新事实替换该行；绝不修改已写 JSONL 行 |
+| deleteAgent | 归属清理 operation 中经 sessionPersistence 的计划删除 API 删除整份逻辑日志；现 API 无 delete，E′ 必须补原 seam 并验，不手删目录 |
+
+`AgentTimelineRow.seq` 是时间线序号，`SessionLogOffset` 是混合 JSONL 事件的零基逻辑偏移，二者不相等：非 timeline 事件也占日志 seq；投影保存 `row.seq → 最近一次提交的 SessionLogOffset`，replacement 保留被替换 row.seq 而取得新 log offset。对外 logs/attach 的 `{logId,epoch,seq,filter}` 使用 JSONL offset，seq 跨 gen 连续；调用 Paseo `fetchTimeline` 的 `{epoch,seq}` 使用 timeline 序号，转换只在 timeline.ts 做。过滤后的行可有间隙，不能把过滤条数当下一 offset；换代应答返回新 epoch 与有效窗口，历史日志仍可按 logId/offset 查。〔一手〕`packages/session/session-persistence/src/handle.ts:69`、`packages/brain/brain-shared/src/paseo/agent/agent-timeline-store-types.ts:14`；〔推理〕游标契约。
+
+Paseo 生产 `bootstrap.ts:1014–1028` 没传 durableTimelineStore，不能拿它的单元测试声称 JSONL 适配已在生产验证。本适配的 flush／重启／replacement／分页／cursor 对齐列入 §10 与宿主 E′/I′ 验收。〔一手〕`paseo-upstream@8018231a:packages/server/src/server/bootstrap.ts:1014`。
+
 ### 4.2 本体的投递器
 
-| 灵鲸语义 | 队列做什么 | 底座自带 agent 的落点 | Claude Code / Codex / ACP |
-| --- | --- | --- | --- |
-| **下一步可见**（只有发起者对自己发起的回合） | 不排队；校验 `turn.initiator.principal == sender` 后直接 `deliver(next_step)`；提供方回 `unsupported` 或当前没有回合 → 退化为下一回合 | `steer`：进 next-step 并叫醒，正在跑的回合在下一个步骤边界消费〔一手，`runtime-types.ts` `steer`；`agent.ts` `send(…, 'next-step', true)`〕 | Claude Code 的流式输入是否到达下一步待实测（01）；ACP 恒 `unsupported` |
-| **只在下一回合可见** | 记 `delivery.queued`；正在跑回合时绝不交出；回合边界取出一批，记 `delivery.handed{turnId, gen}`，一次 `deliver(next_turn, wake)` | `followup`：进 next-turn 并叫醒，每条自成一轮〔一手，`runtime-types.ts`："The item becomes the sole ordinary message of its own turn"〕——所以合批必须在本体完成，一批渲染成一个输入 | 同一形状：一批 = 一次 `startTurn` |
-| **取消并重排** | 此人的消息撞上系统发起的、`side_effects == 0` 的回合 → `cancel(preempt, keepQueue)`，被取消回合 `handed` 的项记 `returned` 回 `pending`，此人的消息排在它们前面起新回合；有副作用 → 退化为下一回合 | `cancel(cause, { keepInbox: true })`：中止回合、保留未开始的；已认领的由本体放回〔一手，`agent.ts` `cancel`〕 | `cancel` 对应各家的中断 |
-| 低显著事实 | 不进队列，每轮前缀现拼（§4.3） | 运行时上下文消息（可替换、不累积） | 本体拼进输入 |
+| 灵鲸语义 | 队列做什么 | 底座自带 agent 的落点 | Claude Code / Codex / ACP | 实现位置（Paseo Manager + 灵鲸增量） |
+| --- | --- | --- | --- | --- |
+| **下一步可见**（只有发起者对自己发起的回合） | 不排队；校验 `turn.initiator.principal == sender` 后直接 `deliver(next_step)`；提供方回 `unsupported` 或当前没有回合 → 退化为下一回合 | `steer`：进 next-step 并叫醒，正在跑的回合在下一个步骤边界消费〔一手，`runtime-types.ts` `steer`；`agent.ts` `send(…, 'next-step', true)`〕 | Claude Code 的流式输入是否到达下一步待实测（01）；ACP 恒 `unsupported` | delivery.ts 调 steerOrReplaceActiveTurn 的 steer-only 分支；新增 allowReplace:false（缺省 true 供人工 send 使用）；明确 unavailable 时持久 pending 等边界，绝不走 replace |
+| **只在下一回合可见** | 记 `delivery.queued`；正在跑回合时绝不交出；回合边界取出一批，记 `delivery.handed{turnId, gen}`，一次 `deliver(next_turn, wake)` | `followup`：进 next-turn 并叫醒，每条自成一轮〔一手，`runtime-types.ts`："The item becomes the sole ordinary message of its own turn"〕——所以合批必须在本体完成，一批渲染成一个输入 | 同一形状：一批 = 一次 `startTurn` | delivery.ts 等 idle 后 streamAgent；忙时不交出 |
+| **取消并重排** | 此人的消息撞上系统发起的、`side_effects == 0` 的回合 → `cancel(preempt, keepQueue)`，被取消回合 `handed` 的项记 `returned` 回 `pending`，此人的消息排在它们前面起新回合；有副作用 → 退化为下一回合 | `cancel(cause, { keepInbox: true })`：中止回合、保留未开始的；已认领的由本体放回〔一手，`agent.ts` `cancel`〕 | `cancel` 对应各家的中断 | delivery.ts 先 cancelAgentRun，确认 settled/not_running 后同队列重排；refused/unknown 不派新轮 |
+| 低显著事实 | 不进队列，每轮前缀现拼（§4.3） | 运行时上下文消息（可替换、不累积） | 本体拼进输入 | context.forTurn 拼前缀，仍写 model-input |
+
+
+投递器从 Paseo `agent-messages/delivery.ts` 扩展，人类消息也走同一 admission／队列；即时 next_step 的“不排队”表示不等合批窗口，仍先持久化投递意图。`streamAgent` 对忙碌 agent 直接拒绝，排队必须在它外面，不能把拒绝后重试叫做 provider 队列。按 `(owner编号,event)` 去重，owner 的 gen 不参与去重键；使用 §2.4 deliveries 表，状态 `pending → handed → consumed`，中断可确认未消费时 `handed → returned → pending`，另记 providerDispatch 与 attempt。重启只补 pending／已确认 returned，handed/dispatching 先对账；unknown 与副作用不明不盲补。链优先、合批窗口／上限仍按本节和 §4.7。〔一手〕`paseo-upstream@8018231a:packages/server/src/server/agent/agent-messages/delivery.ts:62`、`agent-manager.ts:2804`；〔推理〕C10。
 
 **不用底座 `inject`**：它进 next-step、不叫醒，正在跑的回合会在下一个步骤边界认领〔一手，`runtime-types.ts` `inject`〕——等于把内部内容塞进主人发起的回合中途，正是 `overall.md` §8 禁止的；而且它可能被取消或销毁丢掉。
 
@@ -246,8 +323,24 @@ type TurnLimits = { maxInferencesPerTurn: number; maxToolCallsPerTurn: number; w
 ### 4.4 toolport：裁工具与令牌
 
 - **工具集两层**：创建会话时给提供方的是该实例种类的**全集**（预设只在创建时绑）；每个回合的**允许集** = `toolsFor({ kind, instanceKind, senderRole })`，`senderRole` 由 toolport 从本回合触发事件的真实发送者查人物档案得出，不信模型自报（《2.9 每个实例的工具集与权限》）。系统发起的回合（到期、心事、早晨）按"发送者 = 本成员"裁。绑定或角色变了，`stableVersion` 跟着变，触发换新。
-- **令牌** = 32 字节密码学随机，内存里存 `hash(token) → { owner, gen, member, kind, instanceKind }`，不进日志、不进事件。校验顺序：常量时间比对 → 代次是当前代（旧代 → `stale_gen`）→ `minds.current(owner)` 有正在跑的回合 → 工具在本回合允许集 → zod 校验 → 有后果的工具必须引用触发事件号且 `canSeeEvent`（本回合输入与本实例流里的事件）。任一步失败按 `00-contracts.md` §11 的类别返回，令牌层失败另记 `toolport.rejected.v1`。换代、回收、暂停、drain 时 `revoke`；活会话的令牌绑 `{ taskId, gen }`，同样规则。
+- **令牌** = 32 字节密码学随机，内存里存 `hash(token) → { agentId, owner, gen, member, kind, instanceKind, expiresAt }`，不进日志、不进事件。校验顺序：常量时间比对 → 代次是当前代（旧代 → `stale_gen`）→ `minds.current(owner)` 有正在跑的回合 → 工具在本回合允许集 → zod 校验 → 有后果的工具必须引用触发事件号且 `canSeeEvent`（本回合输入与本实例流里的事件）。任一步失败按 `00-contracts.md` §11 的类别返回，令牌层失败另记 `toolport.rejected.v1`。reloadAgentSession／resumeAgentFromPersistence 先提交 gen+1，再 issue 新令牌；AgentManager 的 daemon 全局 mcpAuthToken 删除，改取 SessionConfig.kernelTools.token。Bearer 校验搬 auth.ts 的常量时间比较，但删除“无密码开放”和“daemon 密码回退”分支，缺／错／过期令牌一律拒绝。toolport 订阅 minds.agent.state.v1/gen 的已提交事实撤令牌，读当前 gen 的校验在信号发布前也能拒绝旧代；换代、回收、暂停、drain 时 `revoke`；活会话的令牌绑 `{ taskId, gen }`，同样规则。
 - **执行**：工具在调用当中同步执行、结果同步返回（决策 15）；`reply` 交 outbox（经 actions 先记后做），`inner` 只落经历流（账本落地后由各账本接），`dispatch` / `ponder` / `manage` / `remind` / `commit` 交 tasks / attention / scheduler / will 的写 API；每回合按 `(token, turnId)` 计工具调用数，到 `maxToolCallsPerTurn` 后一律返回 `conflict` 并记 `turn.quality{budget_hit}`。
+
+#### Paseo 扩展点的 Cordis 对应
+
+| Paseo 扩展点 | 灵鲸正式接缝 | 持久性／释放 |
+| --- | --- | --- |
+| pluginAgentTools.getPluginTools／executePluginTool（AM:931–955） | ctx.toolport.register(tool)；所有贡献插件均走该登记 API | effect 释放即撤工具；调用与结果进日志 |
+| pluginLifecycle agent.open.before（AM:1363–1370、5587–5618） | minds.agent.opening(draft,opening,next) 瀑布，agents.yml 的 resolveAgentConfig 为第一监听器；签名归 00 §6.1 | 监听器必须 next()，最终输入持久，配置加工过程不另作日志真相 |
+| publishAgentStream（AM:5394–5400） | minds.agent.stream.v1，声明合并 Events | committed 后发；持久事件 minds/agent-stream 或 timeline-row |
+| invalidatePluginSessions／reloadStalePluginSession（AM:907–929） | Cordis effect 撤工具／监听；不额外重载所有会话 | 工具缓存必须更新，旧 handler 不残留；有会话启动快照的配置变更走显式 reload／下一代 |
+| onAgentAttention／onAgentArchived（AM:883–889） | minds.agent.attention.v1／minds.agent.archived.v1，由 notify/gateway 监听 | 对应 agent-state durable 后发，签名归 00 §6.1 |
+| onWorkspaceStateMayHaveChanged | 删除，本步没有工作区联动 | 工作区批次另定 |
+| setMcpBaseUrl／mcpAuthToken／paseoToolCatalogFactory／resolvePaseoToolPolicy | toolport ready 时 ctx.minds.attachToolport({issue,toolsFor}) | 返回释放函数；不让运行层 minds inject 接入层 toolport |
+| registry／durableTimelineStore | minds inject storageDomain／sessionPersistence；私有 storage.ts／timeline.ts | domain 与句柄 effect 收尾，唯一 writer |
+| beforeSteerUnavailableFallback | minds 投递器的下一步语义准入，明确禁止 replace | unsupported/unavailable 转 pending；unknown 阻止重投 |
+
+依据：〔一手〕`paseo-upstream@8018231a:packages/server/src/server/agent/agent-manager.ts` 表内行号；`packages/core/tools/src/index.ts:128`、`packages/brain/brain/src/index.ts:48`；〔推理〕决策 67 F9。AM 是该 AgentManager 文件。Paseo 插件平台三文件不搬，以上扩展能力逐个换成 Cordis 接缝，功能 2、14、54、112 均为“改”，不是删掉扩展能力。
 
 ### 4.5 回合预算与收尾检查
 
@@ -256,7 +349,7 @@ type TurnLimits = { maxInferencesPerTurn: number; maxToolCallsPerTurn: number; w
 | 每回合推理次数 | ≤ 3 | `agent/pre-step` 听众在 `step ≥ 上限` 时返回 `{ kind: 'reject' }`〔一手，`runtime-types.ts` `'agent/pre-step'`、`PreStepDecision`〕 | `maxTurns`〔二手，`cli-claude-sdk-codex-app-server.md`〕 | 待实测 | 看门狗 |
 | 工具调用次数 | ≤ 6 | toolport 计数（§4.4） | 同 | 同 | 同 |
 | 收尾 | `concludeOn: ['reply', 'no_reply', 'say']` | 工具结果带 `concludesTurn: true`，循环提交该批结果后停止〔一手，`core/tools/src/contracts.ts` `ToolExecutionSuccess.concludesTurn`〕 | `PostToolBatch` 钩子 `continue: false`〔二手〕 | 待实测 | 回合结束检查 |
-| 看门狗 / 硬线 | watchdog 按 limits.watchdogMs 计整轮；完整实例的 120 秒业务硬线仍属本节草案 | brains 的 G4 计时并取消捕获回合，minds 只处理结果，不另设同功能 timer；当前 G4 尚未实现 | 同一 brains 技术执行 | 同一 brains 技术执行 | — |
+| 看门狗 / 硬线 | watchdog 按 limits.watchdogMs 计整轮；完整实例的 120 秒业务硬线仍属本节草案 | minds 的 G4 回合包装计时并取消捕获回合，不另设同功能 timer；当前 G4 尚未实现 | 同一 minds 回合包装 | 同一 minds 回合包装 | — |
 
 `concludeOn` 只放三个"说完了"的工具：`dispatch` 与 `ponder` 不结束回合，她派完还要说一句垫话（KAME：结论没到就给内容会降分，垫话只许"我在想"一类〔一手，`layer2-landscape`〕）〔推理〕。**收尾检查**（代码只查"调了哪个工具"，不读内容）：主人发起的回合 `turn.completed` 时 `concluded_by` 不在五个结束工具 `reply` / `say` / `dispatch` / `ponder` / `no_reply` 之内 → 投递器追加一个系统发起的提醒回合（`next_turn`，一句"主人在等你回复"，每个主人回合最多一次，记 `turn.quality{reminder_sent}`）→ 还没有 → `outbox.fallback({ kind: 'noReply' })`（人设文件里的固定文案，带兜底标记，不回流进上下文；总原则例外 ②，`overall.md` §8 R10）→ 记 `turn.quality{fallback_sent}`。系统发起的回合安静结束是正常的，记 `turn.completed{quiet}`。别人的实例【V2】漏回复只记质量事件、不发兜底（外部地方出错默认沉默，`overall.md` §8 R8）〔推理〕。
 
@@ -291,7 +384,7 @@ type TurnLimits = { maxInferencesPerTurn: number; maxToolCallsPerTurn: number; w
 
 ## 5 交互时序
 
-**一条主人消息**：senses 写 `message.received` → attention `minds.deliver({ to: 主人实例, semantics: 'next_turn' })`（若主人实例正跑主人自己发起的回合则 `'next_step'`）→ 投递器：空闲 → 合并窗口 → `guard.admit` → `stableVersion` 核对（变了先换新）→ `context.forTurn` → `delivery.handed` → `brains` 的 `deliver(next_turn, wake)` → `turn.started`，brains 的 G4 开始计时 → 模型第一批调 `reply` + `inner` → `toolport.invoke` 校验 → `outbox.reply` 在调用当中投递回那条消息来的地方 → `reply` 结果带 `concludesTurn` → `turn.completed{concludedBy: 'reply'}` → `delivery.settled{consumed}` → 换新检查 → 取下一批。
+**一条主人消息**：senses 写 `message.received` → attention `minds.deliver({ to: 主人实例, semantics: 'next_turn' })`（若主人实例正跑主人自己发起的回合则 `'next_step'`）→ 投递器：空闲 → 合并窗口 → `guard.admit` → `stableVersion` 核对（变了先换新）→ `context.forTurn` → `delivery.handed` → `brains` 的 `deliver(next_turn, wake)` → `turn.started`，minds 的 G4 开始计时 → 模型第一批调 `reply` + `inner` → `toolport.invoke` 校验 → `outbox.reply` 在调用当中投递回那条消息来的地方 → `reply` 结果带 `concludesTurn` → `turn.completed{concludedBy: 'reply'}` → `delivery.settled{consumed}` → 换新检查 → 取下一批。
 
 **活的汇报回到已回收的实例【V2】**：手 `report{待验收}` → tasks 核验后写 `task.report` → `minds.deliver({ to: 妈妈实例, 'next_turn' })` → 妈妈实例 `reclaimed`，项留 `pending` → 重建条件满足（这类事件允许唤醒）→ `gen + 1`、新会话、最近 20 轮 → 补投这一批 → 她在妈妈实例里 `reply(引用回执号)`。
 
@@ -315,7 +408,7 @@ direct 的恢复以 §2.6 与 §4.0 为准；实例／活也不得把 transport 
 
 ## 7 成本与性能
 
-minds、context、toolport 零模型调用。每回合：一次输入 = 稳定前缀（吃缓存）+ 每轮前缀（≤ 1 000 字）+ 正文；CLI 内 1–3 次推理。每次重建一次缓存未命中加一份最近对话（≤ 10 000 字）；CLI 提供方的每轮前缀累积在转录里，会提前触发换新。V1 成本 = Σ 正在聊的实例的回合数 × 每回合输入（《2.8 并发、注意容量与成本》，待 M4 实测）。journal 每回合约 6–8 条事件。
+minds、context、toolport 自身不直接调模型 API；模型工作通过提供方。每回合：一次输入 = 稳定前缀（吃缓存）+ 每轮前缀（≤ 1 000 字）+ 正文；CLI 内 1–3 次推理。每次重建一次缓存未命中加一份最近对话（≤ 10 000 字）；CLI 提供方的每轮前缀累积在转录里，会提前触发换新。V1 成本 = Σ 正在聊的实例的回合数 × 每回合输入（《2.8 并发、注意容量与成本》，待 M4 实测）。journal 每回合约 6–8 条事件。
 
 ## 8 安全与隐私
 
@@ -323,13 +416,15 @@ minds、context、toolport 零模型调用。每回合：一次输入 = 稳定�
 
 ## 9 第一版范围
 
-**最小 direct 阶段（计划）**：④ Claude＋G1 → ③ 宿主 → ⑤ Codex＋G2/G3；③ 之前完成 G4 与 JSON 严格读取。direct 做登记、代次、回合、持久投递、待答、恢复与回收；[01-brain-host.md](01-brain-host.md) §9 定义 A–K 任务与验收，用 DeepSeek、Claude 两个真提供方加假 CLI。完整实例路由／人格装配／tasks 不在该阶段。〔一手〕handoff 决策 65、66。
+**最小 direct 阶段（计划）**：④ Claude＋G1 → ③ 宿主 → ⑤ Codex＋G2/G3；③ 之前完成 G4 与 JSON 严格读取。direct 做登记、代次、回合、持久投递、待答、恢复与回收；[01-brain-host.md](01-brain-host.md) §9 定义 A′–I′ 任务与验收，用 DeepSeek、Claude 两个真提供方加假 CLI。完整实例路由／人格装配／tasks 不在该阶段。〔一手〕handoff 决策 65、66。
 
 - **m0**：主人实例一个、底座自带 agent 一个提供方；工具 `reply`、`no_reply`、`inner`；投递器三种语义与合批；换新（上下文、回合数、人设变了、每夜）；回收不做（主人实例常驻）；重启恢复；令牌按代次；回合预算与收尾检查；`context` 只有稳定前缀、最近对话、[状态] 一块。完成标准：用假大脑跑完一回合，事件 `session.opened → delivery.handed → turn.started → tool.called×2 → turn.completed → delivery.settled` 齐全；下一步可见、取消并重排、提醒回合与兜底、换新后"最近对话"重建、重启后放回补投、旧代令牌拒绝、人设文件超限拒绝各有一条测试。
 - **V1.0**：独处实例、回收与重建、活会话（干活、想事、自己的事、整理）与汇报回归属实例、每轮前缀全部块、快照、全部工具。
 - **以后**：别人的实例、群、陌生对话【V2】与 V2 上界；注意容量满时的短回合；提供方续接句柄（`resumeSession`）作为重建的省缓存路径（原生材料可续接且 stableVersion 符合策略；新运行时仍增加代次，见 §4.0）；主人直连别的实例；换提供方后的身份探针与回归；`toolport.tool` 槽位【V3】。
 
 ## 10 待实测
+
+durableTimelineStore 的生产接线、混合日志 offset／timeline seq、epoch=gen、append/flush、更新行追加、历史去重与重启后 logs/attach 必须实测；上游 bootstrap 没接持久库，不能沿用其生产保证。〔一手〕Paseo `bootstrap.ts:1014`；〔推理〕E′/I′。
 
 最小 direct 的 JSON 故障、身份／停稳、续跑及协议验收只维护在 [01-brain-host.md](01-brain-host.md) §9/§10。〔一手〕handoff 决策 66；〔推理〕测试要求。
 

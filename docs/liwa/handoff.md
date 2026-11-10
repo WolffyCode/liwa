@@ -1,17 +1,17 @@
 # 交接文档
 
-更新：2026-11-05。给接手的主对话（新会话）用：读完这份就能接着安排活，不必翻原对话。接手顺序：先读“怎么协作”与“现状”，再读“下一步的活”，开发前核对“仓库状态”中的 develop、release 与功能分支，其余按需。
+更新：2026-11-10。给接手的主对话（新会话）用：读完这份就能接着安排活，不必翻原对话。接手顺序：先读“怎么协作”与“现状”，再读“下一步的活”，开发前核对“仓库状态”中的 develop、release 与功能分支，其余按需。
 
 ## 整体结论速览
 
 - **产品**：灵鲸（LingWhale / Liwa）是一个"家"，住着主人创造的数字生命。主角是主人的闺女：有性格、有身体状态、有记忆、有自己想做的事，会陪主人聊天、替主人干活，没人找她时也在过自己的日子；会学新本事，会慢慢变，主人看得见她为什么变。完整定义见 `docs/liwa/product.md`（已确认），人物画像见 `docs/liwa/portrait.md`（已确认）。
 - **她的抽象**：一个生命的九个部分：身、感、念、思、意、忆、行、长、能；两个运行时概念：在场（她在某个地方的出现）、手上的事。原则：判断归她，边界归你，身体归代码；规则打底，模型定调；行为来自意愿，每件事带理由。
-- **方案**：以灵鲸现有底座为唯一后端，TypeScript + Node 24、Cordis 插件、React 网页、Electron 桌面；所有用脑走第四层 agent CLI。Paseo 按功能借鉴，适配器按既定迁法接入；服务外壳、鉴权、存储、配置、插件、日志复用底座。开发集成在 develop，版本验证后进入 release。〔一手〕主人 2026-11-05 决定，决策 62–66。
+- **方案**：以灵鲸现有底座为唯一后端，TypeScript + Node 24、Cordis 插件、React 网页、Electron 桌面；所有用脑走第四层 agent CLI。Paseo agent 管理层按决策 67 整块搬运并融合，提供方按既定迁法接入；daemon 壳、Paseo 插件平台与远程接入不搬，服务外壳、存储、配置、插件、日志复用底座。开发集成在 develop，版本验证后进入 release。〔一手〕主人 2026-11-05 决定，决策 62–66。
 - **整体架构**：`docs/liwa/architecture/overall.md`（18 节）加图页 `docs/liwa/architecture/overall.html`；第二层设计在 `docs/liwa/architecture/four-layers.md`（决策 42、43）。四层骨架：对外适配层 / 成员层 / 干活层 / agent CLI 集成层，第二层和第三层都经第四层开会话。本体是她的身体和神经系统，不是脑子：共用层（self、body、memory、people、skills、roster、will、attention、journal、guard）+ 按人分的实例（主人一个常驻；独处按需；V2 起每人、每群各一个），每个实例一个实例会话加它自己的第三层；四种活：干活、想事、她自己的事、整理。代码不读懂话、不替她选择；身每分钟一跳、不调模型、确定性可回放。
-- **进度**：第四层第 1、2 步已实现；第 3 步设计已定，见 [常驻宿主与终端命令](architecture/modules/01-brain-host.md)。宿主、minds 最小 direct 运行部分、逐条 JSON 登记及计划中的公共补口尚未实现；完整第二层 context/toolport 等仍按各模块阶段推进。〔一手〕`packages/brain/brain/src/index.ts:191`、`packages/bundle/brain-cli/src/index.ts:308`；主人定稿（决策 65）。
-- **接着做什么**：④ Claude Code 与 G1 → ③ 常驻宿主与命令集 → ⑤ Codex 与 G2/G3。G4 和底座 JSON 严格读取是第 3 步前置；宿主按 01-brain-host 的 A–K 拆分实现，用 DeepSeek、Claude 两个真提供方与假 CLI 验收。〔一手〕主人 2026-11-05 顺序决定（决策 66）。
+- **进度**：第 1、2 步已实现；④ Claude Code 与 G1 已提交 `13a66153`，在 `feature/step4-claude`，待评审合回、未推送；A2 第一轮真机通过隔离与主流程。③按 AgentManager 搬运融合的 A′–I′ 推进，A′ 为本轮文档冻结，不冒称代码已迁。〔一手〕主人工作记录 20；`packages/brain/brain-claude-code/src/provider.ts:20`。
+- **接着做什么**：评审④与 A′ → ③ B′–I′（存储严格读取、G4、subprocess 出生／全范围停稳为宿主开放前置）→ ⑤ Codex 与 G2/G3。工具词汇仍为 spawn/look/answer/manage，MCP 服务器 liwa。〔一手〕决策 66、67；[宿主分块](architecture/modules/01-brain-host.md) §9.3。
 - **对话记录**：`docs/liwa/conversations/` 是文字版；原始 jsonl 与子任务日志只放本机、不得进入公开仓库。
-- **开发工作区**：文档与代码都在 develop 一侧，需求从 develop 拉功能分支，评审后合回；版本验证通过再将 develop 合入 release。同级 `../liwa` 为 release，`../liwa-dev` 为开发工作目录；本需求分支为 `feature/step3-design-docs`。远端 main 保留但不使用，旧代码标签为 `archive/main`。〔一手〕决策 64 与本次分支核对。
+- **开发工作区**：文档与代码都在 develop 一侧，需求从 develop 拉功能分支，评审后合回；版本验证通过再将 develop 合入 release。同级 `../liwa` 为 release，`../liwa-dev` 为开发工作目录；本需求分支为 `feature/step4-claude`。远端 main 保留但不使用，旧代码标签为 `archive/main`。〔一手〕决策 64 与本次分支核对。
 
 ## 阅读顺序
 
@@ -64,26 +64,25 @@
 交回：<主人指定的本机交回文件>；开工先建提纲，每完成一块写入结论、文件、检查原文、风险与待定。
 ```
 
-## 现状（2026-11-05）
+## 现状（2026-11-10）
 
-- **代码与分支**：`develop` 含第 1、2 步实现，`release` 是已验证版本；当前需求在 `feature/step3-design-docs`。第 3 步是已确认设计，不能把计划接口写成已发布类型。〔一手〕本地分支核对；`packages/brain/brain/src/provider.ts:158`。
-- **第 1、2 步已实现**：`@liwa/brain`、共享适配代码、brain-testkit、brain-cli，以及 brain-acp / brain-deepseek / deepseek-app。当前 `liwa brain list / probe / run` 在一次性进程内工作，run 收尾会关闭会话；web/headless 已装配公共层，网页对话仍走原 ctx.agents。〔一手〕`packages/bundle/brain-cli/src/startup.ts:81`、`src/index.ts:308`；`packages/brain/brain/src/index.ts:191`。
-- **deepseek 能力**：每会话一个 `liwa --profile deepseek`，ACP v1 加 `_liwa/steer`、usage、children；图片、结构化问答、模型／模式切换、原生子会话观察与子审批 forward 已有代码。`openChildTask` 仍未实现，通用 next_turn 由上层在边界投递；子逐条时间线不作为已交付能力。〔一手〕`packages/bundle/deepseek-app/cordis.patch.yml:43`、`packages/brain/brain-deepseek/src/session.ts:80`、`packages/brain/brain/src/index.ts:376`。
-- **第 3 步设计已定**：新 brain-host + 轻 brain、本机 HTTP；minds 持有唯一 direct 登记／回合／投递／待答；agent、operation、进程台账逐条 JSON，事件 JSONL；默认自动续跑合格 running、人工 send 打断、wait 遇权限返回、stop 仅中断当前回合，scope all 完整停稳。数据与状态定义在 [02-minds](architecture/modules/02-minds.md)，宿主／命令／验收在 [01-brain-host](architecture/modules/01-brain-host.md)。〔一手〕主人定稿（决策 65）。
-- **公共缺口仍是计划**：G1 取消／失败用量随 Claude；G4 整轮看门狗及 JSON per-record 严格读取在宿主前完成；G2/G3 随 Codex。当前 JSON 后端坏记录会读作 absent，不能拿它直接承诺关键台账可靠。〔一手〕`packages/brain/brain/src/session.ts:473`、`packages/storage/storage-json/src/per-record-unit.ts:178`；决策 66。
-- **适配评估**：Claude Code、Codex 的静态评估在 [Claude Code 评估](research/2026-11-05-claude-code-adaptation.md) 和 [Codex 评估](research/2026-11-05-codex-adaptation.md)；实际 CLI 版本、空壳与计量仍按真机探针验。已有约 237 MB/个的并发 deepseek 观测只作资源估算基线，不能当稳定峰值。〔二手〕两评估 §6–8；[01-agent-cli](architecture/modules/01-agent-cli.md) §7。
-- **其余范围**：完整第二层、主控台／网页接公共层、跨 CLI 子活、全局 home/本事/MCP/插件产品配置按模块推进；手机／独立客户端完成后才做多端，走主人的 SSH VPS。06-growth 的未确认部分仍待主人定。〔一手〕决策 63、65；各模块状态。
+- **代码与分支**：本任务分支 `feature/step4-claude`，HEAD `13a66153`，已基于 develop `12202545`，④代码待合回、未推送；本轮只改文档、不提交／切分支。develop 是集成侧、release 是验证版本，其他工作目录不碰。〔一手〕主人工作记录 20 §2；本地 git 状态核对。
+- **第 1、2 步**：公共层／共享代码、brain-testkit、brain-cli、brain-acp、brain-deepseek、deepseek-app 已实现；当前 brain run 仍一次性，网页对话仍走原 ctx.agents。H′ 才改常驻命令。〔一手〕`packages/bundle/brain-cli/src/startup.ts:81`、`packages/brain/brain/src/index.ts:191`。
+- **④ Claude 与 G1**：SDK 0.3.263 显式用本机真实 CLI，实例 env Key、多 impl、binaryArgs、空壳、四种模式、thinking／回合间切档、受管本事/MCP/插件/command 钩子、全局 agent 集与四级选择均已有代码。当前仅 work 开放，Claude fast mode/feature 接线与 SDK 自定义 agents 入口不做。〔一手〕`packages/brain/brain-claude-code/src/{config,provider,session}.ts`、`packages/brain/brain/src/agents-config/index.ts:1`；决策 68–70。
+- **A2 与计量**：第一轮真 claude 2.1.319 经 DeepSeek Anthropic 端点，隔离与主流程通过；同 UUID 续接。后续修复 N6–N8 与审核 M1–M8 已在④代码：401/403 立即失败，帧账＋累计账对账、基线随句柄，后台子消费归下一结算回合；CLI Anthropic 估价不作第三方实际费用。后续增加能力不冒称均经第一轮真机验证。〔一手〕主人工作记录待写回 16–19；`packages/brain/brain-claude-code/src/usage.ts:1`。
+- **③ A′ 契约**：00 §5.1/§6.1、01 §3/§4.9/附录 A、02 §1–§4、01-brain-host §9.3 已冻结 F1–F9；计划六个包/插件、提供方目录三件归 brain，尚未建包／改 TS。AgentSession 直通、zod 配置唯一真相、storage-domain/per-record、每 agent 一个 JSONL、按代次令牌与 durable 队列是后续实现合同。〔一手〕决策 67；主人工作记录 20。
+- **仍未实现的保证**：JSON 后端会把部分坏文档读作 absent，关键 per-record 严格读取仍前置；G4 唯一整轮计时落 minds，subprocess 出生屏障与 waitForExit 必须补齐。Manager 会话级 pending 不代表 G2 已完整；G2/G3 实际提供方接线与父子总量随⑤。〔一手〕`packages/storage/storage-json/src/per-record-unit.ts:178`；[01-agent-cli](architecture/modules/01-agent-cli.md) §4.11。
+- **其余范围**：完整成员／实例/context/tasks/guard/journal、网页／主控台接公共层按第二层推进；配置文件规范归 [03-agent-config](architecture/modules/03-agent-config.md)，roster 配置事件与编辑页面后续接入；工作区／终端／调度下一批，多端等客户端完成后走主人 SSH VPS。06-growth 未确认部分仍待主人定。〔一手〕决策 63、65、67、69。
 
 ## 下一步的活（第四层 V1：标准 Paseo 流程机制）
 
-**顺序为 ④ Claude Code → ③ 常驻宿主与命令集 → ⑤ Codex。** Claude 提供方可以插在现有公共层上，用现有一次性 `liwa brain run` 与真实 CLI 验收；先有 DeepSeek、Claude 两个真提供方再建宿主。第 3 步不阻塞第 4 步的提供方验收。〔一手〕主人 2026-11-05 顺序决定（决策 66）。
+**顺序保持 ④ Claude Code → ③ 常驻宿主与命令集 → ⑤ Codex。** ④已提交待合回，当前以 DeepSeek、Claude 两个真实提供方为③验收基线。〔一手〕决策 66；主人工作记录 20。
 
-1. **④ Claude Code + G1**：新增 brain-claude-code，SDK 0.3.263 显式用受管解析的本机真实 claude；Key 引用、多 impl、空壳。G1 补取消／失败已知用量与幂等结算，共同回归现有提供方；真实版本、配置来源、问答编码与计量做 A2。〔一手〕决策 55–61、65、66；[01-agent-cli](architecture/modules/01-agent-cli.md) §4.2/§4.11。
-2. **③ 的前置**：完成 G4 捕获回合的单一 watchdog，以及 storage-json/domain 对关键 per-record 记录的严格读取／完整错误报告；不在 brains 或宿主手写第二份存储。〔一手〕决策 66；`packages/storage/storage-json/src/per-record-unit.ts:178`。
-3. **③ 常驻宿主与命令集**：按 [01-brain-host](architecture/modules/01-brain-host.md) §9.3 的 A–K 拆分，实现本机宿主、minds 最小 direct 运行部分、逐条 JSON/JSONL 协调、台账对账、命令和兼容协议。以 DeepSeek、Claude 真提供方及可执行假 CLI 验；ACP 斜杠命令与最小文件块是本步独立附加任务，deepseek 瘦身另开。〔一手〕决策 65、66。
-4. **⑤ Codex + G2/G3**：本机真实 codex app-server、Key、多 impl、空壳；原生沙箱／审批与非硬限边界保持。接通 session-lifetime 待答、follow-up 投递、子实时用量与真实父子口径，复验同一宿主命令。〔一手〕决策 59、61、66；[Codex 评估](research/2026-11-05-codex-adaptation.md) §6–8。
+1. 评审④代码与 A′ 文档冻结；提交／合并另按主人授权，不用文档检查冒称代码或真机验收通过。〔一手〕主人工作记录 20 §8。
+2. 按 [01-brain-host](architecture/modules/01-brain-host.md) §9.3 的 B′–I′ 顺序搬运并改接缝：B′ 分包/NOTICE/测试；C′ 存储；D′ 提供方；E′ JSONL；F′ MCP；G′ durable 投递/gen/agents.yml/G4；H′ profile/命令；I′ 测试与验收。严格 per-record 读取先于 C′ 权威数据验收；G4、受管出生／全范围停稳在宿主开放前完成。〔一手〕决策 67；〔推理〕实施依赖。
+3. ⑤接本机真实 Codex app-server、实例 env/Key、多 impl 与空壳；完成 G2 会话级 pending/follow-up、G3 childId 与真实父子计量口径，复验同一宿主命令。Codex 原生工具归自身沙箱／审批，不承诺推理／工具硬次数。〔一手〕决策 59、66；[Codex 评估](research/2026-11-05-codex-adaptation.md) §6–8。
 
-之后扩完整 minds/context/guard/toolport/tasks/journal，并通过它们把网页接同一公共层；生命周期与队列只有一套。工作区／独立终端／调度下一批；多端阶段走 VPS，按宿主文档 §13 借鉴 relay/E2EE、配对与推送。〔一手〕决策 63、65；〔推理〕模块接缝。
+ACP 三命令与最小文件块仍是③独立附加任务；deepseek 瘦身另开。完整第二层继续用同一 Manager/队列/代次，不新立生命周期。〔一手〕决策 65；〔推理〕唯一归属。
 
 ## 文档约定
 
@@ -150,17 +149,21 @@
 | 53 | 第 1 步验收后的四点落实 | 主人原话：“按照你建议”。确认的四点：① 随附 profile 名 `brain`、组合包 `@liwa/brain-cli`；② `--model` 可省，省略用所用 CLI 的默认模型，`SessionConfig.model` 可选、不传占位值；③ 第 1 步 12 处设计差异全部写回 00 / 01；④ 时间线代码归 brain-shared，网关直接引用。落实：①④ 已有实现，第 1 步差异写入 `00-contracts.md` §5.1 与 `01-agent-cli.md` §2、§3、§4.9、附录 A；② 已在第 2 步落实，同时自写进程桥归严格编译的 `@liwa/brain/src/process.ts`。依据：〔一手〕主人答复及本轮任务书；`packages/bundle/brain-cli/cordis.patch.yml`、`packages/brain/brain-shared/NOTICE`、`packages/brain/brain/src/contract.ts` |
 | 54 | 终端命令集借鉴 Paseo | 主人原话：“你的终端命令合集暂时借鉴paseo的终端命令合集哈”。落实为推进第 ③ 步：常驻进程托管会话，提供 `run / ls / logs / attach / send / wait / stop / inspect / permit / delete / archive / provider / usage` 及 `start / status / restart`；各步用真 CLI 验收。依据：〔一手〕主人原话与本轮任务书 |
 | 55 | 提供方包命名 | 能力前缀保留 `brain-`，实现用产品全名：`brain-claude-code`、`brain-codex`、`brain-deepseek`、`brain-acp`；不用 `*-cli-sdk`，能力名仍为 brain。依据：〔一手〕主人 2026-11-05 决定 |
-| 56 | 接入功能目标 | 第 4、5 步完成后 Claude Code、Codex 接入达到与 Paseo 同等功能水平；以后再加灵鲸自己的全局 home 配置、本事、MCP、插件配置机制。依据：〔一手〕主人 2026-11-05 决定 |
-| 57 | Key 与同 CLI 多提供方 | Claude Code、Codex 首版均走 Key；同一个 CLI 能配置多个提供方并同时运行。同一提供方插件在 `cordis.yml` 多行装配，每行独立 `impl`；模型列表、标签、环境、禁用工具与二进制覆盖按实例归属。Key 采用底座 credential-ref，字段与注入接口按已定宿主方案实现。依据：〔一手〕主人 2026-11-05 决定；`paseo-upstream@8018231a:public-docs/custom-providers.zh-CN.md:1` |
-| 58 | 外部 CLI 空壳子 | CLI 自带全局／项目配置、钩子、本事、插件一律不加载；规矩、项目 CLAUDE.md / AGENTS.md 内容与 MCP 均由灵鲸注入；Codex 另给隔离 HOME。真机探针证明不了隔离就停下来问主人，不静默放宽。依据：〔一手〕主人 2026-11-05 决定；两份适配评估 §5 |
+| 56 | 接入功能目标与落实 | 第④、⑤步完成后 Claude Code、Codex 接入达到与 Paseo 同等功能水平。④已有 skills/MCP/plugins/hooks、thinking/切档/binaryArgs 与四级文件配置；roster 配置事件／主控台页面后续接入，不能继续把全部配置机制写成“以后”。Claude fast mode/feature 接线与 SDK 自定义 agents 入口不做（决策 70）；管理层按决策 67 搬运融合。〔一手〕主人工作记录 17–20；`packages/brain/brain-claude-code/src/config.ts:18` |
+| 57 | Key 与同 CLI 多提供方 | Claude Code、Codex 首版走 Key；同插件在 cordis.yml 挂多行、每行独立 impl，可并行。Key 按决策 68 明文放所选实例 env，不默认 credential-ref／个人登录；目录／标签／禁用工具／二进制各自归实例。〔一手〕主人 2026-11-09 决定；`packages/brain/brain-claude-code/src/config.ts:18` |
+| 58 | 外部 CLI 空壳子 | 不自动加载 CLI 自带全局／项目配置、钩子、本事、插件；灵鲸明确配置的内容由受管入口注入。Claude settingSources:[]、独立 HOME/config/securestorage 与 A2 第一轮隔离已验；Codex 另隔离 HOME，⑤逐项验。全局 agent 集与目录级选择已实现，不等于开放原生配置源；证明不了隔离就停问主人。〔一手〕主人工作记录 16、18、19；03-agent-config；`packages/brain/brain-claude-code/src/config.ts:236` |
 | 59 | Codex 能力边界与 Paseo 一致 | V1 只干活与查资料，原生工具交其自身沙箱与审批；推理次数、工具次数不承诺硬限。不能用 item 条目计数冒充模型请求数，也不能把 on-request 说成每个工具都经本体。依据：〔一手〕主人 2026-11-05 决定；Codex 适配评估 §4.1 |
 | 60 | 使用本机真实 CLI | Claude SDK 显式指向受管解析的本机 `claude`，不用 SDK 自带的 2.1.263；Codex 用 PATH 上真实 `codex`。本机评估版本 Claude Code 2.1.318、Codex 0.163.0，正式最低支持版本以真机验收结果另定。依据：〔一手〕主人 2026-11-05 决定；两份适配评估 §2 |
-| 61 | 公共层补口安排 | G1 回合取消／失败已知用量随第 4 步 Claude 补；G4 整轮看门狗是第 3 步宿主前置；G2 跨回合待答、G3 子线程实时用量带 childId 随第 5 步 Codex 补。当前代码未具备这些保证，具体字段、后台总量结算与时序方案独立评审，不按提供方名字加分支。依据：〔一手〕主人顺序决定（决策 66）；Claude Code／Codex 适配评估 §6；`packages/brain/brain/src/contract.ts:397`、`packages/brain/brain/src/session.ts:473` |
-| 62 | 底座唯一后端与逐条 JSON | Paseo 按功能借鉴，适配器按既定方法迁；服务外壳、鉴权、存储、配置、插件、日志用底座。每个逻辑 agent 一份 storage-json/per-record 文件，operation 与受管进程台账逐条 JSON；事件为 JSONL。无多记录事务，严格读取、intent、flush 与逐条启动对账保证可恢复；不新造存储、不引入会话 SQLite 索引。〔一手〕主人 2026-11-05 决定；`packages/storage/storage-json/README.zh.md:56`；`paseo-upstream@8018231a:docs/data-model.md:64` |
+| 61 | 公共层补口交接 | G1 已随④完成，异常 terminal 保留已知 usage、按 turn 幂等结算；D′ 接 Manager.lastUsage，但它不是累计消费账。G4 在 minds 的捕获回合包装计整轮、调用 cancelAgentRun，rescueTimeouts 只管救援；仍为宿主开放前置。G2 会话级 pending/follow-up、G3 实时子用量 childId 随⑤贯通，Manager 有 Map 不代表已完整。〔一手〕01-agent-cli §4.11；`packages/brain/brain-claude-code/src/usage.ts:1`；〔推理〕决策 67 接线 |
+| 62 | 底座唯一后端与逐条 JSON | daemon 壳、插件平台、远程接入不搬；agent 管理层整块搬运并融合，见决策 67。AgentStorage 接口/schema 搬、实现换 storage-domain，agent/operation/投递/完成订阅逐条 JSON；进程台账仍归 subprocess，事件为 JSONL。无多记录事务，严格读取、intent/flush/checkpoint 与启动对账保证可恢复，不新造存储、不引入会话 SQLite。〔一手〕主人决定；`packages/storage/storage-json/README.zh.md:90`；02-minds §2.4–§2.7 |
 | 63 | 本机阶段与以后 VPS 多端 | 第 3 步只做本机；手机／独立客户端软件完成后才做多端，走主人自己的 SSH VPS 中继／转发，借鉴 Paseo relay/E2EE、配对、推送。协议现在保持新字段可选、不删字段、不收窄类型、双向可解析，新能力在边界 gate 一次。〔一手〕主人 2026-11-05 决定；`paseo-upstream@8018231a:docs/protocol-compatibility.md:11` |
 | 64 | develop / release 分支工作流 | develop 为日常集成、release 为验证过的版本；所有需求从 develop 拉功能分支，文档代码一起完成，评审后合回 develop，版本验证后再合入 release。开发目录 ../liwa-dev，release 目录 ../liwa；远端 main 先不动且不再使用，旧代码由 archive/main 标签保留。〔一手〕主人 2026-11-05 分支决定 |
-| 65 | 第 3 步方案定稿 | D1–D14 按已确认方案，D8/D15 纳核心：minds 最小 direct；本步会话与提供方，工作区/终端/调度下一批；brain-host＋轻 brain＋本机 HTTP，restart 短命替换载体；默认续跑合格 running、send interrupt、wait 权限检查点、stop 当前轮，scope all 全停；Key 引用、安全 reload；ACP 三命令与文件块本步附加，瘦身另开；一小时闲置回收；Apple Silicon Mac 验收；provider ls/diagnostic 与常驻 run。完整规范见 [01-brain-host](architecture/modules/01-brain-host.md) 与 [02-minds](architecture/modules/02-minds.md)。〔一手〕主人 2026-11-05 定稿 |
-| 66 | 第四层推进顺序 | ④ brain-claude-code → ③ 常驻宿主与命令集 → ⑤ brain-codex。Claude 可用现有公共层与一次性 brain run 真 CLI 验，不依赖宿主；先有两个真提供方再建宿主。G1 随 Claude，G4 与底座 JSON 严格读取为宿主前置，G2/G3 随 Codex。〔一手〕主人 2026-11-05 顺序决定 |
+| 65 | 第 3 步方案定稿 | D1–D14 按确认方案，D8/D15 纳核心：唯一 direct minds；会话与提供方本步、工作区/终端/调度下一批；brain-host＋轻 brain＋本机 HTTP、短命 restart 载体；默认续跑合格 running、send interrupt、wait 权限检查点、stop 当前轮/scope all 全停；Key 按决策 68 放实例 env、安全 reload；ACP 三命令/文件块独立附加、瘦身另开、一小时回收、Apple Silicon Mac。daemon 壳、插件平台、远程接入不搬；agent 管理层整块搬运并融合，见决策 67。规范见 [01-brain-host](architecture/modules/01-brain-host.md)、[02-minds](architecture/modules/02-minds.md)。〔一手〕主人 11-05 定稿与 11-09/11-10 决定 |
+| 66 | 第四层推进顺序 | ④ brain-claude-code → ③ 常驻宿主 → ⑤ brain-codex。④与 G1 已提交 `13a66153` 待合回；③以 DeepSeek/Claude 验收，G4/底座关键 per-record 严格读取为宿主开放前置；G2/G3 随 Codex。A′–I′ 是③的分块，非改变产品排期。〔一手〕主人 11-05 顺序决定与工作记录 20 |
+| 67 | AgentManager 层整块搬运并融合（2026-11-10） | 主人决定“全搬，并且融合我们的架构”，F1–F9 全按推荐。F1：BrainProvider 兼 AgentClient 能力，返回 AgentSession，旧包装退役；F2：AgentStorage 接口/schema 搬、实现换 storage-domain/per-record；F3：每 agent 一个 JSONL 逻辑日志，gen 为字段；F4：合并 AgentSessionConfig，contract.ts 的 zod 唯一校验／类型真相；F5：核心 @liwa/minds/ctx.minds 与 @liwa/toolport/ctx.toolport；F6：灵鲸工具 spawn/look/answer/manage 不变，Paseo 原名处理器由 tool-minds.catalog 适配，detach/kill_agent 代码搬但不公开，父不能代批、不开 shell 路；F7：只抽 agent 协议子集；F8：上游测试随源码搬到 tests/paseo，未接用例逐条说明；F9：重启恢复/闲置回收/结构化生成独立插件、工具贡献 tool-minds、提供方目录三件归 brain，登记 effect 化，Paseo 扩展点逐个换 Cordis。语音、插件平台文件、provider-registry/runtime、外部导入/搜索、worktree 联动、daemon/远程壳不进本层。完整契约见 00 §5.1/§6.1、01 §4.9/附录 A、02 §2–§4；实现按宿主 §9.3 A′–I′，A′ 只文档。〔一手〕主人工作记录 19、20 |
+| 68 | 提供方 Key 配置（2026-11-09） | Claude/Codex 首版 Key 明文放实例 env，登录／凭据服务以后定；Claude ANTHROPIC_API_KEY 与 ANTHROPIC_AUTH_TOKEN 必须且只能一个，可选 ANTHROPIC_BASE_URL，装载即校验。现 Claude 包已去 apiKeyEnv/authType/secretEnv/baseUrl 及 credentials/launch-environment 依赖；同插件多行独立 impl，示例 reclaude/GLM。秘密不进 agent JSON/日志/resume。〔一手〕主人工作记录待写回 15；`packages/brain/brain-claude-code/src/config.ts:144` |
+| 69 | 全局 agent 集与四级作用域（2026-11-09） | agents.yml 采用 YAML，实例 use/disable 在 instances 节；全局→实例→目录→对话，目录只存 agents/dirs/，只选已有条目不新增；MCP 用 ${VAR} 展开、不用 !!js；权限规则、marketplace、个人指令自动导入不进首版。解析器归 brain/agents-config，宿主先代管、roster/页面后接；翻不了按 Meta.agentConfig 拒绝。正式规范 [03-agent-config](architecture/modules/03-agent-config.md)。〔一手〕主人工作记录 18、19；`packages/brain/brain/src/agents-config/index.ts:46` |
+| 70 | Claude 审核修复与功能边界（2026-11-10） | M1–M8、N6–N8 已修；模型目录 thinking、回合间 setThinking/事件/视图、binaryArgs 已有；fast mode/feature 接线与 SDK 自定义 agents 不做。用量帧账＋累计账对账，后台子消费归下一结算回合；同 UUID 续接带累计基线、401/403 立即失败、CLI 估价不当第三方实价。A2 第一轮真 CLI 2.1.319 隔离／主流程已验，新增能力仍分开验证；当前仅 work。〔一手〕主人工作记录 16–19；`packages/brain/brain-claude-code/src/usage.ts:1`、`src/config.ts:310` |
 
 ## 评审意见的处理
 
@@ -281,7 +284,7 @@
 - **需要主人同意的操作**：06 成长系统草稿的四点（见"现状"）；转写小凌的讲解视频（要装 ffmpeg 和中文语音识别，不做也不影响架构）。提交推送逐次征得同意。
 
 
-以下是第 3 步定稿之外的领域待定项；已定的模型／诊断、ACP 命令、文件块与凭据引用见决策 65。〔一手〕主人 2026-11-05 定稿。
+以下是第 3 步定稿之外的领域待定项；已定的模型／诊断、ACP 命令、文件块见决策 65，实例 env/Key 见决策 68。〔一手〕主人 2026-11-05 定稿。
 
 | 项 | 待定 | 推荐与理由 | 依据 |
 | --- | --- | --- | --- |
@@ -293,7 +296,7 @@
 | 12 | 问题能否填补充文字的显式标志 | 推荐接 Claude Code 时设计；Codex 的 isOther 与 notes 不等价，不能直接映射为一个布尔，需按提供方真实表达能力区分 | 〔一手〕；Codex 适配评估 §4.2；〔推理〕 |
 | 14 | 两个 Key 轮换、已留本机会话记录是否替换为 `***` | 推荐由主人处理或明确授权；本任务不读取凭据与个人记录 | 〔一手〕接手说明第四节第 14 条、任务书 03；〔推理〕 |
 
-第④、⑤步需完成凭据引用的字段校验与实现验收；仍需核实／确定：CLI 正式最低版本；Claude 问答不可编码组合的产品行为；Codex ephemeral 是提供方实例选择还是逐会话字段；⑪ 父子总量口径。认证首版 Key、credential-ref、空壳子隔离、Codex 软预算边界按决策 57–60、65 确定，不列为待定。依据：〔一手〕任务书 03、主人 2026-11-05 决定；两份适配评估 §4、§10。
+第⑤步需完成所选实例 env/Key 的配置校验与实现验收；仍需核实／确定：CLI 正式最低版本；Claude 问答不可编码组合的产品行为；Codex ephemeral 是提供方实例选择还是逐会话字段；⑪ 父子总量口径。认证首版实例 env/Key、空壳子隔离、Codex 软预算边界按决策 57–60、65、68 确定，不列为待定。依据：〔一手〕任务书 03、主人 2026-11-05 决定；两份适配评估 §4、§10。
 
 ## 模块阶段的调研起点
 
@@ -343,7 +346,7 @@
 
 | 目录／引用 | 用途与当前约束 |
 | --- | --- |
-| `../liwa-dev` | develop 开发侧；每个需求使用自己的功能分支。本需求为 `feature/step3-design-docs`，基于 develop；文档与代码都在这一侧维护 |
+| `../liwa-dev` | develop 开发侧；每个需求使用自己的功能分支。本需求为 `feature/step4-claude`，基于 develop；文档与代码都在这一侧维护 |
 | `../liwa` | release 工作目录，保存验证过的版本，本任务不碰 |
 | `../liwa-dsh` | 游离 HEAD，本任务不碰；不是文档主工作区 |
 | `develop` / `release` | 功能分支评审后合 develop；版本验证后 develop 合 release；提交、推送和合并依任务授权 |

@@ -194,7 +194,7 @@ core 内的层表同时约束 import（dependency-cruiser）与 required 之间�
 | journal、db | `core/journal`、`core/db` | 基础 | required | `journal` | — |
 | guard | `core/guard` | 守护 | required | `guard` | — |
 | procs | `core/procs` | 资源 | required | `procs`；`finalize` 杀进程组 | `managed-processes`、tree-kill、spawn 的规则 |
-| brains | `core/brains` | 资源 | required | `brains`；消费 `brain.provider`（有效绑定由 minds 从 roster 读出后传入） | `AgentClient` / `AgentSession` 契约；`agent-response-loop` + `structured-generation-providers` |
+| brains | `packages/brain/brain` | 资源 | 服务定义／提供方登记表 | `brains`；brain.provider、probe、prepareConfigDir、blobs | AgentClient 能力；provider-snapshot-manager／mutable-provider-config-owner／agent-configuration-validator；配置真相见 00 §5.1 |
 | Claude、Codex、ACP、录放适配器 | `plugins/brain-*` | 资源 | builtin | 提供 `brain.provider` | `providers/claude/`、`codex-app-server-agent.ts` + `codex/`、`acp-agent.ts` + `generic-acp-agent.ts` + `acp-options.ts`；工具调用归一放 brain-shared |
 | abilities | `core/abilities` | 资源 | required | `abilities`；消费 `ability.*` | — |
 | 本地嵌入、语音、看图、世界源 | `plugins/ability-*` | 资源 | builtin | 提供 `ability.*` | `speech/` + `dictation/`（上游 0.14） |
@@ -206,8 +206,8 @@ core 内的层表同时约束 import（dependency-cruiser）与 required 之间�
 | 记忆引擎、成长引擎、关系模型、人设样板、关系内容包 | `plugins/*-default` | 账本的引擎 | builtin / data | 提供 `memory.engine`、`growth.engine`、`social.model`、`persona.template`、`social.pack` | — |
 | senses、attention、will、scheduler、tasks、outbox | `core/*` | 编排 | required | 同名服务键；scheduler 消费 `job.trigger`；senses 消费 `gate.policy`（V2） | `agent-prompt.ts` 的系统信封与完成通知 |
 | 作业触发类型 | `plugins/job-trigger-time` | 编排 | builtin | 提供 `job.trigger` | `cron.ts`、`cron-expression.ts` |
-| minds、context、actions | `core/*` | 运行 | required | `minds`、`context`、`actions` | 中断与 steer 规则；`agent-stream-coalescer`、`timeline-projection`、`creation/`、`idle-runtime-cleanup` 放 minds |
-| toolport、gateway | `core/*` | 接入 | required | `toolport`、`gateway`；gateway 消费 `gateway.command`；toolport 消费 `toolport.tool`（V3） | — |
+| minds、context、actions | minds 为 `packages/brain/minds`；context/actions 随所属模块 | 运行 | minds 服务定义 + 实现；策略插件消费它 | ctx.minds；独立 minds-restart-recovery、minds-idle-cleanup、minds-structured-generation（ctx.structuredGeneration） | AgentManager 整块融合，数据／接口归 02，包与 Config 归 01 §4.9；可替换策略独立挂行 |
+| toolport、gateway | toolport 为 `packages/brain/toolport`；gateway 随其模块 | 接入 | toolport 服务定义 + MCP 端点；tool-minds 是工具消费方／贡献方 | ctx.toolport 登记表；tool-minds 向它 register；gateway 消费主人命令 | mcp-server/mcp-shared/tools 类型与策略搬到 toolport，agent 处理器在 tool-minds；不固化工具目录 |
 | 客户端连接 | `client/` | 客户端 | — | — | `@getpaseo/client` 的形状 |
 | 命令行入口 | `cli/` | 客户端 | — | — | `@getpaseo/cli` 的形状 |
 | 主控台六区域、开发者视图、插件页 | `console/` | 界面 | 内置 | `ui.area.*`、`ui.*` 归 console；插件界面在各插件的 `client/` | — |
@@ -218,25 +218,20 @@ core 内的层表同时约束 import（dependency-cruiser）与 required 之间�
 
 ### 4.8 Paseo 剥离的落位
 
-摘之前先固定一个已审阅的上游提交，为每个适配器列出实际的 import 闭包、裁剪项与依赖映射（进程 → `procs.spawn` 视图，时钟 → 注入，日志 → kernel logger，类型 → contracts），写进各包 `NOTICE`；m0 只验证 Claude，Codex 与 ACP 按 M1 节奏。
+迁入固定 `paseo-upstream@8018231a`，原样拷到各包 src/paseo 后原地改接缝，逐文件来源／改动记 NOTICE，单独 tsconfig.paseo.json；自写源码严格编译。只用公开包入口，模型工作经受管提供方，不搬其 daemon 基础设施。以下是定位索引，完整文件、Config、inject、测试清单分别归 [01-agent-cli](architecture/modules/01-agent-cli.md) §4.9/附录 A 与 [01-brain-host](architecture/modules/01-brain-host.md) §9.3/§9.4。〔一手〕决策 67；`packages/brain/brain-shared/NOTICE:1`；〔推理〕落位。
 
 | Paseo 路径 | 落到 | 处理 |
 | --- | --- | --- |
-| `AgentClient` / `AgentSession` 类型 | `contracts/slots/brain.provider.ts` | 裁剪成契约（方法描述 + 句柄 + 事件），不照搬 |
-| `agent-sdk-types.ts` | `lib/brain-shared/src/paseo/` | 原样保留；每个适配器的 `src/adapter.ts` 把 Paseo 类型映射到灵鲸契约 |
-| `providers/claude/` | `plugins/brain-claude-code/src/paseo/` | 照搬；改人设注入、内核工具注入与批结束钩子、`settingSources`、自动压缩、数据目录；进程经 `procs.spawn` |
-| `codex-app-server-agent.ts` + `codex/` | `plugins/brain-codex/src/paseo/` | 照搬；断开 workspace-git，每成员 `CODEX_HOME`，进程经 `procs.spawn` |
-| `acp-agent.ts`、`generic-acp-agent.ts`、`acp-options.ts` | `plugins/brain-acp/src/paseo/` | 照搬；补人设注入退路（指令文件 / 前缀） |
-| provider-launch-config、notices、options、refresh-deadline、session-import、工具调用归一 | `lib/brain-shared/src/paseo/` | 照搬；不摘 `utils/spawn`、tree-kill（进程归 procs） |
-| `agent-response-loop`、`structured-generation-providers` | `core/brains` | 改造：睡眠用脑与"去查"的结构化生成循环 |
-| `agent-prompt.ts` 的系统信封与完成通知、`agent-messages/`、`finish-subscriptions/` | `core/minds`、`core/outbox` | 改造：队列与订阅意图改存 SQLite，内容换成灵鲸格式 |
-| `agent-stream-coalescer`、`timeline-projection`、`creation/`、`idle-runtime-cleanup` | `core/minds`（投影部分给 `core/gateway`） | 改造 |
-| `managed-processes` | `core/procs` | 改造：所有 CLI 进程都登记 |
-| `agent-attention-policy` | `core/notify` | 改造 |
-| `cron.ts`、`cron-expression.ts` | `plugins/job-trigger-time/src/paseo/` | 只摘解析与 `computeNextRunAt` |
-| `speech/` + `dictation/`（上游 0.14） | `plugins/ability-speech-local/src/paseo/`（V1.1） | 照搬，带 SenseVoice 与 Whisper |
-| `@getpaseo/client`、`@getpaseo/cli` 的连接、重连、`daemon status`、`cli-surface.test.ts` | `packages/client`、`packages/cli` | 只借形状，不摘代码 |
-| AgentManager、Session、websocket-server、MCP 目录、插件平台、relay、Hub | 不摘 | 只读规则 |
+| AgentClient／AgentSession、共享 timeline/protocol/utils | brain-shared | 共享一份；BrainProvider 返回 AgentSession，完整契约只在 00 §5.1 |
+| providers/claude、codex-app-server-agent/codex、ACP | brain-claude-code／brain-codex／brain-acp | CLI 专属策略在提供方；经 launch/subprocess，空壳由灵鲸显式注入 |
+| AgentManager 与运行／创建／归档／投递／完成订阅文件 | @liwa/minds | 整块搬运；AgentStorage 接口/schema 搬，实现换 storage-domain；durable timeline 落 JSONL |
+| provider-snapshot-manager／mutable-provider-config-owner／agent-configuration-validator | @liwa/brain | 目录／校验归提供方表；provider-registry/runtime 不搬，改 Cordis register |
+| restart-recovery／idle-runtime-cleanup／agent-response-loop + structured-generation-providers | 三个独立 minds-* 插件 | 有 Config，可在 Cordis 禁用／替换；结构化服务键 ctx.structuredGeneration |
+| mcp-server/mcp-shared/tools 类型／序列化／策略 | @liwa/toolport | 登记表取目录、Bearer 按 agentId/gen；端点 liwa |
+| paseo-tools 的 agent 组 | @liwa/tool-minds | 原处理器名保留，catalog 映射灵鲸 spawn/look/answer/manage，登记返回 disposer |
+| AgentManager 层与 MCP 目录；Session、websocket-server、插件平台、relay、Hub | 前两项按决策 67 搬运并融合；其余五项不搬 | Paseo 插件平台扩展点换成 Cordis 登记／opening 瀑布／minds.*.v1；远程产品留多端阶段 |
+| managed-processes、spawn/tree-kill | 底座 subprocess | 只借登记与对账要求，不搬 fs 后端／独立进程服务 |
+| 语音／调度／工作区等其他产品域 | 各模块阶段 | 不因 AgentManager import 闭包带回本层；处置见 01 附录 A |
 
 ## 5 模块在代码里怎么划界
 
@@ -255,7 +250,8 @@ core 内的层表同时约束 import（dependency-cruiser）与 required 之间�
 
   插件宿主是 kernel 包，不在 core 的 import 图里；builtin 不在层里，它在图上处于它所填槽位消费方的下一层（`00-plugin-kernel.md` §5.5）。
 - **三条执行点**：① 调用只能向下，同层只调公开 API 且不成环——dependency-cruiser 查 import（文件级与模块级成环都查）；② required 之间的 `inject` 只许指向同层或更低层——kernel 第 1 阶段查，dependency-cruiser 看不见注入；③ **服务注入的方向检查**与 import 用同一张层表，违规都是启动失败。
-- **向上传信息**只有两条路（`overall.md` §3.2 规则 2）：持久的事走经历流事件订阅；不需要持久的走**进程内信号**，在代码里就是上层向下调用下层的登记或汇报 API（gateway 调 `notify.reportPresence`、senses 经 `formhost.onInbound(cb)` 订阅）；kernel 不提供跨模块的事件总线。
+- **上层工具能力登记到运行层**：toolport（接入）在 ready 调 minds.attachToolport({ issue, toolsFor }) 并把返回 disposer 挂 effect；minds 不 inject toolport。工具贡献插件消费两服务并向 toolport.register；提供方/消费方/服务定义三角色完整。〔一手〕决策 67 F9；`packages/core/tools/src/index.ts:128`；〔推理〕层表落位。
+- **向上传信息**只有两条路（`overall.md` §3.2 规则 2）：持久的事走经历流事件订阅；不需要持久的走**进程内信号**，在代码里就是上层向下调用下层的登记或汇报 API（gateway 调 `notify.reportPresence`、senses 经 `formhost.onInbound(cb)` 订阅）；minds 的 Cordis 进程内事件按 00 §6.1 声明，持久事实仍走唯一 JSONL，不能把通知当第二权威日志。
 - **每样数据只有一个写入方**（overall §2.3）：只有所有者模块持有写连接或写 API；迁移 SQL 跟着表的所有者模块放在它的 `migrations/`。
 - **账本与引擎分开**：账本只经槽位注册表解析契约接口、把按受众裁过的输入推给引擎、复核引擎返回的编号；引擎在 `plugins/*`，只依赖 contracts 与 kernel，经 `inject` 读账本的查询 API。
 - **时钟、随机、编号一律注入**（`Clock`、`Rng`、`Ids`），ESLint 禁止系统时钟与随机；这是 L0 可回放的前提。

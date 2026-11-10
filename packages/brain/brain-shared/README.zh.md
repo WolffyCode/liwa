@@ -27,7 +27,7 @@ kind: "package-library"
 
 ### 何时使用
 
-提供方包（`brain-acp`、`brain-deepseek`、`brain-claude`、`brain-codex`）改造各自拷来的 Paseo 客户端时导入它：共用的 agent 契约、协议工具、提供方工具、提供方子 agent 存储与运行时 MCP 配置都只在这里放一份，各提供方不再各拷一份。客户端产出 Paseo `AgentSession` 的提供方用 `PaseoBrainSession` 包住它，只覆写不同之处，不自己再映射一遍事件。
+提供方包（`brain-acp`、`brain-deepseek`、`brain-claude-code`、`brain-codex`）改造各自拷来的 Paseo 客户端时导入它：共用的 agent 契约、协议工具、提供方工具、提供方子 agent 存储与运行时 MCP 配置都只在这里放一份，各提供方不再各拷一份。客户端产出 Paseo `AgentSession` 的提供方用 `PaseoBrainSession` 包住它，只覆写不同之处，不自己再映射一遍事件。
 
 ### 入口
 
@@ -35,7 +35,7 @@ kind: "package-library"
 import type { AgentSession } from '@liwa/brain-shared/paseo/agent/agent-sdk-types'
 import { PaseoBrainSession, paseoLogger } from '@liwa/brain-shared'
 
-const logger = paseoLogger(ctx.logger('brain-claude'))           // what copied Paseo code calls `Logger`
+const logger = paseoLogger(ctx.logger('brain-claude-code'))           // what copied Paseo code calls `Logger`
 const session: AgentSession = await client.createSession(paseoConfig, { agentId: launch.sessionId, processHost: launch })
 return new PaseoBrainSession({ impl, meta, session, blobs: launch }) // a BrainProviderSession
 ```
@@ -98,7 +98,8 @@ return new PaseoBrainSession({ impl, meta, session, blobs: launch }) // a BrainP
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **Paseo 的产品功能链没迁**——附件、Paseo 自己的工具目录与展示、提供方快照管理、OpenCode 桥与 AgentManager 胶水都没拷；受影响的类型与分支已原地删去。
+- **管理层迁入计划**——AgentManager 层按决策 67 搬进 `@liwa/minds`；MCP 目录／工具贡献分进 `@liwa/toolport` 与 `@liwa/tool-minds`，提供方快照三件归 `@liwa/brain`，本次只冻结文档，尚未搬代码。Paseo 附件／专属展示与 OpenCode 桥不搬。
+- **协议子集计划**——`messages.ts` 只抽 agent 相关 schema/type，精确导出与删分支见[迁移地图](../../../docs/liwa/architecture/modules/01-agent-cli.md#附录-a1-agent-协议子集的精确边界f7)；新增 agent-labels、agent-lifecycle、agent-title-limits。实际拷入时才逐文件更新 NOTICE，不把计划写成已迁来源。
 - **跟进上游要手工**——升到更新的 Paseo 提交，要重新拷文件并重做 `NOTICE` 列出的改动。
 
 <a id="dev-note"></a>

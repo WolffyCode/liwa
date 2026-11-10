@@ -27,7 +27,7 @@ Brain provider packages build their Claude Code, Codex, and ACP clients on Paseo
 
 ### When to use it
 
-Provider packages (`brain-acp`, `brain-deepseek`, `brain-claude`, `brain-codex`) import it while adapting their own copied Paseo client: the shared agent contract, the protocol helpers, the provider utilities, the provider subagent store, and runtime MCP configuration all live here once, so no provider copies them again. A provider whose client yields a Paseo `AgentSession` wraps it in `PaseoBrainSession` and overrides only what differs; it does not re-map events itself.
+Provider packages (`brain-acp`, `brain-deepseek`, `brain-claude-code`, `brain-codex`) import it while adapting their own copied Paseo client: the shared agent contract, the protocol helpers, the provider utilities, the provider subagent store, and runtime MCP configuration all live here once, so no provider copies them again. A provider whose client yields a Paseo `AgentSession` wraps it in `PaseoBrainSession` and overrides only what differs; it does not re-map events itself.
 
 ### Entry point
 
@@ -35,7 +35,7 @@ Provider packages (`brain-acp`, `brain-deepseek`, `brain-claude`, `brain-codex`)
 import type { AgentSession } from '@liwa/brain-shared/paseo/agent/agent-sdk-types'
 import { PaseoBrainSession, paseoLogger } from '@liwa/brain-shared'
 
-const logger = paseoLogger(ctx.logger('brain-claude'))           // what copied Paseo code calls `Logger`
+const logger = paseoLogger(ctx.logger('brain-claude-code'))           // what copied Paseo code calls `Logger`
 const session: AgentSession = await client.createSession(paseoConfig, { agentId: launch.sessionId, processHost: launch })
 return new PaseoBrainSession({ impl, meta, session, blobs: launch }) // a BrainProviderSession
 ```
@@ -98,7 +98,8 @@ Nothing here builds a model request, so it cannot invalidate a cached prefix.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **Paseo product chains stay behind** — attachments, Paseo's own tool catalog and presentation, the provider snapshot manager, the OpenCode bridge, and AgentManager glue were not copied; the affected types and branches were cut in place.
+- **Manager migration plan** — under decision 67, the AgentManager layer will move into `@liwa/minds`; the MCP catalog and tool contribution move into `@liwa/toolport` and `@liwa/tool-minds`, while the three provider snapshot modules belong to `@liwa/brain`. This change freezes documentation only; the code has not moved. Paseo attachments, dedicated presentation, and the OpenCode bridge stay behind.
+- **Protocol subset plan** — extract only agent schemas and types from `messages.ts`; the [migration map](../../../docs/liwa/architecture/modules/01-agent-cli.md#附录-a1-agent-协议子集的精确边界f7) owns the exact exports and removed branches. Add agent-labels, agent-lifecycle, and agent-title-limits. Update NOTICE per file when copying the source, without recording planned files as already copied.
 - **Upstream sync is manual** — updating to a newer Paseo commit means re-copying the files and re-applying the changes `NOTICE` lists.
 
 <a id="dev-note"></a>

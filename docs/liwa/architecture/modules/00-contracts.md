@@ -185,158 +185,164 @@ export type BrainClient = ClientOf<typeof Methods, typeof Handles>;      // 由�
 
 ### 5.1 `brain.provider`
 
-契约与运行时接口归 `@liwa/brain`：`contract.ts` 用 zod 4 定义数据 schema 并推导数据类型；`brand.ts` 定义各类品牌 id；`provider.ts` 手写提供方 TypeScript 接口，`session.ts` 包装成调用方会话句柄。schema 用在登记、会话配置、续接句柄与契约测试等边界；品牌 transform 只改类型、不改值、不抛异常。本节不使用 §2.2 的描述符与 `ClientOf`；Cordis 插件配置用 schemastery，会话配置用 zod schema。依据：〔一手〕develop 源码 `packages/brain/brain/src/{contract,brand,provider,session,index}.ts`。
+本节冻结决策 67 的 A′ 契约，供 B′–I′ 实现；不是当前代码的类型声明。当前 `13a66153` 仍返回 `BrainProviderSession`，CLI 仍用一次性 `brain run`；H′ 改走 minds。契约数据归 `@liwa/brain/src/contract.ts` 的 zod schema，提供方接口归 `provider.ts`；Paseo 共享类型只在 brain-shared 一份。〔一手〕`packages/brain/brain/src/provider.ts:158`、`packages/brain/brain-shared/src/paseo/agent/agent-sdk-types.ts:677`；主人工作记录 20 §4 C1–C2。
 
-下列为契约字段摘要（`?` 表示可选；完整 schema 以 当前 develop 的 `contract.ts` 为准，模型省略语义已实现）。代次与回合预算为正整数，子 agent 深度与并发上限为非负整数；输入块、收尾工具及权限选项非空。`SessionConfig` 后续扩展只加可选字段：
+#### 提供方、会话与调用方
+
+`BrainProvider` 兼作 AgentManager 的 `AgentClient`：`impl: ImplId` 是唯一登记身份，`provider` 只读返回 `String(impl)`，不再另配一个 provider 名。保留灵鲸启动上下文（受管进程、blob、home、logger），AgentManager 的打开调用点原地传入完整配置和上下文；不通过 `Paseo → BrainProviderSession → AgentSession` 往返包装。Claude、ACP 直接返回其 `AgentSession`，但 Claude 已有的问答、预算、计量与空壳策略必须移入提供方实现，不能随包装删除而丢失。deepseek、testkit 在 B′ 可用一个临时 `BrainProviderSession → AgentSession` 适配器，D′ 结束删掉；`BrainProviderSession`、`PaseoBrainSession` 与 `ManagedBrainSession` 退役。〔一手〕`packages/brain/brain-claude-code/src/provider.ts:64`、`src/session.ts:20`；`packages/brain/brain-shared/src/session.ts:610`；〔推理〕接缝实施。
+
+以下 TS 片段引用已搬 `agent-sdk-types.ts` 的类型名；`SessionConfig = AgentSessionConfig`，`ResumeHandle` 由灵鲸安全定位字段与 `AgentPersistenceHandle` 对齐，native sessionId 不等于稳定 agentId。可选方法未实现时按能力返回 unsupported/unavailable，不能假造成功。〔一手〕`packages/brain/brain-shared/src/paseo/agent/agent-sdk-types.ts:764`；〔推理〕冻结签名。
 
 ```ts
-type Meta = {
-  streaming: boolean; resume: boolean;
-  nativeTools: boolean; // true = 带着关不掉的原生工具
-  permissionHook: boolean; rollback: boolean; modelSwitch: boolean; modeSwitch: boolean;
-  delivery: { nextStep: boolean; nextTurn: boolean; cancelKeepsQueue: boolean };
-  compaction: 'none' | 'switchable' | 'always_on';
-  budget: { inferences: boolean; toolCalls: boolean; concludeOn: boolean };
-  usage: 'full' | 'tokens' | 'quota' | 'none';
-  personaInjection: { instance: PersonaInjection; work?: PersonaInjection; think?: PersonaInjection; own?: PersonaInjection; tidy?: PersonaInjection };
-  runtime: 'subprocess';
-  transport: 'acp' | 'claude-sdk' | 'codex-app-server' | 'scripted';
-  kernelTools: ('mcp-http' | 'mcp-stdio' | 'dynamic')[]; // 至少一种
-  binary: { command: string; minVersion?: string };
-  children: { native: 'none' | 'observe'; crossCli: true };
-  extensions?: string[];
-};
-type PersonaInjection = 'system_prompt' | 'preset_append' | 'developer_instructions' | 'file';
-type SessionOwner = { instanceId: string; gen: number } | { taskId: string; gen: number }; // gen 正整数；换新、重建、换提供方都换代
-type SessionConfig = {
-  member: MemberId; mindKind: 'instance' | 'work' | 'think' | 'own' | 'tidy'; owner: SessionOwner;
-  persona: { stable: string; notes: string; version: string }; // stable 为各实例逐字相同的人设十段，在最前；notes 在末尾；version 决定陈旧上限
-  cwd: string; dataDir: string; // 本代会话日志由灵鲸管理，随删除级联、不进备份
-  kernelTools?: { endpoint: string; token: string; tools: ToolDef[] } | { native: ToolDef[]; token: string };
-  mcpServers?: Record<string, McpServer>; // toolport 接入前，调用方可直接给 Paseo 形状的 stdio / http / sse 服务器表
-  nativeToolPolicy: 'none' | 'readonly' | 'worktree'; model?: string; // 省略即提供方 CLI 默认模型
-  modeId?: string; // 省略即提供方默认会话模式
-  env?: Record<string, string>;
-  limits: { maxInferencesPerTurn: number; maxToolCallsPerTurn: number; watchdogMs: number };
-  concludeOn: string[]; // 至少一个；成功调用其中之一即结束回合
-  permission: { mode: 'kernel' | 'provider'; autoAllow: string[] };
-  compaction: 'off' | 'provider'; configDir: string; rules: string; skillsDir: string; projectDocs: boolean; // 外部 CLI 由灵鲸受控注入项目文档，见 01 §4.6
-  childPolicy: { native: boolean; maxDepth: number; maxConcurrent: number; crossCli: ImplId[] };
-  resume?: { identityProbe: boolean };
-};
-type ResumeHandle = { provider: ImplId; sessionRef: string; createdAt: Iso; nativeHandle?: string; metadata?: Record<string, JsonValue>; home?: string };
-type BlobRef = { blob: string; bytes: number; mime: string }; // blob 是 64 位小写十六进制 SHA-256，bytes 非负整数
-type TurnInput = { blocks: ({ kind: 'text'; text: string } | { kind: 'block'; name: string; text: string } | { kind: 'image'; blob: BlobRef })[] };
-type Usage = { // 报不出的字段留空，不许填 0
-  tokens?: { input: number; output: number; cacheRead?: number; cacheWrite?: number };
-  context?: { used: number; max: number };
-  quotaWindows?: { id: string; usedPercent: number; resetsAt?: Iso; windowMinutes?: number }[];
-  balances?: { id: string; used?: number; remaining?: number; limit?: number; unit: 'usd' | 'credits' | 'requests' | 'tokens'; resetsAt?: Iso }[];
-  inferences?: number; providerReportedCostUsd?: number;
-};
-type PermissionEffect = 'allow_once' | 'allow_session' | 'allow_always' | 'deny_once' | 'deny_always' | 'cancel';
-type PermissionOption = { id: string; label: string; effect: PermissionEffect };
-type PermissionQuestion = {
-  id: string; question: string; header?: string; detail?: string;
-  options: { label: string; description?: string }[]; multiSelect: boolean;
-}; // options 为空只收自由文本；尚无通用“可填补充文字”标志
-// 至少一个 selected 或非空 custom；公共 checkPermissionAnswers 校验问题号、选项和单选约束
-type PermissionAnswer = { selected: string[]; custom?: string };
-type PermissionResponse = { optionId: string; reason?: string; answers?: Record<string, PermissionAnswer> };
-type BrainMode = { id: string; label: string; description?: string };
-type ModeChange = { modeId: string; appliesAt: 'now' | 'next_step' | 'next_turn' };
-type BrainEvent =
-  | { kind: 'turn.started'; turnId: TurnId }
-  | { kind: 'turn.completed'; turnId: TurnId; usage: Usage; concludedBy?: string }
-  | { kind: 'turn.interrupted'; turnId: TurnId; reason?: string; usage?: Usage }
-  | { kind: 'turn.failed'; turnId: TurnId; usage?: Usage; category: FailureCategory; message: string; retryable: boolean; code?: string; diagnostic?: string }
-  | { kind: 'session.exited'; category: FailureCategory; message: string }
-  | { kind: 'session.compacted'; turnId?: TurnId; preTokens?: number; postTokens?: number }
-  | { kind: 'process.exited'; pid?: number; code: number | null; signal: string | null }
-  | { kind: 'item.message'; turnId?: TurnId; itemId: ItemId; delta: string; final: boolean; childId?: ChildId }
-  | { kind: 'item.reasoning'; turnId?: TurnId; itemId: ItemId; summary: string; childId?: ChildId }
-  | { kind: 'item.tool_call.started'; turnId?: TurnId; callId: CallId; tool: string; args: JsonValue; native: boolean; batch?: number; detail?: ToolCallDetail; childId?: ChildId }
-  | { kind: 'item.tool_call.completed'; turnId?: TurnId; callId: CallId; result: JsonValue; ok: boolean; childId?: ChildId }
-  | { kind: 'permission.request'; turnId?: TurnId; requestId: PermissionRequestId; category: 'tool' | 'plan' | 'question' | 'mode' | 'other'; tool: string; args: JsonValue; title?: string; description?: string; detail?: ToolCallDetail; questions?: PermissionQuestion[]; options: PermissionOption[]; childId?: ChildId }
-  | { kind: 'permission.resolved'; turnId?: TurnId; requestId: PermissionRequestId; optionId: string; effect: PermissionEffect }
-  | { kind: 'usage.update'; turnId?: TurnId; usage: Partial<Usage> }
-  | { kind: 'session.mode_changed'; modeId: string | null; availableModes?: BrainMode[] }
-  | { kind: 'session.model_changed'; model: string }
-  | { kind: 'child.started'; childId: ChildId; childKind: 'native-child'; label: string; provider: ImplId; parentChildId?: ChildId; turnId?: TurnId }
-  | { kind: 'child.ended'; childId: ChildId; stopReason: 'completed' | 'failed' | 'cancelled' | 'aborted'; usage: Usage };
-type MemberConfigSpec = Pick<SessionConfig, 'rules' | 'skillsDir' | 'projectDocs' | 'model' | 'mcpServers' | 'kernelTools'>;
 interface BrainProvider {
-  readonly impl: ImplId; readonly meta: Meta;
+  readonly impl: ImplId;
+  readonly provider: string; // String(impl)，由 impl 派生
+  readonly meta: Meta;
+  readonly capabilities: AgentCapabilityFlags; // 从同一能力声明派生的 Paseo 视图
   readonly sessionHome: 'per-session' | 'per-member';
   writeMemberConfig?(dir: string, spec: MemberConfigSpec): Promise<void>;
-  probe(ctx: BrainProbeContext): Promise<BrainProbeResult>;
-  createSession(cfg: SessionConfig, launch: BrainLaunchContext): Promise<BrainProviderSession>;
-  resumeSession(handle: ResumeHandle, cfg: SessionConfig, launch: BrainLaunchContext): Promise<BrainProviderSession>;
-}
-interface BrainProviderSession {
-  readonly id: string | null;
-  subscribe(listener: (event: BrainEvent) => void): () => void;
-  startTurn(input: TurnInput): Promise<{ turnId: TurnId }>;
-  deliver(input: TurnInput, options: { semantics: 'next_step' | 'next_turn'; wake: boolean; expectedTurnId?: TurnId }): Promise<'accepted' | 'unsupported' | 'unavailable'>;
-  cancel(options: { reason: 'preempt' | 'watchdog' | 'hard_limit' | 'pause' | 'drain' | 'owner'; keepQueue: boolean }): Promise<void>;
-  respondToPermission(requestId: PermissionRequestId, response: PermissionResponse): Promise<void>;
-  persistence(): ResumeHandle | null;
-  canStopRuntime?(): Promise<boolean>; setModel?(model: string): Promise<void>;
-  availableModes?(): Promise<BrainMode[]>; currentMode?(): Promise<string | null>;
-  setMode?(modeId: string): Promise<ModeChange>;
-  close(): Promise<void>;
+  probe(context: BrainProbeContext): Promise<BrainProbeResult>;
+  createSession(config: AgentSessionConfig, launch: BrainLaunchContext,
+    options?: AgentCreateSessionOptions): Promise<AgentSession>;
+  resumeSession(handle: AgentPersistenceHandle, config: AgentSessionConfig,
+    launch: BrainLaunchContext, options?: AgentResumeSessionOptions): Promise<AgentSession>;
+  fetchCatalog(options: FetchCatalogOptions, context?: ProviderRefreshContext): Promise<ProviderCatalog>;
+  getCatalogCacheKey?(options: FetchCatalogOptions): Promise<string | undefined>;
+  resolveConfiguredModel?(model: AgentModelDefinition): AgentModelDefinition;
+  resolveDefaultModeId?(input: ResolveAgentDefaultModeInput): Promise<string | undefined>;
+  resolveCreateConfig?(input: ResolveAgentCreateConfigInput): ResolveAgentCreateConfigResult;
+  isCreateConfigUnattended?(input: AgentCreateConfigUnattendedInput): boolean;
+  listCommands?(config: AgentSessionConfig): Promise<AgentSlashCommand[]>;
+  listFeatures?(config: AgentSessionConfig): Promise<AgentFeature[]>;
+  isAvailable(signal?: AbortSignal, options?: FetchCatalogOptions): Promise<boolean>;
+  getDiagnostic?(): Promise<{ diagnostic: string }>;
+  archiveNativeSession?(handle: AgentPersistenceHandle): Promise<void>;
+  unarchiveNativeSession?(handle: AgentPersistenceHandle): Promise<void>;
+  shutdown?(): Promise<void>;
 }
 ```
 
-| 项 | 规则 | 依据 |
+`AgentClient` 的 create/resume 原签名允许部分 overrides／可选 launch；灵鲸在 Manager 的唯一打开点完成 resolve，再传完整 `AgentSessionConfig` 和 `BrainLaunchContext`。因此上面是兼具能力的提供方接口，不声称它可未经修改就赋给上游 `Record<string, AgentClient>`；D′ 同时改 Manager 的 clients 参数类型和调用点，不加永久桥接层。不含 `listImportableSessions`、`importSession`。〔一手〕`packages/brain/brain-shared/src/paseo/agent/agent-sdk-types.ts:767`；〔推理〕避免签名不实。
+
+| 能力／探测 | 唯一事实与对应 | 依据 |
 | --- | --- | --- |
-| 原生工具 | `Meta.nativeTools` 表示“带着关不掉的原生工具”，不是“能否使用原生工具”；为 true 时拒绝 `nativeToolPolicy: 'none'`。Claude 能以 `tools: []` 清空，声明 false；Codex 声明 true，最终由真 CLI 验收 | 〔一手〕develop 源码 `packages/brain/brain/src/contract.ts`、`packages/brain/brain/src/index.ts`；〔一手〕`01-agent-cli.md` §4.2、§4.3 的源码依据 |
-| 模型 | `SessionConfig.model` 可选，`liwa brain run` 省略 `--model` 就不传占位值，由所用 CLI 使用自己的默认模型；配置目录生成也不写占位模型 | 〔一手〕主人对第 1 步验收后的决定（handoff 决策 53）；〔一手〕`paseo-upstream@8018231a:packages/cli/src/commands/agent/run.ts`；`packages/brain/brain/src/contract.ts:162`、`packages/bundle/brain-cli/src/startup.ts:100` |
-| 事件订阅 | 提供方用 Paseo 的 `subscribe`；调用方句柄提供多订阅者扇出与 `events(signal?)`，每次迭代自建立订阅起收事件，不追放会话创建后的历史，不做创建即无界缓冲；没有首参 `CallContext`，`persistence()` 同步 | 〔一手〕develop 源码 `packages/brain/brain/src/provider.ts`、`packages/brain/brain/src/session.ts` |
-| 权限请求 | 原生请求翻成至少一个允许选项与一个 `deny_once` 的 `options[]`；未知 `optionId` 按 `deny_once` 应用并发 `permission.resolved`；`cancel` 拒绝并中断回合。默认补一次性允许／拒绝／取消；`allow_session` 只在原生能力可兑现时展示，ACP／deepseek 不提供，第一版是否要求 Claude Code／Codex 提供仍待主人定；永久策略留给 toolport／guard，通用 ACP 只给 allow_always 时才照实展示 | 〔一手〕develop 源码 `packages/brain/brain/src/contract.ts`、`packages/test-support/brain-testkit/src/contract.ts` |
-| 字段与判别 | `BrainEvent.kind` 是判别标签，子 agent 种类用 `childKind`；父条目与父权限请求必带 turnId；子条目／请求可省 turnId，但必须带 childId，知道时保留开子时的原父回合号，不能借用后来的回合。`permission.resolved`、中断原因、失败 code / diagnostic 与可选 `usage.update.turnId` 保留 Paseo 提供的事实 | 〔一手〕develop 源码 `packages/brain/brain/src/contract.ts` |
-| 进程 | 会话进程一律经 `BrainLaunchContext.spawn`，brains 先登记归属再交 `ctx.subprocess`；`process.exited` 由 brains 发，提供方不发；`pid` 可选，本阶段 subprocess 不公开进程身份，登记只存命令名与 argv 哈希等归属信息，不存参数原文 | 〔一手〕develop 源码 `packages/brain/brain/src/provider.ts`、`packages/brain/brain/src/session.ts`、`packages/brain/brain/src/views.ts` |
-| 内核工具令牌 | endpoint 与 native 两种分支都带令牌，原生工具也经 `toolport.invoke(token, tool, args)` 回本体；令牌绑定 owner 编号与代次，换代作废 | 〔一手〕`02-minds.md` §4.4；develop 源码 `packages/brain/brain/src/contract.ts` |
-| 额度 | quotaWindows 的 usedPercent 为 0–100、可带重置时间与窗口长度，balances 记录余额；经 usage.update 上报，guard 接入后同时看钱和额度窗口 | 〔一手〕develop 源码 `packages/brain/brain/src/contract.ts`；`overall.md` §9.2 |
-| 用量与失败 | `turn.completed.usage` 必填；SDK 估价只记不算；`context_exceeded` 是换新信号；`cancelled` 不当成可重试去换下一家；`FailureCategory` 为 `retryable / timeout / auth / refused / quota / process_exit / context_exceeded / cancelled` | 〔一手〕develop 源码 `packages/brain/brain/src/contract.ts`；〔一手〕`four-layers.md` §4 |
-| 增量、批号与工具详情 | `delta` / `summary` 按条目累计；`final` 时 delta 可为空。同次模型输出的并行调用共享从 1 递增的批号，判不出留空；`ToolCallDetail` 按 `type` 判别为 `shell{command,cwd?}`、`read{path}`、`edit{path,unifiedDiff?}`、`write{path}`、`search{query}`、`fetch{url}`、`other` | 〔一手〕develop 源码 `packages/brain/brain/src/contract.ts` |
-| 生命周期 | 退出即报 `session.exited` 或 `turn.failed`；中断与关闭幂等；原生中断确认即可，只收尾调用时捕获的回合，ACP 通知则须等对应回合终止；取消失败进入 `stopping` 并拒绝新回合，直到取消成功；关闭时收尾进程、给未结束子 agent 补 `aborted`；不支持的送达语义恒回 `unsupported` | 〔一手〕develop 源码 `packages/brain/brain/src/provider.ts`、`packages/brain/brain/src/session.ts` |
-| 人设注入 | Claude 对实例会话、想事、整理用 system_prompt，对干活用 preset_append；deepseek 各种会话用进程级 personaPrefix，notes 走 agent 作用域，预设没有人格行／complete 段；具体提供方步骤用真 CLI 验证 | 〔一手〕`01-agent-cli.md` §4.2、§4.7；决策 33；`06-growth.md` §4.3；`four-layers.md` §2.16 |
-| 能力与人设 | `scripted` 只给假提供方，产品提供方不用；人设每次拉起与续接都带上，缺省的会话种类注入方式按 instance；自带压缩 `always_on` 的提供方不接 `compaction: 'off'` 会话 | 〔一手〕develop 源码 `packages/brain/brain/src/contract.ts`、`packages/brain/brain/src/index.ts`；〔一手〕`four-layers.md` §2.16、`06-growth.md` §4.3 |
+| streaming、resume、modeSwitch、rollback | Meta 供应声明，分别派生 capabilities.supportsStreaming／supportsSessionPersistence／supportsDynamicModes／supportsRewindConversation、supportsRewindFiles、supportsRewindBoth；rollback 真值必须由实际三项能力解析，不能一个 true 推出全部 true | 〔一手〕`packages/brain/brain/src/contract.ts:49`；`packages/brain/brain-shared/src/paseo/protocol/agent-types.ts:185`；〔推理〕 |
+| supportsMcpServers／supportsReasoningStream／supportsToolInvocations | 能力记录保留原生三项，Meta.kernelTools 是灵鲸工具传输要求，nativeTools 表示原生工具关不掉，不能把两者误并为 supportsToolInvocations | 〔一手〕同上；〔推理〕 |
+| probe／isAvailable／getDiagnostic | 一次 provider probe 生成 available/version/problems，isAvailable 取同一探测结果的 available，getDiagnostic 格式化同一安全报告；按执行环境／目录缓存键共享，不各跑一套检查。目录发现仍走 fetchCatalog | 〔一手〕`packages/brain/brain/src/provider.ts:60`；Paseo `agent/provider-snapshot-manager.ts:573`；〔推理〕 |
+| 灵鲸独有 Meta | 保留 agentConfig{plugins,hooks,instructions}、nativeTools、permissionHook、modelSwitch、thinkingSwitch、delivery、compaction、budget、usage、personaInjection、runtime、transport、kernelTools、binary、children、extensions?；不从 Paseo 标志猜这些保证 | 〔一手〕`packages/brain/brain/src/contract.ts:49` |
 
-| 新契约项 | 当前规则 | 依据 |
+`Meta.thinkingSwitch`、`BrainEvent{kind:'session.thinking_changed', thinking:string|null}` 与视图的 `thinkingOptionId?: string|null` 表达真实档位；当前代码的 `view().thinking`／事件非空 thinking 已随④实现，D′ 在源处统一视图字段名并允许原生 null 表示恢复默认，不并存两个配置字段。CLI 参数仍为 `--thinking`，AgentManager 方法为 `setAgentThinkingOption`。〔一手〕`packages/brain/brain/src/views.ts:70`、`packages/brain/brain/src/contract.ts:499`、`packages/brain/brain-claude-code/src/session.ts:46`；〔推理〕冻结后落实。
+
+| 调用方原职责 | 冻结后的唯一入口 | 依据 |
 | --- | --- | --- |
-| home 与配置写法 | sessionHome 必填；per-session 的 home 为 `<brains>/<impl>/<sessionId>/`，续接句柄记 home 并校验在 impl 下；per-member 共用 `<brains>/<impl>/`。writeMemberConfig 可选，缺省只建空目录，公共层不写厂商分支 | 〔一手〕`packages/brain/brain/src/provider.ts:149`、`:158`；`packages/brain/brain/src/contract.ts:204` |
-| 图片 blob | TurnInput 的 image 引内容寻址 blob，BrainLaunchContext 继承 BrainBlobReader，以 readBlob 读字节，不把本机文件路径当公开协议 | 〔一手〕`packages/brain/brain/src/contract.ts:216`、`packages/brain/brain/src/provider.ts:43` |
-| 模式／模型 | Meta.modeSwitch 与 modeId?；availableModes/currentMode/setMode 按能力调用，未知模式拒绝；ModeChange 明示 now／next_step／next_turn，事件按实际状态变化去重；setModel 成功更新视图与 model_changed | 〔一手〕`packages/brain/brain/src/contract.ts:352`、`:489`、`packages/brain/brain/src/provider.ts:127`；`packages/brain/brain-shared/src/session.ts:657` |
-| 结构化问答 | questions 恰好在 category:question 存在且非空，answers 只随问答允许类答复；每题恰好作答、单选至多一个；按问题号原样保留 selected/custom，厂商 codec 无法编码就 invalid_input 且保留 pending | 〔一手〕`packages/brain/brain/src/contract.ts:302`、`:331`、`:462`、`:554`；`packages/brain/brain-shared/src/session.ts:309`、`:475` |
-| 子 agent 跨回合 | 父回合 terminal 只清父条目／父权限；子请求保留到答复或 child.ended；相同 childId 可 ended 后再 started；已收尾父回合的迟到条目不发布，取消不能提前结束新回合条目 | 〔一手〕`packages/brain/brain/src/contract.ts:378`；`packages/brain/brain-shared/src/session.ts:638`、`:732`|
-| 子审批事实 | childId、工具 args、title／description 随请求上送主人，父 agent 不能代批；deepseek 选 delegatedApproval:forward，底座默认 reject | 〔一手〕`packages/acp/acp/src/updates.ts:74`、`packages/bundle/deepseek-app/cordis.patch.yml:48`|
-| CLI 自开回合的现象 | deepseek 后台子结果可触发提供方自开的 turn.started／terminal；公共句柄已有 activeTurn 互斥，期间 startTurn 返回 brain.turn_active。是否确立为对外规范待主人定，不把代码现象视为新增产品决定 | 〔一手〕`packages/brain/brain-deepseek/src/session.ts:80`、`packages/brain/brain/src/session.ts:605`；handoff 待定 11 |
-| G1 已实现／G4 待补 | interrupted／failed 可带已知 usage；首次终止按回合幂等结算，缺失表示未知，usage.update 不累加消费。watchdogMs 只有声明，API 等待超时不是整轮看门狗；G4 作为③宿主前置，尚未实现 | 〔一手〕`packages/brain/brain/src/contract.ts:397`、`:487`、`packages/brain/brain/src/session.ts:473`、`:610`；handoff 决策 61 |
-| G2／G3 计划补 | 当前无会话级父 pending 生命周期，usage.update 无 childId；跨回合待答与实时子计量随⑤ Codex 补，字段与结算口径待独立设计 | 〔一手〕`packages/brain/brain/src/contract.ts:462`、`:487`、`packages/brain/brain/src/session.ts:529`；Codex 适配评估 §6 |
+| BrainSession／ManagedBrainSession | minds 持有 ManagedAgent，开关、回合互斥、待答、子观察、用量都由 AgentManager 方法承担；不保留第二个会话控制器 | 〔一手〕Paseo `agent/agent-manager.ts:415`；〔推理〕 |
+| brains.createSession／resumeSession／openChildTask | minds.createAgent／resumeAgentFromPersistence；子活经 create-agent/create + finish-subscriptions，完整 tasks 负责业务归属 | 〔一手〕同文件 `:1348`、`:1426`；〔推理〕 |
+| brains.get／listSessions／children | getAgent／listAgents + AgentDirectory 冷记录；原生孩子 listProviderSubagents／fetchProviderSubagentTimeline | 〔一手〕同文件 `:1088`、`:1283`、`:1315` |
+| brains.processes／onUsage | subprocess 的监管查询（minds 保存 processRefs）／minds 的 committed 流与 brain.usage.v1；usageSession 给账号报告上下文，不把 env 发给客户端 | 〔一手〕同文件 `:1278`；`packages/brain/brain/src/views.ts:123`；〔推理〕 |
+| brains 保留 | register、describe、list、probe、prepareConfigDir、blobs，以及提供方目录快照／配置解析；register 返回释放函数，撤提供方时经 minds 停其会话 | 〔一手〕`packages/brain/brain/src/index.ts:235`；〔推理〕 |
 
-本节是现有契约摘要；G1 的异常终止用量已纳入上方类型，下列计划接口与 G2–G4 字段不混入上方已有类型。外部 CLI 空壳子配置、Key 与同 CLI 多提供方按 `01-agent-cli.md` §4.6／§4.10；credential-ref 已定为采用底座引用，具体 provider 配置接线仍计划；问题补充文字标志与 ephemeral 逐会话入口不冒充现有 schema。依据：〔一手〕handoff 决策 57–61、任务书 03；`packages/brain/brain/src/contract.ts:149`。
+#### 合并配置：逐字段处置
 
-有效绑定由 roster 的大脑配置给出：每个成员 × 会话种类（想事可按立场 / 出主意分）一份 `{ impl, model?, fallback: impl[] }`，实例会话与活一样可任选提供方、默认 deepseek CLI（决策 43、46），由 minds 读出后传给 brains；适配器配置只放适配器级参数。搭第二层前，由调用方直接给归属、人设、预算、收尾工具等配置；最小 direct minds、逐条 JSON、跨重启恢复与孤儿对账在③实现；完整 context/toolport/tasks/guard/journal 在第二层阶段实现，当前服务在内存登记并发出 `brain.*.v1` Cordis 事件。依据：〔一手〕主人推进决定（handoff 决策 47）；〔一手〕develop 源码 `packages/brain/brain/src/index.ts`、`packages/bundle/brain-cli/src/index.ts`。
+在 brain-shared 的 `agent-types.ts` 扩展配置的公开出口；`@liwa/brain/src/contract.ts` 的 `SessionConfigSchema` 是唯一校验和类型真相，`SessionConfig = z.infer<typeof SessionConfigSchema>`，`AgentSessionConfig` 是该类型的 type-only re-export，不再手写第二份接口。`agent-sdk-types.ts` 当前还有一份配置接口，D′ 同时删掉并引用这个出口。类型依赖不能引入运行时环；brain 的 zod 不运行时 import brain-shared。可选字段的有效默认只在开会话的 resolve 步骤补齐；灵鲸受管会话的 member/owner/persona/预算等即便边界可选，缺少业务必需值也必须在创建前拒绝。〔一手〕`packages/brain/brain/src/contract.ts:174`、`packages/brain/brain-shared/src/paseo/protocol/agent-types.ts:514`、`packages/brain/brain-shared/src/paseo/agent/agent-sdk-types.ts:598`；〔推理〕F4 落实。
+
+| 字段 | 来源 | 处置 | 理由／约束 |
+| --- | --- | --- | --- |
+| provider: string | Paseo | 留 Paseo 名；解析为 ImplId | 唯一提供方身份，与 impl 同值 |
+| cwd: string | 两边 | 合并，必填 | 唯一工作目录；存在性在最早可判定点检查 |
+| model?: string | 两边 | 合并，留 Paseo 名 | 省略采用提供方默认，不写占位模型 |
+| modeId?: string | 两边 | 合并，留 Paseo 名 | 不是权限自动回答开关 |
+| thinkingOptionId?: string | Paseo；灵鲸 thinking | 合并只留 thinkingOptionId，删除 thinking | --thinking 在 CLI 边界写入它 |
+| mcpServers?: Record<string,McpServerConfig> | 两边 | 合并，留 Paseo 类型 | McpServerSchema 对齐 stdio{command,args?,env?,alwaysLoad?}／http、sse{url,headers?,alwaysLoad?}；liwa 保留 |
+| systemPrompt?: string | Paseo | 留，作为提供方生成的一份最终注入文本 | 灵鲸 persona/rules/instructions 按 01 §4.7 拼成一份；有 persona 时拒绝再给一个独立 systemPrompt，AgentManager.appendSystemPrompt／daemonAppendSystemPrompt 删除，避免双注入 |
+| toolPolicy?: {preapproved: McpToolRef[]} | Paseo | 留 | 只管 MCP 预授权引用，不代表工具全集或原生沙箱 |
+| nativeToolPolicy?: 'none'或'readonly'或'worktree' | 灵鲸 | 留为可选 | 管提供方原生工具范围，与 toolPolicy 不同；执行点同时兑现两者 |
+| title?: string或null | Paseo | 留 | 展示元数据，非身份 |
+| labels?: Record<string,string> | Manager CreateAgentOptions | 纳入合并配置并在唯一创建入口取出 | 当前两份 AgentSessionConfig 都无此字段；父标签改 liwa. 前缀，不搬 tab 标签 |
+| providerOptions?: ProviderOptions | Paseo | 留 | 仍经提供方配置 schema，不允许任意 JSON 绕开空壳策略 |
+| featureValues?: Record<string,JsonValue> | Paseo | 留 | 生命周期接口保留，Claude fast mode/feature 接线不做 |
+| internal?: boolean | Paseo | 留 | 仅内部调用允许，不给公共创建参数；helper 隐藏、不落公开登记 |
+| member?: MemberId | 灵鲸 | 留为可选 | 受管会话 resolve 后必须有成员归属 |
+| mindKind?: MindKind | 灵鲸 | 留为可选 | instance/work/think/own/tidy |
+| owner?: SessionOwner | 灵鲸 | 留为可选 | directId 或 instanceId 或 taskId 加 gen；gen 正整数 |
+| persona?: {stable:string;notes:string;version:string} | 灵鲸 | 留为可选 | stable 十段在前、notes 最后；每次新建／续接重新注入 |
+| dataDir?: string | 灵鲸 | 留为可选 | 提供方本代材料定位，不等于逻辑 JSONL 日志目录 |
+| kernelTools?: KernelTools | 灵鲸 | 留为可选 | endpoint+token+tools 或 native+token，令牌不持久 |
+| env?: Record<string,string> | 灵鲸 | 留为可选 | 会话非秘密覆盖，不能覆盖提供方拥有的认证／隔离变量 |
+| limits?: {maxInferencesPerTurn:number;maxToolCallsPerTurn:number;watchdogMs:number;hardLimitMs?:number} | 灵鲸 | 留为可选，硬线增量 | 正整数；G4 计时归 minds，能力不支持硬次数就拒绝明确硬要求 |
+| concludeOn?: string[] | 灵鲸 | 留为可选 | 非空；只以成功工具调用收尾 |
+| permission?: {mode:'kernel'或'provider';autoAllow:string[]} | 灵鲸 | 留为可选 | 不开放父 agent 代批 |
+| compaction?: 'off'或'provider' | 灵鲸 | 留为可选 | always_on 提供方不能兑现 off |
+| configDir?: string | 灵鲸 | 留为可选 | prepareConfigDir 产物，不接受借用个人 home |
+| rules?: string | 灵鲸 | 留为可选 | 规矩内容，拼接顺序见 01 §4.7 |
+| skillsDir?: string | 灵鲸 | 留为可选 | 已物化的本事根 |
+| projectDocs?: boolean | 灵鲸 | 留为可选 | 只受控读正文，不开 CLI 项目配置源 |
+| childPolicy?: {native:boolean;maxDepth:number;maxConcurrent:number;crossCli:ImplId[]} | 灵鲸 | 留为可选 | 原生孩子只 work；深度／并发非负 |
+| resume?: {identityProbe:boolean} | 灵鲸 | 留为可选 | 身份校验策略，不冒充原生续接句柄 |
+| plugins?: string[] | 灵鲸 | 留为可选 | 本地插件目录，Meta 不支持则拒绝 |
+| hooks?: Hooks | 灵鲸 | 留为可选 | settings 的 command 钩子形状，未知事件拒绝 |
+| instructions?: string | 灵鲸 | 留为可选 | agents.yml 选出的指令与对话片段，不与 systemPrompt 双注入 |
+| skills?: string[] | 灵鲸增量 | 加为可选 | 显式本事目录列表，经同一个 materialize 路径合成 skillsDir；当前 schema 没有该字段，不写成已实现 |
+
+表的来源：〔一手〕`packages/brain/brain/src/contract.ts:174`、`packages/brain/brain-shared/src/paseo/protocol/agent-types.ts:514`、Paseo `agent/agent-manager.ts:317`；处置为主人工作记录 20 C2 与〔推理〕字段归并。工具 schema 归 §8，配置文件与四级作用域只在 [03-agent-config.md](03-agent-config.md) 定义。
+
+```ts
+type SessionOwner = { directId: DirectId; gen: number }
+  | { instanceId: InstanceId; gen: number } | { taskId: TaskId; gen: number };
+type Usage = {
+  tokens?: { input: number; output: number; cacheRead?: number; cacheWrite?: number };
+  context?: { used: number; max: number };
+  quotaWindows?: { id: string; usedPercent: number; resetsAt?: string; windowMinutes?: number }[];
+  balances?: { id: string; used?: number; remaining?: number; limit?: number;
+    unit: 'usd' | 'credits' | 'requests' | 'tokens'; resetsAt?: string }[];
+  inferences?: number; providerReportedCostUsd?: number;
+};
+type SafePersistenceHandle = { provider: ImplId; sessionId: string; nativeHandle?: string;
+  metadata?: Record<string, JsonValue>; home?: string; createdAt?: string };
+```
+
+不透明跨边界 id 使用品牌类型，不用裸 string 拼接身份；gen 与预算正整数，深度／并发非负。PermissionQuestion 按问题号保留 options/multiSelect，PermissionAnswer 为 `{selected:string[],custom?:string}`；不能编码的答案以 invalid_input 拒绝并保留 pending。模型条目／权限的 childId 与开子时父 turn 归属保持，不能借后来的父回合；G3 尚缺 usage.update.childId 的实际接线。〔一手〕`packages/brain/brain/src/contract.ts:94`、`:302`、`:378`；〔推理〕冻结字段。
+
+#### 事件翻译与用量
+
+事件翻译拆成 brain-shared 的纯 reducer `translateAgentEvent(state, event, context): { state, events: BrainEvent[], attention? }`；state 显式包含条目、权限、父子归属和已终止回合，context 给已分配 id／provider，不在纯函数内取时钟、随机或改 Session。minds 分发器保留原 AgentStreamEvent 到日志，再消费 reducer 结果；持久层按原事件重放，经历流按 BrainEvent 投影，只有一个 writer。〔一手〕`packages/brain/brain-shared/src/session.ts:610`；〔推理〕拆纯函数保持现有有状态语义。
+
+| Paseo AgentStreamEvent.type | 灵鲸输出／处理 | 约束 |
+| --- | --- | --- |
+| turn_started | turn.started | 缺 turnId 时先在分发层分配，不能重放再造新号 |
+| turn_completed | turn.completed | usage 必填，未知为缺项；按 turn 幂等结算 |
+| turn_canceled | turn.interrupted | 保留 reason 与已知 usage |
+| turn_failed | turn.failed；无 active turn 的进程退出为 session.exited | 保留 code/diagnostic，失败不吞已知消费 |
+| timeline.user_message | 不另发 BrainEvent；保留 timeline-row | 用户输入回声不能再次投递 |
+| timeline.assistant_message | item.message | delta/final，晚到父旧回合条目不串新轮 |
+| timeline.reasoning | item.reasoning | 条目归属与 childId 保持 |
+| timeline.tool_call | item.tool_call.started／completed | 完成／失败／取消均收尾，保留 detail 与 batch |
+| timeline.compaction | session.compacted | 保留已知 preTokens；不编 postTokens |
+| timeline.todo／error／notification／plugin | 保留 timeline-row；无同义 BrainEvent 时不伪造 | 原生细节可从日志读回 |
+| permission_requested | permission.request | actions → options，问题／答案保持结构，子请求直推主人 |
+| permission_resolved | permission.resolved | 只在应用确认后收 pending |
+| usage_updated | usage.update | 是快照，不能盲目累加消费 |
+| provider_subagent | child.started／child.ended 和带 childId 的条目／权限 | 子 agent 会话级，父 terminal 不截断子输出 |
+| mode_changed | session.mode_changed | 状态去重 |
+| model_changed | session.model_changed | 保留实际模型，不猜默认 |
+| thread_started | 不发 BrainEvent；刷新 persistence 与 agent-state | 当前翻译丢弃，冻结契约要求无秘密句柄及时持久 |
+| thinking_option_changed | session.thinking_changed | 当前翻译丢弃，冻结契约要求保留 string/null 档位 |
+| attention_required | minds.agent.attention.v1 + minds/agent-state 的 attention | 当前翻译丢弃，冻结契约要求保留 finished/error/permission |
+
+依据：〔一手〕`packages/brain/brain-shared/src/session.ts:610`、`:688`、`packages/brain/brain-shared/src/paseo/agent/agent-sdk-types.ts:351`、`:469`。`process.exited` 是 subprocess 事实，由 minds 的受管上下文发出，不由提供方冒报。
+
+Claude 用量采用“帧账 + 累计账对账”：assistant message id 去重、逐计数取最大；有 result 且累计差各项不小于帧账时用累计差，否则用帧账；没有 result 也结算已观测帧。`num_turns` 截断时可能多 1，推理次数只数主线程真实 assistant 响应，不数 synthetic/error 帧。续接同一原生 UUID，metadata 带 token／成本基线；没有基线的首个 result 只定基线，累计倒退不能算负消费；后台子消费进入下一结算回合，child 分项不再加到已含它的父总量。`providerReportedCostUsd` 仅供诊断，第三方端点不按 CLI 的 Anthropic 估价记真实花费；context／quota／余额均不是消费。G1 的 interrupted/failed 已知 usage 进入 AgentManager.lastUsage，同时保留逐 turn 的终止幂等结算，不能把 lastUsage 当累计账。〔一手〕`packages/brain/brain-claude-code/src/usage.ts:1`、`:91`、`:131`、`:202`、`src/session.ts:87`；主人工作记录 16、19；Paseo `agent/agent-manager.ts:4675`、`:4827`。
+
+D′ 直通 AgentSession 时，`AgentUsage` 在原定义增加可选 `cacheWriteTokens`、`inferences`、`quotaWindows`、`balances`，分别对应 Usage 的 cacheWrite、主线程推理次数、额度与余额；沿已有 inputTokens/cachedInputTokens/outputTokens/totalCostUsd/contextWindow* 字段一次映射，不能把已修的 Claude/G1 信息丢在旧包装里。只知道单边 token 时原生日志保留该边，翻成要求完整 input/output 的 tokens 对象前必须两项均已知，不以 0 补未知。提供方返回的 session.provider／事件 provider 与配置 provider 必须同为 String(impl)，不把原生 CLI 类别名当实例身份。〔一手〕`packages/brain/brain-shared/src/paseo/agent/agent-sdk-types.ts:220`、`packages/brain/brain-shared/src/session.ts:113`、`packages/brain/brain-claude-code/src/usage.ts:131`；〔推理〕接缝的无损字段补齐。
 
 #### 第 3 步公共接口增量（全部是计划，未实现）
 
-下表描述已定能力与责任，不是可复制的当前 TypeScript 类型。实际签名由契约／提供方／消费方同时实现；当前摘要保持上文类型，不提前把 direct 等字段并进去。④ Claude 使用现有会话 API 并补 G1；③以 G4 和 JSON 严格读取为前置；⑤补 G2/G3。〔一手〕handoff 决策 65、66；`packages/brain/brain/src/provider.ts:77`。
-
-| 计划接口面 | 计划输入／输出与保证 | 唯一归属／当前依据 |
+| 契约面 | 冻结责任与实施位置 | 依据 |
 | --- | --- | --- |
-| direct owner | SessionOwner 计划增加品牌 directId＋gen；稳定 agentId 与本代 BrainSessionId／native id 分离 | minds 定登记，brains 接 owner；`packages/brain/brain/src/contract.ts:149`〔一手〕 |
-| 持久观察口 | 创建前安装 owner 持久 sink／有界开场缓冲；控制回执经过 durable 屏障；连接退出不撤会话 context | brains 定义、provider 生产、minds 消费；`packages/brain/brain/src/index.ts:491`〔一手〕 |
-| 句柄变化通知 | 可靠通知可恢复性与无秘密 ResumeHandle 的变化；初始化晚到 id、终止与关闭都能核对 | provider 上报、minds 持久；`packages/brain/brain/src/provider.ts:113`〔一手〕 |
-| 目录／诊断 | catalog、installed/version/config/auth 分项及来源时刻；默认不发模型请求，探测与运行同 executable | provider 能力／brains 注册、CLI 消费；`packages/brain/brain/src/provider.ts:60`〔一手〕 |
-| 出生／资源／范围 | 持久启动屏障、公开 birth/scope 标识、采样与 reconcile；terminate＋waitForExit 后才可称停稳 | subprocess 唯一实现；`packages/subprocess/subprocess/src/types.ts:169`〔一手〕 |
-| 活动／回收 | 后台孩子／终端摘要、unknown／否决原因；canStopRuntime 不明不得视为安全 | provider 观察、minds 决定回收；`packages/brain/brain/src/session.ts:751`〔一手〕 |
-| 原生清理 | 按本会话安全定位符删除原生材料并返回逐项结果；不删共享身份／凭据根 | provider 注册，minds 调度；`packages/brain/brain/src/provider.ts:145` 现仅 close〔一手〕 |
-| 配置／账号报告 | credential-ref、不可变会话 spec、安全值 prepare/commit；可选 accountUsage 无来源明确 unavailable | provider 解析，底座凭据服务持密钥；`packages/credentials/credentials/README.md:54`〔一手〕 |
-| G2/G3 扩展位置 | session-lifetime pending／follow-up、usage.update childId 与计量完整性；第三步存储消费预留，第五步公共层贯通 | 〔二手〕`docs/liwa/research/2026-11-05-codex-adaptation.md:340` |
-
-表中接口形状为〔推理〕，产品范围已确认。数据／生命周期只在 [02-minds.md](02-minds.md) §2.3–§2.7/§4.0 定义，提供方义务见 [01-agent-cli.md](01-agent-cli.md) §4.12；本机 RPC 的双向兼容规则见 [01-brain-host.md](01-brain-host.md) §3.2。公共层无 provider 名分支；新公开能力要定义、实现、消费三面齐全。
+| direct owner／持久观察 | SessionOwner 增 directId+gen，初始化前安装 minds 持久 sink，有界缓冲与 durable 回执；连接只拥有读者 | 〔一手〕`packages/brain/brain/src/index.ts:491`；〔推理〕 |
+| 续接通知／进程范围 | describePersistence 非 null 才可续；thread_started/状态变化及时持久；subprocess 单写出生屏障与 processRefs，waitForExit 才能宣称停稳 | 〔一手〕`packages/brain/brain/src/provider.ts:113`、`packages/subprocess/subprocess/src/types.ts:188`；〔推理〕 |
+| 原生清理／资源 | provider 提供精确材料定位与清理；subprocess 采样，不删共享身份根、cwd，不把 unknown 当零 | 〔二手〕Codex 评估 §7；〔推理〕 |
+| 配置／目录 | provider-snapshot-manager 等三件归 brains；Key 只在提供方实例 env，agent JSON／resume／日志去秘密；不默认接 credential-ref 或个人登录 | 〔一手〕`packages/brain/brain-claude-code/src/config.ts:18`；主人工作记录 15 |
+| G2／G3／G4 | minds 接会话级 pending、followUpPrompt 和子事件；G2/G3 的实际提供方补齐随⑤，G4 回合包装与 JSON 严格读在宿主开放前完成，详见 01 §4.11 | 〔一手〕handoff 决策 66、67；〔推理〕 |
 
 ### 5.2 `memory.engine`
 
@@ -406,6 +412,125 @@ export interface Journal extends JournalReader {                              //
 ```
 
 规则：`EVENT_TYPES` 第一版只有 contracts 能定义；journal 追加时校验，未知类型拒绝；载荷里不得复制信封字段；消费方按 `pos` 引用不复制载荷；系统流事件用 `AUDIENCE_OWNER = 0`；大脑事件的批号语义在 §5.1；事件载荷的破坏性变化走一次性迁移。**写入纪律**：能 `append` 的只有 required（经 `Services.journal`）和 kernel；builtin 只拿 `JournalReader`（类型与运行时都拒绝 `append`）；`source` 只由所有者模块构造，插件不能提交。
+
+### 6.1 minds 的持久会话事件与进程内信号（A′）
+
+第③步的 durable 事实直接由 `@liwa/minds` 声明合并进 `@liwa/session` 的 `SessionEventMap`，使用 `minds/` 前缀；进程内信号声明合并进 Cordis `Events`，使用 `minds.*.v1`。本节是计划，不是在当前构建里登记了这些词汇。实现时同时更新已知事件／运行时 codec／persistence catalog，必需事件不标 ignorable；JSONL 信封的 seq/time 仍由 Session 层管理。〔一手〕`packages/core/session/src/types.ts:287`、`packages/session/session-persistence/src/storage-contract.ts:74`、`packages/brain/brain/src/index.ts:48`；〔推理〕C4/C11。
+
+```ts
+type MindsEventScope = {
+  agentId: AgentId; gen: number; bootId: BootId;
+  operationId?: OperationId; turnId?: TurnId;
+};
+type DurableAgentStream = Exclude<AgentStreamEvent, { type: 'timeline' }>;
+type DeliveryState = 'pending' | 'handed' | 'consumed' | 'returned';
+declare module '@liwa/session' {
+  interface SessionEventMap {
+    /** 已提交的原生时间线行。
+     * @mode persist
+     * @param data - 归属、epoch 与完整 row。
+     */
+    'minds/timeline-row': MindsEventScope & { epoch: string; row: AgentTimelineRow };
+    /** 非 timeline 的原生流事实，包含 thread_started 与 attention_required。
+     * @mode persist
+     * @param data - 归属与完整原生事件；失败／取消可带已知 usage。
+     */
+    'minds/agent-stream': MindsEventScope & { event: DurableAgentStream };
+    /** 生命周期提交后的安全状态。
+     * @mode persist
+     * @param data - 归属、原因与不含秘密的完整 after 状态。
+     */
+    'minds/agent-state': MindsEventScope & { reason: string; after: SafeAgentState };
+    /** 投递消费与传输分别记事实。
+     * @mode persist
+     * @param data - 队列项、输入引用、消费状态与传输结果。
+     */
+    'minds/delivery': MindsEventScope & {
+      deliveryId: DeliveryId; owner: SessionOwner; eventIds: EventId[];
+      semantics: 'next_step' | 'next_turn' | 'cancel'; chain?: EventId;
+      sender: Principal; inputRef: ModelInputRef; wake: boolean;
+      state: DeliveryState; attempt: number; expectedGen?: number; expectedTurnId?: TurnId;
+      providerDispatch: 'queued' | 'dispatching' | 'accepted' | 'unknown' | 'cancelled';
+      reason?: string;
+    };
+    /** 一个稳定 agent 的运行时代次变化。
+     * @mode persist
+     * @param data - 旧／新代、原因和不含秘密的原生续接定位。
+     */
+    'minds/gen': MindsEventScope & {
+      previousGen: number | null; reason: 'create' | 'reload' | 'resume' | 'renew' | 'provider_switch';
+      sessionId: BrainSessionId; persistence: SafePersistenceHandle | null;
+    };
+    /** 时间线的更新或替换是追加事实，不改 JSONL 旧行。
+     * @mode persist
+     * @param data - 被替换的原 row.seq 或整份快照及新 epoch。
+     */
+    'minds/timeline-replacement': MindsEventScope & {
+      epoch: string; replacesSeq?: number; rows: AgentTimelineRow[];
+    };
+    /** 每次实际交给提供方的可重建输入。
+     * @mode persist
+     * @param data - 原文／blob、完整非秘密系统注入及工具 schema 的内容引用。
+     */
+    'minds/model-input': MindsEventScope & {
+      inputRef: ModelInputRef; systemPromptRef: ModelInputRef;
+      toolsRef: ModelInputRef; configRevision: string; deliveryIds: DeliveryId[];
+    };
+  }
+}
+```
+
+`SafeAgentState` 取 02 §2.3/§2.5 的 lifecycle/runtime/foreground/pending/attention/usage/persistence/processRefs 与 recordRevision/appliedLogSeq，不能直接序列化带 session、Map、函数的 ManagedAgent；`ModelInputRef` 为 `{ eventSeq: SessionLogOffset } | { blob: BlobRef }`，必须可从同一日志／其归属 blob 精确取回内容。图片、系统人设／规矩／instructions／项目正文、每轮前缀、送达原文、MCP 工具 schema、工具参数与结果、审批答复／follow-up 都必须入这些事件或被引用的内容；env 密钥与 Bearer 不属于模型内容，不能写入。只记文件路径、hash 或 token 数不足以重建输入。原生 CLI 内部追加的隐藏提示不由宿主猜测；提供方若不能导出那部分，E′/I′ 必须报告“宿主输入可重建、完整原生请求尚不可重建”的验收缺口，不能宣称仅靠 timeline 已满足所有模型请求回放。〔一手〕`docs/architecture.md:108`、`packages/brain/brain/src/contract.ts:174`；〔推理〕“模型可见 ⟺ 有日志”核对与实现门槛。
+
+minds 必须在 Manager 内对 mode/model/thinking 的原生状态抑制广播之前取得事件，不能只订阅其现有外层 agent_stream，否则这些状态变化丢失。provider_subagent 既可能经 `AgentStreamEvent`，也可能经 Manager 的独立 `provider_subagent` 事件，归一到一个提交入口，按原事件身份去重。〔一手〕Paseo `agent/agent-manager.ts:237`、`:4675`、`:4696`；〔推理〕。
+
+```ts
+declare module '@liwa/cordis' {
+  interface Context { minds: Minds; toolport: Toolport; structuredGeneration: StructuredGeneration; }
+  interface Events {
+    /** 开会话前依次加工配置；第一个监听器解析 agents.yml。
+     * @mode waterfall
+     * @param draft - 不含秘密快照的完整配置草案。
+     * @param opening - agentId/gen/bootId 与 create/resume 意图。
+     * @param next - 必须调用以交给下一监听器，最终返回校验后的配置。
+     */
+    'minds.agent.opening'(draft: AgentSessionConfig, opening: AgentOpening,
+      next: (draft: AgentSessionConfig) => Promise<AgentSessionConfig>): Promise<AgentSessionConfig>;
+    /** 已提交的原生流事实。
+     * @mode emit
+     * @param signal - 归属、durable seq 与 event。
+     */
+    'minds.agent.stream.v1'(signal: MindsEventScope & { seq: SessionLogOffset; event: AgentStreamEvent }): void;
+    /** 已提交的状态。
+     * @mode emit
+     * @param signal - 归属、durable seq 与安全 after 状态。
+     */
+    'minds.agent.state.v1'(signal: MindsEventScope & { seq: SessionLogOffset; after: SafeAgentState }): void;
+    /** 请求主人关注。
+     * @mode emit
+     * @param signal - 归属、durable seq 与原因。
+     */
+    'minds.agent.attention.v1'(signal: MindsEventScope & { seq: SessionLogOffset; reason: 'finished' | 'error' | 'permission' }): void;
+    /** 归档提交后通知。
+     * @mode emit
+     * @param signal - 归属、durable seq 与归档时间。
+     */
+    'minds.agent.archived.v1'(signal: MindsEventScope & { seq: SessionLogOffset; archivedAt: string }): void;
+  }
+}
+```
+
+`AgentOpening = { agentId: AgentId; gen:number; bootId:BootId; reason:'create'|'resume'|'reload'|'renew' }`。`resolveAgentConfig` 是 minds 安装的第一个 opening 监听器，先读全局／实例／目录／会话选择，后续插件顺序加工，最后在创建点用唯一 zod schema 与提供方策略校验；监听器必须 `return next(nextDraft)`，不得绕过后续链。实现采用本仓库 Cordis 的实际 waterfall 调用约定，不套描述符系统。〔一手〕`packages/brain/brain/src/agents-config/index.ts:145`、`docs/cordis-primer.md` waterfall 语义；〔推理〕冻结签名。
+
+| 事实 | JSONL | Cordis 信号 | 发布时点 |
+| --- | --- | --- | --- |
+| timeline、非 timeline stream | minds/timeline-row、minds/agent-stream | minds.agent.stream.v1 | 02 §2.6 committed cut 之后 |
+| state、attention、archived | minds/agent-state；attention 原生事实另在 agent-stream | minds.agent.state.v1、minds.agent.attention.v1、minds.agent.archived.v1 | 对应状态已 durable 后；一次提交派生多个信号，不重复追加同一状态 |
+| delivery、gen、model-input、timeline replacement | 对应 minds/* | 经 minds.subscribe 的 committed 订阅提供同一事件，无另造同义业务信号 | durable 后 |
+| opening／工具登记和释放／端点 ready | 不单独记录可重放配置加工过程；最终非秘密输入必须持久 | opening 瀑布；register/attachToolport 返回释放函数 | 打开前／effect 生命周期 |
+| 逐字临时片段／连接进度 | 不把未提交片段当事实，最终完整条目仍持久 | 单独 transient 订阅，不带 committed seq | 只供 UI，不推进 cursor |
+
+依据：〔一手〕`packages/brain/brain/src/index.ts:48`、`packages/core/session/src/types.ts:287`；〔推理〕C4/C11 的持久／信号分工。后续完整 journal 承接按 owner 单次转交 writer，不长期双写两本权威事件。
 
 ## 7 账本 API（`ledgers/`）
 

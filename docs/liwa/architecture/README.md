@@ -15,8 +15,10 @@
 | `modules/00-contracts.md` 协议规范 | 已确认（2026-10-29） |
 | `modules/00-commands.md` 标准终端命令的插件化机制 | 已确认（2026-10-29，决策 35） |
 | `../engineering.md` 工程约定与仓库结构 | 已确认（2026-10-29） |
-| `modules/01-agent-cli.md` agent CLI 接入（大脑插件） | 已确认；第 1 步公共层已在 dev `fbb36685` 实现（契约、ctx.brains、Paseo 共享代码、契约测试与 brain 命令），其余按公共层 → deepseek CLI → 常驻会话与终端命令 → Claude → Codex 推进〔一手：dev 分支 `packages/brain/brain/src/index.ts`、`packages/bundle/brain-cli/src/startup.ts`；主人决定见 `../handoff.md` 决策 48、54〕 |
-| `modules/02-minds.md` 用脑调度 | 按实例模型重写（2026-11-02），待主人确认 |
+| `modules/01-agent-cli.md` agent CLI 接入（大脑插件） | ④ Claude/G1 已提交 `13a66153` 待合回；提供方接缝／包划分／Paseo 迁移地图按决策 67 A′ 冻结 |
+| `modules/01-brain-host.md` 常驻宿主与终端命令 | ③按 A′–I′ 搬运融合并装配，G4／严格 per-record 读取为宿主开放前置，后接⑤ Codex |
+| `modules/02-minds.md` 用脑调度 | 最小 direct 基于 Paseo AgentManager + 灵鲸增量，A′ 契约冻结；完整实例／活上下文仍按第二层推进 |
+| `modules/03-agent-config.md` agent 配置 | 全局集／实例／目录／对话四级文件规范与 Claude 映射已有实现，roster 配置事件／页面后续接入 |
 | `modules/03-foundation.md` 基础与守护 | 待写 |
 | `modules/04-life-core.md` 生命内核 | 待写 |
 | `modules/05-memory.md` 记忆系统 | 已确认（2026-10-28） |
