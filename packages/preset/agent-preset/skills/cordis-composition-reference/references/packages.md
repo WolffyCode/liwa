@@ -47,6 +47,12 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@liwa/brain-acp` | yes | Generic Agent Client Protocol brain provider: Paseo's ACP client (moved to ACP SDK 1.4) registered into ctx.brains, with Paseo's vendor shims as configuration |
 | `@liwa/brain-claude-code` | yes | Claude Code CLI brain provider with isolated member configuration, Paseo-style plaintext env per instance, managed SDK processes, structured approvals and cumulative usage accounting |
 | `@liwa/brain-deepseek` | yes | The deepseek brain provider: Liwa's own agent as a per-session `liwa --profile deepseek` CLI process, driven over ACP with the _liwa extension and registered into ctx.brains |
+| `@liwa/minds` | yes | minds plugin scaffold with copied Paseo agent code and explicit injection seams; business wiring is deferred to C–G |
+| `@liwa/minds-idle-cleanup` | yes | minds-idle-cleanup plugin scaffold with copied Paseo agent code and explicit injection seams; business wiring is deferred to C–G |
+| `@liwa/minds-restart-recovery` | yes | minds-restart-recovery plugin scaffold with copied Paseo agent code and explicit injection seams; business wiring is deferred to C–G |
+| `@liwa/minds-structured-generation` | yes | minds-structured-generation plugin scaffold with copied Paseo agent code and explicit injection seams; business wiring is deferred to C–G |
+| `@liwa/toolport` | yes | toolport plugin scaffold with copied Paseo agent code and explicit injection seams; business wiring is deferred to C–G |
+| `@liwa/toolport-minds` | yes | toolport-minds plugin scaffold with copied Paseo agent code and explicit injection seams; business wiring is deferred to C–G |
 
 ## browser-use
 

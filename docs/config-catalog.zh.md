@@ -2523,6 +2523,58 @@ export interface ReconnectConfig {
 ```
 <!-- END GENERATED config-catalog:@liwa/mcp-client -->
 
+<!-- BEGIN GENERATED config-catalog:@liwa/minds -->
+<a id="liwaminds"></a>
+
+## `@liwa/minds`
+
+- `source`: [`packages/brain/minds/src/index.ts:37`](../packages/brain/minds/src/index.ts)
+
+```ts config-catalog
+/** 通过校验的部署配置。 */
+export type Config = ReturnType<typeof Config>
+```
+<!-- END GENERATED config-catalog:@liwa/minds -->
+
+<!-- BEGIN GENERATED config-catalog:@liwa/minds-idle-cleanup -->
+<a id="liwaminds-idle-cleanup"></a>
+
+## `@liwa/minds-idle-cleanup`
+
+- `source`: [`packages/brain/minds-idle-cleanup/src/index.ts:15`](../packages/brain/minds-idle-cleanup/src/index.ts)
+
+```ts config-catalog
+/** 通过校验的部署配置。 */
+export type Config = ReturnType<typeof Config>
+```
+<!-- END GENERATED config-catalog:@liwa/minds-idle-cleanup -->
+
+<!-- BEGIN GENERATED config-catalog:@liwa/minds-restart-recovery -->
+<a id="liwaminds-restart-recovery"></a>
+
+## `@liwa/minds-restart-recovery`
+
+- `source`: [`packages/brain/minds-restart-recovery/src/index.ts:14`](../packages/brain/minds-restart-recovery/src/index.ts)
+
+```ts config-catalog
+/** 通过校验的部署配置。 */
+export type Config = ReturnType<typeof Config>
+```
+<!-- END GENERATED config-catalog:@liwa/minds-restart-recovery -->
+
+<!-- BEGIN GENERATED config-catalog:@liwa/minds-structured-generation -->
+<a id="liwaminds-structured-generation"></a>
+
+## `@liwa/minds-structured-generation`
+
+- `source`: [`packages/brain/minds-structured-generation/src/index.ts:13`](../packages/brain/minds-structured-generation/src/index.ts)
+
+```ts config-catalog
+/** 通过校验的部署配置。 */
+export type Config = ReturnType<typeof Config>
+```
+<!-- END GENERATED config-catalog:@liwa/minds-structured-generation -->
+
 <!-- BEGIN GENERATED config-catalog:@liwa/office-to-pdf -->
 <a id="liwaoffice-to-pdf"></a>
 
@@ -4455,6 +4507,33 @@ export interface Config {
 }
 ```
 <!-- END GENERATED config-catalog:@liwa/tool-workspace-dependencies -->
+
+<!-- BEGIN GENERATED config-catalog:@liwa/toolport -->
+<a id="liwatoolport"></a>
+
+## `@liwa/toolport`
+
+- `source`: [`packages/brain/toolport/src/index.ts:16`](../packages/brain/toolport/src/index.ts)
+
+```ts config-catalog
+/** 通过校验的部署配置。 */
+export type Config = ReturnType<typeof Config>
+```
+<!-- END GENERATED config-catalog:@liwa/toolport -->
+
+<!-- BEGIN GENERATED config-catalog:@liwa/toolport-minds -->
+<a id="liwatoolport-minds"></a>
+
+## `@liwa/toolport-minds`
+
+- `refs`: `z` (`zod`)
+- `source`: [`packages/brain/toolport-minds/src/index.ts:13`](../packages/brain/toolport-minds/src/index.ts)
+
+```ts config-catalog
+/** 通过校验的部署配置。 */
+export type Config = z.infer<typeof Config>
+```
+<!-- END GENERATED config-catalog:@liwa/toolport-minds -->
 
 <!-- BEGIN GENERATED config-catalog:@liwa/typert-loader -->
 <a id="liwatypert-loader"></a>

@@ -1,0 +1,43 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/brain/minds-structured-generation/README.md
+/:
+  en: e53eb64901dafdc9
+  zh: 1f3086a86b004a48
+/liwa-minds-structured-generation:
+  en: 6487a9b08511d794
+  zh: 1fa9c60b56c3dc19
+/liwa-minds-structured-generation/summary:
+  en: aae7aedab2da929a
+  zh: 1257df57863b39cb
+/liwa-minds-structured-generation/table-of-contents:
+  en: 2fee9973f19f9401
+  zh: 57488629c9a54c40
+/liwa-minds-structured-generation/use-this-package:
+  en: 4ab99d0681c6bf63
+  zh: 6d7a307dfd312492
+/liwa-minds-structured-generation/understand-the-implementation:
+  en: f3afd2e41b39ddb8
+  zh: f9fb59539b295438
+/liwa-minds-structured-generation/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/liwa-minds-structured-generation/model-experience/b:
+  en: 0d441d2b529df300
+  zh: 0d441d2b529df300
+/liwa-minds-structured-generation/model-experience/b/what-the-model-sees:
+  en: 0070eac2e16bf181
+  zh: 4b3c3e07d9161f1b
+/liwa-minds-structured-generation/model-experience/b/token-effect:
+  en: e6e5c934916daa16
+  zh: aa1ea48250f1532e
+/liwa-minds-structured-generation/model-experience/b/kv-cache-effect:
+  en: 279c7d99ed302616
+  zh: 642e6c5df931ebb5
+/liwa-minds-structured-generation/known-limitations-and-deferred-work:
+  en: db1834058217cf2c
+  zh: 70c426be98566a6c
+/liwa-minds-structured-generation/known-limitations-and-deferred-work/dev-note:
+  en: 09742b88dd08a1e1
+  zh: 264c98ba40a01c0c

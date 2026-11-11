@@ -74,7 +74,7 @@ Cordis 事件固定使用点号与版本名：`brain.session.opened.v1`、`brain
 
 ### 3.2 `ctx.brains` 服务（`@liwa/brain`，提供方表）
 
-A′ 冻结后 brains 只拥有提供方登记、probe、prepareConfigDir、blobs 与提供方目录三件；minds 持有 ManagedAgent/AgentManager。createSession → createAgent；resumeSession → resumeAgentFromPersistence；openChildTask → create-agent/create + finish-subscriptions；listSessions/get → listAgents/getAgent 与 AgentDirectory；children → listProviderSubagents；processes → subprocess 台账查询，minds 只存 processRefs；onUsage → minds 已提交事件分发并继续发 brain.usage.v1。调用方不再拿 ManagedBrainSession 建第二套回合／pending 状态机。〔一手〕Paseo `agent/agent-manager.ts:1088`、`:1278`、`:1348`、`:1426`；〔推理〕C1。
+brains 只拥有提供方登记、probe、prepareConfigDir、blobs；minds 持有 ManagedAgent/AgentManager 与提供方目录三件，负责模型／模式目录缓存、诊断与默认模型。createSession → createAgent；resumeSession → resumeAgentFromPersistence；openChildTask → create-agent/create + finish-subscriptions；listSessions/get → listAgents/getAgent 与 AgentDirectory；children → listProviderSubagents；processes → subprocess 台账查询，minds 只存 processRefs；onUsage → minds 已提交事件分发并继续发 brain.usage.v1。调用方不再拿 ManagedBrainSession 建第二套回合／pending 状态机。〔一手〕Paseo `agent/agent-manager.ts:1088`、`:1278`、`:1348`、`:1426`；〔推理〕C1。
 
 prepareConfigDir(member,impl,spec) 返回成员 brains 根，只分发提供方 writeMemberConfig；per-session/per-member 布局与受管进程／blob 入口保留。提供方配置错误在唯一 resolve/create 执行点拒绝；权限问题保持结构、子请求直推主人，能力不支持的组合不静默降级。H′ 之前 brain-cli 保持当前一次性运行，H′ 改走 minds；本节不把计划服务形状写成当前发布 API。〔一手〕`packages/brain/brain/src/config-dir/shared.ts:12`、`packages/bundle/brain-cli/src/startup.ts:81`；〔推理〕。
 
@@ -177,7 +177,7 @@ Paseo ACP 客户端、GenericACPAgentClient 与五个厂商 shim 已迁入 brain
 | 清理 | 父会话 `cancel(pause \| drain \| owner)` 先停子 agent 再停主回合；`cancel(preempt \| watchdog)` 只停主回合；hard_limit 的统一子清理策略待定（deepseek 当前只停父）；`close` 杀整个进程组；父活 `manage(stop)` 一并停；未收到 `child.ended` 的在 `session.closed` 时补记 `ended{ stopReason: 'aborted' }` | 父活结束时 tasks 级联 `manage(stop)` 子活；孤儿由 brains 的 `brain_child` 对账 |
 | 不做 | — | Paseo 的 CLI 路（活的 shell 里起别的 agent）：绕开令牌与权限链，不开放 |
 
-她看到的 MCP 服务器名为 `liwa`，工具词汇以 overall.md §5.2 为唯一来源；Paseo 处理器代码与测试里的原名不改。`@liwa/tool-minds/src/catalog.ts` 做模块边界的接口适配并经 `ctx.toolport.register` 登记，不是一层保留旧接口的兼容机制。〔一手〕主人工作记录 20 C6；〔推理〕接线。
+她看到的 MCP 服务器名为 `liwa`，工具词汇以 overall.md §5.2 为唯一来源；Paseo 处理器代码与测试里的原名不改。`@liwa/toolport-minds/src/catalog.ts` 做模块边界的接口适配并经 `ctx.toolport.register` 登记，不是一层保留旧接口的兼容机制。〔一手〕主人工作记录 20 C6；〔推理〕接线。
 
 | 灵鲸工具／变体 | 搬来的 Paseo 处理器 | 暴露范围 |
 | --- | --- | --- |
@@ -226,18 +226,18 @@ CLI 自带的全局与项目配置、钩子、本事、插件一律不加载；�
 
 ### 4.9 包划分与进程模型
 
-本表是决策 67 的计划包边界，B′ 才建包。服务定义必须是 Cordis `Service` 类；提供方实现能力，消费方经公开 API 使用它；可替换策略各自一个插件行，不能由 minds 构造函数一口气 new 成不可关的大包。所有登记跟随 effect；拷入文件逐个记 NOTICE，`src/paseo/` 用独立 `tsconfig.paseo.json`，灵鲸自写源码保持严格检查。〔一手〕`docs/glossary.md:9`、`packages/brain/brain-shared/NOTICE:16`；主人工作记录 19 §2.7、20 C11。
+本表是决策 67 的计划包边界，B′ 才建包。服务定义必须是 Cordis `Service` 类；提供方实现能力，消费方经公开 API 使用它；可替换策略各自一个插件行，不能由 minds 构造函数一口气 new 成不可关的大包。所有登记跟随 effect；拷入文件逐个记 NOTICE，`tsconfig.paseo.json` 编译 `src/paseo/`；minds 与 toolport 另将迁入源码直接引用的纯类型 `src/seams/` 列为输入，主项目仍独立严格检查这些接口。其余灵鲸自写源码保持主项目的严格检查。〔一手〕`docs/glossary.md:9`、`packages/brain/brain-shared/NOTICE:16`；主人工作记录 19 §2.7、20 C11。
 
 | 包／seam 角色 | 搬来的文件（省略 agent/ 与 .ts） | 灵鲸文件／inject |
 | --- | --- | --- |
-| `@liwa/minds`，`packages/brain/minds`；会话运行服务定义 + 实现 | `src/paseo/agent/`：agent-manager、agent-run-state、agent-stream-coalescer、agent-projections、agent-loading、agent-archive、agent-storage（schema/接口）、agent-owner、agent-prompt、lifecycle-command、permission-response、directory、create-agent/{create,intent}、create-agent-title、finish-subscriptions 全组、agent-messages 全组、rewind/rewind、stale-provider-session-error、prompt-attachments、activity-curator、timeline-prompt-index、host-operations/index（只本机）；另迁 server/persistence-hooks 与 client-message-id 到保留相对层级的位置 | `src/index.ts`（Service、Config、minds.*.v1）、storage.ts、timeline.ts、delivery.ts、gen.ts；inject brains、storageDomain、sessionPersistence、sessionProjections、subprocess；不 inject toolport |
-| `@liwa/toolport`，`packages/brain/toolport`；内核工具登记服务定义 + MCP 端点提供方 | `src/paseo/agent/{mcp-server,mcp-shared,tools/types,tools/paseo-tool-serialization,paseo-tool-policy}.ts` | `src/index.ts`（路由、Bearer/代次）、registry.ts；inject minds、底座 webserver；ready 时向 minds.attachToolport 登记能力 |
-| `@liwa/tool-minds`，`packages/brain/tool-minds`；工具消费方／toolport 贡献提供方 | `src/paseo/agent/tools/paseo-tools.ts` 的 agent 工具处理器组，保留内部 Paseo 名 | `src/catalog.ts`（spawn/look/answer/manage 参数 → 处理器）、index.ts；inject minds、brains、toolport；向 toolport.register 登记 |
+| `@liwa/minds`，`packages/brain/minds`；会话运行服务定义 + 实现 | `src/paseo/agent/`：agent-manager、agent-run-state、agent-stream-coalescer、agent-projections、agent-loading、agent-archive、agent-storage（schema/接口）、agent-owner、agent-prompt、lifecycle-command、permission-response、directory、create-agent/{create,intent}、create-agent-title、finish-subscriptions 全组、agent-messages 全组、rewind/rewind、stale-provider-session-error、prompt-attachments、activity-curator、timeline-prompt-index、host-operations/index（只本机）、provider-snapshot-manager、mutable-provider-config-owner、agent-configuration-validator、mcp-shared；另迁 server/persistence-hooks、client-message-id、path-utils、atomic-file、json-utils 与 daemon-config-store 的配置纯函数摘录到保留相对层级的位置 | `src/index.ts`（Service、Config、minds.*.v1）、storage.ts、timeline.ts、delivery.ts、gen.ts；inject brains、storageDomain、sessionPersistence、sessionProjections、subprocess；不 inject toolport |
+| `@liwa/toolport`，`packages/brain/toolport`；内核工具登记服务定义 + MCP 端点提供方 | `src/paseo/agent/{mcp-server,tools/paseo-tool-serialization}.ts` | `src/index.ts`（路由、Bearer/代次）、registry.ts；inject minds、底座 webserver；ready 时向 minds.attachToolport 登记能力 |
+| `@liwa/toolport-minds`，`packages/brain/toolport-minds`；工具消费方／toolport 贡献提供方 | `src/paseo/agent/tools/paseo-tools.ts` 的 agent 工具处理器组，保留内部 Paseo 名 | `src/catalog.ts`（spawn/look/answer/manage 参数 → 处理器）、index.ts；inject minds、brains、toolport；向 toolport.register 登记 |
 | `@liwa/minds-restart-recovery`，`packages/brain/minds-restart-recovery`；可替换恢复策略消费方 | `src/paseo/agent/restart-recovery/index.ts` | src/index.ts；inject minds、storageDomain；只经 minds 的存储业务 API，不另 open 同名 domain |
 | `@liwa/minds-idle-cleanup`，`packages/brain/minds-idle-cleanup`；可替换回收策略消费方 | `src/paseo/agent/idle-runtime-cleanup/index.ts` | src/index.ts；inject minds；候选与 close admission 仍归 Manager |
 | `@liwa/minds-structured-generation`，`packages/brain/minds-structured-generation`；结构化生成服务定义 + 能力提供方，消费 minds/brains | `src/paseo/agent/{agent-response-loop,structured-generation-providers}.ts` | src/index.ts；独立 `ctx.structuredGeneration`，inject minds、brains；调用方为 output-schema 命令／后续整理活 |
-| `@liwa/brain`，现有提供方服务定义／登记表 | 加 `src/paseo/agent/{provider-snapshot-manager,mutable-provider-config-owner,agent-configuration-validator}.ts`；provider-registry/provider-runtime 不搬 | index.ts 登记表产生 clients/providerDefinitions 快照，撤登记触发 minds 停对应会话；agents-config、probe、prepareConfigDir、blobs 留此包；inject subprocess |
-| `@liwa/brain-shared`；共享库 | 已搬类型、timeline projection/store/types、provider-subagents、runtime MCP；新增协议子集见附录 A | 事件纯 reducer、turn-input、logger；不登记服务 |
+| `@liwa/brain`，现有提供方服务定义／登记表 | B′ 不动；D′ 产出提供方表快照给 minds；provider-registry/provider-runtime 不搬 | index.ts 登记表产生 clients/providerDefinitions 快照，撤登记触发 minds 停对应会话；agents-config、probe、prepareConfigDir、blobs 留此包；inject subprocess |
+| `@liwa/brain-shared`；共享库 | 已搬类型、timeline projection/store/types、provider-subagents、runtime MCP；新增 agent/tools/types、agent/paseo-tool-policy 与协议子集见附录 A | 事件纯 reducer、turn-input、logger；不登记服务 |
 | `@liwa/brain-cli` 与 brain-host bundle；装配／命令消费方 | 不搬 Paseo daemon 壳 | H′ 才把 run 改走 minds；此前保持一次性 run；宿主装配草案见 01-brain-host §4.1 |
 | brain-acp／brain-deepseek／brain-claude-code／brain-codex | 各自提供方 src/paseo；共用类型只引 brain-shared | 提供 BrainProvider；testkit 同契约；deepseek-app 每会话一个独立进程 |
 
@@ -245,13 +245,13 @@ host-operations 是19草稿 §1.1 要搬而 §2.7 包表漏列的文件，归 mi
 
 | 包 | Config 字段草案（实现时由 schemastery 校验并显式 resolve） |
 | --- | --- |
-| minds | `storageRoot`：与 json.root 同根；`eventsRoot`：JSONL 后端根；`collectWindowMs`：人类连发窗口（初值 1000）；`batchWindowMs`：非链优先窗口（30000）；`batchMaxItems`／`batchMaxChars`：每批上限（20／8000）；`pendingMaxPerOwner`：队列上限（200，满时报错不丢）；`agentStreamCoalesceWindowMs`：增量合并（60）；`logBatchMs`／`logBatchBytes`：文字日志刷新阈值（实现任务量后给默认）；`lastActivityWriteMs`：摘要节流间隔；`rescueTimeouts.reloadSessionCloseMs`／`interruptSessionMs`：reload/interrupt 救援上限（3000/2000）；`watchdogMs`／`hardLimitMs`：没有会话覆盖时的整轮时限（60000/120000），不是 rescueTimeouts；`finishRetryDelayMs`／`finishRetryMaxMs`：通知重试退避（1000/5000）；`retiredInternalTtlMs`：内部结果缓存期（600000）；`timelineContentMaxChars`：时间线内容上限；`operationRetentionMs`：回执保留期 |
+| minds | `storageRoot`：与 json.root 同根；`eventsRoot`：JSONL 后端根；`collectWindowMs`：人类连发窗口（初值 1000）；`batchWindowMs`：非链优先窗口（30000）；`batchMaxItems`／`batchMaxChars`：每批上限（20／8000）；`pendingMaxPerOwner`：队列上限（200，满时报错不丢）；`agentStreamCoalesceWindowMs`：增量合并（60）；`logBatchMs`／`logBatchBytes`：文字日志刷新阈值（实现任务量后给默认）；`lastActivityWriteMs`：摘要节流间隔；`rescueTimeouts.reloadSessionCloseMs`／`interruptSessionMs`：reload/interrupt 救援上限（3000/2000）；`watchdogMs`／`hardLimitMs`：没有会话覆盖时的整轮时限（60000/120000），不是 rescueTimeouts；`finishRetryDelayMs`／`finishRetryMaxMs`：通知重试退避（1000/5000）；`retiredInternalTtlMs`：内部结果缓存期（600000）；`timelineContentMaxChars`：时间线内容上限；`operationRetentionMs`：回执保留期；`catalogRefreshTimeoutMs`、`diagnosticTimeoutMs`、`catalogConcurrency`：目录刷新时限／诊断时限／并发，显式配置，不保留隐藏环境变量默认 |
 | minds-restart-recovery | `enabled`：恢复策略开关，默认 true；`prompt`：继续提示（默认 Resume working.）；禁用该插件行等效关闭自动续跑，并消费旧 intent，不留待启用后复活 |
 | minds-idle-cleanup | `idleAfterMs`：闲置阈值（3600000）；`sweepIntervalMs`：扫描周期（60000）；`probeTimeoutMs`：提供方否决检查时限（10000）；禁用该插件行取消扫描，已开始关闭照常结算 |
 | minds-structured-generation | `maxCorrections`：同一操作最多纠正次数（2），每次都是正常计费回合，不通过关停/权限/预算限制 |
 | toolport | `listen`：使用底座本机 HTTP 挂载方式（复用回环 webserver）；`route`：默认 /mcp/agents；`tokenTtlMs`：令牌有效时长，ready 时显式 resolve；`toolTimeoutMs`：调用等待上限（10000），超时副作用结果不明不得重调 |
-| tool-minds | 无部署 Config；业务选择由当前 agent、工具 schema 与执行点权限提供 |
-| brain | 现有 membersRoot/blobsDir/probeTimeoutMs 等；新增 `catalogRefreshTimeoutMs`、`diagnosticTimeoutMs`、`catalogConcurrency` 管目录刷新时限／并发；从 provider-snapshot-manager 取出部署变量，不保留隐藏环境变量默认 |
+| toolport-minds | 无部署 Config；业务选择由当前 agent、工具 schema 与执行点权限提供 |
+| brain | 现有 membersRoot/blobsDir/probeTimeoutMs 等 |
 
 可调值进对应 Config，而非保留搬来的 DEFAULT 常量或只给测试用的钩子。结构化生成 `ctx.structuredGeneration.generate(request)` 输入 provider 选择、agentConfig、prompt、schema，输出校验后的 JSON 与 agentId/operationId；显式传 agentId 时复用同一会话，默认临时 internal agent。output-schema 命令创建的公开 agent 仍在原 operation 下纠正，不暗开无归属 helper。〔一手〕Paseo `agent/agent-response-loop.ts:62`、`agent/idle-runtime-cleanup/index.ts:32`；〔推理〕Config 与独立服务键。
 
@@ -435,10 +435,10 @@ A1–A5 是分阶段的完整目标：第④步 A2 先验 provider/G1、本机 C
 | 结构化生成循环 | `agent/agent-response-loop.ts`、`structured-generation-providers.ts`（789） | 迁 + 改造 | `@liwa/minds-structured-generation` | 独立 ctx.structuredGeneration；Config.maxCorrections，消费 minds/brains，见 §4.9 |
 | agent 互发消息与信封 | `agent/agent-messages/`（433） | 迁 | minds | 从 delivery.ts 扩展 durable 队列，包含人类输入；语义按 02 §4.2，信封换 liwa-block |
 | 完成订阅 | `agent/finish-subscriptions/`（820） | 迁 | minds 核心 | 意图存 storage-domain 表，至少一次／权限检查点继续观察；删除远端分支，通知通过同一 durable delivery |
-| 子 agent 工具与 MCP 服务器 | `agent/mcp-server.ts`（52）、`tools/paseo-tools.ts`（3347）、mcp-shared、工具类型／序列化／策略 | 迁 | toolport + tool-minds | 工具登记表与 Bearer 按代次；灵鲸名经 catalog 适配；父不能代批，不开放 shell 路 |
+| 子 agent 工具与 MCP 服务器 | `agent/mcp-server.ts`（52）、`tools/paseo-tools.ts`（3347）、mcp-shared、工具类型／序列化／策略 | 迁 | toolport（端点、序列化）+ toolport-minds（agent 工具）+ minds（mcp-shared）+ brain-shared（工具类型与策略） | 工具登记表与 Bearer 按代次；灵鲸名经 catalog 适配；父不能代批，不开放 shell 路 |
 | 建 agent 的意图与幂等 | `agent/create-agent/{intent,create}.ts` | 迁 | minds | 保留创建／首 prompt／通知流程；删除 worktree/forge/terminal 分支，持久 operation 处理 unknown |
 | 闲置回收、重启恢复 | `agent/idle-runtime-cleanup/`（167）、`restart-recovery/`（81） | 迁 | minds-idle-cleanup／minds-restart-recovery | 两个可禁用策略插件；D4/D12 语义不变，Config 管阈值／prompt |
-| AgentManager、提供方注册表、agent 存储 | `agent-manager.ts`（5794）、agent-storage、agent-archive；provider-snapshot-manager 等目录三件 | 迁 + 融合；provider-registry／provider-runtime 除外 | minds + brain | provider-registry 直接 import 全家实现，换 brains.register；provider-runtime 只启动 OpenCodeBridge 不搬；存储 schema/接口留、实现换 storage-domain |
+| AgentManager、提供方注册表、agent 存储 | `agent-manager.ts`（5794）、agent-storage、agent-archive；provider-snapshot-manager 等目录三件 | 迁 + 融合；provider-registry／provider-runtime 除外 | minds（目录三件同在 minds，brains 只出提供方表快照） | provider-registry 直接 import 全家实现，换 brains.register；provider-runtime 只启动 OpenCodeBridge 不搬；存储 schema/接口留、实现换 storage-domain |
 | 时间线三件 | `agent/{timeline-projection,agent-timeline-store,agent-timeline-content}.ts` 与 `agent-timeline-store-types.ts` | 已迁 | `brain-shared/src/paseo/agent/` | 提供方子 agent 存储与适配器共用；网关（07）直接引用这一份〔一手：develop 源码 `packages/brain/brain-shared/NOTICE`、`packages/brain/brain-shared/src/paseo/agent/provider-subagents/store.ts`〕 |
 | 时间线合流与摘要 | `agent/{agent-stream-coalescer,activity-curator,timeline-prompt-index}.ts` | 迁 | minds | Manager 单一时间线；网关消费公开 API，不再拷一份 |
 | JSONL 帧解码 | `agent/providers/jsonl-frame-decoder.ts` | 已迁 | `brain-shared/src/paseo/agent/providers/` | ACP 与 Codex 传输共用〔一手：develop 源码 `packages/brain/brain-shared/NOTICE`、`packages/brain/brain-shared/src/paseo/agent/providers/jsonl-frame-decoder.ts`〕 |
@@ -503,4 +503,4 @@ A1–A5 是分阶段的完整目标：第④步 A2 先验 provider/G1、本机 C
 | paseo-tool-presentation | 删除专属目录展示分支，活动摘要用已搬 tool-call-display | 〔一手〕brain-shared NOTICE:38 |
 | @getpaseo/client/internal/daemon-client、daemon-client-transport-types | 随 host-operations 与 finish-subscriptions 的远端连接／观察分支删；本地 WaitForFinishResult 直接使用 Manager 观察结果的窄类型 | 〔一手〕Paseo host-operations/index.ts:6、finish-subscriptions/index.ts:5 |
 
-正式拷入后逐文件来源与“灵鲸改”记入 NOTICE；本次仅在允许修改的 brain-shared README 记录迁入计划，不改 NOTICE 来假装文件已搬。〔一手〕任务书 20 §8；〔推理〕计划与实现区分。
+B′ 逐文件来源与“灵鲸改”记入各包 NOTICE，brain-shared README 记录实际迁入的协议与工具词汇；接缝尚未装配，不能视为业务验收通过。〔一手〕各包 NOTICE；〔推理〕实现与验收区分。

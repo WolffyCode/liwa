@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Toolport",
+    "description": "移入した agent ソースと設定のひな型です。業務の接続はまだ実装されていません。"
+  }
+}

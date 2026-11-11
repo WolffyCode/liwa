@@ -7,6 +7,12 @@ A service can be a core spine service, a swappable capability seam, a bundle/com
 
 ```mermaid
 flowchart LR
+  pkg_minds["minds"]
+  svc_minds["ctx.minds<br/>Agent management and provider catalogs"]
+  pkg_minds_structured_generation["minds-structured-generation"]
+  svc_structuredGeneration["ctx.structuredGeneration<br/>Structured agent output generation"]
+  pkg_toolport["toolport"]
+  svc_toolport["ctx.toolport<br/>Kernel MCP tools"]
   pkg_action_cards["action-cards"]
   svc_actionCards["ctx.actionCards<br/>Optional action cards"]
   pkg_creation_recommendations["creation-recommendations"]
@@ -390,6 +396,8 @@ flowchart LR
   pkg_lsp_stdio --> svc_lsp
   pkg_mcp_client --> svc_mcpResources
   pkg_mcp_resources --> svc_mcpResources
+  pkg_minds --> svc_minds
+  pkg_minds_structured_generation --> svc_structuredGeneration
   pkg_office_to_pdf --> svc_officeToPdf
   pkg_permission_presets --> svc_permissionPresets
   pkg_plan_mode --> svc_planMode
@@ -445,6 +453,7 @@ flowchart LR
   pkg_terminal_bash --> svc_terminals
   pkg_token_meter --> svc_tokenMeter
   pkg_tool_subagent --> svc_subagentModelSelection
+  pkg_toolport --> svc_toolport
   pkg_tools --> svc_tools
   pkg_typert_registry --> svc_typert
   pkg_user_approval --> svc_approval
@@ -629,6 +638,9 @@ flowchart LR
 
 | ctx key | Role | Owner | Implementations | Direct consumers | Companion plugins | Note |
 | --- | --- | --- | --- | --- | --- | --- |
+| `ctx.minds` | `service` | [`minds`](../packages/brain/minds) | - | - | - | Owns AgentManager and the running provider catalog; recovery, cleanup and structured generation are separately composed policies. |
+| `ctx.structuredGeneration` | `service` | [`minds-structured-generation`](../packages/brain/minds-structured-generation) | - | - | - | Owns structured output validation and correction; each correction remains an ordinary agent turn. |
+| `ctx.toolport` | `service` | [`toolport`](../packages/brain/toolport) | - | - | - | Owns the kernel MCP entrypoint; toolport domain contributions use a registry separate from ctx.tools. |
 | `ctx.actionCards` | `service` | [`action-cards`](../packages/experimental/action-cards) | - | [`creation-recommendations`](../packages/experimental/creation-recommendations), [`client-ui-action-cards`](../packages/experimental/client-ui-action-cards) | - | Owns the card tool, card state, user actions and status notices; card kinds register their actions and handlers. |
 | `ctx.pluginRecommendations` | `service` | [`plugin-recommendations`](../packages/experimental/plugin-recommendations) | - | [`client-ui-plugin-recommendations`](../packages/experimental/client-ui-plugin-recommendations) | - | Reads the current catalog text of an official plugin card and enables the plugin through the profile plugin manager after a click. |
 | `ctx.headlessStartup` | `core` | [`headless`](../packages/bundle/headless) | - | [`headless`](../packages/bundle/headless) | - | Supplies parsed task and run options to the headless runner and its sandbox-policy configuration. |

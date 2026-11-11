@@ -1,0 +1,46 @@
+{
+  "name": "@liwa/minds-restart-recovery",
+  "description": "minds-restart-recovery plugin scaffold with copied Paseo agent code and explicit injection seams; business wiring is deferred to C\u2013G",
+  "version": "0.2.2-alpha.2",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./paseo/*": {
+      "types": "./lib/types/paseo/*.d.ts",
+      "default": "./lib/types/paseo/*.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "locale/*.json",
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WolffyCode/liwa.git",
+    "directory": "packages/brain/minds-restart-recovery"
+  },
+  "dependencies": {
+    "@liwa/minds": "workspace:*",
+    "@liwa/schemastery": "workspace:~"
+  },
+  "peerDependencies": {
+    "@liwa/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@liwa/cordis": "workspace:~"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

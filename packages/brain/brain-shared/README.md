@@ -70,6 +70,7 @@ Each file under `src/paseo/` is upstream Paseo source with a first-line origin c
 | [`src/session.ts`](src/session.ts) | `PaseoBrainSession`: a Paseo agent session as a `brain.provider` session |
 | [`src/turn-input.ts`](src/turn-input.ts) | Turn input to Paseo prompt blocks, `<liwa-block>` rendering |
 | [`src/logger.ts`](src/logger.ts) | The pino-shaped logger over a cordis logger |
+| [`src/paseo/agent/tools/types.ts`](src/paseo/agent/tools/types.ts), [`src/paseo/agent/paseo-tool-policy.ts`](src/paseo/agent/paseo-tool-policy.ts) | Tool vocabulary and pure policy shared by minds, toolport and toolport-minds |
 | [`NOTICE`](NOTICE) | Upstream commit, license, and the per-file change list |
 
 </details>
@@ -98,8 +99,8 @@ Nothing here builds a model request, so it cannot invalidate a cached prefix.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **Manager migration plan** — under decision 67, the AgentManager layer will move into `@liwa/minds`; the MCP catalog and tool contribution move into `@liwa/toolport` and `@liwa/tool-minds`, while the three provider snapshot modules belong to `@liwa/brain`. This change freezes documentation only; the code has not moved. Paseo attachments, dedicated presentation, and the OpenCode bridge stay behind.
-- **Protocol subset plan** — extract only agent schemas and types from `messages.ts`; the [migration map](../../../docs/liwa/architecture/modules/01-agent-cli.md#附录-a1-agent-协议子集的精确边界f7) owns the exact exports and removed branches. Add agent-labels, agent-lifecycle, and agent-title-limits. Update NOTICE per file when copying the source, without recording planned files as already copied.
+- **Manager migration** — AgentManager, the three provider catalog modules and mcp-shared are now in `@liwa/minds`; endpoint/serialization are in `@liwa/toolport`, agent handlers in `@liwa/toolport-minds`, and tool vocabulary/policy in this package. B seams are not wired; runtime capabilities await C–G. Paseo attachments, presentation and the OpenCode bridge are excluded.
+- **Protocol subset** — `messages.ts` now contains the frozen 16 public exports and their private schema closure. Agent labels, lifecycle and title limits are copied; parent labels use `liwa.` and tab labels are removed. NOTICE records the exact sources and cuts.
 - **Upstream sync is manual** — updating to a newer Paseo commit means re-copying the files and re-applying the changes `NOTICE` lists.
 
 <a id="dev-note"></a>

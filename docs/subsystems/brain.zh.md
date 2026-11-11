@@ -188,6 +188,30 @@ Source: [`packages/brain/brain/src/index.ts`](../../packages/brain/brain/src/ind
 
 Source: [`packages/bundle/brain-cli/src/startup.ts`](../../packages/bundle/brain-cli/src/startup.ts)
 
+<a id="ctxminds--minds"></a>
+
+### `ctx.minds` — `Minds`
+
+仅声明服务所有权；后续块在此装配已迁入的实现。
+
+Source: [`packages/brain/minds/src/index.ts`](../../packages/brain/minds/src/index.ts)
+
+<a id="ctxstructuredgeneration--structuredgeneration"></a>
+
+### `ctx.structuredGeneration` — `StructuredGeneration`
+
+仅声明服务所有权；后续块在此装配已迁入的实现。
+
+Source: [`packages/brain/minds-structured-generation/src/index.ts`](../../packages/brain/minds-structured-generation/src/index.ts)
+
+<a id="ctxtoolport--toolport"></a>
+
+### `ctx.toolport` — `Toolport`
+
+仅声明服务所有权；后续块在此装配已迁入的实现。
+
+Source: [`packages/brain/toolport/src/index.ts`](../../packages/brain/toolport/src/index.ts)
+
 <a id="brainchildendedv1-events"></a>
 
 ### `brain.child.ended.v1/*` events

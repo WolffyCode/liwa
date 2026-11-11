@@ -34,6 +34,12 @@ The following packages carry upstream source files copied in place rather than i
 | [packages/brain/brain-acp](packages/brain/brain-acp/NOTICE) | https://github.com/getpaseo/paseo | `8018231a00a6b45ed6cda1856f954ba14b4824c0` | Apache-2.0 |
 | [packages/brain/brain-claude-code](packages/brain/brain-claude-code/NOTICE) | https://github.com/getpaseo/paseo | `8018231a00a6b45ed6cda1856f954ba14b4824c0` | Apache-2.0 |
 | [packages/brain/brain-shared](packages/brain/brain-shared/NOTICE) | https://github.com/getpaseo/paseo | `8018231a00a6b45ed6cda1856f954ba14b4824c0` | Apache-2.0 |
+| [packages/brain/minds-idle-cleanup](packages/brain/minds-idle-cleanup/NOTICE) | https://github.com/getpaseo/paseo | `8018231a00a6b45ed6cda1856f954ba14b4824c0` | Apache-2.0 |
+| [packages/brain/minds-restart-recovery](packages/brain/minds-restart-recovery/NOTICE) | https://github.com/getpaseo/paseo | `8018231a00a6b45ed6cda1856f954ba14b4824c0` | Apache-2.0 |
+| [packages/brain/minds-structured-generation](packages/brain/minds-structured-generation/NOTICE) | https://github.com/getpaseo/paseo | `8018231a00a6b45ed6cda1856f954ba14b4824c0` | Apache-2.0 |
+| [packages/brain/minds](packages/brain/minds/NOTICE) | https://github.com/getpaseo/paseo | `8018231a00a6b45ed6cda1856f954ba14b4824c0` | Apache-2.0 |
+| [packages/brain/toolport-minds](packages/brain/toolport-minds/NOTICE) | https://github.com/getpaseo/paseo | `8018231a00a6b45ed6cda1856f954ba14b4824c0` | Apache-2.0 |
+| [packages/brain/toolport](packages/brain/toolport/NOTICE) | https://github.com/getpaseo/paseo | `8018231a00a6b45ed6cda1856f954ba14b4824c0` | Apache-2.0 |
 
 ## Runtime npm dependencies
 

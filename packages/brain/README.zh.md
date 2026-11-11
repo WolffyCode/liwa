@@ -31,6 +31,12 @@ kind: "package-group"
 | [`brain-acp`](brain-acp/README.zh.md) | 建在 Paseo ACP 客户端上的通用 ACP agent CLI 提供方 | 登记进 `ctx.brains` |
 | [`brain-deepseek`](brain-deepseek/README.zh.md) | 提供方 `deepseek`：每个会话一个 `liwa --profile deepseek` 进程 | 登记进 `ctx.brains` |
 | [`brain-claude-code`](brain-claude-code/README.zh.md) | 官方 SDK 接本机 Claude Code，成员与提供方配置隔离 | 登记进 `ctx.brains` |
+| [`minds`](minds/README.zh.md) | 会话运行服务与提供方运行期目录；B′ 接缝未装配 | `ctx.minds` |
+| [`toolport`](toolport/README.zh.md) | 内核工具 MCP 端点与序列化；B′ 接缝未装配 | `ctx.toolport` |
+| [`toolport-minds`](toolport-minds/README.zh.md) | agent 工具处理器贡献；B′ 接缝未装配 | `—` |
+| [`minds-restart-recovery`](minds-restart-recovery/README.zh.md) | 可替换的重启恢复策略；B′ 接缝未装配 | `—` |
+| [`minds-idle-cleanup`](minds-idle-cleanup/README.zh.md) | 可替换的闲置回收策略；B′ 接缝未装配 | `—` |
+| [`minds-structured-generation`](minds-structured-generation/README.zh.md) | 结构化生成循环与提供方选择；B′ 接缝未装配 | `ctx.structuredGeneration` |
 
 <a id="related-documentation"></a>
 ## 相关文档

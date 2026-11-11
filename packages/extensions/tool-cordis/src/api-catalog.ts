@@ -2078,6 +2078,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'minds',
+    summary: '仅声明服务所有权；后续块在此装配已迁入的实现。',
+    description: '仅声明服务所有权；后续块在此装配已迁入的实现。',
+    methods: [],
+  },
+  {
     key: 'officeToPdf',
     summary: 'A provider lifetime owns all converters, queued calls, and temporary files.',
     description: 'A provider lifetime owns all converters, queued calls, and temporary files.',
@@ -3459,6 +3465,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'structuredGeneration',
+    summary: '仅声明服务所有权；后续块在此装配已迁入的实现。',
+    description: '仅声明服务所有权；后续块在此装配已迁入的实现。',
+    methods: [],
+  },
+  {
     key: 'subagentModelSelection',
     summary: 'Host settings owner that records Session authorization before the first model request.',
     description: 'Host settings owner that records Session authorization before the first model request.',
@@ -3837,6 +3849,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'content and role-framing tokens under the fixed service heuristic.',
       },
     ],
+  },
+  {
+    key: 'toolport',
+    summary: '仅声明服务所有权；后续块在此装配已迁入的实现。',
+    description: '仅声明服务所有权；后续块在此装配已迁入的实现。',
+    methods: [],
   },
   {
     key: 'toolResultPruner',

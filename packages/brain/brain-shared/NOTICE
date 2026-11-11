@@ -58,3 +58,23 @@ src/paseo/agent/providers/diagnostic-utils.ts（← agent/providers/diagnostic-u
   protocol/timeline-identity.ts、utils/promise-timeout.ts、utils/path.ts、utils/string-command-shell.ts
 
 灵鲸 G1：agent/agent-sdk-types.ts 的 turn_failed 与 turn_canceled 增加可选 AgentUsage，供共享会话映射透传已知异常回合消费；不含提供方分支。
+
+B′ 新增共享工具词汇与协议子集（逐文件）：
+
+src/paseo/agent/tools/types.ts（← packages/server/src/server/agent/tools/types.ts）
+  - 删除语音工具专属 enableVoiceTools／voiceOnly 上下文字段；保留 agent 工具目录、执行与输入类型。
+
+src/paseo/agent/paseo-tool-policy.ts（← packages/server/src/server/agent/paseo-tool-policy.ts）
+  - 删除 speak 语音工具的无条件放行分支；agent 工具统一服从提供方启用／禁用策略。
+
+src/paseo/protocol/messages.ts（← packages/protocol/src/messages.ts）
+  - 只抽附录 A.1 冻结的 16 个公开导出及私有 schema 闭包；FirstAgentContext 只留 prompt；AgentProviderSchema 就地使用 z.string；不搬其他协议产品域或复制会话配置 schema。
+
+src/paseo/protocol/agent-labels.ts（← packages/protocol/src/agent-labels.ts）
+  - 父标签前缀由 paseo. 改为 liwa.；删除 tab 常量与函数；原 addresses.AgentAddress 在本文件以使用到的 serverId／agentId 窄类型声明，不搬远端协议文件。
+
+src/paseo/protocol/agent-lifecycle.ts（← packages/protocol/src/agent-lifecycle.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/protocol/agent-title-limits.ts（← packages/protocol/src/agent-title-limits.ts）
+  - 同上游，仅共同改动。

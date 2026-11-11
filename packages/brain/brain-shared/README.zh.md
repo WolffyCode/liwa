@@ -65,11 +65,12 @@ return new PaseoBrainSession({ impl, meta, session, blobs: launch }) // a BrainP
 |---|---|
 | [`src/paseo/agent/`](src/paseo/agent/agent-sdk-types.ts) | agent 契约、启动配置、提供方选项与提示、刷新时限、会话导入、时间线工具、子 agent 存储、运行时 MCP 配置 |
 | [`src/paseo/agent/providers/`](src/paseo/agent/providers/provider-runner.ts) | 提供方回合驱动、工具调用映射工具、诊断、图片输出、JSONL 分帧 |
-| [`src/paseo/protocol/`](src/paseo/protocol/agent-types.ts) | 协议类型、提供方配置 schema、工具名、路径、工具调用展示 |
+| [`src/paseo/protocol/`](src/paseo/protocol/agent-types.ts) | 协议类型、提供方配置 schema、工具名、路径、工具调用展示、agent 协议子集与父关系标签 |
 | [`src/paseo/utils/`](src/paseo/utils/path.ts) | 超时、路径等价、字符串命令 shell |
 | [`src/session.ts`](src/session.ts) | `PaseoBrainSession`：把 Paseo agent 会话当作 `brain.provider` 会话 |
 | [`src/turn-input.ts`](src/turn-input.ts) | 回合输入到 Paseo 提示词块、`<liwa-block>` 渲染 |
 | [`src/logger.ts`](src/logger.ts) | 接在 cordis logger 上的 pino 形状日志器 |
+| [`src/paseo/agent/tools/types.ts`](src/paseo/agent/tools/types.ts)、[`src/paseo/agent/paseo-tool-policy.ts`](src/paseo/agent/paseo-tool-policy.ts) | minds、toolport、toolport-minds 共用的工具词汇与纯策略 |
 | [`NOTICE`](NOTICE) | 上游提交、许可证与逐文件改动清单 |
 
 </details>
@@ -98,8 +99,8 @@ return new PaseoBrainSession({ impl, meta, session, blobs: launch }) // a BrainP
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **管理层迁入计划**——AgentManager 层按决策 67 搬进 `@liwa/minds`；MCP 目录／工具贡献分进 `@liwa/toolport` 与 `@liwa/tool-minds`，提供方快照三件归 `@liwa/brain`，本次只冻结文档，尚未搬代码。Paseo 附件／专属展示与 OpenCode 桥不搬。
-- **协议子集计划**——`messages.ts` 只抽 agent 相关 schema/type，精确导出与删分支见[迁移地图](../../../docs/liwa/architecture/modules/01-agent-cli.md#附录-a1-agent-协议子集的精确边界f7)；新增 agent-labels、agent-lifecycle、agent-title-limits。实际拷入时才逐文件更新 NOTICE，不把计划写成已迁来源。
+- **管理层迁入**——AgentManager、提供方目录三件与 mcp-shared 已迁入 `@liwa/minds`；端点与序列化在 `@liwa/toolport`，agent 工具在 `@liwa/toolport-minds`，工具类型与策略在本包。B′ 接缝尚未装配，运行能力待 C′–G′ 接通。Paseo 附件／专属展示与 OpenCode 桥不搬。
+- **协议子集**——`messages.ts` 已抽入冻结的 16 个公开导出与私有 schema 闭包；agent-labels、agent-lifecycle、agent-title-limits 已迁入。父标签使用 `liwa.`，不含 tab 标签；逐文件来源与裁剪见 NOTICE。
 - **跟进上游要手工**——升到更新的 Paseo 提交，要重新拷文件并重做 `NOTICE` 列出的改动。
 
 <a id="dev-note"></a>

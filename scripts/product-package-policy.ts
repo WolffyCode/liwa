@@ -16,7 +16,13 @@ export interface ProductPackagePolicy {
  * Optional integrations may be reached by an optional bundle without becoming default capabilities.
  */
 export const PRODUCT_PACKAGE_POLICY: Readonly<Record<string, ProductPackagePolicy>> = {
-  'packages/brain/brain-claude-code': { category: 'optional', reason: 'Requires an explicitly configured local Claude CLI and credential reference.' },
+  'packages/brain/minds': { category: 'optional', reason: 'Agent manager core composed by the brain-host profile; the default web and headless runtimes do not mount it.' },
+  'packages/brain/toolport': { category: 'optional', reason: 'Kernel MCP service and endpoint composed by the brain-host profile, separate from the default tool registry.' },
+  'packages/brain/toolport-minds': { category: 'optional', reason: 'Agent tool contributions registered through toolport in the brain-host composition, outside the default tool registry.' },
+  'packages/brain/minds-restart-recovery': { category: 'optional', reason: 'Independently disableable restart recovery policy for the brain-host agent manager.' },
+  'packages/brain/minds-idle-cleanup': { category: 'optional', reason: 'Independently disableable idle runtime cleanup policy for the brain-host agent manager.' },
+  'packages/brain/minds-structured-generation': { category: 'optional', reason: 'Independently disableable structured generation capability composed with the brain-host agent manager.' },
+  'packages/brain/brain-claude-code': { category: 'optional', reason: 'Requires an explicitly configured local Claude CLI instance.' },
   'packages/core/agent-tool-presentation': { category: 'optional', reason: 'Deprecated selector retained for existing executor configurations.' },
   'packages/browser-use/browser-use': { category: 'optional', reason: 'Service definition used by explicitly selected browser providers.' },
   'packages/computer-use/computer-use': { category: 'optional', reason: 'Service definition used by explicitly selected computer providers.' },

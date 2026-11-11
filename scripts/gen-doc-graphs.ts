@@ -107,6 +107,27 @@ const GROUP_ORDER = [
 
 const SERVICE_ROLES: ServiceRole[] = [
   {
+    key: 'minds',
+    pkg: 'minds',
+    title: 'Agent management and provider catalogs',
+    mode: 'service',
+    note: 'Owns AgentManager and the running provider catalog; recovery, cleanup and structured generation are separately composed policies.',
+  },
+  {
+    key: 'structuredGeneration',
+    pkg: 'minds-structured-generation',
+    title: 'Structured agent output generation',
+    mode: 'service',
+    note: 'Owns structured output validation and correction; each correction remains an ordinary agent turn.',
+  },
+  {
+    key: 'toolport',
+    pkg: 'toolport',
+    title: 'Kernel MCP tools',
+    mode: 'service',
+    note: 'Owns the kernel MCP entrypoint; toolport domain contributions use a registry separate from ctx.tools.',
+  },
+  {
     key: 'actionCards',
     pkg: 'action-cards',
     title: 'Optional action cards',

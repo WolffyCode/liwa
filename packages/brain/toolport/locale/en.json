@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Toolport",
+    "description": "Copied agent source and configuration scaffold; business seams are not wired yet."
+  }
+}

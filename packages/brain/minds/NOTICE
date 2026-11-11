@@ -1,0 +1,143 @@
+@liwa/minds — 第三方来源声明
+
+本包 src/paseo/ 下的迁入文件拷自 Paseo：
+  Upstream: https://github.com/getpaseo/paseo
+  Commit:   8018231a00a6b45ed6cda1856f954ba14b4824c0
+  Version:  0.15.0-beta.1
+  License:  Apache-2.0
+  License text: https://www.apache.org/licenses/LICENSE-2.0
+  Copyright (c) 2025-present Mohamed Boudra
+
+上游没有 NOTICE 文件。文件第一行注明来源；改动在原位置完成，逐文件列在下方。
+src/index.ts、src/seams/ 与 tests/scaffold.spec.ts 是灵鲸自写，MIT；接缝只定义接口，没有假实现。
+上游测试与夹具不在 B′ 拷入，随各自接缝块拷入、适配并验证。
+
+路径对照：packages/server/src/server/ → src/paseo/；packages/protocol/src/ → src/paseo/protocol/。
+
+全部文件的共同改动：
+  - 加来源注释；相对 import 后缀 .js 改成 .ts，跨包使用声明的 ./paseo/* 子路径。
+  - 上游协议与已共享的 agent/utils 模块引用唯一 brain-shared 实现；server/messages 的重导出改直接引协议子集。
+  - pino Logger 改用 brain-shared.PaseoLogger；不新增 pino、uuid 或 fast-deep-equal 依赖。
+  - 迁入源码用 tsconfig.paseo.json 的上游选项；自写代码在主项目严格检查。
+
+逐文件来源与改动：
+
+src/paseo/agent/agent-manager.ts（← packages/server/src/server/agent/agent-manager.ts）
+  - 删除插件生命周期／工具登记／会话失效重载、外部导入与搜索、终端死字段、tab／工作区归档联动及工作区变更回调；回收候选类型移入 Manager；保留原生工具 factory 与 MCP 路径，旧 launch 工具目录字段在 Manager 内以交集类型声明，D′ 再统一正式提供方契约；环境标识改 LIWA_AGENT_ID／LIWA_AGENT_CWD。
+
+src/paseo/agent/agent-run-state.ts（← packages/server/src/server/agent/agent-run-state.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/agent/agent-stream-coalescer.ts（← packages/server/src/server/agent/agent-stream-coalescer.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/agent/agent-projections.ts（← packages/server/src/server/agent/agent-projections.ts）
+  - 删除外部会话描述符投影及其类型；协议改从 brain-shared 引入。
+
+src/paseo/agent/agent-loading.ts（← packages/server/src/server/agent/agent-loading.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/agent/agent-archive.ts（← packages/server/src/server/agent/agent-archive.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/agent/agent-storage.ts（← packages/server/src/server/agent/agent-storage.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/agent/agent-owner.ts（← packages/server/src/server/agent/agent-owner.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/agent/agent-prompt.ts（← packages/server/src/server/agent/agent-prompt.ts）
+  - 删除 plugin session reload 方法依赖与调用；内联 import 类型也走 brain-shared 子路径。
+
+src/paseo/agent/lifecycle-command.ts（← packages/server/src/server/agent/lifecycle-command.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/agent/permission-response.ts（← packages/server/src/server/agent/permission-response.ts）
+  - 依赖的 AgentRunController 已删除 plugin reload；本文件仅共同改动。
+
+src/paseo/agent/directory.ts（← packages/server/src/server/agent/directory.ts）
+  - 删除工作区登记表、background 筛选与对应参数／工作区消息时间查询；保留 agent 可见性、标签、归档、冷记录合并。
+
+src/paseo/agent/create-agent-title.ts（← packages/server/src/server/agent/create-agent-title.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/agent/stale-provider-session-error.ts（← packages/server/src/server/agent/stale-provider-session-error.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/agent/prompt-attachments.ts（← packages/server/src/server/agent/prompt-attachments.ts）
+  - 删除 forge／review／上传／聊天历史附件联合与渲染、分支命名助手；保留纯文本与内联图片提示组装。
+
+src/paseo/agent/activity-curator.ts（← packages/server/src/server/agent/activity-curator.ts）
+  - 删除附件式 fork history 生成与专属工具展示目录；消息摘要直接取其发送者／事件，工具摘要沿用共享 tool-call-display。
+
+src/paseo/agent/timeline-prompt-index.ts（← packages/server/src/server/agent/timeline-prompt-index.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/agent/mcp-shared.ts（← packages/server/src/server/agent/mcp-shared.ts）
+  - 删除日程 schema 与 toScheduleSummary；快照序列化直接调用同包 agent-projections.toAgentPayload；日志改 PaseoLogger。
+
+src/paseo/agent/provider-snapshot-manager.ts（← packages/server/src/server/agent/provider-snapshot-manager.ts）
+  - 删除内置／插件提供方清单、OpenCodeBridge、插件替换方法与只作透传的工作区／进程选项；提供方定义构建与客户端关停由必填 ProviderTableSource 注入；配置类型来自唯一 config 接缝；目录超时、诊断超时、并发显式作为构造选项，不读隐藏环境变量默认；保留目录缓存、刷新、配置事务与诊断。
+
+src/paseo/agent/mutable-provider-config-owner.ts（← packages/server/src/server/agent/mutable-provider-config-owner.ts）
+  - fast-deep-equal 原地替换为 util-values.deepEqualJson；DaemonConfigStore 改引唯一配置接口；不提供配置存储实现。
+
+src/paseo/agent/agent-configuration-validator.ts（← packages/server/src/server/agent/agent-configuration-validator.ts）
+  - 同上游，仅共同改动；使用 brain-shared 的协议 issue 与模型筛选函数。
+
+src/paseo/agent/rewind/rewind.ts（← packages/server/src/server/agent/rewind/rewind.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/agent/host-operations/index.ts（← packages/server/src/server/agent/host-operations/index.ts）
+  - 删除全部远端连接／主机目录／工作区操作，只保留本机 HostObservation 与本机分派；WaitForFinishResult 就地声明观察实际使用的窄形状，不依赖客户端。
+
+src/paseo/agent/create-agent/create.ts（← packages/server/src/server/agent/create-agent/create.ts）
+  - 删除终端、worktree、forge 附件与工作区创建／查找分支及选项，删除不再使用的 firstAgentContext 输入；直接用 cwd，保留父关系、提供方配置、创建、首 prompt、完成通知与错误语义。
+
+src/paseo/agent/create-agent/intent.ts（← packages/server/src/server/agent/create-agent/intent.ts）
+  - 删除工作区 placement 解析、回调与 caller 中不再使用的 cwd／workspaceId 字段；cwd 由调用方直接输入，保留父子标签与显式 detach 关系。
+
+src/paseo/persistence-hooks.ts（← packages/server/src/server/persistence-hooks.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/client-message-id.ts（← packages/server/src/server/client-message-id.ts）
+  - uuid.v4 替换为 node:crypto.randomUUID，保留可注入 generateId 与归一化行为。
+
+src/paseo/path-utils.ts（← packages/server/src/server/path-utils.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/atomic-file.ts（← packages/server/src/server/atomic-file.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/json-utils.ts（← packages/server/src/server/json-utils.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/agent/finish-subscriptions/index.ts（← packages/server/src/server/agent/finish-subscriptions/index.ts）
+  - 删除远端主机状态／重试判定与 subscription 的远端 serverId；父关系只比较 agentId；保留本机持久意图、ACK、至少一次与回收否决。
+
+src/paseo/agent/finish-subscriptions/internal/json-store.ts（← packages/server/src/server/agent/finish-subscriptions/internal/json-store.ts）
+  - 删除记录 schema 的远端 serverId 字段；存储逻辑沿用原实现，C′ 再换 storage-domain。
+
+src/paseo/agent/finish-subscriptions/internal/notification.ts（← packages/server/src/server/agent/finish-subscriptions/internal/notification.ts）
+  - 删除 host unreachable／host removed 的原因类型、事件映射与远端主机通知格式分支，只保留本机 agent 的完成／错误／权限通知。
+
+src/paseo/agent/finish-subscriptions/internal/observation-buffer.ts（← packages/server/src/server/agent/finish-subscriptions/internal/observation-buffer.ts）
+  - WaitForFinishResult 从本机 host-operations 窄类型导入；删除远端 host 原因联合，保留权限／终止缓冲。
+
+src/paseo/agent/finish-subscriptions/internal/observation-stream.ts（← packages/server/src/server/agent/finish-subscriptions/internal/observation-stream.ts）
+  - ObservationScope 与调用删除远端 serverId／连接 signal 参数；本地连续流、初始 wait、取消／释放语义保留。
+
+src/paseo/agent/finish-subscriptions/internal/observation.ts（← packages/server/src/server/agent/finish-subscriptions/internal/observation.ts）
+  - 删除 hosts 来源及不再使用的 serverId 参数，只装配本机观察；保留 snapshot、队列／恢复等待、权限与终止观察。
+
+src/paseo/agent/agent-messages/delivery.ts（← packages/server/src/server/agent/agent-messages/delivery.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/agent/agent-messages/envelope.ts（← packages/server/src/server/agent/agent-messages/envelope.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/agent/agent-messages/index.ts（← packages/server/src/server/agent/agent-messages/index.ts）
+  - 同上游，仅共同改动。
+
+src/paseo/daemon-config-store.ts（← packages/server/src/server/daemon-config-store.ts:321-348）
+  - 摘录上游 321–348 行的 applyMutableProviderConfigToOverrides 一个纯函数，未搬文件其余内容；ProviderOverrideSchema 走 brain-shared，MutableDaemonConfig 走 minds 配置接缝。

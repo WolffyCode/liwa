@@ -1,0 +1,43 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/brain/minds-idle-cleanup/README.md
+/:
+  en: 85cffb88fef560b8
+  zh: f633b093c3b36b58
+/liwa-minds-idle-cleanup:
+  en: a86de3dd3ecb7f5a
+  zh: e7330c686262c8d7
+/liwa-minds-idle-cleanup/summary:
+  en: 8deb0e33f10c9454
+  zh: cfdc854939a2dcbb
+/liwa-minds-idle-cleanup/table-of-contents:
+  en: 2fee9973f19f9401
+  zh: 57488629c9a54c40
+/liwa-minds-idle-cleanup/use-this-package:
+  en: 415518467e805974
+  zh: 0c2c67956230d219
+/liwa-minds-idle-cleanup/understand-the-implementation:
+  en: f3afd2e41b39ddb8
+  zh: f9fb59539b295438
+/liwa-minds-idle-cleanup/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/liwa-minds-idle-cleanup/model-experience/b:
+  en: 0d441d2b529df300
+  zh: 0d441d2b529df300
+/liwa-minds-idle-cleanup/model-experience/b/what-the-model-sees:
+  en: 0070eac2e16bf181
+  zh: 4b3c3e07d9161f1b
+/liwa-minds-idle-cleanup/model-experience/b/token-effect:
+  en: e6e5c934916daa16
+  zh: aa1ea48250f1532e
+/liwa-minds-idle-cleanup/model-experience/b/kv-cache-effect:
+  en: 279c7d99ed302616
+  zh: 642e6c5df931ebb5
+/liwa-minds-idle-cleanup/known-limitations-and-deferred-work:
+  en: db1834058217cf2c
+  zh: 70c426be98566a6c
+/liwa-minds-idle-cleanup/known-limitations-and-deferred-work/dev-note:
+  en: 09742b88dd08a1e1
+  zh: 264c98ba40a01c0c

@@ -128,7 +128,7 @@ G1 已随④ Claude 完成；G4 在 minds 回合包装计时，为③开放前�
 
 #### 决策 67 的宿主装配草案
 
-以下是 H′ 的 bundle 文档草案，不是本轮新增的 cordis 文件。底座 Connection/webserver/storage-domain/session-persistence/subprocess 与实际提供方行正常装配，路径经原 profile 的 liwaHomePath 解析；minds 与 toolport 是 Service Definition + 实现，三个策略／能力行可单独 `disabled:true`，tool-minds 工具贡献也可单独禁用。具体搬运文件与 Config 的唯一清单见 [01-agent-cli.md](01-agent-cli.md) §4.9。〔一手〕`packages/bundle/brain-cli/cordis.patch.yml:12`；主人工作记录 20 C11；〔推理〕装配形状。
+以下是 H′ 的 bundle 文档草案，不是本轮新增的 cordis 文件。底座 Connection/webserver/storage-domain/session-persistence/subprocess 与实际提供方行正常装配，路径经原 profile 的 liwaHomePath 解析；minds 与 toolport 是 Service Definition + 实现，三个策略／能力行可单独 `disabled:true`，toolport-minds 工具贡献也可单独禁用。具体搬运文件与 Config 的唯一清单见 [01-agent-cli.md](01-agent-cli.md) §4.9。〔一手〕`packages/bundle/brain-cli/cordis.patch.yml:12`；主人工作记录 20 C11；〔推理〕装配形状。
 
 ```yaml
 - insert:
@@ -146,8 +146,8 @@ G1 已随④ Claude 完成；G4 在 minds 回合包装计时，为③开放前�
       config:
         listen: loopback
         route: /mcp/agents
-    - id: tool-minds
-      name: '@liwa/tool-minds'
+    - id: toolport-minds
+      name: '@liwa/toolport-minds'
     - id: minds-restart-recovery
       name: '@liwa/minds-restart-recovery'
       config: { enabled: true, prompt: 'Resume working.' }
@@ -517,11 +517,11 @@ CLI -> 验证新 boot ready；会话恢复可另为 running/failed/blocked，不
 | 任务 | 交付与依赖／验收 | 可交 GLM 的部分 | 必须重点评审 |
 | --- | --- | --- | --- |
 | A′ 契约冻结 | F1–F9、C1–C11 与待写回 15–20 落文档；doc-sync | 表格／引用核对 | 配置唯一真相、生命周期所有权、无秘密记录 |
-| B′ 搬文件 | 按 01 §4.9 分包，src/paseo + NOTICE + tests/paseo，接缝先 stub；typecheck | 固定文件拷贝／来源核对 | import 闭包、裁剪范围、无丢功能；stub 不进验收完成率 |
+| B′ 搬文件 | 按 01 §4.9 分包，src/paseo + NOTICE，接缝先 stub；上游测试随各自接缝块搬；typecheck | 固定文件拷贝／来源核对 | import 闭包、裁剪范围、无丢功能；stub 不进验收完成率 |
 | C′ 存储接缝 | 原 storage seam 严格读取前置；AgentStorage over storage-domain/per-record，finish-subscriptions 表；上游 storage 测试改接缝后通过 | schema/字段映射 | 坏记录不当 absent、beginDelete 异步、revision／flush/unknown、多文件恢复 |
 | D′ 提供方接缝 | BrainProvider 改形，Claude/ACP 直通、deepseek/testkit 实现 AgentSession，删临时适配；现有 brain 五包测试与 A2 真机回归 | 固定能力／配置映射 | Claude 空壳/问答/预算/计量不随包装丢失；两份 config 接口统一；受管 launch |
 | E′ 日志接缝 | durable store over JSONL，事件运行时词汇／projection/生成物接通；重启后 logs/attach 读回 | 固定 codec／表格／目录生成 | timeline seq 与 log offset、epoch=gen、追加 replacement、flush cut、原生隐藏请求可重建缺口 |
-| F′ 内核 MCP | toolport 登记表、端点、tool-minds 接口适配、按代次令牌；真实 Claude 经 liwa 服务器 spawn 开子活并获完成通知 | 已冻结工具 schema 映射 | 始终鉴权，禁止无密码放行，父不代批；工具撤登记与实时目录；真实模型另授权 |
+| F′ 内核 MCP | toolport 登记表、端点、toolport-minds 接口适配、按代次令牌；toolport 工具目录保持 gen-tool-catalog 同等的不漏登保证，每个 toolport-* 包都要真实登记并进入目录；真实 Claude 经 liwa 服务器 spawn 开子活并获完成通知 | 已冻结工具 schema 映射 | 始终鉴权，禁止无密码放行，父不代批；工具撤登记与实时目录；真实模型另授权 |
 | G′ 灵鲸增量 | durable delivery、gen、agents.yml opening；G4 唯一回合包装 timer 与 subprocess 出生屏障／waitForExit 补口在此闭合；02 §9 m0 用例 | 纯选择／批次运算 | next_step 不回落 replace、unknown 不重投、旧代令牌与 timer 不串新轮；进程停稳与副作用 |
 | H′ 宿主装配与命令 | brain-host + 轻 brain、本机 Connection、锁/restart/兼容协议，装配三可禁用策略行；brain run 改走 minds；§9.4 | parser／帮助／固定输出／bundle 行 | ready/drain 单写、D4/D5 默认值、无会话随连接释放、归档／reload 收紧 |
 | I′ 测试与验收 | 上游 tests/paseo 接缝回归、灵鲸增量测试、DeepSeek/Claude 真机与可执行假 CLI；§9.4 全过，构建后冒烟 | 机械检查／文档校验 | 独立复核故障注入、模型可见日志、原生计量、真实旧新 codec；不能用 mock 冒充真机 |
@@ -564,9 +564,9 @@ ACP `/goal`／`/plan`／`/compact` 与最小文件块仍按 D9/D10 作为本步�
 | A28 | 实际布局为一 agent 一 JSON、一 process/operation 一 JSON；ls 无 SQL 路径；在 intent/JSONL flush/record rename/回执各点崩溃，恢复同 operation；批量删除部分成功如实返回；缺 processRefs 目标阻止恢复 | 真实 storage-json per-record＋故障注入；测 1,000/10,000 记录启动/ls/写入，记录字节与 RSS |
 | A29 | 旧 CLI→新宿主、新 CLI→旧宿主均解析：新增字段可选，旧字段仍接受，nullable/枚举不收窄；新事件仅发给支持者；旧 history/send 仍工作，新能力缺失只 gate 该功能 | 使用历史 wire 夹具与真实 Typert/Connection codec；不只用 TS 编译通过代替解析；不因版本不同拒绝全部请求 |
 
-#### 搬运测试清单（B′ 随源码入 tests/paseo）
+#### 搬运测试清单（随所属接缝块入 tests/paseo）
 
-按固定来源实际目录枚举，路径相对 `packages/server/src/server/agent/`，行数为 `wc -l`。以下随对应源码迁入所属包的 `tests/paseo/`，保留来源及用例身份；改接缝后能跑的留，不能跑的逐条在该包测试清单记录原因与前置，不删测试来制造通过。真实 e2e 没有授权／Key 不运行，也不以假 CLI 冒充通过。〔一手〕`paseo-upstream@8018231a` 下表文件；主人工作记录 20 C8。
+按固定来源实际目录枚举，路径相对 `packages/server/src/server/agent/`，行数为 `wc -l`。B′ 不拷上游测试与夹具；以下随所属接缝块迁入目标包的 `tests/paseo/`，在该块拷入、改接缝并跑通，保留来源及用例身份；编译与运行办法由首个搬测试的 C′ 块确定。不能跑的逐条在该包测试清单记录原因与前置，不删测试来制造通过。真实 e2e 没有授权／Key 不运行，也不以假 CLI 冒充通过。〔一手〕`paseo-upstream@8018231a` 下表文件；主人工作记录 20 C8。
 
 | 测试文件 | 行数 | 目标包／边界 |
 | --- | --- | --- |
@@ -584,10 +584,10 @@ ACP `/goal`／`/plan`／`/compact` 与最小文件块仍按 D9/D10 作为本步�
 | `activity-curator.test.ts` | 546 | minds |
 | `prompt-attachments.test.ts` | 197 | minds |
 | `timeline-prompt-index.test.ts` | 54 | minds |
-| `mcp-server.test.ts` | 6935 | toolport／tool-minds（跨包装配）；含不搬产品域的用例逐条标未接／原因 |
-| `paseo-tool-policy.test.ts` | 35 | toolport／tool-minds（跨包装配） |
-| `provider-snapshot-manager.test.ts` | 3775 | brain |
-| `mutable-provider-config-owner.test.ts` | 343 | brain |
+| `mcp-server.test.ts` | 6935 | toolport／toolport-minds（跨包装配）；含不搬产品域的用例逐条标未接／原因 |
+| `paseo-tool-policy.test.ts` | 35 | brain-shared |
+| `provider-snapshot-manager.test.ts` | 3775 | minds |
+| `mutable-provider-config-owner.test.ts` | 343 | minds |
 | `agent-response-loop.test.ts` | 332 | minds-structured-generation |
 | `structured-generation-providers.test.ts` | 243 | minds-structured-generation |
 | `rewind/rewind.test.ts` | 179 | minds |
@@ -599,15 +599,15 @@ ACP `/goal`／`/plan`／`/compact` 与最小文件块仍按 D9/D10 作为本步�
 | `finish-subscriptions/internal/observation-stream.test.ts` | 217 | minds |
 | `idle-runtime-cleanup/idle-runtime-cleanup.test.ts` | 294 | minds-idle-cleanup |
 | `restart-recovery/index.test.ts` | 105 | minds-restart-recovery |
-| `agent-mcp.e2e.test.ts` | 901 | toolport／tool-minds（跨包装配） |
-| `mcp-parity.e2e.test.ts` | 1208 | toolport／tool-minds（跨包装配）；含不搬产品域的用例逐条标未接／原因 |
+| `agent-mcp.e2e.test.ts` | 901 | toolport／toolport-minds（跨包装配） |
+| `mcp-parity.e2e.test.ts` | 1208 | toolport／toolport-minds（跨包装配）；含不搬产品域的用例逐条标未接／原因 |
 | `agent-response-loop.real.e2e.test.ts` | 288 | minds-structured-generation |
 | `archive-discovery.e2e.test.ts` | 100 | minds；含不搬产品域的用例逐条标未接／原因 |
 | `model-catalog.e2e.test.ts` | 92 | minds；含不搬产品域的用例逐条标未接／原因 |
 
-`finish-subscriptions` 现有测试共三份，`create-agent` 两份、`agent-messages` 一份、idle-cleanup/restart-recovery 各一份；未发现独立 agent-configuration-validator.test.ts，相关行为在 provider-snapshot-manager 测试里，不编造文件。已搬 brain-shared 的 timeline/store/provider-subagent 等测试仍留原包，不再重复拷贝。`persistence-hooks` 位于 agent 目录外，搬源码时同时审阅其对应 server 级测试。〔一手〕固定来源目录枚举；〔推理〕闭包规则。
+`finish-subscriptions` 现有测试共三份，`create-agent` 两份、`agent-messages` 一份、idle-cleanup/restart-recovery 各一份；未发现独立 agent-configuration-validator.test.ts，相关行为在 provider-snapshot-manager 测试里，不编造文件。已搬 brain-shared 的 timeline/store/provider-subagent 等测试仍留原包，不再重复拷贝。`persistence-hooks` 与 `client-message-id` 位于 agent 目录外，它们的 server 级测试同样随所属接缝块审阅并搬入。〔一手〕固定来源目录枚举；〔推理〕闭包规则。
 
-测试所需 `rewind/test-rewind-session.ts` 作为 tests/paseo 夹具保留，不能因生产不搬就删除回滚测试；不搬组的纯语音／导入／插件平台／worktree 测试不计入本搬运完成率，跨域混合用例须逐条写未接原因。灵鲸增量另写测试：per-record 严格读／跨文件提交、混合日志游标／replacement、gen/旧令牌、opening 顺序／释放、四级配置、next_step 禁 replace、重启 unknown、G1/G4 及 stop-all 等 §9.4 矩阵。〔一手〕主人工作记录 20 C8；〔推理〕覆盖边界。
+测试所需 `rewind/test-rewind-session.ts` 随回滚测试所在接缝块搬入 tests/paseo 作为夹具，不能因生产不搬就删除回滚测试；不搬组的纯语音／导入／插件平台／worktree 测试不计入本搬运完成率，跨域混合用例须逐条写未接原因。灵鲸增量另写测试：per-record 严格读／跨文件提交、混合日志游标／replacement、gen/旧令牌、opening 顺序／释放、四级配置、next_step 禁 replace、重启 unknown、G1/G4 及 stop-all 等 §9.4 矩阵。〔一手〕主人工作记录 20 C8；〔推理〕覆盖边界。
 
 覆盖率对 src/paseo 与 vendor 同样处理，沿用 [brain-shared README](../../../../packages/brain/brain-shared/README.zh.md#understand-the-implementation) 的既有约定；自写 index/storage/timeline/delivery/gen/catalog/registry 不享受迁入豁免。禁止为满足覆盖率删原用例或将灵鲸自写代码挪进 src/paseo。〔一手〕该 README 的编译／检查约定；〔推理〕验收。
 

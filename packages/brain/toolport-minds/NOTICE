@@ -1,0 +1,26 @@
+@liwa/toolport-minds — 第三方来源声明
+
+本包 src/paseo/ 下的迁入文件拷自 Paseo：
+  Upstream: https://github.com/getpaseo/paseo
+  Commit:   8018231a00a6b45ed6cda1856f954ba14b4824c0
+  Version:  0.15.0-beta.1
+  License:  Apache-2.0
+  License text: https://www.apache.org/licenses/LICENSE-2.0
+  Copyright (c) 2025-present Mohamed Boudra
+
+上游没有 NOTICE 文件。文件第一行注明来源；改动在原位置完成，逐文件列在下方。
+src/index.ts、src/seams/ 与 tests/scaffold.spec.ts 是灵鲸自写，MIT；接缝只定义接口，没有假实现。
+上游测试与夹具不在 B′ 拷入，随各自接缝块拷入、适配并验证。
+
+路径对照：packages/server/src/server/ → src/paseo/；packages/protocol/src/ → src/paseo/protocol/。
+
+全部文件的共同改动：
+  - 加来源注释；相对 import 后缀 .js 改成 .ts，跨包使用声明的 ./paseo/* 子路径。
+  - 上游协议与已共享的 agent/utils 模块引用唯一 brain-shared 实现；server/messages 的重导出改直接引协议子集。
+  - pino Logger 改用 brain-shared.PaseoLogger；不新增 pino、uuid 或 fast-deep-equal 依赖。
+  - 迁入源码用 tsconfig.paseo.json 的上游选项；自写代码在主项目严格检查。
+
+逐文件来源与改动：
+
+src/paseo/agent/tools/paseo-tools.ts（← packages/server/src/server/agent/tools/paseo-tools.ts）
+  - 只保留上游实际存在的 15 个 agent 工具处理器（detachAgent 代码在 minds，来源没有独立 detach 工具）；删除插件、浏览器、语音、终端、日程、工作区／worktree、forge、导入与远端分派；创建直接接 cwd，不保留旧 placement 兼容层，列表不接收已删除的 includeBackground 工作区参数；共用工具类型／策略走 brain-shared，删除仅供 list_profiles 使用的 daemonConfigStore 配置选项；注册助手按 schema 泛型约束输入，移除上游 any；保留 send／通知／权限处理与 provider 目录业务。

@@ -341,7 +341,7 @@ D′ 直通 AgentSession 时，`AgentUsage` 在原定义增加可选 `cacheWrite
 | direct owner／持久观察 | SessionOwner 增 directId+gen，初始化前安装 minds 持久 sink，有界缓冲与 durable 回执；连接只拥有读者 | 〔一手〕`packages/brain/brain/src/index.ts:491`；〔推理〕 |
 | 续接通知／进程范围 | describePersistence 非 null 才可续；thread_started/状态变化及时持久；subprocess 单写出生屏障与 processRefs，waitForExit 才能宣称停稳 | 〔一手〕`packages/brain/brain/src/provider.ts:113`、`packages/subprocess/subprocess/src/types.ts:188`；〔推理〕 |
 | 原生清理／资源 | provider 提供精确材料定位与清理；subprocess 采样，不删共享身份根、cwd，不把 unknown 当零 | 〔二手〕Codex 评估 §7；〔推理〕 |
-| 配置／目录 | provider-snapshot-manager 等三件归 brains；Key 只在提供方实例 env，agent JSON／resume／日志去秘密；不默认接 credential-ref 或个人登录 | 〔一手〕`packages/brain/brain-claude-code/src/config.ts:18`；主人工作记录 15 |
+| 配置／目录 | provider-snapshot-manager 等三件归 minds（与 AgentManager 同处，brains 只出提供方表快照）；Key 只在提供方实例 env，agent JSON／resume／日志去秘密；不默认接 credential-ref 或个人登录 | 〔一手〕`packages/brain/brain-claude-code/src/config.ts:18`；主人工作记录 15 |
 | G2／G3／G4 | minds 接会话级 pending、followUpPrompt 和子事件；G2/G3 的实际提供方补齐随⑤，G4 回合包装与 JSON 严格读在宿主开放前完成，详见 01 §4.11 | 〔一手〕handoff 决策 66、67；〔推理〕 |
 
 ### 5.2 `memory.engine`

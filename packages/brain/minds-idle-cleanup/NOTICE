@@ -1,0 +1,26 @@
+@liwa/minds-idle-cleanup — 第三方来源声明
+
+本包 src/paseo/ 下的迁入文件拷自 Paseo：
+  Upstream: https://github.com/getpaseo/paseo
+  Commit:   8018231a00a6b45ed6cda1856f954ba14b4824c0
+  Version:  0.15.0-beta.1
+  License:  Apache-2.0
+  License text: https://www.apache.org/licenses/LICENSE-2.0
+  Copyright (c) 2025-present Mohamed Boudra
+
+上游没有 NOTICE 文件。文件第一行注明来源；改动在原位置完成，逐文件列在下方。
+src/index.ts、src/seams/ 与 tests/scaffold.spec.ts 是灵鲸自写，MIT；接缝只定义接口，没有假实现。
+上游测试与夹具不在 B′ 拷入，随各自接缝块拷入、适配并验证。
+
+路径对照：packages/server/src/server/ → src/paseo/；packages/protocol/src/ → src/paseo/protocol/。
+
+全部文件的共同改动：
+  - 加来源注释；相对 import 后缀 .js 改成 .ts，跨包使用声明的 ./paseo/* 子路径。
+  - 上游协议与已共享的 agent/utils 模块引用唯一 brain-shared 实现；server/messages 的重导出改直接引协议子集。
+  - pino Logger 改用 brain-shared.PaseoLogger；不新增 pino、uuid 或 fast-deep-equal 依赖。
+  - 迁入源码用 tsconfig.paseo.json 的上游选项；自写代码在主项目严格检查。
+
+逐文件来源与改动：
+
+src/paseo/agent/idle-runtime-cleanup/index.ts（← packages/server/src/server/agent/idle-runtime-cleanup/index.ts）
+  - RuntimeCleanupCandidate 定义移到 minds 的 AgentManager 所有者；本策略只通过公开子路径导入，日志与超时助手走 brain-shared。

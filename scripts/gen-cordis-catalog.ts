@@ -52,6 +52,9 @@ export { REGION_BEGIN, REGION_END }
 export const SERVICE_PAGE: Record<string, string> = {
   headlessStartup: 'boot.md',
   brains: 'brain.md',
+  minds: 'brain.md',
+  structuredGeneration: 'brain.md',
+  toolport: 'brain.md',
   brainStartup: 'brain.md',
   acpExtensions: 'brain.md',
   translator: 'translation.md',

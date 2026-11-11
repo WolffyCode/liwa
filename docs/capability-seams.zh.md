@@ -9,6 +9,12 @@
 
 ```mermaid
 flowchart LR
+  pkg_minds["minds"]
+  svc_minds["ctx.minds<br/>Agent management and provider catalogs"]
+  pkg_minds_structured_generation["minds-structured-generation"]
+  svc_structuredGeneration["ctx.structuredGeneration<br/>Structured agent output generation"]
+  pkg_toolport["toolport"]
+  svc_toolport["ctx.toolport<br/>Kernel MCP tools"]
   pkg_action_cards["action-cards"]
   svc_actionCards["ctx.actionCards<br/>Optional action cards"]
   pkg_creation_recommendations["creation-recommendations"]
@@ -392,6 +398,8 @@ flowchart LR
   pkg_lsp_stdio --> svc_lsp
   pkg_mcp_client --> svc_mcpResources
   pkg_mcp_resources --> svc_mcpResources
+  pkg_minds --> svc_minds
+  pkg_minds_structured_generation --> svc_structuredGeneration
   pkg_office_to_pdf --> svc_officeToPdf
   pkg_permission_presets --> svc_permissionPresets
   pkg_plan_mode --> svc_planMode
@@ -447,6 +455,7 @@ flowchart LR
   pkg_terminal_bash --> svc_terminals
   pkg_token_meter --> svc_tokenMeter
   pkg_tool_subagent --> svc_subagentModelSelection
+  pkg_toolport --> svc_toolport
   pkg_tools --> svc_tools
   pkg_typert_registry --> svc_typert
   pkg_user_approval --> svc_approval
@@ -631,6 +640,9 @@ flowchart LR
 
 | ctx 键 | 角色 | 所属包 | 实现 | 直接消费方 | 配套插件 | 说明 |
 | --- | --- | --- | --- | --- | --- | --- |
+| `ctx.minds` | `service` | [`minds`](../packages/brain/minds) | - | - | - | 拥有 AgentManager 与运行期提供方目录；恢复、回收和结构化生成各自独立装配。 |
+| `ctx.structuredGeneration` | `service` | [`minds-structured-generation`](../packages/brain/minds-structured-generation) | - | - | - | 拥有结构化输出的校验与纠正；每次纠正仍是普通 agent 回合。 |
+| `ctx.toolport` | `service` | [`toolport`](../packages/brain/toolport) | - | - | - | 拥有内核 MCP 入口；toolport 领域工具使用独立于 ctx.tools 的登记表。 |
 | `ctx.actionCards` | `service` | [`action-cards`](../packages/experimental/action-cards) | - | [`creation-recommendations`](../packages/experimental/creation-recommendations), [`client-ui-action-cards`](../packages/experimental/client-ui-action-cards) | - | 负责卡片工具、卡片状态、用户操作和状态通知；各卡片种类注册自己的动作和处理器。 |
 | `ctx.pluginRecommendations` | `service` | [`plugin-recommendations`](../packages/experimental/plugin-recommendations) | - | [`client-ui-plugin-recommendations`](../packages/experimental/client-ui-plugin-recommendations) | - | 读取官方插件卡片的当前目录文本，并在用户点击后通过配置插件管理器启用该插件。 |
 | `ctx.headlessStartup` | `core` | [`headless`](../packages/bundle/headless) | - | [`headless`](../packages/bundle/headless) | - | 将解析后的任务和运行选项提供给无界面运行器及其 sandbox-policy 配置。 |

@@ -1,0 +1,36 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types",
+    "tsBuildInfoFile": "lib/tsconfig.paseo.tsbuildinfo",
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false
+  },
+  "include": [
+    "src/paseo"
+  ],
+  "references": [
+    {
+      "path": "../../../vendor/cosmokit"
+    },
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../minds"
+    },
+    {
+      "path": "../minds/tsconfig.paseo.json"
+    },
+    {
+      "path": "../brain-shared"
+    },
+    {
+      "path": "../brain-shared/tsconfig.paseo.json"
+    },
+    {
+      "path": "../../../vendor/schemastery"
+    }
+  ]
+}
