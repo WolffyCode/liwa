@@ -66,6 +66,10 @@ version: 1
 skills:
   review: { dir: skills/review }
   release: { dir: skills/release, applyTo: [claude-reclaude] }
+agents:
+  reviewer-agent: { dir: agents/review }
+commands:
+  check-command: { dir: commands }
 mcpServers:
   docs: { type: http, url: https://mcp.example.test/docs, headers: { Authorization: 'Bearer ${DOCS_TOKEN}' } }
 plugins:
@@ -79,7 +83,9 @@ instances:
   codex-main: { use: [release] }
 ```
 
-`loadAgentsConfig(root)` 读全局集（没有文件就是空集），`loadDirectoryConfig(root, cwd)` 读目录级文件，`resolveAgentConfig(config, { impl, directory })` 为一个实例选条目：默认是 `applyTo` 省略或点名了它的全部条目；任一级的 `use` 按名加，任一级 `disable` 过的名字不管哪级 `use` 都不放回来；引用集里没有的名字报错。两个文件都是严格的：未知的键装载即报，目录级文件只做选择、不能新增条目。结果就是会话形状的：本事用 `materializeSkills` 拷成一个 `skillsDir`，`mcpServers`、`plugins`、按事件分组的 `hooks`，指令文件连成一段 `instructions`。实例行与会话里同名的本事、MCP 服务器在开会话时报错；钩子按事件追加；指令放在规矩之后、仓库指令之前。仓库自带的 `.claude/`、`.mcp.json` 永远不执行，目录级文件只在灵鲸 home 下。
+`loadAgentsConfig(root)` 读全局集（没有文件就是空集），`loadDirectoryConfig(root, cwd)` 读目录级文件，`resolveAgentConfig(config, { impl, directory })` 为一个实例选条目：默认是 `applyTo` 省略或点名了它的全部条目；任一级的 `use` 按名加，任一级 `disable` 过的名字不管哪级 `use` 都不放回来；引用集里没有的名字报错。两个文件都是严格的：未知的键装载即报，目录级文件只做选择、不能新增条目。结果就是会话形状的：本事用 `materializeSkills` 拷成一个 `skillsDir`，`mcpServers`、`plugins`、按事件分组的 `hooks`，指令文件连成一段 `instructions`。实例行与会话里同名的本事、MCP 服务器在开会话时报错；钩子按事件追加；指令放在规矩之后、仓库指令之前。项目执行类 settings/hooks/.mcp.json 不自动导入；说明类由提供方在 projectDocs 开时收集，目录级文件只在灵鲸 home 下。
+
+agents、commands 是命名目录条目，与本事使用相同的 applyTo/use/disable。插件可用 `{dir}` 或 `{library: impl/plugin@marketplace}`，缺失库引用装载即失败；readPluginLibrary 返回带版本的本地安装记录。collectProjectDocs 是接受文件快照的纯收集器，readProjectDocs 把读取限制在 git 根以内、导入深度 5。契约含 sessionRules、项目说明完整注入／失败事件、可选压缩 trigger、静态／显式认证诊断；ctx.brains.managePlugins 只转发显式配置操作，不开模型会话。
 
 ### 驱动与观察
 

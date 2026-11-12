@@ -67,6 +67,8 @@ export interface RunAgents {
   skillsDir: string
   mcpServers: Record<string, McpServer>
   plugins: string[]
+  agents?: string[]
+  commands?: string[]
   hooks: Hooks
   instructions: string
 }
@@ -108,6 +110,8 @@ export function resolveRunSession(command: RunCommand, config: Config, configDir
     ...(agents === undefined || agents.plugins.length === 0 ? {} : { plugins: agents.plugins }),
     ...(agents === undefined || Object.keys(agents.hooks).length === 0 ? {} : { hooks: agents.hooks }),
     ...(agents === undefined || agents.instructions === '' ? {} : { instructions: agents.instructions }),
+    ...(agents?.agents === undefined || agents.agents.length === 0 ? {} : { agents: agents.agents }),
+    ...(agents?.commands === undefined || agents.commands.length === 0 ? {} : { commands: agents.commands }),
     projectDocs: true,
     childPolicy: { native: mindKind === 'work', maxDepth: 1, maxConcurrent: 4, crossCli: [] },
   }
@@ -148,7 +152,8 @@ async function resolveRunAgents(
   io.stderr.write(`liwa: agent config for ${impl}: ${summary.join(' ')}\n`)
   return {
     agents: {
-      skillsDir, mcpServers: resolved.mcpServers, plugins: resolved.plugins, hooks: resolved.hooks, instructions: resolved.instructions,
+      skillsDir, agents: resolved.agents, commands: resolved.commands, mcpServers: resolved.mcpServers,
+      plugins: resolved.plugins, hooks: resolved.hooks, instructions: resolved.instructions,
     },
     dispose: async () => {
       if (skillsDir !== '') await rm(skillsDir, { recursive: true, force: true })
@@ -177,8 +182,12 @@ export function formatEvent(event: BrainEvent): string {
       return `${label} turn=${event.turnId} ${event.category}: ${event.message}`
     case 'session.exited':
       return `${label} ${event.category}: ${event.message}`
+    case 'session.project_document':
+      return `${label} ${event.path} ${JSON.stringify(event.reason)}`
+    case 'session.project_document_failed':
+      return `${label} ${event.path}: ${event.message}`
     case 'session.compacted':
-      return `${label} ${JSON.stringify({ preTokens: event.preTokens, postTokens: event.postTokens })}`
+      return `${label} ${JSON.stringify({ trigger: event.trigger, preTokens: event.preTokens, postTokens: event.postTokens })}`
     case 'process.exited':
       return `${label} code=${String(event.code)} signal=${String(event.signal)}`
     case 'item.message':
@@ -306,6 +315,7 @@ function formatProbe(impl: string, result: BrainProbeResult): string {
     `provider:  ${impl}`,
     `available: ${result.available ? 'yes' : 'no'}`,
     `version:   ${result.version ?? 'unknown'}`,
+    ...(result.auth === undefined ? [] : [`auth:      ${JSON.stringify(result.auth)}`]),
     ...result.problems.map(problem => `problem:   ${problem}`),
   ]
   return `${lines.join('\n')}\n`
@@ -357,7 +367,7 @@ async function runList(ctx: Context, json: boolean, io: BrainCliIo): Promise<num
  * @returns 可用时 0，否则 1。
  */
 async function runProbe(ctx: Context, command: Extract<BrainCommand, { command: 'probe' }>, io: BrainCliIo): Promise<number> {
-  const result = await ctx.brains.probe(ImplId(command.impl))
+  const result = await ctx.brains.probe(ImplId(command.impl), undefined, { checkAuth: command.checkAuth === true })
   io.stdout.write(command.json ? `${JSON.stringify({ impl: command.impl, ...result })}\n` : formatProbe(command.impl, result))
   return result.available ? 0 : 1
 }
@@ -448,6 +458,13 @@ async function run(ctx: Context, config: Config, io: BrainCliIo): Promise<void> 
     case 'list':
       code = await runList(ctx, command.json, io)
       break
+    case 'plugin': {
+      if (config.agentsRoot === '') throw new BrainError('invalid_input', 'brain.plugin_root', 'agentsRoot is required for plugin management')
+      const records = await ctx.brains.managePlugins(ImplId(command.provider), config.agentsRoot, command.request)
+      io.stdout.write(command.json ? `${JSON.stringify(records)}\n` : records.map(record => `${record.key}  ${record.version}  ${record.dir}`).join('\n') + '\n')
+      code = 0
+      break
+    }
     case 'probe':
       code = await runProbe(ctx, command, io)
       break

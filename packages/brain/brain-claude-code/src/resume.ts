@@ -15,28 +15,29 @@ export const CLAUDE_SESSION_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[8
  * @param handle - 只带原生身份与根的续接句柄。
  * @param home - brains 分配的当前成员 impl 根。
  * @param cwd - 用于原生目录编码，原目录变更时可在同一根下查找。
+ * @returns 已验证的转录快照，后续历史回放复用正文。
  */
-export async function validateResume(handle: ResumeHandle, home: string, cwd: string): Promise<void> {
+export async function validateResume(handle: ResumeHandle, home: string, cwd: string): Promise<{ path: string; text: string }> {
   if (handle.home === undefined) throw new BrainError('invalid_input', 'brain.claude_resume_root', 'Resume handle must include its original member/provider home')
   const originalHome = handle.home
-  const inspect = async (): Promise<string> => {
-    const root = await realpath(home)
-    if (await realpath(originalHome) !== root) throw new BrainError('invalid_input', 'brain.claude_resume_root', 'Resume belongs to a different member/provider home')
+  const inspect = async (): Promise<{ path: string; text: string }> => {
+    const root = await resumeHome(home)
+    if (await resumeHome(originalHome) !== root) throw new BrainError('invalid_input', 'brain.claude_resume_root', 'Resume belongs to a different member/provider home')
     const path = await realpath(await claudeTranscriptPath({ cwd, configDir: root, sessionId: handle.sessionRef }))
     const local = relative(root, path)
     if (local === '..' || local.startsWith(`..${sep}`) || isAbsolute(local)) throw new BrainError('invalid_input', 'brain.claude_resume_root', 'Native transcript escapes the member/provider home')
-    return await readFile(path, 'utf8')
+    return { path, text: await readFile(path, 'utf8') }
   }
-  let text: string
+  let snapshot: { path: string; text: string }
   try {
-    text = await inspect()
+    snapshot = await inspect()
   } catch (error) {
     if (error instanceof BrainError) throw error
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') throw new BrainError('not_found', 'brain.claude_resume_missing', 'Native Claude transcript is missing; restore the member data or start a new session')
     throw new BrainError('unavailable', 'brain.claude_resume_unreadable', 'Native Claude transcript cannot be read; check member directory access')
   }
   let messages = 0
-  for (const line of text.split('\n').filter(line => line.trim() !== '')) {
+  for (const line of snapshot.text.split('\n').filter(line => line.trim() !== '')) {
     let row: unknown
     try {
       row = JSON.parse(line)
@@ -49,8 +50,16 @@ export async function validateResume(handle: ResumeHandle, home: string, cwd: st
     messages++
   }
   if (messages === 0) throw corruptTranscript()
+  return snapshot
 }
 
 function corruptTranscript(): BrainError {
   return new BrainError('unavailable', 'brain.claude_resume_corrupt', 'Native Claude transcript is damaged or has no conversation; restore it or start a new session')
+}
+
+async function resumeHome(path: string): Promise<string> {
+  try { return await realpath(path) } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') throw new BrainError('not_found', 'brain.claude_resume_home_missing', 'Member/provider home is missing; restore the original member directory before resuming')
+    throw new BrainError('unavailable', 'brain.claude_resume_home_unreadable', 'Member/provider home cannot be resolved; check directory access')
+  }
 }

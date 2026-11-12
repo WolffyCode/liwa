@@ -125,17 +125,17 @@ prepareConfigDir(member,impl,spec) 返回成员 brains 根，只分发提供方 
 | SDK／二进制 | SDK 0.3.263，显式解析本机真实 claude；`binaryArgs: string[]` 位于可执行文件后、SDK 参数前，--version 探测同样带；不用 SDK 自带 CLI；正式下限仍待实测 | 〔一手〕`packages/brain/brain-claude-code/src/config.ts:24`、`src/provider.ts:80` |
 | 实例 Key | Config.env 直接配明文 Key，ANTHROPIC_API_KEY／ANTHROPIC_AUTH_TOKEN 必须且只能一个，BASE_URL 可选；装载校验；无 apiKeyEnv/authType/secretEnv/baseUrl、无该包 credentials/launch-environment 接线，不读默认 OAuth | 〔一手〕`src/config.ts:18`、`:177`；主人工作记录 15 |
 | 多实例 | 同插件多行，各 impl/label/env/models/禁用工具/binary/binaryArgs 独立，可并行；reclaude 与 z.ai GLM 两行示例仅示意，不含真实 Key | 〔一手〕`packages/bundle/brain-cli/cordis.patch.yml:36` |
-| 空壳 | settingSources:[]、strictMcpConfig、独立 HOME/config/securestorage；项目只受控读取 CLAUDE.md 正文，不执行原生 .claude/.mcp.json；显式本事／MCP／插件／命令钩子由灵鲸注入 | 〔一手〕`src/config.ts:236`、`:310`；A2 第一轮 |
+| 空壳 | settingSources:[]、strictMcpConfig、独立 HOME/config/securestorage；项目说明类由灵鲸收集并注入，执行类 settings/hooks/.mcp.json 不自动读取；显式本事／MCP／插件／命令钩子由灵鲸注入 | 〔一手〕`src/config.ts:236`、`:310`；A2 第一轮 |
 | 当前开放范围 | `mindKind !== work` 在准入拒绝，不能把 CLAUDE_META.compaction='switchable' 当成实例组合已通过长上下文隔离验收；实例／想事／整理要在后续真实组合验收后开放 | 〔一手〕`src/config.ts:273` |
 | 模式 | default／plan／acceptEdits／auto；bypassPermissions、dontAsk 拒绝，allowDangerouslySkipPermissions:false；工具范围与模式分别校验 | 〔一手〕`src/config.ts:342` |
 | thinking | 模型目录 thinkingOptions 为 off/low/medium/high/xhigh/max/ultracode；现 SessionConfig.thinking、--thinking、setThinking、Meta.thinkingSwitch、view().thinking 与 session.thinking_changed 已实现；切档只在回合之间，未知档拒绝；D′ 合并配置只留 thinkingOptionId、方法对齐 setThinkingOption | 〔一手〕`src/config.ts:61`、`src/session.ts:46`、`packages/brain/brain/src/views.ts:70`；00 §5.1 |
 | 配置入口 | 实例 Config 的 skills/mcpServers/plugins/hooks + 会话 plugins/hooks/instructions + 全局四级选择已实现；模型、规矩、MCP、令牌各会话独立快照 | 〔一手〕`src/config.ts:30`、`packages/brain/brain/src/agents-config/index.ts:1`；03-agent-config |
-| 问答／会话允许 | 原生答案 codec 保留 selected/custom，不能编码时拒绝并留 pending；allow_session 只对可生成窄规则的工具展示；父不代批子权限 | 〔一手〕`src/session.ts:108`、`:126` |
+| 问答／会话允许 | selected 保留在 answers，选项备注走 annotations[问题全文].notes；会话许可展示 CLI 窄规则并改写为 session，精确 MCP 使用同一种选项；父不代批子权限 | 〔一手〕`src/session.ts:108`、`:126` |
 | 原生子 agent | work 开放 Agent，canonical childId 不与 task_id 混用；后台跨回合保持；pause/drain/owner/hard_limit 先 stopTasks 再 interrupt，preempt/watchdog 只停父；close 收整组 | 〔一手〕`src/session.ts:151`；Claude 评估 §4〔二手〕 |
 | 送达 | nextStep:true，流式输入 priority:next；nextTurn:false，由 minds 在回合边界补，不声称 provider 已有 durable next_turn | 〔一手〕`src/provider.ts:23`；00 §5.1 |
 | 预算／收尾 | maxTurns 管主循环，不把子任务/helper 算成相同硬限；真实 assistant 主线程帧计推理次数，成功工具与 PostToolBatch 收尾；原生工具总次数硬限不承诺 | 〔一手〕`src/provider.ts:24`、`src/usage.ts:3`、`src/budget.ts:1` |
 | 用量／续接 | 同一 UUID 续接；帧账 + result 累计对账，含 token/成本基线，后台子消费归下一结算回合；取消／失败保留已知帧（G1）；num_turns 不作为推理计数；child.ended.usage 可为空，不填零、不重算父已含的子消费 | 〔一手〕`src/usage.ts:1`、`:91`、`src/session.ts:64`；主人工作记录 16–19 |
-| 认证失败／diagnostic | stream-json 的 system/api_retry 归 diagnostic；401/403 立即失败，不等十次退避；错误与 stderr 经已知秘密脱敏；第三方端点 providerReportedCostUsd 只展示不当实价 | 〔一手〕`src/diagnostics.ts:1`、`src/usage.ts:3`；主人工作记录 16–17 |
+| 认证失败／diagnostic | probe 默认报静态认证事实，--check-auth 只跑 auth status；stream-json 的 system/api_retry 归 diagnostic；401/403 立即失败，不等十次退避；错误与 stderr 经已知秘密脱敏；第三方端点 providerReportedCostUsd 只展示不当实价 | 〔一手〕`src/diagnostics.ts:1`、`src/usage.ts:3`；主人工作记录 16–17 |
 | 不做 | Claude fast mode/feature 接线与 SDK 自定义 agents 配置入口不做；Manager 通用 setFeature 接口保留不等于 Claude 开放 | 〔一手〕主人工作记录 19；`src/config.ts:18` |
 
 ### 4.3 `brain-codex`（Codex app-server）
@@ -196,7 +196,13 @@ Paseo ACP 客户端、GenericACPAgentClient 与五个厂商 shim 已迁入 brain
 
 ### 4.6 外部 CLI 配置：空壳子，内容由灵鲸注入
 
-CLI 自带的全局与项目配置、钩子、本事、插件一律不加载；灵鲸给人设、规矩、项目文档内容与 MCP。`projectDocs` 表示是否由灵鲸受控读取并注入项目 CLAUDE.md／AGENTS.md，不能据此开启 CLI 的 project/local 配置源；干活／查资料需要项目事实，其余会话不注入。当前 Claude 只读取 cwd/CLAUDE.md，不做父目录递归继承；其他提供方逐家兑现，不自行扩展来源。依据：〔一手〕handoff 决策 58、任务书 03；〔推理〕注入实现需设计。
+被干活仓库的文件按说明类／执行类区分：说明类由灵鲸受控读取，执行类 `.claude/settings*.json`、hooks、`.mcp.json` 不自动读取；个人 home 下的说明与配置不读取。Claude 的 `settingSources: []` 保持空壳；`projectDocs` 控制全部项目说明与文件式 agents／commands／skills 的导入，不开启 CLI 的 project/local 源。共享纯收集器 `collectProjectDocs` 的规则只归 brain，文件读取由同包 readProjectDocs 完成。〔一手〕`packages/brain/brain/src/project-docs.ts:1`；主人 11-11（决策 71）。
+
+静态层从 git 根走到 cwd；无 git 根只读 cwd。每级依次收集 CLAUDE.md（没有时才用 AGENTS.md）、.claude/CLAUDE.md、无 paths 前置条件的 .claude/rules/*.md、CLAUDE.local.md，按 realpath 去重。@路径 导入限制在 git 根以内，跳过代码块与行内代码，越界／循环／缺失／超深明确失败；深度上限 5，根深度为 0。每段标来源相对路径，完整系统注入超 instructionsMaxBytes 拒绝而不截断。〔一手〕`packages/brain/brain/src/project-docs.ts:13`；SDK 0.3.263 随附 CLI 的 wgs=5（字节 166218052）与 lD 的 d>=wgs（字节 166218669）。
+
+子目录说明与带 paths 的规则在 SDK PreToolUse 首次触及相应文件路径时按需注入 additionalContext；每份每代会话一次，先记录含全文的 session.project_document，单份超限或读取失败发 session.project_document_failed 且不注入。文件式 agents、commands、skills 与实例、agents.yml 选择的材料合成会话快照插件，同名冲突报出两处来源。MCP 和 settings 写会话快照内的 0600 文件，以文件路径传参，关闭无论成败均清理。〔一手〕`packages/brain/brain-claude-code/src/project-context.ts:1`、`src/config.ts:1`、`src/session.ts:1`。
+
+kernel 模式下，主人对某原生工具选了会话窄规则后，本会话该工具交 CLI 判定：命中规则与 CLI 自带的工作目录内只读命令放行，其余仍上送主人。未选规则的工具继续强制 ask；MCP 精确名会话许可仍由钩子 allow；子 agent 同名工具相同。provider 模式直接交 CLI 匹配会话规则，不自写规则解析器、不写 settings 权限规则。〔一手〕2026-11-11 真机核实（claude 2.1.322）；`packages/brain/brain-claude-code/src/budget.ts:1`。
 
 | 提供方 | 受控来源与隔离 | 真机验收边界 | 依据 |
 | --- | --- | --- | --- |
@@ -341,7 +347,7 @@ A1–A5 是分阶段的完整目标：第④步 A2 先验 provider/G1、本机 C
 | # | 怎么算接通 |
 | --- | --- |
 | A1 | `brain-deepseek`：本体为主人实例拉起真 `liwa --profile deepseek` 子进程（`LIWA_HOME` 在该会话目录、`~/.liwa` 无新文件）→ `liwa chat` 一句话 → `session/new` 带 `_meta.liwa` → 事件 `brain.session.opened → turn.started → tool.called(reply, inner 同批) → turn.completed{concludedBy: reply, usage.tokens 非空, inferences = 1}`；第 4 步被 `agent/pre-step` 拒；主人追加一句经 `_liwa/steer` 在下一步可见；杀本体重启 → 清孤儿杀掉旧进程 → 同一目录重拉 → `session/resume` 成功、身份探针答对 |
-| A2 | `brain-claude-code`：本机真实 `claude`（评估版 2.1.318，正式下限待定）开一件想事活（自定义 `systemPrompt`、`settingSources` 仅限受控灵鲸来源、`CLAUDE_CONFIG_DIR` 在成员目录、`tools: []`），`conclude` 经 MCP 到 toolport（未搭时以受控 HTTP MCP 夹具单验提供方通路）；`maxTurns=3` 第 4 次主循环推理不发生（不代表子任务／helper 总限额）；`~/.claude/projects` 无新文件；宿主的 `kill -9`／孤儿对账子项在第③步验收；`deliver(next_step)` 在下一步可见 |
+| A2 | `brain-claude-code`：本机真实 `claude`（评估版 2.1.318，正式下限待定）开一件想事活（自定义 `systemPrompt`、`settingSources` 仅限受控灵鲸来源、`CLAUDE_CONFIG_DIR` 在成员目录、`tools: []`），`conclude` 经 MCP 到 toolport（未搭时以受控 HTTP MCP 夹具单验提供方通路）；`maxTurns=3` 第 4 次主循环推理不发生（不代表子任务／helper 总限额）；项目静态／按需说明在模型可见，按需全文可由事件重建，执行类哨兵不触发；私有配置文件不进 argv、关闭清理；宿主的 `kill -9`／孤儿对账子项在第③步验收；`deliver(next_step)` 在下一步可见 |
 | A3 | `brain-codex`：真 `codex app-server` 开一件干活活（`developerInstructions`、`CODEX_HOME` 在成员目录、`workspace-write` 限 worktree、读到灵鲸注入的项目 `AGENTS.md` 内容、HOME 隔离）；`report` 经 MCP 到 toolport；写 worktree 外触发 `requestApproval` → `permission.request` → `deny_once` 后回合继续；`turn/steer` 次步可见；`thread/tokenUsage/updated` 进 `brain_usage` |
 | A4 | 子 agent：`deepseek` 上的干活活调 `subagent` 开子会话、子结束结果回到父的下一步、`brain_child` 与用量归父；Claude 上的干活活用 `Agent` 工具开一个子 agent → `child.started / ended` 出现在 `task:<id>` 流、用量记在父活、`cancel(owner)` 时子 agent 被 `stopTask`；同一活调 `spawn(codex, 交接包)` 开子活、子活 `report` 回到父活、父活结束级联停掉子活；子 agent 的一次权限请求直推主人而不是父 |
 | A5 | 切换：roster 把主人实例从 `deepseek` 改成 `claude` → 空闲换代 → 上下文从账本重建 → 身份探针通过 → 再改回 |
@@ -349,7 +355,7 @@ A1–A5 是分阶段的完整目标：第④步 A2 先验 provider/G1、本机 C
 
 ## 10 探针与待实测
 
-源码通路和运行保证分开记录。Claude Code／Codex 两份评估没有启动真实会话，不能当 A2／A3 通过；正式版本下限、隔离、成功收尾与未知用量都以真 CLI 结果决定 Meta。承接 overall §17 的 #35（工具收尾／步数）、#36（压缩）、#40（Codex 中断式收尾），按下面矩阵验。依据：〔一手〕两评估 §8；handoff 决策 60。
+源码通路和运行保证分开记录。Claude Code／Codex 两份评估不能替代 A2／A3 的真实会话证据；正式版本下限、隔离、成功收尾与未知用量都以真 CLI 结果决定 Meta。承接 overall §17 的 #35（工具收尾／步数）、#36（压缩）、#40（Codex 中断式收尾），按下面矩阵验。依据：〔一手〕两评估 §8；handoff 决策 60。
 
 | 项 | 已有证据 | 尚待验证与安排 | 依据 |
 | --- | --- | --- | --- |
@@ -421,6 +427,7 @@ A1–A5 是分阶段的完整目标：第④步 A2 先验 provider/G1、本机 C
 
 | 能力 | Paseo 位置（行） | 处置 | 落到 | 理由 / 改什么 |
 | --- | --- | --- | --- | --- |
+| Claude 项目说明与文件式 agents／commands | CLI 说明与插件目录 | 灵鲸受控收集与快照注入 | brain/project-docs、brain-claude-code | §4.6；SDK 程序化 agents 不用，执行类不自动读 |
 | 统一 agent 契约 | `agent/agent-sdk-types.ts`（830） | 迁 | `brain-shared/src/paseo/` | 映射在各 adapter |
 | Claude 适配器 | `providers/claude/{agent,query,options,project-dir,transcript-history,tool-call-mapper,tool-call-detail-parser,partial-json,runtime-safety,hooks,subagent-handback,interrupt-placeholder}.ts`（≈ 8 600） | 迁 | `brain-claude-code` | §4.2 的改法 |
 | Claude 原生子 agent 观测 | `providers/claude/{sidechain-tracker,task-state,task-notification-tool-call}.ts`、`subagents/`（≈ 1 110 + 目录） | 迁（V1） | `brain-claude-code` | §4.5 路①的观察 |

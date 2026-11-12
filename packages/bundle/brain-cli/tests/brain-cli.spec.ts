@@ -230,3 +230,10 @@ it('reads the global agent configuration set and the directory file for the chos
 it('prints a thinking change as one line', () => {
   expect(runner.formatEvent({ kind: 'session.thinking_changed', thinking: 'off' })).toMatch(/^session\.thinking_changed\s+off$/)
 })
+
+it('parses plugin management and auth checks through the brain command group', async () => {
+  const list = await brain(['plugin', 'list', '--provider', 'fake', '--json'])
+  expect(list.stderr).toContain('does not support plugin management')
+  const auth = await brain(['probe', 'fake', '--check-auth', '--json'])
+  expect(auth.code).toBe(0)
+})

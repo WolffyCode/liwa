@@ -51,6 +51,9 @@ liwa brain --patch apps/cli/tests/profiles/brain/scripted-provider.patch.yml run
 -----
 
 <a id="understand-the-implementation"></a>
+
+`liwa brain probe <impl> --check-auth [--json]` 显式检查认证，Claude 只在临时空壳运行 auth status。`liwa brain plugin install <plugin>@<marketplace> <source> --provider <impl>`、`plugin list --provider <impl> [--json]`、`plugin update|remove <plugin>@<marketplace> --provider <impl>` 管理灵鲸插件库；不支持的提供方明确报错，开会话不安装插件。
+
 ## 理解实现
 
 <details>
@@ -62,7 +65,7 @@ patch 在 base 之上插入这些行：`brains`（`@liwa/brain`，`membersRoot` 
 |---|---|
 | [`cordis.patch.yml`](cordis.patch.yml) | 本层的行 |
 | [`src/startup.ts`](src/startup.ts) | 命令语法与帮助；发布 `brainStartup` |
-| [`src/index.ts`](src/index.ts) | `list`、`probe`、`run`；事件行与权限答复 |
+| [`src/index.ts`](src/index.ts) | `list`、`probe`、`plugin`、`run`；事件行与权限答复 |
 
 </details>
 

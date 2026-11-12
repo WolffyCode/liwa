@@ -51,6 +51,9 @@ liwa brain --patch apps/cli/tests/profiles/brain/scripted-provider.patch.yml run
 -----
 
 <a id="understand-the-implementation"></a>
+
+`liwa brain probe <impl> --check-auth [--json]` explicitly checks provider authentication; Claude runs only auth status in an isolated temporary home. `liwa brain plugin install <plugin>@<marketplace> <source> --provider <impl>`, `plugin list --provider <impl> [--json]`, and `plugin update|remove <plugin>@<marketplace> --provider <impl>` manage the Liwa-owned plugin library. An unsupported provider fails explicitly; sessions never install plugins.
+
 ## Understand the implementation
 
 <details>
@@ -62,7 +65,7 @@ The patch inserts rows over base: `brains` (`@liwa/brain`, `membersRoot` under t
 |---|---|
 | [`cordis.patch.yml`](cordis.patch.yml) | The layer's rows |
 | [`src/startup.ts`](src/startup.ts) | Command grammar and help; publishes `brainStartup` |
-| [`src/index.ts`](src/index.ts) | `list`, `probe`, and `run`; event lines and permission answers |
+| [`src/index.ts`](src/index.ts) | `list`, `probe`, `plugin`, and `run`; event lines and permission answers |
 
 </details>
 

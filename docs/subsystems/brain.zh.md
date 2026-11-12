@@ -24,6 +24,8 @@
 
 这一版里提供方、进程、会话、子 agent 与用量是内存登记，以下面带版本的事件发出，供以后的经历流落库。[`liwa brain`](../../packages/bundle/brain-cli/README.zh.md) 命令列出、探测并试用提供方，[测试工具](../../packages/test-support/brain-testkit/README.zh.md) 里是每个提供方都要过的契约测试。
 
+插件管理的 PluginManagementRequest 为 `{action: 'list'}`、`{action: 'install', plugin: 'name@marketplace', source: string}` 或 `{action: 'update' | 'remove', plugin: string}`。PluginLibraryRecord 包含 `{key, impl, name, marketplace, version, dir}`，key 为 impl/name@marketplace，不保存认证或命令输出。ctx.brains.managePlugins 将显式配置操作交给所选提供方，不打开模型会话；agents 配置引用已安装条目，会话只从本地目录装载。
+
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
 <a id="cordis-surface"></a>

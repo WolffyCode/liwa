@@ -539,6 +539,17 @@ describe('output truncation and spill', () => {
 })
 
 describe('OutputCollector', () => {
+  it('snapshots an independent raw tail and counts the complete observed stream', () => {
+    const collector = new OutputCollector(4, 'snapshot', undefined)
+    collector.push(Buffer.from('abcdef'))
+    const snapshot = collector.snapshot()
+    expect(snapshot).toEqual({ bytes: Buffer.from('cdef'), totalBytes: 6 })
+    snapshot.bytes.fill(0)
+    expect(collector.snapshot().bytes.toString()).toBe('cdef')
+    collector.push(Buffer.from('gh'))
+    expect(collector.snapshot()).toEqual({ bytes: Buffer.from('efgh'), totalBytes: 8 })
+  })
+
   it('keeps the tail of a single oversized chunk', () => {
     const collector = new OutputCollector(10, 'test', spillOptions(100).options)
     collector.push(Buffer.from('0123456789abcdef'))

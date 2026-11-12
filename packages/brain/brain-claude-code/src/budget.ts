@@ -7,6 +7,7 @@ import { KERNEL_MCP_SERVER_NAME, memberMcpServers, type SessionConfig } from '@l
 
 /** 每回合拥有独立成功账本，PostToolBatch 才有权阻止下一步。 */
 export class ClaudeTurnPolicy {
+  private readonly cliTools = new Set<string>()
   private readonly sessionGrants = new Set<string>()
   private readonly successes = new Map<string, string>()
   private conclusion: string | undefined
@@ -29,6 +30,11 @@ export class ClaudeTurnPolicy {
    */
   allowSession(tool: string): void { this.sessionGrants.add(tool) }
 
+  /** 主人已选择 CLI 窄规则的原生工具交回 CLI 判定，不按工具名放行。
+   * @param tool - 规则内的工具名。
+   */
+  delegateSession(tool: string): void { this.cliTools.add(tool) }
+
   /** 当前回合由哪个规范工具结束；没有则省略。 */
   get concludedBy(): string | undefined { return this.conclusion }
 
@@ -46,6 +52,7 @@ export class ClaudeTurnPolicy {
         name => name === input.tool_name || `mcp__${KERNEL_MCP_SERVER_NAME}__${name}` === input.tool_name,
       )
       if (allowed) return Promise.resolve({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'allow' } })
+      if (this.cliTools.has(input.tool_name)) return Promise.resolve({})
       if (this.config.permission.mode === 'kernel') {
         return Promise.resolve({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'ask', permissionDecisionReason: 'Liwa owner approval' } })
       }

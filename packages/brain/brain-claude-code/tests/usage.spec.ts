@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { TurnId } from '@liwa/brain'
 import type { ModelUsage, SDKAssistantMessage, SDKPartialAssistantMessage, SDKResultMessage } from '@anthropic-ai/claude-agent-sdk'
-import { ClaudeUsage, type UsageBaseline } from '../src/usage.ts'
+import { ClaudeUsage, restoredBaseline, type UsageBaseline } from '../src/usage.ts'
 
 const FRESH: UsageBaseline = { costUsd: 0, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }
 
@@ -245,4 +245,9 @@ describe('reconciliation, unsettled turns and synthetic frames', () => {
     usage.observe(result('1', 0.1), TurnId('one'))
     expect(usage.take(TurnId('one'))).toEqual({ tokens: { input: 10, output: 2 }, inferences: 1, providerReportedCostUsd: 0.1 })
   })
+})
+
+it('does not restore a partial or negative persisted token baseline', () => {
+  expect(restoredBaseline({ cumulativeTokens: { input: 1, output: 2 } })).not.toHaveProperty('tokens')
+  expect(restoredBaseline({ cumulativeTokens: { input: -1, output: 2, cacheRead: 0, cacheWrite: 0 } })).not.toHaveProperty('tokens')
 })

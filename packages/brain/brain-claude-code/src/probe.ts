@@ -5,10 +5,11 @@
 import { mkdtemp, rm, mkdir } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { BrainError, execProviderCommand, type BrainProcessHost } from '@liwa/brain'
+import { BrainError, JsonValueSchema, execProviderCommand, type JsonValue, type BrainProbeContext, type BrainProbeResult, type BrainProcessHost } from '@liwa/brain'
+import { ClaudeDiagnostics } from './diagnostics.ts'
 import { sdkEnvironmentOverlay } from './process.ts'
 import { parseClaudeCodeVersion } from './paseo/agent/providers/claude/model-manifest.ts'
-import { claudeParentEnvironment, type Config } from './config.ts'
+import { claudeParentEnvironment, instanceSecrets, type Config } from './config.ts'
 
 /** 任务协议、PostToolBatch 与隔离参数的第一版基线。 */
 export const MIN_CLAUDE_VERSION = '2.1.318'
@@ -44,4 +45,54 @@ export async function resolveClaudeExecutable(
   } finally {
     await rm(dir, { recursive: true, force: true })
   }
+}
+
+/**
+ * 静态探测不启动进程；只有显式要求时在临时空壳里查 auth status。
+ * @param host - 受管探测上下文。
+ * @param config - 提供方实例。
+ * @returns 脱敏后的认证事实与可用性。
+ */
+export async function probeClaude(host: BrainProbeContext, config: Config): Promise<BrainProbeResult> {
+  const diagnostics = new ClaudeDiagnostics(instanceSecrets(config))
+  const variable = config.env['ANTHROPIC_API_KEY'] ? 'ANTHROPIC_API_KEY' : 'ANTHROPIC_AUTH_TOKEN'
+  const baseUrl = config.env['ANTHROPIC_BASE_URL']
+  const auth: NonNullable<BrainProbeResult['auth']> = { variable, ...(baseUrl === undefined ? {} : { baseUrl }) }
+  const problems: string[] = []
+  let executable: string
+  try {
+    executable = await diagnostics.protect(() => host.resolveExecutable(config.binary, undefined, host.signal))
+  } catch (error) {
+    return { available: false, auth, problems: [diagnostics.redact(String(error))] }
+  }
+  if (!host.checkAuth) return { available: true, auth, problems }
+  const dir = await mkdtemp(join(tmpdir(), 'liwa-claude-auth-'))
+  const check = async (): Promise<void> => {
+    await mkdir(join(dir, 'home'), { mode: 0o700 })
+    const env = { ...claudeParentEnvironment(), ...config.env, HOME: join(dir, 'home'), USERPROFILE: join(dir, 'home'), CLAUDE_CONFIG_DIR: dir, CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1' }
+    const output = await diagnostics.protect(() => execProviderCommand(host, executable, [...config.binaryArgs, 'auth', 'status'], {
+      cwd: dir, timeout: config.probeTimeoutMs, graceMs: config.graceMs, envOverlay: sdkEnvironmentOverlay(env),
+      ...(host.signal === undefined ? {} : { signal: host.signal }),
+    }))
+    const text = diagnostics.redact(output.stdout)
+    let status: JsonValue
+    try {
+      status = JsonValueSchema.parse(JSON.parse(text))
+    } catch (_invalidAuthJson) {
+      throw new BrainError('unavailable', 'brain.claude_auth_json', 'claude auth status did not return valid JSON')
+    }
+    const loggedOut = typeof status === 'object' && status !== null && !Array.isArray(status) && status['loggedIn'] === false
+    auth.check = { ok: !loggedOut, status }
+    if (loggedOut) problems.push('claude auth status reports not authenticated; check the instance env')
+  }
+  try {
+    await check()
+  } catch (error) {
+    const message = diagnostics.redact(String(error))
+    auth.check = { ok: false, problem: message }
+    problems.push(message)
+  } finally {
+    await rm(dir, { recursive: true, force: true })
+  }
+  return { available: problems.length === 0, auth, problems }
 }

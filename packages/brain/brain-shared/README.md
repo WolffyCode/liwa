@@ -86,7 +86,10 @@ Each file under `src/paseo/` is upstream Paseo source with a first-line origin c
 
 -----
 
+Completed compaction entries preserve the optional native trigger and observed pre/post token counts; unknown values are omitted.
+
 <a id="model-experience"></a>
+
 ## Model Experience
 
 None, as this library only supplies provider-side code; each provider package owns what its CLI sends to a model.

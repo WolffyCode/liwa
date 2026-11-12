@@ -458,7 +458,7 @@ export type Config = LocalConfig
 ## `@liwa/brain`
 
 - `inject`: `subprocess`
-- `source`: [`packages/brain/brain/src/index.ts:105`](../packages/brain/brain/src/index.ts)
+- `source`: [`packages/brain/brain/src/index.ts:106`](../packages/brain/brain/src/index.ts)
 
 ```ts config-catalog
 /** `ctx.brains` 的配置。 */
@@ -513,7 +513,7 @@ export type AcpVendor = (typeof ACP_VENDORS)[number]
 ## `@liwa/brain-claude-code`
 
 - `inject`: `brains`
-- `source`: [`packages/brain/brain-claude-code/src/config.ts:13`](../packages/brain/brain-claude-code/src/config.ts)
+- `source`: [`packages/brain/brain-claude-code/src/config.ts:16`](../packages/brain/brain-claude-code/src/config.ts)
 
 ```ts config-catalog
 /** 一行配置就是一个独立提供方；认证与地址像 Paseo 的自定义提供方一样直接写在 env 里。 */
@@ -534,6 +534,10 @@ export interface Config {
   disallowedTools: string[]
   /** 实例自带的本事目录（绝对路径）；与会话的 skillsDir 一起装进同一个快照插件，同名本事报错。 */
   skills: string
+  /** 实例受管 agent 描述目录，不使用 SDK 程序化 agents 入口。 */
+  agents: string
+  /** 实例受管斜杠命令目录。 */
+  commands: string
   /** 实例自带的 MCP 服务器；与会话的 mcpServers 合并，同名报错，`liwa` 留给内核工具。 */
   mcpServers: Record<string, InstanceMcpServer>
   /** 实例装载的本地插件目录（绝对路径，须含 .claude-plugin/plugin.json）。 */
@@ -544,6 +548,8 @@ export interface Config {
   controlTimeoutMs: number
   /** 仅运行 --version 的等待上限（毫秒）。 */
   probeTimeoutMs: number
+  /** 显式插件安装／更新命令的超时，不用于会话模型调用。 */
+  pluginInstallTimeoutMs: number
   /** 受管进程终止阶梯的宽限期（毫秒）。 */
   graceMs: number
   /** 完整追加指令的 UTF-8 字节上限；超出拒绝，不截断。 */

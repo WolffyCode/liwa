@@ -25,6 +25,7 @@ packages/server/src/utils/ → src/paseo/utils/。
 逐文件改动（未列出的文件除上面的共同改动外与上游相同）：
 
 src/paseo/agent/agent-sdk-types.ts（← agent/agent-sdk-types.ts）
+  - CompactionTimelineItem 保留原生可选 postTokens，用于不编造压缩后占用的公共事件映射。
   - 去掉 AgentAttachment（@getpaseo/protocol/messages，Paseo 的 PR / issue / 上传附件）及其在 AgentPromptContentBlock 里的分支。
   - AgentLaunchContext 去掉 paseoTools（Paseo 自己的工具目录，不迁），换成 processHost?: ProviderProcessHost（brains 登记归属后转给 ctx.subprocess 的进程入口）。
 

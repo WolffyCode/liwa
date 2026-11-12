@@ -23,7 +23,7 @@
     与上游的编译选项一致，以免改写拷贝。
 
 逐文件处置（除特别说明外，保留原业务逻辑，只改共同导入与来源头）：
-  agent.ts — 删除客户端目录探测、全局认证诊断、外部会话导入、feature UI 与 fast mode 接线（主人 2026-11-10 定不做）、SDK 自定义 agents 入口（不做）、回滚、Paseo 附件；保留会话、流、原生恢复与子观察。进程改注入受管桥；SDK 策略显式传入；开放 default/plan/acceptEdits/auto、不开放 bypassPermissions/dontAsk；计划批准不扩权；切模型/模式发事件；thinking 档位由适配层按模型目录落成 SDK 选项、回合间切档靠 requestQueryRestart 重启 Query（Paseo 的 setThinkingOption 不迁）；system/api_retry 的 401/403 立即 turn_failed 并打断重试、其余状态只记日志；取消撤输入且不吞错，等原生结果结算；子权限等待稳定声明，超时拒绝而不生成替代身份，close/abort 释放等待；CLI 报告会话不存在时本代永久不可用，关闭传输并回收受管进程；stderr/控制错误/失败消息接适配层秘密脱敏；增量工具 JSON 收齐才发布唯一工具开始事件；删除不再使用的原生等待与局部 JSON 更新写法；提供原始帧、Query/回合开始与钩子策略出口。
+  agent.ts — 压缩时间线透传 postTokens；原生恢复复用准入校验得到的正文快照，首次回放结束释放；删除客户端目录探测、全局认证诊断、外部会话导入、feature UI 与 fast mode 接线（主人 2026-11-10 定不做）、SDK 自定义 agents 入口（不做）、回滚、Paseo 附件；保留会话、流、原生恢复与子观察。进程改注入受管桥；SDK 策略显式传入；开放 default/plan/acceptEdits/auto、不开放 bypassPermissions/dontAsk；计划批准不扩权；切模型/模式发事件；thinking 档位由适配层按模型目录落成 SDK 选项、回合间切档靠 requestQueryRestart 重启 Query（Paseo 的 setThinkingOption 不迁）；system/api_retry 的 401/403 立即 turn_failed 并打断重试、其余状态只记日志；取消撤输入且不吞错，等原生结果结算；子权限等待稳定声明，超时拒绝而不生成替代身份，close/abort 释放等待；CLI 报告会话不存在时本代永久不可用，关闭传输并回收受管进程；stderr/控制错误/失败消息接适配层秘密脱敏；增量工具 JSON 收齐才发布唯一工具开始事件；删除不再使用的原生等待与局部 JSON 更新写法；提供原始帧、Query/回合开始与钩子策略出口。
   hooks.ts — 共同导入与来源头。
   interrupt-placeholder.ts — 仅来源头。
   model-manifest.ts — 只留版本解析，删除模型目录、产品思考档与别名表。
@@ -39,7 +39,7 @@
   task-state.ts — 共同导入与来源头。
   tool-call-detail-parser.ts — 共同导入与来源头。
   tool-call-mapper.ts — 共同导入与来源头。
-  transcript-history.ts — 共同导入与来源头；只由隔离 config 根的恢复路径调用。
+  transcript-history.ts — 接收已校验的父转录快照，索引／回放直接取其字节，不再重复读取主文件；共同导入与来源头；只由隔离 config 根的恢复路径调用。
   subagents/live-source.ts — 增加 task_id 到稳定 canonical id 的查询，供子权限归属使用。
   subagents/observation.ts — 共同导入与来源头。
   subagents/presentation.ts — 模型直接展示原生名，不依赖产品目录。

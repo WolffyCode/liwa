@@ -202,6 +202,7 @@ interface BrainProvider {
   readonly sessionHome: 'per-session' | 'per-member';
   writeMemberConfig?(dir: string, spec: MemberConfigSpec): Promise<void>;
   probe(context: BrainProbeContext): Promise<BrainProbeResult>;
+  managePlugins?(context: BrainProbeContext, root: string, request: PluginManagementRequest): Promise<PluginLibraryRecord[]>;
   createSession(config: AgentSessionConfig, launch: BrainLaunchContext,
     options?: AgentCreateSessionOptions): Promise<AgentSession>;
   resumeSession(handle: AgentPersistenceHandle, config: AgentSessionConfig,
@@ -228,7 +229,7 @@ interface BrainProvider {
 | --- | --- | --- |
 | streaming、resume、modeSwitch、rollback | Meta 供应声明，分别派生 capabilities.supportsStreaming／supportsSessionPersistence／supportsDynamicModes／supportsRewindConversation、supportsRewindFiles、supportsRewindBoth；rollback 真值必须由实际三项能力解析，不能一个 true 推出全部 true | 〔一手〕`packages/brain/brain/src/contract.ts:49`；`packages/brain/brain-shared/src/paseo/protocol/agent-types.ts:185`；〔推理〕 |
 | supportsMcpServers／supportsReasoningStream／supportsToolInvocations | 能力记录保留原生三项，Meta.kernelTools 是灵鲸工具传输要求，nativeTools 表示原生工具关不掉，不能把两者误并为 supportsToolInvocations | 〔一手〕同上；〔推理〕 |
-| probe／isAvailable／getDiagnostic | 一次 provider probe 生成 available/version/problems，isAvailable 取同一探测结果的 available，getDiagnostic 格式化同一安全报告；按执行环境／目录缓存键共享，不各跑一套检查。目录发现仍走 fetchCatalog | 〔一手〕`packages/brain/brain/src/provider.ts:60`；Paseo `agent/provider-snapshot-manager.ts:573`；〔推理〕 |
+| probe／isAvailable／getDiagnostic | 一次 provider probe 生成 available/version/problems 与可选 auth；Claude 默认只解析可执行文件位置并报认证变量名／baseUrl，不启动进程，显式 checkAuth 才在临时空壳运行 auth status、先脱敏再解析 JSON；开会话仍验证版本，isAvailable 取同一探测结果的 available，getDiagnostic 格式化同一安全报告；按执行环境／目录缓存键共享，不各跑一套检查。目录发现仍走 fetchCatalog | 〔一手〕`packages/brain/brain/src/provider.ts:60`；Paseo `agent/provider-snapshot-manager.ts:573`；〔推理〕 |
 | 灵鲸独有 Meta | 保留 agentConfig{plugins,hooks,instructions}、nativeTools、permissionHook、modelSwitch、thinkingSwitch、delivery、compaction、budget、usage、personaInjection、runtime、transport、kernelTools、binary、children、extensions?；不从 Paseo 标志猜这些保证 | 〔一手〕`packages/brain/brain/src/contract.ts:49` |
 
 `Meta.thinkingSwitch`、`BrainEvent{kind:'session.thinking_changed', thinking:string|null}` 与视图的 `thinkingOptionId?: string|null` 表达真实档位；当前代码的 `view().thinking`／事件非空 thinking 已随④实现，D′ 在源处统一视图字段名并允许原生 null 表示恢复默认，不并存两个配置字段。CLI 参数仍为 `--thinking`，AgentManager 方法为 `setAgentThinkingOption`。〔一手〕`packages/brain/brain/src/views.ts:70`、`packages/brain/brain/src/contract.ts:499`、`packages/brain/brain-claude-code/src/session.ts:46`；〔推理〕冻结后落实。
@@ -278,7 +279,8 @@ interface BrainProvider {
 | projectDocs?: boolean | 灵鲸 | 留为可选 | 只受控读正文，不开 CLI 项目配置源 |
 | childPolicy?: {native:boolean;maxDepth:number;maxConcurrent:number;crossCli:ImplId[]} | 灵鲸 | 留为可选 | 原生孩子只 work；深度／并发非负 |
 | resume?: {identityProbe:boolean} | 灵鲸 | 留为可选 | 身份校验策略，不冒充原生续接句柄 |
-| plugins?: string[] | 灵鲸 | 留为可选 | 本地插件目录，Meta 不支持则拒绝 |
+| plugins?: string[] | 灵鲸 | 留为可选 | 本地插件目录，或由 agents 配置把插件库引用解析为目录，Meta 不支持则拒绝 |
+| agents?: string[]、commands?: string[] | 灵鲸 | 文件式描述目录 | 与实例和项目材料合成快照插件；不传 SDK 程序化 agents |
 | hooks?: Hooks | 灵鲸 | 留为可选 | settings 的 command 钩子形状，未知事件拒绝 |
 | instructions?: string | 灵鲸 | 留为可选 | agents.yml 选出的指令与对话片段，不与 systemPrompt 双注入 |
 | skills?: string[] | 灵鲸增量 | 加为可选 | 显式本事目录列表，经同一个 materialize 路径合成 skillsDir；当前 schema 没有该字段，不写成已实现 |
@@ -316,7 +318,7 @@ type SafePersistenceHandle = { provider: ImplId; sessionId: string; nativeHandle
 | timeline.assistant_message | item.message | delta/final，晚到父旧回合条目不串新轮 |
 | timeline.reasoning | item.reasoning | 条目归属与 childId 保持 |
 | timeline.tool_call | item.tool_call.started／completed | 完成／失败／取消均收尾，保留 detail 与 batch |
-| timeline.compaction | session.compacted | 保留已知 preTokens；不编 postTokens |
+| timeline.compaction | session.compacted | 保留 trigger（manual/auto）与已知 preTokens/postTokens；未知不编造 |
 | timeline.todo／error／notification／plugin | 保留 timeline-row；无同义 BrainEvent 时不伪造 | 原生细节可从日志读回 |
 | permission_requested | permission.request | actions → options，问题／答案保持结构，子请求直推主人 |
 | permission_resolved | permission.resolved | 只在应用确认后收 pending |
@@ -333,6 +335,12 @@ type SafePersistenceHandle = { provider: ImplId; sessionId: string; nativeHandle
 Claude 用量采用“帧账 + 累计账对账”：assistant message id 去重、逐计数取最大；有 result 且累计差各项不小于帧账时用累计差，否则用帧账；没有 result 也结算已观测帧。`num_turns` 截断时可能多 1，推理次数只数主线程真实 assistant 响应，不数 synthetic/error 帧。续接同一原生 UUID，metadata 带 token／成本基线；没有基线的首个 result 只定基线，累计倒退不能算负消费；后台子消费进入下一结算回合，child 分项不再加到已含它的父总量。`providerReportedCostUsd` 仅供诊断，第三方端点不按 CLI 的 Anthropic 估价记真实花费；context／quota／余额均不是消费。G1 的 interrupted/failed 已知 usage 进入 AgentManager.lastUsage，同时保留逐 turn 的终止幂等结算，不能把 lastUsage 当累计账。〔一手〕`packages/brain/brain-claude-code/src/usage.ts:1`、`:91`、`:131`、`:202`、`src/session.ts:87`；主人工作记录 16、19；Paseo `agent/agent-manager.ts:4675`、`:4827`。
 
 D′ 直通 AgentSession 时，`AgentUsage` 在原定义增加可选 `cacheWriteTokens`、`inferences`、`quotaWindows`、`balances`，分别对应 Usage 的 cacheWrite、主线程推理次数、额度与余额；沿已有 inputTokens/cachedInputTokens/outputTokens/totalCostUsd/contextWindow* 字段一次映射，不能把已修的 Claude/G1 信息丢在旧包装里。只知道单边 token 时原生日志保留该边，翻成要求完整 input/output 的 tokens 对象前必须两项均已知，不以 0 补未知。提供方返回的 session.provider／事件 provider 与配置 provider 必须同为 String(impl)，不把原生 CLI 类别名当实例身份。〔一手〕`packages/brain/brain-shared/src/paseo/agent/agent-sdk-types.ts:220`、`packages/brain/brain-shared/src/session.ts:113`、`packages/brain/brain-claude-code/src/usage.ts:131`；〔推理〕接缝的无损字段补齐。
+
+提供方补充契约：`PermissionOption.sessionRules?: string[]` 展示 CLI 给出的规则原文（如 `Bash(npm test:*)`），选择后仅回传 destination=session 的 `addRules/allow`；精确 MCP 许可采用同一种表达。kernel 模式未选择规则的工具强制 ask；主人选定的原生规则成功交回 CLI 后，仅该规则所含工具名交 CLI 判定，不能按原生工具名整体 allow。〔一手〕`packages/brain/brain-claude-code/src/permissions.ts:48`、`src/budget.ts:43`；2026-11-11 真机核实（claude 2.1.322）。
+
+`BrainEvent` 的 `session.project_document{path,reason:{tool,path},text}` 记录按需注入的来源相对路径、触发工具／路径、带来源标题的注入全文；先发布事件再返回 additionalContext，每份每代会话一次。`session.project_document_failed{path,reason,message}` 表示读取或单份 instructionsMaxBytes 失败、未注入。静态内容仍在最终系统注入中。`session.compacted` 增 `trigger?: 'manual'|'auto'`；有原生 post_tokens 时才带 postTokens。〔一手〕`packages/brain/brain/src/contract.ts:440`、`packages/brain/brain-claude-code/src/project-context.ts:1`。
+
+`BrainProbeContext.checkAuth?: boolean` 控制显式认证检查；`BrainProbeResult.auth?: {variable:'ANTHROPIC_API_KEY'|'ANTHROPIC_AUTH_TOKEN';baseUrl?:string;check?:{ok:boolean;status?:JsonValue;problem?:string}}` 不含认证值。默认没有 check；超时、非零退出、非法 JSON 均明确失败。`managePlugins` 是可选提供方配置操作，不是会话方法；`PluginManagementRequest` 为 list／install{plugin,source}／update{plugin}／remove{plugin}，返回该实例 `PluginLibraryRecord[]{key,impl,name,marketplace,version,dir}`。〔一手〕`packages/brain/brain/src/provider.ts:53`、`src/plugin-library.ts:1`；`packages/brain/brain-claude-code/src/probe.ts:52`。
 
 #### 第 3 步公共接口增量（全部是计划，未实现）
 

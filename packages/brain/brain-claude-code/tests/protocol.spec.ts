@@ -98,7 +98,9 @@ describe('stream-json protocol boundaries', () => {
       const capture = JSON.parse(await readFile(join(root, `${entry.session.persistence()!.sessionRef}.capture.json`), 'utf8')) as { args: string[]; model: string; mode: string }
       expect(capture.model).toBe(i === 0 ? 'mock' : 'mock-other')
       expect(capture.mode).toBe(i === 0 ? 'default' : 'plan')
-      expect(capture.args.join(' ')).toContain(`${id}.invalid`)
+      const mcpFile = capture.args[capture.args.indexOf('--mcp-config') + 1] as string
+      expect(await readFile(mcpFile, 'utf8')).toContain(`${id}.invalid`)
+      expect(capture.args.join(' ')).not.toContain(`${id}.invalid`)
       expect(capture.args.join(' ')).not.toContain(`${id === 'one' ? 'two' : 'one'}.invalid`)
       const index = capture.args.indexOf('--plugin-dir')
       const snapshot = capture.args[index + 1]!

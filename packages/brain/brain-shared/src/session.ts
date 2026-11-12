@@ -49,10 +49,10 @@ export type TurnTerminal = BrainEventOf<'turn.completed' | 'turn.interrupted' | 
 /** 一个待答权限请求：契约选项、它们对应的 Paseo 答复与原生请求。 */
 interface PendingPermission {
   turnId: TurnId | undefined
-  childId: ChildId | undefined
   request: AgentPermissionRequest
-  options: PermissionOption[]
-  responses: Map<string, AgentPermissionResponse>
+  choices: { option: PermissionOption; response: AgentPermissionResponse }[]
+  deny: { option: PermissionOption; response: AgentPermissionResponse }
+  cancel: PermissionOption
   questions: PermissionQuestion[] | undefined
   chosen?: PermissionOption
 }
@@ -75,6 +75,10 @@ interface OpenItems {
   message?: ItemId
   reasoning?: ItemId
 }
+
+/** 父条目必有回合；只有会话级子条目的父回合可能未知。 */
+type TimelineOwner = { kind: 'parent'; turnId: TurnId }
+  | { kind: 'child'; turnId: TurnId | undefined; childId: ChildId }
 
 /** 契约里的取消选项号；对上它的答复拒绝并中断回合。 */
 export const CANCEL_OPTION_ID = 'cancel'
@@ -126,6 +130,16 @@ export function mapPaseoUsage(usage: AgentUsage | undefined): Usage {
  * Paseo 工具详情 → 契约工具详情（闭合联合）。
  * @param detail - Paseo 详情。
  * @returns 契约详情；Paseo 的子 agent、纯文本、计划、工作树、未知映射为 `other`。
+ */
+export function mapPaseoToolDetail(detail: PaseoToolCallDetail): ToolCallDetail
+/** 权限请求可以缺少详情；有详情的调用方仍得到确定的映射类型。
+ * @param detail - 可选的原生详情。
+ * @returns 契约详情，或在原生缺失时省略。
+ */
+export function mapPaseoToolDetail(detail: PaseoToolCallDetail | undefined): ToolCallDetail | undefined
+/** 权限请求可以缺少详情；有详情的调用方仍得到确定的映射类型。
+ * @param detail - 可选的原生详情。
+ * @returns 契约详情，或在原生缺失时省略。
  */
 export function mapPaseoToolDetail(detail: PaseoToolCallDetail | undefined): ToolCallDetail | undefined {
   if (detail === undefined) return undefined
@@ -635,14 +649,14 @@ export class PaseoBrainSession implements BrainProviderSession {
       case 'timeline': {
         const turnId = this.turnOf(event.turnId)
         // 父会话的条目只属于一个回合，且只在那个回合里出现：没有回合的（回显、回合外的提示）与已收尾回合晚到的不进契约。
-        if (turnId !== undefined && !this.turnEnded(turnId)) this.onTimeline(event.item, turnId, undefined)
+        if (turnId !== undefined && !this.turnEnded(turnId)) this.onTimeline(event.item, { kind: 'parent', turnId })
         return
       }
       case 'permission_requested':
         this.onPermissionRequested(event.request, event.turnId)
         return
       case 'permission_resolved':
-        this.onPermissionResolved(event.requestId, event.resolution, event.turnId)
+        this.onPermissionResolved(event.requestId, event.resolution)
         return
       case 'usage_updated': {
         const usage = mapPaseoUsage(event.usage)
@@ -682,7 +696,8 @@ export class PaseoBrainSession implements BrainProviderSession {
 
   private onTurnFailed(event: Extract<AgentStreamEvent, { type: 'turn_failed' }>): void {
     const { category, retryable } = classifyFailure(event.error, event.code)
-    if (event.turnId === undefined && this.activeTurn === undefined) {
+    const turnId = this.turnOf(event.turnId)
+    if (turnId === undefined) {
       // Paseo 约定：没有回合号的 turn_failed 报的是 CLI 在两回合之间退出（Claude 的写法，ACP 原地补齐）。
       if (this.exited) return
       this.exited = true
@@ -690,8 +705,6 @@ export class PaseoBrainSession implements BrainProviderSession {
       this.releaseTurnWaiters()
       return
     }
-    const turnId = this.turnOf(event.turnId)
-    if (turnId === undefined) return
     this.endTurn({
       kind: 'turn.failed',
       turnId,
@@ -740,21 +753,22 @@ export class PaseoBrainSession implements BrainProviderSession {
   /**
    * 一个时间线条目：父会话的带回合号，子 agent 的带 `childId` 与开它的父回合（知道时）。
    * @param item - Paseo 条目。
-   * @param turnId - 所属回合。
-   * @param childId - 子 agent。
+   * @param context - 真实的父或子归属，父回合在调用处已确认存在。
    */
-  private onTimeline(item: AgentTimelineItem, turnId: TurnId | undefined, childId: ChildId | undefined): void {
+  private onTimeline(item: AgentTimelineItem, context: TimelineOwner): void {
+    const { turnId } = context
+    const childId = context.kind === 'child' ? context.childId : undefined
     const owner = { ...(turnId === undefined ? {} : { turnId }), ...(childId === undefined ? {} : { childId }) }
     switch (item.type) {
       case 'assistant_message': {
         // 父会话的消息记在它的回合名下，子 agent 的各记各的；换了消息号就先收尾同一归属的上一条。
-        const parent = childId === undefined && turnId !== undefined ? this.turnItems(turnId) : undefined
-        const open = childId === undefined ? parent?.message : this.openChildMessages.get(childId)
+        const open = context.kind === 'parent' ? this.turnItems(context.turnId).message : this.openChildMessages.get(context.childId)
         const itemId = ItemId(item.messageId ?? open ?? `message-${randomUUID()}`)
         if (open !== undefined && open !== itemId) this.emit({ kind: 'item.message', ...owner, itemId: open, delta: '', final: true })
-        if (childId !== undefined) {
-          this.openChildMessages.set(childId, itemId)
-        } else if (parent !== undefined) {
+        if (context.kind === 'child') {
+          this.openChildMessages.set(context.childId, itemId)
+        } else {
+          const parent = this.turnItems(context.turnId)
           parent.message = itemId
           delete parent.reasoning
         }
@@ -762,25 +776,25 @@ export class PaseoBrainSession implements BrainProviderSession {
         return
       }
       case 'reasoning': {
-        if (childId !== undefined || turnId === undefined) {
-          if (childId !== undefined) this.closeChildMessage(childId, turnId)
+        if (context.kind === 'child') {
+          this.closeChildMessage(context.childId, context.turnId)
           this.emit({ kind: 'item.reasoning', ...owner, itemId: ItemId(`reasoning-${randomUUID()}`), summary: item.text })
           return
         }
         // 父会话同一段思考共用一个条目号（按回合记）。
-        const parent = this.turnItems(turnId)
+        const parent = this.turnItems(context.turnId)
         parent.reasoning ??= ItemId(`reasoning-${randomUUID()}`)
         this.emit({ kind: 'item.reasoning', ...owner, itemId: parent.reasoning, summary: item.text })
         return
       }
       case 'tool_call':
-        if (childId !== undefined) this.closeChildMessage(childId, turnId)
-        else if (turnId !== undefined) this.closeOpenItems(turnId)
+        if (context.kind === 'child') this.closeChildMessage(context.childId, context.turnId)
+        else this.closeOpenItems(context.turnId)
         this.onToolCall(item, turnId, childId)
         return
       case 'compaction':
-        if (item.status === 'completed' && childId === undefined) {
-          this.emit({ kind: 'session.compacted', ...(turnId === undefined ? {} : { turnId }), ...(item.preTokens === undefined ? {} : { preTokens: item.preTokens }) })
+        if (item.status === 'completed' && context.kind === 'parent') {
+          this.emit({ kind: 'session.compacted', turnId: context.turnId, ...(item.preTokens === undefined ? {} : { preTokens: item.preTokens }), ...(item.postTokens === undefined ? {} : { postTokens: item.postTokens }), ...(item.trigger === undefined ? {} : { trigger: item.trigger }) })
         }
         return
       case 'user_message':
@@ -833,7 +847,7 @@ export class PaseoBrainSession implements BrainProviderSession {
         tool: this.toolName(item),
         args: this.toolArgs(item),
         native: true,
-        ...(detail === undefined ? {} : { detail }),
+        detail,
         ...(childId === undefined ? {} : { childId }),
       })
     }
@@ -860,19 +874,20 @@ export class PaseoBrainSession implements BrainProviderSession {
       return
     }
     const mapped = this.permissionOptions(request)
-    const responses = new Map(mapped.map(entry => [entry.option.id, entry.response]))
+    let deny = mapped.find(entry => entry.option.effect === 'deny_once')
+    if (deny === undefined) {
+      deny = { option: { id: DENY_OPTION_ID, label: request.kind === 'question' ? 'Decline' : 'Deny', effect: 'deny_once' }, response: { behavior: 'deny' } }
+      mapped.push(deny)
+    }
+    let cancel = mapped.find(entry => entry.option.effect === 'cancel')
+    if (cancel === undefined) {
+      cancel = { option: { id: CANCEL_OPTION_ID, label: 'Cancel', effect: 'cancel' }, response: { behavior: 'deny', interrupt: true } }
+      mapped.push(cancel)
+    }
     const options = mapped.map(entry => entry.option)
-    if (!options.some(option => option.effect === 'deny_once')) {
-      options.push({ id: DENY_OPTION_ID, label: request.kind === 'question' ? 'Decline' : 'Deny', effect: 'deny_once' })
-      responses.set(DENY_OPTION_ID, { behavior: 'deny' })
-    }
-    if (!options.some(option => option.effect === 'cancel')) {
-      options.push({ id: CANCEL_OPTION_ID, label: 'Cancel', effect: 'cancel' })
-      responses.set(CANCEL_OPTION_ID, { behavior: 'deny', interrupt: true })
-    }
     const questions = request.kind === 'question' ? this.permissionQuestions(request) : undefined
     const requestId = PermissionRequestId(request.id)
-    this.permissions.set(requestId, { turnId, childId, request, options, responses, questions })
+    this.permissions.set(requestId, { turnId, request, choices: mapped, deny, cancel: cancel.option, questions })
     const detail = mapPaseoToolDetail(request.detail)
     this.emit({
       kind: 'permission.request',
@@ -890,22 +905,22 @@ export class PaseoBrainSession implements BrainProviderSession {
     })
   }
 
-  private onPermissionResolved(rawRequestId: string, resolution: AgentPermissionResponse, rawTurnId: string | undefined): void {
+  private onPermissionResolved(rawRequestId: string, resolution: AgentPermissionResponse): void {
     const requestId = PermissionRequestId(rawRequestId)
     const pending = this.permissions.get(requestId)
     if (pending === undefined) return
     this.permissions.delete(requestId)
     // Paseo 自己撤回的请求（回合结束、中断）没有经过答复：记成取消。
     const chosen = pending.chosen ?? (resolution.behavior === 'allow'
-      ? pending.options.find(option => option.effect.startsWith('allow'))
-      : pending.options.find(option => option.effect === 'cancel'))
-    const turnId = pending.turnId ?? (pending.childId === undefined ? this.turnOf(rawTurnId) : undefined)
+      ? pending.choices.find(entry => entry.option.effect.startsWith('allow'))?.option ?? pending.cancel
+      : pending.cancel)
+    const turnId = pending.turnId
     this.emit({
       kind: 'permission.resolved',
       ...(turnId === undefined ? {} : { turnId }),
       requestId,
-      optionId: chosen?.id ?? CANCEL_OPTION_ID,
-      effect: chosen?.effect ?? 'cancel',
+      optionId: chosen.id,
+      effect: chosen.effect,
     })
   }
 
@@ -941,7 +956,7 @@ export class PaseoBrainSession implements BrainProviderSession {
         const child = this.children.get(event.id)
         // 没宣布过的子 agent 不造条目（Paseo："A task that was never declared gets no descriptor"）。
         if (child === undefined) return
-        this.onTimeline(event.item, child.turnId, childId)
+        this.onTimeline(event.item, { kind: 'child', turnId: child.turnId, childId })
         return
       }
       case 'remove':
@@ -1019,10 +1034,7 @@ export class PaseoBrainSession implements BrainProviderSession {
       throw new BrainError('not_found', 'brain.permission_unknown', `${this.impl} session has no pending permission request ${requestId}`)
     }
     // 对不上的选项号按 deny_once 应用。
-    const option = pending.options.find(candidate => candidate.id === response.optionId)
-      ?? pending.options.find(candidate => candidate.effect === 'deny_once')
-    if (option === undefined) throw new BrainError('internal', 'brain.permission_options', `${this.impl} permission request ${requestId} lost its deny option`)
-    const base = pending.responses.get(option.id) ?? { behavior: 'deny' as const }
+    const { option, response: base } = pending.choices.find(candidate => candidate.option.id === response.optionId) ?? pending.deny
     let reply: AgentPermissionResponse = base
     if (base.behavior === 'allow' && pending.questions !== undefined) {
       if (response.answers === undefined) {

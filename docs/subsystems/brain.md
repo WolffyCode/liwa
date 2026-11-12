@@ -24,6 +24,8 @@ Completed turns carry usage; interrupted and failed turns may carry observed spe
 
 Providers, processes, sessions, child agents, and usage are in-memory records in this release, emitted as the versioned events below so the future experience stream can persist them. The [`liwa brain`](../../packages/bundle/brain-cli/README.md) command lists, probes, and tries providers, and the [test kit](../../packages/test-support/brain-testkit/README.md) holds the contract suite every provider passes.
 
+Plugin management uses `PluginManagementRequest`: `{action: 'list'}`, `{action: 'install', plugin: 'name@marketplace', source: string}`, or `{action: 'update' | 'remove', plugin: string}`. `PluginLibraryRecord` contains `{key, impl, name, marketplace, version, dir}`; its key is `impl/name@marketplace` and it never stores authentication or command output. `ctx.brains.managePlugins` routes this explicit configuration operation to the selected provider without opening a model session. Installed entries are referenced by agents configuration and loaded from local directories.
+
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
 <a id="cordis-surface"></a>

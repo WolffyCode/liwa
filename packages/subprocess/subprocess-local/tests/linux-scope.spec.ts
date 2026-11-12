@@ -258,6 +258,7 @@ describe('Linux native capability selection', () => {
     const failedQuery = vi.fn(() => ({ status: 1, error: undefined }))
     try {
       vi.stubEnv('XDG_RUNTIME_DIR', runtime)
+      expect(linuxManagerListener()).toBeUndefined()
       // A row for the path without the listening flag, such as a connection accepted after the
       // listener closed, and another path's listener both need the query.
       writeFileSync(table, header + row('00000000', socket) + row('00010000', `listener ${socket}`))

@@ -1,7 +1,7 @@
 // 人造 stream-json CLI；所有帧只用于 SDK/受管进程回环，不调用任何模型。
 import { createInterface } from 'node:readline'
 import { createHash, randomUUID } from 'node:crypto'
-import { readFileSync, writeFileSync, mkdirSync, realpathSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, realpathSync, readdirSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 
 if (process.argv.includes('--version')) {
@@ -10,6 +10,23 @@ if (process.argv.includes('--version')) {
 }
 const has = name => process.argv.some(value => value === name || value.startsWith(`${name}=`))
 const arg = name => process.argv.find(value => value.startsWith(`${name}=`))?.slice(name.length + 1) ?? process.argv[process.argv.indexOf(name) + 1]
+const pluginCommands = () => {
+  const commands = []
+  const walk = (directory, prefix) => {
+    if (!existsSync(directory)) return
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      if (entry.isDirectory()) walk(join(directory, entry.name), `${prefix}${entry.name}:`)
+      else if (entry.name.endsWith('.md')) commands.push({ name: `${prefix}${entry.name.slice(0, -3)}`, description: 'Managed command', argumentHint: '' })
+    }
+  }
+  for (let index = 0; index < process.argv.length; index++) {
+    if (process.argv[index] !== '--plugin-dir') continue
+    const directory = process.argv[index + 1]
+    const manifest = JSON.parse(readFileSync(join(directory, '.claude-plugin', 'plugin.json'), 'utf8'))
+    walk(join(directory, 'commands'), `${manifest.name}:`)
+  }
+  return commands
+}
 const session = has('--resume') ? arg('--resume') : randomUUID()
 let model = process.argv.includes('--model') ? arg('--model') : 'mock'
 let mode = process.argv.includes('--permission-mode') ? arg('--permission-mode') : 'default'
@@ -61,7 +78,7 @@ const request = req => new Promise(resolve => {
 })
 const assistant = text => emit({ type: 'assistant', uuid: randomUUID(), session_id: session, parent_tool_use_id: null, message: { id: randomUUID(), type: 'message', role: 'assistant', model, content: [{ type: 'text', text }], stop_reason: 'end_turn', usage: frameUsage } })
 const tool = (name, id, input) => emit({ type: 'assistant', uuid: randomUUID(), session_id: session, parent_tool_use_id: null, message: { id: randomUUID(), type: 'message', role: 'assistant', model, content: [{ type: 'tool_use', id, name, input }], usage: { ...frameUsage, output_tokens: 0 } } })
-const toolResult = (id, ok) => emit({ type: 'user', uuid: randomUUID(), session_id: session, parent_tool_use_id: null, message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: id, content: ok ? 'done' : 'denied', is_error: !ok }] } })
+const toolResult = (id, ok, content) => emit({ type: 'user', uuid: randomUUID(), session_id: session, parent_tool_use_id: null, message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: id, content: content ?? (ok ? 'done' : 'denied'), is_error: !ok }] } })
 function streamReply() {
   const id = randomUUID()
   const message = { id, type: 'message', role: 'assistant', model, content: [], usage: { ...frameUsage, output_tokens: 0 }, stop_reason: null }
@@ -124,6 +141,18 @@ async function run(message) {
     return
   }
   if (scenario === 'crash') { process.stderr.write('fixture runtime failure\n'); process.exit(2) }
+  if (scenario === 'compact') {
+    const trigger = process.env.LIWA_TEST_COMPACT_TRIGGER
+    system('compact_boundary', { compact_metadata: { ...(trigger === 'unknown' ? {} : { trigger }), pre_tokens: 100, post_tokens: 20 } })
+    result()
+    return
+  }
+  if (scenario === 'mcp-secret-error') {
+    tool('mcp__docs__check', 'mcp-failed', {})
+    toolResult('mcp-failed', false, `MCP refused ${process.env.LIWA_TEST_ECHO}`)
+    result()
+    return
+  }
   if (scenario === 'secret-error') {
     const secret = process.env.ANTHROPIC_API_KEY ?? process.env.ANTHROPIC_AUTH_TOKEN
     await new Promise(resolve => process.stderr.write(`error ${secret.slice(0, 4)}`, resolve))
@@ -133,6 +162,13 @@ async function run(message) {
     return
   }
   if (scenario === 'stream') { streamReply(); result(); return }
+  if (scenario === 'project-context') {
+    const input = { file_path: join(process.cwd(), 'nested', 'example.ts') }
+    const context = await hook('PreToolUse', { tool_name: 'Read', tool_use_id: 'project-read', tool_input: input })
+    assistant(context.hookSpecificOutput?.additionalContext ?? 'missing project context')
+    result()
+    return
+  }
   if (scenario === 'unknown') { result(undefined, true); return }
   if (scenario === 'zero-crash' || scenario === 'zero-startup') { result(`${scenario} original failure`, false, true); return }
   if (scenario === 'fail') { partial({ type: 'message_start', message: { id: randomUUID(), type: 'message', role: 'assistant', model, content: [], usage: { ...frameUsage, output_tokens: 0 }, stop_reason: null } }); result('Provider failure'); return }
@@ -161,17 +197,17 @@ async function run(message) {
     return
   }
   if (scenario === 'child' || scenario === 'child-permission') childStart()
-  if (['permission', 'child-permission', 'child-early', 'child-late', 'child-missing', 'question', 'question-multi'].includes(scenario)) {
+  if (['native-permission', 'permission', 'child-permission', 'child-early', 'child-late', 'child-missing', 'question', 'question-multi'].includes(scenario)) {
     const question = scenario.startsWith('question')
     const isChild = scenario.startsWith('child-')
-    const name = question ? 'AskUserQuestion' : 'mcp__liwa__report'
+    const name = question ? 'AskUserQuestion' : scenario === 'native-permission' ? 'Bash' : 'mcp__liwa__report'
     const input = question ? { questions: [{ header: 'Choice', question: 'Which color?', options: [{ label: 'Red', description: 'red' }, { label: 'Blue', description: 'blue' }], multiSelect: scenario === 'question-multi' }] } : { value: 'child-permission-mark' }
     const id = randomUUID()
     tool(name, id, input)
     const gate = await hook('PreToolUse', { tool_name: name, tool_input: input, tool_use_id: id, ...(isChild ? { agent_id: 'native-task' } : {}) })
     const answerPending = gate.hookSpecificOutput?.permissionDecision === 'allow'
       ? { behavior: 'allow', updatedInput: input }
-      : request({ subtype: 'can_use_tool', tool_name: name, input, tool_use_id: id, ...(isChild ? { agent_id: 'native-task' } : {}) })
+      : request({ subtype: 'can_use_tool', tool_name: name, input, tool_use_id: id, permission_suggestions: scenario === 'native-permission' ? [{ type: 'addRules', rules: [{ toolName: 'Bash', ruleContent: 'npm test:*' }], behavior: 'allow', destination: 'localSettings' }] : [], ...(isChild ? { agent_id: 'native-task' } : {}) })
     if (scenario === 'child-early') childStart()
     const answer = await answerPending
     if (scenario === 'child-late') childStart()
@@ -209,7 +245,7 @@ createInterface({ input: process.stdin }).on('line', line => {
   switch (req.subtype) {
     case 'initialize':
       initHooks = req.hooks ?? {}
-      response(message, { commands: [], models: [{ value: 'mock', displayName: 'Mock', description: '' }, { value: 'mock-other', displayName: 'Other', description: '' }], account: {}, output_style: 'default', available_output_styles: ['default'] })
+      response(message, { commands: pluginCommands(), models: [{ value: 'mock', displayName: 'Mock', description: '' }, { value: 'mock-other', displayName: 'Other', description: '' }], account: {}, output_style: 'default', available_output_styles: ['default'] })
       break
     case 'set_model':
       if (process.env.LIWA_TEST_CONTROL_FAILURE === 'yes') emit({ type: 'control_response', response: { subtype: 'error', request_id: message.request_id, error: `control failed ${process.env.ANTHROPIC_API_KEY ?? process.env.ANTHROPIC_AUTH_TOKEN}` } })

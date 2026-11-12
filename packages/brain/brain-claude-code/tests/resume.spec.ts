@@ -133,3 +133,19 @@ describe('usage across a resume', () => {
     expect(done.usage).not.toHaveProperty('providerReportedCostUsd')
   })
 })
+
+it('distinguishes missing member roots and returns the validated transcript for replay reuse', async () => {
+  const { launch, handle, file } = await setup()
+  await expect(validateResume(handle, join(host.root, 'absent-home'), host.root)).rejects.toMatchObject({ code: 'brain.claude_resume_home_missing' })
+  await expect(validateResume({ ...handle, home: join(host.root, 'absent-original') }, launch.homeDir, host.root)).rejects.toMatchObject({ code: 'brain.claude_resume_home_missing' })
+  await writeFile(file, valid)
+  expect(await validateResume(handle, launch.homeDir, host.root)).toMatchObject({ text: valid })
+})
+
+it('reports an unresolvable member root separately from a missing transcript', async () => {
+  const { launch, handle } = await setup()
+  const loop = join(host.root, 'root-loop')
+  await symlink(loop, loop)
+  await expect(validateResume(handle, loop, host.root)).rejects.toMatchObject({ code: 'brain.claude_resume_home_unreadable' })
+  await expect(validateResume({ ...handle, home: loop }, launch.homeDir, host.root)).rejects.toMatchObject({ code: 'brain.claude_resume_home_unreadable' })
+})

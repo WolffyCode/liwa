@@ -58,7 +58,7 @@ describe('global agent configuration set', () => {
     const empty = await mkdtemp(join(tmpdir(), 'liwa-agents-empty-'))
     roots.push(empty)
     expect(await loadAgentsConfig(empty, {})).toEqual({
-      version: 1, skills: {}, mcpServers: {}, plugins: {}, hooks: {}, instructions: {}, instances: {},
+      version: 1, skills: {}, agents: {}, commands: {}, mcpServers: {}, plugins: {}, hooks: {}, instructions: {}, instances: {},
     })
   })
 

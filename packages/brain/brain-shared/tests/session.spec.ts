@@ -51,7 +51,7 @@ class FakePaseoSession implements AgentSession {
     this.push({ type: 'turn_started', provider: 'fake', turnId })
     return Promise.resolve({ turnId })
   }
-  steerActiveTurn(_prompt: AgentPromptInput, options: SteerActiveTurnOptions): Promise<SteerResult> {
+  steerActiveTurn = (_prompt: AgentPromptInput, options: SteerActiveTurnOptions): Promise<SteerResult> => {
     this.steers.push(options)
     return Promise.resolve(this.steerResult)
   }
@@ -68,7 +68,7 @@ class FakePaseoSession implements AgentSession {
     this.push({ type: 'mode_changed', provider: 'fake', currentModeId: modeId, availableModes: [...this.modes] })
     return Promise.resolve(this.modeNotice)
   }
-  setModel(modelId: string | null): Promise<void> {
+  setModel = (modelId: string | null): Promise<void> => {
     // 像 Paseo 的 ACP 客户端：不认识的模型只记日志、不换。
     if (modelId !== null && this.models.includes(modelId)) {
       this.model = modelId
@@ -111,6 +111,21 @@ class ChildAwareSession extends PaseoBrainSession {
   protected override permissionChildId(request: AgentPermissionRequest): ChildId | undefined {
     const childId = request.metadata?.['childId']
     return typeof childId === 'string' ? ChildId(childId) : undefined
+  }
+}
+
+class ReportingSession extends ChildAwareSession {
+  begin(turnId: string): void { this.beginProviderTurn(TurnId(turnId)) }
+  finish(turnId: string): void { this.finishTurn({ kind: 'turn.completed', turnId: TurnId(turnId), usage: { inferences: 1 } }) }
+  wait(turnId: string): Promise<void> { return this.whenTurnEnds(TurnId(turnId)) }
+}
+
+class NativeCancelSession extends ChildAwareSession {
+  protected override permissionOptions(request: AgentPermissionRequest) {
+    return [
+      ...super.permissionOptions(request),
+      { option: { id: 'native-cancel', label: 'Cancel', effect: 'cancel' as const }, response: { behavior: 'deny' as const, interrupt: true } },
+    ]
   }
 }
 
@@ -440,12 +455,8 @@ describe('PaseoBrainSession boundary behaviour (review M2–M4, M6, M7)', () => 
   })
 
   it('reports provider-started turns and maps every usage update', async () => {
-    class Reporting extends ChildAwareSession {
-      begin(turnId: string): void { this.beginProviderTurn(TurnId(turnId)) }
-      finish(turnId: string): void { this.finishTurn({ kind: 'turn.completed', turnId: TurnId(turnId), usage: { inferences: 1 } }) }
-    }
     const fake = new FakePaseoSession()
-    const session = new Reporting({ impl: ImplId('fake'), meta: META, session: fake, blobs: BLOBS })
+    const session = new ReportingSession({ impl: ImplId('fake'), meta: META, session: fake, blobs: BLOBS })
     const events = recordEvents(session).events
     session.begin('auto-1')
     fake.push({ type: 'timeline', provider: 'fake', item: { type: 'assistant_message', text: 'woke up', messageId: 'w' } })
@@ -524,4 +535,242 @@ describe('brain-shared helpers', () => {
       { level: 'info', text: 'cyclic (provider="x", cyclic=[unserializable])' },
     ])
   })
+})
+
+it('preserves compact trigger and observed post tokens without inventing absent values', async () => {
+  const { fake, session, events } = open()
+  await session.startTurn(textInput('compact'))
+  fake.push({ type: 'timeline', provider: 'fake', item: { type: 'compaction', status: 'completed', trigger: 'manual', preTokens: 120, postTokens: 30 } })
+  expect(events.at(-1)).toMatchObject({ kind: 'session.compacted', trigger: 'manual', preTokens: 120, postTokens: 30 })
+  fake.push({ type: 'timeline', provider: 'fake', item: { type: 'compaction', status: 'completed' } })
+  expect(events.at(-1)).not.toHaveProperty('postTokens')
+  expect(events.at(-1)).not.toHaveProperty('trigger')
+})
+
+it('renders all logger argument forms without leaking trace or undefined fields', () => {
+  const lines: string[] = []
+  const record = (message: string) => { lines.push(message) }
+  const logger = paseoLogger({ debug: record, info: record, warn: record, error: record })
+  logger.info('plain')
+  logger.info({ omitted: undefined })
+  logger.info(null)
+  logger.info(1)
+  logger.info({ large: 1n }, 'large')
+  logger.child({ parent: 1 }).debug('child')
+  logger.trace('private')
+  expect(lines).toEqual(['plain', '', ' (value=null)', ' (value=1)', 'large (large=[unserializable])', 'child (parent=1)'])
+})
+
+it('maps every native tool detail and its absent result without fabricating content', async () => {
+  const details: import('../src/paseo/agent/agent-sdk-types.ts').ToolCallDetail[] = [
+    { type: 'shell', command: 'pwd', cwd: '/work', output: 'work', exitCode: 0 },
+    { type: 'read', filePath: '/read' }, { type: 'write', filePath: '/write' },
+    { type: 'edit', filePath: '/edit', oldString: '', newString: '' },
+    { type: 'edit', filePath: '/edit', oldString: '', newString: '', unifiedDiff: 'diff' },
+    { type: 'search', query: 'query' }, { type: 'search', query: 'query', content: 'matches' },
+    { type: 'fetch', url: 'https://x.invalid', prompt: 'extract' }, { type: 'fetch', url: 'https://x.invalid', result: 'page' },
+    { type: 'plain_text', text: 'plain' }, { type: 'plan', text: 'plan' },
+    { type: 'unknown', input: { a: 1 }, output: ['result'] },
+    { type: 'sub_agent', description: 'child', subAgentType: 'worker', log: '' },
+    { type: 'worktree_setup', worktreePath: '/worktree', branchName: 'branch', log: '', commands: [], truncated: false },
+  ]
+  const { fake, session, events } = open()
+  const { turnId } = await session.startTurn(textInput('tool details'))
+  for (const [index, detail] of details.entries()) {
+    fake.push({ type: 'timeline', provider: 'fake', turnId, item: { type: 'tool_call', callId: `detail-${index}`, name: detail.type, status: 'completed', error: null, detail } })
+  }
+  expect(events.filter(event => event.kind === 'item.tool_call.completed')).toHaveLength(details.length)
+  expect(events.filter(event => event.kind === 'item.tool_call.started').map(event => event.detail?.type)).toEqual(['shell', 'read', 'write', 'edit', 'edit', 'search', 'search', 'fetch', 'fetch', 'other', 'other', 'other', 'other', 'other'])
+  expect(events.find(event => event.kind === 'item.tool_call.completed' && event.callId === 'detail-1')).toHaveProperty('result', null)
+  expect(events.find(event => event.kind === 'item.tool_call.completed' && event.callId === 'detail-4')).toHaveProperty('result', 'diff')
+  expect(mapPaseoUsage({ outputTokens: 2 })).toEqual({ tokens: { input: 0, output: 2 } })
+  expect(mapPaseoToolDetail({ type: 'shell', command: 'pwd' })).toEqual({ type: 'shell', command: 'pwd' })
+})
+
+it('normalizes incomplete external question cards while preserving duplicate ids and text-only answers', () => {
+  const request: AgentPermissionRequest = { id: 'q', provider: 'fake', name: 'Ask', kind: 'question', input: { questions: [
+    null, 3, {}, { header: 'same', options: [null, 3, {}, { label: 'A', description: 'one' }] },
+    { header: 'same', question: 'second', detail: 'details' }, { question: 'unheaded' },
+  ] } }
+  const questions = paseoQuestions(request)
+  expect(questions.map(question => question.id)).toEqual(['same', 'same#5', 'unheaded'])
+  expect(questions[0]?.options).toEqual([{ label: 'A', description: 'one' }])
+  expect(structuredAnswers(questions, { same: { selected: [], custom: 'custom' } })).toEqual({ same: { selected: [], custom: 'custom' } })
+  const generic = { ...request }
+  delete generic.input
+  expect(paseoQuestions({ ...generic, title: 'Title' })[0]?.question).toBe('Title')
+  expect(paseoQuestions(generic)[0]?.question).toBe('Ask')
+})
+
+it('keeps idle diagnostics out of turns, denies orphan permissions and reports exit once', async () => {
+  const { fake, session, events } = open()
+  fake.push({ type: 'turn_completed', provider: 'fake', usage: {} })
+  fake.push({ type: 'turn_canceled', provider: 'fake', reason: 'old' })
+  fake.push({ type: 'timeline', provider: 'fake', item: { type: 'assistant_message', text: 'orphan' } })
+  fake.push({ type: 'permission_requested', provider: 'fake', request: { id: 'orphan', provider: 'fake', name: 'Bash', kind: 'tool' } })
+  expect(fake.responses.at(-1)?.response.behavior).toBe('deny')
+  fake.push({ type: 'permission_resolved', provider: 'fake', requestId: 'unknown', resolution: { behavior: 'deny' } })
+  fake.push({ type: 'usage_updated', provider: 'fake', usage: {} })
+  fake.push({ type: 'usage_updated', provider: 'fake', usage: { totalCostUsd: 0.1 } })
+  fake.push({ type: 'model_changed', provider: 'fake', runtimeInfo: { provider: 'fake', sessionId: 'native', model: '' } })
+  fake.push({ type: 'turn_failed', provider: 'fake', error: 'process exited' })
+  fake.push({ type: 'turn_failed', provider: 'fake', error: 'process exited again' })
+  expect(events.map(event => event.kind)).toEqual(['usage.update', 'session.exited'])
+  await expect(session.startTurn(textInput('after exit'))).rejects.toMatchObject({ code: 'brain.session_closed' })
+  await session.close()
+  await session.cancel({ reason: 'owner', keepQueue: false })
+})
+
+it('retains detailed failed-turn facts and bounds old terminal deduplication', async () => {
+  const { fake, session, events } = open()
+  for (let index = 0; index < 66; index++) {
+    const { turnId } = await session.startTurn(textInput('turn'))
+    fake.push({ type: 'turn_failed', provider: 'fake', turnId, error: 'authentication failed', code: '401', diagnostic: 'detail', usage: { inputTokens: 1 } })
+    fake.push({ type: 'turn_started', provider: 'fake', turnId })
+  }
+  expect(events.filter(event => event.kind === 'turn.failed')).toHaveLength(66)
+  expect(events.at(-1)).toMatchObject({ kind: 'turn.failed', code: '401', diagnostic: 'detail', retryable: false })
+  expect(await session.canStopRuntime()).toBe(true)
+  fake.describePersistence = () => ({ provider: 'fake', sessionId: 'native' })
+  expect(session.persistence()).not.toHaveProperty('nativeHandle')
+  fake.id = null
+})
+
+it('settles provider turn waiters on terminal, exit and close without reopening ended turns', async () => {
+  const fake = new FakePaseoSession()
+  const session = new ReportingSession({ impl: ImplId('fake'), meta: META, session: fake, blobs: BLOBS })
+  const events = recordEvents(session).events
+  expect(session.id).toBe('native-1')
+  session.begin('provider-turn')
+  session.begin('duplicate-while-running')
+  const waiters = [session.wait('provider-turn'), session.wait('provider-turn')]
+  session.finish('provider-turn')
+  await Promise.all(waiters)
+  await session.wait('provider-turn')
+  session.begin('provider-turn')
+  const idle = session.wait('future')
+  fake.push({ type: 'turn_failed', provider: 'fake', error: 'connection closed' })
+  await idle
+  await session.wait('after-exit')
+  await session.close()
+  session.begin('after-close')
+  session.finish('after-close')
+  await session.wait('after-close')
+  expect(events.filter(event => event.kind === 'turn.started')).toHaveLength(1)
+  expect(events.filter(event => event.kind === 'turn.completed')).toHaveLength(1)
+})
+
+it('ignores an event whose native dispatch snapshot outlives subscription close', async () => {
+  const fake = new FakePaseoSession()
+  fake.subscribe(() => { void session.close() })
+  const session = new PaseoBrainSession({ impl: ImplId('fake'), meta: META, session: fake, blobs: BLOBS })
+  const events = recordEvents(session).events
+  fake.push({ type: 'turn_started', provider: 'fake', turnId: 'late' })
+  await session.close()
+  expect(events).toEqual([])
+})
+
+it('retains session-scoped child output when the parent turn is unknown', async () => {
+  const { fake, session, events } = open()
+  fake.push({ type: 'provider_subagent', provider: 'fake', event: { type: 'upsert', id: 'solo', status: 'running' } })
+  fake.push({ type: 'provider_subagent', provider: 'fake', event: { type: 'timeline', id: 'solo', item: { type: 'assistant_message', text: 'first' } } })
+  fake.push({ type: 'provider_subagent', provider: 'fake', event: { type: 'timeline', id: 'solo', item: { type: 'assistant_message', text: 'second', messageId: 'child-explicit' } } })
+  fake.push({ type: 'provider_subagent', provider: 'fake', event: { type: 'timeline', id: 'solo', item: { type: 'reasoning', text: 'reason' } } })
+  const item = { type: 'tool_call' as const, callId: 'child-call', name: 'Read', status: 'running' as const, error: null, detail: { type: 'read' as const, filePath: '/child' } }
+  fake.push({ type: 'provider_subagent', provider: 'fake', event: { type: 'timeline', id: 'solo', item } })
+  fake.push({ type: 'provider_subagent', provider: 'fake', event: { type: 'timeline', id: 'solo', item: { ...item, status: 'completed' } } })
+  fake.push({ type: 'provider_subagent', provider: 'fake', event: { type: 'timeline', id: 'solo', item: { type: 'compaction', status: 'completed' } } })
+  fake.push({ type: 'provider_subagent', provider: 'fake', event: { type: 'upsert', id: 'solo', status: 'failed' } })
+  fake.push({ type: 'provider_subagent', provider: 'fake', event: { type: 'upsert', id: 'solo', status: 'running', description: 'reopened' } })
+  fake.push({ type: 'provider_subagent', provider: 'fake', event: { type: 'upsert', id: 'solo', status: 'completed' } })
+  expect(events.filter(event => event.kind === 'item.reasoning')).toHaveLength(1)
+  expect(events.find(event => event.kind === 'item.tool_call.completed')).not.toHaveProperty('turnId')
+  expect(events.filter(event => event.kind === 'child.ended').map(event => event.stopReason)).toEqual(['failed', 'completed'])
+  expect(events.some(event => event.kind === 'session.compacted')).toBe(false)
+  const native: AgentSession = fake
+  native.canStopRuntime = () => Promise.resolve(false)
+  expect(await session.canStopRuntime()).toBe(false)
+})
+
+it('uses automatic parent message identities consistently and ignores loading compaction', async () => {
+  const { fake, session, events } = open()
+  await session.startTurn(textInput('stream'))
+  fake.push({ type: 'timeline', provider: 'fake', item: { type: 'assistant_message', text: 'a' } })
+  fake.push({ type: 'timeline', provider: 'fake', item: { type: 'assistant_message', text: 'b' } })
+  fake.push({ type: 'timeline', provider: 'fake', item: { type: 'assistant_message', text: 'c', messageId: 'explicit' } })
+  fake.push({ type: 'timeline', provider: 'fake', item: { type: 'compaction', status: 'loading' } })
+  const messages = events.filter(event => event.kind === 'item.message')
+  expect(messages[0]?.itemId).toBe(messages[1]?.itemId)
+  expect(messages.some(event => event.final)).toBe(true)
+  expect(events.some(event => event.kind === 'session.compacted')).toBe(false)
+  const native: AgentSession = fake
+  delete native.steerActiveTurn
+  expect(await session.deliver(textInput('steer'), { semantics: 'next_step', wake: false })).toBe('unsupported')
+  delete native.setModel
+  await expect(session.setModel('small')).rejects.toMatchObject({ code: 'brain.model_switch_unsupported' })
+  fake.modes.splice(0)
+  await expect(session.setMode('missing')).rejects.toThrow('(none)')
+})
+
+it('keeps permission resolution authoritative when transport fails before or after its acknowledgment', async () => {
+  const { fake, session, events } = open()
+  const { turnId } = await session.startTurn(textInput('permissions'))
+  const request: AgentPermissionRequest = { id: 'retry', provider: 'fake', name: 'Read', kind: 'tool', detail: { type: 'read', filePath: '/file' } }
+  fake.push({ type: 'permission_requested', provider: 'fake', turnId, request })
+  const respond = fake.respondToPermission.bind(fake)
+  fake.respondToPermission = () => Promise.reject(new Error('not acknowledged'))
+  await expect(session.respondToPermission(PermissionRequestId('retry'), { optionId: 'allow' })).rejects.toThrow('not acknowledged')
+  fake.respondToPermission = async (requestId, response) => {
+    await respond(requestId, response)
+    fake.push({ type: 'permission_resolved', provider: 'fake', requestId, resolution: response })
+    throw new Error('acknowledged then disconnected')
+  }
+  await expect(session.respondToPermission(PermissionRequestId('retry'), { optionId: 'allow' })).rejects.toThrow('acknowledged then disconnected')
+  await expect(session.respondToPermission(PermissionRequestId('retry'), { optionId: 'allow' })).rejects.toMatchObject({ code: 'brain.permission_unknown' })
+  expect(events.filter(event => event.kind === 'permission.resolved')).toHaveLength(1)
+})
+
+it('routes child permissions with unknown turns and records native resolutions without an owner choice', async () => {
+  const { fake, events } = open()
+  const request: AgentPermissionRequest = { id: 'child-permission', provider: 'fake', name: 'Read', kind: 'tool', metadata: { childId: 'unannounced-child' } }
+  fake.push({ type: 'permission_requested', provider: 'fake', request })
+  fake.push({ type: 'permission_resolved', provider: 'fake', requestId: request.id, resolution: { behavior: 'allow' } })
+  expect(events.at(-1)).toMatchObject({ kind: 'permission.resolved', effect: 'allow_once' })
+  expect(events.at(-1)).not.toHaveProperty('turnId')
+  const denied = { ...request, id: 'deny-only', actions: [{ id: 'no', label: 'No', behavior: 'deny' as const }] }
+  fake.push({ type: 'permission_requested', provider: 'fake', request: denied })
+  fake.push({ type: 'permission_resolved', provider: 'fake', requestId: denied.id, resolution: { behavior: 'allow' } })
+  expect(events.at(-1)).toMatchObject({ effect: 'cancel', optionId: 'cancel' })
+})
+
+it('accepts native cancel choices and rejects orphan parent permissions even when the transport is gone', async () => {
+  const fake = new FakePaseoSession()
+  const session = new NativeCancelSession({ impl: ImplId('fake'), meta: META, session: fake, blobs: BLOBS })
+  const events = recordEvents(session).events
+  fake.respondToPermission = () => Promise.reject(new Error('transport gone'))
+  fake.push({ type: 'permission_requested', provider: 'fake', request: { id: 'orphan', provider: 'fake', name: 'Read', kind: 'tool' } })
+  await Promise.resolve()
+  expect(events).toEqual([])
+  fake.push({ type: 'provider_subagent', provider: 'fake', event: { type: 'timeline', id: 'undeclared', item: { type: 'assistant_message', text: 'ignore' } } })
+  fake.push({ type: 'turn_started', provider: 'fake' })
+  fake.push({ type: 'timeline', provider: 'fake', item: { type: 'reasoning', text: 'no message yet' } })
+  const item = { type: 'tool_call' as const, callId: 'search', name: 'Search', status: 'completed' as const, error: null }
+  fake.push({ type: 'timeline', provider: 'fake', item: { ...item, detail: { type: 'search', query: 'needle' } } })
+  fake.push({ type: 'permission_requested', provider: 'fake', request: { id: 'cancel', provider: 'fake', name: 'Read', kind: 'tool' } })
+  const permission = events.find(event => event.kind === 'permission.request')
+  expect(permission?.kind === 'permission.request' ? permission.options.filter(option => option.effect === 'cancel') : []).toEqual([
+    { id: 'native-cancel', label: 'Cancel', effect: 'cancel' },
+  ])
+  expect(events.find(event => event.kind === 'item.tool_call.completed')).toMatchObject({ result: null })
+  fake.push({ type: 'timeline', provider: 'fake', item: { ...item, callId: 'text', detail: { type: 'plain_text' } } })
+  await session.close()
+})
+
+it('does not attach an unknown child permission to a later parent turn', async () => {
+  const { fake, session, events } = open()
+  const request = { id: 'late-parent', provider: 'fake', name: 'Read', kind: 'tool' as const, metadata: { childId: 'unknown' } }
+  fake.push({ type: 'permission_requested', provider: 'fake', request })
+  const { turnId } = await session.startTurn(textInput('new parent'))
+  fake.push({ type: 'permission_resolved', provider: 'fake', turnId, requestId: request.id, resolution: { behavior: 'deny' } })
+  expect(events.at(-1)).not.toHaveProperty('turnId')
 })

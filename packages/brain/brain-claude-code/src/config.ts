@@ -2,11 +2,14 @@
  * 显式实例配置与空壳子环境；会话策略只经 SDK 覆盖，不覆写成员共用状态。
  * @module @liwa/brain-claude-code/config
  */
-import { cp, mkdir, readdir, readFile, stat, writeFile, mkdtemp, rm } from 'node:fs/promises'
-import { isAbsolute, join } from 'node:path'
+import { cp, mkdir, readdir, realpath, stat, writeFile, mkdtemp, rm } from 'node:fs/promises'
+import { readFileSync, writeFileSync } from 'node:fs'
+import { z as jsonSchema } from 'zod'
+import { dirname, isAbsolute, join, relative, sep } from 'node:path'
 import z from '@liwa/schemastery'
 import { BrainError, HookEventSchema, ImplIdSchema, KERNEL_MCP_SERVER_NAME, memberMcpServers, rulesDocument, type Hooks, type McpServer, type SessionConfig, type MemberConfigSpec } from '@liwa/brain'
 import { scrubbedParentEnv } from '@liwa/subprocess'
+import { ClaudeProjectContext } from './project-context.ts'
 import type { Options } from '@anthropic-ai/claude-agent-sdk'
 
 /** 一行配置就是一个独立提供方；认证与地址像 Paseo 的自定义提供方一样直接写在 env 里。 */
@@ -27,6 +30,10 @@ export interface Config {
   disallowedTools: string[]
   /** 实例自带的本事目录（绝对路径）；与会话的 skillsDir 一起装进同一个快照插件，同名本事报错。 */
   skills: string
+  /** 实例受管 agent 描述目录，不使用 SDK 程序化 agents 入口。 */
+  agents: string
+  /** 实例受管斜杠命令目录。 */
+  commands: string
   /** 实例自带的 MCP 服务器；与会话的 mcpServers 合并，同名报错，`liwa` 留给内核工具。 */
   mcpServers: Record<string, InstanceMcpServer>
   /** 实例装载的本地插件目录（绝对路径，须含 .claude-plugin/plugin.json）。 */
@@ -37,6 +44,8 @@ export interface Config {
   controlTimeoutMs: number
   /** 仅运行 --version 的等待上限（毫秒）。 */
   probeTimeoutMs: number
+  /** 显式插件安装／更新命令的超时，不用于会话模型调用。 */
+  pluginInstallTimeoutMs: number
   /** 受管进程终止阶梯的宽限期（毫秒）。 */
   graceMs: number
   /** 完整追加指令的 UTF-8 字节上限；超出拒绝，不截断。 */
@@ -119,7 +128,7 @@ const InstanceHookMatcherSchema = z.object({
   hooks: z.array(z.object({ type: z.const('command').required(), command: z.string().required(), timeout: z.natural() })).required(),
 })
 
-export const Config: z<Config> = z.object({
+export const Config: z<Partial<Config>, Config> = z.object({
   impl: z.string().default('claude-code'),
   label: z.string().default('Claude Code'),
   binary: z.string().default('claude'),
@@ -128,11 +137,14 @@ export const Config: z<Config> = z.object({
   models: z.array(InstanceModelSchema).required(),
   disallowedTools: z.array(z.string()).default([]),
   skills: z.string().default(''),
+  agents: z.string().default(''),
+  commands: z.string().default(''),
   mcpServers: z.dict(InstanceMcpServerSchema).default({}),
   plugins: z.array(z.string()).default([]),
   hooks: z.dict(z.array(InstanceHookMatcherSchema)).default({}),
   controlTimeoutMs: z.natural().min(1).default(30_000),
   probeTimeoutMs: z.natural().min(1).default(10_000),
+  pluginInstallTimeoutMs: z.natural().min(1).default(120_000),
   graceMs: z.natural().min(1).default(2_000),
   instructionsMaxBytes: z.natural().min(1).default(65_536),
 })
@@ -257,6 +269,8 @@ export interface ClaudeSessionPolicy {
   options: Options
   /** 最终生效的 MCP 服务器（内核 + 实例 + 会话），SDK 与收尾策略、脱敏都用这一份。 */
   mcpServers: Record<string, McpServer>
+  /** 此代受控项目说明；projectDocs 关时省略。 */
+  projectContext?: ClaudeProjectContext
   /** 开会话时应用的 thinking 选择。 */
   thinking: ThinkingChoice
   /** 删除此代快照；不删除成员转录或其他会话。 */
@@ -273,8 +287,6 @@ export interface ClaudeSessionPolicy {
 export async function resolveSessionPolicy(config: Config, session: SessionConfig, home: string): Promise<ClaudeSessionPolicy> {
   if (session.mindKind !== 'work') throw new BrainError('invalid_input', 'brain.claude_work_only', 'Claude is work-only until real CLI compaction and tool isolation are verified')
   if (session.nativeToolPolicy !== 'worktree' && session.childPolicy.native) throw new BrainError('invalid_input', 'brain.claude_children_policy', 'Native children require worktree tools; child tool restrictions cannot be inherited reliably')
-  const hasSkills = config.skills !== '' || session.skillsDir !== ''
-  if (session.nativeToolPolicy === 'none' && hasSkills) throw new BrainError('invalid_input', 'brain.claude_skills_policy', 'Skills require the native Skill tool')
   const mode = session.modeId ?? 'default'
   if (!isSessionMode(mode)) throw new BrainError('invalid_input', 'brain.mode_unknown', `Claude supports ${SESSION_MODES.join(', ')} modes`)
   if (session.kernelTools !== undefined && 'native' in session.kernelTools) throw new BrainError('invalid_input', 'brain.claude_mcp_required', 'Claude kernel tools require an MCP endpoint')
@@ -282,15 +294,8 @@ export async function resolveSessionPolicy(config: Config, session: SessionConfi
   const thinking = resolveThinking(model, session.thinking)
   const mcpServers = mergedMcpServers(config, session)
   const prompt = [session.persona.stable, rulesDocument(session.rules), session.instructions ?? '']
-  if (session.projectDocs) {
-    let doc: string | undefined
-    try {
-      doc = await readFile(join(session.cwd, 'CLAUDE.md'), 'utf8')
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
-    }
-    if (doc !== undefined) prompt.push(doc)
-  }
+  const projectContext = session.projectDocs ? await ClaudeProjectContext.create(session.cwd, config.instructionsMaxBytes) : undefined
+  for (const document of projectContext?.initial.documents ?? []) prompt.push(`[Project instructions: ${document.path}]\n${document.text}`)
   prompt.push(session.persona.notes)
   const append = prompt.filter(Boolean).join('\n\n')
   if (Buffer.byteLength(append) > config.instructionsMaxBytes) throw new BrainError('invalid_input', 'brain.claude_instructions_limit', 'Instructions exceed instructionsMaxBytes; shorten them or increase the configured limit')
@@ -310,23 +315,57 @@ export async function resolveSessionPolicy(config: Config, session: SessionConfi
       claudeMdExcludes: ['**'], autoCompactEnabled: session.compaction !== 'off', autoMemoryEnabled: false, enabledPlugins: {},
       ...(Object.keys(hooks).length === 0 ? {} : { hooks }),
     },
-    mcpServers: Object.fromEntries(Object.entries(mcpServers).map(([name, server]) => [name,
-      server.type === 'stdio'
-        ? { type: server.type, command: server.command, args: server.args ?? [], env: server.env ?? {} }
-        : { type: server.type, url: server.url, headers: server.headers ?? {} },
-    ])),
     ...(plugins.length === 0 ? {} : { plugins: plugins.map(path => ({ type: 'local' as const, path })) }),
   }
   applyThinking(options, thinking)
   await assertPluginDirectories(plugins)
-  if (!hasSkills) return { options, mcpServers, thinking, dispose: () => Promise.resolve() }
-  // 灵鲸改：只装载此代明确提供的本事（实例的加成员的），不用共享可变 settings 区分并发会话。
-  const snapshot = await mkdtemp(join(home, 'skills-'))
+  const projectSources: Record<'skills' | 'agents' | 'commands', MaterialSource[]> = { skills: [], agents: [], commands: [] }
+  if (projectContext !== undefined) {
+    const root = projectContext.initial.root
+    const directories = [await realpath(session.cwd)]
+    while (directories[0] !== root) directories.unshift(dirname(directories[0] as string))
+    for (const directory of directories) {
+      for (const kind of ['skills', 'agents', 'commands'] as const) {
+        const source = join(directory, '.claude', kind)
+        const actual = await realpath(source).catch((error: unknown) => {
+          if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined
+          throw error
+        })
+        if (actual === undefined) continue
+        const local = relative(root, actual)
+        if (local === '..' || local.startsWith(`..${sep}`) || isAbsolute(local)) throw new BrainError('invalid_input', 'brain.project_material_outside', `Project ${kind} resolves outside the git root`)
+        projectSources[kind].push({ dir: actual, root })
+      }
+    }
+  }
+  const hasSkills = config.skills !== '' || session.skillsDir !== '' || projectSources.skills.length > 0
+  if (session.nativeToolPolicy === 'none' && hasSkills) throw new BrainError('invalid_input', 'brain.claude_skills_policy', 'Skills require the native Skill tool')
+  const snapshot = await mkdtemp(join(home, 'snapshot-'))
   const dispose = async (): Promise<void> => { await rm(snapshot, { recursive: true, force: true }) }
   const populate = async (): Promise<void> => {
-    await copySkills([config.skills, session.skillsDir], join(snapshot, 'skills'))
-    await mkdir(join(snapshot, '.claude-plugin'))
-    await writeFile(join(snapshot, '.claude-plugin', 'plugin.json'), JSON.stringify({ name: 'liwa-member-skills', version: '1.0.0' }), { mode: 0o600 })
+    const materials = {
+      skills: [...[config.skills, session.skillsDir].map(dir => ({ dir })), ...projectSources.skills],
+      agents: [...[config.agents, ...(session.agents ?? [])].map(dir => ({ dir })), ...projectSources.agents],
+      commands: [...[config.commands, ...(session.commands ?? [])].map(dir => ({ dir })), ...projectSources.commands],
+    }
+    for (const kind of ['skills', 'agents', 'commands'] as const) {
+      await copyMaterials(materials[kind], join(snapshot, kind), kind)
+    }
+    const hasMaterials = Object.values(materials).some(sources => sources.some(source => source.dir !== ''))
+    if (hasMaterials) {
+      await mkdir(join(snapshot, '.claude-plugin'))
+      await writeFile(join(snapshot, '.claude-plugin', 'plugin.json'), JSON.stringify({ name: 'liwa-member-materials', version: '1.0.0' }), { mode: 0o600 })
+      options.plugins = [...(options.plugins ?? []), { type: 'local', path: snapshot }]
+    }
+    const mcpFile = join(snapshot, 'mcp.json')
+    const serializedServers = Object.fromEntries(Object.entries(mcpServers).map(([name, server]) => [name, server.type === 'stdio'
+      ? { ...server, args: server.args ?? [], env: server.env ?? {} }
+      : { ...server, headers: server.headers ?? {} }]))
+    await writeFile(mcpFile, JSON.stringify({ mcpServers: serializedServers }), { mode: 0o600 })
+    options.extraArgs = { ...options.extraArgs, 'mcp-config': mcpFile }
+    const settingsFile = join(snapshot, 'settings.json')
+    await writeFile(settingsFile, JSON.stringify(options.settings), { mode: 0o600 })
+    options.settings = settingsFile
   }
   try {
     await populate()
@@ -334,8 +373,8 @@ export async function resolveSessionPolicy(config: Config, session: SessionConfi
     await dispose()
     throw error
   }
-  options.plugins = [...(options.plugins ?? []), { type: 'local', path: snapshot }]
-  return { options, mcpServers, thinking, dispose }
+  return { options, mcpServers, thinking, ...(projectContext === undefined ? {} : { projectContext }), dispose }
+
 }
 
 /** 会话模式：Paseo 的五个减去 bypassPermissions（设计 §4.2 禁用）；dontAsk 同理不开放。 */
@@ -395,10 +434,12 @@ export function applyThinking(options: Options, choice: ThinkingChoice): void {
   else options.thinking = choice.thinking
   if (choice.effort === undefined) delete options.effort
   else options.effort = choice.effort
-  const settings = options.settings
-  if (typeof settings !== 'object') return
+  const value = options.settings
+  if (value === undefined) return
+  const settings = typeof value === 'string' ? jsonSchema.record(jsonSchema.string(), jsonSchema.unknown()).parse(JSON.parse(readFileSync(value, 'utf8'))) : value
   if (choice.ultracode) settings.ultracode = true
   else delete settings.ultracode
+  if (typeof value === 'string') writeFileSync(value, JSON.stringify(settings), { mode: 0o600 })
 }
 
 /**
@@ -429,7 +470,9 @@ export function sessionSecrets(mcpServers: Record<string, McpServer>, kernelTool
 
 function validateInstanceSurface(config: Config): void {
   for (const model of config.models) validateThinkingOptions(model)
-  if (config.skills !== '' && !isAbsolute(config.skills)) throw new BrainError('invalid_input', 'brain.claude_skills', 'skills must be an absolute directory path')
+  for (const kind of ['skills', 'agents', 'commands'] as const) {
+    if (config[kind] !== '' && !isAbsolute(config[kind])) throw new BrainError('invalid_input', 'brain.claude_materials', `${kind} must be an absolute directory path`)
+  }
   for (const path of config.plugins) {
     if (!isAbsolute(path)) throw new BrainError('invalid_input', 'brain.claude_plugins', `plugin directory ${path} must be an absolute path`)
   }
@@ -504,19 +547,43 @@ async function assertPluginDirectories(plugins: string[]): Promise<void> {
   }
 }
 
-async function copySkills(sources: string[], target: string): Promise<void> {
-  await mkdir(target, { recursive: true })
+interface MaterialSource { dir: string; root?: string }
+
+async function copyMaterials(sources: MaterialSource[], target: string, kind: string): Promise<void> {
+  await mkdir(target, { recursive: true, mode: 0o700 })
   const owners = new Map<string, string>()
   for (const source of sources) {
-    if (source === '') continue
-    const entries = await readdir(source).catch((error: unknown) => {
-      throw new BrainError('invalid_input', 'brain.skills_dir_missing', `skills directory ${source} cannot be read`, { cause: error })
-    })
-    for (const entry of entries) {
-      const owner = owners.get(entry)
-      if (owner !== undefined) throw new BrainError('invalid_input', 'brain.claude_skills_conflict', `skill ${entry} is provided by both ${owner} and ${source}`)
-      owners.set(entry, source)
-      await cp(join(source, entry), join(target, entry), { recursive: true })
+    if (source.dir === '') continue
+    const active = new Set<string>()
+    const claim = (name: string): void => {
+      const owner = owners.get(name)
+      if (owner !== undefined) throw new BrainError('invalid_input', 'brain.claude_material_conflict', `${kind} ${name} is provided by both ${owner} and ${source.dir}`)
+      owners.set(name, source.dir)
+    }
+    const copy = async (name: string): Promise<void> => {
+      const path = join(source.dir, name)
+      const actual = await realpath(path)
+      const local = source.root === undefined ? undefined : relative(source.root, actual)
+      if (local !== undefined && (local === '..' || local.startsWith(`..${sep}`) || isAbsolute(local))) throw new BrainError('invalid_input', 'brain.project_material_outside', `Project ${kind} entry ${name} resolves outside the git root`)
+      const metadata = await stat(actual)
+      if (!metadata.isDirectory()) {
+        claim(name)
+        await mkdir(dirname(join(target, name)), { recursive: true, mode: 0o700 })
+        await cp(actual, join(target, name), { dereference: true })
+        return
+      }
+      if (active.has(actual)) throw new BrainError('invalid_input', 'brain.material_cycle', `Material directory cycle at ${name}`)
+      active.add(actual)
+      if (kind === 'skills' && name !== '' && !name.includes(sep)) claim(name)
+      const entries = await readdir(actual)
+      for (const entry of entries.sort()) await copy(join(name, entry))
+      active.delete(actual)
+    }
+    try {
+      await copy('')
+    } catch (error) {
+      if (error instanceof BrainError) throw error
+      throw new BrainError('invalid_input', 'brain.material_unreadable', `${kind} directory ${source.dir} cannot be read`, { cause: error })
     }
   }
 }

@@ -523,6 +523,8 @@ export class ManagedBrainSession implements BrainSession {
         // 进程退出只由 brains 依据它登记的拉起补发；提供方发的丢弃，保持唯一来源。
         this.host.logger.warn(`brain session ${this.id}: provider ${this.impl} emitted process.exited; brains reports process exits itself`)
         return
+      case 'session.project_document':
+      case 'session.project_document_failed':
       case 'session.compacted':
       case 'item.message':
       case 'item.reasoning':

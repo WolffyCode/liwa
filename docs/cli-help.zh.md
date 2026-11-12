@@ -17,6 +17,11 @@
 - [`liwa brain`](#liwa-brain)
 - [`liwa brain list`](#liwa-brain-list)
 - [`liwa brain probe`](#liwa-brain-probe)
+- [`liwa brain plugin`](#liwa-brain-plugin)
+- [`liwa brain plugin list`](#liwa-brain-plugin-list)
+- [`liwa brain plugin install`](#liwa-brain-plugin-install)
+- [`liwa brain plugin update`](#liwa-brain-plugin-update)
+- [`liwa brain plugin remove`](#liwa-brain-plugin-remove)
 - [`liwa brain run`](#liwa-brain-run)
 - [`liwa deepseek`](#liwa-deepseek)
 - [`liwa headless`](#liwa-headless)
@@ -122,6 +127,7 @@ Commands:
                              them
   probe [options] <impl>     probe one provider: availability, version, and
                              problems
+  plugin                     manage the Liwa-owned provider plugin library
   run [options] <prompt...>  open one session in this process, stream its
                              events, run one turn, and close it
   help [command]             display help for command
@@ -161,11 +167,100 @@ Usage: liwa brain probe [options] <impl>
 probe one provider: availability, version, and problems
 
 Arguments:
-  impl        provider implementation name
+  impl          provider implementation name
 
 Options:
-  --json      print one JSON document instead of text
-  -h, --help  show this help
+  --check-auth  check authentication with auth status in an isolated temporary
+                home
+  --json        print one JSON document instead of text
+  -h, --help    show this help
+```
+
+<a id="liwa-brain-plugin"></a>
+## `liwa brain plugin`
+
+调用方式: `liwa brain plugin --help`, `liwa brain plugin help --help`, `liwa --profile brain plugin --help`, `liwa --profile brain plugin help --help`
+
+```text
+Usage: liwa brain plugin [options] [command]
+
+manage the Liwa-owned provider plugin library
+
+Options:
+  -h, --help                           show this help
+
+Commands:
+  list [options]
+  install [options] <plugin> <source>
+  update [options] <plugin>
+  remove [options] <plugin>
+  help [command]                       display help for command
+```
+
+<a id="liwa-brain-plugin-list"></a>
+## `liwa brain plugin list`
+
+调用方式: `liwa brain plugin list --help`, `liwa --profile brain plugin list --help`
+
+```text
+Usage: liwa brain plugin list [options]
+
+Options:
+  --provider <impl>  provider instance
+  --json             print JSON
+  -h, --help         show this help
+```
+
+<a id="liwa-brain-plugin-install"></a>
+## `liwa brain plugin install`
+
+调用方式: `liwa brain plugin install --help`, `liwa --profile brain plugin install --help`
+
+```text
+Usage: liwa brain plugin install [options] <plugin> <source>
+
+Arguments:
+  plugin             <plugin>@<marketplace>
+  source             marketplace source passed to the provider CLI
+
+Options:
+  --provider <impl>  provider instance
+  --json             print JSON
+  -h, --help         show this help
+```
+
+<a id="liwa-brain-plugin-update"></a>
+## `liwa brain plugin update`
+
+调用方式: `liwa brain plugin update --help`, `liwa --profile brain plugin update --help`
+
+```text
+Usage: liwa brain plugin update [options] <plugin>
+
+Arguments:
+  plugin             <plugin>@<marketplace>
+
+Options:
+  --provider <impl>  provider instance
+  --json             print JSON
+  -h, --help         show this help
+```
+
+<a id="liwa-brain-plugin-remove"></a>
+## `liwa brain plugin remove`
+
+调用方式: `liwa brain plugin remove --help`, `liwa --profile brain plugin remove --help`
+
+```text
+Usage: liwa brain plugin remove [options] <plugin>
+
+Arguments:
+  plugin             <plugin>@<marketplace>
+
+Options:
+  --provider <impl>  provider instance
+  --json             print JSON
+  -h, --help         show this help
 ```
 
 <a id="liwa-brain-run"></a>

@@ -5,7 +5,8 @@
 import { BrainError, ChildId, PermissionRequestId, type ResumeHandle, type BrainEvent, type CancelOptions, type TurnId, type PermissionAnswer, type PermissionOption, type PermissionQuestion } from '@liwa/brain'
 import { PaseoBrainSession, type PaseoBrainSessionInit } from '@liwa/brain-shared'
 import type { AgentMetadata, AgentPermissionRequest, AgentPermissionResponse } from '@liwa/brain-shared/paseo/agent/agent-sdk-types'
-import { claudeAnswerInput, sessionPermissionUpdate } from './permissions.ts'
+import { claudeAnswerInput, sessionPermissionOptions } from './permissions.ts'
+import type { ClaudeDiagnostics } from './diagnostics.ts'
 import type { ClaudeTurnPolicy } from './budget.ts'
 import { baselineMetadata, type ClaudeUsage } from './usage.ts'
 import type { ClaudeAgentSession } from './paseo/agent/providers/claude/agent.ts'
@@ -13,7 +14,7 @@ import { applyThinking, resolveModel, resolveThinking, type ClaudeSessionPolicy,
 
 /** Claude 会话：结构化问答、会话审批、实例模型目录与 thinking 档位。 */
 export class ClaudeBrainSession extends PaseoBrainSession {
-  private readonly sessionGrantRequests = new Map<PermissionRequestId, string>()
+  private readonly sessionGrantRequests = new Map<PermissionRequestId, Map<string, string[]>>()
   private applied: ThinkingChoice
   /**
    *
@@ -29,10 +30,11 @@ export class ClaudeBrainSession extends PaseoBrainSession {
   constructor(
     init: PaseoBrainSessionInit, private readonly config: Config, private readonly policy: ClaudeSessionPolicy,
     private readonly usage: ClaudeUsage, private readonly budget: ClaudeTurnPolicy, private readonly home: string,
-    private model: string, private thinking: string | undefined,
+    private model: string, private thinking: string | undefined, private readonly diagnostics: ClaudeDiagnostics,
   ) {
     super(init)
     this.applied = policy.thinking
+    if (policy.projectContext !== undefined) policy.projectContext.publish = (event) => { this.emit(event) }
   }
 
   /**
@@ -72,11 +74,17 @@ export class ClaudeBrainSession extends PaseoBrainSession {
    * @inheritdoc
    */
   protected override decorate(event: BrainEvent): BrainEvent {
+    if (event.kind === 'item.tool_call.completed') return { ...event, result: this.diagnostics.redactValue(event.result) }
     if (event.kind === 'permission.resolved') {
-      const tool = this.sessionGrantRequests.get(event.requestId)
+      const tools = this.sessionGrantRequests.get(event.requestId)?.get(event.optionId)
       this.sessionGrantRequests.delete(event.requestId)
       // allow_session 只由下方登记过的窄规则生成；共享层不会发布未知请求的 resolved。
-      if (event.effect === 'allow_session') this.budget.allowSession(tool as string)
+      if (event.effect === 'allow_session' && tools !== undefined) {
+        for (const tool of tools) {
+          if (tool.startsWith('mcp__')) this.budget.allowSession(tool)
+          else this.budget.delegateSession(tool)
+        }
+      }
     }
     if (event.kind === 'turn.completed') {
       const usage = this.usage.take(event.turnId)
@@ -115,9 +123,12 @@ export class ClaudeBrainSession extends PaseoBrainSession {
    */
   protected override permissionOptions(request: AgentPermissionRequest): { option: PermissionOption; response: AgentPermissionResponse }[] {
     const options = super.permissionOptions(request)
-    const rule = sessionPermissionUpdate(request)
-    if (rule !== undefined) this.sessionGrantRequests.set(PermissionRequestId(request.id), request.name)
-    if (rule !== undefined) options.push({ option: { id: 'allow_session', label: 'Allow for this session', effect: 'allow_session' }, response: { behavior: 'allow', updatedPermissions: [rule] } })
+    const grants = sessionPermissionOptions(request)
+    if (grants.length > 0) {
+      const rulesByOption = new Map(grants.map(grant => [grant.option.id, grant.tools]))
+      this.sessionGrantRequests.set(PermissionRequestId(request.id), rulesByOption)
+    }
+    options.push(...grants)
     return options
   }
 
@@ -144,8 +155,12 @@ export class ClaudeBrainSession extends PaseoBrainSession {
    * @inheritdoc
    */
   override async close(): Promise<void> {
-    await super.close()
-    this.sessionGrantRequests.clear()
-    await this.policy.dispose()
+    try {
+      await super.close()
+    } finally {
+      this.sessionGrantRequests.clear()
+      if (this.policy.projectContext !== undefined) this.policy.projectContext.publish = undefined
+      await this.policy.dispose()
+    }
   }
 }

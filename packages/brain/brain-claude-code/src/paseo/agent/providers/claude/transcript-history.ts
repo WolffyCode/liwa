@@ -90,6 +90,7 @@ async function* locatedRecords(
 function indexedRecords(
   locations: readonly RecordLocation[],
   descriptors: ReadonlyMap<string, FileHandle>,
+  snapshot?: { file: string; bytes: Buffer },
 ): AsyncIterable<TranscriptEntry> {
   return {
     async *[Symbol.asyncIterator]() {
@@ -98,11 +99,12 @@ function indexedRecords(
   };
   async function* readEntries(): AsyncGenerator<TranscriptEntry> {
     for (const location of locations) {
-      const fd = descriptors.get(location.file)!;
-      const buffer = Buffer.allocUnsafe(location.length);
+      const fd = descriptors.get(location.file);
+      const cached = snapshot?.file === location.file;
+      const buffer = cached ? snapshot.bytes.subarray(location.offset, location.offset + location.length) : Buffer.allocUnsafe(location.length);
       let read = 0;
-      while (read < buffer.length) {
-        const { bytesRead: count } = await fd.read(
+      while (!cached && read < buffer.length) {
+        const { bytesRead: count } = await fd!.read(
           buffer,
           read,
           buffer.length - read,
@@ -162,10 +164,11 @@ export interface ClaudeReplayHistory {
 export async function withClaudeReplayHistory<T>(
   historyPath: string,
   consume: (history: ClaudeReplayHistory) => Promise<T>,
+  initial?: { path: string; text: string },
 ): Promise<T> {
   const descriptors = new Map<string, FileHandle>();
   try {
-    return await consume(await indexHistory(historyPath, descriptors));
+    return await consume(await indexHistory(historyPath, descriptors, initial === undefined ? undefined : { file: initial.path, bytes: Buffer.from(initial.text) }));
   } finally {
     await closeReplaySources(descriptors.values());
   }
@@ -180,6 +183,7 @@ async function closeReplaySources(descriptors: Iterable<FileHandle>): Promise<vo
 async function indexHistory(
   historyPath: string,
   descriptors: Map<string, FileHandle>,
+  snapshot?: { file: string; bytes: Buffer },
 ): Promise<ClaudeReplayHistory> {
   const sessionDirectory = path.join(
     path.dirname(historyPath),
@@ -222,6 +226,16 @@ async function indexHistory(
     file: string,
     visit: (entry: TranscriptEntry, location: RecordLocation) => void,
   ): Promise<void> {
+    if (snapshot?.file === file) {
+      let offset = 0;
+      for (const line of snapshot.bytes.toString("utf8").split("\n")) {
+        const length = Buffer.byteLength(line);
+        const entry = parseRecord(line);
+        if (entry) visit(entry, { file, offset, length, timestamp: normalizeProviderReplayTimestamp(entry.timestamp) });
+        offset += length + 1;
+      }
+      return;
+    }
     const fd = await fs.open(file, "r");
     descriptors.set(file, fd);
     for await (const { entry, location } of locatedRecords(file, fd)) visit(entry, location);
@@ -248,14 +262,14 @@ async function indexHistory(
       if (!b.timestamp) return -1;
       return Date.parse(a.timestamp) - Date.parse(b.timestamp);
     });
-    workflowEntriesByRunId.set(runId, indexedRecords(locations, descriptors));
+    workflowEntriesByRunId.set(runId, indexedRecords(locations, descriptors, snapshot));
   }
   return {
-    parentEntries: indexedRecords(parentLocations, descriptors),
+    parentEntries: indexedRecords(parentLocations, descriptors, snapshot),
     subagents: [...locationsByAgentId].map(([agentId, locations]) => ({
       agentId,
       meta: metaByAgentId.get(agentId) ?? null,
-      entries: indexedRecords(locations, descriptors),
+      entries: indexedRecords(locations, descriptors, snapshot),
     })),
     workflows: await readWorkflows(sessionDirectory),
     workflowEntriesByRunId,

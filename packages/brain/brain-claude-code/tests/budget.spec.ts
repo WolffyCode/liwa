@@ -85,3 +85,19 @@ it('concludes on a tool of an MCP server that only the instance row configures',
   await unaware.hook({ ...base, ...instanceCall, hook_event_name: 'PostToolUse', tool_response: { ok: true } })
   expect(await unaware.hook({ ...base, hook_event_name: 'PostToolBatch', tool_calls: [instanceCall] })).toEqual({})
 })
+
+it('delegates only owner-selected native tools to CLI while keeping MCP grants exact', async () => {
+  const cfg = config()
+  cfg.permission.mode = 'kernel'
+  const policy = new ClaudeTurnPolicy(cfg)
+  const bash = { ...base, ...call, tool_name: 'Bash', hook_event_name: 'PreToolUse' as const }
+  expect(await policy.hook(bash)).toMatchObject({ hookSpecificOutput: { permissionDecision: 'ask' } })
+  policy.delegateSession('Bash')
+  expect(await policy.hook(bash)).toEqual({})
+  expect(await policy.hook({ ...bash, agent_id: 'child' })).toEqual({})
+  expect(await policy.hook({ ...bash, tool_name: 'Write' })).toMatchObject({ hookSpecificOutput: { permissionDecision: 'ask' } })
+  policy.allowSession('mcp__liwa__report')
+  expect(await policy.hook({ ...bash, tool_name: 'mcp__liwa__report' })).toMatchObject({ hookSpecificOutput: { permissionDecision: 'allow' } })
+  policy.begin()
+  expect(await policy.hook(bash)).toEqual({})
+})

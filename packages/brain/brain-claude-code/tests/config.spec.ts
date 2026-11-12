@@ -1,11 +1,14 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createBrainTestHost, type BrainTestHost } from '@liwa/brain-testkit'
-import { KERNEL_MCP_SERVER_NAME } from '@liwa/brain'
-import { Config, type Config as ClaudeConfig, type ThinkingOptionId, claudeEnvironment, instanceSecrets, resolveModel, resolveSessionPolicy, sessionSecrets, validateConfig, writeMemberConfig } from '../src/config.ts'
+import { JsonValueSchema, KERNEL_MCP_SERVER_NAME } from '@liwa/brain'
+import { Config, type Config as ClaudeConfig, type ThinkingOptionId, type ClaudeSessionPolicy, claudeEnvironment, instanceSecrets, resolveModel, resolveSessionPolicy, resolveThinking, applyThinking, sessionSecrets, validateConfig, writeMemberConfig } from '../src/config.ts'
 
-const settings = (patch: Partial<ClaudeConfig> = {}): ClaudeConfig => Config(Object.assign({ env: { ANTHROPIC_API_KEY: 'instance-key' }, models: [{ id: 'mock', label: 'Mock', isDefault: true }] }, patch) as ClaudeConfig)
+const settings = (patch: Partial<ClaudeConfig> = {}): ClaudeConfig => Config(Object.assign({ env: { ANTHROPIC_API_KEY: 'instance-key' }, models: [{ id: 'mock', label: 'Mock', isDefault: true }] }, patch))
+async function sdkOptions(policy: ClaudeSessionPolicy) {
+  return { ...policy.options, settings: JsonValueSchema.parse(JSON.parse(await readFile(policy.options.settings as string, 'utf8'))), mcpServers: (JSON.parse(await readFile(policy.options.extraArgs?.['mcp-config'] as string, 'utf8')) as { mcpServers: Record<string, unknown> }).mcpServers }
+}
 let host: BrainTestHost | undefined
 afterEach(async () => { vi.unstubAllEnvs(); await host?.dispose() })
 
@@ -51,7 +54,7 @@ describe('Claude instance configuration', () => {
     expect(env).toMatchObject({ HOME: join(launch.homeDir, 'home'), CLAUDE_CONFIG_DIR: launch.homeDir, ANTHROPIC_API_KEY: 'instance-key', ANTHROPIC_BASE_URL: 'https://one.invalid', DISABLE_COMPACT: '1', TASK_FLAG: 'yes' })
     for (const key of ['CLAUDE_SECURESTORAGE_CONFIG_DIR', 'CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_AUTH_TOKEN', 'ANTHROPIC_MODEL', 'NODE_OPTIONS', 'API_TIMEOUT_MS', 'ARBITRARY_DEPLOYMENT_SETTING']) expect(env).not.toHaveProperty(key)
     const policy = await resolveSessionPolicy(settings(), cfg, launch.homeDir)
-    expect(policy.options).toMatchObject({ settingSources: [], strictMcpConfig: true, mcpServers: {}, settings: { claudeMdExcludes: ['**'], enabledPlugins: {} } })
+    expect(await sdkOptions(policy)).toMatchObject({ settingSources: [], strictMcpConfig: true, mcpServers: {}, settings: { claudeMdExcludes: ['**'], enabledPlugins: {} } })
     expect(policy.options.plugins).toBeUndefined()
     expect(await readFile(join(launch.homeDir, 'settings.json'), 'utf8')).toBe('{}\n')
     await policy.dispose()
@@ -126,7 +129,7 @@ describe('Claude policy filesystem and transport boundaries', () => {
       http: { type: 'http', url: 'https://example.invalid', headers: { X: 'y' } }, sse: { type: 'sse', url: 'https://example.invalid/events' },
     } })
     const policy = await resolveSessionPolicy(settings(), cfg, host.launch().homeDir)
-    expect(policy.options).toMatchObject({ permissionMode: 'plan', tools: ['Read', 'Glob', 'Grep'], mcpServers: { bare: { args: [], env: {} }, full: { args: ['x'], env: { A: 'b' } }, sse: { headers: {} } } })
+    expect(await sdkOptions(policy)).toMatchObject({ permissionMode: 'plan', tools: ['Read', 'Glob', 'Grep'], mcpServers: { bare: { args: [], env: {} }, full: { args: ['x'], env: { A: 'b' } }, sse: { headers: {} } } })
     await policy.dispose()
     await expect(resolveSessionPolicy(settings(), host.sessionConfig({ kernelTools: { native: [], token: 'fake' } }), host.launch().homeDir)).rejects.toThrow('MCP endpoint')
     expect(() =>{  validateConfig(settings({ env: { ANTHROPIC_API_KEY: 'k', ANTHROPIC_BASE_URL: 'https://:password@example.test' } })) }).toThrow()
@@ -155,12 +158,12 @@ describe('thinking options', () => {
     const config = thinkingModel([{ id: 'high', label: 'High', isDefault: true }, { id: 'off', label: 'Off' }, { id: 'ultracode', label: 'Ultra' }])
     const defaulted = await resolveSessionPolicy(config, host.sessionConfig(), home)
     expect(defaulted.options).toMatchObject({ thinking: { type: 'adaptive', display: 'summarized' }, effort: 'high' })
-    expect(defaulted.options.settings).not.toHaveProperty('ultracode')
+    expect((await sdkOptions(defaulted)).settings).not.toHaveProperty('ultracode')
     const off = await resolveSessionPolicy(config, host.sessionConfig({ thinking: 'off' }), home)
     expect(off.options.thinking).toEqual({ type: 'disabled' })
     expect(off.options).not.toHaveProperty('effort')
     const ultra = await resolveSessionPolicy(config, host.sessionConfig({ thinking: 'ultracode' }), home)
-    expect(ultra.options).toMatchObject({ effort: 'xhigh', thinking: { type: 'adaptive' }, settings: { ultracode: true } })
+    expect(await sdkOptions(ultra)).toMatchObject({ effort: 'xhigh', thinking: { type: 'adaptive' }, settings: { ultracode: true } })
     const plain = await resolveSessionPolicy(settings(), host.sessionConfig(), home)
     expect(plain.options).not.toHaveProperty('thinking')
     expect(plain.options).not.toHaveProperty('effort')
@@ -222,7 +225,7 @@ describe('instance skills, MCP servers, plugins and hooks', () => {
     const home = host.launch().homeDir
     const config = settings({ mcpServers: { inst: { type: 'stdio', command: 'inst-cmd' }, web: { type: 'http', url: 'https://inst.invalid' } } })
     const policy = await resolveSessionPolicy(config, host.sessionConfig({ mcpServers: { sess: { type: 'sse', url: 'https://sess.invalid' } } }), home)
-    expect(policy.options.mcpServers).toEqual({
+    expect((await sdkOptions(policy)).mcpServers).toEqual({
       inst: { type: 'stdio', command: 'inst-cmd', args: [], env: {} },
       web: { type: 'http', url: 'https://inst.invalid', headers: {} },
       sess: { type: 'sse', url: 'https://sess.invalid', headers: {} },
@@ -264,10 +267,10 @@ describe('instance skills, MCP servers, plugins and hooks', () => {
     const home = host.launch().homeDir
     const hooks = { PreToolUse: [hook], SessionStart: [{ hooks: [{ type: 'command' as const, command: 'echo start', timeout: 5 }] }] }
     const policy = await resolveSessionPolicy(settings({ hooks }), host.sessionConfig(), home)
-    expect(policy.options.settings).toMatchObject({ hooks })
+    expect((await sdkOptions(policy)).settings).toMatchObject({ hooks })
     await policy.dispose()
     const none = await resolveSessionPolicy(settings(), host.sessionConfig(), home)
-    expect(none.options.settings).not.toHaveProperty('hooks')
+    expect((await sdkOptions(none)).settings).not.toHaveProperty('hooks')
     await none.dispose()
   })
 })
@@ -295,7 +298,7 @@ describe('session-level agent configuration', () => {
       home,
     )
     expect(policy.options.plugins).toEqual([{ type: 'local', path: pluginA }, { type: 'local', path: pluginB }])
-    expect(policy.options.settings).toMatchObject({
+    expect((await sdkOptions(policy)).settings).toMatchObject({
       hooks: { PreToolUse: [sessionHook, timedHook, instanceHook], SessionStart: [sessionHook] },
     })
     const prompt = policy.options.systemPrompt
@@ -324,4 +327,91 @@ describe('binary arguments', () => {
     validateConfig(settings({ binaryArgs: ['--wrapper-flag', 'value'] }))
     expect(() => { validateConfig(settings({ binaryArgs: ['bad\0arg'] })) }).toThrow('binaryArgs')
   })
+})
+
+it('snapshots instance and project agents/commands and keeps settings/MCP secrets in private files', async () => {
+  host = await createBrainTestHost()
+  const home = host.launch().homeDir
+  const agents = join(host.root, 'configured-agents')
+  const commands = join(host.root, 'configured-commands')
+  await mkdir(agents)
+  await mkdir(join(commands, 'nested'), { recursive: true })
+  await writeFile(join(agents, 'reviewer.md'), 'reviewer')
+  await writeFile(join(commands, 'nested', 'check.md'), 'check')
+  await mkdir(join(host.root, '.claude', 'agents'), { recursive: true })
+  await writeFile(join(host.root, '.claude', 'agents', 'worker.md'), 'worker')
+  const secret = 'fake-mcp-header-token'
+  const policy = await resolveSessionPolicy(settings({ agents, commands, hooks: { PreToolUse: [{ hooks: [{ type: 'command', command: `echo ${secret}` }] }] } }), host.sessionConfig({ projectDocs: true, mcpServers: { docs: { type: 'http', url: 'https://docs.invalid', headers: { Authorization: secret } } } }), home)
+  const snapshot = policy.options.plugins?.at(-1)?.path as string
+  expect(await readFile(join(snapshot, 'agents', 'reviewer.md'), 'utf8')).toBe('reviewer')
+  expect(await readFile(join(snapshot, 'agents', 'worker.md'), 'utf8')).toBe('worker')
+  expect(await readFile(join(snapshot, 'commands', 'nested', 'check.md'), 'utf8')).toBe('check')
+  expect(policy.options.mcpServers).toBeUndefined()
+  expect(typeof policy.options.settings).toBe('string')
+  expect(JSON.stringify(policy.options)).not.toContain(secret)
+  const settingsFile = policy.options.settings as string
+  expect(await readFile(settingsFile, 'utf8')).toContain(secret)
+  const mcpFile = policy.options.extraArgs?.['mcp-config'] as string
+  expect(await readFile(mcpFile, 'utf8')).toContain(secret)
+  await policy.dispose()
+  await expect(readFile(mcpFile)).rejects.toThrow()
+  await writeFile(join(agents, 'worker.md'), 'duplicate')
+  const conflict = resolveSessionPolicy(settings({ agents }), host.sessionConfig({ projectDocs: true }), home)
+  await expect(conflict).rejects.toThrow(/worker.*configured-agents.*\.claude|worker.*\.claude.*configured-agents/s)
+})
+
+it('collects project materials from the git root to cwd and merges distinct nested command names', async () => {
+  host = await createBrainTestHost()
+  await mkdir(join(host.root, '.git'))
+  const cwd = join(host.root, 'sub')
+  await mkdir(join(host.root, '.claude', 'agents'), { recursive: true })
+  await mkdir(join(host.root, '.claude', 'commands', 'nested'), { recursive: true })
+  await mkdir(join(cwd, '.claude', 'commands', 'nested'), { recursive: true })
+  await writeFile(join(host.root, '.claude', 'agents', 'root.md'), 'root agent')
+  await writeFile(join(host.root, '.claude', 'commands', 'nested', 'root.md'), 'root command')
+  await writeFile(join(cwd, '.claude', 'commands', 'nested', 'sub.md'), 'sub command')
+  const policy = await resolveSessionPolicy(settings(), host.sessionConfig({ cwd, projectDocs: true }), host.launch().homeDir)
+  const snapshot = policy.options.plugins?.at(-1)?.path as string
+  expect(await readFile(join(snapshot, 'agents', 'root.md'), 'utf8')).toBe('root agent')
+  expect(await readFile(join(snapshot, 'commands', 'nested', 'root.md'), 'utf8')).toBe('root command')
+  expect(await readFile(join(snapshot, 'commands', 'nested', 'sub.md'), 'utf8')).toBe('sub command')
+  await policy.dispose()
+})
+
+it('leaves unselected thinking to CLI and accepts absent optional MCP fields through the typed configuration API', () => {
+  const config = settings()
+  config.mcpServers = { bare: { type: 'stdio', command: 'bare' }, web: { type: 'http', url: 'https://x.invalid' } }
+  validateConfig(config)
+  expect(sessionSecrets({ bare: { type: 'stdio', command: 'bare' } }, undefined)).toEqual([])
+  expect(resolveThinking({ id: 'm', label: 'M', isDefault: true, thinkingOptions: [{ id: 'high', label: 'H', isDefault: false }] }, undefined)).toEqual({ ultracode: false })
+  const options: import('@anthropic-ai/claude-agent-sdk').Options = {}
+  applyThinking(options, { ultracode: false })
+  expect(options).toEqual({})
+})
+
+it('rejects project material links outside the git root and directory cycles, while copying nested skill assets', async () => {
+  host = await createBrainTestHost()
+  const root = join(host.root, 'repo')
+  await mkdir(join(root, '.git'), { recursive: true })
+  await mkdir(join(root, '.claude'))
+  const outside = join(host.root, 'outside')
+  await mkdir(outside)
+  await symlink(outside, join(root, '.claude', 'agents'))
+  await expect(resolveSessionPolicy(settings(), host.sessionConfig({ cwd: root, projectDocs: true }), host.launch().homeDir)).rejects.toMatchObject({ code: 'brain.project_material_outside' })
+  await rm(join(root, '.claude', 'agents'))
+  await mkdir(join(root, '.claude', 'agents'))
+  await symlink(outside, join(root, '.claude', 'agents', 'escape'))
+  await expect(resolveSessionPolicy(settings(), host.sessionConfig({ cwd: root, projectDocs: true }), host.launch().homeDir)).rejects.toMatchObject({ code: 'brain.project_material_outside' })
+  await rm(join(root, '.claude', 'agents'), { recursive: true })
+  await symlink('agents', join(root, '.claude', 'agents'))
+  await expect(resolveSessionPolicy(settings(), host.sessionConfig({ cwd: root, projectDocs: true }), host.launch().homeDir)).rejects.toMatchObject({ code: 'ELOOP' })
+  const skills = join(host.root, 'skill-materials')
+  await mkdir(join(skills, 'review', 'assets', 'nested'), { recursive: true })
+  await writeFile(join(skills, 'review', 'SKILL.md'), 'review')
+  await writeFile(join(skills, 'review', 'assets', 'nested', 'asset.txt'), 'asset')
+  const policy = await resolveSessionPolicy(settings({ skills }), host.sessionConfig(), host.launch().homeDir)
+  expect(await readFile(join(policy.options.plugins!.at(-1)!.path, 'skills', 'review', 'assets', 'nested', 'asset.txt'), 'utf8')).toBe('asset')
+  await policy.dispose()
+  await symlink(skills, join(skills, 'loop'))
+  await expect(resolveSessionPolicy(settings({ skills }), host.sessionConfig(), host.launch().homeDir)).rejects.toMatchObject({ code: 'brain.material_cycle' })
 })

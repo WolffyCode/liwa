@@ -381,6 +381,7 @@ interface ClaudeAgentSessionOptions {
   controlTimeoutMs: number;
   sdkOptions: ClaudeOptions;
   spawn: ClaudeQueryContext["spawn"];
+  historySnapshot?: { path: string; text: string };
   onMessage?: (message: SDKMessage, turnId: string | undefined) => void;
   onQuery?: () => void;
   onTurn?: () => void;
@@ -3644,8 +3645,9 @@ export class ClaudeAgentSession implements AgentSession {
         item: {
           type: "compaction",
           status: "completed",
-          trigger: compactMetadata?.trigger === "manual" ? "manual" : "auto",
+          trigger: compactMetadata?.trigger === "manual" || compactMetadata?.trigger === "auto" ? compactMetadata.trigger : undefined,
           preTokens: compactMetadata?.preTokens,
+          postTokens: compactMetadata?.postTokens,
         },
         provider: "claude",
       });
@@ -4299,8 +4301,8 @@ export class ClaudeAgentSession implements AgentSession {
     this.replayingHistory = true;
     try {
       this.taskState.reset();
-      historyPath = await this.resolveHistoryPath(sessionId);
-      if (!historyPath || !(await transcriptExists(historyPath))) {
+      historyPath = this.adapter.historySnapshot?.path ?? await this.resolveHistoryPath(sessionId);
+      if (!historyPath || (this.adapter.historySnapshot === undefined && !(await transcriptExists(historyPath)))) {
         this.logger.info(
           { sessionId, cwd: this.config.cwd, historyPath },
           "No Claude transcript to load history from",
@@ -4310,7 +4312,7 @@ export class ClaudeAgentSession implements AgentSession {
       await withClaudeReplayHistory(historyPath, async (history) => {
         const replay = await this.ingestPersistedSidechains(history);
         await this.ingestPersistedHistory(history.parentEntries, replay);
-      });
+      }, this.adapter.historySnapshot);
     } catch (error) {
       this.logger.warn(
         { err: error, sessionId, historyPath },
@@ -4318,6 +4320,7 @@ export class ClaudeAgentSession implements AgentSession {
       );
     } finally {
       this.replayingHistory = false;
+      delete this.adapter.historySnapshot;
     }
   }
 
@@ -5310,8 +5313,9 @@ function convertClaudeHistoryEntryPreamble(
         {
           type: "compaction",
           status: "completed",
-          trigger: compactMetadata?.trigger === "manual" ? "manual" : "auto",
+          trigger: compactMetadata?.trigger === "manual" || compactMetadata?.trigger === "auto" ? compactMetadata.trigger : undefined,
           preTokens: compactMetadata?.preTokens,
+          postTokens: compactMetadata?.postTokens,
         },
       ],
     };

@@ -9,9 +9,9 @@ import {
 } from '@liwa/brain-testkit'
 import BrainRegistry, {
   BrainBlobStore, BrainError, BrainEventSchema, BrainSessionId, ChildId, ImplId, MemberId, PermissionRequestId, RULES_PRECEDENCE,
-  checkPermissionAnswers, homeDirFor, memberMcpServers, mergeLaunchEnv, replaceSkills, resolveBlobsDir, rulesDocument,
+  checkPermissionAnswers, execProviderCommand, homeDirFor, memberMcpServers, mergeLaunchEnv, replaceSkills, resolveBlobsDir, rulesDocument,
   type BrainEvent, type BrainProcessView, type BrainProvider, type BrainProviderSession, type BrainSessionClosedRecord,
-  type BrainUsageRecord, type BrainSessionView, type BrainChildView,
+  type BrainUsageRecord, type BrainSessionView, type BrainChildView, type BrainProbeContext, type PluginManagementRequest,
 } from '../src/index.ts'
 
 const FAKE = ImplId('fake')
@@ -52,6 +52,22 @@ describe('ctx.brains', () => {
 
   const cfg = (overrides: Parameters<typeof sampleSessionConfig>[1] = {}): ReturnType<typeof sampleSessionConfig> =>
     sampleSessionConfig(fixture.root, overrides)
+
+  it('routes plugin management through the registered provider process boundary without opening a session', async () => {
+    const provider: BrainProvider = Object.assign(new ScriptedBrainProvider({ process: false }), {
+      managePlugins: async (context: BrainProbeContext, root: string, request: PluginManagementRequest) => {
+        expect(root).toBe(fixture.root)
+        expect(request).toEqual({ action: 'list' })
+        const executable = await context.resolveExecutable(process.execPath)
+        const output = await execProviderCommand(context, executable, ['--version'])
+        expect(output.stdout.trim()).toBe(process.version)
+        return []
+      },
+    })
+    fixture.ctx.brains.register(provider)
+    expect(await fixture.ctx.brains.managePlugins(FAKE, fixture.root, { action: 'list' })).toEqual([])
+    expect(fixture.ctx.brains.listSessions()).toEqual([])
+  })
 
 
   it.each(['turn.completed', 'turn.interrupted', 'turn.failed'] as const)('settles %s usage once without counting updates or child detail twice', async (kind) => {
@@ -584,4 +600,18 @@ describe('thinking switch capability', () => {
       await rm(root, { recursive: true, force: true })
     }
   })
+})
+
+it('rejects file-based agents and commands when the provider cannot load plugins', async () => {
+  const fixture = await setup()
+  try {
+    const meta = { agentConfig: { plugins: false, hooks: false, instructions: false } }
+    fixture.ctx.brains.register(new ScriptedBrainProvider({ process: false, meta }))
+    for (const material of ['agents', 'commands'] as const) {
+      await expect(fixture.ctx.brains.createSession(fixture.ctx, { impl: FAKE, cfg: sampleSessionConfig(fixture.root, { [material]: ['/configured/materials'] }) })).rejects.toMatchObject({ category: 'invalid_input' })
+    }
+  } finally {
+    await fixture.ctx.fiber.dispose()
+    await rm(fixture.root, { recursive: true, force: true })
+  }
 })

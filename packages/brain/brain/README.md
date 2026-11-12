@@ -66,6 +66,10 @@ version: 1
 skills:
   review: { dir: skills/review }
   release: { dir: skills/release, applyTo: [claude-reclaude] }
+agents:
+  reviewer-agent: { dir: agents/review }
+commands:
+  check-command: { dir: commands }
 mcpServers:
   docs: { type: http, url: https://mcp.example.test/docs, headers: { Authorization: 'Bearer ${DOCS_TOKEN}' } }
 plugins:
@@ -79,7 +83,9 @@ instances:
   codex-main: { use: [release] }
 ```
 
-`loadAgentsConfig(root)` reads the set (an absent file is an empty set), `loadDirectoryConfig(root, cwd)` the directory file, and `resolveAgentConfig(config, { impl, directory })` picks the entries for one instance: the default is every entry whose `applyTo` is absent or names the instance; `use` at either level adds by name, a name disabled at either level stays out whatever any `use` says, and a name that is not in the set fails. Both files are strict: an unknown key fails the load, and the directory file only selects, it cannot add entries. The result is session-shaped: skills to copy with `materializeSkills` into one `skillsDir`, `mcpServers`, `plugins`, `hooks` grouped by event, and the instruction files joined into one `instructions` text. Skills and MCP servers with the same name in the instance row and the session fail at open; hooks append per event; instructions sit after the rules and before the repository document. The repository's own `.claude/` and `.mcp.json` are never executed, and the directory file lives only under the Liwa home.
+`loadAgentsConfig(root)` reads the set (an absent file is an empty set), `loadDirectoryConfig(root, cwd)` the directory file, and `resolveAgentConfig(config, { impl, directory })` picks the entries for one instance: the default is every entry whose `applyTo` is absent or names the instance; `use` at either level adds by name, a name disabled at either level stays out whatever any `use` says, and a name that is not in the set fails. Both files are strict: an unknown key fails the load, and the directory file only selects, it cannot add entries. The result is session-shaped: skills to copy with `materializeSkills` into one `skillsDir`, `mcpServers`, `plugins`, `hooks` grouped by event, and the instruction files joined into one `instructions` text. Skills and MCP servers with the same name in the instance row and the session fail at open; hooks append per event; instructions sit after the rules and before the repository document. Project executable settings/hooks/.mcp.json are not imported; description files are collected by the provider when projectDocs is enabled, and the directory file lives only under the Liwa home.
+
+`agents` and `commands` are named directory entries with the same applyTo/use/disable selection as skills. Plugins accept either `{dir}` or `{library: impl/plugin@marketplace}`; missing library references fail at load. `readPluginLibrary` returns versioned local installation records. `collectProjectDocs` is a pure collector over supplied sources; `readProjectDocs` bounds filesystem reads at the git root and expands imports with limit 5. The contract includes sessionRules, exact project-document injection/failure events, optional compaction trigger, and static/explicit authentication diagnostics. `ctx.brains.managePlugins` forwards explicit management to a supporting provider without opening a model session.
 
 ### Drive and observe it
 

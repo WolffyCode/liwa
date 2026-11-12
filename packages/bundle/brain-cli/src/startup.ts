@@ -7,6 +7,7 @@
 import { Command, Option } from 'commander'
 import type { Context } from '@liwa/cordis'
 import { parseCmdline } from '@liwa/cmdline'
+import type { PluginManagementRequest } from '@liwa/brain'
 import { internals } from './startup-internals.ts'
 
 /** 稳定的 cordis 插件名。 */
@@ -29,7 +30,8 @@ export const RUN_MIND_KINDS = ['instance', 'work', 'think', 'own', 'tidy'] as co
 /** 解析出的一条 `liwa brain` 命令。 */
 export type BrainCommand =
   | { command: 'list'; json: boolean }
-  | { command: 'probe'; impl: string; json: boolean }
+  | { command: 'plugin'; provider: string; request: PluginManagementRequest; json: boolean }
+  | { command: 'probe'; impl: string; json: boolean; checkAuth?: boolean }
   | {
     command: 'run'
     provider: string
@@ -90,10 +92,21 @@ Examples:
     .description('probe one provider: availability, version, and problems')
     .helpOption('-h, --help', 'show this help')
     .argument('<impl>', 'provider implementation name')
+    .option('--check-auth', 'check authentication with auth status in an isolated temporary home')
     .option('--json', 'print one JSON document instead of text')
-    .action((impl: string, options: { json?: boolean }) => {
-      publish({ command: 'probe', impl, json: options.json === true })
+    .action((impl: string, options: { json?: boolean; checkAuth?: boolean }) => {
+      publish({ command: 'probe', impl, json: options.json === true, ...(options.checkAuth ? { checkAuth: true } : {}) })
     })
+  const plugins = program.command('plugin').description('manage the Liwa-owned provider plugin library')
+  plugins.command('list').requiredOption('--provider <impl>', 'provider instance').option('--json', 'print JSON')
+    .action((options: { provider: string; json?: boolean }) => { publish({ command: 'plugin', provider: options.provider, request: { action: 'list' }, json: options.json === true }) })
+  plugins.command('install').argument('<plugin>', '<plugin>@<marketplace>').argument('<source>', 'marketplace source passed to the provider CLI')
+    .requiredOption('--provider <impl>', 'provider instance').option('--json', 'print JSON')
+    .action((plugin: string, source: string, options: { provider: string; json?: boolean }) => { publish({ command: 'plugin', provider: options.provider, request: { action: 'install', plugin, source }, json: options.json === true }) })
+  for (const action of ['update', 'remove'] as const) {
+    plugins.command(action).argument('<plugin>', '<plugin>@<marketplace>').requiredOption('--provider <impl>', 'provider instance').option('--json', 'print JSON')
+      .action((plugin: string, options: { provider: string; json?: boolean }) => { publish({ command: 'plugin', provider: options.provider, request: { action, plugin }, json: options.json === true }) })
+  }
   const run = program.command('run')
     .description('open one session in this process, stream its events, run one turn, and close it')
     .helpOption('-h, --help', 'show this help')

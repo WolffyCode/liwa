@@ -6,6 +6,7 @@
  * @module @liwa/brain
  */
 
+import type { PluginLibraryRecord, PluginManagementRequest } from './plugin-library.ts'
 import { randomUUID } from 'node:crypto'
 import { mkdir } from 'node:fs/promises'
 import { isAbsolute, join, relative, resolve } from 'node:path'
@@ -298,10 +299,11 @@ export class BrainRegistry extends Service {
    * 探测一个提供方能不能开会话；结果记进登记，不可用时发 `brain.provider.unavailable.v1`。探测本身出错或超时按不可用处理。
    * @param impl - 提供方。
    * @param signal - 取消探测。
+   * @param options - 可选的显式认证检查；省略时不检查认证。
    * @returns 探测结果。
    * @throws {BrainError} `not_found`。
    */
-  async probe(impl: ImplId, signal?: AbortSignal): Promise<BrainProbeResult> {
+  async probe(impl: ImplId, signal?: AbortSignal, options?: { checkAuth?: boolean }): Promise<BrainProbeResult> {
     const record = this.requireProvider(impl)
     const subprocess = this.subprocess
     let result: BrainProbeResult
@@ -309,6 +311,7 @@ export class BrainRegistry extends Service {
       result = await within(record.provider.probe({
         logger: this.selfCtx.logger(`brain:${impl}`),
         signal,
+        ...(options?.checkAuth === undefined ? {} : { checkAuth: options.checkAuth }),
         resolveExecutable: (command, env, probeSignal) => subprocess.resolveExecutable(command, env, probeSignal),
         spawn: spec => subprocess.spawn(spec),
       }), this.settings.probeTimeoutMs, `${impl} probe`)
@@ -321,6 +324,22 @@ export class BrainRegistry extends Service {
     record.probeResult = result
     if (!result.available) this.selfCtx.emit('brain.provider.unavailable.v1', { impl, result: structuredClone(result), at })
     return result
+  }
+
+  /** 显式管理提供方自己的插件库，不开模型会话。
+   * @param impl - 提供方实例。
+   * @param root - agents 配置根。
+   * @param request - 插件管理动作。
+   * @returns 更新后的安装记录。
+   */
+  async managePlugins(impl: ImplId, root: string, request: PluginManagementRequest): Promise<PluginLibraryRecord[]> {
+    const provider = this.requireProvider(impl).provider
+    if (provider.managePlugins === undefined) throw new BrainError('invalid_input', 'brain.plugins_unsupported', `${impl} does not support plugin management`)
+    return provider.managePlugins({
+      logger: this.selfCtx.logger(`brain:${impl}`),
+      resolveExecutable: (command, env, signal) => this.subprocess.resolveExecutable(command, env, signal),
+      spawn: spec => this.subprocess.spawn(spec),
+    }, root, request)
   }
 
   /**
@@ -458,11 +477,12 @@ export class BrainRegistry extends Service {
     if (config.modeId !== undefined && !record.meta.modeSwitch) {
       throw new BrainError('invalid_input', 'brain.mode_switch_unsupported', `brain provider ${record.impl} has no session modes; open the session without modeId`)
     }
-    const wantsPlugins = (config.plugins?.length ?? 0) > 0
+    const pluginMaterials = ['plugins', 'agents', 'commands'] as const
+    const unsupportedMaterials = record.meta.agentConfig.plugins ? [] : pluginMaterials.filter(kind => (config[kind]?.length ?? 0) > 0)
     const wantsHooks = Object.keys(config.hooks ?? {}).length > 0
     const wantsInstructions = (config.instructions ?? '').trim() !== ''
     const unsupported = [
-      wantsPlugins && !record.meta.agentConfig.plugins ? 'plugins' : undefined,
+      ...unsupportedMaterials,
       wantsHooks && !record.meta.agentConfig.hooks ? 'hooks' : undefined,
       wantsInstructions && !record.meta.agentConfig.instructions ? 'instructions' : undefined,
     ].filter(item => item !== undefined)
@@ -558,3 +578,7 @@ export class BrainRegistry extends Service {
 }
 
 export default BrainRegistry
+
+export { collectProjectDocs, readProjectDocs, resolveProjectDocumentPath, PROJECT_IMPORT_DEPTH, type ProjectDocumentSource, type ProjectDocument, type ProjectDocuments } from './project-docs.ts'
+
+export { PluginLibraryRecordSchema, readPluginLibrary, writePluginLibraryRecord, removePluginLibraryRecord, type PluginLibraryRecord, type PluginManagementRequest } from './plugin-library.ts'

@@ -12,6 +12,7 @@ import { cp, mkdir, readFile, stat } from 'node:fs/promises'
 import { isAbsolute, join, resolve } from 'node:path'
 import { JSON_SCHEMA, load as parseYaml } from 'js-yaml'
 import { z } from 'zod'
+import { readPluginLibrary } from '../plugin-library.ts'
 import { BrainError } from '../errors.ts'
 import {
   HookCommandSchema, HookEventSchema, McpHttpServerSchema, McpSseServerSchema, McpStdioServerSchema,
@@ -29,7 +30,7 @@ const SKILL_FILE = 'SKILL.md'
 
 const ApplyToSchema = z.strictObject({ applyTo: z.array(z.string().min(1)).optional() })
 const SkillEntrySchema = ApplyToSchema.extend({ dir: z.string().min(1) })
-const PluginEntrySchema = ApplyToSchema.extend({ dir: z.string().min(1) })
+const PluginEntrySchema = z.union([ApplyToSchema.extend({ dir: z.string().min(1) }), ApplyToSchema.extend({ library: z.string().min(1) })])
 const InstructionEntrySchema = ApplyToSchema.extend({ file: z.string().min(1) })
 const HookEntrySchema = ApplyToSchema.extend({
   event: HookEventSchema, matcher: z.string().optional(), hooks: z.array(HookCommandSchema).min(1),
@@ -45,6 +46,8 @@ const named = <T extends z.ZodType>(schema: T) => z.record(z.string().regex(ENTR
 export const AgentsConfigSchema = z.strictObject({
   version: z.literal(1),
   skills: named(SkillEntrySchema),
+  agents: named(SkillEntrySchema),
+  commands: named(SkillEntrySchema),
   mcpServers: named(McpEntrySchema),
   plugins: named(PluginEntrySchema),
   hooks: named(HookEntrySchema),
@@ -52,7 +55,7 @@ export const AgentsConfigSchema = z.strictObject({
   instances: z.record(z.string().min(1), SelectionSchema).default({}),
 })
 /** 读好的全局集：目录与文件都已是绝对路径，MCP 里的 `${VAR}` 已展开。 */
-export type AgentsConfig = z.output<typeof AgentsConfigSchema>
+export type AgentsConfig = Omit<z.output<typeof AgentsConfigSchema>, 'plugins'> & { plugins: Record<string, { dir: string; applyTo?: string[] | undefined }> }
 /** `dirs/<哈希>.yml` 的形状：某个工作目录下各实例的再选择。 */
 export const DirectoryConfigSchema = z.strictObject({
   version: z.literal(1),
@@ -72,6 +75,8 @@ export interface ResolveAgentOptions {
 /** 为一个实例选出的配置，已经是会话配置能直接用的形状（本事还要经 {@link materializeSkills} 落成目录）。 */
 export interface ResolvedAgentConfig {
   skills: { name: string; dir: string }[]
+  agents: string[]
+  commands: string[]
   mcpServers: Record<string, McpServer>
   plugins: string[]
   hooks: Hooks
@@ -88,17 +93,28 @@ export interface ResolvedAgentConfig {
 export async function loadAgentsConfig(root: string, env: Record<string, string | undefined> = process.env): Promise<AgentsConfig> {
   const path = join(root, AGENTS_CONFIG_FILE)
   const text = await readOptional(path)
-  if (text === undefined) return { version: 1, skills: {}, mcpServers: {}, plugins: {}, hooks: {}, instructions: {}, instances: {} }
+  if (text === undefined) {
+    return { version: 1, skills: {}, agents: {}, commands: {}, mcpServers: {}, plugins: {}, hooks: {}, instructions: {}, instances: {} }
+  }
   const parsed = AgentsConfigSchema.safeParse(parseYamlDocument(text, path))
   if (!parsed.success) throw invalidFile(path, parsed.error.issues)
   const config = parsed.data
   for (const name of Object.keys(config.mcpServers)) {
     if (name === KERNEL_MCP_SERVER_NAME) throw new BrainError('invalid_input', 'brain.agent_config_invalid', `${path}: MCP server name ${name} is reserved for Liwa kernel tools`)
   }
+  const library = await readPluginLibrary(root)
+  const plugins = Object.fromEntries(Object.entries(config.plugins).map(([name, entry]) => {
+    if ('dir' in entry) return [name, { ...entry, dir: resolvePath(root, entry.dir) }]
+    const record = library.find(record => record.key === entry.library)
+    if (record === undefined) throw new BrainError('invalid_input', 'brain.plugin_reference_missing', `Plugin library reference ${entry.library} is not installed`)
+    return [name, { dir: record.dir, ...(entry.applyTo === undefined ? {} : { applyTo: entry.applyTo }) }]
+  }))
   return {
     ...config,
     skills: mapValues(config.skills, entry => ({ ...entry, dir: resolvePath(root, entry.dir) })),
-    plugins: mapValues(config.plugins, entry => ({ ...entry, dir: resolvePath(root, entry.dir) })),
+    agents: mapValues(config.agents, entry => ({ ...entry, dir: resolvePath(root, entry.dir) })),
+    commands: mapValues(config.commands, entry => ({ ...entry, dir: resolvePath(root, entry.dir) })),
+    plugins,
     instructions: mapValues(config.instructions, entry => ({ ...entry, file: resolvePath(root, entry.file) })),
     mcpServers: mapValues(config.mcpServers, entry => expandMcpEnvironment(entry, env, path)),
   }
@@ -145,7 +161,7 @@ export async function loadDirectoryConfig(root: string, cwd: string): Promise<Di
 export async function resolveAgentConfig(config: AgentsConfig, options: ResolveAgentOptions): Promise<ResolvedAgentConfig> {
   const selections = [config.instances[options.impl], options.directory?.instances[options.impl]]
     .filter(selection => selection !== undefined)
-  const sections = [config.skills, config.mcpServers, config.plugins, config.hooks, config.instructions]
+  const sections = [config.skills, config.agents, config.commands, config.mcpServers, config.plugins, config.hooks, config.instructions]
   const knownNames = new Set(sections.flatMap(entries => Object.keys(entries)))
   for (const selection of selections) {
     for (const name of [...selection.use, ...selection.disable]) {
@@ -170,7 +186,7 @@ export async function resolveAgentConfig(config: AgentsConfig, options: ResolveA
     })
     pieces.push(text.trim())
   }
-  return { skills, mcpServers, plugins, hooks, instructions: pieces.filter(piece => piece !== '').join('\n\n') }
+  return { skills, agents: chosen(config.agents, options.impl, selections).map(([, entry]) => entry.dir), commands: chosen(config.commands, options.impl, selections).map(([, entry]) => entry.dir), mcpServers, plugins, hooks, instructions: pieces.filter(piece => piece !== '').join('\n\n') }
 }
 
 /**
@@ -256,7 +272,7 @@ function parseYamlDocument(text: string, path: string): unknown {
   try {
     document = parseYaml(text, { schema: JSON_SCHEMA, filename: path })
   } catch (error) {
-    throw new BrainError('invalid_input', 'brain.agent_config_invalid', `${path} is not valid YAML: ${error instanceof Error ? error.message : String(error)}`, { cause: error })
+    throw new BrainError('invalid_input', 'brain.agent_config_invalid', `${path} is not valid YAML: ${String(error)}`, { cause: error })
   }
   return document
 }

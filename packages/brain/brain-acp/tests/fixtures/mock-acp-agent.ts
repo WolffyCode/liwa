@@ -159,9 +159,15 @@ async function runScenario(client: AgentContext, sessionId: string, scenario: st
     case 'long':
       // 先登记取消再说话：客户端在 prompt 发出时就报回合开始，取消可能在说话的两次 await 之间到达。
       return new Promise<PromptResponse>((resolve) => {
-        cancels.set(sessionId, () => { resolve({ stopReason: 'cancelled' }) })
-        // 取消后连接可能已断，这句没人收也无妨。
-        say(client, sessionId, 'Working on it').catch(() => undefined)
+        const output = Promise.withResolvers<undefined>()
+        cancels.set(sessionId, () => {
+          // ACP 的终止答复之后不能再发旧回合的块，否则新回合无法从无 turnId 的通知识别归属。
+          void output.promise.then(() => { resolve({ stopReason: 'cancelled' }) })
+        })
+        void say(client, sessionId, 'Working on it').then(
+          () => { output.resolve(undefined) },
+          (_closedConnection: unknown) => { output.resolve(undefined) }, // 连接已断时不再有输出需要排空。
+        )
       })
     default:
       await say(client, sessionId, `Reply for ${scenario}.`)

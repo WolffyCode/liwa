@@ -1,11 +1,12 @@
 import { fakeClaudeBinary } from './fixtures/binary.ts'
 import { fakeAuthEnv } from './fixtures/auth.ts'
 import { createHash } from 'node:crypto'
-import { readFile } from 'node:fs/promises'
+import { readFile, mkdir, writeFile, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createBrainTestHost, recordEvents, textInput, type BrainTestHost } from '@liwa/brain-testkit'
 import type { BrainProviderSession, SessionConfigInput } from '@liwa/brain'
+import { ClaudeTurnPolicy } from '../src/budget.ts'
 import { ClaudeAgentSession } from '../src/paseo/agent/providers/claude/agent.ts'
 import { Config, ClaudeBrainProvider, type Config as ClaudeConfig } from '../src/index.ts'
 
@@ -27,6 +28,24 @@ async function setup(env?: Record<string, string>, patch: Partial<ClaudeConfig> 
 }
 
 describe('Claude SDK integration', () => {
+  it('publishes lazy project documents before returning their exact text through the SDK hook', async () => {
+    host = await createBrainTestHost()
+    await mkdir(join(host.root, '.git'))
+    await mkdir(join(host.root, 'nested'))
+    await writeFile(join(host.root, 'nested', 'CLAUDE.md'), 'lazy-project-sentinel')
+    const provider = new ClaudeBrainProvider(settings(await fakeClaudeBinary(host.root)))
+    const session = await provider.createSession(host.sessionConfig({ projectDocs: true }), host.launch())
+    sessions.push(session)
+    const recorder = recordEvents(session)
+    await session.startTurn(textInput('scenario:project-context'))
+    await recorder.waitForKind('turn.completed')
+    const document = recorder.events.find(event => event.kind === 'session.project_document')
+    expect(document).toMatchObject({ path: 'nested/CLAUDE.md', reason: { tool: 'Read', path: 'nested/example.ts' } })
+    expect(document?.kind === 'session.project_document' ? document.text : '').toContain('lazy-project-sentinel')
+    const messageIndex = recorder.events.findIndex(event => event.kind === 'item.message' && event.delta.includes('lazy-project-sentinel'))
+    expect(messageIndex).toBeGreaterThan(recorder.events.findIndex(event => event === document))
+  })
+
   it('uses SDK hooks to conclude a successful batch before another model step', async () => {
     const { session, events } = await setup()
     await session.startTurn(textInput('scenario:conclude'))
@@ -300,4 +319,93 @@ describe('runtime thinking switch', () => {
     await session.setThinking!('high')
     await session.setModel!('mock-other')
   })
+})
+
+it('removes the session snapshot even when native close rejects', async () => {
+  host = await createBrainTestHost()
+  const skills = join(host.root, 'closing-skills')
+  await mkdir(join(skills, 'review'), { recursive: true })
+  await writeFile(join(skills, 'review', 'SKILL.md'), 'review')
+  const launch = host.launch()
+  const provider = new ClaudeBrainProvider(settings(await fakeClaudeBinary(host.root)))
+  const session = await provider.createSession(host.sessionConfig({ skillsDir: skills }), launch)
+  const close = vi.spyOn(ClaudeAgentSession.prototype, 'close').mockRejectedValueOnce(new Error('close failed'))
+  await expect(session.close()).rejects.toThrow('close failed')
+  expect((await readdir(launch.homeDir)).filter(name => name.startsWith('skills-') || name.startsWith('snapshot-'))).toEqual([])
+  close.mockRestore()
+})
+
+it.each(['preempt', 'watchdog'] as const)('does not stop background tasks on %s', async (reason) => {
+  const { session, events } = await setup()
+  const stop = vi.spyOn(ClaudeAgentSession.prototype, 'stopTasks')
+  await session.startTurn(textInput('scenario:long'))
+  await session.cancel({ reason, keepQueue: false })
+  await events.waitForKind('turn.interrupted')
+  expect(stop).not.toHaveBeenCalled()
+  stop.mockRestore()
+})
+
+it('keeps every known secret out of argv and removes private configuration after closing', async () => {
+  const secret = 'fake-session-kernel-token'
+  const { session, launch, events } = await setup(undefined, { env: { ANTHROPIC_API_KEY: 'fake-instance-auth-token' }, hooks: { PreToolUse: [{ hooks: [{ type: 'command', command: `echo ${secret}` }] }] } }, { mcpServers: { docs: { type: 'stdio', command: 'fake-mcp', env: { TOKEN: secret } } } })
+  await session.startTurn(textInput('scenario:reply'))
+  await events.waitForKind('turn.completed')
+  const capture = JSON.parse(await readFile(join(launch.homeDir, `${session.persistence()!.sessionRef}.capture.json`), 'utf8')) as { args: string[] }
+  expect(JSON.stringify(capture.args)).not.toContain(secret)
+  expect(JSON.stringify(capture.args)).not.toContain('fake-instance-auth-token')
+  const mcp = capture.args[capture.args.indexOf('--mcp-config') + 1] as string
+  const settingsFile = capture.args[capture.args.indexOf('--settings') + 1] as string
+  expect(await readFile(mcp, 'utf8')).toContain(secret)
+  expect(await readFile(settingsFile, 'utf8')).toContain(secret)
+  await session.close()
+  await expect(readFile(mcp)).rejects.toThrow()
+})
+
+it('redacts an MCP failure result that echoes its header token', async () => {
+  const secret = 'fake-mcp-result-secret'
+  const { session, events } = await setup({ LIWA_TEST_ECHO: secret }, {}, { mcpServers: { docs: { type: 'http', url: 'https://docs.invalid', headers: { Authorization: `Bearer ${secret}` } } } })
+  await session.startTurn(textInput('scenario:mcp-secret-error'))
+  await events.waitForKind('turn.completed')
+  const result = events.events.find(event => event.kind === 'item.tool_call.completed' && event.callId === 'mcp-failed')
+  expect(JSON.stringify(result)).toContain('[redacted]')
+  expect(JSON.stringify(result)).not.toContain(secret)
+})
+
+it('lists commands supplied by the managed snapshot plugin through the native session API', async () => {
+  host = await createBrainTestHost()
+  const commands = join(host.root, 'commands')
+  await mkdir(commands)
+  await writeFile(join(commands, 'review.md'), 'Review the project')
+  const observe = vi.spyOn(ClaudeAgentSession.prototype, 'ensureHistoryReady')
+  const provider = new ClaudeBrainProvider(settings(await fakeClaudeBinary(host.root)))
+  const session = await provider.createSession(host.sessionConfig({ commands: [commands] }), host.launch())
+  sessions.push(session)
+  const native = observe.mock.contexts[0]
+  if (!(native instanceof ClaudeAgentSession)) throw new Error('Expected the provider to initialize a native session')
+  observe.mockRestore()
+  expect((await native.listCommands()).some(command => command.name === 'liwa-member-materials:review')).toBe(true)
+})
+
+it.each(['provider', 'kernel'] as const)('delegates a native tool only after the selected CLI rule is returned in %s mode', async (mode) => {
+  const { session, events } = await setup(undefined, {}, { permission: { mode, autoAllow: [] } })
+  const delegate = vi.spyOn(ClaudeTurnPolicy.prototype, 'delegateSession')
+  await session.startTurn(textInput('scenario:native-permission'))
+  const request = await events.waitForKind('permission.request')
+  expect(delegate).not.toHaveBeenCalled()
+  const option = request.options.find(option => option.effect === 'allow_session')
+  expect(option?.sessionRules).toEqual(['Bash(npm test:*)'])
+  await session.respondToPermission(request.requestId, { optionId: option!.id })
+  await events.waitForKind('turn.completed')
+  expect(delegate).toHaveBeenCalledWith('Bash')
+  delegate.mockRestore()
+})
+
+it.each(['manual', 'auto', 'unknown'])('preserves only known compact trigger %s and observed post tokens', async (trigger) => {
+  const { session, events } = await setup({ LIWA_TEST_COMPACT_TRIGGER: trigger })
+  await session.startTurn(textInput('scenario:compact'))
+  const compacted = await events.waitForKind('session.compacted')
+  expect(compacted).toMatchObject({ preTokens: 100, postTokens: 20 })
+  if (trigger === 'unknown') expect(compacted).not.toHaveProperty('trigger')
+  else expect(compacted.trigger).toBe(trigger)
+  await events.waitForKind('turn.completed')
 })

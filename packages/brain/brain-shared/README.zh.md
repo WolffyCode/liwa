@@ -86,7 +86,10 @@ return new PaseoBrainSession({ impl, meta, session, blobs: launch }) // a BrainP
 
 -----
 
+完成的压缩条目保留可选的原生 trigger 与已知前后 token；未知值省略，不编造。
+
 <a id="model-experience"></a>
+
 ## 模型体验
 
 无，因为本库只提供提供方侧的代码；每个提供方包管它的 CLI 发给模型的内容。

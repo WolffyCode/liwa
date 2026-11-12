@@ -2,6 +2,7 @@
  * 会话已解析秘密的唯一脱敏边界；stderr 跨块匹配，错误保持原类型。
  * @module @liwa/brain-claude-code/diagnostics
  */
+import type { JsonValue } from '@liwa/brain'
 import type { Logger } from '@liwa/cordis'
 import { paseoLogger, type PaseoLogger } from '@liwa/brain-shared'
 
@@ -28,6 +29,18 @@ export class ClaudeDiagnostics {
   }
 
   /**
+   * MCP 失败等 JSON 载荷递归脱敏，保留结构与非字符串值。
+   * @param value - 已类型化的 JSON 载荷。
+   * @returns 不含已知秘密的同形载荷。
+   */
+  redactValue(value: JsonValue): JsonValue {
+    if (typeof value === 'string') return this.redact(value)
+    if (Array.isArray(value)) return value.map(entry => this.redactValue(entry))
+    if (value === null || typeof value !== 'object') return value
+    return Object.fromEntries(Object.entries(value).map(([key, entry]) => [this.redact(key), this.redactValue(entry)]))
+  }
+
+  /**
    * 在序列化完成后脱敏，不把秘密传到宿主 logger。
    * @param logger - 宿主日志器。
    * @returns Paseo 形状日志器。
@@ -51,10 +64,30 @@ export class ClaudeDiagnostics {
       return await operation()
     } catch (error) {
       if (!(error instanceof Error)) throw new Error(this.redact(String(error)))
-      error.message = this.redact(error.message)
-      if (error.stack !== undefined) error.stack = this.redact(error.stack)
+      this.redactError(error, new Set())
       throw error
     }
+  }
+
+  private redactError(value: unknown, visited: Set<object>): unknown {
+    if (typeof value === 'string') return this.redact(value)
+    if (value === null || typeof value !== 'object') return value
+    if (visited.has(value)) return value
+    visited.add(value)
+    if (value instanceof Error) {
+      value.message = this.redact(value.message)
+      if ('stdout' in value && typeof value.stdout === 'string') value.stdout = this.redact(value.stdout)
+      if ('stderr' in value && typeof value.stderr === 'string') value.stderr = this.redact(value.stderr)
+      if (value.stack !== undefined) value.stack = this.redact(value.stack)
+      if (value.cause !== undefined) value.cause = this.redactError(value.cause, visited)
+      if (value instanceof AggregateError) this.redactError(value.errors, visited)
+    } else if (Array.isArray(value)) {
+      const entries: unknown[] = value
+      for (const [index, entry] of entries.entries()) entries[index] = this.redactError(entry, visited)
+    } else {
+      for (const [key, entry] of Object.entries(value)) Object.assign(value, { [key]: this.redactError(entry, visited) })
+    }
+    return value
   }
 
   /**

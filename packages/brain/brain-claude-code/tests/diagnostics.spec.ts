@@ -59,3 +59,33 @@ describe('known secret diagnostic boundary', () => {
     expect(await diagnostics.protect(() => Promise.resolve('ok'))).toBe('ok')
   })
 })
+
+it('redacts nested causes and aggregate errors, including cyclic causes', async () => {
+  const inner = new Error('fake-nested-token')
+  const outer = new AggregateError([inner, 'fake-nested-token'], 'MCP fake-nested-token', { cause: inner })
+  inner.cause = outer
+  await expect(new ClaudeDiagnostics(['fake-nested-token']).protect(() => Promise.reject(outer))).rejects.toBe(outer)
+  expect(inner.message).toBe('[redacted]')
+  expect(outer.message).toBe('MCP [redacted]')
+  expect(outer.errors[1]).toBe('[redacted]')
+  expect(inner.stack).not.toContain('fake-nested-token')
+})
+
+it('preserves JSON shape while redacting nested MCP values and process error output', async () => {
+  const diagnostics = new ClaudeDiagnostics(['fake-json-token'])
+  expect(diagnostics.redactValue({ field: ['fake-json-token', 3, true, null], 'fake-json-token': { nested: 'fake-json-token' } })).toEqual({ field: ['[redacted]', 3, true, null], '[redacted]': { nested: '[redacted]' } })
+  const error = Object.assign(new Error('failed'), { stdout: 'fake-json-token', stderr: 'fake-json-token', cause: 7 })
+  await expect(diagnostics.protect(() => Promise.reject(error))).rejects.toMatchObject({ stdout: '[redacted]', stderr: '[redacted]', cause: 7 })
+  const nonText = Object.assign(new Error('failed'), { stdout: 1, stderr: null })
+  await expect(diagnostics.protect(() => Promise.reject(nonText))).rejects.toBe(nonText)
+})
+
+it('redacts structured non-Error causes without losing their shape or cyclic links', async () => {
+  const cause: { message: string; nested: unknown[]; self?: object } = { message: 'fake-cause-token', nested: [null, 3, true, 'fake-cause-token'] }
+  cause.self = cause
+  const failure = new Error('failed', { cause })
+  await expect(new ClaudeDiagnostics(['fake-cause-token']).protect(() => Promise.reject(failure))).rejects.toBe(failure)
+  expect(cause.message).toBe('[redacted]')
+  expect(cause.nested).toEqual([null, 3, true, '[redacted]'])
+  expect(cause.self).toBe(cause)
+})

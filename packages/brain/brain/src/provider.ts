@@ -13,8 +13,9 @@ import type { BrainBlobReader } from './blobs.ts'
 import type { BrainSessionId, ImplId, PermissionRequestId, TurnId } from './brand.ts'
 import type {
   BrainEvent, BrainMode, CancelOptions, DeliverOptions, DeliverResult, Meta, ModeChange, PermissionResponse, ResumeHandle,
-  SessionConfig, TurnInput,
+  SessionConfig, TurnInput, JsonValue,
 } from './contract.ts'
+import type { PluginManagementRequest, PluginLibraryRecord } from './plugin-library.ts'
 import type { MemberConfigSpec } from './config-dir/shared.ts'
 
 /** 提供方能用的子进程操作；签名与 subprocess seam 相同。 */
@@ -53,6 +54,8 @@ export interface BrainLaunchContext extends BrainProcessHost, BrainBlobReader {
 export interface BrainProbeContext extends BrainProcessHost {
   /** 提供方的日志器。 */
   readonly logger: Logger
+  /** 显式认证检查；省略时只报告静态认证事实。 */
+  readonly checkAuth?: boolean
   /** 取消探测。 */
   readonly signal?: AbortSignal | undefined
 }
@@ -63,6 +66,8 @@ export interface BrainProbeResult {
   available: boolean
   /** 读得到时的 CLI 版本。 */
   version?: string
+  /** 认证只报告变量名与地址，显式检查的原生 JSON 已脱敏。 */
+  auth?: { variable: 'ANTHROPIC_API_KEY' | 'ANTHROPIC_AUTH_TOKEN'; baseUrl?: string; check?: { ok: boolean; status?: JsonValue; problem?: string } }
   /** 不能（完全）用的全部原因，按显示顺序；没有就是空数组。 */
   problems: string[]
 }
@@ -181,6 +186,13 @@ export interface BrainProvider {
    * @returns 可用性、版本与问题清单。
    */
   probe(context: BrainProbeContext): Promise<BrainProbeResult>
+  /** 显式插件库配置操作；省略表示该提供方不支持。
+   * @param context - 受管安装命令入口。
+   * @param root - agents 配置根。
+   * @param request - 安装、列出、更新或删除。
+   * @returns 该实例的安装记录。
+   */
+  managePlugins?(context: BrainProbeContext, root: string, request: PluginManagementRequest): Promise<PluginLibraryRecord[]>
   /**
    * 开一个新会话。
    * @param config - 校验过的会话配置。

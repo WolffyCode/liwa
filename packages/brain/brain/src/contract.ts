@@ -31,6 +31,8 @@ export const ChildIdSchema = z.string().min(1).transform(ChildId)
 export const IsoSchema = z.iso.datetime({ offset: true })
 /** 任意 JSON 值；契约里的载荷一律用它，不用 `unknown`。 */
 export const JsonValueSchema = z.json()
+/** 可重建、可序列化的 JSON 载荷。 */
+export type { JsonValue } from '@liwa/util-values'
 
 /** 会话种类：实例会话，或干活、想事、自己的事、整理四种活之一。 */
 export const MindKindSchema = z.enum(['instance', 'work', 'think', 'own', 'tidy'])
@@ -191,6 +193,9 @@ export const SessionConfigSchema = z.object({
   thinking: z.string().min(1).optional(),
   /** 这一场会话额外装载的本地插件目录（Claude 形状，含 `.claude-plugin/plugin.json`）；提供方 `Meta.agentConfig.plugins` 为 false 时拒绝。 */
   plugins: z.array(z.string().min(1)).optional(),
+  /** 文件式 agent 描述与斜杠命令目录。 */
+  agents: z.array(z.string().min(1)).optional(),
+  commands: z.array(z.string().min(1)).optional(),
   /** 这一场会话额外的命令钩子（Claude settings.hooks 形状）；`Meta.agentConfig.hooks` 为 false 时拒绝。 */
   hooks: HooksSchema.optional(),
   /** 这一场会话的指令片段（全局集与目录级选出的指令都并在这里），放在规矩之后、仓库指令之前；`Meta.agentConfig.instructions` 为 false 时拒绝。 */
@@ -324,7 +329,10 @@ export const PermissionEffectSchema = z.enum(['allow_once', 'allow_session', 'al
 export type PermissionEffect = z.output<typeof PermissionEffectSchema>
 
 /** 权限请求给出的一个选项。 */
-export const PermissionOptionSchema = z.object({ id: z.string().min(1), label: z.string(), effect: PermissionEffectSchema })
+export const PermissionOptionSchema = z.object({
+  id: z.string().min(1), label: z.string(), effect: PermissionEffectSchema,
+  sessionRules: z.array(z.string()).optional(),
+})
 /** 权限请求给出的一个选项。 */
 export type PermissionOption = z.output<typeof PermissionOptionSchema>
 
@@ -439,10 +447,15 @@ export const BrainEventSchema = z.discriminatedUnion('kind', [
     code: z.string().optional(),
     diagnostic: z.string().optional(),
   }),
+  /** 按需注入的完整模型输入，先记录再交给 CLI。 */
+  z.object({ kind: z.literal('session.project_document'), path: z.string(), reason: z.object({ tool: z.string(), path: z.string() }), text: z.string() }),
+  /** 说明读取或字节限制失败；这份说明没有注入。 */
+  z.object({ kind: z.literal('session.project_document_failed'), path: z.string(), reason: z.object({ tool: z.string(), path: z.string() }), message: z.string() }),
   /** CLI 在两个回合之间退出；会话没了。 */
   z.object({ kind: z.literal('session.exited'), category: FailureCategorySchema, message: z.string() }),
   z.object({
     kind: z.literal('session.compacted'),
+    trigger: z.enum(['manual', 'auto']).optional(),
     turnId: TurnIdSchema.optional(),
     preTokens: z.number().int().nonnegative().optional(),
     postTokens: z.number().int().nonnegative().optional(),

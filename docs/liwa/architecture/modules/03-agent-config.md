@@ -7,7 +7,7 @@
 | 规范 | 拥有什么 | 入口／生效 |
 | --- | --- | --- |
 | 软件配置 | 装哪些 Cordis 插件、二进制／binaryArgs、实例 env/Key、模型目录、监听／存储／超时 | bundle → profile patch → home patch → --patch，部署／装配时；安全 reload 只影响后续会话 |
-| agent 配置 | 指令、本事、MCP、本地 CLI 插件、command 钩子及其选择 | `$LIWA_HOME/agents/agents.yml`、`dirs/` 与会话字段；每次打开会话解析，运行中不改不可变快照 |
+| agent 配置 | 指令、本事、文件式 agents／commands、MCP、本地／插件库 CLI 插件、command 钩子及其选择 | `$LIWA_HOME/agents/agents.yml`、`dirs/` 与会话字段；每次打开会话解析，运行中不改不可变快照 |
 | 提供方实例 | 同一个 brain-* 插件在 Cordis 挂多行，各 impl 唯一、认证独立；实例可带自有 skills/MCP/plugins/hooks | 部署参数在 Cordis；对全局集合的 use/disable 在 agents.yml.instances，不能写进提供方 Config |
 
 依据：〔一手〕`apps/cli/src/profile-boot.ts:68`、`:82`、`:215`；`packages/brain/brain-claude-code/src/config.ts:18`、`packages/brain/brain/src/agents-config/index.ts:46`。后续 roster 接管配置实体与事件时复用本解析器，不新建第二套文件合并规则。〔推理〕唯一归属。
@@ -18,22 +18,26 @@ Claude／Codex 首版 Key 在所选实例的 `env` 中明文配置；不提供 c
 
 | 级 | 文件／调用 | 能做什么 |
 | --- | --- | --- |
-| 全局默认 | `<agentsRoot>/agents.yml`，agentsRoot 默认由 bundle 设为 `$LIWA_HOME/agents` | 定义命名的 skills/mcpServers/plugins/hooks/instructions；applyTo 省略即默认用于所有实例，给定则默认只用于所列 impl |
+| 全局默认 | `<agentsRoot>/agents.yml`，agentsRoot 默认由 bundle 设为 `$LIWA_HOME/agents` | 定义命名的 skills/agents/commands/mcpServers/plugins/hooks/instructions；applyTo 省略即默认用于所有实例，给定则默认只用于所列 impl |
 | 实例 | 同文件 `instances.<impl>.use/disable`；实例部署自带材料仍在 Cordis | 从全局集按名选择，不另造配置格式 |
 | 目录 | `<agentsRoot>/dirs/<hash>.yml`，hash 是规范化绝对 cwd 的 SHA-256 前 32 个十六进制字符 | 只有 version、path、instances；各实例只 use/disable，不能新增条目／指令正文／permissions |
-| 对话 | SessionConfig 的 skillsDir、mcpServers、plugins、hooks、instructions，以及 model/modeId/thinkingOptionId 等 | 追加本场材料，独立快照；能力不支持则创建前拒绝；当前代码档位字段仍为 thinking，D′ 原处统一为 thinkingOptionId |
+| 对话 | SessionConfig 的 skillsDir、agents、commands、mcpServers、plugins、hooks、instructions，以及 model/modeId/thinkingOptionId 等 | 追加本场材料，独立快照；能力不支持则创建前拒绝；当前代码档位字段仍为 thinking，D′ 原处统一为 thinkingOptionId |
 
 路径规范化为 `resolve(cwd).normalize('NFC')`，不是 realpath；目录文件里的 path 必须与请求 cwd 规范化后相同，不扫描父目录继承，不读取仓库 `.liwa/agents.yml`。目录级只由主人管理的 agentsRoot 读取，不因 clone 工作区自动获得执行钩子能力。〔一手〕`packages/brain/brain/src/agents-config/index.ts:57`、`:132`、`:125`、`:224`；主人工作记录 19。
 
 ## 3 文件形状
 
-全局集使用 version:1 的严格 YAML 对象，未知键／非法条目名／未知钩子事件报错。条目名匹配 `^[a-z0-9][a-z0-9_-]*$`；相对 dir/file 相对 agentsRoot 解析。本事目录必须有 SKILL.md；插件目录必须有 `.claude-plugin/plugin.json`；MCP 服务器名 liwa 保留给内核工具。〔一手〕`packages/brain/brain/src/agents-config/index.ts:24`、`:46`、`:108`、`:199`；`packages/brain/brain-claude-code/src/config.ts:499`。
+全局集使用 version:1 的严格 YAML 对象，未知键／非法条目名／未知钩子事件报错。条目名匹配 `^[a-z0-9][a-z0-9_-]*$`；相对 dir/file 相对 agentsRoot 解析。本事目录必须有 SKILL.md；本地插件目录必须有 `.claude-plugin/plugin.json`；插件条目支持 `{dir}` 或 `{library: impl/plugin@marketplace}`，library 必须已在灵鲸插件库登记；MCP 服务器名 liwa 保留给内核工具。〔一手〕`packages/brain/brain/src/agents-config/index.ts:24`、`:46`、`:108`、`:199`；`packages/brain/brain-claude-code/src/config.ts:499`。
 
 ```yaml
 version: 1
 skills:
   review: { dir: skills/review }
   release: { dir: skills/release, applyTo: [claude-main] }
+agents:
+  reviewer-agent: { dir: agents/review }
+commands:
+  check-command: { dir: commands }
 mcpServers:
   docs:
     type: http
@@ -41,6 +45,7 @@ mcpServers:
     headers: { Authorization: 'Bearer ${DOCS_TOKEN}' }
 plugins:
   reviewer: { dir: plugins/reviewer, applyTo: [claude-main] }
+  installed-review: { library: claude-main/review@team, applyTo: [claude-main] }
 hooks:
   audit:
     event: PreToolUse
@@ -76,14 +81,17 @@ instances:
 | --- | --- |
 | 默认／use／disable | 先按 applyTo 选默认，再加实例与目录 use；任一级 disable 压过任何级 use；不存在的名字直接报错 |
 | 本事 | 按选中的条目名复制到独立 skillsDir；与实例自带／会话同名本事冲突报错，不覆盖 |
+| agents／commands | 按同一 applyTo/use/disable 选择目录，与实例和启用 projectDocs 时的仓库材料合成快照插件；同名报两处来源；不用 SDK agents 选项 |
 | MCP | 按服务器名并集；实例与会话同名报错，不允许覆盖内核 liwa；alwaysLoad 按能力兑现 |
-| 插件 | 全局选择结果与显式会话／实例本地目录组合，不自动加载 marketplace 或个人插件；当前提供方按目录列表交 CLI，尚不承诺路径别名去重 |
+| 插件 | 本地目录或已安装插件库引用在装载时解析为目录，再与会话／实例显式目录组合；开会话只传 --plugin-dir，不联网、不读个人插件库；所有选择复用四级 use/disable |
 | 钩子 | 按事件追加；当前代码把 session（含全局、目录与对话）组排前、实例自带组排后，不声称已实现跨四级重新排序 |
 | 指令 | 选中全局／实例／目录指令按声明顺序读取、空行拼接；对话指令随后；最终注入为人设 stable → 规矩 → instructions → 受控项目正文 → persona.notes，notes 在末尾；总 UTF-8 字节超上限拒绝，不截断 |
 | 模型／档位／模式 | 对话选择经实例目录与能力校验；实例默认在 provider resolve 中落实；目录文件不接受这些字段，不开放绕过实例禁用工具／模式的路径 |
 | 权限 | V1 不接 permissions.allow/deny/ask 文件规则；现 permission/mode 由会话契约与提供方处理，不能凭本 YAML 扩权 |
 
 依据：〔一手〕`packages/brain/brain/src/agents-config/index.ts:145`、`:210`；`packages/brain/brain-claude-code/src/config.ts:284`、`:460`、`:490`、`:507`。这里说明实际代码，不把主人工作记录 15 草稿的未实现排序或目录新增能力写成现状。
+
+插件库归 `$LIWA_HOME/agents/plugin-library/`（0700），每实例独立 CLI 配置与空 HOME，安装记录逐条 JSON（0600）保存 key、impl、名字、marketplace、版本、目录。`liwa brain plugin install <plugin>@<marketplace> <source> --provider <impl>` 使用该实例 binary/env 调用 marketplace add 与 plugin install；source 按 CLI 支持的形式原样透传。`plugin list --provider <impl> [--json]` 只读登记；`plugin update <plugin>@<marketplace> --provider <impl>` 显式刷新／更新；`plugin remove <plugin>@<marketplace> --provider <impl>` 卸载后删登记。安装／更新是显式联网管理动作，开会话不调用安装器；命令日志／错误经实例秘密脱敏。同实例并发管理以独占锁拒绝，失败不伪造登记成功；崩溃后提示检查管理锁。〔一手〕`packages/brain/brain-claude-code/src/plugin-library.ts:1`、`packages/brain/brain/src/plugin-library.ts:1`；主人 11-11（决策 71）。
 
 ## 5 各家映射与空壳
 
@@ -103,4 +111,4 @@ instances:
 
 文件解析与物化唯一属于 `@liwa/brain/src/agents-config`；提供方只负责翻译成 CLI 形状；宿主／minds 消费解析结果，不能自写第二份 loader。roster 以后拥有运行期配置实体／事件与主控台编辑入口，沿同一解析器接管。已有 brain run 通过 agentsRoot 使用它；G′ 接 opening，H′ 接宿主命令。〔一手〕`packages/bundle/brain-cli/cordis.patch.yml:83`；〔推理〕分期。
 
-marketplace、个人全局指令自动导入、仓库内 .liwa/agents.yml、权限规则和配置主控台不在首版；Claude fast mode/feature 接线、SDK 自定义 agents 入口不做；Codex 真实映射、并发隔离与原生配置零读取仍需⑤验收。研究报告保持评估时内容，当前设计以本文、00 §5.1、01 §4.2/§4.6 为准。〔一手〕主人工作记录 18、19；〔推理〕范围与证据边界。
+个人全局指令自动导入、仓库内 .liwa/agents.yml、权限规则和配置主控台不在首版；Claude fast mode/feature 接线、SDK 自定义 agents 入口不做；Codex 真实映射、并发隔离与原生配置零读取仍需⑤验收。研究报告保持评估时内容，当前设计以本文、00 §5.1、01 §4.2/§4.6 为准。〔一手〕主人工作记录 18、19；〔推理〕范围与证据边界。

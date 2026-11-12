@@ -5,6 +5,7 @@ import {
   ProviderCommandError, execProviderCommand, findProviderExecutable, spawnProviderProcess,
   type ProviderProcessHost,
 } from '../src/index.ts'
+import type { SubprocessHandle, SubprocessOutcome } from '@liwa/subprocess'
 
 describe('provider process helpers', () => {
   const ctx = new Context()
@@ -62,5 +63,23 @@ describe('provider process helpers', () => {
     handle.stdin?.end('ping')
     expect((await handle.done).exitCode).toBe(0)
     expect(Buffer.concat(chunks).toString()).toBe('ping')
+  })
+
+  it('reports a signaled process with no collected streams and a cancellation without a timeout', async () => {
+    const finished = Promise.withResolvers<SubprocessOutcome>()
+    const handle: SubprocessHandle = {
+      stdin: undefined, stdout: undefined, stderr: undefined, control: undefined, collected: {},
+      done: finished.promise, terminate: () => {}, waitForExit: () => Promise.resolve(true),
+    }
+    const processHost: ProviderProcessHost = { resolveExecutable: command => Promise.resolve(command), spawn: () => handle }
+    const signaled = execProviderCommand(processHost, 'fake', [])
+    finished.resolve({ exitCode: null, signal: 'SIGTERM' })
+    await expect(signaled).rejects.toMatchObject({ killed: false, code: null, stdout: '', stderr: '' })
+    const cancelled = Promise.withResolvers<SubprocessOutcome>()
+    const signal = new AbortController()
+    const running = execProviderCommand({ ...processHost, spawn: () => ({ ...handle, done: cancelled.promise }) }, 'fake', [], { signal: signal.signal })
+    signal.abort()
+    cancelled.resolve({ exitCode: null, signal: 'SIGTERM' })
+    await expect(running).rejects.toThrow('terminated after cancellation')
   })
 })

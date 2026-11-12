@@ -2,10 +2,11 @@
  * 本机 Claude Code SDK 提供方，每会话一个受管 CLI。
  * @module @liwa/brain-claude-code/provider
  */
+import type { HookInput } from '@anthropic-ai/claude-agent-sdk'
 import {
   BrainError, ImplId, TurnId,
   type BrainLaunchContext, type BrainProbeContext, type BrainProbeResult, type BrainProvider, type BrainProviderSession,
-  type Meta, type ResumeHandle, type SessionConfig,
+  type Meta, type ResumeHandle, type SessionConfig, type PluginManagementRequest, type PluginLibraryRecord,
 } from '@liwa/brain'
 import { StringDecoder } from 'node:string_decoder'
 import { ClaudeDiagnostics } from './diagnostics.ts'
@@ -13,9 +14,10 @@ import { CLAUDE_SESSION_UUID, validateResume } from './resume.ts'
 import { ClaudeAgentSession } from './paseo/agent/providers/claude/agent.ts'
 import { Config, claudeEnvironment, instanceSecrets, resolveModel, resolveSessionPolicy, sessionSecrets, validateConfig, writeMemberConfig } from './config.ts'
 import { claudeSpawnSpec, ManagedClaudeCodeProcess } from './process.ts'
-import { MIN_CLAUDE_VERSION, resolveClaudeExecutable } from './probe.ts'
+import { MIN_CLAUDE_VERSION, probeClaude, resolveClaudeExecutable } from './probe.ts'
 import { ClaudeTurnPolicy } from './budget.ts'
 import { ClaudeUsage, restoredBaseline } from './usage.ts'
+import { manageClaudePlugins } from './plugin-library.ts'
 import { ClaudeBrainSession } from './session.ts'
 
 /** 能力声明；实例仍由准入显式拒绝，真实 CLI 组合另经 A2 验收。 */
@@ -51,14 +53,12 @@ export class ClaudeBrainProvider implements BrainProvider {
    * @inheritdoc
    */
   async probe(context: BrainProbeContext): Promise<BrainProbeResult> {
-    let version: string | undefined
-    const problems: string[] = []
-    try {
-      version = (await resolveClaudeExecutable(context, this.config, context.signal)).version
-    } catch (error) {
-      problems.push(String(error))
-    }
-    return { available: problems.length === 0, ...(version === undefined ? {} : { version }), problems }
+    return probeClaude(context, this.config)
+  }
+
+  /** @inheritdoc */
+  managePlugins(context: BrainProbeContext, root: string, request: PluginManagementRequest): Promise<PluginLibraryRecord[]> {
+    return manageClaudePlugins(context, this.config, root, request)
   }
 
   /**
@@ -77,13 +77,19 @@ export class ClaudeBrainProvider implements BrainProvider {
   }
 
   private async open(config: SessionConfig, launch: BrainLaunchContext, handle?: ResumeHandle): Promise<BrainProviderSession> {
-    if (handle !== undefined) await validateResume(handle, launch.homeDir, config.cwd)
+    const historySnapshot = handle === undefined ? undefined : await validateResume(handle, launch.homeDir, config.cwd)
     const policy = await resolveSessionPolicy(this.config, config, launch.homeDir)
     const diagnostics = new ClaudeDiagnostics([...instanceSecrets(this.config), ...sessionSecrets(policy.mcpServers, config.kernelTools)])
     const freshBaseline = { costUsd: 0, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }
     const usage = new ClaudeUsage(handle === undefined ? freshBaseline : restoredBaseline(handle.metadata))
     const budget = new ClaudeTurnPolicy(config, Object.keys(policy.mcpServers))
-    policy.options.hooks = Object.fromEntries(['PreToolUse', 'PostToolUse', 'PostToolUseFailure', 'PostToolBatch'].map(name => [name, [{ hooks: [budget.hook.bind(budget)] }]]))
+    const hookEvents = ['PreToolUse', 'PostToolUse', 'PostToolUseFailure', 'PostToolBatch']
+    policy.options.hooks = Object.fromEntries(hookEvents.map(name => [name, [{ hooks: [async (input: HookInput) => {
+      const decision = await budget.hook(input)
+      const context = await policy.projectContext?.hook(input)
+      if (context?.hookSpecificOutput === undefined) return decision
+      return { ...decision, hookSpecificOutput: { ...decision.hookSpecificOutput, ...context.hookSpecificOutput } }
+    }] }]]))
     let session: ClaudeAgentSession | undefined
     const start = async (): Promise<BrainProviderSession> => {
       const binary = await resolveClaudeExecutable(launch, this.config)
@@ -94,6 +100,7 @@ export class ClaudeBrainProvider implements BrainProvider {
         ...(config.modeId === undefined ? {} : { modeId: config.modeId }), providerOptions: {},
       }, {
         sdkOptions: policy.options,
+        ...(historySnapshot === undefined ? {} : { historySnapshot }),
         controlTimeoutMs: this.config.controlTimeoutMs,
         onQuery: () => { usage.reset() },
         onTurn: () => { budget.begin() },
@@ -114,14 +121,17 @@ export class ClaudeBrainProvider implements BrainProvider {
       await session.ensureHistoryReady()
       return new ClaudeBrainSession(
         { impl: this.impl, meta: this.meta, session, blobs: launch }, this.config, policy, usage, budget, launch.homeDir,
-        resolveModel(this.config, config.model).id, config.thinking,
+        resolveModel(this.config, config.model).id, config.thinking, diagnostics,
       )
     }
     try {
       return await start()
     } catch (error) {
-      await session?.close()
-      await policy.dispose()
+      try {
+        await session?.close()
+      } finally {
+        await policy.dispose()
+      }
       throw error
     }
   }
