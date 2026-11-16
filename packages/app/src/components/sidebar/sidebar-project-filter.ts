@@ -34,7 +34,10 @@ export function filterWorkspacesByProjects(input: {
   const { workspaces, projectFilters } = input;
   if (projectFilters.length === 0) return [...workspaces];
   const included = new Set(projectFilters);
-  return workspaces.filter((workspace) => included.has(workspace.projectViewKey));
+  // Independent chats belong to no selectable project, so a project filter leaves them alone.
+  return workspaces.filter(
+    (workspace) => workspace.purpose === "chat" || included.has(workspace.projectViewKey),
+  );
 }
 
 const EMPTY_PROJECT_FILTERS: readonly string[] = [];

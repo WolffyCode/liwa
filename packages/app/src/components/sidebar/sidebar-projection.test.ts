@@ -72,6 +72,7 @@ function projectionInput(options?: {
   const unpinned = makeWorkspace("unpinned", "needs_input");
   return {
     projects: [makeProject([pinned.placement, unpinned.placement])],
+    independentChats: [] as SidebarWorkspacePlacement[],
     pinnedKeys: {
       pinnedWorkspaceKeys: [pinned.placement.workspaceKey],
       pinnedAtByKey: { [pinned.placement.workspaceKey]: "2026-07-12T12:00:00.000Z" },
@@ -84,6 +85,8 @@ function projectionInput(options?: {
     projectNamesByViewKey: new Map([["project", "Project"]]),
     groupMode: options?.groupMode ?? ("project" as const),
     pinnedCollapsed: options?.pinnedCollapsed ?? false,
+    projectsCollapsed: false,
+    chatsCollapsed: false,
     collapsedProjectKeys: new Set<string>(),
     collapsedWorkspaceGroupKeys: new Set<string>(),
     t: i18n.t,
@@ -112,7 +115,86 @@ function twoProjectInput(groupMode: "project" | "status") {
   };
 }
 
+function makeChat(id: string) {
+  const chat = makeWorkspace(id, "done", [], "chat-backing");
+  chat.placement.purpose = "chat";
+  chat.entry.purpose = "chat";
+  return chat;
+}
+
 describe("buildSidebarProjection", () => {
+  for (const groupMode of ["project", "status"] as const) {
+    it(`lists independent chats after projects and walks them last in ${groupMode} grouping`, () => {
+      const input = projectionInput({ groupMode });
+      const pinnedChat = makeChat("pinned-chat");
+      const recentChat = makeChat("recent-chat");
+      const projection = buildSidebarProjection({
+        ...input,
+        independentChats: [recentChat.placement, pinnedChat.placement],
+        pinnedKeys: {
+          pinnedWorkspaceKeys: ["srv:pinned", pinnedChat.placement.workspaceKey],
+          pinnedAtByKey: {
+            "srv:pinned": "2026-07-12T12:00:00.000Z",
+            [pinnedChat.placement.workspaceKey]: "2026-11-15T00:00:00.000Z",
+          },
+        },
+        workspaceEntriesByKey: new Map([
+          ...input.workspaceEntriesByKey,
+          [pinnedChat.entry.workspaceKey, pinnedChat.entry],
+          [recentChat.entry.workspaceKey, recentChat.entry],
+        ]),
+      });
+
+      expect(projection.pinnedGroups.pinnedChats.map((row) => row.workspaceId)).toEqual([
+        "pinned-chat",
+        "pinned",
+      ]);
+      expect(projection.pinnedGroups.independentChats).toEqual([recentChat.placement]);
+      expect(
+        projection.workspaceGroups.flatMap((group) => group.rows).some((row) => row.purpose),
+      ).toBe(false);
+      expect(projection.projectIconTargets.map((target) => target.projectViewKey)).toEqual([
+        "project",
+      ]);
+      expect(projection.shortcutModel.shortcutTargets.map((target) => target.workspaceId)).toEqual([
+        "pinned-chat",
+        "pinned",
+        "unpinned",
+        "recent-chat",
+      ]);
+    });
+
+    it.each([
+      { projectsCollapsed: true, chatsCollapsed: false, expected: ["pinned", "chat"] },
+      { projectsCollapsed: false, chatsCollapsed: true, expected: ["pinned", "unpinned"] },
+      { projectsCollapsed: true, chatsCollapsed: true, expected: ["pinned"] },
+    ])(
+      `skips collapsed sections in ${groupMode} shortcuts but keeps their rows: %j`,
+      ({ projectsCollapsed, chatsCollapsed, expected }) => {
+        const input = projectionInput({ groupMode });
+        const chat = makeChat("chat");
+        const projection = buildSidebarProjection({
+          ...input,
+          independentChats: [chat.placement],
+          workspaceEntriesByKey: new Map([
+            ...input.workspaceEntriesByKey,
+            [chat.entry.workspaceKey, chat.entry],
+          ]),
+          projectsCollapsed,
+          chatsCollapsed,
+        });
+
+        expect(
+          projection.shortcutModel.shortcutTargets.map((target) => target.workspaceId),
+        ).toEqual(expected);
+        expect(projection.pinnedGroups.independentChats).toEqual([chat.placement]);
+        expect(
+          projection.pinnedGroups.unpinnedProjects[0]?.workspaces.map((row) => row.workspaceId),
+        ).toEqual(["unpinned"]);
+      },
+    );
+  }
+
   // The rule that outlived the bug it was written for: a project icon is fetched per project, so
   // whatever a mode groups by, the rows it produces can only reference projects already covered.
   for (const groupMode of ["project", "status"] as const) {

@@ -1,5 +1,6 @@
 import path from "node:path";
 import { readFileSync } from "node:fs";
+import type { WorkspaceDescriptorPayload } from "@getpaseo/protocol/messages";
 import type { TerminalActivity } from "@getpaseo/protocol/terminal-activity";
 import { connectDaemonClient } from "./daemon-client-loader";
 import { withProjectOwnership } from "./project-ownership";
@@ -7,6 +8,8 @@ import { createTempDirectory, createTempGitRepo } from "./workspace";
 
 export interface SeedWorkspaceDescriptor {
   id: string;
+  purpose?: WorkspaceDescriptorPayload["purpose"];
+  workspaceKind?: WorkspaceDescriptorPayload["workspaceKind"];
   name: string;
   projectId: string;
   projectDisplayName: string;
@@ -120,10 +123,11 @@ export interface SeedDaemonClient {
     labels?: Record<string, string>;
     background?: boolean;
   }): Promise<{ id: string; status: string }>;
-  fetchAgents(options?: { scope?: "active" }): Promise<{
+  fetchAgents(options?: { scope?: "active"; filter?: { includeArchived?: boolean } }): Promise<{
     entries: Array<{
       agent: {
         id: string;
+        archivedAt?: string | null;
         provider: string;
         cwd: string;
         workspaceId?: string;

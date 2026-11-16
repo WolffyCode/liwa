@@ -5,9 +5,11 @@ import { selectPrHintFromStatus } from "@/git/pr-hint";
 import { type HostProjectListItem } from "@/projects/host-project-model";
 import type { PendingCreateAttempt } from "@/stores/create-flow-store";
 import type { WorkspaceDescriptor } from "@/stores/session-store";
-import type {
-  WorkspaceStructureHostPlacement,
-  WorkspaceStructureProject,
+import {
+  createProjectViewKey,
+  type WorkspaceStructureChat,
+  type WorkspaceStructureHostPlacement,
+  type WorkspaceStructureProject,
 } from "@/projects/workspace-structure";
 import { projectDisplayNameFromProjectId } from "@/utils/project-display-name";
 import { aggregateSidebarStateBuckets } from "@/utils/sidebar-agent-state";
@@ -29,6 +31,7 @@ export interface SidebarWorkspacePlacement {
   workspaceDirectory?: string;
   projectKind: WorkspaceStructureProject["projectKind"];
   workspaceKind: WorkspaceDescriptor["workspaceKind"];
+  purpose?: WorkspaceDescriptor["purpose"];
   background?: boolean;
   name: string;
 }
@@ -150,6 +153,9 @@ export function createSidebarWorkspaceEntry(input: {
 }): SidebarWorkspaceEntry {
   const projectViewKey = input.projectViewKey ?? input.workspace.projectId;
   const effectiveStatus = deriveEffectiveWorkspaceStatus(input);
+  // A chat directory may sit inside someone else's checkout; that repository is not the chat's.
+  const isChat = input.workspace.purpose === "chat";
+  const gitRuntime = isChat ? undefined : input.workspace.gitRuntime;
   return {
     workspaceKey: `${input.serverId}:${input.workspace.id}`,
     serverId: input.serverId,
@@ -162,28 +168,38 @@ export function createSidebarWorkspaceEntry(input: {
       input.workspace.worktreeSlug ?? shortenPath(input.workspace.workspaceDirectory),
     projectKind: input.workspace.projectKind,
     workspaceKind: input.workspace.workspaceKind,
+    ...(isChat ? { purpose: input.workspace.purpose } : {}),
     background: input.workspace.background,
     name: input.workspace.name,
     title: input.workspace.title ?? null,
     pinnedAt: input.workspace.pinnedAt,
     labels: input.workspace.labels ?? EMPTY_WORKSPACE_LABELS,
-    currentBranch: normalizeCurrentBranch(input.workspace.gitRuntime?.currentBranch),
+    currentBranch: normalizeCurrentBranch(gitRuntime?.currentBranch),
     statusBucket: effectiveStatus.status,
     statusEnteredAt: effectiveStatus.enteredAt,
     archivingAt: input.workspace.archivingAt,
-    diffStat: input.workspace.diffStat,
-    prHint: selectPrHintFromStatus(
-      input.workspace.githubRuntime?.pullRequest,
-      input.workspace.forge,
-    ),
-    archiveHasUncommittedChanges: input.workspace.gitRuntime?.isDirty ?? null,
-    archiveUnpushedCommitCount: input.workspace.gitRuntime?.aheadOfOrigin ?? null,
+    diffStat: isChat ? null : input.workspace.diffStat,
+    prHint: isChat
+      ? null
+      : selectPrHintFromStatus(input.workspace.githubRuntime?.pullRequest, input.workspace.forge),
+    archiveHasUncommittedChanges: gitRuntime?.isDirty ?? null,
+    archiveUnpushedCommitCount: gitRuntime?.aheadOfOrigin ?? null,
     scripts: input.workspace.scripts,
     hasRunningScripts: input.workspace.scripts.some((script) => script.lifecycle === "running"),
   };
 }
 
 const EMPTY_WORKSPACE_LABELS: string[] = [];
+
+/**
+ * The directory a row may copy, open, or show. A chat's directory is private backing the daemon
+ * allocated, so its rows reveal none.
+ */
+export function getRevealableWorkspaceDirectory(
+  workspace: Pick<SidebarWorkspaceEntry, "purpose" | "workspaceDirectory">,
+): string | null {
+  return workspace.purpose === "chat" ? null : workspace.workspaceDirectory;
+}
 
 export interface ProjectStatusSession {
   workspaces: Map<string, WorkspaceDescriptor>;
@@ -277,6 +293,27 @@ export function buildSidebarWorkspacePlacementModel(input: {
     projectNamesByViewKey: new Map(
       projects.map((project) => [project.viewKey, project.projectName]),
     ),
+  };
+}
+
+/** A chat's row identity. Its backing project only keys placement; rows never show it. */
+export function createSidebarChatPlacement(
+  chat: WorkspaceStructureChat,
+): SidebarWorkspacePlacement {
+  return {
+    workspaceKey: chat.workspaceKey,
+    serverId: chat.serverId,
+    workspaceId: chat.workspaceId,
+    projectViewKey: createProjectViewKey({
+      kind: "placement",
+      serverId: chat.serverId,
+      projectId: chat.projectId,
+    }),
+    projectName: chat.projectName,
+    projectKind: "non_git",
+    workspaceKind: "directory",
+    purpose: "chat",
+    name: chat.name,
   };
 }
 

@@ -1,6 +1,7 @@
 import { PressHighlight as Pressable } from "@/components/ui/press-highlight";
-import { useMemo, type ReactNode } from "react";
+import { useMemo, type ComponentProps, type ReactNode } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react-native";
+import { ToolbarButton } from "@/components/ui/pane-content-toolbar";
 import { Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { DensityIcon } from "@/components/ui/density-icon";
@@ -39,6 +40,26 @@ export function SidebarSectionHeader({
       )}
       {children ? <View style={styles.actions}>{children}</View> : null}
     </View>
+  );
+}
+
+/** An icon action at a section header's trailing edge, such as starting a new conversation. */
+export function SidebarSectionAction({
+  icon,
+  label,
+  onPress,
+  testID,
+}: {
+  icon: ComponentProps<typeof DensityIcon>["icon"];
+  label: string;
+  onPress: () => void;
+  testID: string;
+}) {
+  const isCompact = useIsCompactFormFactor();
+  return (
+    <ToolbarButton label={label} compact={isCompact} onPress={onPress} testID={testID}>
+      <DensityIcon icon={icon} size="sm" color="foregroundMuted" />
+    </ToolbarButton>
   );
 }
 

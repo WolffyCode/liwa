@@ -73,6 +73,8 @@ export function SidebarModelProvider({
     (state) => state.collapsedWorkspaceGroupKeys,
   );
   const pinnedCollapsed = useSidebarCollapsedSectionsStore((state) => state.collapsedPinned);
+  const projectsCollapsed = useSidebarCollapsedSectionsStore((state) => state.collapsedProjects);
+  const chatsCollapsed = useSidebarCollapsedSectionsStore((state) => state.collapsedChats);
   const pinnedWorkspaceOrder = useSidebarOrderStore((state) => state.pinnedWorkspaceOrder);
   const toggleProjectCollapsed = useSidebarCollapsedSectionsStore(
     (state) => state.toggleProjectCollapsed,
@@ -151,16 +153,31 @@ export function SidebarModelProvider({
     list.projects,
     visibleWorkspaceKeys,
   ]);
-  const pinnedKeys = usePinnedSidebarKeys(filteredProjects);
+  // Chats follow the label and background filters like any row; the project filter keeps them.
+  const filteredChats = useMemo(
+    () =>
+      hasActiveLabelFilter || !showBackground
+        ? list.chats.filter((chat) => visibleWorkspaceKeys.has(chat.workspaceKey))
+        : list.chats,
+    [hasActiveLabelFilter, list.chats, showBackground, visibleWorkspaceKeys],
+  );
+  const visiblePlacements = useMemo(
+    () => [...filteredProjects.flatMap((project) => project.workspaces), ...filteredChats],
+    [filteredChats, filteredProjects],
+  );
+  const pinnedKeys = usePinnedSidebarKeys(visiblePlacements);
   const projectionInput = useMemo(
     () => ({
       projects: filteredProjects,
+      independentChats: filteredChats,
       pinnedKeys,
       pinnedWorkspaceOrder,
       workspaceEntriesByKey: filteredWorkspaceEntriesByKey,
       projectNamesByViewKey: list.projectNamesByViewKey,
       groupMode,
       pinnedCollapsed,
+      projectsCollapsed,
+      chatsCollapsed,
       collapsedProjectKeys,
       collapsedWorkspaceGroupKeys,
       t,
@@ -171,7 +188,10 @@ export function SidebarModelProvider({
       groupMode,
       list.projectNamesByViewKey,
       filteredProjects,
+      filteredChats,
       pinnedCollapsed,
+      projectsCollapsed,
+      chatsCollapsed,
       pinnedKeys,
       pinnedWorkspaceOrder,
       filteredWorkspaceEntriesByKey,

@@ -4,6 +4,7 @@ import {
   CircleGauge,
   FolderPlus,
   GitBranch,
+  Plus,
   Server,
   Settings,
   type LucideIcon,
@@ -55,7 +56,12 @@ import {
 } from "@/components/ui/control-geometry";
 import { SidebarResizeHandle } from "@/components/sidebar-resize-handle";
 import { DensityIcon } from "@/components/ui/density-icon";
-import { SidebarSectionHeader } from "@/components/sidebar/sidebar-section-header";
+import {
+  SidebarSectionAction,
+  SidebarSectionHeader,
+} from "@/components/sidebar/sidebar-section-header";
+import { useOpenNewChat } from "@/chats/new-chat";
+import { useSidebarCollapsedSectionsStore } from "@/stores/sidebar-collapsed-sections-store";
 import { Shortcut } from "@/components/ui/shortcut";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { HEADER_INNER_HEIGHT, useIsCompactFormFactor } from "@/constants/layout";
@@ -106,7 +112,6 @@ interface SidebarSharedProps {
   pinnedGroups: PinnedSidebarGroups;
   projects: SidebarProjectEntry[];
   hasProjectsBeforeFilter: boolean;
-  hasActiveProjectFilter: boolean;
   workspaceEntriesByKey: ReadonlyMap<string, SidebarWorkspaceEntry>;
   isInitialLoad: boolean;
   isRevalidating: boolean;
@@ -163,7 +168,6 @@ export const LeftSidebar = memo(function LeftSidebar({
   const {
     projects,
     hasProjectsBeforeFilter,
-    resolvedProjectFilters,
     workspaceEntriesByKey,
     isInitialLoad,
     isRevalidating,
@@ -235,7 +239,6 @@ export const LeftSidebar = memo(function LeftSidebar({
     pinnedGroups,
     projects,
     hasProjectsBeforeFilter,
-    hasActiveProjectFilter: resolvedProjectFilters.length > 0,
     workspaceEntriesByKey,
     isInitialLoad,
     isRevalidating,
@@ -556,7 +559,6 @@ function MobileSidebar({
   pinnedGroups,
   projects,
   hasProjectsBeforeFilter,
-  hasActiveProjectFilter,
   workspaceEntriesByKey,
   isInitialLoad,
   isRevalidating,
@@ -583,6 +585,10 @@ function MobileSidebar({
   const handleWorkspacePress = useCallback(() => {
     closeSidebar();
   }, [closeSidebar]);
+  const projectsSectionHeader = useMemo(
+    () => <ProjectsSectionHeader onBeforeNavigate={closeSidebar} />,
+    [closeSidebar],
+  );
 
   const closeButton = useMemo(
     () => (
@@ -661,7 +667,6 @@ function MobileSidebar({
                 pinnedGroups={pinnedGroups}
                 projects={projects}
                 hasProjectsBeforeFilter={hasProjectsBeforeFilter}
-                hasActiveProjectFilter={hasActiveProjectFilter}
                 workspaceEntriesByKey={workspaceEntriesByKey}
                 isRefreshing={isManualRefresh && isRevalidating}
                 onRefresh={handleRefresh}
@@ -670,7 +675,7 @@ function MobileSidebar({
                 onImportSession={handleImportSession}
                 parentGestureRef={closeGestureRef}
                 dragGestureHostActive={active}
-                listHeaderComponent={workspacesSectionHeaderElement}
+                listHeaderComponent={projectsSectionHeader}
               />
             )}
           </SidebarToastRegion>
@@ -696,7 +701,6 @@ function DesktopSidebar({
   pinnedGroups,
   projects,
   hasProjectsBeforeFilter,
-  hasActiveProjectFilter,
   workspaceEntriesByKey,
   isInitialLoad,
   isRevalidating,
@@ -733,6 +737,10 @@ function DesktopSidebar({
 
   const closeSidebar = usePanelStore((state) => state.showMobileAgent);
   const { gesture: closeGesture, gestureRef: closeGestureRef } = useCloseAgentListGesture(overlay);
+  const projectsSectionHeader = useMemo(
+    () => <ProjectsSectionHeader onBeforeNavigate={closeSidebar} />,
+    [closeSidebar],
+  );
 
   const startWidth = useSharedValue(visibleSidebarWidth);
   const resizeWidth = useSharedValue(visibleSidebarWidth);
@@ -863,7 +871,6 @@ function DesktopSidebar({
                   pinnedGroups={pinnedGroups}
                   projects={projects}
                   hasProjectsBeforeFilter={hasProjectsBeforeFilter}
-                  hasActiveProjectFilter={hasActiveProjectFilter}
                   workspaceEntriesByKey={workspaceEntriesByKey}
                   isRefreshing={isManualRefresh && isRevalidating}
                   onRefresh={handleRefresh}
@@ -872,7 +879,7 @@ function DesktopSidebar({
                   onWorkspacePress={closeSidebar}
                   parentGestureRef={closeGestureRef}
                   dragGestureHostActive={active}
-                  listHeaderComponent={workspacesSectionHeaderElement}
+                  listHeaderComponent={projectsSectionHeader}
                 />
               )}
             </SidebarToastRegion>
@@ -903,9 +910,24 @@ function DesktopSidebar({
   );
 }
 
-function WorkspacesSectionHeader() {
+function ProjectsSectionHeader({ onBeforeNavigate }: { onBeforeNavigate: () => void }) {
+  const { t } = useTranslation();
+  const collapsed = useSidebarCollapsedSectionsStore((state) => state.collapsedProjects);
+  const toggleCollapsed = useSidebarCollapsedSectionsStore(
+    (state) => state.toggleProjectsSectionCollapsed,
+  );
+  const openNewChat = useOpenNewChat();
+  const startNewChat = useCallback(() => {
+    onBeforeNavigate();
+    openNewChat();
+  }, [onBeforeNavigate, openNewChat]);
   return (
-    <SidebarSectionHeader title="Workspaces">
+    <SidebarSectionHeader
+      title={t("sidebar.sections.projects")}
+      collapsed={collapsed}
+      onToggle={toggleCollapsed}
+      testID="sidebar-projects-section-header"
+    >
       <Tooltip delayDuration={300}>
         <TooltipTrigger asChild>
           <View>
@@ -913,16 +935,18 @@ function WorkspacesSectionHeader() {
           </View>
         </TooltipTrigger>
         <TooltipContent side="bottom" align="center" offset={8}>
-          <IconTooltipContent label="Display preferences" />
+          <IconTooltipContent label={t("sidebar.display.trigger")} />
         </TooltipContent>
       </Tooltip>
+      <SidebarSectionAction
+        icon={Plus}
+        label={t("newWorkspace.title")}
+        onPress={startNewChat}
+        testID="sidebar-projects-new-chat"
+      />
     </SidebarSectionHeader>
   );
 }
-
-// Stable element so the sidebar list's listHeaderComponent prop keeps identity across
-// renders (WorkspacesSectionHeader takes no props).
-const workspacesSectionHeaderElement = <WorkspacesSectionHeader />;
 
 // Static styles for Animated.Views — must NOT use Unistyles dynamic theme to
 // avoid the "Unable to find node on an unmounted component" crash when Unistyles

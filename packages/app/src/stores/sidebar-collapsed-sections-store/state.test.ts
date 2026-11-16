@@ -4,8 +4,10 @@ import {
   mergePersistedCollapsedProjects,
   serializeCollapsedProjects,
   setProjectCollapsed,
+  toggleChatsCollapsed,
   togglePinnedCollapsed,
   toggleProjectCollapsed,
+  toggleProjectsSectionCollapsed,
   toggleWorkspaceGroupCollapsed,
 } from "@/stores/sidebar-collapsed-sections-store/state";
 
@@ -14,6 +16,8 @@ function emptyState(): CollapsedProjectsState {
     collapsedProjectKeys: new Set(),
     collapsedWorkspaceGroupKeys: new Set(),
     collapsedPinned: false,
+    collapsedProjects: false,
+    collapsedChats: false,
   };
 }
 
@@ -35,13 +39,30 @@ describe("sidebar collapsed projects transitions", () => {
       collapsedProjectKeys: new Set(["project-a", "project-b"]),
       collapsedWorkspaceGroupKeys: new Set(["running"]),
       collapsedPinned: true,
+      collapsedProjects: true,
+      collapsedChats: true,
     };
 
     expect(serializeCollapsedProjects(state)).toEqual({
       collapsedProjectKeys: ["project-a", "project-b"],
       collapsedWorkspaceGroupKeys: ["running"],
       collapsedPinned: true,
+      collapsedProjects: true,
+      collapsedChats: true,
     });
+    expect(
+      mergePersistedCollapsedProjects(serializeCollapsedProjects(state), emptyState()),
+    ).toEqual(state);
+  });
+
+  it("collapses Projects and Conversations independently and keeps each project's own state", () => {
+    let state = setProjectCollapsed(emptyState(), "project-a", true);
+    state = toggleProjectsSectionCollapsed(state);
+    expect(state).toMatchObject({ collapsedProjects: true, collapsedChats: false });
+    state = toggleChatsCollapsed(state);
+    state = toggleProjectsSectionCollapsed(state);
+    expect(state).toMatchObject({ collapsedProjects: false, collapsedChats: true });
+    expect(Array.from(state.collapsedProjectKeys)).toEqual(["project-a"]);
   });
 
   it("toggles and restores the pinned section collapse flag", () => {
@@ -50,6 +71,8 @@ describe("sidebar collapsed projects transitions", () => {
 
     const restored = mergePersistedCollapsedProjects({ collapsedPinned: true }, emptyState());
     expect(restored.collapsedPinned).toBe(true);
+    expect(restored.collapsedProjects).toBe(false);
+    expect(restored.collapsedChats).toBe(false);
   });
 
   it("rejects the complete value when a persisted project key is invalid", () => {

@@ -1,5 +1,5 @@
 import { type ReactNode, useCallback } from "react";
-import { Import, Plus } from "lucide-react-native";
+import { Import, Plus, SquarePen } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
@@ -101,6 +101,29 @@ export function SidebarProjectEmptyState({
         onPress={onImportSession}
       >
         {t("importSession.title")}
+      </Button>
+    </SidebarEmptyStateCard>
+  );
+}
+
+export function SidebarChatsEmptyState({ onNewChat }: { onNewChat: () => void }) {
+  const { t } = useTranslation();
+
+  return (
+    <SidebarEmptyStateCard
+      testID="sidebar-chats-empty-state"
+      title={t("sidebar.conversations.empty.title")}
+      description={t("sidebar.conversations.empty.description")}
+    >
+      <Button
+        variant="secondary"
+        size="sm"
+        leftIcon={SquarePen}
+        style={styles.action}
+        textStyle={styles.actionText}
+        onPress={onNewChat}
+      >
+        {t("newWorkspace.title")}
       </Button>
     </SidebarEmptyStateCard>
   );

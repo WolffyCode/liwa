@@ -30,11 +30,31 @@ function project(projectKey: string, workspaces: SidebarWorkspacePlacement[]): S
 }
 
 describe("splitPinnedSidebarGroups", () => {
+  it("moves a pinned independent chat to Pinned once, without a project section", () => {
+    const pinned: SidebarWorkspacePlacement = { ...placement("chat-pinned"), purpose: "chat" };
+    const unpinned: SidebarWorkspacePlacement = { ...placement("chat-unpinned"), purpose: "chat" };
+    const result = splitPinnedSidebarGroups({
+      projects: [],
+      independentChats: [pinned, unpinned],
+      keys: {
+        pinnedWorkspaceKeys: [pinned.workspaceKey],
+        pinnedAtByKey: { [pinned.workspaceKey]: "2026-11-15T00:00:00Z" },
+      },
+      pinnedWorkspaceOrder: [],
+    });
+    expect(result).toEqual({
+      pinnedChats: [pinned],
+      unpinnedProjects: [],
+      independentChats: [unpinned],
+    });
+  });
+
   it("keeps the project shell reachable when every chat is pinned", () => {
     const only = placement("w1");
     const projects = [project("p1", [only])];
     const result = splitPinnedSidebarGroups({
       projects,
+      independentChats: [],
       keys: {
         pinnedWorkspaceKeys: ["w1"],
         pinnedAtByKey: { w1: "2026-01-01T00:00:00Z" },
@@ -49,6 +69,7 @@ describe("splitPinnedSidebarGroups", () => {
     const projects = [project("p1", [])];
     const result = splitPinnedSidebarGroups({
       projects,
+      independentChats: [],
       keys: { pinnedWorkspaceKeys: [], pinnedAtByKey: {} },
       pinnedWorkspaceOrder: [],
     });
@@ -59,6 +80,7 @@ describe("splitPinnedSidebarGroups", () => {
     const projects = [project("p1", [placement("w1"), placement("w2")])];
     const result = splitPinnedSidebarGroups({
       projects,
+      independentChats: [],
       keys: {
         pinnedWorkspaceKeys: ["w1"],
         pinnedAtByKey: { w1: "2026-01-01T00:00:00Z" },
@@ -73,6 +95,7 @@ describe("splitPinnedSidebarGroups", () => {
     const projects = [project("p1", [placement("older"), placement("newer")])];
     const result = splitPinnedSidebarGroups({
       projects,
+      independentChats: [],
       keys: {
         pinnedWorkspaceKeys: ["older", "newer"],
         pinnedAtByKey: {
@@ -93,6 +116,7 @@ describe("splitPinnedSidebarGroups", () => {
     const projects = [project("p1", [placement("older"), placement("newer"), placement("new")])];
     const result = splitPinnedSidebarGroups({
       projects,
+      independentChats: [],
       keys: {
         pinnedWorkspaceKeys: ["older", "newer", "new"],
         pinnedAtByKey: {

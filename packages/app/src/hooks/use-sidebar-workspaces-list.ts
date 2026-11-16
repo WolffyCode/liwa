@@ -5,11 +5,12 @@ import { useCreateFlowStore } from "@/stores/create-flow-store";
 import { useSessionStore } from "@/stores/session-store";
 import { useWorkspaceDirectoryServerIds } from "@/stores/session-store-hooks";
 import { workspaceEqualityFns } from "@/stores/session-store-hooks/selectors";
-import { useWorkspaceStructure } from "@/stores/session-store-hooks";
+import { useWorkspaceChats, useWorkspaceStructure } from "@/stores/session-store-hooks";
 import { getHostRuntimeStore, useHostRegistryLoaded, useHosts } from "@/runtime/host-runtime";
 import { useSidebarOrderStore } from "@/stores/sidebar-order-store";
 import { useSidebarViewStore } from "@/stores/sidebar-view-store";
 import {
+  createSidebarChatPlacement,
   createSidebarWorkspacePlacementSelector,
   computeSidebarOrderUpdates,
   createSidebarWorkspaceEntry,
@@ -87,8 +88,11 @@ const EMPTY_PROJECT_NAMES = new Map<string, string>();
 
 export interface SidebarWorkspacesListResult {
   workspaceSortSupported: boolean;
+  /** Every row the sidebar can show: project workspaces, then independent chats. */
   workspacePlacements: SidebarWorkspacePlacement[];
   projects: SidebarProjectEntry[];
+  /** Independent chats, most recent prompt first. They belong to no project. */
+  chats: SidebarWorkspacePlacement[];
   projectNamesByViewKey: Map<string, string>;
   isLoading: boolean;
   isInitialLoad: boolean;
@@ -156,9 +160,20 @@ export function useSidebarWorkspacesList(options?: {
     [hostProjects, selectPlacements],
   );
 
+  const structureChats = useWorkspaceChats(directoryServerIds);
+  const chats = useMemo(
+    () =>
+      structureChats.length > 0 ? structureChats.map(createSidebarChatPlacement) : EMPTY_WORKSPACES,
+    [structureChats],
+  );
+
   const projects = sidebarModel.projects.length > 0 ? sidebarModel.projects : EMPTY_PROJECTS;
-  const workspacePlacements =
-    sidebarModel.workspaces.length > 0 ? sidebarModel.workspaces : EMPTY_WORKSPACES;
+  const workspacePlacements = useMemo(() => {
+    if (chats.length === 0) {
+      return sidebarModel.workspaces.length > 0 ? sidebarModel.workspaces : EMPTY_WORKSPACES;
+    }
+    return [...sidebarModel.workspaces, ...chats];
+  }, [chats, sidebarModel.workspaces]);
   const projectNamesByViewKey =
     sidebarModel.projectNamesByViewKey.size > 0
       ? sidebarModel.projectNamesByViewKey
@@ -203,6 +218,7 @@ export function useSidebarWorkspacesList(options?: {
     workspaceSortSupported,
     workspacePlacements,
     projects,
+    chats,
     projectNamesByViewKey,
     ...loadingState,
     refreshAll,

@@ -9,6 +9,7 @@ import {
   buildSidebarWorkspacePlacementModel,
   buildSidebarProjectsFromStructure,
   computeSidebarOrderUpdates,
+  createSidebarChatPlacement,
   createSidebarWorkspacePlacementSelector,
   createSidebarWorkspaceEntry,
   deriveProjectStatusBucket,
@@ -52,6 +53,60 @@ function workspaceWithForge(forge: string | undefined, prUrl: string): Workspace
     },
   };
 }
+
+describe("independent chat rows", () => {
+  it("carry no Git metadata even when an enclosing repository reports it", () => {
+    const entry = createSidebarWorkspaceEntry({
+      serverId: "srv",
+      workspace: {
+        ...workspaceWithForge(undefined, "https://github.com/acme/repo/pull/42"),
+        purpose: "chat",
+        workspaceKind: "directory",
+        diffStat: { additions: 120, deletions: 12 },
+        gitRuntime: {
+          currentBranch: "main",
+          remoteUrl: "git@github.com:acme/repo.git",
+          isPaseoOwnedWorktree: false,
+          isDirty: true,
+          aheadBehind: null,
+          aheadOfOrigin: 3,
+          behindOfOrigin: 0,
+        },
+      },
+    });
+    expect(entry).toMatchObject({
+      purpose: "chat",
+      currentBranch: null,
+      diffStat: null,
+      prHint: null,
+      archiveHasUncommittedChanges: null,
+      archiveUnpushedCommitCount: null,
+    });
+  });
+
+  it("are placed by their own identity, keyed to a private project row nobody renders", () => {
+    expect(
+      createSidebarChatPlacement({
+        workspaceKey: "srv:wks_chat",
+        serverId: "srv",
+        workspaceId: "wks_chat",
+        projectId: "prj_chats",
+        projectName: "Chats",
+        name: "Trip ideas",
+      }),
+    ).toEqual({
+      workspaceKey: "srv:wks_chat",
+      serverId: "srv",
+      workspaceId: "wks_chat",
+      projectViewKey: JSON.stringify(["srv", "prj_chats"]),
+      projectName: "Chats",
+      projectKind: "non_git",
+      workspaceKind: "directory",
+      purpose: "chat",
+      name: "Trip ideas",
+    });
+  });
+});
 
 describe("createSidebarWorkspaceEntry forge threading", () => {
   it("threads a gitlab summary forge onto the prHint", () => {

@@ -24,6 +24,7 @@ import { DiffStat } from "@/components/diff-stat";
 import { Pressable } from "react-native";
 import type { GestureResponderEvent } from "react-native";
 import type { SidebarWorkspaceEntry } from "@/hooks/use-sidebar-workspaces-list";
+import { getRevealableWorkspaceDirectory } from "@/hooks/sidebar-workspaces-view-model";
 import type { PrHint } from "@/git/use-pr-status-query";
 import { openExternalUrl } from "@/utils/open-external-url";
 import { copyToClipboard } from "@/utils/copy-to-clipboard";
@@ -114,7 +115,7 @@ function WorkspaceHoverCardContent({
           testID="hover-card-workspace-branch"
         />
       ) : null}
-      {workspace.workspaceDirectoryLabel ? (
+      {getRevealableWorkspaceDirectory(workspace) && workspace.workspaceDirectoryLabel ? (
         <CopyableInfoRow
           icon={ThemedFolder}
           value={workspace.workspaceDirectoryLabel}

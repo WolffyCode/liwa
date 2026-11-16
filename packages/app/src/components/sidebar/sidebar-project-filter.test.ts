@@ -55,6 +55,16 @@ describe("resolveActiveProjectFilters", () => {
 });
 
 describe("filterWorkspacesByProjects", () => {
+  test("narrows ordinary projects and leaves independent chats visible", () => {
+    const chat: SidebarWorkspaceEntry = { ...workspace("chat", "private-chats"), purpose: "chat" };
+    expect(
+      filterWorkspacesByProjects({
+        workspaces: [workspace("one", "alpha"), workspace("two", "beta"), chat],
+        projectFilters: ["alpha"],
+      }).map((entry) => entry.workspaceId),
+    ).toEqual(["one", "chat"]);
+  });
+
   const workspaces = [
     workspace("one", "alpha"),
     workspace("two", "alpha"),

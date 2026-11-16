@@ -20,6 +20,8 @@ export interface PinnedSidebarGroups {
   pinnedChats: SidebarWorkspacePlacement[];
   // Everything else, with pinned chats removed. Feeds the draggable project list.
   unpinnedProjects: SidebarProjectEntry[];
+  // Independent chats that are not pinned; a pinned one is only in pinnedChats.
+  independentChats: SidebarWorkspacePlacement[];
 }
 
 function projectWithoutPinnedWorkspaces(
@@ -35,19 +37,17 @@ function projectWithoutPinnedWorkspaces(
 }
 
 function buildPinnedSidebarKeys(
-  projects: SidebarProjectEntry[],
+  placements: readonly SidebarWorkspacePlacement[],
   workspaceMaps: ReadonlyMap<string, ReadonlyMap<string, { pinnedAt?: string | null }>>,
 ): PinnedSidebarKeys {
   const pinnedWorkspaceKeys: string[] = [];
   const pinnedAtByKey: Record<string, string> = {};
 
-  for (const project of projects) {
-    for (const placement of project.workspaces) {
-      const workspace = workspaceMaps.get(placement.serverId)?.get(placement.workspaceId);
-      if (workspace?.pinnedAt) {
-        pinnedWorkspaceKeys.push(placement.workspaceKey);
-        pinnedAtByKey[placement.workspaceKey] = workspace.pinnedAt;
-      }
+  for (const placement of placements) {
+    const workspace = workspaceMaps.get(placement.serverId)?.get(placement.workspaceId);
+    if (workspace?.pinnedAt) {
+      pinnedWorkspaceKeys.push(placement.workspaceKey);
+      pinnedAtByKey[placement.workspaceKey] = workspace.pinnedAt;
     }
   }
   return { pinnedWorkspaceKeys, pinnedAtByKey };
@@ -69,19 +69,16 @@ function arePinnedSidebarKeysEqual(left: PinnedSidebarKeys, right: PinnedSidebar
   return true;
 }
 
-export function usePinnedSidebarKeys(projects: SidebarProjectEntry[]): PinnedSidebarKeys {
+export function usePinnedSidebarKeys(
+  placements: readonly SidebarWorkspacePlacement[],
+): PinnedSidebarKeys {
   const previousKeysRef = useRef<PinnedSidebarKeys>({
     pinnedWorkspaceKeys: [],
     pinnedAtByKey: {},
   });
   const serverIds = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          projects.flatMap((project) => project.workspaces.map((workspace) => workspace.serverId)),
-        ),
-      ),
-    [projects],
+    () => Array.from(new Set(placements.map((workspace) => workspace.serverId))),
+    [placements],
   );
   const workspaceMaps = useStoreWithEqualityFn(
     useSessionStore,
@@ -100,25 +97,26 @@ export function usePinnedSidebarKeys(projects: SidebarProjectEntry[]): PinnedSid
         workspaceMapByServerId.set(serverId, workspaceMap);
       }
     }
-    const nextKeys = buildPinnedSidebarKeys(projects, workspaceMapByServerId);
+    const nextKeys = buildPinnedSidebarKeys(placements, workspaceMapByServerId);
     if (arePinnedSidebarKeysEqual(previousKeysRef.current, nextKeys)) {
       return previousKeysRef.current;
     }
     previousKeysRef.current = nextKeys;
     return nextKeys;
-  }, [projects, serverIds, workspaceMaps]);
+  }, [placements, serverIds, workspaceMaps]);
 }
 
 // Splits the sidebar into a dedicated Pinned section (chats) and the regular list below.
 // Pinned chats are ordered most-recently-pinned first.
 export function splitPinnedSidebarGroups(input: {
   projects: SidebarProjectEntry[];
+  independentChats: SidebarWorkspacePlacement[];
   keys: PinnedSidebarKeys;
   pinnedWorkspaceOrder: string[];
 }): PinnedSidebarGroups {
-  const { projects, keys, pinnedWorkspaceOrder } = input;
+  const { projects, independentChats, keys, pinnedWorkspaceOrder } = input;
   if (keys.pinnedWorkspaceKeys.length === 0) {
-    return { pinnedChats: [], unpinnedProjects: projects };
+    return { pinnedChats: [], unpinnedProjects: projects, independentChats };
   }
   const pinnedWorkspaceKeySet = new Set(keys.pinnedWorkspaceKeys);
   const pinnedChats: SidebarWorkspacePlacement[] = [];
@@ -131,6 +129,14 @@ export function splitPinnedSidebarGroups(input: {
       }
     }
     unpinnedProjects.push(projectWithoutPinnedWorkspaces(project, pinnedWorkspaceKeySet));
+  }
+  const unpinnedIndependentChats: SidebarWorkspacePlacement[] = [];
+  for (const chat of independentChats) {
+    if (pinnedWorkspaceKeySet.has(chat.workspaceKey)) {
+      pinnedChats.push(chat);
+    } else {
+      unpinnedIndependentChats.push(chat);
+    }
   }
 
   pinnedChats.sort((a, b) =>
@@ -146,5 +152,6 @@ export function splitPinnedSidebarGroups(input: {
       getKey: (workspace) => workspace.workspaceKey,
     }),
     unpinnedProjects,
+    independentChats: unpinnedIndependentChats,
   };
 }
