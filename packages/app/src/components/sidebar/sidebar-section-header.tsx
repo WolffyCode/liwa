@@ -1,5 +1,5 @@
 import { PressHighlight as Pressable } from "@/components/ui/press-highlight";
-import { useMemo, type ComponentProps, type ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react-native";
 import { ToolbarButton } from "@/components/ui/pane-content-toolbar";
 import { Text, View } from "react-native";
@@ -75,12 +75,12 @@ function CollapsibleTitle({
   testID?: string;
 }) {
   const isCompact = useIsCompactFormFactor();
-  const accessibilityState = useMemo(() => ({ expanded: !collapsed }), [collapsed]);
 
   return (
+    // aria-expanded reaches both platforms; react-native-web drops accessibilityState.
     <Pressable
       accessibilityRole="button"
-      accessibilityState={accessibilityState}
+      aria-expanded={!collapsed}
       onPress={onToggle}
       style={styles.toggle}
       testID={testID}
