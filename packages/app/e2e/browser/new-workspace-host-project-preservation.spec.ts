@@ -221,10 +221,17 @@ test.describe("New workspace host project preservation", () => {
 
     await expectNewWorkspaceProjectSelected(page, SHARED_PROJECT_NAME);
 
+    // A manual choice lives in the form, and a global New conversation route carries no directory,
+    // so after the reload the project is chosen again before switching hosts.
     await addConnectedHostsAndReload(page, [crossHostProject.secondaryHost], {
       primaryLabel: PRIMARY_HOST_LABEL,
     });
-    await expectNewWorkspaceProjectSelected(page, SHARED_PROJECT_NAME);
+    await expectNewWorkspaceProjectSelected(page, "Workspace directory (optional)");
+    await selectNewWorkspaceProject(page, {
+      projectKey: crossHostProject.sharedProjectKey,
+      projectViewKey: crossHostProject.selectedProjectViewKey,
+      projectDisplayName: SHARED_PROJECT_NAME,
+    });
     await selectNewWorkspaceHost(page, SECONDARY_HOST_LABEL);
 
     await expectNewWorkspaceProjectSelected(page, SHARED_PROJECT_NAME);
