@@ -91,6 +91,29 @@ describe("project commands", () => {
     expect(result.data[0]?.projectId).toBe("project-1");
   });
 
+  it("omits the private project that backs independent chats", async () => {
+    listProjects.mockResolvedValueOnce({
+      projects: [
+        project,
+        {
+          projectId: "project-chats",
+          purpose: "chat" as const,
+          projectDisplayName: "Chats",
+          projectCustomName: null,
+          projectRootPath: "/tmp/.paseo/chats",
+          projectKind: "non_git" as const,
+        },
+      ],
+    });
+
+    const result = await runLsCommand(
+      { daemonTarget: { kind: "instance", home: "/tmp/project-test" } },
+      {} as never,
+    );
+
+    expect(result.data.map((row) => row.projectId)).toEqual(["project-1"]);
+  });
+
   it("renames and resets a project", async () => {
     expect(resolveProjectName({ name: "  New name  " })).toBe("New name");
     expect(resolveProjectName({ reset: true })).toBeNull();

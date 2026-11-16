@@ -13,9 +13,11 @@ export async function runLsCommand(
 
   try {
     const payload = await client.listProjects();
+    // The project that backs independent chats is daemon-private, not one the user added.
+    const userProjects = payload.projects.filter((project) => project.purpose !== "chat");
     return {
       type: "list",
-      data: payload.projects.map(toProjectRow),
+      data: userProjects.map(toProjectRow),
       schema: projectSchema,
     };
   } finally {
