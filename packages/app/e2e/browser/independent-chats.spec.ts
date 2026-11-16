@@ -22,7 +22,6 @@ import {
   expectWorkspaceAbsentFromSidebar,
   pinWorkspaceFromSidebar,
 } from "../support/helpers/sidebar";
-import { waitForSidebarHydration } from "../support/helpers/workspace-ui";
 
 // Independent chats: New conversation without a workspace directory. The daemon backs each chat
 // with a private directory under $PASEO_HOME/chats; the sidebar lists it under Conversations and
@@ -58,12 +57,17 @@ async function expectNewConversationWithoutDirectory(page: Page): Promise<void> 
   expect(url.searchParams.has("projectId")).toBe(false);
 }
 
+// On a desktop-width sidebar Rename edits the title in place; Enter saves it.
 async function renameChatFromSidebar(page: Page, chatKey: string, title: string): Promise<void> {
   await page.getByTestId(`sidebar-workspace-row-${chatKey}`).hover();
   await page.getByTestId(`sidebar-workspace-kebab-${chatKey}`).click();
   await page.getByTestId(`sidebar-workspace-menu-rename-${chatKey}`).click();
-  await page.getByTestId(`sidebar-workspace-rename-modal-${chatKey}-input`).fill(title);
-  await page.getByTestId(`sidebar-workspace-rename-modal-${chatKey}-submit`).click();
+  const input = page.getByTestId(`sidebar-workspace-rename-input-${chatKey}`);
+  await expect(input).toBeFocused();
+  // The whole title is selected, so typing replaces it.
+  await page.keyboard.type(title);
+  await page.keyboard.press("Enter");
+  await expect(input).toHaveCount(0, { timeout: 15_000 });
 }
 
 test("a conversation without a directory lives under Conversations until it is archived into History", async ({
@@ -73,12 +77,13 @@ test("a conversation without a directory lives under Conversations until it is a
   test.setTimeout(180_000);
   const message = "Independent chat about system design";
   await gotoAppShell(page);
-  await waitForSidebarHydration(page);
 
   const pinnedSection = page.getByTestId("sidebar-pinned-section");
   const projectsHeader = page.getByTestId("sidebar-projects-section-header");
   const chatsSection = page.getByTestId("sidebar-chats-section");
   const chatsHeader = page.getByTestId("sidebar-chats-section-header");
+  // The worker daemon starts without projects, so the sections, not a project row, mark hydration.
+  await expect(chatsSection).toBeVisible({ timeout: 60_000 });
   await expect(pinnedSection).toBeVisible();
   await expect(projectsHeader).toHaveText(/Projects/);
   await expect(chatsSection).toContainText("Conversations");
@@ -118,6 +123,12 @@ test("a conversation without a directory lives under Conversations until it is a
     ).toHaveCount(0);
 
     // Closing the agent tab only changes the layout; the conversation and its agent stay.
+    // The close button only takes pointer events once its tab is hovered.
+    await page
+      .getByTestId(`workspace-tab-agent_${agentId}`)
+      .filter({ visible: true })
+      .first()
+      .hover();
     await closeWorkspaceAgentTab(page, agentId);
     const afterClose = (await e2eWorkerClient.fetchAgents()).entries.find(
       (entry) => entry.agent.id === agentId,
@@ -129,8 +140,7 @@ test("a conversation without a directory lives under Conversations until it is a
     await chatsHeader.click();
     await expect(chatRow).toHaveCount(0);
     await page.reload();
-    await waitForSidebarHydration(page);
-    await expect(chatsHeader).toHaveAttribute("aria-expanded", "false");
+    await expect(chatsHeader).toHaveAttribute("aria-expanded", "false", { timeout: 60_000 });
     await expect(projectsHeader).toHaveAttribute("aria-expanded", "true");
     await expect(chatRow).toHaveCount(0);
     await chatsHeader.click();
