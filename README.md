@@ -1,3 +1,5 @@
+> **liwa（灵鲸）** 是基于 Paseo 的个人 agent 客户端，产品说明见 [`docs/liwa/`](docs/liwa/README.md)。以下是 Paseo 原有的说明；许可证与署名见 [`LICENSE`](LICENSE) 和 [`NOTICE`](NOTICE)。
+
 <p align="center">
   <img src="packages/website/public/logo.svg" width="64" height="64" alt="Paseo logo">
 </p>
