@@ -52,6 +52,7 @@ import { AgentProviderSchema } from "./provider-manifest.js";
 import { ProviderPaseoToolsPolicySchema } from "./provider-config.js";
 import { TOOL_CALL_ICON_NAMES } from "./agent-types.js";
 import { WORKSPACE_LABEL_COLORS } from "./workspace-labels.js";
+import { WorkspacePurposeSchema } from "./workspace-purpose.js";
 import {
   ChatCreateRequestSchema,
   ChatListRequestSchema,
@@ -2954,6 +2955,9 @@ export const WorkspaceCreateRequestSchema = z.object({
   background: z.boolean().optional(),
   callerAgentId: z.string().optional(),
   source: z.discriminatedUnion("kind", [
+    // An independent chat. The daemon allocates its private directory, so the
+    // caller supplies no path. Gate on `features.independentChats`.
+    z.object({ kind: z.literal("chat") }),
     z.object({
       kind: z.literal("directory"),
       // Path of the existing checkout/directory to back the workspace.
@@ -4070,6 +4074,8 @@ export const ServerInfoStatusPayloadSchema = z
         workspacePinning: z.boolean().optional(),
         // COMPAT(workspaceMarkUnread): added in v0.5.0, remove after 2027-08-20.
         workspaceMarkUnread: z.boolean().optional(),
+        // COMPAT(independentChats): added after v0.16.0-beta.2, remove gate after 2027-05-15.
+        independentChats: z.boolean().optional(),
         // COMPAT(hubRelationship): added in v0.1.X, drop the gate when floor >= v0.1.X.
         hubRelationship: z.boolean().optional(),
         // COMPAT(relayProtectedSecurity): added in v0.13.0. A capable daemon always advertises
@@ -4454,6 +4460,7 @@ export const WorkspaceDescriptorPayloadSchema = z
     projectKind: z.enum(["git", "non_git", "directory"]),
     // COMPAT(workspaces): keep legacy directory workspace kind parseable.
     workspaceKind: z.enum(["directory", "local_checkout", "checkout", "worktree"]),
+    purpose: WorkspacePurposeSchema.optional(),
     name: z.string(),
     // COMPAT(workspaceTitles): added in v0.1.97, drop the optional gate when floor >= v0.1.97.
     // When the user has titled a workspace, `name` carries the resolved value
@@ -4638,6 +4645,7 @@ export const FetchRecentProviderSessionsResponseMessageSchema = z.object({
 // workspace is archived.
 export const WorkspaceProjectDescriptorPayloadSchema = z.object({
   projectId: z.string(),
+  purpose: WorkspacePurposeSchema.optional(),
   // COMPAT(projectKey): added in v0.2.4 on 2026-07-28; remove optional after 2027-01-28.
   projectKey: z.string().optional(),
   projectDisplayName: z.string(),

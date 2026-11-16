@@ -17,8 +17,10 @@ export interface CreationResult {
   setupSkippedReason?: string;
   requestId?: string;
 }
+const INDEPENDENT_CHATS_UNSUPPORTED = "Update the host to create independent chats.";
+
 interface Dependencies {
-  supports: (feature: "creationLifecycle" | "agentRequestReceipts") => boolean;
+  supports: (feature: "creationLifecycle" | "agentRequestReceipts" | "independentChats") => boolean;
   requestId: () => string;
   request: (kind: Kind, input: Record<string, unknown>) => Promise<CreationResult>;
   observe: (
@@ -59,7 +61,15 @@ export class CreationClient {
   }
   createWorkspace(input: CreateWorkspaceRequestOptions): Promise<CreationResult> {
     const { onEvent, ...request } = input;
+    // A host without the capability would reject the source, or an older one would
+    // misread it; refuse before any request so nothing substitutes a project workspace.
+    if (request.source.kind === "chat" && !this.deps.supports("independentChats")) {
+      return Promise.reject(new Error(INDEPENDENT_CHATS_UNSUPPORTED));
+    }
     return this.start("workspace", request, onEvent, async (operation) => {
+      // Every host with independent chats has the creation lifecycle, so this branch
+      // only narrows the source for the legacy sequence below.
+      if (request.source.kind === "chat") throw new Error(INDEPENDENT_CHATS_UNSUPPORTED);
       if (request.workspaceId || request.agent?.agentId)
         throw new Error("Update the host to use caller-selected creation IDs.");
       const { agent, ...workspaceInput } = request;

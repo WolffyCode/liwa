@@ -634,6 +634,72 @@ describe("workspace message schemas", () => {
     ]);
   });
 
+  test("creates an independent chat without a caller-selected directory", () => {
+    const request = {
+      type: "workspace.create.request",
+      requestId: "chat-create",
+      source: { kind: "chat" },
+    };
+    expect(WorkspaceCreateRequestSchema.parse(request)).toEqual(request);
+    expect(
+      WorkspaceCreateRequestSchema.parse({
+        ...request,
+        source: { kind: "chat", path: "/tmp/override" },
+      }).source,
+    ).toEqual({ kind: "chat" });
+  });
+
+  test("carries the chat purpose on workspace and project directory payloads", () => {
+    const parsed = SessionOutboundMessageSchema.parse({
+      type: "workspace_update",
+      payload: {
+        kind: "upsert",
+        workspace: {
+          id: "chat-workspace",
+          projectId: "chat-project",
+          projectDisplayName: "Chats",
+          projectRootPath: "/home/.paseo/chats",
+          workspaceDirectory: "/home/.paseo/chats/wks_0000000000000001",
+          projectKind: "non_git",
+          workspaceKind: "directory",
+          purpose: "chat",
+          name: "Trip ideas",
+          status: "done",
+          activityAt: null,
+          scripts: [],
+        },
+      },
+    });
+    if (parsed.type !== "workspace_update" || parsed.payload.kind !== "upsert") {
+      throw new Error("Expected workspace_update upsert payload");
+    }
+    expect(parsed.payload.workspace.purpose).toBe("chat");
+
+    const project = SessionOutboundMessageSchema.parse({
+      type: "project.add.response",
+      payload: {
+        requestId: "req-chat-project",
+        project: {
+          projectId: "chat-project",
+          purpose: "chat",
+          projectDisplayName: "Chats",
+          projectCustomName: null,
+          projectRootPath: "/home/.paseo/chats",
+          projectKind: "non_git",
+        },
+        error: null,
+      },
+    });
+    if (project.type !== "project.add.response") throw new Error("Expected project.add.response");
+    expect(project.payload.project?.purpose).toBe("chat");
+    expect(
+      WorkspaceDescriptorPayloadSchema.safeParse({
+        ...parsed.payload.workspace,
+        purpose: "notes",
+      }).success,
+    ).toBe(false);
+  });
+
   test("preserves informational workspace parentage in directory updates", () => {
     const workspace = {
       id: "child",
