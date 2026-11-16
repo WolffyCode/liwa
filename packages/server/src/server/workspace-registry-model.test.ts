@@ -154,6 +154,35 @@ describe("workspace placement", () => {
     });
   });
 
+  test("leaves a chat workspace's placement alone inside an enclosing Git checkout", () => {
+    const workspace = createPersistedWorkspaceRecord({
+      workspaceId: "workspace-chat",
+      projectId: "project-chats",
+      cwd: "/repo/.paseo/chats/workspace-chat",
+      kind: "directory",
+      purpose: "chat",
+      displayName: "Trip ideas",
+      createdAt: "2026-03-01T00:00:00.000Z",
+      updatedAt: "2026-03-01T00:00:00.000Z",
+    });
+
+    const update = reconcileWorkspacePlacement({
+      workspace,
+      checkout: {
+        cwd: workspace.cwd,
+        isGit: true,
+        currentBranch: "main",
+        remoteUrl: "git@github.com:acme/repo.git",
+        worktreeRoot: "/repo",
+        isPaseoOwnedWorktree: false,
+        mainRepoRoot: "/repo",
+      },
+      updatedAt: "2026-03-02T00:00:00.000Z",
+    });
+
+    expect(update).toBeNull();
+  });
+
   test("projects persisted placement to the wire checkout", () => {
     const workspace = createPersistedWorkspaceRecord({
       workspaceId: "workspace-one",

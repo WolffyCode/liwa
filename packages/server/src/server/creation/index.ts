@@ -12,6 +12,13 @@ import {
 import { writeFileAtomic } from "../atomic-file.js";
 import { generateWorkspaceId } from "../workspace-registry-model.js";
 
+// Failures that prove nothing was provisioned, so the same operation may run again.
+const REJECTED_BEFORE_PROVISION_CODES: ReadonlySet<string> = new Set([
+  "directory_not_found",
+  "source_required",
+  "chat_directory_unavailable",
+]);
+
 type Observer = (snapshot: CreationSnapshot) => void;
 export interface CreatedAgent {
   agent: AgentSnapshotPayload;
@@ -198,7 +205,8 @@ export class CreationService {
         error instanceof Error && "code" in error && typeof error.code === "string"
           ? error.code
           : undefined;
-      const rejectedBeforeProvision = code === "directory_not_found" || code === "source_required";
+      const rejectedBeforeProvision =
+        code !== undefined && REJECTED_BEFORE_PROVISION_CODES.has(code);
       const unknown =
         stage === "prompt" ||
         (stage === "workspace" && !rejectedBeforeProvision) ||

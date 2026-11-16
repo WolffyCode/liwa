@@ -281,6 +281,32 @@ describe("workspace registries", () => {
     expect(opaque.projectId).toMatch(/^prj_[0-9a-f]{16}$/);
   });
 
+  test("keeps chat and ordinary projects from taking over each other's root", async () => {
+    await projectRegistry.initialize();
+    const input = {
+      rootPath: path.join(tmpDir, "chats"),
+      kind: "non_git" as const,
+      displayName: "chats",
+      timestamp: "2026-11-15T00:00:00.000Z",
+    };
+    const ordinary = await projectRegistry.getOrCreateActiveByRoot(input);
+    await expect(
+      projectRegistry.getOrCreateActiveByRoot({ ...input, purpose: "chat" }),
+    ).rejects.toMatchObject({ code: "project_purpose_conflict", projectId: ordinary.projectId });
+    expect(await projectRegistry.get(ordinary.projectId)).toEqual(ordinary);
+
+    const chatRoot = { ...input, rootPath: path.join(tmpDir, "private-chats") };
+    const chats = await projectRegistry.getOrCreateActiveByRoot({ ...chatRoot, purpose: "chat" });
+    expect(chats.purpose).toBe("chat");
+    expect(await projectRegistry.getOrCreateActiveByRoot({ ...chatRoot, purpose: "chat" })).toEqual(
+      chats,
+    );
+    await expect(projectRegistry.getOrCreateActiveByRoot(chatRoot)).rejects.toMatchObject({
+      code: "project_purpose_conflict",
+      projectId: chats.projectId,
+    });
+  });
+
   test("allocates a fresh opaque ID when only an archived exact root exists", async () => {
     await projectRegistry.initialize();
     const rootPath = path.join(tmpDir, "archived-root");

@@ -1295,6 +1295,65 @@ describe("WorkspaceReconciliationService", () => {
     expect(projects.get("p1")!.kind).toBe("git");
   });
 
+  test("never turns a chat project or its workspace into a checkout of an enclosing repo", async () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "reconcile-chat-home-"));
+    const resolved = realpathSync(dir);
+    tempDirs.push(resolved);
+    writeFileSync(path.join(resolved, "README.md"), "# Test\n");
+    initGitRepoInDir(resolved);
+    const chatsRoot = path.join(resolved, "chats");
+    const chatDirectory = path.join(chatsRoot, "w-chat");
+    mkdirSync(chatDirectory, { recursive: true });
+
+    const { projects, workspaces, projectRegistry, workspaceRegistry } = createTestRegistries();
+    const chatProject = createPersistedProjectRecord({
+      projectId: "p-chats",
+      rootPath: chatsRoot,
+      kind: "non_git",
+      purpose: "chat",
+      displayName: "Chats",
+      projectKey: "chats-key",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+    const chatWorkspace = createPersistedWorkspaceRecord({
+      workspaceId: "w-chat",
+      projectId: "p-chats",
+      cwd: chatDirectory,
+      kind: "directory",
+      purpose: "chat",
+      displayName: "Trip ideas",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+    projects.set("p-chats", chatProject);
+    workspaces.set("w-chat", chatWorkspace);
+
+    const service = new WorkspaceReconciliationService({
+      projectRegistry,
+      workspaceRegistry,
+      logger: createTestLogger(),
+      workspaceGitService: createWorkspaceGitServiceStub({
+        [chatsRoot]: {
+          projectKind: "git",
+          projectDisplayName: "repo",
+          workspaceDisplayName: "main",
+        },
+        [chatDirectory]: {
+          projectKind: "git",
+          projectDisplayName: "repo",
+          workspaceDisplayName: "main",
+        },
+      }),
+    });
+
+    const result = await service.runOnce();
+
+    expect(result.changesApplied).toEqual([]);
+    expect(projects.get("p-chats")).toEqual(chatProject);
+    expect(workspaces.get("w-chat")).toEqual(chatWorkspace);
+  });
+
   test("updates workspace kind when a directory becomes a git repo", async () => {
     const dir = mkdtempSync(path.join(tmpdir(), "reconcile-ws-kind-"));
     const resolved = realpathSync(dir);

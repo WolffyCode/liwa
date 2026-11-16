@@ -172,6 +172,7 @@ import {
   checkoutLiteFromGitSnapshot,
   checkoutFromPersistedWorkspacePlacement,
   deriveWorkspaceDisplayName,
+  generateWorkspaceId,
 } from "./workspace-registry-model.js";
 import { resolveWorkspaceIdForPath } from "./resolve-workspace-id-for-path.js";
 import {
@@ -243,7 +244,7 @@ import {
   matchesAgentUpdatesFilter,
   type AgentUpdatesService,
 } from "./session/agent-updates/agent-updates-service.js";
-import { expandTilde } from "../utils/path.js";
+import { expandTilde, isPathInsideRoot } from "../utils/path.js";
 import {
   searchDirectoryEntries,
   WORKSPACE_SEARCH_HIDDEN_DIRECTORIES,
@@ -312,6 +313,7 @@ import {
 import { runGitCommand } from "../utils/run-git-command.js";
 import { CreateAgentLifecycleDispatch } from "./agent/create-agent-lifecycle-dispatch.js";
 import { resolveWorktreeSourceCwd } from "./workspace-source.js";
+import { allocateChatDirectory } from "./chats/directory.js";
 
 type ProviderSubagentManagerEvent = Extract<
   AgentManagerEvent,
@@ -4710,6 +4712,27 @@ export class Session {
             ? async (id, workspace, onReady) => {
                 if (!workspace?.workspaceDirectory)
                   throw new Error("Created workspace has no directory");
+                const workspaceDirectory = workspace.workspaceDirectory;
+                const createInitialAgent = (cwd: string) =>
+                  this.createSessionAgent(
+                    {
+                      ...agentInput,
+                      type: "create_agent_request",
+                      requestId,
+                      config: { ...agentInput.config, cwd },
+                      workspaceId: workspace.id,
+                    },
+                    id,
+                    onReady,
+                  );
+                // The daemon owns a chat's directory, so the agent's cwd is read relative to it
+                // ("." is the chat itself) and cannot leave it.
+                if (request.source.kind === "chat") {
+                  const chatAgentCwd = resolve(workspaceDirectory, agentInput.config.cwd);
+                  if (!isPathInsideRoot(workspaceDirectory, chatAgentCwd))
+                    throw new Error("Agent directory must be inside the chat directory");
+                  return createInitialAgent(chatAgentCwd);
+                }
                 const sourceCwd =
                   request.source.kind === "directory"
                     ? request.source.path
@@ -4721,20 +4744,7 @@ export class Session {
                   isAbsolute(relativeCwd)
                 )
                   throw new Error("Agent directory must be inside the workspace source");
-                return this.createSessionAgent(
-                  {
-                    ...agentInput,
-                    type: "create_agent_request",
-                    requestId,
-                    config: {
-                      ...agentInput.config,
-                      cwd: resolve(workspace.workspaceDirectory, relativeCwd),
-                    },
-                    workspaceId: workspace.id,
-                  },
-                  id,
-                  onReady,
-                );
+                return createInitialAgent(resolve(workspaceDirectory, relativeCwd));
               }
             : undefined,
         },
@@ -6145,6 +6155,7 @@ export class Session {
       worktreeSlug,
       projectKind: (resolvedProjectRecord?.kind ?? "directory") === "git" ? "git" : "non_git",
       workspaceKind: workspace.kind,
+      ...(workspace.purpose ? { purpose: workspace.purpose } : {}),
       name: resolveWorkspaceDisplayName(workspace),
       title: workspace.title,
       pinnedAt: workspace.pinnedAt,
@@ -6421,6 +6432,7 @@ export class Session {
     const icon = await this.projectIcons.snapshot(project);
     return {
       projectId: project.projectId,
+      ...(project.purpose ? { purpose: project.purpose } : {}),
       ...(project.projectKey ? { projectKey: project.projectKey } : {}),
       projectDisplayName: resolveProjectDisplayName(project),
       projectCustomName: project.customName ?? null,
@@ -7350,9 +7362,46 @@ export class Session {
       const transformed = await this.pluginRuntime.before("workspace.create.before", input);
       creationRequest = { ...transformed, type, requestId };
     }
-    return creationRequest.source.kind === "directory"
-      ? this.handleWorkspaceCreateLocal(creationRequest, workspaceId)
-      : this.handleWorkspaceCreateWorktree(creationRequest, workspaceId);
+    switch (creationRequest.source.kind) {
+      case "chat":
+        return this.handleWorkspaceCreateChat(creationRequest, workspaceId);
+      case "directory":
+        return this.handleWorkspaceCreateLocal(creationRequest, workspaceId);
+      case "worktree":
+        return this.handleWorkspaceCreateWorktree(creationRequest, workspaceId);
+    }
+  }
+
+  private async handleWorkspaceCreateChat(
+    request: Extract<SessionInboundMessage, { type: "workspace.create.request" }>,
+    requestedWorkspaceId?: string,
+  ): Promise<WorkspaceDescriptorPayload> {
+    const workspaceId = requestedWorkspaceId ?? generateWorkspaceId();
+    const directory = await allocateChatDirectory({ paseoHome: this.paseoHome, workspaceId });
+    const workspace = await this.workspaceProvisioning.createWorkspaceForChat({
+      directory,
+      workspaceId,
+      title: request.title?.trim() || resolveFirstAgentPromptTitle(request.firstAgentContext),
+      metadata: request.metadata,
+      expectsInitialAgent: Boolean(request.firstAgentContext),
+      ...(await this.workspaceBackgroundIntent(request.background, request.callerAgentId)),
+    });
+    const descriptor = await this.describeWorkspaceRecord(workspace);
+    await this.emitCreatedWorkspaceUpdate(
+      descriptor,
+      request.firstAgentContext ? "running" : undefined,
+    );
+    if (request.firstAgentContext) {
+      this.workspaceAutoName.scheduleForDirectory(
+        {
+          workspaceId: workspace.workspaceId,
+          cwd: workspace.cwd,
+          firstAgentContext: request.firstAgentContext,
+        },
+        { currentSelection: this.getFocusedAgentSelectionForCwd(workspace.cwd) },
+      );
+    }
+    return descriptor;
   }
 
   private async handleWorkspaceCreateLocal(

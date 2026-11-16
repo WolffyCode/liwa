@@ -12,11 +12,13 @@ import {
 } from "../../workspace-registry-model.js";
 import {
   createPersistedWorkspaceRecord,
+  ProjectPurposeConflictError,
   type PersistedProjectRecord,
   type PersistedWorkspaceRecord,
   type ProjectRegistry,
   type WorkspaceRegistry,
 } from "../../workspace-registry.js";
+import type { ChatDirectory } from "../../chats/directory.js";
 import type { WorkspaceGitService } from "../../workspace-git-service.js";
 import type { CreatePaseoWorktreeWorkflowResult } from "../../worktree-session.js";
 import { deriveProjectKey } from "../../project-key.js";
@@ -60,6 +62,21 @@ export interface CreateWorktreeWorkspaceInput {
   callerWorkspaceId?: string;
 }
 
+export interface CreateChatWorkspaceInput {
+  directory: ChatDirectory;
+  workspaceId: string;
+  title: string | null;
+  metadata?: Record<string, JsonValue>;
+  expectsInitialAgent?: boolean;
+  background?: boolean;
+  callerWorkspaceId?: string;
+}
+
+// The private project and an untitled chat both need a name before anything better exists;
+// the first prompt or the generated title replaces the chat's.
+const CHAT_PROJECT_DISPLAY_NAME = "Chats";
+const CHAT_WORKSPACE_DISPLAY_NAME = "New chat";
+
 export interface WorkspaceProvisioningService {
   runInImportWorkspace<T>(
     input: ImportWorkspaceInput,
@@ -82,6 +99,7 @@ export interface WorkspaceProvisioningService {
   createWorkspaceForWorktree(
     input: CreateWorktreeWorkspaceInput,
   ): Promise<PersistedWorkspaceRecord>;
+  createWorkspaceForChat(input: CreateChatWorkspaceInput): Promise<PersistedWorkspaceRecord>;
   findOrCreateProjectForDirectory(cwd: string): Promise<PersistedProjectRecord>;
   ensureWorkspaceRecordUnarchived(
     workspace: PersistedWorkspaceRecord,
@@ -230,6 +248,8 @@ export function createWorkspaceProvisioningService(deps: {
     const project = await projectRegistry.get(projectId);
     if (!project) throw new WorkspaceProvisioningError("unknown_project", projectId);
     if (project.archivedAt) throw new WorkspaceProvisioningError("archived_project", projectId);
+    // Only chat allocation places workspaces in the private chat project.
+    if (project.purpose === "chat") throw new ProjectPurposeConflictError(projectId);
     return project;
   }
 
@@ -330,6 +350,43 @@ export function createWorkspaceProvisioningService(deps: {
     await workspaceRegistry.upsert(workspace, {
       expectsInitialAgent: input.expectsInitialAgent,
     });
+    emitWorkspaceCreated(workspace);
+    return workspace;
+  }
+
+  async function createWorkspaceForChat(
+    input: CreateChatWorkspaceInput,
+  ): Promise<PersistedWorkspaceRecord> {
+    const { rootPath, cwd } = input.directory;
+    const timestamp = new Date().toISOString();
+    const project = await projectRegistry.getOrCreateActiveByRoot({
+      rootPath,
+      kind: "non_git",
+      purpose: "chat",
+      displayName: CHAT_PROJECT_DISPLAY_NAME,
+      projectKey: deriveProjectKey({
+        rootPath,
+        remoteUrl: null,
+        worktreeRoot: null,
+        mainRepoRoot: null,
+        serverId,
+      }),
+      timestamp,
+    });
+    const workspace = createPersistedWorkspaceRecord({
+      workspaceId: input.workspaceId,
+      projectId: project.projectId,
+      cwd,
+      kind: "directory",
+      purpose: "chat",
+      displayName: CHAT_WORKSPACE_DISPLAY_NAME,
+      title: input.title,
+      metadata: input.metadata,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      ...(await resolveCreationMetadata(input)),
+    });
+    await workspaceRegistry.upsert(workspace, { expectsInitialAgent: input.expectsInitialAgent });
     emitWorkspaceCreated(workspace);
     return workspace;
   }
@@ -462,17 +519,9 @@ export function createWorkspaceProvisioningService(deps: {
       };
     }
     if (project.archivedAt || workspace.archivedAt) {
-      const projectCheckout =
-        checkout && areEquivalentPaths(project.rootPath, workspace.cwd)
-          ? checkout
-          : await workspaceGitService.getCheckout(project.rootPath);
-      const kind = projectCheckout.isGit ? "git" : "non_git";
-      const projectKey = deriveProjectKey({
-        rootPath: project.rootPath,
-        remoteUrl: projectCheckout.remoteUrl,
-        worktreeRoot: projectCheckout.worktreeRoot,
-        mainRepoRoot: projectCheckout.mainRepoRoot,
-        serverId,
+      const { kind, projectKey } = await observeProjectGitFacts(project, {
+        cwd: workspace.cwd,
+        checkout,
       });
       if (project.archivedAt || project.kind !== kind || project.projectKey !== projectKey) {
         await projectRegistry.upsert({
@@ -514,23 +563,41 @@ export function createWorkspaceProvisioningService(deps: {
     return update.workspace;
   }
 
+  /**
+   * Git-derived project metadata, read from the workspace's checkout when it sits at the
+   * project root. A chat project keeps what it was allocated with: an enclosing repository
+   * would otherwise answer for its private root.
+   */
+  async function observeProjectGitFacts(
+    project: PersistedProjectRecord,
+    workspace?: { cwd: string; checkout: ProjectCheckoutLitePayload | null | undefined },
+  ): Promise<Pick<PersistedProjectRecord, "kind" | "projectKey">> {
+    if (project.purpose === "chat") return { kind: project.kind, projectKey: project.projectKey };
+    const projectCheckout =
+      workspace?.checkout && areEquivalentPaths(project.rootPath, workspace.cwd)
+        ? workspace.checkout
+        : await workspaceGitService.getCheckout(project.rootPath);
+    return {
+      kind: projectCheckout.isGit ? "git" : "non_git",
+      projectKey: deriveProjectKey({
+        rootPath: project.rootPath,
+        remoteUrl: projectCheckout.remoteUrl,
+        worktreeRoot: projectCheckout.worktreeRoot,
+        mainRepoRoot: projectCheckout.mainRepoRoot,
+        serverId,
+      }),
+    };
+  }
+
   async function refreshProjectKind(
     project: PersistedProjectRecord,
     workspaceCwd?: string,
     workspaceCheckout?: Awaited<ReturnType<WorkspaceGitService["getCheckout"]>>,
   ): Promise<PersistedProjectRecord> {
-    const projectCheckout =
-      workspaceCwd && workspaceCheckout && areEquivalentPaths(project.rootPath, workspaceCwd)
-        ? workspaceCheckout
-        : await workspaceGitService.getCheckout(project.rootPath);
-    const kind: PersistedProjectRecord["kind"] = projectCheckout.isGit ? "git" : "non_git";
-    const projectKey = deriveProjectKey({
-      rootPath: project.rootPath,
-      remoteUrl: projectCheckout.remoteUrl,
-      worktreeRoot: projectCheckout.worktreeRoot,
-      mainRepoRoot: projectCheckout.mainRepoRoot,
-      serverId,
-    });
+    const { kind, projectKey } = await observeProjectGitFacts(
+      project,
+      workspaceCwd ? { cwd: workspaceCwd, checkout: workspaceCheckout } : undefined,
+    );
     if (project.kind === kind && project.projectKey === projectKey) return project;
     const refreshed = {
       ...project,
@@ -548,6 +615,7 @@ export function createWorkspaceProvisioningService(deps: {
     resolveOrCreateWorkspaceIdForCreateAgent,
     createWorkspaceForDirectory,
     createWorkspaceForWorktree,
+    createWorkspaceForChat,
     findOrCreateProjectForDirectory,
     ensureWorkspaceRecordUnarchived,
   };

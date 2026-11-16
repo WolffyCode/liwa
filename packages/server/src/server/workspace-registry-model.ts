@@ -119,7 +119,9 @@ export function reconcileWorkspacePlacement(input: {
   checkout: ProjectCheckoutLitePayload | null;
   updatedAt: string;
 }): WorkspacePlacementUpdate | null {
-  if (!input.checkout) return null;
+  // A chat directory is private backing. When $PASEO_HOME sits inside a Git checkout, the
+  // enclosing repository must not turn the chat into a checkout of it.
+  if (!input.checkout || input.workspace.purpose === "chat") return null;
   const observed = initialWorkspacePlacement({
     source: "checkout",
     cwd: input.workspace.cwd,

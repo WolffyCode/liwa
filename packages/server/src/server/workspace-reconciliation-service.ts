@@ -359,7 +359,10 @@ export class WorkspaceReconciliationService {
       return checkout;
     };
     const roots: Array<{ rootPath: string; projects: PersistedProjectRecord[] }> = [];
-    for (const project of projectsToReconcile) {
+    // Chat projects have no Git facts to converge, even when an enclosing repository
+    // would answer for their root.
+    const gitProjects = projectsToReconcile.filter((project) => project.purpose !== "chat");
+    for (const project of gitProjects) {
       const root = roots.find((candidate) =>
         areEquivalentPaths(candidate.rootPath, project.rootPath),
       );

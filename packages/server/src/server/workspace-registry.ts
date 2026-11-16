@@ -1,4 +1,8 @@
 import type { JsonValue } from "@getpaseo/protocol/agent-types";
+import {
+  WorkspacePurposeSchema,
+  type WorkspacePurpose,
+} from "@getpaseo/protocol/workspace-purpose";
 import { promises as fs } from "node:fs";
 
 import type { Logger } from "pino";
@@ -24,6 +28,8 @@ const PersistedProjectRecordSchema = z.object({
   projectId: z.string(),
   rootPath: z.string(),
   kind: z.enum(["git", "non_git"]),
+  // Fixed at allocation. Git reconciliation never rewrites a chat project.
+  purpose: WorkspacePurposeSchema.optional(),
   displayName: z.string(),
   // COMPAT(projectKey): added in v0.2.4 on 2026-07-28; remove optional after 2027-01-28.
   projectKey: z
@@ -55,6 +61,8 @@ const PersistedWorkspaceRecordSchema = z.object({
   projectId: z.string(),
   cwd: z.string(),
   kind: z.enum(["local_checkout", "worktree", "directory"]),
+  // Fixed at allocation; placement reconciliation leaves chat workspaces alone.
+  purpose: WorkspacePurposeSchema.optional(),
   displayName: z.string(),
   // User-set title layered over the derived displayName. In Model B the title is
   // the workspace identity; branch/directory are backing metadata. Reconciliation
@@ -113,6 +121,15 @@ const PersistedWorkspaceRecordSchema = z.object({
 export type PersistedProjectRecord = z.infer<typeof PersistedProjectRecordSchema>;
 export type PersistedWorkspaceRecord = z.infer<typeof PersistedWorkspaceRecordSchema>;
 
+/** A root already belongs to a project of another purpose: chats and projects never share one. */
+export class ProjectPurposeConflictError extends Error {
+  readonly code = "project_purpose_conflict";
+  constructor(readonly projectId: string) {
+    super(`Project purpose does not match its registered root: ${projectId}`);
+    this.name = "ProjectPurposeConflictError";
+  }
+}
+
 export interface WorkspaceMutation {
   kind: "upsert" | "archive" | "remove";
   workspaceId: string;
@@ -142,6 +159,7 @@ export interface ProjectRegistry {
   getOrCreateActiveByRoot(input: {
     rootPath: string;
     kind: PersistedProjectKind;
+    purpose?: WorkspacePurpose;
     displayName: string;
     projectKey?: string;
     timestamp: string;
@@ -416,6 +434,7 @@ export class FileBackedProjectRegistry
   async getOrCreateActiveByRoot(input: {
     rootPath: string;
     kind: PersistedProjectKind;
+    purpose?: WorkspacePurpose;
     displayName: string;
     projectKey?: string;
     timestamp: string;
@@ -435,6 +454,8 @@ export class FileBackedProjectRegistry
             left.projectId.localeCompare(right.projectId),
         )[0];
       if (active) {
+        if (active.purpose !== input.purpose)
+          throw new ProjectPurposeConflictError(active.projectId);
         if (active.kind === input.kind && active.projectKey === (input.projectKey ?? null))
           return active;
         const refreshed = {
@@ -454,6 +475,7 @@ export class FileBackedProjectRegistry
           projectId,
           rootPath: input.rootPath,
           kind: input.kind,
+          purpose: input.purpose,
           displayName: input.displayName,
           projectKey: input.projectKey ?? null,
           createdAt: input.timestamp,
@@ -661,6 +683,7 @@ export function createPersistedProjectRecord(input: {
   projectId: string;
   rootPath: string;
   kind: PersistedProjectKind;
+  purpose?: WorkspacePurpose;
   displayName: string;
   customName?: string | null;
   projectKey?: string | null;
@@ -688,6 +711,7 @@ export function createPersistedWorkspaceRecord(input: {
   projectId: string;
   cwd: string;
   kind: PersistedWorkspaceKind;
+  purpose?: WorkspacePurpose;
   displayName: string;
   title?: string | null;
   branch?: string | null;

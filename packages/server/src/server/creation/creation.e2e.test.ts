@@ -4,7 +4,7 @@ import { BUILTIN_PROVIDER_IDS } from "@getpaseo/protocol/provider-manifest";
 import { WebSocket } from "ws";
 import { SessionInboundMessageSchema, WSOutboundMessageSchema } from "@getpaseo/protocol/messages";
 import { randomUUID } from "node:crypto";
-import { mkdtemp, rm, writeFile, readFile } from "node:fs/promises";
+import { mkdtemp, rm, stat, writeFile, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, test, vi } from "vitest";
@@ -571,5 +571,224 @@ test("Hub-shaped keyed agent worktree creation uses workspace setup and preserve
     await client.close();
     await daemon.close();
     await rm(directory, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
+  }
+}, 60000);
+
+function chatWorkspaces(entries: Awaited<ReturnType<DaemonClient["fetchWorkspaces"]>>["entries"]) {
+  return entries.filter((entry) => entry.purpose === "chat");
+}
+
+// The dev daemon's $PASEO_HOME sits inside the repository checkout, so chats there must stay
+// plain directories in a private project however Git answers for the enclosing tree.
+async function createPaseoHomeInsideGitCheckout(): Promise<string> {
+  const root = await mkdtemp(join(tmpdir(), "chat-home-"));
+  execFileSync("git", ["init", "-b", "main", root], { stdio: "pipe" });
+  execFileSync("git", ["remote", "add", "origin", "git@github.com:acme/enclosing.git"], {
+    cwd: root,
+    stdio: "pipe",
+  });
+  return root;
+}
+
+test("independent chats get private directories in one private project that never becomes a checkout", async () => {
+  const root = await createPaseoHomeInsideGitCheckout();
+  const daemon = await createCreationDaemon({ paseoHomeRoot: root });
+  const client = new DaemonClient({
+    url: `ws://127.0.0.1:${daemon.port}/ws`,
+    appVersion: "0.16.0",
+  });
+  try {
+    await client.connect();
+    const first = await client.createWorkspace({ source: { kind: "chat" }, title: "Architecture" });
+    const second = await client.createWorkspace({ source: { kind: "chat" }, title: "Writing" });
+    expect(first.error).toBeNull();
+    expect(second.error).toBeNull();
+    const firstWorkspace = first.workspace!;
+    const secondWorkspace = second.workspace!;
+    expect(firstWorkspace).toMatchObject({
+      purpose: "chat",
+      workspaceKind: "directory",
+      projectKind: "non_git",
+      name: "Architecture",
+      projectRootPath: join(daemon.paseoHome, "chats"),
+      workspaceDirectory: join(daemon.paseoHome, "chats", firstWorkspace.id),
+    });
+    expect(secondWorkspace.workspaceDirectory).toBe(
+      join(daemon.paseoHome, "chats", secondWorkspace.id),
+    );
+    expect(secondWorkspace.projectId).toBe(firstWorkspace.projectId);
+    expect((await stat(firstWorkspace.workspaceDirectory!)).isDirectory()).toBe(true);
+    await expect(stat(join(firstWorkspace.workspaceDirectory!, ".git"))).rejects.toThrow();
+    const project = (await client.listProjects()).projects.find(
+      (entry) => entry.projectId === firstWorkspace.projectId,
+    );
+    expect(project).toMatchObject({ purpose: "chat", projectKind: "non_git" });
+
+    await client.setWorkspaceTitle(firstWorkspace.id, "Renamed architecture");
+    const renamed = chatWorkspaces((await client.fetchWorkspaces()).entries).find(
+      (entry) => entry.id === firstWorkspace.id,
+    );
+    expect(renamed).toMatchObject({ name: "Renamed architecture", purpose: "chat" });
+    expect(renamed?.gitRuntime).toBeUndefined();
+
+    await client.archiveWorkspace(firstWorkspace.id);
+    expect(
+      chatWorkspaces((await client.fetchWorkspaces()).entries).map((entry) => entry.id),
+    ).toEqual([secondWorkspace.id]);
+    expect((await stat(firstWorkspace.workspaceDirectory!)).isDirectory()).toBe(true);
+  } finally {
+    await client.close();
+    await daemon.close();
+    await rm(root, { recursive: true, force: true });
+  }
+}, 60000);
+
+test("chat creation replays one allocation and the caller cannot redirect the agent's directory", async () => {
+  const daemon = await createCreationDaemon();
+  const client = new DaemonClient({
+    url: `ws://127.0.0.1:${daemon.port}/ws`,
+    appVersion: "0.16.0",
+  });
+  try {
+    await client.connect();
+    const input: Parameters<DaemonClient["createWorkspace"]>[0] = {
+      source: { kind: "chat" },
+      idempotencyKey: "chat-allocation-replay",
+      agent: {
+        config: { provider: "codex", cwd: "." },
+        initialPrompt: "Plan a trip to Kyoto",
+        clientMessageId: "chat-message",
+      },
+    };
+    const first = await client.createWorkspace(input);
+    const replay = await client.createWorkspace(input);
+    expect(first.error).toBeNull();
+    expect(first.workspace).toMatchObject({ purpose: "chat", name: "Plan a trip to Kyoto" });
+    expect(first.agent?.cwd).toBe(first.workspace?.workspaceDirectory);
+    expect(replay.workspace?.id).toBe(first.workspace?.id);
+    expect(replay.agent?.id).toBe(first.agent?.id);
+    expect(chatWorkspaces((await client.fetchWorkspaces()).entries)).toHaveLength(1);
+
+    const redirected = await client.createWorkspace({
+      source: { kind: "chat" },
+      agent: {
+        config: { provider: "codex", cwd: "/caller-selected-project" },
+        initialPrompt: "Read my project",
+      },
+    });
+    expect(redirected.error).toBe("Agent directory must be inside the chat directory");
+    expect(redirected.agent).toBeUndefined();
+  } finally {
+    await client.close();
+    await daemon.close();
+  }
+}, 60000);
+
+// The app navigates into the chat when it is ready and retries a failed first agent from
+// there, so the chat stays active and the same operation completes into it.
+test("a failed chat agent launch keeps the chat and the same operation retries into it", async () => {
+  let providerFails = true;
+  const daemon = await createCreationDaemon({
+    agentClients: createTestAgentClients({
+      beforeCreateSession: async (config) => {
+        if (!config.internal && providerFails) throw new Error("Provider startup failed");
+      },
+    }),
+  });
+  const client = new DaemonClient({
+    url: `ws://127.0.0.1:${daemon.port}/ws`,
+    appVersion: "0.16.0",
+  });
+  try {
+    await client.connect();
+    const input: Parameters<DaemonClient["createWorkspace"]>[0] = {
+      source: { kind: "chat" },
+      idempotencyKey: "failed-chat",
+      agent: {
+        config: { provider: "codex", cwd: "." },
+        initialPrompt: "Start a chat",
+        clientMessageId: "failed-chat-message",
+      },
+    };
+    const failed = await client.createWorkspace(input);
+    expect(failed.error).toContain("Provider startup failed");
+    expect(failed.creation).toMatchObject({ failedStage: "agent", outcomeUnknown: false });
+    expect(
+      chatWorkspaces((await client.fetchWorkspaces()).entries).map((entry) => entry.id),
+    ).toEqual([failed.creation?.workspaceId]);
+
+    providerFails = false;
+    const retried = await client.createWorkspace(input);
+    expect(retried.error).toBeNull();
+    expect(retried.workspace?.id).toBe(failed.creation?.workspaceId);
+    expect(retried.agent?.cwd).toBe(retried.workspace?.workspaceDirectory);
+    expect(
+      chatWorkspaces((await client.fetchWorkspaces()).entries).map((entry) => entry.id),
+    ).toEqual([retried.workspace?.id]);
+  } finally {
+    await client.close();
+    await daemon.close();
+  }
+}, 60000);
+
+test("archiving a chat stops its agent and keeps it in history after a daemon restart", async () => {
+  const root = await createPaseoHomeInsideGitCheckout();
+  const firstDaemon = await createCreationDaemon({ paseoHomeRoot: root, cleanup: false });
+  const firstClient = new DaemonClient({
+    url: `ws://127.0.0.1:${firstDaemon.port}/ws`,
+    appVersion: "0.16.0",
+  });
+  let firstDaemonOpen = true;
+  let restarted: Awaited<ReturnType<typeof createCreationDaemon>> | null = null;
+  let client: DaemonClient | null = null;
+  try {
+    await firstClient.connect();
+    const kept = await firstClient.createWorkspace({ source: { kind: "chat" }, title: "Kept" });
+    const archived = await firstClient.createWorkspace({
+      source: { kind: "chat" },
+      agent: {
+        config: { provider: "codex", cwd: "." },
+        initialPrompt: "Summarize the meeting",
+        clientMessageId: "archived-chat-message",
+      },
+    });
+    expect(archived.error).toBeNull();
+    await firstClient.archiveWorkspace(archived.workspace!.id);
+    await firstClient.close();
+    await firstDaemon.close();
+    firstDaemonOpen = false;
+
+    restarted = await createCreationDaemon({ paseoHomeRoot: root });
+    client = new DaemonClient({ url: `ws://127.0.0.1:${restarted.port}/ws`, appVersion: "0.16.0" });
+    await client.connect();
+    expect(chatWorkspaces((await client.fetchWorkspaces()).entries)).toEqual([
+      expect.objectContaining({
+        id: kept.workspace!.id,
+        name: "Kept",
+        purpose: "chat",
+        workspaceKind: "directory",
+        projectKind: "non_git",
+      }),
+    ]);
+    expect(
+      (await client.listProjects()).projects.filter((project) => project.purpose === "chat"),
+    ).toEqual([expect.objectContaining({ projectKind: "non_git" })]);
+    const history = await client.fetchAgentHistory({ filter: { includeArchived: true } });
+    const archivedAgent = history.entries.find(
+      (entry) => entry.agent.id === archived.agent!.id,
+    )?.agent;
+    expect(archivedAgent).toMatchObject({
+      workspaceId: archived.workspace!.id,
+      status: "closed",
+    });
+    expect(archivedAgent?.archivedAt).toEqual(expect.any(String));
+  } finally {
+    await client?.close();
+    await restarted?.close();
+    if (firstDaemonOpen) {
+      await firstClient.close();
+      await firstDaemon.close();
+    }
+    await rm(root, { recursive: true, force: true });
   }
 }, 60000);

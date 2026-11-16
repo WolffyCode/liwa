@@ -253,6 +253,31 @@ test("partial provisioning without a registered workspace is not repeated", asyn
   expect(provisions).toBe(1);
 });
 
+test("a chat directory that could not be created leaves the same operation retryable", async () => {
+  const f = await fixture();
+  let provisions = 0;
+  f.input.provision = async () => {
+    provisions++;
+    if (provisions === 1) {
+      throw Object.assign(new Error("Chat directory unavailable"), {
+        code: "chat_directory_unavailable",
+      });
+    }
+    return { workspace };
+  };
+  f.provider.resolve();
+
+  const failed = await f.service.create(f.input);
+  expect(failed).toMatchObject({
+    phase: "failed",
+    failedStage: "workspace",
+    errorCode: "chat_directory_unavailable",
+    outcomeUnknown: false,
+  });
+  expect(await f.service.create(f.input)).toMatchObject({ phase: "completed", workspace, agent });
+  expect(provisions).toBe(2);
+});
+
 test.each(["pending", "completed"])(
   "imports a %s legacy agent receipt without creating another agent",
   async (state) => {

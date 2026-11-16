@@ -599,6 +599,7 @@ export class WorkspaceDirectory {
       )
       .map((project) => ({
         projectId: project.projectId,
+        purpose: project.purpose,
         projectKey: project.projectKey ?? undefined,
         projectDisplayName: resolveProjectDisplayName(project),
         projectCustomName: project.customName ?? null,

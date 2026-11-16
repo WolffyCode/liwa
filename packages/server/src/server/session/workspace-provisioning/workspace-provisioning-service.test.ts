@@ -798,6 +798,68 @@ test("createWorkspaceForDirectory classifies unknown and archived explicit proje
   } satisfies Partial<WorkspaceProvisioningError>);
 });
 
+test("chats share one private project and keep their purpose inside an enclosing repository", async () => {
+  gitRoots.add(tmpDir);
+  const rootPath = path.join(tmpDir, "chats");
+  const first = await provisioning.createWorkspaceForChat({
+    directory: { rootPath, cwd: path.join(rootPath, "wks_0000000000000001") },
+    workspaceId: "wks_0000000000000001",
+    title: "Trip ideas",
+    expectsInitialAgent: true,
+  });
+  const second = await provisioning.createWorkspaceForChat({
+    directory: { rootPath, cwd: path.join(rootPath, "wks_0000000000000002") },
+    workspaceId: "wks_0000000000000002",
+    title: null,
+  });
+
+  expect(first).toMatchObject({
+    workspaceId: "wks_0000000000000001",
+    cwd: path.join(rootPath, "wks_0000000000000001"),
+    kind: "directory",
+    purpose: "chat",
+    title: "Trip ideas",
+    branch: null,
+    worktreeRoot: null,
+  });
+  expect(second).toMatchObject({ purpose: "chat", title: null, displayName: "New chat" });
+  expect(second.projectId).toBe(first.projectId);
+  const project = await projectRegistry.get(first.projectId);
+  expect(project).toMatchObject({ rootPath, kind: "non_git", purpose: "chat" });
+
+  await workspaceRegistry.archive(first.workspaceId, ARCHIVED_AT);
+  await projectRegistry.archive(first.projectId, ARCHIVED_AT);
+  const restored = await provisioning.ensureWorkspaceRecordUnarchived({
+    ...first,
+    archivedAt: ARCHIVED_AT,
+  });
+
+  expect(restored).toMatchObject({ archivedAt: null, kind: "directory", purpose: "chat" });
+  expect(await projectRegistry.get(first.projectId)).toMatchObject({
+    archivedAt: null,
+    kind: "non_git",
+    purpose: "chat",
+    projectKey: project?.projectKey,
+  });
+});
+
+test("ordinary workspaces cannot be placed in the private chat project", async () => {
+  const rootPath = path.join(tmpDir, "chats");
+  const chat = await provisioning.createWorkspaceForChat({
+    directory: { rootPath, cwd: path.join(rootPath, "wks_0000000000000001") },
+    workspaceId: "wks_0000000000000001",
+    title: "Trip ideas",
+  });
+
+  await expect(
+    provisioning.createWorkspaceForDirectory(path.join(tmpDir, "directory"), null, chat.projectId),
+  ).rejects.toMatchObject({ code: "project_purpose_conflict", projectId: chat.projectId });
+  await expect(provisioning.findOrCreateProjectForDirectory(rootPath)).rejects.toMatchObject({
+    code: "project_purpose_conflict",
+    projectId: chat.projectId,
+  });
+});
+
 test("findOrCreateProjectForDirectory keeps nested selected roots independent", async () => {
   const repo = path.join(tmpDir, "repo");
   gitRoots.add(repo);
