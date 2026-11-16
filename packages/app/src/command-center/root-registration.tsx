@@ -160,14 +160,14 @@ export function CommandCenterRootActions() {
         group: "actions",
         groupRank: 0,
         rank: 1,
-        keywords: ["new", "workspace", "worktree", "branch"],
+        keywords: ["new", "conversation", "chat", "workspace", "worktree", "branch"],
         visibility: "always",
         run: () => {
           keyboardActionDispatcher.dispatch({ id: "workspace.new", scope: "sidebar" });
         },
         presentation: {
           kind: "action",
-          title: t("sidebar.actions.newWorkspace"),
+          title: t("newWorkspace.title"),
           sectionTitle: t("shell.commandCenter.actions"),
           icon: PlusIcon,
           shortcutKeys:

@@ -17,6 +17,11 @@ export function buildWorkspaceArchiveRedirectRoute(input: {
 
   const archivedWorkspace =
     Array.from(input.workspaces).find((workspace) => workspace.id === archivedWorkspaceId) ?? null;
+  // A chat's backing directory is private, so archiving one returns to a New conversation
+  // without a directory rather than to its backing project.
+  if (archivedWorkspace?.purpose === "chat") {
+    return buildNewWorkspaceRoute({ serverId: input.serverId });
+  }
   const sourceDirectory =
     archivedWorkspace?.projectRootPath || archivedWorkspace?.workspaceDirectory;
   if (!sourceDirectory) {

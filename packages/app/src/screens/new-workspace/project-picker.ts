@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { ComboboxOption as ComboboxOptionType } from "@/components/ui/combobox";
 import { isWorkspaceArchivePending } from "@/contexts/session-workspace-upserts";
 import {
@@ -19,13 +20,14 @@ import {
 } from "./project-selection";
 
 const PROJECT_OPTION_PREFIX = "project:";
+/** The picker row that clears the directory, so the conversation is an independent chat. */
+export const NO_PROJECT_OPTION_ID = "no-project";
 
 interface NewWorkspaceProjectPickerInput {
   selectedServerId: string;
   projects: HostProjectListItem[];
   routeProject: HostProjectListItem | null;
   routeProjectContextViewKey: string | null;
-  lastActiveProject: HostProjectListItem | null;
   allowAllProjects: boolean;
 }
 
@@ -37,6 +39,8 @@ interface NewWorkspaceProjectPickerState {
   selectedProjectOptionId: string;
   projectTriggerLabel: string;
   handleSelectProjectOption: (id: string) => void;
+  /** Selects a project that is not an option yet, such as one just added from the picker. */
+  selectProject: (project: HostProjectListItem) => void;
 }
 
 function projectOptionId(projectId: string): string {
@@ -86,9 +90,9 @@ export function useNewWorkspaceProjectPicker({
   projects,
   routeProject,
   routeProjectContextViewKey,
-  lastActiveProject,
   allowAllProjects,
 }: NewWorkspaceProjectPickerInput): NewWorkspaceProjectPickerState {
+  const { t } = useTranslation();
   const selectableProjects = useMemo(
     () =>
       filterWorkspaceProjectsForHost({ projects, serverId: selectedServerId, allowAllProjects }),
@@ -98,12 +102,11 @@ export function useNewWorkspaceProjectPicker({
     () =>
       resolveInitialWorkspaceProject({
         routeProject,
-        lastActiveProject,
         projects: selectableProjects,
         serverId: selectedServerId,
         allowAllProjects,
       }),
-    [allowAllProjects, lastActiveProject, routeProject, selectableProjects, selectedServerId],
+    [allowAllProjects, routeProject, selectableProjects, selectedServerId],
   );
 
   const selectionContextKey = createProjectSelectionContextKey({
@@ -131,16 +134,13 @@ export function useNewWorkspaceProjectPicker({
       initialProjectSource: resolveInitialProjectSelectionSource({
         initialProject,
         routeProject,
-        lastActiveProject,
       }),
       projects: selectableProjects,
       routeProject,
-      lastActiveProject,
       shouldPreserveMissingProject,
     }),
     [
       initialProject,
-      lastActiveProject,
       manualSelectionContextKey,
       routeProject,
       selectableProjects,
@@ -159,19 +159,16 @@ export function useNewWorkspaceProjectPicker({
 
   const activeSelection = reconcileProjectSelection(projectSelection, selectionContext);
   const selectedProject = resolveProjectSelection(activeSelection, selectionContext);
-  const { options: projectPickerOptions, projectByOptionId } = useMemo(
+  const { options, projectByOptionId } = useMemo(
     () => computeProjectOptionData(selectableProjects),
     [selectableProjects],
   );
-  const handleSelectProjectOption = useCallback(
-    (id: string) => {
-      const project = projectByOptionId.get(id);
-      if (!project) return;
-      if (
-        !allowAllProjects &&
-        !project.hosts.some((host) => host.worktreeSupport !== "unsupported")
-      )
-        return;
+  const projectPickerOptions = useMemo(
+    () => [{ id: NO_PROJECT_OPTION_ID, label: t("newWorkspace.directory.none") }, ...options],
+    [options, t],
+  );
+  const selectProject = useCallback(
+    (project: HostProjectListItem) => {
       setProjectSelection({
         contextKey: manualSelectionContextKey,
         project,
@@ -179,7 +176,28 @@ export function useNewWorkspaceProjectPicker({
         source: "manual",
       });
     },
-    [allowAllProjects, manualSelectionContextKey, projectByOptionId],
+    [manualSelectionContextKey],
+  );
+  const handleSelectProjectOption = useCallback(
+    (id: string) => {
+      if (id === NO_PROJECT_OPTION_ID) {
+        setProjectSelection({
+          contextKey: manualSelectionContextKey,
+          project: null,
+          source: "none",
+        });
+        return;
+      }
+      const project = projectByOptionId.get(id);
+      if (!project) return;
+      if (
+        !allowAllProjects &&
+        !project.hosts.some((host) => host.worktreeSupport !== "unsupported")
+      )
+        return;
+      selectProject(project);
+    },
+    [allowAllProjects, manualSelectionContextKey, projectByOptionId, selectProject],
   );
 
   return {
@@ -189,8 +207,11 @@ export function useNewWorkspaceProjectPicker({
       : null,
     projectPickerOptions,
     projectByOptionId,
-    selectedProjectOptionId: selectedProject ? projectOptionId(selectedProject.viewKey) : "",
-    projectTriggerLabel: selectedProject?.projectName ?? "Choose project",
+    selectedProjectOptionId: selectedProject
+      ? projectOptionId(selectedProject.viewKey)
+      : NO_PROJECT_OPTION_ID,
+    projectTriggerLabel: selectedProject?.projectName ?? t("newWorkspace.directory.placeholder"),
     handleSelectProjectOption,
+    selectProject,
   };
 }

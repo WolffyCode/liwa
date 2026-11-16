@@ -354,6 +354,38 @@ describe("ReplicaCache", () => {
     );
   });
 
+  it("keeps an independent chat and its private project identified across cache reopen", async () => {
+    const storage = new MemoryStorage();
+    const writer = createCache(storage);
+    const baseline = directory({ workspaces: { generation: "g", afterSeq: 8 } });
+    const chat = normalizeWorkspaceDescriptor({
+      ...workspacePayload(),
+      id: "workspace-chat",
+      projectId: "project-chats",
+      workspaceKind: "directory",
+      purpose: "chat",
+    });
+    const chatProject = normalizeProjectDescriptor({
+      projectId: "project-chats",
+      purpose: "chat",
+      projectDisplayName: "Chats",
+      projectRootPath: "/home/.paseo/chats",
+      projectKind: "non_git",
+    });
+    baseline.workspaces.set(chat.id, chat);
+    baseline.projects.set(chatProject.projectId, chatProject);
+    commitDirectory(writer, SERVER_ID, baseline);
+    await writer.flush();
+
+    const reader = createCache(storage);
+    const restored = await reader.readDirectory(SERVER_ID);
+
+    expect(restored.workspaces.get(chat.id)?.purpose).toBe("chat");
+    expect(restored.projects.get(chatProject.projectId)?.purpose).toBe("chat");
+    expect(restored.workspaces.get("workspace-1")?.purpose).toBeUndefined();
+    expect((await reader.readWorkspace(SERVER_ID, chat.id))?.workspace.purpose).toBe("chat");
+  });
+
   it("preserves where the workspace's forge is on the web across cache reopen", async () => {
     const storage = new MemoryStorage();
     const writer = createCache(storage);

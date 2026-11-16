@@ -462,9 +462,14 @@ export function AddProjectFlow({ request, onClose }: AddProjectFlowProps) {
     else onClose();
   }, [onClose, state]);
 
-  const openNewWorkspaceForProject = useCallback(
+  const onProjectSelected = request.onProjectSelected;
+  const completeProjectSelection = useCallback(
     (serverId: string, project: WorkspaceProjectDescriptorPayload) => {
       onClose();
+      if (onProjectSelected) {
+        onProjectSelected({ serverId, project });
+        return;
+      }
       usePanelStore.getState().showMobileAgent();
       router.push(
         buildNewWorkspaceRoute({
@@ -475,7 +480,7 @@ export function AddProjectFlow({ request, onClose }: AddProjectFlowProps) {
         }),
       );
     },
-    [onClose],
+    [onClose, onProjectSelected],
   );
 
   const openAddedProject = useCallback(
@@ -488,7 +493,7 @@ export function AddProjectFlow({ request, onClose }: AddProjectFlowProps) {
       try {
         const result = await openProject(path);
         if (result.ok) {
-          openNewWorkspaceForProject(hostId, result.project);
+          completeProjectSelection(hostId, result.project);
           return;
         }
         const reason = getOpenProjectFailureReason(result);
@@ -508,7 +513,7 @@ export function AddProjectFlow({ request, onClose }: AddProjectFlowProps) {
         submissionInFlightRef.current = false;
       }
     },
-    [hostId, openNewWorkspaceForProject, openProject],
+    [hostId, completeProjectSelection, openProject],
   );
 
   const browse = useCallback(async () => {
@@ -570,7 +575,7 @@ export function AddProjectFlow({ request, onClose }: AddProjectFlowProps) {
         );
         if (result.ok) {
           lastCloneParentByHost.set(locationPage.hostId, parentPath);
-          openNewWorkspaceForProject(locationPage.hostId, result.project);
+          completeProjectSelection(locationPage.hostId, result.project);
           return;
         }
         setState((current) =>
@@ -590,7 +595,7 @@ export function AddProjectFlow({ request, onClose }: AddProjectFlowProps) {
         submissionInFlightRef.current = false;
       }
     },
-    [cloneGithubProject, openNewWorkspaceForProject],
+    [cloneGithubProject, completeProjectSelection],
   );
   const rows = useMemo<FlowRowOption[]>(() => {
     if (page.kind === "host") {
@@ -765,7 +770,7 @@ export function AddProjectFlow({ request, onClose }: AddProjectFlowProps) {
         upsertProject,
         setHasHydratedWorkspaces,
       });
-      openNewWorkspaceForProject(page.hostId, payload.project);
+      completeProjectSelection(page.hostId, payload.project);
     } catch {
       setState((current) =>
         setPageStatus(current, "new-directory-name", {
@@ -776,7 +781,7 @@ export function AddProjectFlow({ request, onClose }: AddProjectFlowProps) {
     } finally {
       submissionInFlightRef.current = false;
     }
-  }, [client, openNewWorkspaceForProject, page, setHasHydratedWorkspaces, upsertProject]);
+  }, [client, completeProjectSelection, page, setHasHydratedWorkspaces, upsertProject]);
 
   const submitActive = useCallback(() => {
     if (page.kind === "new-directory-name") {

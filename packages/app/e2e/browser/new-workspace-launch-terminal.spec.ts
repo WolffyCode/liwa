@@ -175,7 +175,7 @@ async function expectNewWorkspaceFullscreen(page: Page, submitLabel: string): Pr
   await expect(frame.getByRole("button")).toHaveCount(2);
   await expect(frame.getByRole("button", { name: submitLabel })).toBeVisible();
   await expectNewWorkspaceHeaderHidden(page);
-  const picker = (await page.getByRole("button", { name: "Workspace project" }).boundingBox())!;
+  const picker = (await page.getByRole("button", { name: "Workspace directory" }).boundingBox())!;
   await expect
     .poll(() =>
       frame.evaluate(
@@ -220,7 +220,7 @@ test.describe("New workspace: fullscreen composer across the compact breakpoint"
       projectKey: workspace.projectKey,
       projectDisplayName: workspace.projectDisplayName,
     });
-    const projectPicker = page.getByRole("button", { name: "Workspace project" });
+    const projectPicker = page.getByRole("button", { name: "Workspace directory" });
 
     await test.step("chat: fullscreen covers the centered form and exits back into it", async () => {
       await resizeComposerViewport(page, "portrait");

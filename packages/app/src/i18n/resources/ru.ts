@@ -1285,6 +1285,13 @@ export const ru: TranslationResources = {
     pinned: {
       title: "Закреплённые",
     },
+    conversations: {
+      title: "Разговоры",
+      empty: {
+        title: "Разговоров пока нет",
+        description: "Здесь появляются разговоры без папки рабочего пространства.",
+      },
+    },
     host: {
       noHost: "Нет хоста",
       switchTitle: "Сменить хост",
@@ -1292,7 +1299,6 @@ export const ru: TranslationResources = {
     },
     actions: {
       addProject: "Добавить проект",
-      newWorkspace: "Новое рабочее пространство",
       hosts: "Хосты",
       settings: "Настройки",
       closeSidebar: "Закрыть боковую панель",
@@ -1313,6 +1319,7 @@ export const ru: TranslationResources = {
       appName: "Paseo",
     },
     sections: {
+      projects: "Проекты",
       sessions: "История",
       search: "Поиск",
       schedules: "Расписания",
@@ -1408,7 +1415,7 @@ export const ru: TranslationResources = {
     },
   },
   newWorkspace: {
-    title: "Новое рабочее пространство",
+    title: "Новый разговор",
     create: "Создать",
     isolation: {
       local: "Локально",
@@ -1416,20 +1423,29 @@ export const ru: TranslationResources = {
       label: "Изоляция",
     },
     fields: {
-      project: "Проект",
+      directory: "Папка рабочего пространства",
       branch: "Ветка",
       baseNotApplicable: "Неприменимо",
       host: "Хост",
     },
     titlePlaceholder: "Заголовок (необязательно)",
+    directory: {
+      placeholder: "Папка рабочего пространства (необязательно)",
+      none: "Без рабочего пространства",
+      search: "Искать папки рабочих пространств",
+      empty: "Нет подходящих папок рабочих пространств.",
+    },
     errors: {
       hostDisconnected: "Хост не подключён",
+      createFailed: "Не удалось создать разговор. Повторите попытку.",
+      updateHost: "Обновите этот хост, чтобы начать разговор без папки рабочего пространства.",
+      enterMessage: "Введите сообщение, чтобы начать разговор без папки рабочего пространства.",
       createWorktreeFailed: "Не удалось создать worktree.",
       composerStateRequired: "Редактор сообщения ещё не готов.",
       selectModel: "Выберите модель",
     },
     tooltips: {
-      project: "Выберите проект",
+      directory: "Выберите папку рабочего пространства (необязательно)",
       host: "Выберите хост",
       isolation: "Выберите уровень изоляции",
       startingRef: "Выберите, с чего начать",
@@ -2726,7 +2742,7 @@ export const ru: TranslationResources = {
       },
       help: {
         openProject: "Открыть проект",
-        newWorkspace: "Новое рабочее пространство",
+        newWorkspace: "Новый разговор",
         newWorktree: "Новый worktree",
         archiveWorkspace: "Архивировать рабочее пространство",
         newTab: "Новая вкладка",

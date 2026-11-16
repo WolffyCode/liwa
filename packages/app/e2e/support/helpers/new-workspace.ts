@@ -209,6 +209,16 @@ export async function openGlobalNewWorkspaceComposer(page: Page): Promise<void> 
   });
 }
 
+// The global entry starts without a directory, so specs about project-scoped composer state
+// choose the project the way a user would.
+export async function openGlobalNewWorkspaceComposerInProject(
+  page: Page,
+  project: { projectKey: string; projectDisplayName: string },
+): Promise<void> {
+  await openGlobalNewWorkspaceComposer(page);
+  await selectNewWorkspaceProject(page, project);
+}
+
 export async function openMissingProjectNewWorkspaceComposer(
   page: Page,
   input: { serverId: string; projectId: string; sourceDirectory: string },
@@ -224,7 +234,7 @@ export async function openMissingProjectNewWorkspaceComposer(
 }
 
 export async function expectNewWorkspaceControlsEnabled(page: Page): Promise<void> {
-  await expect(page.getByRole("button", { name: "Workspace project" })).toBeEnabled({
+  await expect(page.getByRole("button", { name: "Workspace directory" })).toBeEnabled({
     timeout: 30_000,
   });
   await expect(page.getByRole("textbox", { name: "Message agent..." })).toBeEditable({
@@ -238,7 +248,7 @@ export async function openNewWorkspaceProjectPickerWithShortcut(
 ): Promise<void> {
   await page.keyboard.press(shortcut);
 
-  const searchInput = page.getByPlaceholder("Search projects");
+  const searchInput = page.getByPlaceholder("Search workspace directories");
   await expect(searchInput).toBeVisible({ timeout: 30_000 });
   await expect(searchInput).toBeFocused();
 }
@@ -247,7 +257,7 @@ export async function expectNewWorkspaceProjectSelected(
   page: Page,
   projectDisplayName: string,
 ): Promise<void> {
-  const projectPicker = page.getByRole("button", { name: "Workspace project" });
+  const projectPicker = page.getByRole("button", { name: "Workspace directory" });
   await expect(projectPicker).toBeVisible({ timeout: 30_000 });
   await expect(projectPicker).toContainText(projectDisplayName);
 }
@@ -256,7 +266,7 @@ export async function expectNewWorkspaceTriggerLabelsAligned(
   page: Page,
   input: { projectLabel: string; hostLabel: string },
 ): Promise<void> {
-  const projectTrigger = page.getByRole("button", { name: "Workspace project" });
+  const projectTrigger = page.getByRole("button", { name: "Workspace directory" });
   const hostTrigger = page.getByRole("button", { name: "Host", exact: true });
   const projectLabel = projectTrigger.getByText(input.projectLabel, { exact: true });
   const hostLabel = hostTrigger.getByText(input.hostLabel, { exact: true });

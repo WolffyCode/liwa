@@ -1303,6 +1303,13 @@ export const es: TranslationResources = {
     pinned: {
       title: "Anclados",
     },
+    conversations: {
+      title: "Conversaciones",
+      empty: {
+        title: "Aún no hay conversaciones",
+        description: "Aquí aparecen las conversaciones sin carpeta de espacio de trabajo.",
+      },
+    },
     host: {
       noHost: "Sin anfitrión",
       switchTitle: "Cambiar de anfitrión",
@@ -1310,7 +1317,6 @@ export const es: TranslationResources = {
     },
     actions: {
       addProject: "Agregar proyecto",
-      newWorkspace: "Nuevo espacio de trabajo",
       hosts: "Hosts",
       settings: "Ajustes",
       closeSidebar: "Cerrar barra lateral",
@@ -1331,6 +1337,7 @@ export const es: TranslationResources = {
       appName: "Paseo",
     },
     sections: {
+      projects: "Proyectos",
       sessions: "Historial",
       search: "Buscar",
       schedules: "Horarios",
@@ -1426,7 +1433,7 @@ export const es: TranslationResources = {
     },
   },
   newWorkspace: {
-    title: "Nuevo espacio de trabajo",
+    title: "Nueva conversación",
     create: "Crear",
     isolation: {
       local: "Local",
@@ -1434,20 +1441,31 @@ export const es: TranslationResources = {
       label: "Aislamiento",
     },
     fields: {
-      project: "Proyecto",
+      directory: "Carpeta del espacio de trabajo",
       branch: "Rama",
       baseNotApplicable: "No aplicable",
       host: "Host",
     },
     titlePlaceholder: "Título (opcional)",
+    directory: {
+      placeholder: "Carpeta del espacio de trabajo (opcional)",
+      none: "Sin espacio de trabajo",
+      search: "Buscar carpetas de espacios de trabajo",
+      empty: "No hay carpetas de espacios de trabajo que coincidan.",
+    },
     errors: {
       hostDisconnected: "Hostno está conectado",
+      createFailed: "No se pudo crear la conversación. Inténtalo de nuevo.",
+      updateHost:
+        "Actualiza este host para iniciar una conversación sin carpeta de espacio de trabajo.",
+      enterMessage:
+        "Escribe un mensaje para iniciar una conversación sin carpeta de espacio de trabajo.",
       createWorktreeFailed: "No se pudo crear el árbol de trabajo",
       composerStateRequired: "Se requiere el estado del compositor",
       selectModel: "Selecciona un modelo",
     },
     tooltips: {
-      project: "Choose the project",
+      directory: "Elige una carpeta del espacio de trabajo (opcional)",
       host: "Choose the host",
       isolation: "Choose the isolation level",
       startingRef: "Elige por dónde empezar",
@@ -2739,7 +2757,7 @@ export const es: TranslationResources = {
       },
       help: {
         openProject: "Abrir proyecto",
-        newWorkspace: "Nuevo espacio de trabajo",
+        newWorkspace: "Nueva conversación",
         newWorktree: "Nuevo árbol de trabajo",
         archiveWorkspace: "Archivar espacio de trabajo",
         newTab: "Nueva pestaña",

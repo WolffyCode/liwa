@@ -45,9 +45,10 @@ export function resolveWorkspaceHeader(input: { workspace: WorkspaceDescriptor }
   title: string;
   subtitle: string;
 } {
+  // A chat's backing project is private, so its header names only the chat.
   return {
     title: input.workspace.name,
-    subtitle: input.workspace.projectDisplayName,
+    subtitle: input.workspace.purpose === "chat" ? "" : input.workspace.projectDisplayName,
   };
 }
 
@@ -60,7 +61,10 @@ export function resolveWorkspaceHeaderRenderState(input: {
   }
 
   const header = resolveWorkspaceHeader({ workspace: input.workspace });
-  const checkout = input.checkoutState.kind === "ready" ? input.checkoutState.checkout : null;
+  // An enclosing repository can answer Git status for a chat directory; it is not the chat's.
+  const isChat = input.workspace.purpose === "chat";
+  const checkout =
+    !isChat && input.checkoutState.kind === "ready" ? input.checkoutState.checkout : null;
   const currentBranchName =
     checkout?.isGit && checkout.currentBranch !== "HEAD"
       ? trimNonEmpty(checkout.currentBranch)
@@ -70,7 +74,8 @@ export function resolveWorkspaceHeaderRenderState(input: {
     kind: "ready",
     title: header.title,
     subtitle: header.subtitle,
-    isSubtitleDistinct: !areHeaderLabelsEquivalent(header.title, header.subtitle),
+    isSubtitleDistinct:
+      header.subtitle.length > 0 && !areHeaderLabelsEquivalent(header.title, header.subtitle),
     isGitCheckout: checkout?.isGit ?? false,
     currentBranchName,
   };

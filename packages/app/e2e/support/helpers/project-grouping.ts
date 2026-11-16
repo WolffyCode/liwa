@@ -72,10 +72,9 @@ export async function beginWorkspaceFromProject(page: Page, projectName: string)
   await expect(group).toBeVisible({ timeout: PROJECT_VISIBILITY_TIMEOUT });
   await group.hover();
   await group.getByLabel(`Create a new workspace for ${projectName}`).click();
-  await expect(page.getByRole("button", { name: "Workspace project", exact: true })).toContainText(
-    projectName,
-    { timeout: PROJECT_VISIBILITY_TIMEOUT },
-  );
+  await expect(
+    page.getByRole("button", { name: "Workspace directory", exact: true }),
+  ).toContainText(projectName, { timeout: PROJECT_VISIBILITY_TIMEOUT });
 }
 
 export async function selectWorkspaceHost(page: Page, hostName: string): Promise<void> {

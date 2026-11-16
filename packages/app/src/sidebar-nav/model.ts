@@ -41,7 +41,7 @@ export type SidebarNavItem<Section extends SidebarSection = SidebarSection> =
   | PluginSidebarNavItem;
 
 const BUILTIN_LABEL_KEYS: Record<BuiltinSidebarItemId, string> = {
-  "new-workspace": "sidebar.actions.newWorkspace",
+  "new-workspace": "newWorkspace.title",
   history: "sidebar.sections.sessions",
   search: "sidebar.sections.search",
   schedules: "sidebar.sections.schedules",

@@ -53,7 +53,8 @@ export function hostProjectFromWorkspace(input: {
   serverId: string;
   workspace: WorkspaceDescriptor | null;
 }): HostProjectListItem | null {
-  if (!input.workspace) {
+  // A chat's backing project is private; it never seeds a project choice.
+  if (!input.workspace || input.workspace.purpose === "chat") {
     return null;
   }
   const projectId = input.workspace.projectId.trim() || undefined;
@@ -207,36 +208,29 @@ export function resolveHostProjectCandidate(input: {
   return resolveExactHostProjectCandidate(input) ?? resolveEquivalentHostProjectCandidate(input);
 }
 
+/**
+ * The directory a New conversation starts with: the routed project when the entry came from
+ * inside one, otherwise none, which creates an independent chat.
+ */
 export function resolveInitialWorkspaceProject(input: {
   routeProject: HostProjectListItem | null;
-  lastActiveProject: HostProjectListItem | null;
   projects: readonly HostProjectListItem[];
   serverId: string;
   allowAllProjects: boolean;
 }): HostProjectListItem | null {
-  const candidates = [input.routeProject, input.lastActiveProject];
-  for (const candidate of candidates) {
-    if (!candidate) {
-      continue;
-    }
-    const hydratedProject =
-      resolveHostProjectCandidate({
-        candidate,
-        projects: input.projects,
-        serverId: input.serverId,
-      }) ?? candidate;
-    if (
-      canCreateWorkspaceForHostProject({
-        project: hydratedProject,
-        serverId: input.serverId,
-        allowAllProjects: input.allowAllProjects,
-      })
-    ) {
-      return hydratedProject;
-    }
-  }
-
-  return input.projects[0] ?? null;
+  if (!input.routeProject) return null;
+  const hydratedProject =
+    resolveHostProjectCandidate({
+      candidate: input.routeProject,
+      projects: input.projects,
+      serverId: input.serverId,
+    }) ?? input.routeProject;
+  const canCreate = canCreateWorkspaceForHostProject({
+    project: hydratedProject,
+    serverId: input.serverId,
+    allowAllProjects: input.allowAllProjects,
+  });
+  return canCreate ? hydratedProject : null;
 }
 
 export function resolveInitialWorktreeProject(input: {

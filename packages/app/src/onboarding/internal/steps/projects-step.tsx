@@ -33,7 +33,10 @@ export function ProjectsStep({
   const { t } = useTranslation();
   const openAddProject = useOpenAddProject();
   const projectRootPaths = useProjectRootPaths(serverId);
-  const handleAddProject = useCallback(() => openAddProject(serverId), [openAddProject, serverId]);
+  const handleAddProject = useCallback(
+    () => openAddProject({ preferredHostId: serverId }),
+    [openAddProject, serverId],
+  );
 
   return (
     <View style={styles.container}>

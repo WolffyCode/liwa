@@ -30,6 +30,28 @@ function workspace(
 }
 
 describe("buildWorkspaceArchiveRedirectRoute", () => {
+  it("returns to a New conversation without a directory after archiving a chat", () => {
+    const chat: WorkspaceDescriptor = {
+      ...workspace({
+        id: "wks_chat",
+        projectId: "project-chats",
+        projectDisplayName: "Chats",
+        projectRootPath: "/home/.paseo/chats",
+        workspaceKind: "directory",
+        projectKind: "non_git",
+      }),
+      purpose: "chat",
+    };
+
+    expect(
+      buildWorkspaceArchiveRedirectRoute({
+        serverId: "server-1",
+        archivedWorkspaceId: chat.id,
+        workspaces: [chat],
+      }),
+    ).toBe("/new?serverId=server-1");
+  });
+
   it("redirects an archived worktree to the new workspace screen for the same project", () => {
     const workspaces = [
       workspace({ id: "/repo", workspaceKind: "checkout", name: "main" }),

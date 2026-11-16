@@ -7,7 +7,14 @@ import { Shortcut } from "@/components/ui/shortcut";
 import { useShortcutKeys } from "@/hooks/use-shortcut-keys";
 import { getHostProjectSourceDirectory, type HostProjectListItem } from "@/projects/host-projects";
 import { pickerItemLabel, type PickerItem } from "../../new-workspace-picker-item";
-import { addProjectIcon, branchIcon, folderIcon, ProjectIcon, pullRequestIcon } from "./icons";
+import {
+  addProjectIcon,
+  branchIcon,
+  chatIcon,
+  folderIcon,
+  ProjectIcon,
+  pullRequestIcon,
+} from "./icons";
 
 interface OptionRowState {
   option: ComboboxOption;
@@ -65,6 +72,26 @@ export function ProjectOption({
   );
 }
 
+export function NoProjectOption({
+  option,
+  selected,
+  active,
+  onPress,
+  disabled,
+}: OptionRowState & { disabled: boolean }): ReactElement {
+  return (
+    <ComboboxItem
+      testID="new-workspace-project-picker-none"
+      label={option.label}
+      selected={selected}
+      active={active}
+      disabled={disabled}
+      onPress={onPress}
+      leadingSlot={noProjectLeading}
+    />
+  );
+}
+
 export function AddProjectOption({ onPress }: { onPress: () => void }): ReactElement {
   const { t } = useTranslation();
   const openProjectKeys = useShortcutKeys("new-agent");
@@ -83,6 +110,7 @@ export function AddProjectOption({ onPress }: { onPress: () => void }): ReactEle
   );
 }
 
+const noProjectLeading = <IconBox>{chatIcon}</IconBox>;
 const worktreeLeading = <IconBox>{branchIcon}</IconBox>;
 const localLeading = <IconBox>{folderIcon}</IconBox>;
 

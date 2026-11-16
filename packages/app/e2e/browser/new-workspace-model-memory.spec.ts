@@ -7,7 +7,7 @@ import { seedModelProvider } from "../support/helpers/agent-profiles";
 import { connectDaemonClient } from "../support/helpers/daemon-client-loader";
 import { gotoWorkspace } from "../support/helpers/launcher";
 import {
-  openGlobalNewWorkspaceComposer,
+  openGlobalNewWorkspaceComposerInProject,
   submitNewWorkspaceEmpty,
   submitNewWorkspacePrompt,
 } from "../support/helpers/new-workspace";
@@ -80,7 +80,7 @@ for (const hostStatus of ["ready", "unavailable"] as const) {
       await startWithoutRememberedModel(page);
       await gotoWorkspace(page, workspace.workspaceId);
       await waitForSidebarHydration(page);
-      await openGlobalNewWorkspaceComposer(page);
+      await openGlobalNewWorkspaceComposerInProject(page, workspace);
       for (const [index, select] of [chooseModel, reselectModel].entries()) {
         const count = index + 1;
         await test.step(`create workspace ${count} and return`, async () => {
@@ -89,14 +89,14 @@ for (const hostStatus of ["ready", "unavailable"] as const) {
           await submitNewWorkspacePrompt(page, "Remember this model on the next workspace");
           await expect(page).toHaveURL(/\/workspace\//);
           await expectCreatedModelAgents(page, client, PROVIDER, MODEL, count);
-          await openGlobalNewWorkspaceComposer(page);
+          await openGlobalNewWorkspaceComposerInProject(page, workspace);
           await expectSavedSelection(page, PROVIDER, MODEL);
           await expectRememberedModel(page, LABEL);
         });
       }
       await submitNewWorkspaceEmpty(page);
       await expect(page).toHaveURL(/\/workspace\//);
-      await openGlobalNewWorkspaceComposer(page);
+      await openGlobalNewWorkspaceComposerInProject(page, workspace);
       await expectSavedSelection(page, PROVIDER, MODEL);
       await expectRememberedModel(page, LABEL);
     } finally {

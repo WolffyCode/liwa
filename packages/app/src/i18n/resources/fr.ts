@@ -1297,6 +1297,13 @@ export const fr: TranslationResources = {
     pinned: {
       title: "Épinglés",
     },
+    conversations: {
+      title: "Conversations",
+      empty: {
+        title: "Aucune conversation pour l’instant",
+        description: "Les conversations sans dossier d’espace de travail apparaissent ici.",
+      },
+    },
     host: {
       noHost: "Aucun hôte",
       switchTitle: "Changer d’hôte",
@@ -1304,7 +1311,6 @@ export const fr: TranslationResources = {
     },
     actions: {
       addProject: "Ajouter un projet",
-      newWorkspace: "Nouvel espace de travail",
       hosts: "Hôtes",
       settings: "Paramètres",
       closeSidebar: "Fermer la barre latérale",
@@ -1325,6 +1331,7 @@ export const fr: TranslationResources = {
       appName: "Paseo",
     },
     sections: {
+      projects: "Projets",
       sessions: "Historique",
       search: "Recherche",
       schedules: "Planifications",
@@ -1420,7 +1427,7 @@ export const fr: TranslationResources = {
     },
   },
   newWorkspace: {
-    title: "Nouvel espace de travail",
+    title: "Nouvelle conversation",
     create: "Créer",
     isolation: {
       local: "Local",
@@ -1428,20 +1435,31 @@ export const fr: TranslationResources = {
       label: "Isolation",
     },
     fields: {
-      project: "Projet",
+      directory: "Dossier de l’espace de travail",
       branch: "Branche",
       baseNotApplicable: "Non applicable",
       host: "Hôte",
     },
     titlePlaceholder: "Titre (facultatif)",
+    directory: {
+      placeholder: "Dossier de l’espace de travail (facultatif)",
+      none: "Sans espace de travail",
+      search: "Rechercher des dossiers d’espace de travail",
+      empty: "Aucun dossier d’espace de travail correspondant.",
+    },
     errors: {
       hostDisconnected: "L’hôte n’est pas connecté",
+      createFailed: "Impossible de créer la conversation. Réessayez.",
+      updateHost:
+        "Mettez à jour cet hôte pour démarrer une conversation sans dossier d’espace de travail.",
+      enterMessage:
+        "Saisissez un message pour démarrer une conversation sans dossier d’espace de travail.",
       createWorktreeFailed: "Impossible de créer le worktree",
       composerStateRequired: "L’état de la zone de saisie est requis",
       selectModel: "Sélectionnez un modèle",
     },
     tooltips: {
-      project: "Choisir le projet",
+      directory: "Choisir un dossier d’espace de travail (facultatif)",
       host: "Choisir l’hôte",
       isolation: "Choisir le niveau d’isolation",
       startingRef: "Choisir le point de départ",
@@ -2741,7 +2759,7 @@ export const fr: TranslationResources = {
       },
       help: {
         openProject: "Ouvrir un projet",
-        newWorkspace: "Nouvel espace de travail",
+        newWorkspace: "Nouvelle conversation",
         newWorktree: "Nouveau worktree",
         archiveWorkspace: "Archiver l’espace de travail",
         newTab: "Nouvel onglet",

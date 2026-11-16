@@ -79,9 +79,7 @@ export function resolveSidebarProjectLocalPath(
 // A project can host a brand-new workspace on a host when that host can create a
 // git worktree (git projects) OR the host supports running multiple independent
 // workspaces per directory (`workspaceMultiplicity`), which is what lets non-git
-// directories add a second workspace. Mirrors the gate used by the global "New
-// workspace" affordances (use-global-new-workspace-action.ts and left-sidebar's
-// SidebarNewWorkspaceHeaderRow): `canCreateWorktree || supportsMultiplicity`.
+// directories add a second workspace: `canCreateWorktree || supportsMultiplicity`.
 function resolveNewWorkspaceTarget(
   project: SidebarProjectEntry,
   supportsMultiplicityByServerId: ReadonlyMap<string, boolean>,

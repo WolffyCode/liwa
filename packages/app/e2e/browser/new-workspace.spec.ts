@@ -12,13 +12,13 @@ import {
   createWorktreeViaDaemon,
   delayBrowserAgentCreatedStatus,
   expectComposerGithubAttachmentPill,
-  expectNewWorkspaceProjectSelected,
   expectPickerClosed,
   expectPickerOpen,
   expectPickerSelected,
   expectStartingRefPickerTriggerPr,
   fillNewWorkspaceDraft,
   openGlobalNewWorkspaceComposer,
+  openGlobalNewWorkspaceComposerInProject,
   openBranchPicker,
   openNewWorkspaceComposer,
   openProjectViaDaemon,
@@ -32,6 +32,7 @@ import {
   selectBranchInPicker,
   selectGitHubPrInPicker,
   selectPickerOptionByKeyboard,
+  selectNewWorkspaceProject,
   selectWorkspaceIsolation,
   submitNewWorkspacePrompt,
 } from "../support/helpers/new-workspace";
@@ -275,13 +276,13 @@ test.describe("New workspace flow", () => {
 
       const projectTrigger = page.getByTestId("new-workspace-project-picker-trigger");
       await projectTrigger.click();
-      await page.getByPlaceholder("Search projects").fill("no matching project");
+      await page.getByPlaceholder("Search workspace directories").fill("no matching project");
       await expect(page.getByTestId("new-workspace-project-picker-add-project")).toBeVisible();
       await page.keyboard.press("Escape");
 
       await page.getByTestId("host-picker-trigger").click();
       await page.getByTestId(`new-workspace-host-picker-option-${emptyServerId}`).click();
-      await expect(projectTrigger).toContainText("Choose project");
+      await expect(projectTrigger).toContainText("Workspace directory (optional)");
       await projectTrigger.click();
 
       const addProject = page.getByTestId("new-workspace-project-picker-add-project");
@@ -428,7 +429,7 @@ test.describe("New workspace flow", () => {
     }
   });
 
-  test("global new workspace uses the last active project and creates one agent tab", async ({
+  test("global new conversation starts without a directory and creates one agent tab in the chosen project", async ({
     page,
   }) => {
     const serverId = getServerId();
@@ -453,7 +454,14 @@ test.describe("New workspace flow", () => {
       });
 
       await openGlobalNewWorkspaceComposer(page);
-      await expectNewWorkspaceProjectSelected(page, openedProject.projectDisplayName);
+      await expect(page.getByTestId("new-workspace-project-picker-trigger")).toContainText(
+        "Workspace directory (optional)",
+      );
+      expect(new URL(page.url()).searchParams.has("dir")).toBe(false);
+      await selectNewWorkspaceProject(page, {
+        projectKey: openedProject.projectKey,
+        projectDisplayName: openedProject.projectDisplayName,
+      });
       await submitNewWorkspacePrompt(page);
 
       const createdWorkspace = await assertNewWorkspaceSidebarAndHeader(page, {
@@ -610,8 +618,7 @@ test.describe("New workspace flow", () => {
       await switchSidebarToStatusGrouping(page);
       await startTrackingSidebarStatusGroups(page);
 
-      await openGlobalNewWorkspaceComposer(page);
-      await expectNewWorkspaceProjectSelected(page, openedProject.projectDisplayName);
+      await openGlobalNewWorkspaceComposerInProject(page, openedProject);
       await submitNewWorkspacePrompt(page);
 
       const createdWorkspace = await assertNewWorkspaceSidebarAndHeader(page, {
@@ -663,8 +670,7 @@ test.describe("New workspace flow", () => {
       await switchSidebarToStatusGrouping(page);
       await startTrackingSidebarStatusGroups(page);
 
-      await openGlobalNewWorkspaceComposer(page);
-      await expectNewWorkspaceProjectSelected(page, openedProject.projectDisplayName);
+      await openGlobalNewWorkspaceComposerInProject(page, openedProject);
       await submitNewWorkspaceWithoutPrompt(page);
 
       const createdWorkspace = await assertNewWorkspaceSidebarAndHeader(page, {

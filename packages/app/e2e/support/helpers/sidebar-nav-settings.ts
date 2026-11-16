@@ -32,7 +32,7 @@ function settingsRow(page: Page, key: SidebarNavKey): Locator {
 
 function itemLabel(key: SidebarNavKey): string {
   return {
-    "new-workspace": "New workspace",
+    "new-workspace": "New conversation",
     history: "History",
     search: "Search",
     schedules: "Schedules",

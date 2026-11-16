@@ -38,19 +38,16 @@ function context(
 ): ProjectSelectionContext {
   const contextKey = input.contextKey ?? "host:";
   const routeProject = input.routeProject ?? null;
-  const lastActiveProject = input.lastActiveProject ?? null;
   return {
     contextKey,
     manualContextKey: input.manualContextKey ?? "",
     selectedServerId: input.selectedServerId ?? "host",
     routeProject,
-    lastActiveProject,
     initialProjectSource:
       input.initialProjectSource ??
       resolveInitialProjectSelectionSource({
         initialProject: input.initialProject,
         routeProject,
-        lastActiveProject,
       }),
     shouldPreserveMissingProject: () => false,
     ...input,
@@ -192,41 +189,55 @@ describe("reconcileProjectSelection", () => {
     expect(resolveProjectSelection(hydratedSelection, archiveGap)).toEqual(hydratedProject);
   });
 
-  it("resets an automatic fallback when the remembered project hydrates", () => {
-    const fallback = project("fallback");
-    const remembered = project("remembered");
-    const current = createProjectSelection(
-      context({ initialProject: fallback, projects: [fallback, remembered] }),
-    );
-    const afterRememberedHydration = context({
-      initialProject: remembered,
-      projects: [fallback, remembered],
-      lastActiveProject: remembered,
+  it("keeps an explicit choice of no directory when the routed project hydrates", () => {
+    const routed = project("route-project");
+    const current: ProjectSelection = {
+      contextKey: routed.viewKey,
+      project: null,
+      source: "none",
+    };
+    const hydrated = context({
+      contextKey: "host:route-project",
+      manualContextKey: routed.viewKey,
+      initialProject: routed,
+      routeProject: routed,
+      projects: [routed, project("other")],
     });
 
-    expect(reconcileProjectSelection(current, afterRememberedHydration)).toEqual({
-      contextKey: "host:",
-      project: remembered,
-      source: "initial",
-    });
+    expect(reconcileProjectSelection(current, hydrated)).toEqual(current);
+    expect(resolveProjectSelection(current, hydrated)).toBeNull();
   });
 
-  it("keeps manual selections when the remembered project hydrates", () => {
+  it("starts a global New conversation without a directory", () => {
+    const projects = [project("first"), project("second")];
+    const global = context({ initialProject: null, projects });
+
+    expect(global.initialProjectSource).toBeNull();
+    expect(resolveProjectSelection(createProjectSelection(global), global)).toBeNull();
+  });
+
+  it("keeps the same no-directory selection when the project list is rebuilt", () => {
+    const current = createProjectSelection(context({ initialProject: null, projects: [] }));
+    const rebuilt = context({ initialProject: null, projects: [project("listed")] });
+
+    expect(reconcileProjectSelection(current, rebuilt)).toBe(current);
+  });
+
+  it("keeps manual selections as unrelated projects hydrate", () => {
     const manual = project("manual");
-    const remembered = project("remembered");
+    const other = project("other");
     const current: ProjectSelection = {
       contextKey: "",
       project: manual,
       originProject: manual,
       source: "manual",
     };
-    const afterRememberedHydration = context({
-      initialProject: remembered,
-      projects: [manual, remembered],
-      lastActiveProject: remembered,
+    const afterHydration = context({
+      initialProject: null,
+      projects: [manual, other],
     });
 
-    expect(reconcileProjectSelection(current, afterRememberedHydration)).toEqual(current);
+    expect(reconcileProjectSelection(current, afterHydration)).toEqual(current);
   });
 
   it("resolves a manual selection on another host while retaining its origin snapshot", () => {
@@ -655,10 +666,9 @@ describe("reconcileProjectSelection", () => {
     });
   });
 
-  it("resolves manual selections from selectable projects, not route or remembered projects", () => {
+  it("resolves manual selections from selectable projects, not the route project", () => {
     const manual = project("manual");
     const routeProject = project("route-project");
-    const remembered = project("remembered");
     const current: ProjectSelection = {
       contextKey: routeProject.viewKey,
       project: manual,
@@ -671,7 +681,6 @@ describe("reconcileProjectSelection", () => {
       initialProject: routeProject,
       projects: [manual],
       routeProject,
-      lastActiveProject: remembered,
     });
 
     expect(resolveProjectSelection(current, selectionContext)).toEqual(manual);

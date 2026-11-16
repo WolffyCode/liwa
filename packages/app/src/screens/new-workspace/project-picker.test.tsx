@@ -3,7 +3,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import type { HostProjectListItem } from "@/projects/host-projects";
-import { useNewWorkspaceProjectPicker } from "./project-picker";
+import { NO_PROJECT_OPTION_ID, useNewWorkspaceProjectPicker } from "./project-picker";
 
 function project(input: {
   viewKey: string;
@@ -54,7 +54,6 @@ describe("useNewWorkspaceProjectPicker", () => {
           projects,
           routeProject,
           routeProjectContextViewKey: routePlacement.viewKey,
-          lastActiveProject: null,
           allowAllProjects: true,
         }),
       {
@@ -78,5 +77,59 @@ describe("useNewWorkspaceProjectPicker", () => {
     });
 
     expect(result.current.selectedProject).toEqual(manualProject);
+  });
+
+  it("offers no directory first and keeps that choice when a routed project hydrates", () => {
+    const routed = project({
+      viewKey: "remote:github.com/acme/route",
+      projectKey: "remote:github.com/acme/route",
+      projectId: "route-local",
+      projectName: "Route project",
+    });
+    const { result, rerender } = renderHook(
+      ({ projects }) =>
+        useNewWorkspaceProjectPicker({
+          selectedServerId: "host",
+          projects,
+          routeProject: routed,
+          routeProjectContextViewKey: routed.viewKey,
+          allowAllProjects: true,
+        }),
+      { initialProps: { projects: [routed] } },
+    );
+
+    expect(result.current.selectedProject).toEqual(routed);
+    expect(result.current.projectPickerOptions[0]?.id).toBe(NO_PROJECT_OPTION_ID);
+    act(() => result.current.handleSelectProjectOption(NO_PROJECT_OPTION_ID));
+    expect(result.current.selectedProject).toBeNull();
+    expect(result.current.selectedProjectOptionId).toBe(NO_PROJECT_OPTION_ID);
+
+    rerender({ projects: [routed, { ...routed, viewKey: "other", projectName: "Other" }] });
+    expect(result.current.selectedProject).toBeNull();
+  });
+
+  it("starts a global entry without a directory even when projects exist", () => {
+    const listed = project({
+      viewKey: "remote:github.com/acme/listed",
+      projectKey: "remote:github.com/acme/listed",
+      projectId: "listed-local",
+      projectName: "Listed project",
+    });
+    const { result } = renderHook(
+      ({ projects }) =>
+        useNewWorkspaceProjectPicker({
+          selectedServerId: "host",
+          projects,
+          routeProject: null,
+          routeProjectContextViewKey: null,
+          allowAllProjects: true,
+        }),
+      { initialProps: { projects: [listed] } },
+    );
+
+    expect(result.current.selectedProject).toBeNull();
+    expect(result.current.selectedSourceDirectory).toBeNull();
+    act(() => result.current.selectProject(listed));
+    expect(result.current.selectedProject).toEqual(listed);
   });
 });

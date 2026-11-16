@@ -77,7 +77,7 @@ export async function expectCommandCenterToRemainAtTheTop(page: Page): Promise<v
 
 export async function expectPrimaryCommandCenterActions(panel: Locator): Promise<void> {
   const expectedActions = [
-    { title: "New workspace", shortcut: "⌘N" },
+    { title: "New conversation", shortcut: "⌘N" },
     { title: "Import session" },
     { title: "History" },
     { title: "Schedules" },

@@ -9,8 +9,7 @@ import { clickNewChat, gotoWorkspace } from "../support/helpers/launcher";
 import {
   assertNewWorkspaceSidebarAndHeader,
   connectNewWorkspaceDaemonClient,
-  expectNewWorkspaceProjectSelected,
-  openGlobalNewWorkspaceComposer,
+  openGlobalNewWorkspaceComposerInProject,
   selectWorkspaceIsolation,
   submitNewWorkspaceEmpty,
   submitNewWorkspacePrompt,
@@ -269,8 +268,7 @@ test.describe("Workspace model regressions", () => {
 
       await gotoWorkspace(page, seeded.workspaceId);
       await waitForSidebarHydration(page);
-      await openGlobalNewWorkspaceComposer(page);
-      await expectNewWorkspaceProjectSelected(page, seeded.projectDisplayName);
+      await openGlobalNewWorkspaceComposerInProject(page, seeded);
       await selectWorkspaceIsolation(page, "local");
       await submitNewWorkspacePrompt(page, "Fix login bug");
 
@@ -354,8 +352,7 @@ test.describe("Workspace model regressions", () => {
         indicator: "running",
       });
 
-      await openGlobalNewWorkspaceComposer(page);
-      await expectNewWorkspaceProjectSelected(page, seeded.projectDisplayName);
+      await openGlobalNewWorkspaceComposerInProject(page, seeded);
       await selectWorkspaceIsolation(page, "local");
       await submitNewWorkspaceEmpty(page);
 
@@ -470,8 +467,7 @@ test.describe("Workspace model regressions", () => {
         indicator: "needs_input",
       });
 
-      await openGlobalNewWorkspaceComposer(page);
-      await expectNewWorkspaceProjectSelected(page, seeded.projectDisplayName);
+      await openGlobalNewWorkspaceComposerInProject(page, seeded);
       await selectWorkspaceIsolation(page, "local");
       await submitNewWorkspaceEmpty(page);
 

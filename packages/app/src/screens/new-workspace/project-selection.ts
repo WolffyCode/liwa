@@ -5,8 +5,9 @@ import {
   type HostProjectListItem,
 } from "@/projects/host-projects";
 
-export type ProjectSelectionSource = "initial" | "manual";
-export type InitialProjectSelectionSource = "route" | "lastActive" | "fallback" | null;
+// Only an entry inside a project supplies one. A global entry starts without a directory, so a
+// remembered or first-listed project never becomes the default.
+export type InitialProjectSelectionSource = "route" | null;
 
 interface InitialProjectSelection {
   contextKey: string;
@@ -21,7 +22,17 @@ interface ManualProjectSelection {
   source: "manual";
 }
 
-export type ProjectSelection = InitialProjectSelection | ManualProjectSelection;
+/** The user cleared the directory: the next creation is an independent chat. */
+interface NoProjectSelection {
+  contextKey: string;
+  project: null;
+  source: "none";
+}
+
+export type ProjectSelection =
+  | InitialProjectSelection
+  | ManualProjectSelection
+  | NoProjectSelection;
 
 export interface ProjectSelectionContext {
   contextKey: string;
@@ -31,7 +42,6 @@ export interface ProjectSelectionContext {
   initialProjectSource: InitialProjectSelectionSource;
   projects: HostProjectListItem[];
   routeProject: HostProjectListItem | null;
-  lastActiveProject: HostProjectListItem | null;
   shouldPreserveMissingProject: (project: HostProjectListItem) => boolean;
 }
 
@@ -64,7 +74,6 @@ export function createProjectSelection({
 export function resolveInitialProjectSelectionSource(input: {
   initialProject: HostProjectListItem | null;
   routeProject: HostProjectListItem | null;
-  lastActiveProject: HostProjectListItem | null;
 }): InitialProjectSelectionSource {
   if (!input.initialProject) {
     return null;
@@ -82,29 +91,18 @@ export function resolveInitialProjectSelectionSource(input: {
   ) {
     return "route";
   }
-  if (
-    input.lastActiveProject?.viewKey === input.initialProject.viewKey ||
-    (input.lastActiveProject?.projectKey !== null &&
-      input.lastActiveProject?.projectKey !== undefined &&
-      input.lastActiveProject.projectKey === input.initialProject.projectKey)
-  ) {
-    return "lastActive";
-  }
-  return "fallback";
+  return null;
 }
 
 function resolveSelectedProjectFromInitialInputs(
   project: HostProjectListItem,
   context: ProjectSelectionContext,
 ): HostProjectListItem | null {
-  return (
-    (context.routeProject?.viewKey === project.viewKey ? context.routeProject : null) ??
-    (context.lastActiveProject?.viewKey === project.viewKey ? context.lastActiveProject : null)
-  );
+  return context.routeProject?.viewKey === project.viewKey ? context.routeProject : null;
 }
 
 function refreshSelectionProject(
-  selection: ProjectSelection,
+  selection: InitialProjectSelection | ManualProjectSelection,
   project: HostProjectListItem,
 ): ProjectSelection {
   if (selection.project === project) {
@@ -148,7 +146,7 @@ function shouldResetHydratedInitialSelection(
   if (
     selection.source !== "initial" ||
     !context.initialProject ||
-    (context.initialProjectSource !== "route" && context.initialProjectSource !== "lastActive")
+    context.initialProjectSource !== "route"
   ) {
     return false;
   }
@@ -205,6 +203,10 @@ export function reconcileProjectSelection(
   context: ProjectSelectionContext,
 ): ProjectSelection {
   const initialSelection = createProjectSelection(context);
+  // Clearing the directory is a manual choice: it survives hydration and host changes.
+  if (current.source === "none") {
+    return current.contextKey === context.manualContextKey ? current : initialSelection;
+  }
   const currentContextKey =
     current.source === "manual" ? context.manualContextKey : context.contextKey;
   if (current.contextKey !== currentContextKey) {
@@ -216,7 +218,10 @@ export function reconcileProjectSelection(
   }
 
   if (!current.project) {
-    return initialSelection;
+    // A global entry starts and stays without a directory. Returning the same selection keeps the
+    // picker's reconcile effect from re-rendering whenever the project list is rebuilt.
+    const isStillWithoutDirectory = context.initialProject === null;
+    return isStillWithoutDirectory ? current : initialSelection;
   }
 
   if (current.source === "manual") {

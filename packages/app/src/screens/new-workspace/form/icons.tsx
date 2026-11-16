@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { StyleSheet, withUnistyles } from "react-native-unistyles";
-import { Folder, FolderPlus, GitBranch, GitPullRequest } from "lucide-react-native";
+import { Folder, FolderPlus, GitBranch, GitPullRequest, MessageSquare } from "lucide-react-native";
 import { ProjectIconView } from "@/components/project-icon-view";
 import { ICON_SIZE, type Theme } from "@/styles/theme";
 import { projectIconPlaceholderLabelFromDisplayName } from "@/utils/project-display-name";
@@ -9,12 +9,14 @@ const ThemedFolder = withUnistyles(Folder);
 const ThemedFolderPlus = withUnistyles(FolderPlus);
 const ThemedGitBranch = withUnistyles(GitBranch);
 const ThemedGitPullRequest = withUnistyles(GitPullRequest);
+const ThemedMessageSquare = withUnistyles(MessageSquare);
 const mutedColor = (theme: Theme) => ({ color: theme.colors.foregroundMuted });
 
 export const folderIcon = <ThemedFolder size={ICON_SIZE.sm} uniProps={mutedColor} />;
 export const addProjectIcon = <ThemedFolderPlus size={ICON_SIZE.sm} uniProps={mutedColor} />;
 export const branchIcon = <ThemedGitBranch size={ICON_SIZE.sm} uniProps={mutedColor} />;
 export const pullRequestIcon = <ThemedGitPullRequest size={ICON_SIZE.sm} uniProps={mutedColor} />;
+export const chatIcon = <ThemedMessageSquare size={ICON_SIZE.sm} uniProps={mutedColor} />;
 
 // Single uppercase initial inside an iconSize.md (16px) square — below the smallest font-size
 // token, so it stays a literal sized to the box.

@@ -134,6 +134,35 @@ describe("workspace source of truth consumption", () => {
     });
   });
 
+  it("names only the chat in an independent chat's header, even inside an enclosing repo", () => {
+    const chat = createWorkspaceDescriptor({
+      id: "wks_chat",
+      projectDisplayName: "Chats",
+      projectKind: "non_git",
+      workspaceKind: "directory",
+      purpose: "chat",
+      name: "Trip ideas",
+    });
+    expect(
+      resolveWorkspaceHeaderRenderState({
+        workspace: chat,
+        checkoutState: { kind: "ready", checkout: { isGit: true, currentBranch: "main" } },
+      }),
+    ).toEqual({
+      kind: "ready",
+      title: "Trip ideas",
+      subtitle: "",
+      isSubtitleDistinct: false,
+      isGitCheckout: false,
+      currentBranchName: null,
+    });
+    expect(
+      resolveWorkspaceHeader({
+        workspace: createWorkspaceDescriptor({ projectDisplayName: "Chats", name: "chat" }),
+      }).subtitle,
+    ).toBe("Chats");
+  });
+
   it("renders git checkout headers with branch affordance after checkout status resolves", () => {
     expect(
       resolveWorkspaceHeaderRenderState({

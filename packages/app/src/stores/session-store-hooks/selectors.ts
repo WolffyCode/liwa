@@ -1,8 +1,10 @@
 import equal from "fast-deep-equal";
 import {
+  buildWorkspaceStructureChats,
   buildWorkspaceStructureProjects,
   type WorkspaceSort,
   type WorkspaceStructure,
+  type WorkspaceStructureChat,
   type WorkspaceStructureProject,
 } from "@/projects/workspace-structure";
 import { resolveWorkspaceMapKeyByIdentity } from "@/utils/workspace-identity";
@@ -27,6 +29,7 @@ export interface SidebarOrderSnapshot {
 }
 
 const EMPTY_WORKSPACE_KEYS: string[] = [];
+const EMPTY_WORKSPACE_CHATS: WorkspaceStructureChat[] = [];
 const EMPTY_WORKSPACE_STRUCTURE: WorkspaceStructure = { projects: [] };
 
 export const workspaceEqualityFns = {
@@ -216,6 +219,32 @@ export function createWorkspaceStructureProjectsSelector(
       return previous && equal(previous, project) ? previous : project;
     });
     return previousProjects;
+  };
+}
+
+/** Rebuilds only when a host's workspace map changes, and keeps the previous list when equal. */
+export function createWorkspaceStructureChatsSelector(
+  serverIds: readonly string[],
+): (state: SessionsSnapshot) => WorkspaceStructureChat[] {
+  let previousInputs: Array<Map<string, WorkspaceDescriptor> | undefined> | null = null;
+  let previousChats = EMPTY_WORKSPACE_CHATS;
+
+  return (state) => {
+    const inputs = serverIds.map((serverId) => state.sessions[serverId]?.workspaces);
+    const priorInputs = previousInputs;
+    const unchanged =
+      priorInputs !== null &&
+      inputs.every((workspaces, index) => workspaces === priorInputs[index]);
+    if (unchanged) return previousChats;
+
+    previousInputs = inputs;
+    const sessions = serverIds.flatMap((serverId, index) => {
+      const workspaces = inputs[index];
+      return workspaces ? [{ serverId, workspaces: workspaces.values() }] : [];
+    });
+    const next = buildWorkspaceStructureChats({ sessions });
+    if (!equal(previousChats, next)) previousChats = next;
+    return previousChats;
   };
 }
 

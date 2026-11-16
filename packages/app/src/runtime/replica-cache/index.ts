@@ -7,6 +7,7 @@ import {
   WorkspaceGitHubRuntimePayloadSchema,
 } from "@getpaseo/protocol/messages";
 import { AgentProviderSchema } from "@getpaseo/protocol/provider-manifest";
+import { WorkspacePurposeSchema } from "@getpaseo/protocol/workspace-purpose";
 import type { PluginTimelineData } from "@getpaseo/plugin";
 import {
   normalizeProjectDescriptor,
@@ -318,6 +319,8 @@ const StoredWorkspaceSchema = z.strictObject({
   worktreeSlug: z.string().optional(),
   projectKind: z.enum(["git", "non_git", "directory"]),
   workspaceKind: z.enum(["directory", "local_checkout", "checkout", "worktree"]),
+  // A cold read without it would paint a chat's private backing as an ordinary project.
+  purpose: WorkspacePurposeSchema.optional(),
   // Require the flag so older rows that lost background visibility invalidate the workspace cursor.
   background: z.boolean(),
   name: z.string(),
@@ -341,6 +344,7 @@ const StoredWorkspaceSchema = z.strictObject({
 
 const StoredProjectSchema = z.strictObject({
   projectId: z.string(),
+  purpose: WorkspacePurposeSchema.optional(),
   projectKey: z.string().optional(),
   projectDisplayName: z.string(),
   projectCustomName: z.string().nullable(),
@@ -744,6 +748,7 @@ function serializeWorkspace(workspace: WorkspaceDescriptor): StoredWorkspace {
     worktreeSlug: workspace.worktreeSlug,
     projectKind: workspace.projectKind,
     workspaceKind: workspace.workspaceKind,
+    ...(workspace.purpose ? { purpose: workspace.purpose } : {}),
     background: workspace.background ?? false,
     name: workspace.name,
     title: workspace.title ?? null,
@@ -777,6 +782,7 @@ function serializeWorkspace(workspace: WorkspaceDescriptor): StoredWorkspace {
 function serializeProject(project: ProjectDescriptor): StoredProject {
   return {
     projectId: project.projectId,
+    ...(project.purpose ? { purpose: project.purpose } : {}),
     ...(project.projectKey ? { projectKey: project.projectKey } : {}),
     projectDisplayName: project.projectDisplayName,
     projectCustomName: project.projectCustomName,

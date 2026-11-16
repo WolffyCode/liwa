@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 import type { ProjectDescriptor, WorkspaceDescriptor } from "@/stores/session-store";
-import { buildWorkspaceStructureProjects, createProjectViewKey } from "./workspace-structure";
+import {
+  buildWorkspaceStructureChats,
+  buildWorkspaceStructureProjects,
+  createProjectViewKey,
+} from "./workspace-structure";
 
 function project(input: {
   id: string;
@@ -223,4 +227,76 @@ test("time ties use workspace identity so renaming cannot move Created rows", ()
   expect(
     buildWorkspaceStructureProjects({ sessions, workspaceSort: "created" })[0].workspaceKeys,
   ).toEqual(["h:a", "h:b"]);
+});
+
+describe("independent chats", () => {
+  const chatProject: ProjectDescriptor = {
+    projectId: "prj_chats",
+    purpose: "chat",
+    projectKey: "host:srv:/home/.paseo/chats",
+    projectDisplayName: "Chats",
+    projectCustomName: null,
+    projectRootPath: "/home/.paseo/chats",
+    projectKind: "non_git",
+  };
+  function chat(id: string, name: string, lastPrompt: string | null): WorkspaceDescriptor {
+    return {
+      ...workspace(id, "prj_chats", `/home/.paseo/chats/${id}`),
+      projectDisplayName: "Chats",
+      projectKind: "non_git",
+      workspaceKind: "directory",
+      purpose: "chat",
+      name,
+      createdAt: new Date("2026-11-01T00:00:00.000Z"),
+      lastUserMessageAt: lastPrompt ? new Date(lastPrompt) : null,
+    };
+  }
+
+  test("are not display projects and list newest prompt first", () => {
+    const ordinary = project({ id: "prj_app", key: "remote:github.com/acme/app", root: "/app" });
+    const sessions = [
+      {
+        serverId: "srv",
+        projects: [ordinary, chatProject],
+        workspaces: [
+          workspace("ws-app", "prj_app", "/app"),
+          chat("ws-old", "Older", "2026-11-02T00:00:00.000Z"),
+          chat("ws-new", "Newer", "2026-11-03T00:00:00.000Z"),
+          chat("ws-silent", "Never prompted", null),
+        ],
+      },
+    ];
+
+    expect(
+      buildWorkspaceStructureProjects({ sessions }).map((entry) => entry.workspaceKeys),
+    ).toEqual([["srv:ws-app"]]);
+    expect(buildWorkspaceStructureChats({ sessions })).toEqual([
+      {
+        workspaceKey: "srv:ws-new",
+        serverId: "srv",
+        workspaceId: "ws-new",
+        projectId: "prj_chats",
+        projectName: "Chats",
+        name: "Newer",
+      },
+      expect.objectContaining({ workspaceKey: "srv:ws-old" }),
+      expect.objectContaining({ workspaceKey: "srv:ws-silent" }),
+    ]);
+  });
+
+  test("are recognized by purpose, not by a project named Chats", () => {
+    const namedChats = project({ id: "prj_named", key: null, root: "/work/chats", name: "Chats" });
+    const sessions = [
+      {
+        serverId: "srv",
+        projects: [namedChats],
+        workspaces: [{ ...workspace("ws-named", "prj_named", "/work/chats"), name: "chat" }],
+      },
+    ];
+
+    expect(buildWorkspaceStructureProjects({ sessions }).map((entry) => entry.projectName)).toEqual(
+      ["Chats"],
+    );
+    expect(buildWorkspaceStructureChats({ sessions })).toEqual([]);
+  });
 });

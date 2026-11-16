@@ -127,6 +127,7 @@ export interface WorkspaceDescriptor {
   setupStatus?: WorkspaceDescriptorPayload["setupStatus"];
   projectKind: WorkspaceDescriptorPayload["projectKind"];
   workspaceKind: WorkspaceDescriptorPayload["workspaceKind"];
+  purpose?: WorkspaceDescriptorPayload["purpose"];
   background?: boolean;
   name: string;
   title?: string | null;
@@ -171,6 +172,7 @@ export function normalizeWorkspaceDescriptor(
     setupStatus: payload.setupStatus ?? null,
     projectKind: payload.projectKind,
     workspaceKind: payload.workspaceKind,
+    ...(payload.purpose ? { purpose: payload.purpose } : {}),
     background: payload.background ?? false,
     parentWorkspaceId: payload.parentWorkspaceId,
     name: payload.name,
@@ -193,6 +195,7 @@ export function normalizeWorkspaceDescriptor(
 
 export interface ProjectDescriptor {
   projectId: string;
+  purpose?: WorkspaceProjectDescriptorPayload["purpose"];
   projectKey?: string | null;
   projectDisplayName: string;
   projectCustomName: string | null;
@@ -207,6 +210,7 @@ export function normalizeProjectDescriptor(
 ): ProjectDescriptor {
   return {
     projectId: payload.projectId,
+    ...(payload.purpose ? { purpose: payload.purpose } : {}),
     projectKey: payload.projectKey ?? null,
     projectDisplayName: payload.projectDisplayName,
     projectCustomName: payload.projectCustomName ?? null,

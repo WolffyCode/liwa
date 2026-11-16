@@ -8,7 +8,7 @@ import {
 } from "../support/helpers/agent-profiles";
 import { connectDaemonClient } from "../support/helpers/daemon-client-loader";
 import { gotoWorkspace } from "../support/helpers/launcher";
-import { openGlobalNewWorkspaceComposer } from "../support/helpers/new-workspace";
+import { openGlobalNewWorkspaceComposerInProject } from "../support/helpers/new-workspace";
 import { seedWorkspace } from "../support/helpers/seed-client";
 import { waitForSidebarHydration } from "../support/helpers/workspace-ui";
 import { expectRememberedModel, expectSavedSelection } from "../support/helpers/model-memory";
@@ -79,13 +79,13 @@ test("restores the remembered model when a provider recovers after New workspace
     await rememberModel(page);
     await gotoWorkspace(page, workspace.workspaceId);
     await waitForSidebarHydration(page);
-    await openGlobalNewWorkspaceComposer(page);
+    await openGlobalNewWorkspaceComposerInProject(page, workspace);
     await expectRememberedModel(page, LABEL);
 
     await gotoWorkspace(page, workspace.workspaceId);
     await waitForSidebarHydration(page);
     await setProviderAvailability(client, workspace.repoPath, false);
-    await openGlobalNewWorkspaceComposer(page);
+    await openGlobalNewWorkspaceComposerInProject(page, workspace);
     await expect(
       page.getByTestId("combined-model-selector").filter({ visible: true }),
     ).not.toContainText("Loading...");

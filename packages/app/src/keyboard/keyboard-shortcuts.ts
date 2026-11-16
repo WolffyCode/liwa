@@ -286,7 +286,7 @@ const SHORTCUT_BINDINGS: readonly ShortcutBinding[] = [
     },
   },
 
-  // --- New workspace ---
+  // --- New conversation ---
   {
     id: "workspace-new-cmd-n-mac",
     action: "workspace.new",
@@ -295,7 +295,7 @@ const SHORTCUT_BINDINGS: readonly ShortcutBinding[] = [
     help: {
       id: "new-workspace",
       section: "workspaces",
-      label: "New workspace",
+      label: "New conversation",
     },
   },
   {
@@ -306,7 +306,7 @@ const SHORTCUT_BINDINGS: readonly ShortcutBinding[] = [
     help: {
       id: "new-workspace",
       section: "workspaces",
-      label: "New workspace",
+      label: "New conversation",
     },
   },
 

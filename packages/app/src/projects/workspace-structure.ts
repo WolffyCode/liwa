@@ -24,6 +24,17 @@ export interface WorkspaceStructure {
   projects: WorkspaceStructureProject[];
 }
 
+/** An independent chat. It has no display project: its private backing project is omitted. */
+export interface WorkspaceStructureChat {
+  workspaceKey: string;
+  serverId: string;
+  workspaceId: string;
+  /** The private backing project on the chat's host, used only as placement identity. */
+  projectId: string;
+  projectName: string;
+  name: string;
+}
+
 interface WorkspaceStructureSession {
   serverId: string;
   projects: Iterable<ProjectDescriptor>;
@@ -61,6 +72,9 @@ export function buildWorkspaceStructureProjects(input: {
 
   for (const session of input.sessions) {
     for (const project of session.projects) {
+      // A chat's private project is execution backing, never a project the user chose; its
+      // workspaces have no display project here and come from buildWorkspaceStructureChats.
+      if (project.purpose === "chat") continue;
       projectEntries.push({ serverId: session.serverId, project });
       const sharedKey = project.projectKey ?? null;
       if (sharedKey) {
@@ -119,6 +133,37 @@ export function buildWorkspaceStructureProjects(input: {
           sensitivity: "base",
         }) || left.viewKey.localeCompare(right.viewKey),
     );
+}
+
+/** Independent chats across hosts, most recent human prompt first. */
+export function buildWorkspaceStructureChats(input: {
+  sessions: Pick<WorkspaceStructureSession, "serverId" | "workspaces">[];
+}): WorkspaceStructureChat[] {
+  const chats: Array<{ chat: WorkspaceStructureChat; sortItem: WorkspaceSortItem }> = [];
+  for (const session of input.sessions) {
+    for (const workspace of session.workspaces) {
+      if (workspace.purpose !== "chat") continue;
+      const workspaceKey = `${session.serverId}:${workspace.id}`;
+      chats.push({
+        chat: {
+          workspaceKey,
+          serverId: session.serverId,
+          workspaceId: workspace.id,
+          projectId: workspace.projectId,
+          projectName: workspace.projectCustomName ?? workspace.projectDisplayName,
+          name: workspace.name,
+        },
+        sortItem: {
+          workspaceKey,
+          workspaceName: workspace.name,
+          sortTime: workspaceSortTime(workspace, "lastPrompt"),
+        },
+      });
+    }
+  }
+  return chats
+    .sort((left, right) => compareWorkspaceTimes(left.sortItem, right.sortItem))
+    .map((entry) => entry.chat);
 }
 
 export function createProjectViewKey(

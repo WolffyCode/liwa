@@ -1277,6 +1277,13 @@ export const en = {
     pinned: {
       title: "Pinned",
     },
+    conversations: {
+      title: "Conversations",
+      empty: {
+        title: "No conversations yet",
+        description: "Conversations without a workspace directory appear here.",
+      },
+    },
     host: {
       noHost: "No host",
       switchTitle: "Switch host",
@@ -1284,7 +1291,6 @@ export const en = {
     },
     actions: {
       addProject: "Add project",
-      newWorkspace: "New workspace",
       hosts: "Hosts",
       settings: "Settings",
       closeSidebar: "Close sidebar",
@@ -1305,6 +1311,7 @@ export const en = {
       appName: "Paseo",
     },
     sections: {
+      projects: "Projects",
       sessions: "History",
       search: "Search",
       schedules: "Schedules",
@@ -1400,7 +1407,7 @@ export const en = {
     },
   },
   newWorkspace: {
-    title: "New workspace",
+    title: "New conversation",
     create: "Create",
     isolation: {
       local: "Local",
@@ -1408,20 +1415,29 @@ export const en = {
       label: "Isolation",
     },
     fields: {
-      project: "Project",
+      directory: "Workspace directory",
       branch: "Branch",
       baseNotApplicable: "Not applicable",
       host: "Host",
     },
     titlePlaceholder: "Title (optional)",
+    directory: {
+      placeholder: "Workspace directory (optional)",
+      none: "Without a workspace",
+      search: "Search workspace directories",
+      empty: "No matching workspace directories.",
+    },
     errors: {
       hostDisconnected: "Host is not connected",
+      createFailed: "Could not create the conversation. Try again.",
+      updateHost: "Update this host to start a conversation without a workspace directory.",
+      enterMessage: "Enter a message to start a conversation without a workspace directory.",
       createWorktreeFailed: "Failed to create worktree",
       composerStateRequired: "Composer state is required",
       selectModel: "Select a model",
     },
     tooltips: {
-      project: "Choose the project",
+      directory: "Choose a workspace directory (optional)",
       host: "Choose the host",
       isolation: "Choose the isolation level",
       startingRef: "Choose where to start from",
@@ -2810,7 +2826,7 @@ export const en = {
       },
       help: {
         openProject: "Open project",
-        newWorkspace: "New workspace",
+        newWorkspace: "New conversation",
         newWorktree: "New worktree",
         archiveWorkspace: "Archive workspace",
         newTab: "New tab",

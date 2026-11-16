@@ -176,13 +176,13 @@ export async function withNewWorkspaceIssuesExample(
       switchToOtherProject: () =>
         test.step("switch to the other project", async () => {
           if (!other) throw new Error("Open the example with otherProject to switch projects");
-          await page.getByRole("button", { name: "Workspace project" }).click();
+          await page.getByRole("button", { name: "Workspace directory" }).click();
           await page
             .getByTestId("combobox-desktop-container")
             .last()
             .getByText(other.projectDisplayName, { exact: true })
             .click();
-          await expect(page.getByRole("button", { name: "Workspace project" })).toContainText(
+          await expect(page.getByRole("button", { name: "Workspace directory" })).toContainText(
             other.projectDisplayName,
           );
           target = other;

@@ -85,7 +85,7 @@ async function openNewWorkspaceFromContextProject(
     workspaceId: scenario.contextWorkspaceId,
   });
   await openGlobalNewWorkspaceComposer(page);
-  await expectNewWorkspaceProjectSelected(page, "Context project");
+  await expectNewWorkspaceProjectSelected(page, "Workspace directory (optional)");
 }
 
 const test = base.extend<{ crossHostProject: CrossHostProjectScenario }>({
@@ -200,10 +200,7 @@ test.describe("New workspace host project preservation", () => {
     await expectNewWorkspaceProjectSelected(page, SHARED_PROJECT_NAME);
   });
 
-  test("keeps the active workspace project selected when switching hosts", async ({
-    page,
-    crossHostProject,
-  }) => {
+  test("keeps the selected project when switching hosts", async ({ page, crossHostProject }) => {
     await openProjectDirectoryWithHosts(page, {
       hosts: [crossHostProject.secondaryHost],
       primaryLabel: PRIMARY_HOST_LABEL,
@@ -214,7 +211,11 @@ test.describe("New workspace host project preservation", () => {
       workspaceId: crossHostProject.primarySharedWorkspaceId,
     });
     await openGlobalNewWorkspaceComposer(page);
-    await expectNewWorkspaceProjectSelected(page, SHARED_PROJECT_NAME);
+    await selectNewWorkspaceProject(page, {
+      projectKey: crossHostProject.sharedProjectKey,
+      projectViewKey: crossHostProject.selectedProjectViewKey,
+      projectDisplayName: SHARED_PROJECT_NAME,
+    });
 
     await selectNewWorkspaceHost(page, SECONDARY_HOST_LABEL);
 

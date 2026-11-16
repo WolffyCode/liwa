@@ -1257,7 +1257,14 @@ export const zhCN: TranslationResources = {
       clear: "清除筛选",
     },
     pinned: {
-      title: "已置顶",
+      title: "置顶",
+    },
+    conversations: {
+      title: "对话",
+      empty: {
+        title: "还没有对话",
+        description: "不关联工作区目录的对话会显示在这里。",
+      },
     },
     host: {
       noHost: "没有 Host",
@@ -1266,7 +1273,6 @@ export const zhCN: TranslationResources = {
     },
     actions: {
       addProject: "添加 project",
-      newWorkspace: "新建工作区",
       hosts: "Hosts",
       settings: "设置",
       closeSidebar: "关闭侧边栏",
@@ -1287,6 +1293,7 @@ export const zhCN: TranslationResources = {
       appName: "Paseo",
     },
     sections: {
+      projects: "项目",
       sessions: "历史",
       search: "搜索",
       schedules: "计划",
@@ -1379,7 +1386,7 @@ export const zhCN: TranslationResources = {
     },
   },
   newWorkspace: {
-    title: "新建 workspace",
+    title: "新聊天",
     create: "创建",
     isolation: {
       local: "本地",
@@ -1387,20 +1394,29 @@ export const zhCN: TranslationResources = {
       label: "隔离",
     },
     fields: {
-      project: "项目",
+      directory: "工作区目录",
       branch: "分支",
       baseNotApplicable: "不适用",
       host: "主机",
     },
     titlePlaceholder: "标题（可选）",
+    directory: {
+      placeholder: "工作区目录（可选）",
+      none: "不关联工作区",
+      search: "搜索工作区目录",
+      empty: "没有匹配的工作区目录。",
+    },
     errors: {
       hostDisconnected: "Host 未连接",
+      createFailed: "创建对话失败，请重试。",
+      updateHost: "请更新此主机，才能发起不关联工作区目录的对话。",
+      enterMessage: "请输入消息，才能发起不关联工作区目录的对话。",
       createWorktreeFailed: "创建 worktree 失败",
       composerStateRequired: "Composer 状态必填",
       selectModel: "请选择模型",
     },
     tooltips: {
-      project: "Choose the project",
+      directory: "选择工作区目录（可选）",
       host: "Choose the host",
       isolation: "Choose the isolation level",
       startingRef: "选择起始位置",
@@ -2650,7 +2666,7 @@ export const zhCN: TranslationResources = {
       },
       help: {
         openProject: "打开项目",
-        newWorkspace: "新建 workspace",
+        newWorkspace: "新聊天",
         newWorktree: "新建 worktree",
         archiveWorkspace: "归档工作区",
         newTab: "新建标签",

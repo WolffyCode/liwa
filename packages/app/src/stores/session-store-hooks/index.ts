@@ -1,9 +1,10 @@
-import type { WorkspaceSort } from "@/projects/workspace-structure";
+import type { WorkspaceSort, WorkspaceStructureChat } from "@/projects/workspace-structure";
 import { useMemo } from "react";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 import { useSidebarOrderStore } from "@/stores/sidebar-order-store";
 import {
   composeWorkspaceStructure,
+  createWorkspaceStructureChatsSelector,
   createWorkspaceStructureProjectsSelector,
   selectHasHydratedWorkspaces,
   selectHydratedWorkspaceServerIds,
@@ -124,6 +125,12 @@ export function useWorkspaceStructure(
       }),
     [projectOrder, projects, workspaceOrderByProject],
   );
+}
+
+/** Independent chats on these hosts; they are absent from `useWorkspaceStructure` projects. */
+export function useWorkspaceChats(serverIds: string[]): WorkspaceStructureChat[] {
+  const selectChats = useMemo(() => createWorkspaceStructureChatsSelector(serverIds), [serverIds]);
+  return useStoreWithEqualityFn(useSessionStore, selectChats, workspaceEqualityFns.identity);
 }
 
 export function useWorkspaceKeys(serverId: string | null): string[] {

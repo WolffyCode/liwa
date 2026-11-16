@@ -103,7 +103,7 @@ import { loadDesktopSettings } from "@/desktop/settings/desktop-settings";
 import { RosettaCalloutSource } from "@/desktop/updates/rosetta-callout-source";
 import { UpdateCalloutSource } from "@/desktop/updates/update-callout-source";
 import { useActiveWorktreeNewAction } from "@/hooks/use-active-worktree-new-action";
-import { useGlobalNewWorkspaceAction } from "@/hooks/use-global-new-workspace-action";
+import { useGlobalNewChatAction } from "@/chats/new-chat";
 import { useLatchedBoolean } from "@/hooks/use-latched-boolean";
 import { useFaviconStatus } from "@/hooks/use-favicon-status";
 import { useKeyboardShortcuts } from "@/keyboard/use-shortcuts";
@@ -450,7 +450,7 @@ function AppContainer({ children, chromeEnabled: chromeEnabledOverride }: AppCon
   });
 
   useActiveWorktreeNewAction();
-  useGlobalNewWorkspaceAction();
+  useGlobalNewChatAction();
 
   const activeWorkspace = useActiveWorkspaceSelection();
   const explorerVisible = useIsExplorerSidebarOpen({

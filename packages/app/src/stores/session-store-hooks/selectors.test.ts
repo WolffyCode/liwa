@@ -4,6 +4,7 @@ import { createProjectViewKey } from "@/projects/workspace-structure";
 import type { DaemonClient } from "@getpaseo/client/internal/daemon-client";
 import {
   composeWorkspaceStructure,
+  createWorkspaceStructureChatsSelector,
   createWorkspaceStructureProjectsSelector,
   selectHasWorkspaces,
   selectHydratedWorkspaceServerIds,
@@ -335,6 +336,47 @@ describe("selectWorkspaceFields", () => {
 });
 
 describe("workspace structure composition", () => {
+  it("lists chats apart from projects and keeps the list while workspaces are unchanged", () => {
+    const ordinary = createWorkspace({ id: "workspace-a" });
+    const chat: WorkspaceDescriptor = {
+      ...createWorkspace({
+        id: "workspace-chat",
+        projectId: "project-chats",
+        projectDisplayName: "Chats",
+        workspaceKind: "directory",
+        name: "Trip ideas",
+      }),
+      purpose: "chat",
+    };
+    const workspaces = new Map([
+      [ordinary.id, ordinary],
+      [chat.id, chat],
+    ]);
+    const projects = new Map([
+      [ordinary.projectId, projectDescriptorFromTestWorkspace(ordinary)],
+      [chat.projectId, { ...projectDescriptorFromTestWorkspace(chat), purpose: "chat" as const }],
+    ]);
+    const selectChats = createWorkspaceStructureChatsSelector([SERVER_ID]);
+    const selectProjects = createWorkspaceStructureProjectsSelector([SERVER_ID]);
+    const state = { sessions: { [SERVER_ID]: { workspaces, projects } } };
+
+    const chats = selectChats(state);
+    expect(chats.map((entry) => entry.workspaceKey)).toEqual([`${SERVER_ID}:workspace-chat`]);
+    expect(selectProjects(state).flatMap((project) => project.workspaceKeys)).toEqual([
+      `${SERVER_ID}:workspace-a`,
+    ]);
+    expect(
+      selectChats({
+        sessions: { [SERVER_ID]: { workspaces, projects, hasHydratedWorkspaces: true } },
+      }),
+    ).toBe(chats);
+    expect(
+      selectChats({
+        sessions: { [SERVER_ID]: { workspaces: new Map(workspaces), projects } },
+      }),
+    ).toBe(chats);
+  });
+
   it("reuses structure when unrelated session state changes", () => {
     const workspace = createWorkspace({ id: "workspace-a" });
     const workspaces = new Map([[workspace.id, workspace]]);

@@ -456,7 +456,7 @@ test.describe("Composer autocomplete", () => {
     const commandRequestsByAgentId = recordCommandRequestsByAgentId(page);
 
     await page.goto("/new");
-    await expectNewWorkspaceProjectSelected(page, "Choose project");
+    await expectNewWorkspaceProjectSelected(page, "Workspace directory (optional)");
     await composerLocator(page).fill("/");
 
     const popover = page

@@ -18,7 +18,14 @@ import {
 } from "./field-trigger";
 import { branchIcon, folderIcon, ProjectIcon, pullRequestIcon } from "./icons";
 import { LaunchControl } from "./launch-control";
-import { AddProjectOption, IsolationOption, ProjectOption, RefOption } from "./options";
+import {
+  AddProjectOption,
+  IsolationOption,
+  NoProjectOption,
+  ProjectOption,
+  RefOption,
+} from "./options";
+import { NO_PROJECT_OPTION_ID } from "../project-picker";
 
 type Isolation = "local" | "worktree";
 type RenderOption = NonNullable<ComboboxProps["renderOption"]>;
@@ -102,6 +109,9 @@ function useProjectPicker(
   const { supportsWorkspaceMultiplicity, onAddProject } = project;
   const renderOption = useCallback<RenderOption>(
     (row) => {
+      if (row.option.id === NO_PROJECT_OPTION_ID) {
+        return <NoProjectOption {...row} disabled={isPending} />;
+      }
       const item = projectByOptionId.get(row.option.id);
       return (
         <ProjectOption
@@ -206,9 +216,9 @@ export function useNewWorkspaceForm(props: NewWorkspaceFormProps): ReactElement 
     <FieldTrigger
       ref={project.anchorRef}
       variant={variant}
-      label={t("newWorkspace.fields.project")}
-      accessibilityLabel="Workspace project"
-      tooltip={t("newWorkspace.tooltips.project")}
+      label={t("newWorkspace.fields.directory")}
+      accessibilityLabel={t("newWorkspace.fields.directory")}
+      tooltip={t("newWorkspace.tooltips.directory")}
       shortcutAction="new-workspace"
       icon={projectIcon}
       value={project.triggerLabel}
@@ -275,7 +285,8 @@ export function useNewWorkspaceForm(props: NewWorkspaceFormProps): ReactElement 
       testID="new-workspace-ref-picker-trigger"
     />
   ) : null;
-  const launchField = (
+  // A terminal needs a directory to run in; without one the conversation is a chat.
+  const launchField = selectedProject ? (
     <LaunchControl
       variant={variant}
       serverId={launch.serverId}
@@ -284,7 +295,7 @@ export function useNewWorkspaceForm(props: NewWorkspaceFormProps): ReactElement 
       profiles={launch.profiles}
       disabled={launch.disabled}
     />
-  );
+  ) : null;
 
   const pickers = (
     <>
@@ -293,14 +304,14 @@ export function useNewWorkspaceForm(props: NewWorkspaceFormProps): ReactElement 
         value={project.selectedOptionId}
         onSelect={project.onSelect}
         searchable
-        searchPlaceholder="Search projects"
-        title={t("newWorkspace.fields.project")}
+        searchPlaceholder={t("newWorkspace.directory.search")}
+        title={t("newWorkspace.fields.directory")}
         open={project.openState}
         onOpenChange={project.onOpenChange}
         desktopPlacement="bottom-start"
         desktopMinWidth={360}
         anchorRef={project.anchorRef}
-        emptyText="No projects available."
+        emptyText={t("newWorkspace.directory.empty")}
         renderOption={projectPicker.renderOption}
         footer={projectPicker.footer}
       />
@@ -342,10 +353,11 @@ export function useNewWorkspaceForm(props: NewWorkspaceFormProps): ReactElement 
         {baseField}
         {pluginItems}
         {launchField}
-        {/* Isolation and Base come and go with the project; their rows stay reserved so the
-            stack keeps one height and nothing above the composer jumps. */}
+        {/* Isolation, Base and Launch come and go with the project; their rows stay reserved so
+            the stack keeps one height and nothing above the composer jumps. */}
         {isolationField ? null : <View style={styles.reservedField} pointerEvents="none" />}
         {baseField ? null : <View style={styles.reservedField} pointerEvents="none" />}
+        {launchField ? null : <View style={styles.reservedField} pointerEvents="none" />}
         {pickers}
       </View>
     );

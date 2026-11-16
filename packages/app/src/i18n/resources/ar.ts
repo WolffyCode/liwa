@@ -1267,6 +1267,13 @@ export const ar: TranslationResources = {
     pinned: {
       title: "المثبتة",
     },
+    conversations: {
+      title: "المحادثات",
+      empty: {
+        title: "لا توجد محادثات بعد",
+        description: "تظهر هنا المحادثات التي لا ترتبط بمجلد مساحة عمل.",
+      },
+    },
     host: {
       noHost: "لا مضيف",
       switchTitle: "تبديل المضيف",
@@ -1274,7 +1281,6 @@ export const ar: TranslationResources = {
     },
     actions: {
       addProject: "إضافة مشروع",
-      newWorkspace: "مساحة عمل جديدة",
       hosts: "المضيفون",
       settings: "إعدادات",
       closeSidebar: "إغلاق الشريط الجانبي",
@@ -1295,6 +1301,7 @@ export const ar: TranslationResources = {
       appName: "Paseo",
     },
     sections: {
+      projects: "المشاريع",
       sessions: "السجل",
       search: "بحث",
       schedules: "الجداول",
@@ -1390,7 +1397,7 @@ export const ar: TranslationResources = {
     },
   },
   newWorkspace: {
-    title: "مساحة عمل جديدة",
+    title: "محادثة جديدة",
     create: "يخلق",
     isolation: {
       local: "محلي",
@@ -1398,20 +1405,29 @@ export const ar: TranslationResources = {
       label: "العزل",
     },
     fields: {
-      project: "المشروع",
+      directory: "مجلد مساحة العمل",
       branch: "الفرع",
       baseNotApplicable: "غير قابل للتطبيق",
       host: "المضيف",
     },
     titlePlaceholder: "العنوان (اختياري)",
+    directory: {
+      placeholder: "مجلد مساحة العمل (اختياري)",
+      none: "بدون مساحة عمل",
+      search: "ابحث في مجلدات مساحات العمل",
+      empty: "لا توجد مجلدات مساحات عمل مطابقة.",
+    },
     errors: {
       hostDisconnected: "Host غير متصل",
+      createFailed: "تعذّر إنشاء المحادثة. حاول مرة أخرى.",
+      updateHost: "حدّث هذا المضيف لبدء محادثة بدون مجلد مساحة عمل.",
+      enterMessage: "اكتب رسالة لبدء محادثة بدون مجلد مساحة عمل.",
       createWorktreeFailed: "فشل في إنشاء شجرة العمل",
       composerStateRequired: "حالة الملحن مطلوبة",
       selectModel: "اختر نموذجا",
     },
     tooltips: {
-      project: "Choose the project",
+      directory: "اختر مجلد مساحة العمل (اختياري)",
       host: "Choose the host",
       isolation: "Choose the isolation level",
       startingRef: "اختر من أين تبدأ",
@@ -2716,7 +2732,7 @@ export const ar: TranslationResources = {
       },
       help: {
         openProject: "مشروع مفتوح",
-        newWorkspace: "مساحة عمل جديدة",
+        newWorkspace: "محادثة جديدة",
         newWorktree: "شجرة عمل جديدة",
         archiveWorkspace: "أرشفة مساحة العمل",
         newTab: "علامة تبويب جديدة",

@@ -25,8 +25,8 @@ import {
 } from "../support/helpers/workspace-ui";
 
 // Model B entry points into the New Workspace screen. The surviving entries are
-// the global button (universal) and each project's per-row New workspace icon
-// (preselects that project) — shown for git projects and for non-git projects on
+// the global button (universal, no directory) and each project's per-row New workspace
+// icon (preselects that project) — shown for git projects and for non-git projects on
 // a multiplicity-capable host. These specs prove the global entry opens the
 // screen, the project icon preselects the right project across the reused 'new'
 // screen, and non-git projects never offer the worktree Isolation control.
@@ -87,7 +87,7 @@ test.describe("New workspace entry points", () => {
       });
       await expect(page.getByTestId("host-picker-trigger")).toBeVisible({ timeout: 30_000 });
       await expectNewWorkspaceTriggerLabelsAligned(page, {
-        projectLabel: seeded.projectDisplayName,
+        projectLabel: "Workspace directory (optional)",
         hostLabel: "localhost",
       });
     } finally {
@@ -205,7 +205,8 @@ test.describe("New workspace entry points", () => {
       await expect(page).toHaveURL(/\/workspace\//, { timeout: 30_000 });
 
       await page.goto(`/new?serverId=${encodeURIComponent(serverId)}`);
-      await expectNewWorkspaceProjectSelected(page, rememberedProject.projectDisplayName);
+      // The last active workspace does not seed the directory of a plain New conversation.
+      await expectNewWorkspaceProjectSelected(page, "Workspace directory (optional)");
 
       const composer = page.getByRole("textbox", { name: "Message agent..." });
       await expect(composer).toBeEditable({ timeout: 30_000 });
@@ -217,7 +218,7 @@ test.describe("New workspace entry points", () => {
 
       await expect(page).toHaveURL(/\/new(?:\?.*)?$/, { timeout: 30_000 });
       await expect(composer).toHaveValue(draftText);
-      await expectNewWorkspaceProjectSelected(page, rememberedProject.projectDisplayName);
+      await expectNewWorkspaceProjectSelected(page, "Workspace directory (optional)");
     } finally {
       await otherProject.cleanup();
       await rememberedProject.cleanup();

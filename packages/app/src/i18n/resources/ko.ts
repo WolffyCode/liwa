@@ -1274,6 +1274,13 @@ export const ko: TranslationResources = {
     pinned: {
       title: "고정됨",
     },
+    conversations: {
+      title: "대화",
+      empty: {
+        title: "아직 대화가 없습니다",
+        description: "워크스페이스 폴더 없이 시작한 대화가 여기에 표시됩니다.",
+      },
+    },
     host: {
       noHost: "호스트 없음",
       switchTitle: "호스트 전환",
@@ -1281,7 +1288,6 @@ export const ko: TranslationResources = {
     },
     actions: {
       addProject: "프로젝트 추가",
-      newWorkspace: "새 워크스페이스",
       hosts: "호스트",
       settings: "설정",
       closeSidebar: "사이드바 닫기",
@@ -1302,6 +1308,7 @@ export const ko: TranslationResources = {
       appName: "Paseo",
     },
     sections: {
+      projects: "프로젝트",
       sessions: "기록",
       search: "검색",
       schedules: "일정",
@@ -1397,7 +1404,7 @@ export const ko: TranslationResources = {
     },
   },
   newWorkspace: {
-    title: "새 워크스페이스",
+    title: "새 대화",
     create: "생성",
     isolation: {
       local: "로컬",
@@ -1405,20 +1412,29 @@ export const ko: TranslationResources = {
       label: "격리",
     },
     fields: {
-      project: "프로젝트",
+      directory: "워크스페이스 폴더",
       branch: "브랜치",
       baseNotApplicable: "해당 없음",
       host: "호스트",
     },
     titlePlaceholder: "제목(선택 사항)",
+    directory: {
+      placeholder: "워크스페이스 폴더(선택 사항)",
+      none: "워크스페이스 없음",
+      search: "워크스페이스 폴더 검색",
+      empty: "일치하는 워크스페이스 폴더가 없습니다.",
+    },
     errors: {
       hostDisconnected: "호스트가 연결되어 있지 않습니다",
+      createFailed: "대화를 만들지 못했습니다. 다시 시도하세요.",
+      updateHost: "워크스페이스 폴더 없이 대화를 시작하려면 이 호스트를 업데이트하세요.",
+      enterMessage: "워크스페이스 폴더 없이 대화를 시작하려면 메시지를 입력하세요.",
       createWorktreeFailed: "워크트리를 생성하지 못했습니다",
       composerStateRequired: "작성기 상태가 필요합니다",
       selectModel: "모델을 선택하세요",
     },
     tooltips: {
-      project: "Choose the project",
+      directory: "워크스페이스 폴더 선택(선택 사항)",
       host: "Choose the host",
       isolation: "Choose the isolation level",
       startingRef: "시작 위치를 선택하세요",
@@ -2694,7 +2710,7 @@ export const ko: TranslationResources = {
       },
       help: {
         openProject: "프로젝트 열기",
-        newWorkspace: "새 워크스페이스",
+        newWorkspace: "새 대화",
         newWorktree: "새 워크트리",
         archiveWorkspace: "워크스페이스 보관",
         newTab: "새 탭",

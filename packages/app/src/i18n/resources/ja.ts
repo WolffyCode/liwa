@@ -1281,6 +1281,13 @@ export const ja: TranslationResources = {
     pinned: {
       title: "固定済み",
     },
+    conversations: {
+      title: "会話",
+      empty: {
+        title: "まだ会話はありません",
+        description: "ワークスペースフォルダを指定しない会話がここに表示されます。",
+      },
+    },
     host: {
       noHost: "ホストなし",
       switchTitle: "ホストを切り替え",
@@ -1288,7 +1295,6 @@ export const ja: TranslationResources = {
     },
     actions: {
       addProject: "プロジェクトを追加",
-      newWorkspace: "新しいワークスペース",
       hosts: "ホスト",
       settings: "設定",
       closeSidebar: "サイドバーを閉じる",
@@ -1309,6 +1315,7 @@ export const ja: TranslationResources = {
       appName: "Paseo",
     },
     sections: {
+      projects: "プロジェクト",
       sessions: "履歴",
       search: "検索",
       schedules: "スケジュール",
@@ -1404,7 +1411,7 @@ export const ja: TranslationResources = {
     },
   },
   newWorkspace: {
-    title: "新しいワークスペース",
+    title: "新しい会話",
     create: "作成",
     isolation: {
       local: "ローカル",
@@ -1412,20 +1419,29 @@ export const ja: TranslationResources = {
       label: "分離方法",
     },
     fields: {
-      project: "プロジェクト",
+      directory: "ワークスペースフォルダ",
       branch: "ブランチ",
       baseNotApplicable: "該当なし",
       host: "ホスト",
     },
     titlePlaceholder: "タイトル（任意）",
+    directory: {
+      placeholder: "ワークスペースフォルダ（任意）",
+      none: "ワークスペースなし",
+      search: "ワークスペースフォルダを検索",
+      empty: "一致するワークスペースフォルダはありません。",
+    },
     errors: {
       hostDisconnected: "ホストが接続されていません",
+      createFailed: "会話を作成できませんでした。もう一度お試しください。",
+      updateHost: "ワークスペースフォルダなしで会話を始めるには、このホストを更新してください。",
+      enterMessage: "ワークスペースフォルダなしで会話を始めるには、メッセージを入力してください。",
       createWorktreeFailed: "ワークツリーの作成に失敗しました",
       composerStateRequired: "コンポーザーの状態が必要です",
       selectModel: "モデルを選択してください",
     },
     tooltips: {
-      project: "Choose the project",
+      directory: "ワークスペースフォルダを選択（任意）",
       host: "Choose the host",
       isolation: "Choose the isolation level",
       startingRef: "開始点を選択",
@@ -2705,7 +2721,7 @@ export const ja: TranslationResources = {
       },
       help: {
         openProject: "プロジェクトを開く",
-        newWorkspace: "新しいワークスペース",
+        newWorkspace: "新しい会話",
         newWorktree: "新しいワークツリー",
         archiveWorkspace: "ワークスペースをアーカイブ",
         newTab: "新しいタブ",

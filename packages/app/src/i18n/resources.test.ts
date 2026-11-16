@@ -450,9 +450,20 @@ describe("translation resources", () => {
     expect(en.sidebar.project.toasts.updateHostToRemove).toBe(
       "Update the host to remove projects.",
     );
-    expect(en.newWorkspace.title).toBe("New workspace");
+    expect(en.newWorkspace.title).toBe("New conversation");
     expect(en.newWorkspace.refPicker.searchPlaceholder).toBe("Search branches and PRs");
     expect(en.openProject.tiles.addProject.title).toBe("Add a project");
+  });
+
+  it("labels independent chats as conversations with an optional workspace directory", () => {
+    expect(en.sidebar.sections.projects).toBe("Projects");
+    expect(en.sidebar.conversations.title).toBe("Conversations");
+    expect(en.newWorkspace.fields.directory).toBe("Workspace directory");
+    expect(en.newWorkspace.directory.none).toBe("Without a workspace");
+    expect(zhCN.sidebar.pinned.title).toBe("置顶");
+    expect(zhCN.sidebar.sections.projects).toBe("项目");
+    expect(zhCN.sidebar.conversations.title).toBe("对话");
+    expect(zhCN.newWorkspace.title).toBe("新聊天");
   });
 
   it("includes provider selector and pairing keys for the Batch 4D migration", () => {
@@ -485,7 +496,7 @@ describe("translation resources", () => {
     expect(en.settings.shortcuts.dialogTitle).toBe("Shortcuts");
     expect(en.settings.shortcuts.sections.tabsPanes).toBe("Tabs & Panes");
     expect(en.settings.shortcuts.help.toggleCommandCenter).toBe("Toggle command center");
-    expect(en.settings.shortcuts.help.newWorkspace).toBe("New workspace");
+    expect(en.settings.shortcuts.help.newWorkspace).toBe("New conversation");
     expect(en.settings.shortcuts.help.cycleAgentMode).toBe("Cycle agent mode");
     expect(en.settings.shortcuts.helpNotes.showKeyboardShortcuts).toBe(
       "Available when focus is not in a text field or terminal.",

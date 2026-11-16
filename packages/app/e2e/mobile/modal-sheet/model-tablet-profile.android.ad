@@ -5,7 +5,7 @@ env APP_ID=sh.paseo.debug
 env PROVIDER_ID=codex
 
 open "${APP_ID}" "${FORM_URL}"
-wait "label=\"Workspace project\"" 20000
+wait "label=\"Workspace directory\"" 20000
 press "id=\"combined-model-selector\""
 wait "id=\"combobox-desktop-container\"" 10000
 # A remembered model opens its provider's list. Return to the provider page first.

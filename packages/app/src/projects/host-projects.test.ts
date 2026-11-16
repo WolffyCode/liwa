@@ -8,6 +8,7 @@ import {
   hostProjectFromRoute,
   hostProjectFromWorkspace,
   resolveEquivalentHostProjectCandidate,
+  resolveInitialWorkspaceProject,
 } from "./host-project-model";
 import { normalizeWorkspaceDescriptor } from "@/stores/session-store";
 
@@ -160,5 +161,59 @@ describe("host project lookups", () => {
       projectKey: "remote:github.com/acme/app",
       hosts: [{ serverId: "host-a", projectId: "project-a" }],
     });
+  });
+
+  test("never derives a project from a chat, whatever its backing project is called", () => {
+    const chat = normalizeWorkspaceDescriptor({
+      id: "wks_chat",
+      projectId: "prj_chats",
+      projectDisplayName: "Chats",
+      projectRootPath: "/home/.paseo/chats",
+      workspaceDirectory: "/home/.paseo/chats/wks_chat",
+      projectKind: "non_git",
+      workspaceKind: "directory",
+      purpose: "chat",
+      name: "Trip ideas",
+      archivingAt: null,
+      status: "done",
+      statusEnteredAt: null,
+      activityAt: null,
+      diffStat: null,
+      scripts: [],
+    });
+    const namedChats = { ...chat, id: "wks_named", purpose: undefined };
+
+    expect(hostProjectFromWorkspace({ serverId: "host-a", workspace: chat })).toBeNull();
+    expect(
+      hostProjectFromWorkspace({ serverId: "host-a", workspace: namedChats })?.projectName,
+    ).toBe("Chats");
+  });
+
+  test("starts without a directory unless the entry routes one", () => {
+    const listed = project();
+    expect(
+      resolveInitialWorkspaceProject({
+        routeProject: null,
+        projects: [listed],
+        serverId: "host-a",
+        allowAllProjects: true,
+      }),
+    ).toBeNull();
+    expect(
+      resolveInitialWorkspaceProject({
+        routeProject: listed,
+        projects: [listed],
+        serverId: "host-b",
+        allowAllProjects: true,
+      }),
+    ).toBe(listed);
+    expect(
+      resolveInitialWorkspaceProject({
+        routeProject: listed,
+        projects: [listed],
+        serverId: "missing-host",
+        allowAllProjects: true,
+      }),
+    ).toBeNull();
   });
 });

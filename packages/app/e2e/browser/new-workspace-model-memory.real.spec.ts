@@ -11,7 +11,7 @@ import {
   expectSavedSelection,
 } from "../support/helpers/model-memory";
 import {
-  openGlobalNewWorkspaceComposer,
+  openGlobalNewWorkspaceComposerInProject,
   submitNewWorkspacePrompt,
 } from "../support/helpers/new-workspace";
 import { seedWorkspace } from "../support/helpers/seed-client";
@@ -42,7 +42,7 @@ test("remembers real Codex GPT-6 Astra after repeated successful workspace creat
     await startWithoutRememberedModel(page);
     await gotoWorkspace(page, workspace.workspaceId);
     await waitForSidebarHydration(page);
-    await openGlobalNewWorkspaceComposer(page);
+    await openGlobalNewWorkspaceComposerInProject(page, workspace);
     for (const [index, select] of [chooseModel, reselectModel].entries()) {
       const count = index + 1;
       await test.step(`create workspace ${count} and return`, async () => {
@@ -56,7 +56,7 @@ test("remembers real Codex GPT-6 Astra after repeated successful workspace creat
         ).toBeVisible({
           timeout: 60_000,
         });
-        await openGlobalNewWorkspaceComposer(page);
+        await openGlobalNewWorkspaceComposerInProject(page, workspace);
         await expectSavedSelection(page, "codex", "gpt-6-astra");
         await expectRememberedModel(page, label);
       });
