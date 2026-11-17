@@ -2,7 +2,7 @@
 
 日期 2026-11-16 · 状态：现行（产品模型主人 2026-11-15 确认；功能点 2026-11-16 写成，待主人审）。
 
-这份文档回答一件事：**liwa 最终是个什么产品，每个功能具体做什么**。怎么分期、什么时候做，写在 [`roadmap.md`](roadmap.md) 里。以 DeepSeek Harness 为底座的旧版产品定义和人物画像在标签 `archive/dsh-develop` 的 `docs/liwa/` 里，只当素材，其中的"闺女"并进了第 9 节数字生命。
+这份文档回答一件事：**liwa 最终是个什么产品，每个功能具体做什么**。代码里分成哪些部件、放在哪，写在 [`architecture.md`](architecture.md) 里；怎么分期、什么时候做，写在 [`roadmap.md`](roadmap.md) 里。以 DeepSeek Harness 为底座的旧版产品定义和人物画像在标签 `archive/dsh-develop` 的 `docs/liwa/` 里，只当素材，其中的"闺女"并进了第 9 节数字生命。
 
 **怎么读**：功能分三级，这份文档写到第二级。
 
