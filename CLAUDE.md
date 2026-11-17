@@ -4,11 +4,8 @@
 
 本仓库是 liwa（灵鲸 / LingWhale）：以 Paseo 为底座的个人 agent 客户端。代码来自上游 `getpaseo/paseo`，保留完整提交历史；liwa 自己写的说明只在这一节、`NOTICE`、`README.md` 开头和 `docs/liwa/`。
 
-- **分支**：`develop` 日常集成，`release` 放验证过的版本。需求从 `develop` 拉功能分支，评审后合回；版本验证通过后，再把 `develop` 合进 `release`。提交、推送、合并都要有该次任务的明确授权。
-- **上游**：远端 `upstream` 只跟踪 Paseo 的 `main`，合上游用普通合并，不用 rebase。代码里的 `paseo` 名字（包名、命令、数据目录）不改，否则每次合上游都会冲突。
-- **新代码放哪**：liwa 新加的代码尽量放在新目录或插件里；改 Paseo 原有代码只通过公共契约改，这样合上游时冲突最少。
-- **运行**：开发版 daemon 用 `127.0.0.1:6768`，状态存在仓库内的 `.dev/paseo-home`，不碰正式安装的 Paseo（`127.0.0.1:6767`、`~/.paseo`）。Node 用 `.tool-versions` 里钉的版本。从 Paseo 里启动的 agent 会继承 `PASEO_HOME=~/.paseo`，而开发脚本看到 `PASEO_HOME` 就直接用它（`scripts/dev-home.sh` 的 `configure_dev_paseo_home`），所以跑开发脚本和测试前先执行 `unset PASEO_HOME PASEO_AGENT_ID PASEO_AGENT_CWD PASEO_WORKSPACE_ID PASEO_CLI`，否则开发版会读写正式数据。`npm run dev:server` 在 `package.json` 里把端口写死成 6768，外面传的 `PASEO_LISTEN` 会被覆盖；几个工作目录要同时起开发版 daemon 时，直接用 `PASEO_LISTEN=127.0.0.1:<端口> ./scripts/dev-daemon.sh`，`npm run cli` 带同一个 `PASEO_LISTEN` 就会连到它。
-- **文档**：liwa 的产品和设计文档在 `docs/liwa/`，只存最新方案。以 DeepSeek Harness 为底座的旧版本在标签 `archive/dsh-develop`、`archive/dsh-release` 里，只作参考。
+- **动手前先读 [`docs/liwa/development.md`](docs/liwa/development.md)**：仓库开发规范，管分支（`release` 发版、`develop` 开发、需求从 `develop` 拉分支）、代码放哪、提交、检查和开发环境（含跑开发脚本前要去掉继承的 `PASEO_HOME`）。
+- 产品、架构、实现步骤和排期见 [`docs/liwa/README.md`](docs/liwa/README.md)。
 - 下面是 Paseo 原有的规范，继续适用。
 
 Paseo is a mobile app for monitoring and controlling your local AI coding agents from anywhere. Your dev environment, in your pocket. Connects directly to your actual development environment — your code stays on your machine.
